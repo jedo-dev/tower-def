@@ -1,0 +1,23 @@
+:root {
+  font-family: 'Trebuchet MS', 'Segoe UI', Tahoma, sans-serif;
+  background: #12151d;
+  color: #ecf2ff;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  min-height: 100svh;
+}
