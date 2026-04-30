@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { GridConfig } from '../../../shared/constants/grid';
+import { GridConfig } from '../../../constants/grid';
 
 const ENTRANCE_CELL = { x: 0, y: 7 };
 const EXIT_CELL = { x: GridConfig.COLS - 1, y: 7 };

@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
-import { GridConfig } from '../../../shared/constants/grid';
-import { GameScene } from './GameScene';
+import { GridConfig } from '../../constants/grid';
+import { GameScene } from './scenes/GameScene';
 
 export function createGameConfig(container: HTMLDivElement): Phaser.Types.Core.GameConfig {
   return {
