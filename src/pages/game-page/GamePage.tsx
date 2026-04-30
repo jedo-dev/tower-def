@@ -1,5 +1,12 @@
 import { GameCanvas } from '../../widgets/game-canvas/ui/GameCanvas';
+import { HudPanel } from '../../widgets/hud/ui/HudPanel';
+import './GamePage.css';
 
 export function GamePage() {
-  return <GameCanvas />;
+  return (
+    <main className="game-page">
+      <HudPanel />
+      <GameCanvas />
+    </main>
+  );
 }

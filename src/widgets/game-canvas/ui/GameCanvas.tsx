@@ -12,9 +12,23 @@ export function GameCanvas() {
       return;
     }
 
-    gameRef.current = new Phaser.Game(createGameConfig(containerRef.current));
+    const game = new Phaser.Game(createGameConfig(containerRef.current));
+    gameRef.current = game;
+
+    const handleViewportResize = () => {
+      if (!containerRef.current) {
+        return;
+      }
+
+      const { clientWidth, clientHeight } = containerRef.current;
+      game.scale.resize(clientWidth, clientHeight);
+    };
+
+    window.addEventListener('resize', handleViewportResize);
+    handleViewportResize();
 
     return () => {
+      window.removeEventListener('resize', handleViewportResize);
       gameRef.current?.destroy(true);
       gameRef.current = null;
     };

@@ -11,7 +11,7 @@ export function createGameConfig(container: HTMLDivElement): Phaser.Types.Core.G
     backgroundColor: '#1a1f2c',
     scene: [GameScene],
     scale: {
-      mode: Phaser.Scale.FIT,
+      mode: Phaser.Scale.ENVELOP,
       autoCenter: Phaser.Scale.CENTER_BOTH,
     },
   };
