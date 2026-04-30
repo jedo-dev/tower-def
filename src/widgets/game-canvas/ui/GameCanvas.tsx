@@ -1,6 +1,6 @@
-import { useEffect, useRef } from 'react';
+﻿import { useEffect, useRef } from 'react';
 import Phaser from 'phaser';
-import { createGameConfig } from '../../../entities/game/lib/createGameConfig';
+import { createGameConfig } from '../../../shared/lib/phaser/createGameConfig';
 import './GameCanvas.css';
 
 export function GameCanvas() {
@@ -26,3 +26,5 @@ export function GameCanvas() {
     </div>
   );
 }
+
+
