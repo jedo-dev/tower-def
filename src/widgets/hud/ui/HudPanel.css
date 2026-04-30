@@ -1,0 +1,59 @@
+.hud-panel {
+  display: grid;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid #2a3344;
+  border-radius: 12px;
+  background: #182031;
+}
+
+.hud-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.hud-stat {
+  margin: 0;
+  padding: 8px;
+  border-radius: 8px;
+  background: #202b40;
+}
+
+.hud-label {
+  display: block;
+  font-size: 12px;
+  color: #9db0d3;
+}
+
+.hud-value {
+  display: block;
+  margin-top: 4px;
+  font-weight: 700;
+  color: #eff4ff;
+}
+
+.hud-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.hud-button {
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid #40527a;
+  border-radius: 10px;
+  background: #263550;
+  color: #dbe6ff;
+}
+
+.hud-button:disabled {
+  opacity: 0.75;
+}
+
+.hud-button-primary {
+  border-color: #4a7cff;
+  background: #365ec8;
+  color: #f5f8ff;
+}
