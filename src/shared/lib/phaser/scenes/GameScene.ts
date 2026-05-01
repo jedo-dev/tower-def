@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { GRID_DEFAULT_ROW_CENTER, GRID_DIMENSIONS } from '../../../constants/grid';
 import { createGridModel } from '../../grid/createGridModel';
+import { findPathBfs } from '../../pathfinding/hasPathBfs';
 
 const ENTRANCE_CELL = { x: 0, y: GRID_DEFAULT_ROW_CENTER };
 const EXIT_CELL = { x: GRID_DIMENSIONS.cols - 1, y: GRID_DEFAULT_ROW_CENTER };
@@ -50,6 +51,27 @@ export class GameScene extends Phaser.Scene {
           )
           .setOrigin(0.5);
       }
+    }
+
+    if (IS_DEV_MODE) {
+      this.drawDebugPathOverlay(grid);
+    }
+  }
+
+  private drawDebugPathOverlay(grid: ReturnType<typeof createGridModel>): void {
+    const pathOverlay = this.add.graphics();
+    const pathResult = findPathBfs(grid);
+
+    if (!pathResult.found) {
+      return;
+    }
+
+    for (const point of pathResult.path) {
+      const x = point.x * GRID_DIMENSIONS.cellSize;
+      const y = point.y * GRID_DIMENSIONS.cellSize;
+
+      pathOverlay.fillStyle(0xf5d742, 0.2);
+      pathOverlay.fillRect(x, y, GRID_DIMENSIONS.cellSize, GRID_DIMENSIONS.cellSize);
     }
   }
 }
