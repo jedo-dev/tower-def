@@ -4,6 +4,7 @@ export type GridPoint = {
 };
 
 export type GridCell = GridPoint & {
+  role: 'empty' | 'entrance' | 'exit';
   isWalkable: boolean;
   isOccupied: boolean;
 };
