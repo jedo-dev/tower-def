@@ -1,10 +1,12 @@
 import Phaser from 'phaser';
 import { GRID_DEFAULT_ROW_CENTER, GRID_DIMENSIONS } from '../../../constants/grid';
+import { calculateWaveStartPath } from '../../../../entities/wave';
 import { createGridModel } from '../../grid/createGridModel';
 import { findPathBfs } from '../../pathfinding/hasPathBfs';
 import { validateTowerPlacementPath } from '../../pathfinding/validateTowerPlacementPath';
 import type { GridPosition } from '../../../types/pathfinding';
 import type { GridCell, GridModel } from '../../../types/grid';
+import type { CreepEntity } from '../../../../entities/creep';
 
 const ENTRANCE_CELL = { x: 0, y: GRID_DEFAULT_ROW_CENTER };
 const EXIT_CELL = { x: GRID_DIMENSIONS.cols - 1, y: GRID_DEFAULT_ROW_CENTER };
@@ -12,6 +14,12 @@ const IS_DEV_MODE = import.meta.env.DEV;
 const DEFAULT_TOWER_COST = 100;
 const SELL_REFUND_RATIO = 0.5;
 const START_GOLD = 100;
+const CREEP_MOVE_SPEED_PX_PER_SEC = 80;
+
+type CreepRenderState = {
+  entity: CreepEntity;
+  sprite: Phaser.GameObjects.Arc;
+};
 
 export class GameScene extends Phaser.Scene {
   public static readonly KEY = 'GameScene';
@@ -23,6 +31,8 @@ export class GameScene extends Phaser.Scene {
   private placedTowerCostsByCellKey = new Map<string, number>();
   private playerGold = START_GOLD;
   private isBuildPhaseActive = true;
+  private activeCreepPath: GridPosition[] = [];
+  private activeCreeps: CreepRenderState[] = [];
 
   constructor() {
     super(GameScene.KEY);
@@ -37,6 +47,10 @@ export class GameScene extends Phaser.Scene {
     this.input.mouse?.disableContextMenu();
     this.registry.set('economy.gold', this.playerGold);
     this.registry.set('phase.build.active', this.isBuildPhaseActive);
+  }
+
+  public update(_time: number, delta: number): void {
+    this.moveCreepsAlongPath(delta);
   }
 
   private drawDebugGrid(): void {
@@ -74,6 +88,8 @@ export class GameScene extends Phaser.Scene {
     if (IS_DEV_MODE) {
       this.drawDebugPathOverlay(grid);
     }
+
+    this.initializeDebugCreepMovement(grid);
   }
 
   private drawDebugPathOverlay(grid: ReturnType<typeof createGridModel>): void {
@@ -95,6 +111,34 @@ export class GameScene extends Phaser.Scene {
       this.pathOverlay.fillStyle(0xf5d742, 0.2);
       this.pathOverlay.fillRect(x, y, GRID_DIMENSIONS.cellSize, GRID_DIMENSIONS.cellSize);
     }
+  }
+
+  private initializeDebugCreepMovement(grid: GridModel): void {
+    const waveStartPath = calculateWaveStartPath(grid);
+    this.activeCreepPath = waveStartPath;
+    this.activeCreeps.forEach((creep) => creep.sprite.destroy());
+    this.activeCreeps = [];
+
+    if (waveStartPath.length === 0) {
+      return;
+    }
+
+    const startPoint = this.toCellCenter(waveStartPath[0]);
+    const debugCreep: CreepEntity = {
+      id: 'debug:creep:0',
+      type: 'basic',
+      hp: 100,
+      speed: 1,
+      status: 'alive',
+      position: { ...waveStartPath[0] },
+      pathIndex: 0,
+    };
+
+    const sprite = this.add.circle(startPoint.x, startPoint.y, 8, 0x9bd6ff, 1);
+    this.activeCreeps.push({
+      entity: debugCreep,
+      sprite,
+    });
   }
 
   private registerGridHoverDetection(): void {
@@ -172,6 +216,50 @@ export class GameScene extends Phaser.Scene {
 
     this.buildPreviewOverlay.fillStyle(isBuildCellValid ? 0x2fbf71 : 0xd24a43, 0.35);
     this.buildPreviewOverlay.fillRect(x, y, GRID_DIMENSIONS.cellSize, GRID_DIMENSIONS.cellSize);
+  }
+
+  private moveCreepsAlongPath(deltaMs: number): void {
+    if (this.activeCreepPath.length === 0 || this.activeCreeps.length === 0) {
+      return;
+    }
+
+    const stepDistance = (deltaMs / 1000) * CREEP_MOVE_SPEED_PX_PER_SEC;
+
+    for (const creep of this.activeCreeps) {
+      if (creep.entity.status !== 'alive') {
+        continue;
+      }
+
+      const nextPathIndex = creep.entity.pathIndex + 1;
+
+      if (nextPathIndex >= this.activeCreepPath.length) {
+        this.markCreepEscaped(creep);
+        continue;
+      }
+
+      const nextPoint = this.activeCreepPath[nextPathIndex];
+      const nextCenter = this.toCellCenter(nextPoint);
+      const dx = nextCenter.x - creep.sprite.x;
+      const dy = nextCenter.y - creep.sprite.y;
+      const distanceToNext = Math.hypot(dx, dy);
+
+      if (distanceToNext <= stepDistance) {
+        creep.sprite.setPosition(nextCenter.x, nextCenter.y);
+        creep.entity.pathIndex = nextPathIndex;
+        creep.entity.position = { x: nextPoint.x, y: nextPoint.y };
+
+        if (nextPathIndex >= this.activeCreepPath.length - 1) {
+          this.markCreepEscaped(creep);
+        }
+        continue;
+      }
+
+      const ratio = stepDistance / distanceToNext;
+      creep.sprite.setPosition(
+        creep.sprite.x + dx * ratio,
+        creep.sprite.y + dy * ratio,
+      );
+    }
   }
 
   private isBuildCellValid(cellPosition: GridPosition, grid: GridModel): boolean {
@@ -306,5 +394,24 @@ export class GameScene extends Phaser.Scene {
 
   private canPerformBuildActions(): boolean {
     return this.isBuildPhaseActive;
+  }
+
+  private toCellCenter(position: GridPosition): { x: number; y: number } {
+    return {
+      x: position.x * GRID_DIMENSIONS.cellSize + GRID_DIMENSIONS.cellSize / 2,
+      y: position.y * GRID_DIMENSIONS.cellSize + GRID_DIMENSIONS.cellSize / 2,
+    };
+  }
+
+  private markCreepEscaped(creep: CreepRenderState): void {
+    if (creep.entity.status === 'escaped') {
+      return;
+    }
+
+    creep.entity.status = 'escaped';
+    const escapedCount = this.activeCreeps.filter(
+      (candidate) => candidate.entity.status === 'escaped',
+    ).length;
+    this.registry.set('wave.escapedCreeps', escapedCount);
   }
 }
