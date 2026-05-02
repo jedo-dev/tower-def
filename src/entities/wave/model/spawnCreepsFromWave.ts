@@ -22,6 +22,7 @@ export function spawnCreepsFromWave(
         id: createCreepId(wave.id, spawn.creepTypeId, spawnIndex),
         type: spawn.creepTypeId,
         hp: DEFAULT_CREEP_HP,
+        lifeState: 'alive',
         speed: DEFAULT_CREEP_SPEED,
         status: 'alive',
         position: { x: entrance.x, y: entrance.y },

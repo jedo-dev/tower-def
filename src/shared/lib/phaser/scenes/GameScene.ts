@@ -1,12 +1,22 @@
 import Phaser from 'phaser';
 import { GRID_DEFAULT_ROW_CENTER, GRID_DIMENSIONS } from '../../../constants/grid';
 import { calculateWaveStartPath } from '../../../../entities/wave';
+import { applyDamageToCreep, isCreepDead } from '../../../../entities/creep';
+import {
+  TOWER_COMBAT_STATS_BY_TYPE,
+  canTowerAttack,
+  consumeTowerAttack,
+  createInitialTowerCombatRuntime,
+  selectTowerTarget,
+  tickTowerCooldown,
+} from '../../../../entities/tower';
 import { createGridModel } from '../../grid/createGridModel';
 import { findPathBfs } from '../../pathfinding/hasPathBfs';
 import { validateTowerPlacementPath } from '../../pathfinding/validateTowerPlacementPath';
 import type { GridPosition } from '../../../types/pathfinding';
 import type { GridCell, GridModel } from '../../../types/grid';
 import type { CreepEntity } from '../../../../entities/creep';
+import type { TowerCombatRuntime, TowerEntity } from '../../../../entities/tower';
 
 const ENTRANCE_CELL = { x: 0, y: GRID_DEFAULT_ROW_CENTER };
 const EXIT_CELL = { x: GRID_DIMENSIONS.cols - 1, y: GRID_DEFAULT_ROW_CENTER };
@@ -15,10 +25,21 @@ const DEFAULT_TOWER_COST = 100;
 const SELL_REFUND_RATIO = 0.5;
 const START_GOLD = 100;
 const CREEP_MOVE_SPEED_PX_PER_SEC = 80;
+const DEV_ATTACK_TRACE_LIFETIME_MS = 120;
 
 type CreepRenderState = {
   entity: CreepEntity;
   sprite: Phaser.GameObjects.Arc;
+};
+
+type TowerRenderState = {
+  entity: TowerEntity;
+  runtime: TowerCombatRuntime;
+};
+
+type AttackTraceState = {
+  graphics: Phaser.GameObjects.Graphics;
+  remainingMs: number;
 };
 
 export class GameScene extends Phaser.Scene {
@@ -28,11 +49,14 @@ export class GameScene extends Phaser.Scene {
   private gridGraphics: Phaser.GameObjects.Graphics | null = null;
   private pathOverlay: Phaser.GameObjects.Graphics | null = null;
   private buildPreviewOverlay: Phaser.GameObjects.Graphics | null = null;
+  private attackTraceOverlay: Phaser.GameObjects.Graphics | null = null;
   private placedTowerCostsByCellKey = new Map<string, number>();
   private playerGold = START_GOLD;
   private isBuildPhaseActive = true;
   private activeCreepPath: GridPosition[] = [];
   private activeCreeps: CreepRenderState[] = [];
+  private activeTowers: TowerRenderState[] = [];
+  private activeAttackTraces: AttackTraceState[] = [];
 
   constructor() {
     super(GameScene.KEY);
@@ -44,6 +68,7 @@ export class GameScene extends Phaser.Scene {
     this.registerGridHoverDetection();
     this.pathOverlay = this.add.graphics();
     this.buildPreviewOverlay = this.add.graphics();
+    this.attackTraceOverlay = this.add.graphics();
     this.input.mouse?.disableContextMenu();
     this.registry.set('economy.gold', this.playerGold);
     this.registry.set('phase.build.active', this.isBuildPhaseActive);
@@ -51,6 +76,9 @@ export class GameScene extends Phaser.Scene {
 
   public update(_time: number, delta: number): void {
     this.moveCreepsAlongPath(delta);
+    this.updateTowerCombat(delta);
+    this.removeDeadCreepsFromActiveWave();
+    this.updateAttackTraces(delta);
   }
 
   private drawDebugGrid(): void {
@@ -118,6 +146,7 @@ export class GameScene extends Phaser.Scene {
     this.activeCreepPath = waveStartPath;
     this.activeCreeps.forEach((creep) => creep.sprite.destroy());
     this.activeCreeps = [];
+    this.activeTowers = [];
 
     if (waveStartPath.length === 0) {
       return;
@@ -128,6 +157,7 @@ export class GameScene extends Phaser.Scene {
       id: 'debug:creep:0',
       type: 'basic',
       hp: 100,
+      lifeState: 'alive',
       speed: 1,
       status: 'alive',
       position: { ...waveStartPath[0] },
@@ -315,6 +345,16 @@ export class GameScene extends Phaser.Scene {
       this.toGridCellKey(hoveredCell),
       DEFAULT_TOWER_COST,
     );
+    this.activeTowers.push({
+      entity: {
+        id: this.toTowerId(hoveredCell),
+        position: { x: hoveredCell.x, y: hoveredCell.y },
+        cost: DEFAULT_TOWER_COST,
+        type: 'archer',
+        combatStats: TOWER_COMBAT_STATS_BY_TYPE.archer,
+      },
+      runtime: createInitialTowerCombatRuntime(),
+    });
     this.playerGold -= DEFAULT_TOWER_COST;
     this.registry.set('economy.gold', this.playerGold);
 
@@ -354,6 +394,9 @@ export class GameScene extends Phaser.Scene {
     targetCell.isOccupied = false;
     targetCell.isWalkable = true;
     this.placedTowerCostsByCellKey.delete(hoveredCellKey);
+    this.activeTowers = this.activeTowers.filter(
+      (tower) => tower.entity.id !== this.toTowerId(hoveredCell),
+    );
 
     const refundAmount = Math.floor(towerCost * SELL_REFUND_RATIO);
     this.registry.set('economy.lastSellRefund', refundAmount);
@@ -392,6 +435,10 @@ export class GameScene extends Phaser.Scene {
     return `${position.x}:${position.y}`;
   }
 
+  private toTowerId(position: GridPosition): string {
+    return `tower:${position.x}:${position.y}`;
+  }
+
   private canPerformBuildActions(): boolean {
     return this.isBuildPhaseActive;
   }
@@ -413,5 +460,107 @@ export class GameScene extends Phaser.Scene {
       (candidate) => candidate.entity.status === 'escaped',
     ).length;
     this.registry.set('wave.escapedCreeps', escapedCount);
+  }
+
+  private removeDeadCreepsFromActiveWave(): void {
+    const aliveCreeps: CreepRenderState[] = [];
+
+    for (const creep of this.activeCreeps) {
+      if (!isCreepDead(creep.entity)) {
+        aliveCreeps.push(creep);
+        continue;
+      }
+
+      creep.sprite.destroy();
+    }
+
+    this.activeCreeps = aliveCreeps;
+  }
+
+  private updateTowerCombat(deltaMs: number): void {
+    if (this.activeTowers.length === 0 || this.activeCreeps.length === 0) {
+      return;
+    }
+
+    for (const tower of this.activeTowers) {
+      tower.runtime = tickTowerCooldown(tower.runtime, deltaMs);
+
+      if (!canTowerAttack(tower.entity, tower.runtime)) {
+        continue;
+      }
+
+      const targetCreep = selectTowerTarget(
+        tower.entity,
+        this.activeCreeps.map((creep) => creep.entity),
+      );
+
+      if (!targetCreep) {
+        continue;
+      }
+
+      const targetRenderState = this.activeCreeps.find(
+        (creep) => creep.entity.id === targetCreep.id,
+      );
+
+      if (!targetRenderState) {
+        continue;
+      }
+
+      const damageResult = applyDamageToCreep(
+        targetRenderState.entity,
+        tower.entity.combatStats.damage,
+      );
+
+      targetRenderState.entity = damageResult.creep;
+      tower.runtime = consumeTowerAttack(tower.entity, tower.runtime);
+      this.spawnDevAttackTrace(tower.entity.position, targetRenderState.entity.position);
+    }
+  }
+
+  private spawnDevAttackTrace(
+    from: GridPosition,
+    to: GridPosition,
+  ): void {
+    if (!IS_DEV_MODE || !this.attackTraceOverlay) {
+      return;
+    }
+
+    const fromCenter = this.toCellCenter(from);
+    const toCenter = this.toCellCenter(to);
+    const trace = this.add.graphics();
+    trace.lineStyle(2, 0xffe07a, 1);
+    trace.beginPath();
+    trace.moveTo(fromCenter.x, fromCenter.y);
+    trace.lineTo(toCenter.x, toCenter.y);
+    trace.strokePath();
+    this.activeAttackTraces.push({
+      graphics: trace,
+      remainingMs: DEV_ATTACK_TRACE_LIFETIME_MS,
+    });
+  }
+
+  private updateAttackTraces(deltaMs: number): void {
+    if (this.activeAttackTraces.length === 0) {
+      return;
+    }
+
+    const nextTraces: AttackTraceState[] = [];
+
+    for (const trace of this.activeAttackTraces) {
+      const remainingMs = trace.remainingMs - deltaMs;
+
+      if (remainingMs <= 0) {
+        trace.graphics.destroy();
+        continue;
+      }
+
+      trace.graphics.setAlpha(remainingMs / DEV_ATTACK_TRACE_LIFETIME_MS);
+      nextTraces.push({
+        graphics: trace.graphics,
+        remainingMs,
+      });
+    }
+
+    this.activeAttackTraces = nextTraces;
   }
 }

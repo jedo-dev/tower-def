@@ -16,6 +16,7 @@ function createCreep(status: CreepEntity['status']): CreepEntity {
     id: `creep:${status}`,
     type: 'basic',
     hp: 100,
+    lifeState: status === 'dead' ? 'dead' : 'alive',
     speed: 1,
     status,
     position: { x: 0, y: 0 },
