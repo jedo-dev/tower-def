@@ -85,4 +85,18 @@ describe('player resources gold spending validation', () => {
     expect(granted.granted).toBe(true);
     expect(granted.resources.gold).toBe(65);
   });
+
+  it('player can lose after enough escaped creeps', () => {
+    let resources = { gold: 100, lives: 3 };
+
+    resources = subtractLives(resources, 1);
+    expect(isGameOverByLives(resources)).toBe(false);
+
+    resources = subtractLives(resources, 1);
+    expect(isGameOverByLives(resources)).toBe(false);
+
+    resources = subtractLives(resources, 1);
+    expect(isGameOverByLives(resources)).toBe(true);
+    expect(resources.lives).toBe(0);
+  });
 });

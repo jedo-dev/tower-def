@@ -52,4 +52,27 @@ describe('tower combat flow', () => {
     expect(damageResult.creep.hp).toBe(60 - tower.combatStats.damage);
     expect(damageResult.killed).toBe(false);
   });
+
+  it('archer tower can kill creep in finite number of attacks', () => {
+    const tower = createTower();
+    let creep = createCreep({
+      id: 'creep:killable',
+      hp: 95,
+      pathIndex: 2,
+      position: { x: 6, y: 5 },
+    });
+
+    let attacks = 0;
+    while (creep.status === 'alive' && attacks < 20) {
+      const target = selectTowerTarget(tower, [creep]);
+      expect(target).not.toBeNull();
+
+      const damageResult = applyDamageToCreep(target as CreepEntity, tower.combatStats.damage);
+      creep = damageResult.creep;
+      attacks += 1;
+    }
+
+    expect(creep.status).toBe('dead');
+    expect(attacks).toBeLessThanOrEqual(20);
+  });
 });
