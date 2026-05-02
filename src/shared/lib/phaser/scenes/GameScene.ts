@@ -8,6 +8,18 @@ import {
   spendGold,
   subtractLives,
 } from '../../../../entities/player-resources';
+import {
+  canPerformBuildActions as canPerformBuildActionsByPhase,
+  completeWaveIfResolved,
+  createInitialWavePhaseState,
+  isWaveActionAllowed,
+  resetWavePhaseState,
+  startNextWaveCycle,
+  startWave,
+  transitionCompletedToBuild,
+  transitionToGameOver,
+  type WavePhaseState,
+} from '../../../../features/wave-phase';
 import { ECONOMY_BALANCE } from '../../../constants/economy';
 import { GRID_DEFAULT_ROW_CENTER, GRID_DIMENSIONS } from '../../../constants/grid';
 import { calculateWaveStartPath } from '../../../../entities/wave';
@@ -37,6 +49,8 @@ const CREEP_MOVE_SPEED_PX_PER_SEC = 80;
 const DEV_ATTACK_TRACE_LIFETIME_MS = 120;
 const INITIAL_PLAYER_RESOURCES = createInitialPlayerResources();
 const EARLY_WAVE_START_BONUS_PLACEHOLDER_ELIGIBLE = false;
+const NEXT_WAVE_DELAY_MS = 1200;
+const RESTART_DELAY_MS = 1200;
 
 type CreepRenderState = {
   entity: CreepEntity;
@@ -55,6 +69,7 @@ type AttackTraceState = {
 
 export class GameScene extends Phaser.Scene {
   public static readonly KEY = 'GameScene';
+  private isSceneCleanedUp = false;
   private hoveredCell: GridPosition | null = null;
   private gridModel: GridModel | null = null;
   private gridGraphics: Phaser.GameObjects.Graphics | null = null;
@@ -64,34 +79,47 @@ export class GameScene extends Phaser.Scene {
   private placedTowerCostsByCellKey = new Map<string, number>();
   private playerGold = INITIAL_PLAYER_RESOURCES.gold;
   private playerLives = INITIAL_PLAYER_RESOURCES.lives;
-  private isBuildPhaseActive = true;
+  private wavePhaseState: WavePhaseState = createInitialWavePhaseState();
   private isGameOver = false;
   private isWaveCompletionRewardGranted = false;
+  private nextWaveStartsAtMs: number | null = null;
+  private restartScheduledAtMs: number | null = null;
+  private currentWaveNumber = 1;
   private activeCreepPath: GridPosition[] = [];
   private activeCreeps: CreepRenderState[] = [];
   private activeTowers: TowerRenderState[] = [];
   private activeAttackTraces: AttackTraceState[] = [];
+  private pointerMoveHandler: ((pointer: Phaser.Input.Pointer) => void) | null = null;
+  private pointerDownHandler: ((pointer: Phaser.Input.Pointer) => void) | null = null;
+  private gameOutHandler: (() => void) | null = null;
 
   constructor() {
     super(GameScene.KEY);
   }
 
   public create(): void {
+    this.isSceneCleanedUp = false;
     this.cameras.main.setBackgroundColor('#1a1f2c');
-    this.drawDebugGrid();
+    this.drawGrid();
     this.registerGridHoverDetection();
-    this.pathOverlay = this.add.graphics();
+    if (IS_DEV_MODE) {
+      this.pathOverlay = this.add.graphics();
+      this.attackTraceOverlay = this.add.graphics();
+    }
     this.buildPreviewOverlay = this.add.graphics();
-    this.attackTraceOverlay = this.add.graphics();
     this.input.mouse?.disableContextMenu();
     this.registry.set('economy.gold', this.playerGold);
     this.registry.set('economy.lives', this.playerLives);
-    this.registry.set('phase.build.active', this.isBuildPhaseActive);
+    this.registry.set('phase.build.active', this.canPerformBuildActions());
     this.registry.set('phase.game.over', this.isGameOver);
     this.registry.set('economy.earlyWaveStartBonus.granted', false);
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, this.handleSceneShutdown, this);
+    this.events.once(Phaser.Scenes.Events.DESTROY, this.handleSceneShutdown, this);
   }
 
   public update(_time: number, delta: number): void {
+    this.tryRestartRun(_time);
+
     if (this.isGameOver) {
       return;
     }
@@ -100,10 +128,11 @@ export class GameScene extends Phaser.Scene {
     this.updateTowerCombat(delta);
     this.removeDeadCreepsFromActiveWave();
     this.applyWaveCompletionRewardIfResolved();
+    this.tryStartNextWave(_time);
     this.updateAttackTraces(delta);
   }
 
-  private drawDebugGrid(): void {
+  private drawGrid(): void {
     this.gridGraphics ??= this.add.graphics();
     this.gridGraphics.clear();
 
@@ -136,13 +165,13 @@ export class GameScene extends Phaser.Scene {
     }
 
     if (IS_DEV_MODE) {
-      this.drawDebugPathOverlay(grid);
+      this.drawPathOverlayDebug(grid);
     }
 
-    this.initializeDebugCreepMovement(grid);
+    this.initializeWaveRuntime(grid);
   }
 
-  private drawDebugPathOverlay(grid: ReturnType<typeof createGridModel>): void {
+  private drawPathOverlayDebug(grid: ReturnType<typeof createGridModel>): void {
     if (!this.pathOverlay) {
       return;
     }
@@ -163,7 +192,7 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
-  private initializeDebugCreepMovement(grid: GridModel): void {
+  private initializeWaveRuntime(grid: GridModel): void {
     const waveStartPath = calculateWaveStartPath(grid);
     this.activeCreepPath = waveStartPath;
     this.activeCreeps.forEach((creep) => creep.sprite.destroy());
@@ -176,50 +205,19 @@ export class GameScene extends Phaser.Scene {
       return;
     }
 
-    const startPoint = this.toCellCenter(waveStartPath[0]);
-    const debugCreep: CreepEntity = {
-      id: 'debug:creep:0',
-      type: 'basic',
-      hp: 100,
-      lifeState: 'alive',
-      speed: 1,
-      status: 'alive',
-      position: { ...waveStartPath[0] },
-      pathIndex: 0,
-    };
-
-    const sprite = this.add.circle(startPoint.x, startPoint.y, 8, 0x9bd6ff, 1);
-    this.activeCreeps.push({
-      entity: debugCreep,
-      sprite,
-    });
+    this.spawnWaveCreeps(waveStartPath);
+    this.wavePhaseState = startWave(this.wavePhaseState).state;
+    this.registry.set('phase.build.active', this.canPerformBuildActions());
   }
 
   private registerGridHoverDetection(): void {
-    this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
-      this.hoveredCell = this.toGridCell(pointer.worldX, pointer.worldY);
-      this.updateHoveredCellDebug();
-      this.updateBuildPreview();
-    });
+    this.pointerMoveHandler = this.handlePointerMove.bind(this);
+    this.pointerDownHandler = this.handlePointerDown.bind(this);
+    this.gameOutHandler = this.handleGameOut.bind(this);
 
-    this.input.on('gameout', () => {
-      this.hoveredCell = null;
-      this.updateHoveredCellDebug();
-      this.updateBuildPreview();
-    });
-
-    this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
-      if (pointer.button === 0) {
-        this.tryPlaceTowerAtHoveredCell();
-        return;
-      }
-
-      if (pointer.button !== 2) {
-        return;
-      }
-
-      this.trySellTowerAtHoveredCell();
-    });
+    this.input.on('pointermove', this.pointerMoveHandler);
+    this.input.on('pointerdown', this.pointerDownHandler);
+    this.input.on('gameout', this.gameOutHandler);
   }
 
   private toGridCell(worldX: number, worldY: number): GridPosition | null {
@@ -236,7 +234,7 @@ export class GameScene extends Phaser.Scene {
     return { x, y };
   }
 
-  private updateHoveredCellDebug(): void {
+  private updateHoveredCellDebugRegistry(): void {
     if (!IS_DEV_MODE) {
       return;
     }
@@ -341,7 +339,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   private tryPlaceTowerAtHoveredCell(): void {
-    if (!this.canPerformBuildActions()) {
+    if (!isWaveActionAllowed(this.wavePhaseState, 'place-tower') || this.isGameOver) {
       return;
     }
 
@@ -395,12 +393,12 @@ export class GameScene extends Phaser.Scene {
     this.updateBuildPreview();
 
     if (IS_DEV_MODE) {
-      this.drawDebugPathOverlay(this.gridModel);
+      this.drawPathOverlayDebug(this.gridModel);
     }
   }
 
   private trySellTowerAtHoveredCell(): void {
-    if (!this.canPerformBuildActions()) {
+    if (!isWaveActionAllowed(this.wavePhaseState, 'sell-tower') || this.isGameOver) {
       return;
     }
 
@@ -438,7 +436,7 @@ export class GameScene extends Phaser.Scene {
     this.updateBuildPreview();
 
     if (IS_DEV_MODE) {
-      this.drawDebugPathOverlay(this.gridModel);
+      this.drawPathOverlayDebug(this.gridModel);
     }
   }
 
@@ -473,7 +471,11 @@ export class GameScene extends Phaser.Scene {
   }
 
   private canPerformBuildActions(): boolean {
-    return this.isBuildPhaseActive;
+    if (this.isGameOver) {
+      return false;
+    }
+
+    return canPerformBuildActionsByPhase(this.wavePhaseState);
   }
 
   private toCellCenter(position: GridPosition): { x: number; y: number } {
@@ -498,8 +500,9 @@ export class GameScene extends Phaser.Scene {
 
     if (isGameOverByLives({ lives: this.playerLives })) {
       this.isGameOver = true;
-      this.isBuildPhaseActive = false;
-      this.registry.set('phase.build.active', this.isBuildPhaseActive);
+      this.wavePhaseState = transitionToGameOver(this.wavePhaseState);
+      this.restartScheduledAtMs ??= this.time.now + RESTART_DELAY_MS;
+      this.registry.set('phase.build.active', this.canPerformBuildActions());
       this.registry.set('phase.game.over', this.isGameOver);
     }
 
@@ -638,6 +641,11 @@ export class GameScene extends Phaser.Scene {
       return;
     }
 
+    this.wavePhaseState = completeWaveIfResolved(
+      this.wavePhaseState,
+      this.activeCreeps.map((creep) => creep.entity),
+    );
+
     const nextResources = addGold(
       { gold: this.playerGold, lives: this.playerLives },
       ECONOMY_BALANCE.waveCompletionRewardGold,
@@ -645,6 +653,9 @@ export class GameScene extends Phaser.Scene {
     this.playerGold = nextResources.gold;
     this.registry.set('economy.gold', this.playerGold);
     this.isWaveCompletionRewardGranted = true;
+    this.wavePhaseState = transitionCompletedToBuild(this.wavePhaseState);
+    this.registry.set('phase.build.active', this.canPerformBuildActions());
+    this.nextWaveStartsAtMs ??= this.time.now + NEXT_WAVE_DELAY_MS;
   }
 
   private applyEarlyWaveStartBonusPlaceholder(): void {
@@ -657,5 +668,177 @@ export class GameScene extends Phaser.Scene {
     this.playerGold = result.resources.gold;
     this.registry.set('economy.gold', this.playerGold);
     this.registry.set('economy.earlyWaveStartBonus.granted', result.granted);
+  }
+
+  private tryStartNextWave(nowMs: number): void {
+    if (this.nextWaveStartsAtMs === null) {
+      return;
+    }
+
+    if (nowMs < this.nextWaveStartsAtMs) {
+      return;
+    }
+
+    if (!this.gridModel) {
+      this.nextWaveStartsAtMs = null;
+      return;
+    }
+
+    const wavePath = calculateWaveStartPath(this.gridModel);
+    if (wavePath.length === 0) {
+      this.nextWaveStartsAtMs = null;
+      return;
+    }
+
+    this.activeCreepPath = wavePath;
+    this.spawnWaveCreeps(wavePath);
+    this.wavePhaseState = startNextWaveCycle(this.wavePhaseState);
+    this.registry.set('phase.build.active', this.canPerformBuildActions());
+    this.isWaveCompletionRewardGranted = false;
+    this.nextWaveStartsAtMs = null;
+    this.currentWaveNumber += 1;
+    this.registry.set('wave.number', this.currentWaveNumber);
+  }
+
+  private tryRestartRun(nowMs: number): void {
+    if (this.restartScheduledAtMs === null) {
+      return;
+    }
+
+    if (nowMs < this.restartScheduledAtMs) {
+      return;
+    }
+
+    this.restartScheduledAtMs = null;
+    this.resetRunToInitialState();
+  }
+
+  private resetRunToInitialState(): void {
+    this.destroyAllCreeps();
+    this.destroyAllAttackTraces();
+    this.activeTowers = [];
+    this.placedTowerCostsByCellKey.clear();
+    this.hoveredCell = null;
+    this.updateHoveredCellDebugRegistry();
+    this.buildPreviewOverlay?.clear();
+    this.pathOverlay?.clear();
+    this.nextWaveStartsAtMs = null;
+    this.activeCreepPath = [];
+    this.isWaveCompletionRewardGranted = false;
+
+    const initialResources = createInitialPlayerResources();
+    this.playerGold = initialResources.gold;
+    this.playerLives = initialResources.lives;
+    this.wavePhaseState = resetWavePhaseState();
+    this.isGameOver = false;
+    this.currentWaveNumber = 1;
+
+    this.registry.set('economy.gold', this.playerGold);
+    this.registry.set('economy.lives', this.playerLives);
+    this.registry.set('phase.game.over', this.isGameOver);
+    this.registry.set('phase.build.active', this.canPerformBuildActions());
+    this.registry.set('wave.number', this.currentWaveNumber);
+    this.registry.remove('wave.escapedCreeps');
+    this.registry.remove('economy.lastSellRefund');
+
+    this.drawGrid();
+  }
+
+  private spawnWaveCreeps(path: GridPosition[]): void {
+    this.destroyAllCreeps();
+
+    const startPoint = this.toCellCenter(path[0]);
+    const waveCreep: CreepEntity = {
+      id: `wave:creep:${this.currentWaveNumber}`,
+      type: 'basic',
+      hp: 100,
+      lifeState: 'alive',
+      speed: 1,
+      status: 'alive',
+      position: { ...path[0] },
+      pathIndex: 0,
+    };
+
+    const sprite = this.add.circle(startPoint.x, startPoint.y, 8, 0x9bd6ff, 1);
+    this.activeCreeps.push({
+      entity: waveCreep,
+      sprite,
+    });
+  }
+
+  private handlePointerMove(pointer: Phaser.Input.Pointer): void {
+    this.hoveredCell = this.toGridCell(pointer.worldX, pointer.worldY);
+    this.updateHoveredCellDebugRegistry();
+    this.updateBuildPreview();
+  }
+
+  private handlePointerDown(pointer: Phaser.Input.Pointer): void {
+    if (pointer.button === 0) {
+      this.tryPlaceTowerAtHoveredCell();
+      return;
+    }
+
+    if (pointer.button !== 2) {
+      return;
+    }
+
+    this.trySellTowerAtHoveredCell();
+  }
+
+  private handleGameOut(): void {
+    this.hoveredCell = null;
+    this.updateHoveredCellDebugRegistry();
+    this.updateBuildPreview();
+  }
+
+  private destroyAllCreeps(): void {
+    this.activeCreeps.forEach((creep) => creep.sprite.destroy());
+    this.activeCreeps = [];
+  }
+
+  private destroyAllAttackTraces(): void {
+    this.activeAttackTraces.forEach((trace) => trace.graphics.destroy());
+    this.activeAttackTraces = [];
+  }
+
+  private handleSceneShutdown(): void {
+    if (this.isSceneCleanedUp) {
+      return;
+    }
+
+    this.isSceneCleanedUp = true;
+
+    if (this.pointerMoveHandler) {
+      this.input.off('pointermove', this.pointerMoveHandler);
+      this.pointerMoveHandler = null;
+    }
+
+    if (this.pointerDownHandler) {
+      this.input.off('pointerdown', this.pointerDownHandler);
+      this.pointerDownHandler = null;
+    }
+
+    if (this.gameOutHandler) {
+      this.input.off('gameout', this.gameOutHandler);
+      this.gameOutHandler = null;
+    }
+
+    this.destroyAllCreeps();
+    this.destroyAllAttackTraces();
+    this.pathOverlay?.destroy();
+    this.pathOverlay = null;
+    this.buildPreviewOverlay?.destroy();
+    this.buildPreviewOverlay = null;
+    this.attackTraceOverlay?.destroy();
+    this.attackTraceOverlay = null;
+    this.gridGraphics?.destroy();
+    this.gridGraphics = null;
+    this.activeTowers = [];
+    this.activeCreepPath = [];
+    this.gridModel = null;
+    this.nextWaveStartsAtMs = null;
+    this.restartScheduledAtMs = null;
+    this.placedTowerCostsByCellKey.clear();
+    this.hoveredCell = null;
   }
 }

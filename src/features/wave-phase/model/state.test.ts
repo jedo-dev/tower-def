@@ -1,13 +1,19 @@
 import { describe, expect, it } from 'vitest';
 import {
+  canPerformBuildActions,
   completeWaveIfResolved,
   createInitialWavePhaseState,
   isBuildPhase,
   isCompletedPhase,
+  isWaveActionAllowed,
   isGameOverPhase,
   isWavePhase,
+  resetWavePhaseState,
+  startNextWaveCycle,
   setWavePhase,
   startWave,
+  transitionCompletedToBuild,
+  transitionToGameOver,
 } from './state';
 import type { CreepEntity } from '../../../entities/creep';
 
@@ -75,5 +81,74 @@ describe('wave phase state', () => {
     const nextState = completeWaveIfResolved(waveState, creeps);
 
     expect(isWavePhase(nextState)).toBe(true);
+  });
+
+  it('transitions completed -> build for next cycle', () => {
+    const completedState = setWavePhase(createInitialWavePhaseState(), 'completed');
+    const nextState = transitionCompletedToBuild(completedState);
+
+    expect(isBuildPhase(nextState)).toBe(true);
+  });
+
+  it('does not transition non-completed phase to build', () => {
+    const waveState = setWavePhase(createInitialWavePhaseState(), 'wave');
+    const nextState = transitionCompletedToBuild(waveState);
+
+    expect(nextState).toBe(waveState);
+  });
+
+  it('transitions any non-game-over phase to game-over', () => {
+    const waveState = setWavePhase(createInitialWavePhaseState(), 'wave');
+    const nextState = transitionToGameOver(waveState);
+
+    expect(isGameOverPhase(nextState)).toBe(true);
+  });
+
+  it('keeps game-over phase idempotent', () => {
+    const gameOverState = setWavePhase(createInitialWavePhaseState(), 'game-over');
+    const nextState = transitionToGameOver(gameOverState);
+
+    expect(nextState).toBe(gameOverState);
+  });
+
+  it('allows build actions only in build phase', () => {
+    expect(canPerformBuildActions(setWavePhase(createInitialWavePhaseState(), 'build'))).toBe(
+      true,
+    );
+    expect(canPerformBuildActions(setWavePhase(createInitialWavePhaseState(), 'wave'))).toBe(
+      false,
+    );
+    expect(
+      canPerformBuildActions(setWavePhase(createInitialWavePhaseState(), 'completed')),
+    ).toBe(false);
+    expect(
+      canPerformBuildActions(setWavePhase(createInitialWavePhaseState(), 'game-over')),
+    ).toBe(false);
+  });
+
+  it('blocks place/sell actions during wave phase and allows in build phase', () => {
+    const buildState = setWavePhase(createInitialWavePhaseState(), 'build');
+    const waveState = setWavePhase(createInitialWavePhaseState(), 'wave');
+
+    expect(isWaveActionAllowed(buildState, 'place-tower')).toBe(true);
+    expect(isWaveActionAllowed(buildState, 'sell-tower')).toBe(true);
+    expect(isWaveActionAllowed(waveState, 'place-tower')).toBe(false);
+    expect(isWaveActionAllowed(waveState, 'sell-tower')).toBe(false);
+  });
+
+  it('starts next wave cycle from completed phase', () => {
+    const completedState = setWavePhase(createInitialWavePhaseState(), 'completed');
+    const nextState = startNextWaveCycle(completedState);
+
+    expect(isWavePhase(nextState)).toBe(true);
+  });
+
+  it('resets wave phase state back to build', () => {
+    const gameOverState = setWavePhase(createInitialWavePhaseState(), 'game-over');
+    const resetState = resetWavePhaseState();
+
+    expect(isGameOverPhase(gameOverState)).toBe(true);
+    expect(isBuildPhase(resetState)).toBe(true);
+    expect(resetState.phase).toBe('build');
   });
 });
