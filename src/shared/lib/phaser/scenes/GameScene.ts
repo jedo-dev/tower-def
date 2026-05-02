@@ -33,8 +33,8 @@ import {
   tickTowerCooldown,
 } from '../../../../entities/tower';
 import { createGridModel } from '../../grid/createGridModel';
-import { findPathBfs } from '../../pathfinding/hasPathBfs';
 import { validateTowerPlacementPath } from '../../pathfinding/validateTowerPlacementPath';
+import { GameSoundManager } from '../sound/GameSoundManager';
 import type { GridPosition } from '../../../types/pathfinding';
 import type { GridCell, GridModel } from '../../../types/grid';
 import type { CreepEntity } from '../../../../entities/creep';
@@ -42,11 +42,13 @@ import type { TowerCombatRuntime, TowerEntity } from '../../../../entities/tower
 
 const ENTRANCE_CELL = { x: 0, y: GRID_DEFAULT_ROW_CENTER };
 const EXIT_CELL = { x: GRID_DIMENSIONS.cols - 1, y: GRID_DEFAULT_ROW_CENTER };
-const IS_DEV_MODE = import.meta.env.DEV;
 const DEFAULT_TOWER_COST = 100;
 const SELL_REFUND_RATIO = ECONOMY_BALANCE.towerSellRatio;
 const CREEP_MOVE_SPEED_PX_PER_SEC = 80;
-const DEV_ATTACK_TRACE_LIFETIME_MS = 120;
+const CREEP_MAX_SIMULATION_DELTA_MS = 34;
+const ATTACK_FEEDBACK_MIN_LIFETIME_MS = 70;
+const ATTACK_FEEDBACK_MAX_LIFETIME_MS = 180;
+const ATTACK_FEEDBACK_BASE_ALPHA = 0.9;
 const INITIAL_PLAYER_RESOURCES = createInitialPlayerResources();
 const EARLY_WAVE_START_BONUS_PLACEHOLDER_ELIGIBLE = false;
 const NEXT_WAVE_DELAY_MS = 1200;
@@ -63,10 +65,23 @@ const PREVIEW_INVALID_FILL = 0xe55a4f;
 const PREVIEW_INVALID_STROKE = 0xffb8b2;
 const GRID_PIXEL_WIDTH = GRID_DIMENSIONS.cols * GRID_DIMENSIONS.cellSize;
 const GRID_PIXEL_HEIGHT = GRID_DIMENSIONS.rows * GRID_DIMENSIONS.cellSize;
+const CREEP_BASE_COLOR = 0x9bd6ff;
+const CREEP_HIT_FLASH_COLOR = 0xffffff;
+const CREEP_HIT_FLASH_DURATION_MS = 90;
+const CREEP_DEATH_FADE_DURATION_MS = 180;
+const TOWER_ATTACK_PULSE_LIFETIME_MS = 120;
+const TOWER_ATTACK_PULSE_COLOR = 0xffe6a6;
+const TOWER_ATTACK_PULSE_MAX_LINE_WIDTH = 3;
+const DAMAGE_NUMBERS_ENABLED = true;
+const DAMAGE_NUMBER_LIFETIME_MS = 420;
+const DAMAGE_NUMBER_RISE_PX = 12;
+
 
 type CreepRenderState = {
   entity: CreepEntity;
   sprite: Phaser.GameObjects.Arc;
+  hitFlashRemainingMs: number;
+  deathFadeRemainingMs: number;
 };
 
 type TowerRenderState = {
@@ -77,6 +92,18 @@ type TowerRenderState = {
 type AttackTraceState = {
   graphics: Phaser.GameObjects.Graphics;
   remainingMs: number;
+  maxLifetimeMs: number;
+};
+
+type DamageNumberState = {
+  text: Phaser.GameObjects.Text;
+  startY: number;
+  remainingMs: number;
+};
+
+type TowerAttackPulseState = {
+  graphics: Phaser.GameObjects.Graphics;
+  remainingMs: number;
 };
 
 export class GameScene extends Phaser.Scene {
@@ -85,9 +112,9 @@ export class GameScene extends Phaser.Scene {
   private hoveredCell: GridPosition | null = null;
   private gridModel: GridModel | null = null;
   private gridGraphics: Phaser.GameObjects.Graphics | null = null;
-  private pathOverlay: Phaser.GameObjects.Graphics | null = null;
   private buildPreviewOverlay: Phaser.GameObjects.Graphics | null = null;
   private attackTraceOverlay: Phaser.GameObjects.Graphics | null = null;
+  private towerPulseOverlay: Phaser.GameObjects.Graphics | null = null;
   private placedTowerCostsByCellKey = new Map<string, number>();
   private playerGold = INITIAL_PLAYER_RESOURCES.gold;
   private playerLives = INITIAL_PLAYER_RESOURCES.lives;
@@ -101,6 +128,8 @@ export class GameScene extends Phaser.Scene {
   private activeCreeps: CreepRenderState[] = [];
   private activeTowers: TowerRenderState[] = [];
   private activeAttackTraces: AttackTraceState[] = [];
+  private activeDamageNumbers: DamageNumberState[] = [];
+  private activeTowerAttackPulses: TowerAttackPulseState[] = [];
   private pointerMoveHandler: ((pointer: Phaser.Input.Pointer) => void) | null = null;
   private pointerDownHandler: ((pointer: Phaser.Input.Pointer) => void) | null = null;
   private pointerUpHandler: ((pointer: Phaser.Input.Pointer) => void) | null = null;
@@ -111,6 +140,7 @@ export class GameScene extends Phaser.Scene {
     | null = null;
   private lastActionAtMs = Number.NEGATIVE_INFINITY;
   private devFpsReportElapsedMs = 0;
+  private soundManager: GameSoundManager | null = null;
 
   constructor() {
     super(GameScene.KEY);
@@ -123,12 +153,11 @@ export class GameScene extends Phaser.Scene {
     this.registerScaleResizeHandling();
     this.drawGrid();
     this.registerGridHoverDetection();
-    if (IS_DEV_MODE) {
-      this.pathOverlay = this.add.graphics();
-      this.attackTraceOverlay = this.add.graphics();
-    }
+    this.attackTraceOverlay = this.add.graphics();
+    this.towerPulseOverlay = this.add.graphics();
     this.buildPreviewOverlay = this.add.graphics();
     this.input.mouse?.disableContextMenu();
+    this.soundManager = new GameSoundManager(this);
     this.registry.set('economy.gold', this.playerGold);
     this.registry.set('economy.lives', this.playerLives);
     this.registry.set('phase.build.active', this.canPerformBuildActions());
@@ -147,11 +176,14 @@ export class GameScene extends Phaser.Scene {
 
     this.moveCreepsAlongPath(delta);
     this.updateTowerCombat(delta);
-    this.removeDeadCreepsFromActiveWave();
+    this.updateCreepHitFeedback(delta);
+    this.removeDeadCreepsFromActiveWave(delta);
     this.applyWaveCompletionRewardIfResolved();
     this.tryStartNextWave(_time);
     this.updateAttackTraces(delta);
-    this.reportDevPerformance(delta);
+    this.updateTowerAttackPulses(delta);
+    this.updateDamageNumbers(delta);
+    this.updatePerformanceTelemetry(delta);
   }
 
   private drawGrid(): void {
@@ -167,7 +199,7 @@ export class GameScene extends Phaser.Scene {
     for (const cell of grid.cells) {
       this.drawGridCell(cell);
 
-      if (IS_DEV_MODE && (cell.role === 'entrance' || cell.role === 'exit')) {
+      if (cell.role === 'entrance' || cell.role === 'exit') {
         const x = cell.x * GRID_DIMENSIONS.cellSize;
         const y = cell.y * GRID_DIMENSIONS.cellSize;
 
@@ -186,32 +218,7 @@ export class GameScene extends Phaser.Scene {
       }
     }
 
-    if (IS_DEV_MODE) {
-      this.drawPathOverlayDebug(grid);
-    }
-
     this.initializeWaveRuntime(grid);
-  }
-
-  private drawPathOverlayDebug(grid: ReturnType<typeof createGridModel>): void {
-    if (!this.pathOverlay) {
-      return;
-    }
-
-    this.pathOverlay.clear();
-    const pathResult = findPathBfs(grid);
-
-    if (!pathResult.found) {
-      return;
-    }
-
-    for (const point of pathResult.path) {
-      const x = point.x * GRID_DIMENSIONS.cellSize;
-      const y = point.y * GRID_DIMENSIONS.cellSize;
-
-      this.pathOverlay.fillStyle(0xf5d742, 0.2);
-      this.pathOverlay.fillRect(x, y, GRID_DIMENSIONS.cellSize, GRID_DIMENSIONS.cellSize);
-    }
   }
 
   private initializeWaveRuntime(grid: GridModel): void {
@@ -275,16 +282,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   private updateHoveredCellDebugRegistry(): void {
-    if (!IS_DEV_MODE) {
-      return;
-    }
-
-    if (this.hoveredCell) {
-      this.registry.set('build.hoveredCell', this.hoveredCell);
-      return;
-    }
-
-    this.registry.remove('build.hoveredCell');
+    return;
   }
 
   private updateBuildPreview(): void {
@@ -339,7 +337,8 @@ export class GameScene extends Phaser.Scene {
       return;
     }
 
-    const stepDistance = (deltaMs / 1000) * CREEP_MOVE_SPEED_PX_PER_SEC;
+    const normalizedDeltaMs = Math.min(deltaMs, CREEP_MAX_SIMULATION_DELTA_MS);
+    const normalizedStepDistance = (normalizedDeltaMs / 1000) * CREEP_MOVE_SPEED_PX_PER_SEC;
 
     for (const creep of this.activeCreeps) {
       if (creep.entity.status !== 'alive') {
@@ -359,7 +358,7 @@ export class GameScene extends Phaser.Scene {
       const dy = nextCenter.y - creep.sprite.y;
       const distanceToNext = Math.hypot(dx, dy);
 
-      if (distanceToNext <= stepDistance) {
+      if (distanceToNext <= normalizedStepDistance) {
         creep.sprite.setPosition(nextCenter.x, nextCenter.y);
         creep.entity.pathIndex = nextPathIndex;
         creep.entity.position = { x: nextPoint.x, y: nextPoint.y };
@@ -370,11 +369,11 @@ export class GameScene extends Phaser.Scene {
         continue;
       }
 
-      const ratio = stepDistance / distanceToNext;
-      creep.sprite.setPosition(
-        creep.sprite.x + dx * ratio,
-        creep.sprite.y + dy * ratio,
-      );
+      const ratio = normalizedStepDistance / distanceToNext;
+      const nextX = creep.sprite.x + dx * ratio;
+      const nextY = creep.sprite.y + dy * ratio;
+      creep.sprite.setPosition(nextX, nextY);
+      creep.sprite.rotation = Math.atan2(dy, dx);
     }
   }
 
@@ -461,9 +460,6 @@ export class GameScene extends Phaser.Scene {
     this.drawGridCell(targetCell);
     this.updateBuildPreview();
 
-    if (IS_DEV_MODE) {
-      this.drawPathOverlayDebug(this.gridModel);
-    }
   }
 
   private trySellTowerAtHoveredCell(): void {
@@ -509,9 +505,6 @@ export class GameScene extends Phaser.Scene {
     this.drawGridCell(targetCell);
     this.updateBuildPreview();
 
-    if (IS_DEV_MODE) {
-      this.drawPathOverlayDebug(this.gridModel);
-    }
   }
 
   private drawGridCell(cell: GridCell): void {
@@ -586,11 +579,24 @@ export class GameScene extends Phaser.Scene {
     this.registry.set('wave.escapedCreeps', escapedCount);
   }
 
-  private removeDeadCreepsFromActiveWave(): void {
+  private removeDeadCreepsFromActiveWave(deltaMs: number): void {
     const aliveCreeps: CreepRenderState[] = [];
 
     for (const creep of this.activeCreeps) {
       if (!isCreepDead(creep.entity)) {
+        aliveCreeps.push(creep);
+        continue;
+      }
+
+      if (creep.deathFadeRemainingMs <= 0) {
+        creep.deathFadeRemainingMs = CREEP_DEATH_FADE_DURATION_MS;
+      }
+
+      creep.deathFadeRemainingMs = Math.max(0, creep.deathFadeRemainingMs - deltaMs);
+      const alpha = creep.deathFadeRemainingMs / CREEP_DEATH_FADE_DURATION_MS;
+      creep.sprite.setAlpha(alpha);
+
+      if (creep.deathFadeRemainingMs > 0) {
         aliveCreeps.push(creep);
         continue;
       }
@@ -635,6 +641,12 @@ export class GameScene extends Phaser.Scene {
       );
 
       targetRenderState.entity = damageResult.creep;
+      this.applyCreepHitFeedback(targetRenderState);
+      this.soundManager?.play('hit');
+      this.spawnDamageNumber(
+        targetRenderState.entity.position,
+        tower.entity.combatStats.damage,
+      );
 
       if (damageResult.killed) {
         const nextResources = addGold(
@@ -643,32 +655,40 @@ export class GameScene extends Phaser.Scene {
         );
         this.playerGold = nextResources.gold;
         this.registry.set('economy.gold', this.playerGold);
+        this.soundManager?.play('death');
       }
 
       tower.runtime = consumeTowerAttack(tower.entity, tower.runtime);
-      this.spawnDevAttackTrace(tower.entity.position, targetRenderState.entity.position);
+      this.spawnAttackFeedback(tower.entity, targetRenderState.entity.position);
+      this.spawnTowerAttackPulse(tower.entity.position);
+      this.soundManager?.play('attack');
     }
   }
 
-  private spawnDevAttackTrace(
-    from: GridPosition,
+  private spawnAttackFeedback(
+    tower: TowerEntity,
     to: GridPosition,
   ): void {
-    if (!IS_DEV_MODE || !this.attackTraceOverlay) {
+    if (!this.attackTraceOverlay) {
       return;
     }
 
-    const fromCenter = this.toCellCenter(from);
+    const fromCenter = this.toCellCenter(tower.position);
     const toCenter = this.toCellCenter(to);
+    const lifetimeMs = Math.max(
+      ATTACK_FEEDBACK_MIN_LIFETIME_MS,
+      Math.min(ATTACK_FEEDBACK_MAX_LIFETIME_MS, Math.round(tower.combatStats.attackCooldownMs * 0.28)),
+    );
     const trace = this.add.graphics();
-    trace.lineStyle(2, 0xffe07a, 1);
+    trace.lineStyle(2, 0xffdc88, ATTACK_FEEDBACK_BASE_ALPHA);
     trace.beginPath();
     trace.moveTo(fromCenter.x, fromCenter.y);
     trace.lineTo(toCenter.x, toCenter.y);
     trace.strokePath();
     this.activeAttackTraces.push({
       graphics: trace,
-      remainingMs: DEV_ATTACK_TRACE_LIFETIME_MS,
+      remainingMs: lifetimeMs,
+      maxLifetimeMs: lifetimeMs,
     });
   }
 
@@ -687,21 +707,138 @@ export class GameScene extends Phaser.Scene {
         continue;
       }
 
-      trace.graphics.setAlpha(remainingMs / DEV_ATTACK_TRACE_LIFETIME_MS);
+      trace.graphics.setAlpha(remainingMs / trace.maxLifetimeMs);
       nextTraces.push({
         graphics: trace.graphics,
         remainingMs,
+        maxLifetimeMs: trace.maxLifetimeMs,
       });
     }
 
     this.activeAttackTraces = nextTraces;
   }
 
-  private reportDevPerformance(deltaMs: number): void {
-    if (!IS_DEV_MODE) {
+  private spawnTowerAttackPulse(position: GridPosition): void {
+    if (!this.towerPulseOverlay) {
       return;
     }
 
+    const x = position.x * GRID_DIMENSIONS.cellSize;
+    const y = position.y * GRID_DIMENSIONS.cellSize;
+    const pulse = this.add.graphics();
+    pulse.lineStyle(TOWER_ATTACK_PULSE_MAX_LINE_WIDTH, TOWER_ATTACK_PULSE_COLOR, 0.95);
+    pulse.strokeRect(x + 2, y + 2, GRID_DIMENSIONS.cellSize - 4, GRID_DIMENSIONS.cellSize - 4);
+    this.activeTowerAttackPulses.push({
+      graphics: pulse,
+      remainingMs: TOWER_ATTACK_PULSE_LIFETIME_MS,
+    });
+  }
+
+  private updateTowerAttackPulses(deltaMs: number): void {
+    if (this.activeTowerAttackPulses.length === 0) {
+      return;
+    }
+
+    const nextPulses: TowerAttackPulseState[] = [];
+
+    for (const pulse of this.activeTowerAttackPulses) {
+      const remainingMs = pulse.remainingMs - deltaMs;
+
+      if (remainingMs <= 0) {
+        pulse.graphics.destroy();
+        continue;
+      }
+
+      const alpha = remainingMs / TOWER_ATTACK_PULSE_LIFETIME_MS;
+      pulse.graphics.setAlpha(alpha);
+      nextPulses.push({
+        graphics: pulse.graphics,
+        remainingMs,
+      });
+    }
+
+    this.activeTowerAttackPulses = nextPulses;
+  }
+
+  private spawnDamageNumber(position: GridPosition, damage: number): void {
+    if (!DAMAGE_NUMBERS_ENABLED) {
+      return;
+    }
+
+    const center = this.toCellCenter(position);
+    const text = this.add.text(center.x, center.y - 10, `${damage}`, {
+      fontFamily: 'Trebuchet MS',
+      fontSize: '11px',
+      color: '#ffe9a8',
+      stroke: '#1d2536',
+      strokeThickness: 2,
+    });
+    text.setOrigin(0.5);
+
+    this.activeDamageNumbers.push({
+      text,
+      startY: text.y,
+      remainingMs: DAMAGE_NUMBER_LIFETIME_MS,
+    });
+  }
+
+  private updateDamageNumbers(deltaMs: number): void {
+    if (this.activeDamageNumbers.length === 0) {
+      return;
+    }
+
+    const next: DamageNumberState[] = [];
+
+    for (const numberState of this.activeDamageNumbers) {
+      const remainingMs = numberState.remainingMs - deltaMs;
+
+      if (remainingMs <= 0) {
+        numberState.text.destroy();
+        continue;
+      }
+
+      const progress = 1 - remainingMs / DAMAGE_NUMBER_LIFETIME_MS;
+      numberState.text.setAlpha(1 - progress);
+      numberState.text.setY(numberState.startY - DAMAGE_NUMBER_RISE_PX * progress);
+      next.push({
+        ...numberState,
+        remainingMs,
+      });
+    }
+
+    this.activeDamageNumbers = next;
+  }
+
+  private applyCreepHitFeedback(creep: CreepRenderState): void {
+    creep.hitFlashRemainingMs = CREEP_HIT_FLASH_DURATION_MS;
+    creep.sprite.setFillStyle(CREEP_HIT_FLASH_COLOR, 1);
+  }
+
+  private updateCreepHitFeedback(deltaMs: number): void {
+    for (const creep of this.activeCreeps) {
+      if (creep.hitFlashRemainingMs <= 0) {
+        continue;
+      }
+
+      creep.hitFlashRemainingMs = Math.max(0, creep.hitFlashRemainingMs - deltaMs);
+
+      if (creep.hitFlashRemainingMs === 0) {
+        creep.sprite.setFillStyle(CREEP_BASE_COLOR, 1);
+        continue;
+      }
+
+      const progress = creep.hitFlashRemainingMs / CREEP_HIT_FLASH_DURATION_MS;
+      const tint = Phaser.Display.Color.Interpolate.ColorWithColor(
+        Phaser.Display.Color.ValueToColor(CREEP_BASE_COLOR),
+        Phaser.Display.Color.ValueToColor(CREEP_HIT_FLASH_COLOR),
+        100,
+        Math.round(progress * 100),
+      );
+      creep.sprite.setFillStyle(Phaser.Display.Color.GetColor(tint.r, tint.g, tint.b), 1);
+    }
+  }
+
+  private updatePerformanceTelemetry(deltaMs: number): void {
     this.devFpsReportElapsedMs += deltaMs;
 
     if (this.devFpsReportElapsedMs < DEV_FPS_REPORT_INTERVAL_MS) {
@@ -809,7 +946,6 @@ export class GameScene extends Phaser.Scene {
     this.hoveredCell = null;
     this.updateHoveredCellDebugRegistry();
     this.buildPreviewOverlay?.clear();
-    this.pathOverlay?.clear();
     this.nextWaveStartsAtMs = null;
     this.activeCreepPath = [];
     this.isWaveCompletionRewardGranted = false;
@@ -847,10 +983,12 @@ export class GameScene extends Phaser.Scene {
       pathIndex: 0,
     };
 
-    const sprite = this.add.circle(startPoint.x, startPoint.y, 8, 0x9bd6ff, 1);
+    const sprite = this.add.circle(startPoint.x, startPoint.y, 8, CREEP_BASE_COLOR, 1);
     this.activeCreeps.push({
       entity: waveCreep,
       sprite,
+      hitFlashRemainingMs: 0,
+      deathFadeRemainingMs: 0,
     });
   }
 
@@ -950,6 +1088,16 @@ export class GameScene extends Phaser.Scene {
     this.activeAttackTraces = [];
   }
 
+  private destroyAllTowerAttackPulses(): void {
+    this.activeTowerAttackPulses.forEach((pulse) => pulse.graphics.destroy());
+    this.activeTowerAttackPulses = [];
+  }
+
+  private destroyAllDamageNumbers(): void {
+    this.activeDamageNumbers.forEach((numberState) => numberState.text.destroy());
+    this.activeDamageNumbers = [];
+  }
+
   private handleSceneShutdown(): void {
     if (this.isSceneCleanedUp) {
       return;
@@ -983,12 +1131,14 @@ export class GameScene extends Phaser.Scene {
 
     this.destroyAllCreeps();
     this.destroyAllAttackTraces();
-    this.pathOverlay?.destroy();
-    this.pathOverlay = null;
+    this.destroyAllTowerAttackPulses();
+    this.destroyAllDamageNumbers();
     this.buildPreviewOverlay?.destroy();
     this.buildPreviewOverlay = null;
     this.attackTraceOverlay?.destroy();
     this.attackTraceOverlay = null;
+    this.towerPulseOverlay?.destroy();
+    this.towerPulseOverlay = null;
     this.gridGraphics?.destroy();
     this.gridGraphics = null;
     this.activeTowers = [];
@@ -1000,6 +1150,7 @@ export class GameScene extends Phaser.Scene {
     this.activeTouchGesture = null;
     this.lastActionAtMs = Number.NEGATIVE_INFINITY;
     this.devFpsReportElapsedMs = 0;
+    this.soundManager = null;
     this.hoveredCell = null;
   }
 }
