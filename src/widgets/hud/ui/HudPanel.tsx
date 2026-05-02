@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import './HudPanel.css';
 import { createInitialPlayerResources } from '../../../entities/player-resources';
 
@@ -9,7 +10,7 @@ const HUD_VALUES = {
   wave: '0 / 0',
 } as const;
 
-export function HudPanel() {
+function HudPanelComponent() {
   return (
     <section className="hud-panel" aria-label="Game HUD">
       <div className="hud-stats">
@@ -28,13 +29,34 @@ export function HudPanel() {
       </div>
 
       <div className="hud-actions">
-        <button type="button" className="hud-button" disabled>
+        <button
+          type="button"
+          className="hud-button"
+          aria-label="Build tower (coming soon)"
+          disabled
+        >
           Build (stub)
         </button>
-        <button type="button" className="hud-button hud-button-primary" disabled>
+        <button
+          type="button"
+          className="hud-button"
+          aria-label="Sell tower (coming soon)"
+          disabled
+        >
+          Sell (stub)
+        </button>
+        <button
+          type="button"
+          className="hud-button hud-button-primary"
+          aria-label="Start wave (coming soon)"
+          disabled
+        >
           Start Wave (stub)
         </button>
       </div>
     </section>
   );
 }
+
+export const HudPanel = memo(HudPanelComponent);
+

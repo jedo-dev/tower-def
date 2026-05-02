@@ -1,9 +1,9 @@
-﻿import { useEffect, useRef } from 'react';
+import { memo, useEffect, useRef } from 'react';
 import Phaser from 'phaser';
 import { createGameConfig } from '../../../shared/lib/phaser/createGameConfig';
 import './GameCanvas.css';
 
-export function GameCanvas() {
+function GameCanvasComponent() {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const gameRef = useRef<Phaser.Game | null>(null);
 
@@ -41,4 +41,5 @@ export function GameCanvas() {
   );
 }
 
+export const GameCanvas = memo(GameCanvasComponent);
 
