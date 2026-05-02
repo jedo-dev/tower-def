@@ -1,12 +1,12 @@
 .game-canvas-shell {
   width: 100%;
   display: flex;
-  align-items: center;
+  align-items: stretch;
   justify-content: center;
 }
 
 .game-canvas-container {
-  width: min(100%, 420px);
+  width: 100%;
   aspect-ratio: 2 / 3;
   border: 2px solid #3a4964;
   border-radius: 10px;

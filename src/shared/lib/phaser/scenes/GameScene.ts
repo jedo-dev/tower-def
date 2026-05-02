@@ -51,6 +51,18 @@ const INITIAL_PLAYER_RESOURCES = createInitialPlayerResources();
 const EARLY_WAVE_START_BONUS_PLACEHOLDER_ELIGIBLE = false;
 const NEXT_WAVE_DELAY_MS = 1200;
 const RESTART_DELAY_MS = 1200;
+const ACTION_COOLDOWN_MS = 160;
+const TOUCH_TAP_MIN_DURATION_MS = 70;
+const TOUCH_TAP_MAX_DURATION_MS = 250;
+const TOUCH_TAP_MAX_MOVE_PX = 12;
+const TOUCH_LONG_PRESS_MIN_DURATION_MS = 450;
+const DEV_FPS_REPORT_INTERVAL_MS = 500;
+const PREVIEW_VALID_FILL = 0x3ecf78;
+const PREVIEW_VALID_STROKE = 0xaaf5c8;
+const PREVIEW_INVALID_FILL = 0xe55a4f;
+const PREVIEW_INVALID_STROKE = 0xffb8b2;
+const GRID_PIXEL_WIDTH = GRID_DIMENSIONS.cols * GRID_DIMENSIONS.cellSize;
+const GRID_PIXEL_HEIGHT = GRID_DIMENSIONS.rows * GRID_DIMENSIONS.cellSize;
 
 type CreepRenderState = {
   entity: CreepEntity;
@@ -91,7 +103,14 @@ export class GameScene extends Phaser.Scene {
   private activeAttackTraces: AttackTraceState[] = [];
   private pointerMoveHandler: ((pointer: Phaser.Input.Pointer) => void) | null = null;
   private pointerDownHandler: ((pointer: Phaser.Input.Pointer) => void) | null = null;
+  private pointerUpHandler: ((pointer: Phaser.Input.Pointer) => void) | null = null;
+  private scaleResizeHandler: (() => void) | null = null;
   private gameOutHandler: (() => void) | null = null;
+  private activeTouchGesture:
+    | { startedAtMs: number; startX: number; startY: number; soldByLongPress: boolean }
+    | null = null;
+  private lastActionAtMs = Number.NEGATIVE_INFINITY;
+  private devFpsReportElapsedMs = 0;
 
   constructor() {
     super(GameScene.KEY);
@@ -100,6 +119,8 @@ export class GameScene extends Phaser.Scene {
   public create(): void {
     this.isSceneCleanedUp = false;
     this.cameras.main.setBackgroundColor('#1a1f2c');
+    this.cameras.main.roundPixels = true;
+    this.registerScaleResizeHandling();
     this.drawGrid();
     this.registerGridHoverDetection();
     if (IS_DEV_MODE) {
@@ -130,6 +151,7 @@ export class GameScene extends Phaser.Scene {
     this.applyWaveCompletionRewardIfResolved();
     this.tryStartNextWave(_time);
     this.updateAttackTraces(delta);
+    this.reportDevPerformance(delta);
   }
 
   private drawGrid(): void {
@@ -213,11 +235,29 @@ export class GameScene extends Phaser.Scene {
   private registerGridHoverDetection(): void {
     this.pointerMoveHandler = this.handlePointerMove.bind(this);
     this.pointerDownHandler = this.handlePointerDown.bind(this);
+    this.pointerUpHandler = this.handlePointerUp.bind(this);
     this.gameOutHandler = this.handleGameOut.bind(this);
 
     this.input.on('pointermove', this.pointerMoveHandler);
     this.input.on('pointerdown', this.pointerDownHandler);
+    this.input.on('pointerup', this.pointerUpHandler);
     this.input.on('gameout', this.gameOutHandler);
+  }
+
+  private registerScaleResizeHandling(): void {
+    this.scaleResizeHandler = this.applyResponsiveCamera.bind(this);
+    this.scale.on(Phaser.Scale.Events.RESIZE, this.scaleResizeHandler);
+    this.applyResponsiveCamera();
+  }
+
+  private applyResponsiveCamera(): void {
+    const viewportWidth = this.scale.width;
+    const viewportHeight = this.scale.height;
+    const zoom = Math.min(viewportWidth / GRID_PIXEL_WIDTH, viewportHeight / GRID_PIXEL_HEIGHT);
+
+    this.cameras.main.setZoom(zoom);
+    this.cameras.main.setBounds(0, 0, GRID_PIXEL_WIDTH, GRID_PIXEL_HEIGHT, true);
+    this.cameras.main.centerOn(GRID_PIXEL_WIDTH / 2, GRID_PIXEL_HEIGHT / 2);
   }
 
   private toGridCell(worldX: number, worldY: number): GridPosition | null {
@@ -265,9 +305,33 @@ export class GameScene extends Phaser.Scene {
     const isBuildCellValid = this.isBuildCellValid(this.hoveredCell, this.gridModel);
     const x = this.hoveredCell.x * GRID_DIMENSIONS.cellSize;
     const y = this.hoveredCell.y * GRID_DIMENSIONS.cellSize;
+    const fillColor = isBuildCellValid ? PREVIEW_VALID_FILL : PREVIEW_INVALID_FILL;
+    const strokeColor = isBuildCellValid ? PREVIEW_VALID_STROKE : PREVIEW_INVALID_STROKE;
+    const markerSize = GRID_DIMENSIONS.cellSize * 0.2;
+    const centerX = x + GRID_DIMENSIONS.cellSize / 2;
+    const centerY = y + GRID_DIMENSIONS.cellSize / 2;
 
-    this.buildPreviewOverlay.fillStyle(isBuildCellValid ? 0x2fbf71 : 0xd24a43, 0.35);
+    this.buildPreviewOverlay.fillStyle(fillColor, 0.42);
     this.buildPreviewOverlay.fillRect(x, y, GRID_DIMENSIONS.cellSize, GRID_DIMENSIONS.cellSize);
+    this.buildPreviewOverlay.lineStyle(2, strokeColor, 1);
+    this.buildPreviewOverlay.strokeRect(x + 1, y + 1, GRID_DIMENSIONS.cellSize - 2, GRID_DIMENSIONS.cellSize - 2);
+
+    this.buildPreviewOverlay.lineStyle(2, strokeColor, 0.95);
+    this.buildPreviewOverlay.beginPath();
+    this.buildPreviewOverlay.moveTo(centerX - markerSize, centerY);
+    this.buildPreviewOverlay.lineTo(centerX + markerSize, centerY);
+
+    if (isBuildCellValid) {
+      this.buildPreviewOverlay.moveTo(centerX, centerY - markerSize);
+      this.buildPreviewOverlay.lineTo(centerX, centerY + markerSize);
+    } else {
+      this.buildPreviewOverlay.moveTo(centerX - markerSize, centerY - markerSize);
+      this.buildPreviewOverlay.lineTo(centerX + markerSize, centerY + markerSize);
+      this.buildPreviewOverlay.moveTo(centerX - markerSize, centerY + markerSize);
+      this.buildPreviewOverlay.lineTo(centerX + markerSize, centerY - markerSize);
+    }
+
+    this.buildPreviewOverlay.strokePath();
   }
 
   private moveCreepsAlongPath(deltaMs: number): void {
@@ -339,6 +403,10 @@ export class GameScene extends Phaser.Scene {
   }
 
   private tryPlaceTowerAtHoveredCell(): void {
+    if (!this.canProcessUserAction()) {
+      return;
+    }
+
     if (!isWaveActionAllowed(this.wavePhaseState, 'place-tower') || this.isGameOver) {
       return;
     }
@@ -388,6 +456,7 @@ export class GameScene extends Phaser.Scene {
     });
     this.playerGold = spendGoldResult.resources.gold;
     this.registry.set('economy.gold', this.playerGold);
+    this.markUserActionProcessed();
 
     this.drawGridCell(targetCell);
     this.updateBuildPreview();
@@ -398,6 +467,10 @@ export class GameScene extends Phaser.Scene {
   }
 
   private trySellTowerAtHoveredCell(): void {
+    if (!this.canProcessUserAction()) {
+      return;
+    }
+
     if (!isWaveActionAllowed(this.wavePhaseState, 'sell-tower') || this.isGameOver) {
       return;
     }
@@ -431,6 +504,7 @@ export class GameScene extends Phaser.Scene {
 
     const refundAmount = Math.floor(towerCost * SELL_REFUND_RATIO);
     this.registry.set('economy.lastSellRefund', refundAmount);
+    this.markUserActionProcessed();
 
     this.drawGridCell(targetCell);
     this.updateBuildPreview();
@@ -532,6 +606,8 @@ export class GameScene extends Phaser.Scene {
       return;
     }
 
+    const creepsForTargeting = this.activeCreeps.map((creep) => creep.entity);
+
     for (const tower of this.activeTowers) {
       tower.runtime = tickTowerCooldown(tower.runtime, deltaMs);
 
@@ -539,10 +615,7 @@ export class GameScene extends Phaser.Scene {
         continue;
       }
 
-      const targetCreep = selectTowerTarget(
-        tower.entity,
-        this.activeCreeps.map((creep) => creep.entity),
-      );
+      const targetCreep = selectTowerTarget(tower.entity, creepsForTargeting);
 
       if (!targetCreep) {
         continue;
@@ -622,6 +695,21 @@ export class GameScene extends Phaser.Scene {
     }
 
     this.activeAttackTraces = nextTraces;
+  }
+
+  private reportDevPerformance(deltaMs: number): void {
+    if (!IS_DEV_MODE) {
+      return;
+    }
+
+    this.devFpsReportElapsedMs += deltaMs;
+
+    if (this.devFpsReportElapsedMs < DEV_FPS_REPORT_INTERVAL_MS) {
+      return;
+    }
+
+    this.devFpsReportElapsedMs = 0;
+    this.registry.set('performance.fps', Math.round(this.game.loop.actualFps));
   }
 
   private applyWaveCompletionRewardIfResolved(): void {
@@ -770,9 +858,47 @@ export class GameScene extends Phaser.Scene {
     this.hoveredCell = this.toGridCell(pointer.worldX, pointer.worldY);
     this.updateHoveredCellDebugRegistry();
     this.updateBuildPreview();
+
+    if (!pointer.primaryDown || !pointer.wasTouch || !this.activeTouchGesture) {
+      return;
+    }
+
+    const durationMs = this.time.now - this.activeTouchGesture.startedAtMs;
+    const moveDistance = Math.hypot(
+      pointer.worldX - this.activeTouchGesture.startX,
+      pointer.worldY - this.activeTouchGesture.startY,
+    );
+    const isStillPressingCell = moveDistance <= TOUCH_TAP_MAX_MOVE_PX;
+
+    if (
+      !this.activeTouchGesture.soldByLongPress
+      && isStillPressingCell
+      && durationMs >= TOUCH_LONG_PRESS_MIN_DURATION_MS
+    ) {
+      this.trySellTowerAtHoveredCell();
+      this.activeTouchGesture.soldByLongPress = true;
+    }
+  }
+
+  private canProcessUserAction(): boolean {
+    return this.time.now - this.lastActionAtMs >= ACTION_COOLDOWN_MS;
+  }
+
+  private markUserActionProcessed(): void {
+    this.lastActionAtMs = this.time.now;
   }
 
   private handlePointerDown(pointer: Phaser.Input.Pointer): void {
+    if (pointer.wasTouch) {
+      this.activeTouchGesture = {
+        startedAtMs: this.time.now,
+        startX: pointer.worldX,
+        startY: pointer.worldY,
+        soldByLongPress: false,
+      };
+      return;
+    }
+
     if (pointer.button === 0) {
       this.tryPlaceTowerAtHoveredCell();
       return;
@@ -785,7 +911,30 @@ export class GameScene extends Phaser.Scene {
     this.trySellTowerAtHoveredCell();
   }
 
+  private handlePointerUp(pointer: Phaser.Input.Pointer): void {
+    if (!pointer.wasTouch || !this.activeTouchGesture) {
+      return;
+    }
+
+    const durationMs = this.time.now - this.activeTouchGesture.startedAtMs;
+    const moveDistance = Math.hypot(
+      pointer.worldX - this.activeTouchGesture.startX,
+      pointer.worldY - this.activeTouchGesture.startY,
+    );
+    const isTap =
+      durationMs >= TOUCH_TAP_MIN_DURATION_MS
+      && durationMs <= TOUCH_TAP_MAX_DURATION_MS
+      && moveDistance <= TOUCH_TAP_MAX_MOVE_PX;
+
+    if (isTap && !this.activeTouchGesture.soldByLongPress) {
+      this.tryPlaceTowerAtHoveredCell();
+    }
+
+    this.activeTouchGesture = null;
+  }
+
   private handleGameOut(): void {
+    this.activeTouchGesture = null;
     this.hoveredCell = null;
     this.updateHoveredCellDebugRegistry();
     this.updateBuildPreview();
@@ -818,9 +967,18 @@ export class GameScene extends Phaser.Scene {
       this.pointerDownHandler = null;
     }
 
+    if (this.pointerUpHandler) {
+      this.input.off('pointerup', this.pointerUpHandler);
+      this.pointerUpHandler = null;
+    }
+
     if (this.gameOutHandler) {
       this.input.off('gameout', this.gameOutHandler);
       this.gameOutHandler = null;
+    }
+    if (this.scaleResizeHandler) {
+      this.scale.off(Phaser.Scale.Events.RESIZE, this.scaleResizeHandler);
+      this.scaleResizeHandler = null;
     }
 
     this.destroyAllCreeps();
@@ -839,6 +997,9 @@ export class GameScene extends Phaser.Scene {
     this.nextWaveStartsAtMs = null;
     this.restartScheduledAtMs = null;
     this.placedTowerCostsByCellKey.clear();
+    this.activeTouchGesture = null;
+    this.lastActionAtMs = Number.NEGATIVE_INFINITY;
+    this.devFpsReportElapsedMs = 0;
     this.hoveredCell = null;
   }
 }
