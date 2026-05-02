@@ -1,4 +1,14 @@
 import Phaser from 'phaser';
+import {
+  addGold,
+  applyEarlyWaveStartBonusPlaceholder,
+  canSpendGold,
+  createInitialPlayerResources,
+  isGameOverByLives,
+  spendGold,
+  subtractLives,
+} from '../../../../entities/player-resources';
+import { ECONOMY_BALANCE } from '../../../constants/economy';
 import { GRID_DEFAULT_ROW_CENTER, GRID_DIMENSIONS } from '../../../constants/grid';
 import { calculateWaveStartPath } from '../../../../entities/wave';
 import { applyDamageToCreep, isCreepDead } from '../../../../entities/creep';
@@ -22,10 +32,11 @@ const ENTRANCE_CELL = { x: 0, y: GRID_DEFAULT_ROW_CENTER };
 const EXIT_CELL = { x: GRID_DIMENSIONS.cols - 1, y: GRID_DEFAULT_ROW_CENTER };
 const IS_DEV_MODE = import.meta.env.DEV;
 const DEFAULT_TOWER_COST = 100;
-const SELL_REFUND_RATIO = 0.5;
-const START_GOLD = 100;
+const SELL_REFUND_RATIO = ECONOMY_BALANCE.towerSellRatio;
 const CREEP_MOVE_SPEED_PX_PER_SEC = 80;
 const DEV_ATTACK_TRACE_LIFETIME_MS = 120;
+const INITIAL_PLAYER_RESOURCES = createInitialPlayerResources();
+const EARLY_WAVE_START_BONUS_PLACEHOLDER_ELIGIBLE = false;
 
 type CreepRenderState = {
   entity: CreepEntity;
@@ -51,8 +62,11 @@ export class GameScene extends Phaser.Scene {
   private buildPreviewOverlay: Phaser.GameObjects.Graphics | null = null;
   private attackTraceOverlay: Phaser.GameObjects.Graphics | null = null;
   private placedTowerCostsByCellKey = new Map<string, number>();
-  private playerGold = START_GOLD;
+  private playerGold = INITIAL_PLAYER_RESOURCES.gold;
+  private playerLives = INITIAL_PLAYER_RESOURCES.lives;
   private isBuildPhaseActive = true;
+  private isGameOver = false;
+  private isWaveCompletionRewardGranted = false;
   private activeCreepPath: GridPosition[] = [];
   private activeCreeps: CreepRenderState[] = [];
   private activeTowers: TowerRenderState[] = [];
@@ -71,13 +85,21 @@ export class GameScene extends Phaser.Scene {
     this.attackTraceOverlay = this.add.graphics();
     this.input.mouse?.disableContextMenu();
     this.registry.set('economy.gold', this.playerGold);
+    this.registry.set('economy.lives', this.playerLives);
     this.registry.set('phase.build.active', this.isBuildPhaseActive);
+    this.registry.set('phase.game.over', this.isGameOver);
+    this.registry.set('economy.earlyWaveStartBonus.granted', false);
   }
 
   public update(_time: number, delta: number): void {
+    if (this.isGameOver) {
+      return;
+    }
+
     this.moveCreepsAlongPath(delta);
     this.updateTowerCombat(delta);
     this.removeDeadCreepsFromActiveWave();
+    this.applyWaveCompletionRewardIfResolved();
     this.updateAttackTraces(delta);
   }
 
@@ -147,6 +169,8 @@ export class GameScene extends Phaser.Scene {
     this.activeCreeps.forEach((creep) => creep.sprite.destroy());
     this.activeCreeps = [];
     this.activeTowers = [];
+    this.isWaveCompletionRewardGranted = false;
+    this.applyEarlyWaveStartBonusPlaceholder();
 
     if (waveStartPath.length === 0) {
       return;
@@ -309,7 +333,7 @@ export class GameScene extends Phaser.Scene {
       return false;
     }
 
-    if (this.playerGold < DEFAULT_TOWER_COST) {
+    if (!canSpendGold({ gold: this.playerGold }, DEFAULT_TOWER_COST)) {
       return false;
     }
 
@@ -339,6 +363,15 @@ export class GameScene extends Phaser.Scene {
       return;
     }
 
+    const spendGoldResult = spendGold(
+      { gold: this.playerGold, lives: this.playerLives },
+      DEFAULT_TOWER_COST,
+    );
+
+    if (!spendGoldResult.spent) {
+      return;
+    }
+
     targetCell.isOccupied = true;
     targetCell.isWalkable = false;
     this.placedTowerCostsByCellKey.set(
@@ -355,7 +388,7 @@ export class GameScene extends Phaser.Scene {
       },
       runtime: createInitialTowerCombatRuntime(),
     });
-    this.playerGold -= DEFAULT_TOWER_COST;
+    this.playerGold = spendGoldResult.resources.gold;
     this.registry.set('economy.gold', this.playerGold);
 
     this.drawGridCell(targetCell);
@@ -456,6 +489,20 @@ export class GameScene extends Phaser.Scene {
     }
 
     creep.entity.status = 'escaped';
+    const nextResources = subtractLives(
+      { gold: this.playerGold, lives: this.playerLives },
+      1,
+    );
+    this.playerLives = nextResources.lives;
+    this.registry.set('economy.lives', this.playerLives);
+
+    if (isGameOverByLives({ lives: this.playerLives })) {
+      this.isGameOver = true;
+      this.isBuildPhaseActive = false;
+      this.registry.set('phase.build.active', this.isBuildPhaseActive);
+      this.registry.set('phase.game.over', this.isGameOver);
+    }
+
     const escapedCount = this.activeCreeps.filter(
       (candidate) => candidate.entity.status === 'escaped',
     ).length;
@@ -512,6 +559,16 @@ export class GameScene extends Phaser.Scene {
       );
 
       targetRenderState.entity = damageResult.creep;
+
+      if (damageResult.killed) {
+        const nextResources = addGold(
+          { gold: this.playerGold, lives: this.playerLives },
+          ECONOMY_BALANCE.creepKillRewardGold,
+        );
+        this.playerGold = nextResources.gold;
+        this.registry.set('economy.gold', this.playerGold);
+      }
+
       tower.runtime = consumeTowerAttack(tower.entity, tower.runtime);
       this.spawnDevAttackTrace(tower.entity.position, targetRenderState.entity.position);
     }
@@ -562,5 +619,43 @@ export class GameScene extends Phaser.Scene {
     }
 
     this.activeAttackTraces = nextTraces;
+  }
+
+  private applyWaveCompletionRewardIfResolved(): void {
+    if (this.isWaveCompletionRewardGranted) {
+      return;
+    }
+
+    if (this.activeCreeps.length === 0) {
+      return;
+    }
+
+    const hasAliveCreep = this.activeCreeps.some(
+      (creep) => creep.entity.status === 'alive',
+    );
+
+    if (hasAliveCreep) {
+      return;
+    }
+
+    const nextResources = addGold(
+      { gold: this.playerGold, lives: this.playerLives },
+      ECONOMY_BALANCE.waveCompletionRewardGold,
+    );
+    this.playerGold = nextResources.gold;
+    this.registry.set('economy.gold', this.playerGold);
+    this.isWaveCompletionRewardGranted = true;
+  }
+
+  private applyEarlyWaveStartBonusPlaceholder(): void {
+    const result = applyEarlyWaveStartBonusPlaceholder(
+      { gold: this.playerGold, lives: this.playerLives },
+      ECONOMY_BALANCE.earlyWaveStartBonusGold,
+      EARLY_WAVE_START_BONUS_PLACEHOLDER_ELIGIBLE,
+    );
+
+    this.playerGold = result.resources.gold;
+    this.registry.set('economy.gold', this.playerGold);
+    this.registry.set('economy.earlyWaveStartBonus.granted', result.granted);
   }
 }

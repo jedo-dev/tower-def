@@ -1,8 +1,11 @@
 import './HudPanel.css';
+import { createInitialPlayerResources } from '../../../entities/player-resources';
+
+const INITIAL_PLAYER_RESOURCES = createInitialPlayerResources();
 
 const HUD_VALUES = {
-  gold: 100,
-  lives: 20,
+  gold: INITIAL_PLAYER_RESOURCES.gold,
+  lives: INITIAL_PLAYER_RESOURCES.lives,
   wave: '0 / 0',
 } as const;
 
