@@ -3,12 +3,21 @@ import './HudPanel.css';
 import { sendGameCommand } from '../../../shared/lib/game-bridge/bridge';
 import { useGameHudSnapshot } from '../../../shared/lib/game-bridge/useGameHudSnapshot';
 import { mapHudSnapshotToViewModel } from '../model/mapHudSnapshotToViewModel';
+import type { HudFactionType } from '../../../shared/lib/game-bridge/types';
 
 function formatCountdown(secondsLeft: number): string {
   const safeSeconds = Math.max(0, secondsLeft);
   const minutes = Math.floor(safeSeconds / 60);
   const seconds = safeSeconds % 60;
   return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+}
+
+function toFactionType(value: string): HudFactionType {
+  if (value === 'orc' || value === 'human' || value === 'elf') {
+    return value;
+  }
+
+  return 'undead';
 }
 
 function HudPanelComponent() {
@@ -71,6 +80,18 @@ function HudPanelComponent() {
             <span className="hud-mode-label">Mode:</span>
             <span className="hud-mode-value">{viewModel.modeLabel}</span>
           </p>
+
+          <label className="hud-faction">
+            <span className="hud-faction-label">Faction</span>
+            <select
+              className="hud-faction-select"
+              aria-label="Select creep faction"
+              value={snapshot.selectedFaction}
+              onChange={(event) => sendGameCommand('select-faction', { faction: toFactionType(event.target.value) })}
+            >
+              <option value="undead">Undead</option>
+            </select>
+          </label>
         </>
       )}
 

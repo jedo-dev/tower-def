@@ -16,6 +16,7 @@ let snapshot: GameHudSnapshot = {
   phase: 'build',
   canStartWave: false,
   selectedTowerType: null,
+  selectedFaction: 'undead',
   autoStartSecondsLeft: null,
 };
 

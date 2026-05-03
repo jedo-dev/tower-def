@@ -27,8 +27,9 @@ import {
   UNIT_SPRITE_KEYS,
   UNIT_SPRITE_SHEET_FRAME,
 } from '../../../constants/sprites';
-import { calculateWaveStartPath } from '../../../../entities/wave';
+import { calculateWaveStartPath, generateWaveUnits } from '../../../../entities/wave';
 import { applyDamageToCreep, isCreepDead } from '../../../../entities/creep';
+import { undeadUnits, type UnitConfig } from '../../../../entities/unit';
 import {
   TOWER_COMBAT_STATS_BY_TYPE,
   canTowerAttack,
@@ -44,7 +45,7 @@ import {
   onGameCommand,
   publishGameHudSnapshot,
 } from '../../game-bridge/bridge';
-import type { GameHudSnapshot } from '../../game-bridge/types';
+import type { GameHudSnapshot, HudFactionType } from '../../game-bridge/types';
 import type { GridPosition } from '../../../types/pathfinding';
 import type { GridCell, GridModel } from '../../../types/grid';
 import type { CreepEntity } from '../../../../entities/creep';
@@ -54,7 +55,7 @@ const ENTRANCE_CELL = { x: 0, y: GRID_DEFAULT_ROW_CENTER };
 const EXIT_CELL = { x: GRID_DIMENSIONS.cols - 1, y: GRID_DEFAULT_ROW_CENTER };
 const DEFAULT_TOWER_COST = 50;
 const SELL_REFUND_RATIO = ECONOMY_BALANCE.towerSellRatio;
-const CREEP_MOVE_SPEED_PX_PER_SEC = 80;
+const CREEP_BASE_MOVE_SPEED_PX_PER_SEC = 80;
 const CREEP_MAX_SIMULATION_DELTA_MS = 34;
 const ATTACK_FEEDBACK_MIN_LIFETIME_MS = 70;
 const ATTACK_FEEDBACK_MAX_LIFETIME_MS = 180;
@@ -85,6 +86,8 @@ const TOWER_ATTACK_PULSE_MAX_LINE_WIDTH = 3;
 const DAMAGE_NUMBERS_ENABLED = true;
 const DAMAGE_NUMBER_LIFETIME_MS = 420;
 const DAMAGE_NUMBER_RISE_PX = 12;
+const WAVE_SPAWN_INTERVAL_MS = 350;
+const WAVE_FIRST_SPAWN_DELAY_MS = 200;
 
 
 type CreepRenderState = {
@@ -116,6 +119,12 @@ type TowerAttackPulseState = {
   remainingMs: number;
 };
 
+type PendingWaveSpawn = {
+  unit: UnitConfig;
+  spawnAtMs: number;
+  sequenceIndex: number;
+};
+
 export class GameScene extends Phaser.Scene {
   public static readonly KEY = 'GameScene';
   private isSceneCleanedUp = false;
@@ -136,6 +145,7 @@ export class GameScene extends Phaser.Scene {
   private currentWaveNumber = 1;
   private activeCreepPath: GridPosition[] = [];
   private activeCreeps: CreepRenderState[] = [];
+  private pendingWaveSpawns: PendingWaveSpawn[] = [];
   private activeTowers: TowerRenderState[] = [];
   private activeAttackTraces: AttackTraceState[] = [];
   private activeDamageNumbers: DamageNumberState[] = [];
@@ -147,7 +157,9 @@ export class GameScene extends Phaser.Scene {
   private gameOutHandler: (() => void) | null = null;
   private unsubscribeStartWaveCommand: (() => void) | null = null;
   private unsubscribeTowerSelectCommand: (() => void) | null = null;
+  private unsubscribeFactionSelectCommand: (() => void) | null = null;
   private selectedTowerType: 'archer' | null = null;
+  private selectedFaction: HudFactionType = 'undead';
   private activeTouchGesture:
     | { startedAtMs: number; startX: number; startY: number; soldByLongPress: boolean }
     | null = null;
@@ -213,6 +225,11 @@ export class GameScene extends Phaser.Scene {
       this.registry.set('ui.selectedTowerType', this.selectedTowerType ?? 'none');
       this.publishHudSnapshot();
     });
+    this.unsubscribeFactionSelectCommand = onGameCommand('select-faction', (payload) => {
+      this.selectedFaction = payload.faction;
+      this.registry.set('wave.selectedFaction', this.selectedFaction);
+      this.publishHudSnapshot();
+    });
     this.registry.set('economy.gold', this.playerGold);
     this.registry.set('economy.lives', this.playerLives);
     this.registry.set('phase.build.active', this.canPerformBuildActions());
@@ -231,6 +248,7 @@ export class GameScene extends Phaser.Scene {
       return;
     }
 
+    this.processPendingWaveSpawns(_time);
     this.moveCreepsAlongPath(delta);
     this.updateTowerCombat(delta);
     this.updateCreepHitFeedback(delta);
@@ -397,12 +415,12 @@ export class GameScene extends Phaser.Scene {
     }
 
     const normalizedDeltaMs = Math.min(deltaMs, CREEP_MAX_SIMULATION_DELTA_MS);
-    const normalizedStepDistance = (normalizedDeltaMs / 1000) * CREEP_MOVE_SPEED_PX_PER_SEC;
-
     for (const creep of this.activeCreeps) {
       if (creep.entity.status !== 'alive') {
         continue;
       }
+      const normalizedStepDistance =
+        (normalizedDeltaMs / 1000) * CREEP_BASE_MOVE_SPEED_PX_PER_SEC * creep.entity.speed;
 
       const nextPathIndex = creep.entity.pathIndex + 1;
 
@@ -917,6 +935,10 @@ export class GameScene extends Phaser.Scene {
       return;
     }
 
+    if (this.pendingWaveSpawns.length > 0) {
+      return;
+    }
+
     if (this.activeCreeps.length === 0) {
       return;
     }
@@ -1022,6 +1044,7 @@ export class GameScene extends Phaser.Scene {
     this.buildPreviewOverlay?.clear();
     this.nextWaveStartsAtMs = null;
     this.activeCreepPath = [];
+    this.pendingWaveSpawns = [];
     this.isWaveCompletionRewardGranted = false;
 
     const initialResources = createInitialPlayerResources();
@@ -1043,31 +1066,81 @@ export class GameScene extends Phaser.Scene {
     this.drawGrid();
   }
 
-  private spawnWaveCreeps(path: GridPosition[]): void {
+  private spawnWaveCreeps(): void {
     this.destroyAllCreeps();
-
-    const startPoint = this.toCellCenter(path[0]);
-    const waveCreep: CreepEntity = {
-      id: `wave:creep:${this.currentWaveNumber}`,
-      type: 'basic',
-      hp: 100,
-      lifeState: 'alive',
-      speed: 1,
-      status: 'alive',
-      position: { ...path[0] },
-      pathIndex: 0,
-    };
-
-    const sprite = this.add.sprite(startPoint.x, startPoint.y, UNIT_SPRITE_KEYS.UNDEAD_GHOUL, 0);
-    sprite.setDisplaySize(24, 24);
-    sprite.setTint(CREEP_BASE_COLOR);
-    sprite.play(UNIT_ANIMATION_KEYS.UNDEAD_GHOUL_WALK);
-    this.activeCreeps.push({
-      entity: waveCreep,
-      sprite,
-      hitFlashRemainingMs: 0,
-      deathFadeRemainingMs: 0,
+    this.pendingWaveSpawns = [];
+    const units = generateWaveUnits({
+      waveNumber: this.currentWaveNumber,
+      factionUnits: this.getSelectedFactionUnits(),
     });
+
+    const firstSpawnAtMs = this.time.now + WAVE_FIRST_SPAWN_DELAY_MS;
+    this.pendingWaveSpawns = units.map((unit, index) => ({
+      unit,
+      sequenceIndex: index,
+      spawnAtMs: firstSpawnAtMs + index * WAVE_SPAWN_INTERVAL_MS,
+    }));
+  }
+
+  private processPendingWaveSpawns(nowMs: number): void {
+    if (this.pendingWaveSpawns.length === 0 || this.activeCreepPath.length === 0) {
+      return;
+    }
+
+    const startPoint = this.toCellCenter(this.activeCreepPath[0]);
+    const readySpawns = this.pendingWaveSpawns.filter((spawn) => spawn.spawnAtMs <= nowMs);
+    this.pendingWaveSpawns = this.pendingWaveSpawns.filter((spawn) => spawn.spawnAtMs > nowMs);
+
+    for (const spawn of readySpawns) {
+      const waveCreep: CreepEntity = {
+        id: `wave:creep:${this.currentWaveNumber}:${spawn.sequenceIndex}`,
+        type: 'basic',
+        hp: spawn.unit.health,
+        lifeState: 'alive',
+        speed: spawn.unit.speed,
+        status: 'alive',
+        position: { ...this.activeCreepPath[0] },
+        pathIndex: 0,
+      };
+
+      const spriteKey = this.getSpriteKeyByUnit(spawn.unit);
+      const animationKey = this.getAnimationKeyByUnit(spawn.unit);
+      const sprite = this.add.sprite(startPoint.x, startPoint.y, spriteKey, 0);
+      sprite.setDisplaySize(24, 24);
+      sprite.setTint(CREEP_BASE_COLOR);
+      sprite.play(animationKey);
+
+      this.activeCreeps.push({
+        entity: waveCreep,
+        sprite,
+        hitFlashRemainingMs: 0,
+        deathFadeRemainingMs: 0,
+      });
+    }
+  }
+
+  private getSelectedFactionUnits(): UnitConfig[] {
+    if (this.selectedFaction === 'undead') {
+      return undeadUnits;
+    }
+
+    return undeadUnits;
+  }
+
+  private getSpriteKeyByUnit(unit: UnitConfig): string {
+    if (unit.id === 'undead_skeleton') {
+      return UNIT_SPRITE_KEYS.UNDEAD_SKELETON;
+    }
+
+    return UNIT_SPRITE_KEYS.UNDEAD_GHOUL;
+  }
+
+  private getAnimationKeyByUnit(unit: UnitConfig): string {
+    if (unit.id === 'undead_skeleton') {
+      return UNIT_ANIMATION_KEYS.UNDEAD_SKELETON_WALK;
+    }
+
+    return UNIT_ANIMATION_KEYS.UNDEAD_GHOUL_WALK;
   }
 
   private handlePointerMove(pointer: Phaser.Input.Pointer): void {
@@ -1198,7 +1271,7 @@ export class GameScene extends Phaser.Scene {
     }
 
     this.activeCreepPath = wavePath;
-    this.spawnWaveCreeps(wavePath);
+    this.spawnWaveCreeps();
     this.wavePhaseState = startNextWaveCycle(this.wavePhaseState);
     this.registry.set('phase.build.active', this.canPerformBuildActions());
     this.isWaveCompletionRewardGranted = false;
@@ -1225,6 +1298,7 @@ export class GameScene extends Phaser.Scene {
         !this.isGameOver
         && this.canPerformBuildActions(),
       selectedTowerType: this.selectedTowerType,
+      selectedFaction: this.selectedFaction,
       autoStartSecondsLeft,
     };
 
@@ -1269,6 +1343,10 @@ export class GameScene extends Phaser.Scene {
       this.unsubscribeTowerSelectCommand();
       this.unsubscribeTowerSelectCommand = null;
     }
+    if (this.unsubscribeFactionSelectCommand) {
+      this.unsubscribeFactionSelectCommand();
+      this.unsubscribeFactionSelectCommand = null;
+    }
 
     this.destroyAllCreeps();
     this.destroyAllAttackTraces();
@@ -1284,6 +1362,7 @@ export class GameScene extends Phaser.Scene {
     this.gridGraphics = null;
     this.activeTowers = [];
     this.activeCreepPath = [];
+    this.pendingWaveSpawns = [];
     this.gridModel = null;
     this.nextWaveStartsAtMs = null;
     this.restartScheduledAtMs = null;
