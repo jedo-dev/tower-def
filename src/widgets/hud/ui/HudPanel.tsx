@@ -4,6 +4,13 @@ import { sendGameCommand } from '../../../shared/lib/game-bridge/bridge';
 import { useGameHudSnapshot } from '../../../shared/lib/game-bridge/useGameHudSnapshot';
 import { mapHudSnapshotToViewModel } from '../model/mapHudSnapshotToViewModel';
 
+function formatCountdown(secondsLeft: number): string {
+  const safeSeconds = Math.max(0, secondsLeft);
+  const minutes = Math.floor(safeSeconds / 60);
+  const seconds = safeSeconds % 60;
+  return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+}
+
 function HudPanelComponent() {
   const [isExpanded, setIsExpanded] = useState(false);
   const snapshot = useGameHudSnapshot();
@@ -98,6 +105,11 @@ function HudPanelComponent() {
           Start Wave
         </button>
       </div>
+      {snapshot.autoStartSecondsLeft !== null && (
+        <p className="hud-auto-start" aria-live="polite">
+          Auto start in {formatCountdown(snapshot.autoStartSecondsLeft)}
+        </p>
+      )}
 
       <button
         type="button"

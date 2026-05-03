@@ -8,6 +8,7 @@ export type GameHudSnapshot = {
   phase: GamePhase;
   canStartWave: boolean;
   selectedTowerType: HudTowerType | null;
+  autoStartSecondsLeft: number | null;
 };
 
 export type GameCommandMap = {

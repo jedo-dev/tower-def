@@ -15,13 +15,18 @@ import {
   isWaveActionAllowed,
   resetWavePhaseState,
   startNextWaveCycle,
-  startWave,
   transitionCompletedToBuild,
   transitionToGameOver,
   type WavePhaseState,
 } from '../../../../features/wave-phase';
 import { ECONOMY_BALANCE } from '../../../constants/economy';
 import { GRID_DEFAULT_ROW_CENTER, GRID_DIMENSIONS } from '../../../constants/grid';
+import {
+  UNIT_ANIMATION_KEYS,
+  UNIT_SPRITE_ASSETS,
+  UNIT_SPRITE_KEYS,
+  UNIT_SPRITE_SHEET_FRAME,
+} from '../../../constants/sprites';
 import { calculateWaveStartPath } from '../../../../entities/wave';
 import { applyDamageToCreep, isCreepDead } from '../../../../entities/creep';
 import {
@@ -47,7 +52,7 @@ import type { TowerCombatRuntime, TowerEntity } from '../../../../entities/tower
 
 const ENTRANCE_CELL = { x: 0, y: GRID_DEFAULT_ROW_CENTER };
 const EXIT_CELL = { x: GRID_DIMENSIONS.cols - 1, y: GRID_DEFAULT_ROW_CENTER };
-const DEFAULT_TOWER_COST = 100;
+const DEFAULT_TOWER_COST = 50;
 const SELL_REFUND_RATIO = ECONOMY_BALANCE.towerSellRatio;
 const CREEP_MOVE_SPEED_PX_PER_SEC = 80;
 const CREEP_MAX_SIMULATION_DELTA_MS = 34;
@@ -56,7 +61,7 @@ const ATTACK_FEEDBACK_MAX_LIFETIME_MS = 180;
 const ATTACK_FEEDBACK_BASE_ALPHA = 0.9;
 const INITIAL_PLAYER_RESOURCES = createInitialPlayerResources();
 const EARLY_WAVE_START_BONUS_PLACEHOLDER_ELIGIBLE = false;
-const NEXT_WAVE_DELAY_MS = 1200;
+const AUTO_WAVE_START_DELAY_MS = 30000;
 const RESTART_DELAY_MS = 1200;
 const ACTION_COOLDOWN_MS = 160;
 const TOUCH_TAP_MIN_DURATION_MS = 70;
@@ -70,7 +75,7 @@ const PREVIEW_INVALID_FILL = 0xe55a4f;
 const PREVIEW_INVALID_STROKE = 0xffb8b2;
 const GRID_PIXEL_WIDTH = GRID_DIMENSIONS.cols * GRID_DIMENSIONS.cellSize;
 const GRID_PIXEL_HEIGHT = GRID_DIMENSIONS.rows * GRID_DIMENSIONS.cellSize;
-const CREEP_BASE_COLOR = 0x9bd6ff;
+const CREEP_BASE_COLOR = 0xffffff;
 const CREEP_HIT_FLASH_COLOR = 0xffffff;
 const CREEP_HIT_FLASH_DURATION_MS = 90;
 const CREEP_DEATH_FADE_DURATION_MS = 180;
@@ -84,7 +89,7 @@ const DAMAGE_NUMBER_RISE_PX = 12;
 
 type CreepRenderState = {
   entity: CreepEntity;
-  sprite: Phaser.GameObjects.Arc;
+  sprite: Phaser.GameObjects.Sprite;
   hitFlashRemainingMs: number;
   deathFadeRemainingMs: number;
 };
@@ -148,10 +153,22 @@ export class GameScene extends Phaser.Scene {
     | null = null;
   private lastActionAtMs = Number.NEGATIVE_INFINITY;
   private devFpsReportElapsedMs = 0;
+  private lastPublishedAutoStartSecondsLeft: number | null = null;
   private soundManager: GameSoundManager | null = null;
 
   constructor() {
     super(GameScene.KEY);
+  }
+
+  public preload(): void {
+    Object.entries(UNIT_SPRITE_ASSETS).forEach(([key, assetPath]) => {
+      if (!this.textures.exists(key)) {
+        this.load.spritesheet(key, assetPath, {
+          frameWidth: UNIT_SPRITE_SHEET_FRAME.width,
+          frameHeight: UNIT_SPRITE_SHEET_FRAME.height,
+        });
+      }
+    });
   }
 
   public create(): void {
@@ -166,6 +183,28 @@ export class GameScene extends Phaser.Scene {
     this.buildPreviewOverlay = this.add.graphics();
     this.input.mouse?.disableContextMenu();
     this.soundManager = new GameSoundManager(this);
+    if (!this.anims.exists(UNIT_ANIMATION_KEYS.UNDEAD_SKELETON_WALK)) {
+      this.anims.create({
+        key: UNIT_ANIMATION_KEYS.UNDEAD_SKELETON_WALK,
+        frames: this.anims.generateFrameNumbers(UNIT_SPRITE_KEYS.UNDEAD_SKELETON, {
+          start: 0,
+          end: 3,
+        }),
+        frameRate: 8,
+        repeat: -1,
+      });
+    }
+    if (!this.anims.exists(UNIT_ANIMATION_KEYS.UNDEAD_GHOUL_WALK)) {
+      this.anims.create({
+        key: UNIT_ANIMATION_KEYS.UNDEAD_GHOUL_WALK,
+        frames: this.anims.generateFrameNumbers(UNIT_SPRITE_KEYS.UNDEAD_GHOUL, {
+          start: 0,
+          end: 3,
+        }),
+        frameRate: 8,
+        repeat: -1,
+      });
+    }
     this.unsubscribeStartWaveCommand = onGameCommand('start-wave', () => {
       this.handleStartWaveCommand();
     });
@@ -185,6 +224,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   public update(_time: number, delta: number): void {
+    this.updateAutoWaveCountdown(_time);
     this.tryRestartRun(_time);
 
     if (this.isGameOver) {
@@ -248,11 +288,12 @@ export class GameScene extends Phaser.Scene {
     this.applyEarlyWaveStartBonusPlaceholder();
 
     if (waveStartPath.length === 0) {
+      this.nextWaveStartsAtMs = null;
+      this.publishHudSnapshot();
       return;
     }
 
-    this.spawnWaveCreeps(waveStartPath);
-    this.wavePhaseState = startWave(this.wavePhaseState).state;
+    this.nextWaveStartsAtMs = this.time.now + AUTO_WAVE_START_DELAY_MS;
     this.registry.set('phase.build.active', this.canPerformBuildActions());
     this.publishHudSnapshot();
   }
@@ -833,7 +874,7 @@ export class GameScene extends Phaser.Scene {
 
   private applyCreepHitFeedback(creep: CreepRenderState): void {
     creep.hitFlashRemainingMs = CREEP_HIT_FLASH_DURATION_MS;
-    creep.sprite.setFillStyle(CREEP_HIT_FLASH_COLOR, 1);
+    creep.sprite.setTint(CREEP_HIT_FLASH_COLOR);
   }
 
   private updateCreepHitFeedback(deltaMs: number): void {
@@ -845,7 +886,7 @@ export class GameScene extends Phaser.Scene {
       creep.hitFlashRemainingMs = Math.max(0, creep.hitFlashRemainingMs - deltaMs);
 
       if (creep.hitFlashRemainingMs === 0) {
-        creep.sprite.setFillStyle(CREEP_BASE_COLOR, 1);
+        creep.sprite.setTint(CREEP_BASE_COLOR);
         continue;
       }
 
@@ -856,7 +897,7 @@ export class GameScene extends Phaser.Scene {
         100,
         Math.round(progress * 100),
       );
-      creep.sprite.setFillStyle(Phaser.Display.Color.GetColor(tint.r, tint.g, tint.b), 1);
+      creep.sprite.setTint(Phaser.Display.Color.GetColor(tint.r, tint.g, tint.b));
     }
   }
 
@@ -902,7 +943,29 @@ export class GameScene extends Phaser.Scene {
     this.isWaveCompletionRewardGranted = true;
     this.wavePhaseState = transitionCompletedToBuild(this.wavePhaseState);
     this.registry.set('phase.build.active', this.canPerformBuildActions());
-    this.nextWaveStartsAtMs ??= this.time.now + NEXT_WAVE_DELAY_MS;
+    this.nextWaveStartsAtMs ??= this.time.now + AUTO_WAVE_START_DELAY_MS;
+    this.publishHudSnapshot();
+  }
+
+  private updateAutoWaveCountdown(nowMs: number): void {
+    if (!this.canPerformBuildActions() || this.nextWaveStartsAtMs === null) {
+      if (this.lastPublishedAutoStartSecondsLeft !== null) {
+        this.lastPublishedAutoStartSecondsLeft = null;
+        this.publishHudSnapshot();
+      }
+      return;
+    }
+
+    const nextSecondsLeft = Math.max(
+      0,
+      Math.ceil((this.nextWaveStartsAtMs - nowMs) / 1000),
+    );
+
+    if (this.lastPublishedAutoStartSecondsLeft === nextSecondsLeft) {
+      return;
+    }
+
+    this.lastPublishedAutoStartSecondsLeft = nextSecondsLeft;
     this.publishHudSnapshot();
   }
 
@@ -995,7 +1058,10 @@ export class GameScene extends Phaser.Scene {
       pathIndex: 0,
     };
 
-    const sprite = this.add.circle(startPoint.x, startPoint.y, 8, CREEP_BASE_COLOR, 1);
+    const sprite = this.add.sprite(startPoint.x, startPoint.y, UNIT_SPRITE_KEYS.UNDEAD_GHOUL, 0);
+    sprite.setDisplaySize(24, 24);
+    sprite.setTint(CREEP_BASE_COLOR);
+    sprite.play(UNIT_ANIMATION_KEYS.UNDEAD_GHOUL_WALK);
     this.activeCreeps.push({
       entity: waveCreep,
       sprite,
@@ -1115,12 +1181,7 @@ export class GameScene extends Phaser.Scene {
       return;
     }
 
-    if (this.nextWaveStartsAtMs !== null) {
-      this.nextWaveStartsAtMs = this.time.now;
-      this.publishHudSnapshot();
-      return;
-    }
-
+    this.nextWaveStartsAtMs = null;
     this.startNextWaveFromBuildState();
   }
 
@@ -1148,6 +1209,13 @@ export class GameScene extends Phaser.Scene {
   }
 
   private publishHudSnapshot(): void {
+    const autoStartSecondsLeft =
+      !this.isGameOver
+      && this.canPerformBuildActions()
+      && this.nextWaveStartsAtMs !== null
+        ? Math.max(0, Math.ceil((this.nextWaveStartsAtMs - this.time.now) / 1000))
+        : null;
+
     const snapshot: GameHudSnapshot = {
       gold: this.playerGold,
       lives: this.playerLives,
@@ -1155,9 +1223,9 @@ export class GameScene extends Phaser.Scene {
       phase: this.wavePhaseState.phase,
       canStartWave:
         !this.isGameOver
-        && this.canPerformBuildActions()
-        && this.nextWaveStartsAtMs !== null,
+        && this.canPerformBuildActions(),
       selectedTowerType: this.selectedTowerType,
+      autoStartSecondsLeft,
     };
 
     publishGameHudSnapshot(snapshot);
@@ -1223,6 +1291,7 @@ export class GameScene extends Phaser.Scene {
     this.activeTouchGesture = null;
     this.lastActionAtMs = Number.NEGATIVE_INFINITY;
     this.devFpsReportElapsedMs = 0;
+    this.lastPublishedAutoStartSecondsLeft = null;
     this.soundManager = null;
     this.hoveredCell = null;
   }

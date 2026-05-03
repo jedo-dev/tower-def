@@ -10,6 +10,7 @@ function createSnapshot(overrides: Partial<GameHudSnapshot> = {}): GameHudSnapsh
     phase: 'build',
     canStartWave: true,
     selectedTowerType: null,
+    autoStartSecondsLeft: null,
     ...overrides,
   };
 }
