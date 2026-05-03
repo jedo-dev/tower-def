@@ -14,21 +14,38 @@ function GameCanvasComponent() {
 
     const game = new Phaser.Game(createGameConfig(containerRef.current));
     gameRef.current = game;
+    let lastWidth = 0;
+    let lastHeight = 0;
 
-    const handleViewportResize = () => {
+    const handleContainerResize = () => {
       if (!containerRef.current) {
         return;
       }
 
-      const { clientWidth, clientHeight } = containerRef.current;
-      game.scale.resize(clientWidth, clientHeight);
+      const nextWidth = Math.floor(containerRef.current.clientWidth);
+      const nextHeight = Math.floor(containerRef.current.clientHeight);
+
+      if (nextWidth <= 0 || nextHeight <= 0) {
+        return;
+      }
+
+      if (nextWidth === lastWidth && nextHeight === lastHeight) {
+        return;
+      }
+
+      lastWidth = nextWidth;
+      lastHeight = nextHeight;
+      game.scale.resize(nextWidth, nextHeight);
     };
 
-    window.addEventListener('resize', handleViewportResize);
-    handleViewportResize();
+    const observer = new ResizeObserver(() => {
+      handleContainerResize();
+    });
+    observer.observe(containerRef.current);
+    handleContainerResize();
 
     return () => {
-      window.removeEventListener('resize', handleViewportResize);
+      observer.disconnect();
       gameRef.current?.destroy(true);
       gameRef.current = null;
     };
