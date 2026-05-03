@@ -35,6 +35,11 @@ import {
 import { createGridModel } from '../../grid/createGridModel';
 import { validateTowerPlacementPath } from '../../pathfinding/validateTowerPlacementPath';
 import { GameSoundManager } from '../sound/GameSoundManager';
+import {
+  onGameCommand,
+  publishGameHudSnapshot,
+} from '../../game-bridge/bridge';
+import type { GameHudSnapshot } from '../../game-bridge/types';
 import type { GridPosition } from '../../../types/pathfinding';
 import type { GridCell, GridModel } from '../../../types/grid';
 import type { CreepEntity } from '../../../../entities/creep';
@@ -135,6 +140,9 @@ export class GameScene extends Phaser.Scene {
   private pointerUpHandler: ((pointer: Phaser.Input.Pointer) => void) | null = null;
   private scaleResizeHandler: (() => void) | null = null;
   private gameOutHandler: (() => void) | null = null;
+  private unsubscribeStartWaveCommand: (() => void) | null = null;
+  private unsubscribeTowerSelectCommand: (() => void) | null = null;
+  private selectedTowerType: 'archer' | null = null;
   private activeTouchGesture:
     | { startedAtMs: number; startX: number; startY: number; soldByLongPress: boolean }
     | null = null;
@@ -158,11 +166,20 @@ export class GameScene extends Phaser.Scene {
     this.buildPreviewOverlay = this.add.graphics();
     this.input.mouse?.disableContextMenu();
     this.soundManager = new GameSoundManager(this);
+    this.unsubscribeStartWaveCommand = onGameCommand('start-wave', () => {
+      this.handleStartWaveCommand();
+    });
+    this.unsubscribeTowerSelectCommand = onGameCommand('select-tower', (payload) => {
+      this.selectedTowerType = payload.towerType;
+      this.registry.set('ui.selectedTowerType', this.selectedTowerType ?? 'none');
+      this.publishHudSnapshot();
+    });
     this.registry.set('economy.gold', this.playerGold);
     this.registry.set('economy.lives', this.playerLives);
     this.registry.set('phase.build.active', this.canPerformBuildActions());
     this.registry.set('phase.game.over', this.isGameOver);
     this.registry.set('economy.earlyWaveStartBonus.granted', false);
+    this.publishHudSnapshot();
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, this.handleSceneShutdown, this);
     this.events.once(Phaser.Scenes.Events.DESTROY, this.handleSceneShutdown, this);
   }
@@ -237,6 +254,7 @@ export class GameScene extends Phaser.Scene {
     this.spawnWaveCreeps(waveStartPath);
     this.wavePhaseState = startWave(this.wavePhaseState).state;
     this.registry.set('phase.build.active', this.canPerformBuildActions());
+    this.publishHudSnapshot();
   }
 
   private registerGridHoverDetection(): void {
@@ -456,6 +474,7 @@ export class GameScene extends Phaser.Scene {
     this.playerGold = spendGoldResult.resources.gold;
     this.registry.set('economy.gold', this.playerGold);
     this.markUserActionProcessed();
+    this.publishHudSnapshot();
 
     this.drawGridCell(targetCell);
     this.updateBuildPreview();
@@ -501,6 +520,7 @@ export class GameScene extends Phaser.Scene {
     const refundAmount = Math.floor(towerCost * SELL_REFUND_RATIO);
     this.registry.set('economy.lastSellRefund', refundAmount);
     this.markUserActionProcessed();
+    this.publishHudSnapshot();
 
     this.drawGridCell(targetCell);
     this.updateBuildPreview();
@@ -572,6 +592,7 @@ export class GameScene extends Phaser.Scene {
       this.registry.set('phase.build.active', this.canPerformBuildActions());
       this.registry.set('phase.game.over', this.isGameOver);
     }
+    this.publishHudSnapshot();
 
     const escapedCount = this.activeCreeps.filter(
       (candidate) => candidate.entity.status === 'escaped',
@@ -656,6 +677,7 @@ export class GameScene extends Phaser.Scene {
         this.playerGold = nextResources.gold;
         this.registry.set('economy.gold', this.playerGold);
         this.soundManager?.play('death');
+        this.publishHudSnapshot();
       }
 
       tower.runtime = consumeTowerAttack(tower.entity, tower.runtime);
@@ -881,6 +903,7 @@ export class GameScene extends Phaser.Scene {
     this.wavePhaseState = transitionCompletedToBuild(this.wavePhaseState);
     this.registry.set('phase.build.active', this.canPerformBuildActions());
     this.nextWaveStartsAtMs ??= this.time.now + NEXT_WAVE_DELAY_MS;
+    this.publishHudSnapshot();
   }
 
   private applyEarlyWaveStartBonusPlaceholder(): void {
@@ -893,6 +916,7 @@ export class GameScene extends Phaser.Scene {
     this.playerGold = result.resources.gold;
     this.registry.set('economy.gold', this.playerGold);
     this.registry.set('economy.earlyWaveStartBonus.granted', result.granted);
+    this.publishHudSnapshot();
   }
 
   private tryStartNextWave(nowMs: number): void {
@@ -909,20 +933,7 @@ export class GameScene extends Phaser.Scene {
       return;
     }
 
-    const wavePath = calculateWaveStartPath(this.gridModel);
-    if (wavePath.length === 0) {
-      this.nextWaveStartsAtMs = null;
-      return;
-    }
-
-    this.activeCreepPath = wavePath;
-    this.spawnWaveCreeps(wavePath);
-    this.wavePhaseState = startNextWaveCycle(this.wavePhaseState);
-    this.registry.set('phase.build.active', this.canPerformBuildActions());
-    this.isWaveCompletionRewardGranted = false;
-    this.nextWaveStartsAtMs = null;
-    this.currentWaveNumber += 1;
-    this.registry.set('wave.number', this.currentWaveNumber);
+    this.startNextWaveFromBuildState();
   }
 
   private tryRestartRun(nowMs: number): void {
@@ -964,6 +975,7 @@ export class GameScene extends Phaser.Scene {
     this.registry.set('wave.number', this.currentWaveNumber);
     this.registry.remove('wave.escapedCreeps');
     this.registry.remove('economy.lastSellRefund');
+    this.publishHudSnapshot();
 
     this.drawGrid();
   }
@@ -1098,6 +1110,59 @@ export class GameScene extends Phaser.Scene {
     this.activeDamageNumbers = [];
   }
 
+  private handleStartWaveCommand(): void {
+    if (this.isGameOver || !this.canPerformBuildActions()) {
+      return;
+    }
+
+    if (this.nextWaveStartsAtMs !== null) {
+      this.nextWaveStartsAtMs = this.time.now;
+      this.publishHudSnapshot();
+      return;
+    }
+
+    this.startNextWaveFromBuildState();
+  }
+
+  private startNextWaveFromBuildState(): void {
+    if (!this.gridModel) {
+      return;
+    }
+
+    const wavePath = calculateWaveStartPath(this.gridModel);
+    if (wavePath.length === 0) {
+      this.nextWaveStartsAtMs = null;
+      this.publishHudSnapshot();
+      return;
+    }
+
+    this.activeCreepPath = wavePath;
+    this.spawnWaveCreeps(wavePath);
+    this.wavePhaseState = startNextWaveCycle(this.wavePhaseState);
+    this.registry.set('phase.build.active', this.canPerformBuildActions());
+    this.isWaveCompletionRewardGranted = false;
+    this.nextWaveStartsAtMs = null;
+    this.currentWaveNumber += 1;
+    this.registry.set('wave.number', this.currentWaveNumber);
+    this.publishHudSnapshot();
+  }
+
+  private publishHudSnapshot(): void {
+    const snapshot: GameHudSnapshot = {
+      gold: this.playerGold,
+      lives: this.playerLives,
+      waveNumber: this.currentWaveNumber,
+      phase: this.wavePhaseState.phase,
+      canStartWave:
+        !this.isGameOver
+        && this.canPerformBuildActions()
+        && this.nextWaveStartsAtMs !== null,
+      selectedTowerType: this.selectedTowerType,
+    };
+
+    publishGameHudSnapshot(snapshot);
+  }
+
   private handleSceneShutdown(): void {
     if (this.isSceneCleanedUp) {
       return;
@@ -1127,6 +1192,14 @@ export class GameScene extends Phaser.Scene {
     if (this.scaleResizeHandler) {
       this.scale.off(Phaser.Scale.Events.RESIZE, this.scaleResizeHandler);
       this.scaleResizeHandler = null;
+    }
+    if (this.unsubscribeStartWaveCommand) {
+      this.unsubscribeStartWaveCommand();
+      this.unsubscribeStartWaveCommand = null;
+    }
+    if (this.unsubscribeTowerSelectCommand) {
+      this.unsubscribeTowerSelectCommand();
+      this.unsubscribeTowerSelectCommand = null;
     }
 
     this.destroyAllCreeps();
