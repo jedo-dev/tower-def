@@ -5,6 +5,7 @@ export type HudFactionType = 'undead' | 'orc' | 'human' | 'elf';
 export type GameHudSnapshot = {
   gold: number;
   lives: number;
+  builderFactionName: string;
   waveNumber: number;
   phase: GamePhase;
   canStartWave: boolean;

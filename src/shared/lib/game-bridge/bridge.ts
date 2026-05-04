@@ -12,6 +12,7 @@ const snapshotEventTarget = new EventTarget();
 let snapshot: GameHudSnapshot = {
   gold: 0,
   lives: 0,
+  builderFactionName: 'Undead',
   waveNumber: 1,
   phase: 'build',
   canStartWave: false,

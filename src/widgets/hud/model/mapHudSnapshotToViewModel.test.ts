@@ -6,6 +6,7 @@ function createSnapshot(overrides: Partial<GameHudSnapshot> = {}): GameHudSnapsh
   return {
     gold: 100,
     lives: 20,
+    builderFactionName: 'Undead',
     waveNumber: 1,
     phase: 'build',
     canStartWave: true,

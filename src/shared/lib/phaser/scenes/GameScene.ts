@@ -31,6 +31,11 @@ import { calculateWaveStartPath, generateWaveUnits } from '../../../../entities/
 import { applyDamageToCreep, isCreepDead } from '../../../../entities/creep';
 import { undeadUnits, type UnitConfig } from '../../../../entities/unit';
 import {
+  builderFactions,
+  DEFAULT_BUILDER_FACTION,
+  type BuilderFactionConfig,
+} from '../../../../entities/builder-faction';
+import {
   TOWER_COMBAT_STATS_BY_TYPE,
   canTowerAttack,
   consumeTowerAttack,
@@ -159,6 +164,7 @@ export class GameScene extends Phaser.Scene {
   private unsubscribeTowerSelectCommand: (() => void) | null = null;
   private unsubscribeFactionSelectCommand: (() => void) | null = null;
   private selectedTowerType: 'archer' | null = null;
+  private selectedBuilderFactionId = DEFAULT_BUILDER_FACTION;
   private selectedFaction: HudFactionType = 'undead';
   private activeTouchGesture:
     | { startedAtMs: number; startX: number; startY: number; soldByLongPress: boolean }
@@ -1323,9 +1329,12 @@ export class GameScene extends Phaser.Scene {
         ? Math.max(0, Math.ceil((this.nextWaveStartsAtMs - this.time.now) / 1000))
         : null;
 
+    const currentBuilderFaction = this.getCurrentBuilderFaction();
+
     const snapshot: GameHudSnapshot = {
       gold: this.playerGold,
       lives: this.playerLives,
+      builderFactionName: currentBuilderFaction.name,
       waveNumber: this.currentWaveNumber,
       phase: this.wavePhaseState.phase,
       canStartWave:
@@ -1337,6 +1346,11 @@ export class GameScene extends Phaser.Scene {
     };
 
     publishGameHudSnapshot(snapshot);
+  }
+
+  private getCurrentBuilderFaction(): BuilderFactionConfig {
+    const faction = builderFactions.find((candidate) => candidate.id === this.selectedBuilderFactionId);
+    return faction ?? builderFactions[0];
   }
 
   private handleSceneShutdown(): void {

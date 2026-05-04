@@ -36,6 +36,10 @@ function HudPanelComponent() {
           <span className="hud-label">Lives</span>
           <span className="hud-value">{snapshot.lives}</span>
         </p>
+        <p className="hud-stat">
+          <span className="hud-label">Race</span>
+          <span className="hud-value hud-value-race">{snapshot.builderFactionName}</span>
+        </p>
         {isExpanded && (
           <>
             <p className="hud-stat">

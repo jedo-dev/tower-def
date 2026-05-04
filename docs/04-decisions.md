@@ -50,3 +50,9 @@ This simplifies pathfinding, prevents mid-wave path chaos, and matches the inten
 Reason:
 
 The player must never be allowed to fully block the creep path.
+
+## Decision 007: Builder factions are config-driven
+
+Builder factions and their buildable towers are defined via typed config models.
+
+For MVP testing, each faction starts with one archer-type starter tower.

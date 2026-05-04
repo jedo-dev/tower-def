@@ -136,6 +136,10 @@
   color: var(--color-text-primary);
 }
 
+.hud-value-race {
+  font-size: clamp(16px, 4.2vw, 20px);
+}
+
 .hud-faction {
   display: grid;
   gap: 4px;
