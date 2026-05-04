@@ -69,14 +69,14 @@ export const undeadUnits: UnitConfig[] = [
     id: 'undead_crypt_fiend',
     name: 'Crypt Fiend',
     tier: UnitTier.TIER_2,
-    spriteKey: 'unit.undead.crypt_fiend',
+    spriteKey: UNIT_SPRITE_KEYS.UNDEAD_CRYPT_FIEND,
     description: 'A spider-like horror wrapped in deathly chitin.',
   }),
   createUndeadUnit({
     id: 'undead_gargoyle',
     name: 'Gargoyle',
     tier: UnitTier.TIER_3,
-    spriteKey: 'unit.undead.gargoyle',
+    spriteKey: UNIT_SPRITE_KEYS.UNDEAD_GARGOYLE,
     description: 'Winged stone predator animated by necrotic will.',
   }),
   createUndeadUnit({

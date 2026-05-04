@@ -217,6 +217,28 @@ export class GameScene extends Phaser.Scene {
         repeat: -1,
       });
     }
+    if (!this.anims.exists(UNIT_ANIMATION_KEYS.UNDEAD_CRYPT_FIEND_WALK)) {
+      this.anims.create({
+        key: UNIT_ANIMATION_KEYS.UNDEAD_CRYPT_FIEND_WALK,
+        frames: this.anims.generateFrameNumbers(UNIT_SPRITE_KEYS.UNDEAD_CRYPT_FIEND, {
+          start: 0,
+          end: 3,
+        }),
+        frameRate: 8,
+        repeat: -1,
+      });
+    }
+    if (!this.anims.exists(UNIT_ANIMATION_KEYS.UNDEAD_GARGOYLE_WALK)) {
+      this.anims.create({
+        key: UNIT_ANIMATION_KEYS.UNDEAD_GARGOYLE_WALK,
+        frames: this.anims.generateFrameNumbers(UNIT_SPRITE_KEYS.UNDEAD_GARGOYLE, {
+          start: 0,
+          end: 3,
+        }),
+        frameRate: 8,
+        repeat: -1,
+      });
+    }
     this.unsubscribeStartWaveCommand = onGameCommand('start-wave', () => {
       this.handleStartWaveCommand();
     });
@@ -1131,6 +1153,12 @@ export class GameScene extends Phaser.Scene {
     if (unit.id === 'undead_skeleton') {
       return UNIT_SPRITE_KEYS.UNDEAD_SKELETON;
     }
+    if (unit.id === 'undead_crypt_fiend') {
+      return UNIT_SPRITE_KEYS.UNDEAD_CRYPT_FIEND;
+    }
+    if (unit.id === 'undead_gargoyle') {
+      return UNIT_SPRITE_KEYS.UNDEAD_GARGOYLE;
+    }
 
     return UNIT_SPRITE_KEYS.UNDEAD_GHOUL;
   }
@@ -1138,6 +1166,12 @@ export class GameScene extends Phaser.Scene {
   private getAnimationKeyByUnit(unit: UnitConfig): string {
     if (unit.id === 'undead_skeleton') {
       return UNIT_ANIMATION_KEYS.UNDEAD_SKELETON_WALK;
+    }
+    if (unit.id === 'undead_crypt_fiend') {
+      return UNIT_ANIMATION_KEYS.UNDEAD_CRYPT_FIEND_WALK;
+    }
+    if (unit.id === 'undead_gargoyle') {
+      return UNIT_ANIMATION_KEYS.UNDEAD_GARGOYLE_WALK;
     }
 
     return UNIT_ANIMATION_KEYS.UNDEAD_GHOUL_WALK;
