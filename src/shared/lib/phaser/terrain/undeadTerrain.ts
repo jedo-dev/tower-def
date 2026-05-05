@@ -2,8 +2,8 @@ import type { GridPosition } from '../../../types/pathfinding';
 import { UndeadTerrainTileIndex } from '../../../constants/terrain';
 
 const UNDEAD_TERRAIN_HASH_SEED = 8717;
-const UNDEAD_TERRAIN_DECORATION_BASE_CHANCE_PERCENT = 8;
-const UNDEAD_TERRAIN_DECORATION_EDGE_BONUS_PERCENT = 12;
+const UNDEAD_TERRAIN_DECORATION_BASE_CHANCE_PERCENT = 3;
+const UNDEAD_TERRAIN_DECORATION_EDGE_BONUS_PERCENT = 6;
 
 const UNDEAD_BASE_TILES = [
   UndeadTerrainTileIndex.BASE_STONE_A,
@@ -81,3 +81,6 @@ export function resolveUndeadTerrainTileIndex(context: TerrainCellContext): numb
   return UNDEAD_DECORATION_TILES[decorationHash % UNDEAD_DECORATION_TILES.length];
 }
 
+export function isUndeadDecorationTileIndex(tileIndex: number): boolean {
+  return UNDEAD_DECORATION_TILES.includes(tileIndex as (typeof UNDEAD_DECORATION_TILES)[number]);
+}

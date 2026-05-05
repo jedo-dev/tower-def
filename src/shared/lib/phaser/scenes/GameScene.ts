@@ -58,7 +58,7 @@ import {
 } from '../../../../entities/tower';
 import { createGridModel } from '../../grid/createGridModel';
 import { validateTowerPlacementPath } from '../../pathfinding/validateTowerPlacementPath';
-import { resolveUndeadTerrainTileIndex } from '../terrain/undeadTerrain';
+import { isUndeadDecorationTileIndex, resolveUndeadTerrainTileIndex } from '../terrain/undeadTerrain';
 import { GameSoundManager } from '../sound/GameSoundManager';
 import {
   onGameCommand,
@@ -108,11 +108,12 @@ const WAVE_FIRST_SPAWN_DELAY_MS = 200;
 const BONE_ARCHER_TOWER_ID = 'undead_bone_archer_tower';
 const BONE_ARCHER_TOWER_CONFIG =
   buildableTowers.find((tower) => tower.id === BONE_ARCHER_TOWER_ID) ?? null;
-const BONE_ARCHER_DISPLAY_SIZE_IN_CELLS = 1.4;
+const TOWER_VISUAL_SCALE_IN_CELLS = 1.3;
 const BONE_ARCHER_ORIGIN_X = 0.5;
 const BONE_ARCHER_ORIGIN_Y = 0.82;
 const GRID_LINE_COLOR = 0x5f6f8f;
-const GRID_LINE_ALPHA = 0.9;
+const GRID_IDLE_ALPHA = 0.08;
+const GRID_BUILD_ALPHA = 0.42;
 const GRID_LINE_WIDTH = 1;
 const ENTRANCE_EXIT_LABEL_FONT_FAMILY = 'Arial';
 const ENTRANCE_EXIT_LABEL_FONT_SIZE_PX = '10px';
@@ -121,6 +122,13 @@ const TERRAIN_RENDER_DEPTH = -20;
 const GRID_OVERLAY_RENDER_DEPTH = 10;
 const ENTRANCE_EXIT_LABEL_RENDER_DEPTH = 20;
 const TOWER_RENDER_DEPTH = 40;
+const CREEP_RENDER_DEPTH = 45;
+const CREEP_VISUAL_SIZE_PX = 28;
+const TERRAIN_BASE_TILE_ALPHA = 0.72;
+const TERRAIN_DECORATION_TILE_ALPHA = 0.62;
+const TERRAIN_BASE_TILE_TINT = 0xc3cbbf;
+const TERRAIN_DECORATION_TILE_TINT = 0xb7bfae;
+const BUILD_PREVIEW_RENDER_DEPTH = 15;
 
 
 type CreepRenderState = {
@@ -240,10 +248,12 @@ export class GameScene extends Phaser.Scene {
     this.isSceneCleanedUp = false;
     this.cameras.main.setBackgroundColor('#1a1f2c');
     this.cameras.main.roundPixels = true;
+    this.applyNearestNeighborFiltering();
     this.registerScaleResizeHandling();
     this.drawGrid();
     this.registerGridHoverDetection();
     this.buildPreviewOverlay = this.add.graphics();
+    this.buildPreviewOverlay.setDepth(BUILD_PREVIEW_RENDER_DEPTH);
     this.input.mouse?.disableContextMenu();
     this.soundManager = new GameSoundManager(this);
     if (!this.anims.exists(UNIT_ANIMATION_KEYS.UNDEAD_SKELETON_WALK)) {
@@ -309,6 +319,7 @@ export class GameScene extends Phaser.Scene {
     this.registry.set('phase.build.active', this.canPerformBuildActions());
     this.registry.set('phase.game.over', this.isGameOver);
     this.registry.set('economy.earlyWaveStartBonus.granted', false);
+    this.updateGridOverlayVisualState();
     this.publishHudSnapshot();
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, this.handleSceneShutdown, this);
     this.events.once(Phaser.Scenes.Events.DESTROY, this.handleSceneShutdown, this);
@@ -372,6 +383,7 @@ export class GameScene extends Phaser.Scene {
     }
 
     this.drawGridLines(grid);
+    this.updateGridOverlayVisualState();
     this.initializeWaveRuntime(grid);
   }
 
@@ -393,6 +405,8 @@ export class GameScene extends Phaser.Scene {
 
     this.nextWaveStartsAtMs = this.time.now + AUTO_WAVE_START_DELAY_MS;
     this.registry.set('phase.build.active', this.canPerformBuildActions());
+    this.updateGridOverlayVisualState();
+    this.updateBuildPreview();
     this.publishHudSnapshot();
   }
 
@@ -450,10 +464,12 @@ export class GameScene extends Phaser.Scene {
     this.buildPreviewOverlay.clear();
 
     if (!this.canPerformBuildActions()) {
+      this.updateGridOverlayVisualState();
       return;
     }
 
     if (!this.hoveredCell || !this.gridModel) {
+      this.updateGridOverlayVisualState();
       return;
     }
 
@@ -487,6 +503,7 @@ export class GameScene extends Phaser.Scene {
     }
 
     this.buildPreviewOverlay.strokePath();
+    this.updateGridOverlayVisualState();
   }
 
   private moveCreepsAlongPath(deltaMs: number): void {
@@ -706,6 +723,13 @@ export class GameScene extends Phaser.Scene {
     sprite.setOrigin(0, 0);
     sprite.setDisplaySize(GRID_DIMENSIONS.cellSize, GRID_DIMENSIONS.cellSize);
     sprite.setDepth(TERRAIN_RENDER_DEPTH);
+    if (isUndeadDecorationTileIndex(tileIndex)) {
+      sprite.setAlpha(TERRAIN_DECORATION_TILE_ALPHA);
+      sprite.setTint(TERRAIN_DECORATION_TILE_TINT);
+    } else {
+      sprite.setAlpha(TERRAIN_BASE_TILE_ALPHA);
+      sprite.setTint(TERRAIN_BASE_TILE_TINT);
+    }
     this.terrainSprites.push(sprite);
   }
 
@@ -757,12 +781,37 @@ export class GameScene extends Phaser.Scene {
       return;
     }
 
-    this.gridGraphics.lineStyle(GRID_LINE_WIDTH, GRID_LINE_COLOR, GRID_LINE_ALPHA);
+    this.gridGraphics.lineStyle(GRID_LINE_WIDTH, GRID_LINE_COLOR, GRID_BUILD_ALPHA);
     for (const cell of grid.cells) {
       const x = cell.x * GRID_DIMENSIONS.cellSize;
       const y = cell.y * GRID_DIMENSIONS.cellSize;
       this.gridGraphics.strokeRect(x, y, GRID_DIMENSIONS.cellSize, GRID_DIMENSIONS.cellSize);
     }
+  }
+
+  private updateGridOverlayVisualState(): void {
+    if (!this.gridGraphics) {
+      return;
+    }
+
+    const targetAlpha = this.canPerformBuildActions() ? GRID_BUILD_ALPHA : GRID_IDLE_ALPHA;
+    this.gridGraphics.setAlpha(targetAlpha);
+  }
+
+  private applyNearestNeighborFiltering(): void {
+    if (this.textures.exists(TerrainAssetKey.UNDEAD_TILESET)) {
+      this.textures.get(TerrainAssetKey.UNDEAD_TILESET).setFilter(Phaser.Textures.FilterMode.NEAREST);
+    }
+    Object.values(UNIT_SPRITE_KEYS).forEach((spriteKey) => {
+      if (this.textures.exists(spriteKey)) {
+        this.textures.get(spriteKey).setFilter(Phaser.Textures.FilterMode.NEAREST);
+      }
+    });
+    Object.values(TOWER_SPRITE_KEYS).forEach((spriteKey) => {
+      if (this.textures.exists(spriteKey)) {
+        this.textures.get(spriteKey).setFilter(Phaser.Textures.FilterMode.NEAREST);
+      }
+    });
   }
 
   private clearTerrainSprites(): void {
@@ -817,6 +866,8 @@ export class GameScene extends Phaser.Scene {
       this.restartScheduledAtMs ??= this.time.now + RESTART_DELAY_MS;
       this.registry.set('phase.build.active', this.canPerformBuildActions());
       this.registry.set('phase.game.over', this.isGameOver);
+      this.updateGridOverlayVisualState();
+      this.updateBuildPreview();
     }
     this.publishHudSnapshot();
 
@@ -1102,6 +1153,8 @@ export class GameScene extends Phaser.Scene {
     this.isWaveCompletionRewardGranted = true;
     this.wavePhaseState = transitionCompletedToBuild(this.wavePhaseState);
     this.registry.set('phase.build.active', this.canPerformBuildActions());
+    this.updateGridOverlayVisualState();
+    this.updateBuildPreview();
     this.nextWaveStartsAtMs ??= this.time.now + AUTO_WAVE_START_DELAY_MS;
     this.publishHudSnapshot();
   }
@@ -1243,7 +1296,8 @@ export class GameScene extends Phaser.Scene {
       const spriteKey = this.getSpriteKeyByUnit(spawn.unit);
       const animationKey = this.getAnimationKeyByUnit(spawn.unit);
       const sprite = this.add.sprite(startPoint.x, startPoint.y, spriteKey, 0);
-      sprite.setDisplaySize(24, 24);
+      sprite.setDisplaySize(CREEP_VISUAL_SIZE_PX, CREEP_VISUAL_SIZE_PX);
+      sprite.setDepth(CREEP_RENDER_DEPTH);
       sprite.setTint(CREEP_BASE_COLOR);
       sprite.play(animationKey);
 
@@ -1339,8 +1393,8 @@ export class GameScene extends Phaser.Scene {
     const sprite = this.add.sprite(center.x, center.y, spriteKey, 0);
     sprite.setDepth(TOWER_RENDER_DEPTH);
     sprite.setDisplaySize(
-      GRID_DIMENSIONS.cellSize * BONE_ARCHER_DISPLAY_SIZE_IN_CELLS,
-      GRID_DIMENSIONS.cellSize * BONE_ARCHER_DISPLAY_SIZE_IN_CELLS,
+      GRID_DIMENSIONS.cellSize * TOWER_VISUAL_SCALE_IN_CELLS,
+      GRID_DIMENSIONS.cellSize * TOWER_VISUAL_SCALE_IN_CELLS,
     );
     sprite.setOrigin(BONE_ARCHER_ORIGIN_X, BONE_ARCHER_ORIGIN_Y);
     sprite.play(TOWER_ANIMATION_KEYS.UNDEAD_BONE_ARCHER_BUILD);
@@ -1541,6 +1595,8 @@ export class GameScene extends Phaser.Scene {
     this.spawnWaveCreeps();
     this.wavePhaseState = startNextWaveCycle(this.wavePhaseState);
     this.registry.set('phase.build.active', this.canPerformBuildActions());
+    this.updateGridOverlayVisualState();
+    this.updateBuildPreview();
     this.isWaveCompletionRewardGranted = false;
     this.nextWaveStartsAtMs = null;
     this.currentWaveNumber += 1;

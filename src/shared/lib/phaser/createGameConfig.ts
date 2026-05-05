@@ -8,6 +8,10 @@ export function createGameConfig(container: HTMLDivElement): Phaser.Types.Core.G
     parent: container,
     width: GRID_DIMENSIONS.cols * GRID_DIMENSIONS.cellSize,
     height: GRID_DIMENSIONS.rows * GRID_DIMENSIONS.cellSize,
+    pixelArt: true,
+    roundPixels: true,
+    antialias: false,
+    antialiasGL: false,
     backgroundColor: '#1a1f2c',
     scene: [GameScene],
     scale: {
