@@ -22,6 +22,12 @@ import {
 import { ECONOMY_BALANCE } from '../../../constants/economy';
 import { GRID_DEFAULT_ROW_CENTER, GRID_DIMENSIONS } from '../../../constants/grid';
 import {
+  TOWER_ANIMATION_KEYS,
+  TOWER_BONE_ARCHER_ANIMATION_FRAMES,
+  TOWER_BONE_ARCHER_EFFECT_FRAMES,
+  TOWER_SPRITE_ASSETS,
+  TOWER_SPRITE_KEYS,
+  TOWER_SPRITE_SHEET_FRAME,
   UNIT_ANIMATION_KEYS,
   UNIT_SPRITE_ASSETS,
   UNIT_SPRITE_KEYS,
@@ -36,6 +42,7 @@ import {
   type BuilderFactionConfig,
 } from '../../../../entities/builder-faction';
 import {
+  buildableTowers,
   TOWER_COMBAT_STATS_BY_TYPE,
   canTowerAttack,
   consumeTowerAttack,
@@ -62,9 +69,6 @@ const DEFAULT_TOWER_COST = 50;
 const SELL_REFUND_RATIO = ECONOMY_BALANCE.towerSellRatio;
 const CREEP_BASE_MOVE_SPEED_PX_PER_SEC = 80;
 const CREEP_MAX_SIMULATION_DELTA_MS = 34;
-const ATTACK_FEEDBACK_MIN_LIFETIME_MS = 70;
-const ATTACK_FEEDBACK_MAX_LIFETIME_MS = 180;
-const ATTACK_FEEDBACK_BASE_ALPHA = 0.9;
 const INITIAL_PLAYER_RESOURCES = createInitialPlayerResources();
 const EARLY_WAVE_START_BONUS_PLACEHOLDER_ELIGIBLE = false;
 const AUTO_WAVE_START_DELAY_MS = 30000;
@@ -85,14 +89,21 @@ const CREEP_BASE_COLOR = 0xffffff;
 const CREEP_HIT_FLASH_COLOR = 0xffffff;
 const CREEP_HIT_FLASH_DURATION_MS = 90;
 const CREEP_DEATH_FADE_DURATION_MS = 180;
-const TOWER_ATTACK_PULSE_LIFETIME_MS = 120;
-const TOWER_ATTACK_PULSE_COLOR = 0xffe6a6;
-const TOWER_ATTACK_PULSE_MAX_LINE_WIDTH = 3;
+const PROJECTILE_MIN_LIFETIME_MS = 180;
+const PROJECTILE_MAX_LIFETIME_MS = 320;
+const PROJECTILE_DISPLAY_SIZE_PX = 22;
+const PROJECTILE_RENDER_DEPTH = 30;
 const DAMAGE_NUMBERS_ENABLED = true;
 const DAMAGE_NUMBER_LIFETIME_MS = 420;
 const DAMAGE_NUMBER_RISE_PX = 12;
 const WAVE_SPAWN_INTERVAL_MS = 350;
 const WAVE_FIRST_SPAWN_DELAY_MS = 200;
+const BONE_ARCHER_TOWER_ID = 'undead_bone_archer_tower';
+const BONE_ARCHER_TOWER_CONFIG =
+  buildableTowers.find((tower) => tower.id === BONE_ARCHER_TOWER_ID) ?? null;
+const BONE_ARCHER_DISPLAY_SIZE_IN_CELLS = 1.4;
+const BONE_ARCHER_ORIGIN_X = 0.5;
+const BONE_ARCHER_ORIGIN_Y = 0.82;
 
 
 type CreepRenderState = {
@@ -105,10 +116,15 @@ type CreepRenderState = {
 type TowerRenderState = {
   entity: TowerEntity;
   runtime: TowerCombatRuntime;
+  sprite: Phaser.GameObjects.Sprite;
 };
 
-type AttackTraceState = {
-  graphics: Phaser.GameObjects.Graphics;
+type ProjectileState = {
+  sprite: Phaser.GameObjects.Sprite;
+  fromX: number;
+  fromY: number;
+  toX: number;
+  toY: number;
   remainingMs: number;
   maxLifetimeMs: number;
 };
@@ -116,11 +132,6 @@ type AttackTraceState = {
 type DamageNumberState = {
   text: Phaser.GameObjects.Text;
   startY: number;
-  remainingMs: number;
-};
-
-type TowerAttackPulseState = {
-  graphics: Phaser.GameObjects.Graphics;
   remainingMs: number;
 };
 
@@ -137,8 +148,6 @@ export class GameScene extends Phaser.Scene {
   private gridModel: GridModel | null = null;
   private gridGraphics: Phaser.GameObjects.Graphics | null = null;
   private buildPreviewOverlay: Phaser.GameObjects.Graphics | null = null;
-  private attackTraceOverlay: Phaser.GameObjects.Graphics | null = null;
-  private towerPulseOverlay: Phaser.GameObjects.Graphics | null = null;
   private placedTowerCostsByCellKey = new Map<string, number>();
   private playerGold = INITIAL_PLAYER_RESOURCES.gold;
   private playerLives = INITIAL_PLAYER_RESOURCES.lives;
@@ -152,9 +161,8 @@ export class GameScene extends Phaser.Scene {
   private activeCreeps: CreepRenderState[] = [];
   private pendingWaveSpawns: PendingWaveSpawn[] = [];
   private activeTowers: TowerRenderState[] = [];
-  private activeAttackTraces: AttackTraceState[] = [];
+  private activeProjectiles: ProjectileState[] = [];
   private activeDamageNumbers: DamageNumberState[] = [];
-  private activeTowerAttackPulses: TowerAttackPulseState[] = [];
   private pointerMoveHandler: ((pointer: Phaser.Input.Pointer) => void) | null = null;
   private pointerDownHandler: ((pointer: Phaser.Input.Pointer) => void) | null = null;
   private pointerUpHandler: ((pointer: Phaser.Input.Pointer) => void) | null = null;
@@ -187,6 +195,15 @@ export class GameScene extends Phaser.Scene {
         });
       }
     });
+
+    Object.entries(TOWER_SPRITE_ASSETS).forEach(([key, assetPath]) => {
+      if (!this.textures.exists(key)) {
+        this.load.spritesheet(key, assetPath, {
+          frameWidth: TOWER_SPRITE_SHEET_FRAME.width,
+          frameHeight: TOWER_SPRITE_SHEET_FRAME.height,
+        });
+      }
+    });
   }
 
   public create(): void {
@@ -196,8 +213,6 @@ export class GameScene extends Phaser.Scene {
     this.registerScaleResizeHandling();
     this.drawGrid();
     this.registerGridHoverDetection();
-    this.attackTraceOverlay = this.add.graphics();
-    this.towerPulseOverlay = this.add.graphics();
     this.buildPreviewOverlay = this.add.graphics();
     this.input.mouse?.disableContextMenu();
     this.soundManager = new GameSoundManager(this);
@@ -245,6 +260,7 @@ export class GameScene extends Phaser.Scene {
         repeat: -1,
       });
     }
+    this.createBoneArcherTowerAnimations();
     this.unsubscribeStartWaveCommand = onGameCommand('start-wave', () => {
       this.handleStartWaveCommand();
     });
@@ -283,8 +299,7 @@ export class GameScene extends Phaser.Scene {
     this.removeDeadCreepsFromActiveWave(delta);
     this.applyWaveCompletionRewardIfResolved();
     this.tryStartNextWave(_time);
-    this.updateAttackTraces(delta);
-    this.updateTowerAttackPulses(delta);
+    this.updateProjectiles(delta);
     this.updateDamageNumbers(delta);
     this.updatePerformanceTelemetry(delta);
   }
@@ -329,6 +344,7 @@ export class GameScene extends Phaser.Scene {
     this.activeCreepPath = waveStartPath;
     this.activeCreeps.forEach((creep) => creep.sprite.destroy());
     this.activeCreeps = [];
+    this.destroyAllTowerSprites();
     this.activeTowers = [];
     this.isWaveCompletionRewardGranted = false;
     this.applyEarlyWaveStartBonusPlaceholder();
@@ -548,15 +564,18 @@ export class GameScene extends Phaser.Scene {
       this.toGridCellKey(hoveredCell),
       DEFAULT_TOWER_COST,
     );
+    const towerEntity: TowerEntity = {
+      id: this.toTowerId(hoveredCell),
+      position: { x: hoveredCell.x, y: hoveredCell.y },
+      cost: DEFAULT_TOWER_COST,
+      type: 'archer',
+      combatStats: TOWER_COMBAT_STATS_BY_TYPE.archer,
+    };
+    const towerSprite = this.createPlacedBoneArcherSprite(towerEntity.position);
     this.activeTowers.push({
-      entity: {
-        id: this.toTowerId(hoveredCell),
-        position: { x: hoveredCell.x, y: hoveredCell.y },
-        cost: DEFAULT_TOWER_COST,
-        type: 'archer',
-        combatStats: TOWER_COMBAT_STATS_BY_TYPE.archer,
-      },
+      entity: towerEntity,
       runtime: createInitialTowerCombatRuntime(),
+      sprite: towerSprite,
     });
     this.playerGold = spendGoldResult.resources.gold;
     this.registry.set('economy.gold', this.playerGold);
@@ -600,9 +619,13 @@ export class GameScene extends Phaser.Scene {
     targetCell.isOccupied = false;
     targetCell.isWalkable = true;
     this.placedTowerCostsByCellKey.delete(hoveredCellKey);
-    this.activeTowers = this.activeTowers.filter(
-      (tower) => tower.entity.id !== this.toTowerId(hoveredCell),
-    );
+    this.activeTowers = this.activeTowers.filter((tower) => {
+      const shouldKeep = tower.entity.id !== this.toTowerId(hoveredCell);
+      if (!shouldKeep) {
+        this.playBoneArcherSellAnimation(tower);
+      }
+      return shouldKeep;
+    });
 
     const refundAmount = Math.floor(towerCost * SELL_REFUND_RATIO);
     this.registry.set('economy.lastSellRefund', refundAmount);
@@ -768,105 +791,75 @@ export class GameScene extends Phaser.Scene {
       }
 
       tower.runtime = consumeTowerAttack(tower.entity, tower.runtime);
-      this.spawnAttackFeedback(tower.entity, targetRenderState.entity.position);
-      this.spawnTowerAttackPulse(tower.entity.position);
+      this.playBoneArcherAttackAnimation(tower);
+      this.spawnProjectileFeedback(tower.entity, targetRenderState.entity.position);
       this.soundManager?.play('attack');
     }
   }
 
-  private spawnAttackFeedback(
+  private spawnProjectileFeedback(
     tower: TowerEntity,
     to: GridPosition,
   ): void {
-    if (!this.attackTraceOverlay) {
-      return;
-    }
-
     const fromCenter = this.toCellCenter(tower.position);
     const toCenter = this.toCellCenter(to);
     const lifetimeMs = Math.max(
-      ATTACK_FEEDBACK_MIN_LIFETIME_MS,
-      Math.min(ATTACK_FEEDBACK_MAX_LIFETIME_MS, Math.round(tower.combatStats.attackCooldownMs * 0.28)),
+      PROJECTILE_MIN_LIFETIME_MS,
+      Math.min(PROJECTILE_MAX_LIFETIME_MS, Math.round(tower.combatStats.attackCooldownMs * 0.28)),
     );
-    const trace = this.add.graphics();
-    trace.lineStyle(2, 0xffdc88, ATTACK_FEEDBACK_BASE_ALPHA);
-    trace.beginPath();
-    trace.moveTo(fromCenter.x, fromCenter.y);
-    trace.lineTo(toCenter.x, toCenter.y);
-    trace.strokePath();
-    this.activeAttackTraces.push({
-      graphics: trace,
+    const frame = TOWER_BONE_ARCHER_EFFECT_FRAMES.projectile;
+    const projectile = this.add.sprite(
+      fromCenter.x,
+      fromCenter.y,
+      TOWER_SPRITE_KEYS.UNDEAD_BONE_ARCHER,
+      frame,
+    );
+    projectile.setDisplaySize(PROJECTILE_DISPLAY_SIZE_PX, PROJECTILE_DISPLAY_SIZE_PX);
+    projectile.setOrigin(0.5);
+    projectile.setDepth(PROJECTILE_RENDER_DEPTH);
+    this.activeProjectiles.push({
+      sprite: projectile,
+      fromX: fromCenter.x,
+      fromY: fromCenter.y,
+      toX: toCenter.x,
+      toY: toCenter.y,
       remainingMs: lifetimeMs,
       maxLifetimeMs: lifetimeMs,
     });
   }
 
-  private updateAttackTraces(deltaMs: number): void {
-    if (this.activeAttackTraces.length === 0) {
+  private updateProjectiles(deltaMs: number): void {
+    if (this.activeProjectiles.length === 0) {
       return;
     }
 
-    const nextTraces: AttackTraceState[] = [];
+    const nextProjectiles: ProjectileState[] = [];
 
-    for (const trace of this.activeAttackTraces) {
-      const remainingMs = trace.remainingMs - deltaMs;
+    for (const projectile of this.activeProjectiles) {
+      const remainingMs = projectile.remainingMs - deltaMs;
 
       if (remainingMs <= 0) {
-        trace.graphics.destroy();
+        projectile.sprite.destroy();
         continue;
       }
 
-      trace.graphics.setAlpha(remainingMs / trace.maxLifetimeMs);
-      nextTraces.push({
-        graphics: trace.graphics,
+      const progress = 1 - remainingMs / projectile.maxLifetimeMs;
+      const x = projectile.fromX + (projectile.toX - projectile.fromX) * progress;
+      const y = projectile.fromY + (projectile.toY - projectile.fromY) * progress;
+      projectile.sprite.setPosition(x, y);
+      projectile.sprite.setAlpha(1 - progress * 0.35);
+      nextProjectiles.push({
+        sprite: projectile.sprite,
+        fromX: projectile.fromX,
+        fromY: projectile.fromY,
+        toX: projectile.toX,
+        toY: projectile.toY,
         remainingMs,
-        maxLifetimeMs: trace.maxLifetimeMs,
+        maxLifetimeMs: projectile.maxLifetimeMs,
       });
     }
 
-    this.activeAttackTraces = nextTraces;
-  }
-
-  private spawnTowerAttackPulse(position: GridPosition): void {
-    if (!this.towerPulseOverlay) {
-      return;
-    }
-
-    const x = position.x * GRID_DIMENSIONS.cellSize;
-    const y = position.y * GRID_DIMENSIONS.cellSize;
-    const pulse = this.add.graphics();
-    pulse.lineStyle(TOWER_ATTACK_PULSE_MAX_LINE_WIDTH, TOWER_ATTACK_PULSE_COLOR, 0.95);
-    pulse.strokeRect(x + 2, y + 2, GRID_DIMENSIONS.cellSize - 4, GRID_DIMENSIONS.cellSize - 4);
-    this.activeTowerAttackPulses.push({
-      graphics: pulse,
-      remainingMs: TOWER_ATTACK_PULSE_LIFETIME_MS,
-    });
-  }
-
-  private updateTowerAttackPulses(deltaMs: number): void {
-    if (this.activeTowerAttackPulses.length === 0) {
-      return;
-    }
-
-    const nextPulses: TowerAttackPulseState[] = [];
-
-    for (const pulse of this.activeTowerAttackPulses) {
-      const remainingMs = pulse.remainingMs - deltaMs;
-
-      if (remainingMs <= 0) {
-        pulse.graphics.destroy();
-        continue;
-      }
-
-      const alpha = remainingMs / TOWER_ATTACK_PULSE_LIFETIME_MS;
-      pulse.graphics.setAlpha(alpha);
-      nextPulses.push({
-        graphics: pulse.graphics,
-        remainingMs,
-      });
-    }
-
-    this.activeTowerAttackPulses = nextPulses;
+    this.activeProjectiles = nextProjectiles;
   }
 
   private spawnDamageNumber(position: GridPosition, damage: number): void {
@@ -1064,8 +1057,8 @@ export class GameScene extends Phaser.Scene {
 
   private resetRunToInitialState(): void {
     this.destroyAllCreeps();
-    this.destroyAllAttackTraces();
-    this.activeTowers = [];
+    this.destroyAllProjectiles();
+    this.destroyAllTowerSprites();
     this.placedTowerCostsByCellKey.clear();
     this.hoveredCell = null;
     this.updateHoveredCellDebugRegistry();
@@ -1167,6 +1160,123 @@ export class GameScene extends Phaser.Scene {
     }
 
     return UNIT_SPRITE_KEYS.UNDEAD_GHOUL;
+  }
+
+  private createBoneArcherTowerAnimations(): void {
+    this.createTowerAnimation(
+      TOWER_ANIMATION_KEYS.UNDEAD_BONE_ARCHER_BUILD,
+      TOWER_BONE_ARCHER_ANIMATION_FRAMES.build,
+      10,
+      0,
+    );
+    this.createTowerAnimation(
+      TOWER_ANIMATION_KEYS.UNDEAD_BONE_ARCHER_IDLE,
+      TOWER_BONE_ARCHER_ANIMATION_FRAMES.idle,
+      8,
+      -1,
+    );
+    this.createTowerAnimation(
+      TOWER_ANIMATION_KEYS.UNDEAD_BONE_ARCHER_ATTACK,
+      TOWER_BONE_ARCHER_ANIMATION_FRAMES.attack,
+      14,
+      0,
+    );
+    this.createTowerAnimation(
+      TOWER_ANIMATION_KEYS.UNDEAD_BONE_ARCHER_HIT_REACTION,
+      TOWER_BONE_ARCHER_ANIMATION_FRAMES.hitReaction,
+      10,
+      0,
+    );
+    this.createTowerAnimation(
+      TOWER_ANIMATION_KEYS.UNDEAD_BONE_ARCHER_SELL,
+      TOWER_BONE_ARCHER_ANIMATION_FRAMES.sell,
+      10,
+      0,
+    );
+  }
+
+  private createTowerAnimation(
+    key: string,
+    frameIndexes: readonly number[],
+    frameRate: number,
+    repeat: number,
+  ): void {
+    if (this.anims.exists(key)) {
+      return;
+    }
+
+    this.anims.create({
+      key,
+      frames: frameIndexes.map((frame) => ({
+        key: TOWER_SPRITE_KEYS.UNDEAD_BONE_ARCHER,
+        frame,
+      })),
+      frameRate,
+      repeat,
+    });
+  }
+
+  private createPlacedBoneArcherSprite(position: GridPosition): Phaser.GameObjects.Sprite {
+    const center = this.toCellCenter(position);
+    const spriteKey =
+      BONE_ARCHER_TOWER_CONFIG?.spriteKey ?? TOWER_SPRITE_KEYS.UNDEAD_BONE_ARCHER;
+    const sprite = this.add.sprite(center.x, center.y, spriteKey, 0);
+    sprite.setDisplaySize(
+      GRID_DIMENSIONS.cellSize * BONE_ARCHER_DISPLAY_SIZE_IN_CELLS,
+      GRID_DIMENSIONS.cellSize * BONE_ARCHER_DISPLAY_SIZE_IN_CELLS,
+    );
+    sprite.setOrigin(BONE_ARCHER_ORIGIN_X, BONE_ARCHER_ORIGIN_Y);
+    sprite.play(TOWER_ANIMATION_KEYS.UNDEAD_BONE_ARCHER_BUILD);
+    sprite.once(
+      `animationcomplete-${TOWER_ANIMATION_KEYS.UNDEAD_BONE_ARCHER_BUILD}`,
+      () => {
+        if (!sprite.scene) {
+          return;
+        }
+        sprite.play(TOWER_ANIMATION_KEYS.UNDEAD_BONE_ARCHER_IDLE);
+      },
+    );
+
+    return sprite;
+  }
+
+  private playBoneArcherAttackAnimation(tower: TowerRenderState): void {
+    if (tower.entity.type !== 'archer') {
+      return;
+    }
+
+    if (!tower.sprite.active) {
+      return;
+    }
+
+    tower.sprite.play(TOWER_ANIMATION_KEYS.UNDEAD_BONE_ARCHER_ATTACK, true);
+    tower.sprite.once(
+      `animationcomplete-${TOWER_ANIMATION_KEYS.UNDEAD_BONE_ARCHER_ATTACK}`,
+      () => {
+        if (!tower.sprite.active) {
+          return;
+        }
+        tower.sprite.play(TOWER_ANIMATION_KEYS.UNDEAD_BONE_ARCHER_IDLE, true);
+      },
+    );
+  }
+
+  private playBoneArcherSellAnimation(tower: TowerRenderState): void {
+    if (!tower.sprite.active) {
+      return;
+    }
+
+    tower.sprite.play(TOWER_ANIMATION_KEYS.UNDEAD_BONE_ARCHER_SELL, true);
+    tower.sprite.once(
+      `animationcomplete-${TOWER_ANIMATION_KEYS.UNDEAD_BONE_ARCHER_SELL}`,
+      () => {
+        if (!tower.sprite.active) {
+          return;
+        }
+
+        tower.sprite.destroy();
+      },
+    );
   }
 
   private getAnimationKeyByUnit(unit: UnitConfig): string {
@@ -1274,14 +1384,14 @@ export class GameScene extends Phaser.Scene {
     this.activeCreeps = [];
   }
 
-  private destroyAllAttackTraces(): void {
-    this.activeAttackTraces.forEach((trace) => trace.graphics.destroy());
-    this.activeAttackTraces = [];
+  private destroyAllTowerSprites(): void {
+    this.activeTowers.forEach((tower) => tower.sprite.destroy());
+    this.activeTowers = [];
   }
 
-  private destroyAllTowerAttackPulses(): void {
-    this.activeTowerAttackPulses.forEach((pulse) => pulse.graphics.destroy());
-    this.activeTowerAttackPulses = [];
+  private destroyAllProjectiles(): void {
+    this.activeProjectiles.forEach((projectile) => projectile.sprite.destroy());
+    this.activeProjectiles = [];
   }
 
   private destroyAllDamageNumbers(): void {
@@ -1397,18 +1507,13 @@ export class GameScene extends Phaser.Scene {
     }
 
     this.destroyAllCreeps();
-    this.destroyAllAttackTraces();
-    this.destroyAllTowerAttackPulses();
+    this.destroyAllProjectiles();
+    this.destroyAllTowerSprites();
     this.destroyAllDamageNumbers();
     this.buildPreviewOverlay?.destroy();
     this.buildPreviewOverlay = null;
-    this.attackTraceOverlay?.destroy();
-    this.attackTraceOverlay = null;
-    this.towerPulseOverlay?.destroy();
-    this.towerPulseOverlay = null;
     this.gridGraphics?.destroy();
     this.gridGraphics = null;
-    this.activeTowers = [];
     this.activeCreepPath = [];
     this.pendingWaveSpawns = [];
     this.gridModel = null;
