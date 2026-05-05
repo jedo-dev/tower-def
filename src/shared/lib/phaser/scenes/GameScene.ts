@@ -22,6 +22,11 @@ import {
 import { ECONOMY_BALANCE } from '../../../constants/economy';
 import { GRID_DEFAULT_ROW_CENTER, GRID_DIMENSIONS } from '../../../constants/grid';
 import {
+  TerrainAssetKey,
+  TERRAIN_TILESET_ASSET_PATHS,
+  TERRAIN_TILESET_FRAME,
+} from '../../../constants/terrain';
+import {
   TOWER_ANIMATION_KEYS,
   TOWER_BONE_ARCHER_ANIMATION_FRAMES,
   TOWER_BONE_ARCHER_EFFECT_FRAMES,
@@ -37,6 +42,7 @@ import { calculateWaveStartPath, generateWaveUnits } from '../../../../entities/
 import { applyDamageToCreep, isCreepDead } from '../../../../entities/creep';
 import { undeadUnits, type UnitConfig } from '../../../../entities/unit';
 import {
+  BuilderFaction,
   builderFactions,
   DEFAULT_BUILDER_FACTION,
   type BuilderFactionConfig,
@@ -52,6 +58,7 @@ import {
 } from '../../../../entities/tower';
 import { createGridModel } from '../../grid/createGridModel';
 import { validateTowerPlacementPath } from '../../pathfinding/validateTowerPlacementPath';
+import { resolveUndeadTerrainTileIndex } from '../terrain/undeadTerrain';
 import { GameSoundManager } from '../sound/GameSoundManager';
 import {
   onGameCommand,
@@ -104,6 +111,16 @@ const BONE_ARCHER_TOWER_CONFIG =
 const BONE_ARCHER_DISPLAY_SIZE_IN_CELLS = 1.4;
 const BONE_ARCHER_ORIGIN_X = 0.5;
 const BONE_ARCHER_ORIGIN_Y = 0.82;
+const GRID_LINE_COLOR = 0x5f6f8f;
+const GRID_LINE_ALPHA = 0.9;
+const GRID_LINE_WIDTH = 1;
+const ENTRANCE_EXIT_LABEL_FONT_FAMILY = 'Arial';
+const ENTRANCE_EXIT_LABEL_FONT_SIZE_PX = '10px';
+const ENTRANCE_EXIT_LABEL_COLOR = '#ffffff';
+const TERRAIN_RENDER_DEPTH = -20;
+const GRID_OVERLAY_RENDER_DEPTH = 10;
+const ENTRANCE_EXIT_LABEL_RENDER_DEPTH = 20;
+const TOWER_RENDER_DEPTH = 40;
 
 
 type CreepRenderState = {
@@ -147,6 +164,8 @@ export class GameScene extends Phaser.Scene {
   private hoveredCell: GridPosition | null = null;
   private gridModel: GridModel | null = null;
   private gridGraphics: Phaser.GameObjects.Graphics | null = null;
+  private terrainSprites: Phaser.GameObjects.Image[] = [];
+  private gridLabels: Phaser.GameObjects.Text[] = [];
   private buildPreviewOverlay: Phaser.GameObjects.Graphics | null = null;
   private placedTowerCostsByCellKey = new Map<string, number>();
   private playerGold = INITIAL_PLAYER_RESOURCES.gold;
@@ -187,6 +206,17 @@ export class GameScene extends Phaser.Scene {
   }
 
   public preload(): void {
+    if (!this.textures.exists(TerrainAssetKey.UNDEAD_TILESET)) {
+      this.load.spritesheet(
+        TerrainAssetKey.UNDEAD_TILESET,
+        TERRAIN_TILESET_ASSET_PATHS[TerrainAssetKey.UNDEAD_TILESET],
+        {
+          frameWidth: TERRAIN_TILESET_FRAME.width,
+          frameHeight: TERRAIN_TILESET_FRAME.height,
+        },
+      );
+    }
+
     Object.entries(UNIT_SPRITE_ASSETS).forEach(([key, assetPath]) => {
       if (!this.textures.exists(key)) {
         this.load.spritesheet(key, assetPath, {
@@ -307,6 +337,9 @@ export class GameScene extends Phaser.Scene {
   private drawGrid(): void {
     this.gridGraphics ??= this.add.graphics();
     this.gridGraphics.clear();
+    this.gridGraphics.setDepth(GRID_OVERLAY_RENDER_DEPTH);
+    this.clearTerrainSprites();
+    this.clearGridLabels();
 
     const grid = createGridModel({
       entrance: ENTRANCE_CELL,
@@ -321,21 +354,24 @@ export class GameScene extends Phaser.Scene {
         const x = cell.x * GRID_DIMENSIONS.cellSize;
         const y = cell.y * GRID_DIMENSIONS.cellSize;
 
-        this.add
+        const label = this.add
           .text(
             x + GRID_DIMENSIONS.cellSize / 2,
             y + GRID_DIMENSIONS.cellSize / 2,
             cell.role === 'entrance' ? 'IN' : 'OUT',
             {
-              fontFamily: 'Arial',
-              fontSize: '10px',
-              color: '#ffffff',
+              fontFamily: ENTRANCE_EXIT_LABEL_FONT_FAMILY,
+              fontSize: ENTRANCE_EXIT_LABEL_FONT_SIZE_PX,
+              color: ENTRANCE_EXIT_LABEL_COLOR,
             },
           )
           .setOrigin(0.5);
+        label.setDepth(ENTRANCE_EXIT_LABEL_RENDER_DEPTH);
+        this.gridLabels.push(label);
       }
     }
 
+    this.drawGridLines(grid);
     this.initializeWaveRuntime(grid);
   }
 
@@ -638,6 +674,46 @@ export class GameScene extends Phaser.Scene {
   }
 
   private drawGridCell(cell: GridCell): void {
+    const x = cell.x * GRID_DIMENSIONS.cellSize;
+    const y = cell.y * GRID_DIMENSIONS.cellSize;
+    this.renderTerrainCell(cell);
+
+    if (!this.gridGraphics) {
+      return;
+    }
+
+    if (cell.isOccupied) {
+      this.gridGraphics.fillStyle(0x263347, 0.55);
+      this.gridGraphics.fillRect(x, y, GRID_DIMENSIONS.cellSize, GRID_DIMENSIONS.cellSize);
+    }
+  }
+
+  private renderTerrainCell(cell: GridCell): void {
+    if (!this.hasUndeadTilesetTexture()) {
+      this.renderFallbackTerrainCell(cell);
+      return;
+    }
+
+    const tileIndex = this.resolveTerrainTileIndexForCell(cell);
+    const x = cell.x * GRID_DIMENSIONS.cellSize;
+    const y = cell.y * GRID_DIMENSIONS.cellSize;
+    const sprite = this.add.image(
+      x,
+      y,
+      TerrainAssetKey.UNDEAD_TILESET,
+      tileIndex,
+    );
+    sprite.setOrigin(0, 0);
+    sprite.setDisplaySize(GRID_DIMENSIONS.cellSize, GRID_DIMENSIONS.cellSize);
+    sprite.setDepth(TERRAIN_RENDER_DEPTH);
+    this.terrainSprites.push(sprite);
+  }
+
+  private hasUndeadTilesetTexture(): boolean {
+    return this.textures.exists(TerrainAssetKey.UNDEAD_TILESET);
+  }
+
+  private renderFallbackTerrainCell(cell: GridCell): void {
     if (!this.gridGraphics) {
       return;
     }
@@ -649,14 +725,54 @@ export class GameScene extends Phaser.Scene {
         ? 0x1e8f48
         : cell.role === 'exit'
           ? 0xaf4536
-          : cell.isOccupied
-            ? 0x3f4f66
-            : 0x253248;
+          : 0x253248;
 
     this.gridGraphics.fillStyle(fillColor, 1);
     this.gridGraphics.fillRect(x, y, GRID_DIMENSIONS.cellSize, GRID_DIMENSIONS.cellSize);
-    this.gridGraphics.lineStyle(1, 0x42597f, 1);
-    this.gridGraphics.strokeRect(x, y, GRID_DIMENSIONS.cellSize, GRID_DIMENSIONS.cellSize);
+  }
+
+  private resolveTerrainTileIndexForCell(cell: GridCell): number {
+    if (this.selectedBuilderFactionId !== BuilderFaction.UNDEAD) {
+      return resolveUndeadTerrainTileIndex({
+        position: { x: cell.x, y: cell.y },
+        entrance: ENTRANCE_CELL,
+        exit: EXIT_CELL,
+        cols: GRID_DIMENSIONS.cols,
+        rows: GRID_DIMENSIONS.rows,
+      });
+    }
+
+    // TODO: switch terrain resolver per builder faction when non-Undead terrain tilesets are implemented.
+    return resolveUndeadTerrainTileIndex({
+      position: { x: cell.x, y: cell.y },
+      entrance: ENTRANCE_CELL,
+      exit: EXIT_CELL,
+      cols: GRID_DIMENSIONS.cols,
+      rows: GRID_DIMENSIONS.rows,
+    });
+  }
+
+  private drawGridLines(grid: GridModel): void {
+    if (!this.gridGraphics) {
+      return;
+    }
+
+    this.gridGraphics.lineStyle(GRID_LINE_WIDTH, GRID_LINE_COLOR, GRID_LINE_ALPHA);
+    for (const cell of grid.cells) {
+      const x = cell.x * GRID_DIMENSIONS.cellSize;
+      const y = cell.y * GRID_DIMENSIONS.cellSize;
+      this.gridGraphics.strokeRect(x, y, GRID_DIMENSIONS.cellSize, GRID_DIMENSIONS.cellSize);
+    }
+  }
+
+  private clearTerrainSprites(): void {
+    this.terrainSprites.forEach((sprite) => sprite.destroy());
+    this.terrainSprites = [];
+  }
+
+  private clearGridLabels(): void {
+    this.gridLabels.forEach((label) => label.destroy());
+    this.gridLabels = [];
   }
 
   private toGridCellKey(position: GridPosition): string {
@@ -1221,6 +1337,7 @@ export class GameScene extends Phaser.Scene {
     const spriteKey =
       BONE_ARCHER_TOWER_CONFIG?.spriteKey ?? TOWER_SPRITE_KEYS.UNDEAD_BONE_ARCHER;
     const sprite = this.add.sprite(center.x, center.y, spriteKey, 0);
+    sprite.setDepth(TOWER_RENDER_DEPTH);
     sprite.setDisplaySize(
       GRID_DIMENSIONS.cellSize * BONE_ARCHER_DISPLAY_SIZE_IN_CELLS,
       GRID_DIMENSIONS.cellSize * BONE_ARCHER_DISPLAY_SIZE_IN_CELLS,
@@ -1514,6 +1631,8 @@ export class GameScene extends Phaser.Scene {
     this.buildPreviewOverlay = null;
     this.gridGraphics?.destroy();
     this.gridGraphics = null;
+    this.clearTerrainSprites();
+    this.clearGridLabels();
     this.activeCreepPath = [];
     this.pendingWaveSpawns = [];
     this.gridModel = null;
