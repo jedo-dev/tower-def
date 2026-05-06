@@ -8,6 +8,17 @@ export type StartPageProps = {
 export function StartPage({ onNavigate }: StartPageProps) {
   return (
     <main className="start-page">
+      <video
+        className="start-page-video"
+        autoPlay
+        loop
+        muted
+        playsInline
+        aria-hidden
+      >
+        <source src="/assets/video/background.mp4" type="video/mp4" />
+      </video>
+      <div className="start-page-video-overlay" aria-hidden />
       <div className="start-page-content">
         <div className="start-title-block">
           <h1 className="start-title">Tower Defense</h1>
