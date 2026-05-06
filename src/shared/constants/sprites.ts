@@ -38,8 +38,8 @@ export const TOWER_SPRITE_ASSETS: Record<(typeof TOWER_SPRITE_KEYS)[keyof typeof
 };
 
 export const TOWER_SPRITE_SHEET_FRAME = {
-  width: 32,
-  height: 32,
+  width: 60,
+  height: 60,
 } as const;
 
 export const TOWER_ANIMATION_KEYS = {
