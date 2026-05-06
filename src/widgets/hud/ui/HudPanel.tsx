@@ -4,6 +4,11 @@ import { sendGameCommand } from '../../../shared/lib/game-bridge/bridge';
 import { useGameHudSnapshot } from '../../../shared/lib/game-bridge/useGameHudSnapshot';
 import { mapHudSnapshotToViewModel } from '../model/mapHudSnapshotToViewModel';
 import type { HudFactionType } from '../../../shared/lib/game-bridge/types';
+import type { GameSetupConfig } from '../../../shared/config/game-setup';
+
+export type HudPanelProps = {
+  setup: GameSetupConfig | null;
+};
 
 function formatCountdown(secondsLeft: number): string {
   const safeSeconds = Math.max(0, secondsLeft);
@@ -20,7 +25,20 @@ function toFactionType(value: string): HudFactionType {
   return 'undead';
 }
 
-function HudPanelComponent() {
+function mapFactionToDisplayName(faction: HudFactionType): string {
+  switch (faction) {
+    case 'undead':
+      return 'Undead';
+    case 'orc':
+      return 'Orc';
+    case 'human':
+      return 'Human';
+    case 'elf':
+      return 'Elf';
+  }
+}
+
+function HudPanelComponent({ setup }: HudPanelProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const snapshot = useGameHudSnapshot();
   const viewModel = mapHudSnapshotToViewModel(snapshot);
@@ -42,6 +60,16 @@ function HudPanelComponent() {
         </p>
         {isExpanded && (
           <>
+            <p className="hud-stat">
+              <span className="hud-label">Enemy</span>
+              <span className="hud-value">{mapFactionToDisplayName(snapshot.selectedFaction)}</span>
+            </p>
+            {setup?.difficulty && (
+              <p className="hud-stat">
+                <span className="hud-label">Diff</span>
+                <span className="hud-value hud-value-diff">{setup.difficulty}</span>
+              </p>
+            )}
             <p className="hud-stat">
               <span className="hud-label">Wave</span>
               <span className="hud-value">{snapshot.waveNumber}</span>
@@ -151,4 +179,3 @@ function HudPanelComponent() {
 }
 
 export const HudPanel = memo(HudPanelComponent);
-

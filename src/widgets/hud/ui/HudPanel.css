@@ -140,6 +140,10 @@
   font-size: clamp(16px, 4.2vw, 20px);
 }
 
+.hud-value-diff {
+  color: #ffd700;
+}
+
 .hud-faction {
   display: grid;
   gap: 4px;
