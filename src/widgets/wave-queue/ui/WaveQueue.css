@@ -1,0 +1,111 @@
+.wave-queue {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  right: 8px;
+  z-index: 100;
+  background: linear-gradient(180deg, rgba(20, 25, 35, 0.95) 0%, rgba(15, 18, 25, 0.9) 100%);
+  border: 2px solid #3a4050;
+  border-radius: 8px;
+  padding: 6px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.wave-queue-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.wave-queue-label {
+  font-family: 'Trebuchet MS', 'Lucida Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  color: #ffd700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.wave-queue-count {
+  font-family: 'Trebuchet MS', 'Lucida Sans', sans-serif;
+  font-size: 10px;
+  color: #8b949e;
+}
+
+.wave-queue-content {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  min-height: 24px;
+}
+
+.wave-queue-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  background: linear-gradient(135deg, #2a3040 0%, #1a1e28 100%);
+  border: 1px solid #3a4050;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+}
+
+.wave-queue-sprite {
+  width: 20px;
+  height: 20px;
+  image-rendering: pixelated;
+}
+
+.wave-queue-more {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  background: #2a3040;
+  border: 1px solid #3a4050;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Trebuchet MS', 'Lucida Sans', sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  color: #8b949e;
+}
+
+.wave-queue-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 24px;
+}
+
+.wave-queue-empty-text {
+  font-family: 'Trebuchet MS', 'Lucida Sans', sans-serif;
+  font-size: 11px;
+  color: #484f58;
+  font-style: italic;
+}
+
+@media (max-width: 380px) {
+  .wave-queue {
+    padding: 4px 8px;
+  }
+
+  .wave-queue-icon {
+    width: 20px;
+    height: 20px;
+    font-size: 10px;
+  }
+
+  .wave-queue-more {
+    width: 20px;
+    height: 20px;
+    font-size: 9px;
+  }
+}

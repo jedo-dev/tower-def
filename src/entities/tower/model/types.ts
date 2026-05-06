@@ -8,12 +8,14 @@ export type TowerType = 'archer' | 'splash';
 
 export const TowerTypeConfig = {
   ARCHER: 'archer',
+  SPLASH: 'splash',
 } as const;
 
 export type BuildableTowerType = (typeof TowerTypeConfig)[keyof typeof TowerTypeConfig];
 
 export type BuildableTowerId =
   | 'undead_bone_archer_tower'
+  | 'undead_plague_tower'
   | 'orc_spear_watchtower'
   | 'human_guard_archer_tower'
   | 'elf_moon_archer_tower';
@@ -35,6 +37,7 @@ export type TowerCombatStats = {
   range: number;
   damage: number;
   attackCooldownMs: number;
+  splashRadius?: number;
 };
 
 export const TOWER_COMBAT_STATS_BY_TYPE: Record<TowerType, TowerCombatStats> = {
@@ -47,6 +50,7 @@ export const TOWER_COMBAT_STATS_BY_TYPE: Record<TowerType, TowerCombatStats> = {
     range: TowerCombatConfig.SPLASH_RANGE_CELLS,
     damage: TowerCombatConfig.SPLASH_DAMAGE,
     attackCooldownMs: TowerCombatConfig.SPLASH_ATTACK_COOLDOWN_MS,
+    splashRadius: TowerCombatConfig.SPLASH_RADIUS_CELLS,
   },
 };
 

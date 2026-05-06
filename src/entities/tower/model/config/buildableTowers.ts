@@ -16,6 +16,18 @@ export const buildableTowers: BuildableTowerConfig[] = [
     description: 'Necromantic archer nest built from cursed remains.',
   },
   {
+    id: 'undead_plague_tower',
+    name: 'Plague Tower',
+    faction: BuilderFaction.UNDEAD,
+    towerType: TowerTypeConfig.SPLASH,
+    costGold: 75,
+    damage: 18,
+    range: 2.5,
+    attackCooldownMs: 1200,
+    spriteKey: 'tower.undead.plague',
+    description: 'Launches toxic projectiles that damage all nearby foes.',
+  },
+  {
     id: 'orc_spear_watchtower',
     name: 'Spear Watchtower',
     faction: BuilderFaction.ORC,

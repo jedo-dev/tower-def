@@ -1,6 +1,12 @@
 export type GamePhase = 'build' | 'wave' | 'completed' | 'game-over';
-export type HudTowerType = 'archer';
+export type HudTowerType = 'archer' | 'splash';
 export type HudFactionType = 'undead' | 'orc' | 'human' | 'elf';
+export type HudCreepType = 'skeleton' | 'ghoul' | 'crypt_fiend' | 'gargoyle';
+
+export type WaveQueueItem = {
+  type: HudCreepType;
+  index: number;
+};
 
 export type GameHudSnapshot = {
   gold: number;
@@ -12,6 +18,8 @@ export type GameHudSnapshot = {
   selectedTowerType: HudTowerType | null;
   selectedFaction: HudFactionType;
   autoStartSecondsLeft: number | null;
+  waveQueue: WaveQueueItem[];
+  pendingCreepCount: number;
 };
 
 export type GameCommandMap = {

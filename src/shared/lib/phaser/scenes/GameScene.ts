@@ -107,11 +107,16 @@ const DAMAGE_NUMBER_RISE_PX = 12;
 const WAVE_SPAWN_INTERVAL_MS = 350;
 const WAVE_FIRST_SPAWN_DELAY_MS = 200;
 const BONE_ARCHER_TOWER_ID = 'undead_bone_archer_tower';
+const PLAGUE_TOWER_ID = 'undead_plague_tower';
 const BONE_ARCHER_TOWER_CONFIG =
   buildableTowers.find((tower) => tower.id === BONE_ARCHER_TOWER_ID) ?? null;
+const PLAGUE_TOWER_CONFIG =
+  buildableTowers.find((tower) => tower.id === PLAGUE_TOWER_ID) ?? null;
 const TOWER_VISUAL_SCALE_IN_CELLS = 1.3;
 const BONE_ARCHER_ORIGIN_X = 0.5;
 const BONE_ARCHER_ORIGIN_Y = 0.82;
+const PLAGUE_TOWER_ORIGIN_X = 0.5;
+const PLAGUE_TOWER_ORIGIN_Y = 0.75;
 const GRID_LINE_COLOR = 0x5f6f8f;
 const GRID_IDLE_ALPHA = 0.08;
 const GRID_BUILD_ALPHA = 0.42;
@@ -206,7 +211,7 @@ export class GameScene extends Phaser.Scene {
   private unsubscribeStartWaveCommand: (() => void) | null = null;
   private unsubscribeTowerSelectCommand: (() => void) | null = null;
   private unsubscribeFactionSelectCommand: (() => void) | null = null;
-  private selectedTowerType: 'archer' | null = null;
+  private selectedTowerType: 'archer' | 'splash' | null = null;
   private selectedBuilderFactionId = DEFAULT_BUILDER_FACTION;
   private selectedFaction: HudFactionType = 'undead';
   private activeTouchGesture:
@@ -622,18 +627,23 @@ export class GameScene extends Phaser.Scene {
 
     targetCell.isOccupied = true;
     targetCell.isWalkable = false;
+    const towerType = this.selectedTowerType ?? 'archer';
+    const towerConfig = towerType === 'splash' ? PLAGUE_TOWER_CONFIG : BONE_ARCHER_TOWER_CONFIG;
+    const towerCost = towerConfig?.costGold ?? DEFAULT_TOWER_COST;
     this.placedTowerCostsByCellKey.set(
       this.toGridCellKey(hoveredCell),
-      DEFAULT_TOWER_COST,
+      towerCost,
     );
     const towerEntity: TowerEntity = {
       id: this.toTowerId(hoveredCell),
       position: { x: hoveredCell.x, y: hoveredCell.y },
-      cost: DEFAULT_TOWER_COST,
-      type: 'archer',
-      combatStats: TOWER_COMBAT_STATS_BY_TYPE.archer,
+      cost: towerCost,
+      type: towerType,
+      combatStats: TOWER_COMBAT_STATS_BY_TYPE[towerType],
     };
-    const towerSprite = this.createPlacedBoneArcherSprite(towerEntity.position);
+    const towerSprite = towerType === 'splash'
+      ? this.createPlacedPlagueSprite(towerEntity.position)
+      : this.createPlacedBoneArcherSprite(towerEntity.position);
     this.activeTowers.push({
       entity: towerEntity,
       runtime: createInitialTowerCombatRuntime(),
@@ -951,40 +961,98 @@ export class GameScene extends Phaser.Scene {
         continue;
       }
 
-      const damageResult = applyDamageToCreep(
-        targetRenderState.entity,
-        tower.entity.combatStats.damage,
-      );
+      const isSplashTower = tower.entity.type === 'splash';
+      const splashRadius = tower.entity.combatStats.splashRadius ?? 0;
 
-      targetRenderState.entity = damageResult.creep;
-      this.applyCreepHitFeedback(targetRenderState);
-      this.soundManager?.play('hit');
-      this.spawnDamageNumber(
-        targetRenderState.entity.position,
-        tower.entity.combatStats.damage,
-      );
-
-      if (damageResult.killed) {
-        const nextResources = addGold(
-          { gold: this.playerGold, lives: this.playerLives },
-          ECONOMY_BALANCE.creepKillRewardGold,
-        );
-        this.playerGold = nextResources.gold;
-        this.registry.set('economy.gold', this.playerGold);
-        this.soundManager?.play('death');
-        this.publishHudSnapshot();
+      if (isSplashTower && splashRadius > 0) {
+        this.applySplashDamage(tower, targetRenderState);
+      } else {
+        this.applySingleTargetDamage(tower, targetRenderState);
       }
 
       tower.runtime = consumeTowerAttack(tower.entity, tower.runtime);
-      this.playBoneArcherAttackAnimation(tower);
-      this.spawnProjectileFeedback(tower.entity, targetRenderState.entity.position);
+      if (isSplashTower) {
+        this.playPlagueAttackAnimation(tower);
+      } else {
+        this.playBoneArcherAttackAnimation(tower);
+      }
+      this.spawnProjectileFeedback(tower.entity, targetRenderState.entity.position, isSplashTower);
       this.soundManager?.play('attack');
     }
+  }
+
+  private applySingleTargetDamage(tower: TowerRenderState, targetRenderState: CreepRenderState): void {
+    const damageResult = applyDamageToCreep(
+      targetRenderState.entity,
+      tower.entity.combatStats.damage,
+    );
+
+    targetRenderState.entity = damageResult.creep;
+    this.applyCreepHitFeedback(targetRenderState);
+    this.soundManager?.play('hit');
+    this.spawnDamageNumber(
+      targetRenderState.entity.position,
+      tower.entity.combatStats.damage,
+    );
+
+    if (damageResult.killed) {
+      this.handleCreepKill();
+    }
+  }
+
+  private applySplashDamage(tower: TowerRenderState, targetRenderState: CreepRenderState): void {
+    const splashRadius = tower.entity.combatStats.splashRadius ?? 1.5;
+    const towerCenter = tower.entity.position;
+    const splashRadiusPx = splashRadius * GRID_DIMENSIONS.cellSize;
+
+    const creepsInSplashRadius = this.activeCreeps.filter((creep) => {
+      if (creep.entity.status !== 'alive') {
+        return false;
+      }
+      const creepCenter = this.toCellCenter(creep.entity.position);
+      const towerCenterPx = this.toCellCenter(towerCenter);
+      const distance = Math.hypot(creepCenter.x - towerCenterPx.x, creepCenter.y - towerCenterPx.y);
+      return distance <= splashRadiusPx;
+    });
+
+    let totalDamageDealt = 0;
+    for (const creep of creepsInSplashRadius) {
+      const damageResult = applyDamageToCreep(
+        creep.entity,
+        tower.entity.combatStats.damage,
+      );
+
+      creep.entity = damageResult.creep;
+      this.applyCreepHitFeedback(creep);
+      totalDamageDealt += tower.entity.combatStats.damage;
+
+      if (damageResult.killed) {
+        this.handleCreepKill();
+      }
+    }
+
+    this.soundManager?.play('hit');
+    this.spawnDamageNumber(
+      targetRenderState.entity.position,
+      totalDamageDealt,
+    );
+  }
+
+  private handleCreepKill(): void {
+    const nextResources = addGold(
+      { gold: this.playerGold, lives: this.playerLives },
+      ECONOMY_BALANCE.creepKillRewardGold,
+    );
+    this.playerGold = nextResources.gold;
+    this.registry.set('economy.gold', this.playerGold);
+    this.soundManager?.play('death');
+    this.publishHudSnapshot();
   }
 
   private spawnProjectileFeedback(
     tower: TowerEntity,
     to: GridPosition,
+    isSplash: boolean = false,
   ): void {
     const fromCenter = this.toCellCenter(tower.position);
     const toCenter = this.toCellCenter(to);
@@ -999,9 +1067,13 @@ export class GameScene extends Phaser.Scene {
       TOWER_SPRITE_KEYS.UNDEAD_BONE_ARCHER,
       frame,
     );
-    projectile.setDisplaySize(PROJECTILE_DISPLAY_SIZE_PX, PROJECTILE_DISPLAY_SIZE_PX);
+    const displaySize = isSplash ? PROJECTILE_DISPLAY_SIZE_PX * 1.8 : PROJECTILE_DISPLAY_SIZE_PX;
+    projectile.setDisplaySize(displaySize, displaySize);
     projectile.setOrigin(0.5);
     projectile.setDepth(PROJECTILE_RENDER_DEPTH);
+    if (isSplash) {
+      projectile.setTint(0x44ff44);
+    }
     this.activeProjectiles.push({
       sprite: projectile,
       fromX: fromCenter.x,
@@ -1429,6 +1501,32 @@ export class GameScene extends Phaser.Scene {
     return sprite;
   }
 
+  private createPlacedPlagueSprite(position: GridPosition): Phaser.GameObjects.Sprite {
+    const center = this.toCellCenter(position);
+    const spriteKey =
+      PLAGUE_TOWER_CONFIG?.spriteKey ?? TOWER_SPRITE_KEYS.UNDEAD_BONE_ARCHER;
+    const sprite = this.add.sprite(center.x, center.y, spriteKey, 0);
+    sprite.setDepth(TOWER_RENDER_DEPTH);
+    sprite.setDisplaySize(
+      GRID_DIMENSIONS.cellSize * TOWER_VISUAL_SCALE_IN_CELLS * 1.1,
+      GRID_DIMENSIONS.cellSize * TOWER_VISUAL_SCALE_IN_CELLS * 1.1,
+    );
+    sprite.setOrigin(PLAGUE_TOWER_ORIGIN_X, PLAGUE_TOWER_ORIGIN_Y);
+    sprite.setTint(0x44aa44);
+    sprite.play(TOWER_ANIMATION_KEYS.UNDEAD_BONE_ARCHER_BUILD);
+    sprite.once(
+      `animationcomplete-${TOWER_ANIMATION_KEYS.UNDEAD_BONE_ARCHER_BUILD}`,
+      () => {
+        if (!sprite.scene) {
+          return;
+        }
+        sprite.play(TOWER_ANIMATION_KEYS.UNDEAD_BONE_ARCHER_IDLE);
+      },
+    );
+
+    return sprite;
+  }
+
   private playBoneArcherAttackAnimation(tower: TowerRenderState): void {
     if (tower.entity.type !== 'archer') {
       return;
@@ -1466,6 +1564,23 @@ export class GameScene extends Phaser.Scene {
         tower.sprite.destroy();
       },
     );
+  }
+
+  private playPlagueAttackAnimation(tower: TowerRenderState): void {
+    if (tower.entity.type !== 'splash') {
+      return;
+    }
+
+    if (!tower.sprite.active) {
+      return;
+    }
+
+    tower.sprite.setTint(0x66ff66);
+    this.time.delayedCall(150, () => {
+      if (tower.sprite.active) {
+        tower.sprite.setTint(0x44aa44);
+      }
+    });
   }
 
   private getAnimationKeyByUnit(unit: UnitConfig): string {
@@ -1631,6 +1746,7 @@ export class GameScene extends Phaser.Scene {
         : null;
 
     const currentBuilderFaction = this.getCurrentBuilderFaction();
+    const waveQueue = this.buildWaveQueue();
 
     const snapshot: GameHudSnapshot = {
       gold: this.playerGold,
@@ -1644,9 +1760,25 @@ export class GameScene extends Phaser.Scene {
       selectedTowerType: this.selectedTowerType,
       selectedFaction: this.selectedFaction,
       autoStartSecondsLeft,
+      waveQueue,
+      pendingCreepCount: this.pendingWaveSpawns.length + this.activeCreeps.filter(c => c.entity.status === 'alive').length,
     };
 
     publishGameHudSnapshot(snapshot);
+  }
+
+  private buildWaveQueue(): { type: 'skeleton' | 'ghoul' | 'crypt_fiend' | 'gargoyle'; index: number }[] {
+    return this.pendingWaveSpawns.map((spawn, idx) => {
+      let creepType: 'skeleton' | 'ghoul' | 'crypt_fiend' | 'gargoyle' = 'skeleton';
+      if (spawn.unit.id.includes('ghoul')) {
+        creepType = 'ghoul';
+      } else if (spawn.unit.id.includes('crypt_fiend')) {
+        creepType = 'crypt_fiend';
+      } else if (spawn.unit.id.includes('gargoyle')) {
+        creepType = 'gargoyle';
+      }
+      return { type: creepType, index: idx };
+    });
   }
 
   private getCurrentBuilderFaction(): BuilderFactionConfig {

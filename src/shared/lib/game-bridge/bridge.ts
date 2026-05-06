@@ -34,6 +34,8 @@ let snapshot: GameHudSnapshot = {
   selectedTowerType: null,
   selectedFaction: 'undead',
   autoStartSecondsLeft: null,
+  waveQueue: [],
+  pendingCreepCount: 0,
 };
 
 export function getGameHudSnapshot(): GameHudSnapshot {

@@ -10,7 +10,7 @@ export type HudViewModel = {
 
 export function mapHudSnapshotToViewModel(snapshot: GameHudSnapshot): HudViewModel {
   const phaseLabel = snapshot.phase === 'game-over' ? 'Game Over' : snapshot.phase;
-  const selectedTowerLabel = snapshot.selectedTowerType === null ? 'None' : 'Archer';
+  const selectedTowerLabel = snapshot.selectedTowerType === null ? 'None' : snapshot.selectedTowerType === 'splash' ? 'Plague' : 'Archer';
   const modeLabel = snapshot.selectedTowerType === null ? 'Sell (placeholder)' : 'Build (placeholder)';
   const isWaveActive = snapshot.phase === 'wave';
 

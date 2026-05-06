@@ -13,6 +13,8 @@ function createSnapshot(overrides: Partial<GameHudSnapshot> = {}): GameHudSnapsh
     selectedTowerType: null,
     selectedFaction: 'undead',
     autoStartSecondsLeft: null,
+    waveQueue: [],
+    pendingCreepCount: 0,
     ...overrides,
   };
 }
