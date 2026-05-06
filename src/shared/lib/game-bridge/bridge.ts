@@ -1,4 +1,5 @@
 import type { GameCommandMap, GameHudSnapshot } from './types';
+import type { GameSetupConfig } from '../../config/game-setup';
 
 type CommandName = keyof GameCommandMap;
 type CommandHandler<T extends CommandName> = (payload: GameCommandMap[T]) => void;
@@ -8,6 +9,20 @@ const SNAPSHOT_EVENT = 'game-bridge:snapshot';
 
 const commandHandlers = new Map<CommandName, Set<CommandHandler<CommandName>>>();
 const snapshotEventTarget = new EventTarget();
+
+let gameSetupConfig: GameSetupConfig | null = null;
+
+export function getGameSetupConfig(): GameSetupConfig | null {
+  return gameSetupConfig;
+}
+
+export function setGameSetupConfig(config: GameSetupConfig): void {
+  gameSetupConfig = config;
+}
+
+export function clearGameSetupConfig(): void {
+  gameSetupConfig = null;
+}
 
 let snapshot: GameHudSnapshot = {
   gold: 0,

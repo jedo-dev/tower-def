@@ -63,6 +63,7 @@ import { GameSoundManager } from '../sound/GameSoundManager';
 import {
   onGameCommand,
   publishGameHudSnapshot,
+  getGameSetupConfig,
 } from '../../game-bridge/bridge';
 import type { GameHudSnapshot, HudFactionType } from '../../game-bridge/types';
 import type { GridPosition } from '../../../types/pathfinding';
@@ -129,6 +130,13 @@ const TERRAIN_DECORATION_TILE_ALPHA = 0.62;
 const TERRAIN_BASE_TILE_TINT = 0xc3cbbf;
 const TERRAIN_DECORATION_TILE_TINT = 0xb7bfae;
 const BUILD_PREVIEW_RENDER_DEPTH = 15;
+
+function mapEnemyFactionToHudFaction(faction: string): HudFactionType {
+  if (faction === 'ORC' || faction === 'HUMAN' || faction === 'ELF') {
+    return faction.toLowerCase() as HudFactionType;
+  }
+  return 'undead';
+}
 
 
 type CreepRenderState = {
@@ -246,6 +254,7 @@ export class GameScene extends Phaser.Scene {
 
   public create(): void {
     this.isSceneCleanedUp = false;
+    this.loadSetupConfig();
     this.cameras.main.setBackgroundColor('#1a1f2c');
     this.cameras.main.roundPixels = true;
     this.applyNearestNeighborFiltering();
@@ -838,6 +847,15 @@ export class GameScene extends Phaser.Scene {
     }
 
     return canPerformBuildActionsByPhase(this.wavePhaseState);
+  }
+
+  private loadSetupConfig(): void {
+    const setupConfig = getGameSetupConfig();
+    if (setupConfig) {
+      this.selectedBuilderFactionId = setupConfig.builderFaction;
+      this.selectedFaction = mapEnemyFactionToHudFaction(setupConfig.enemyFaction);
+      this.registry.set('game.setup', setupConfig);
+    }
   }
 
   private toCellCenter(position: GridPosition): { x: number; y: number } {

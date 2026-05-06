@@ -1,0 +1,278 @@
+.game-setup-page {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(180deg, #0d1117 0%, #161b22 50%, #1c2128 100%);
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+.setup-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.setup-back-button {
+  width: 44px;
+  height: 44px;
+  border: 2px solid #30363d;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #21262d 0%, #161b22 100%);
+  color: #c9d1d9;
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.setup-back-button:hover {
+  background: linear-gradient(180deg, #30363d 0%, #21262d 100%);
+  border-color: #484f58;
+}
+
+.setup-title {
+  flex: 1;
+  font-family: 'Trebuchet MS', 'Lucida Sans', sans-serif;
+  font-size: 20px;
+  font-weight: 600;
+  color: #ffd700;
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+  margin: 0;
+  text-align: center;
+}
+
+.setup-progress {
+  display: flex;
+  gap: 8px;
+}
+
+.setup-progress-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #30363d;
+  transition: all 0.2s ease;
+}
+
+.setup-progress-dot-active {
+  background: #ffd700;
+  box-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
+}
+
+.setup-progress-dot-complete {
+  background: #238636;
+}
+
+.setup-content {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 16px;
+}
+
+.setup-cards {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.setup-cards-vertical {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.setup-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px 12px;
+  border: 2px solid #30363d;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #21262d 0%, #161b22 100%);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.setup-card:hover {
+  border-color: var(--card-theme, #484f58);
+  transform: translateY(-2px);
+}
+
+.setup-card-selected {
+  border-color: var(--card-theme, #ffd700);
+  background: linear-gradient(180deg, #2d333b 0%, #1c2128 100%);
+  box-shadow: 0 0 16px rgba(var(--card-theme, 255, 215, 0), 0.2);
+}
+
+.setup-card-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--card-theme, #5c8cff) 0%, rgba(0, 0, 0, 0.3) 100%);
+  margin-bottom: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.setup-card-name {
+  font-family: 'Trebuchet MS', 'Lucida Sans', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 8px 0;
+}
+
+.setup-card-desc {
+  font-family: 'Trebuchet MS', 'Lucida Sans', sans-serif;
+  font-size: 11px;
+  color: #8b949e;
+  margin: 0 0 8px 0;
+  line-height: 1.4;
+}
+
+.setup-card-tower {
+  font-family: 'Trebuchet MS', 'Lucida Sans', sans-serif;
+  font-size: 10px;
+  color: var(--card-theme, #5c8cff);
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.setup-difficulty-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 14px 16px;
+  border: 2px solid #30363d;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #21262d 0%, #161b22 100%);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.setup-difficulty-btn:hover {
+  border-color: #484f58;
+  background: linear-gradient(180deg, #2d333b 0%, #1c2128 100%);
+}
+
+.setup-difficulty-btn-selected {
+  border-color: #ffd700;
+  background: linear-gradient(180deg, #2d333b 0%, #1c2128 100%);
+}
+
+.setup-difficulty-name {
+  font-family: 'Trebuchet MS', 'Lucida Sans', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 4px;
+}
+
+.setup-difficulty-btn-selected .setup-difficulty-name {
+  color: #ffd700;
+}
+
+.setup-difficulty-desc {
+  font-family: 'Trebuchet MS', 'Lucida Sans', sans-serif;
+  font-size: 12px;
+  color: #8b949e;
+  margin: 0;
+}
+
+.setup-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.setup-summary-block {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  border: 2px solid #30363d;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #21262d 0%, #161b22 100%);
+}
+
+.setup-summary-label {
+  font-family: 'Trebuchet MS', 'Lucida Sans', sans-serif;
+  font-size: 14px;
+  color: #8b949e;
+}
+
+.setup-summary-value {
+  font-family: 'Trebuchet MS', 'Lucida Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--theme, #ffffff);
+}
+
+.setup-summary-value-diff {
+  color: #ffd700;
+}
+
+.setup-footer {
+  padding-top: 16px;
+  border-top: 1px solid #30363d;
+}
+
+.setup-next-button {
+  width: 100%;
+  font-family: 'Trebuchet MS', 'Lucida Sans', sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+  padding: 14px 24px;
+  border: 2px solid #2ea043;
+  border-radius: 6px;
+  background: linear-gradient(180deg, #238636 0%, #196c2e 100%);
+  color: #ffffff;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  box-shadow:
+    0 2px 0 #0d5316,
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transition: all 0.2s ease;
+  min-height: 52px;
+}
+
+.setup-next-button:hover {
+  background: linear-gradient(180deg, #2ea043 0%, #238636 100%);
+  transform: translateY(-1px);
+  box-shadow:
+    0 3px 0 #0d5316,
+    0 4px 12px rgba(46, 160, 67, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.setup-next-button:active {
+  transform: translateY(1px);
+  box-shadow:
+    0 1px 0 #0d5316,
+    inset 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+@media (min-width: 390px) and (min-height: 844px) {
+  .setup-title {
+    font-size: 22px;
+  }
+
+  .setup-card {
+    padding: 20px 16px;
+  }
+
+  .setup-card-name {
+    font-size: 18px;
+  }
+
+  .setup-card-desc {
+    font-size: 12px;
+  }
+}

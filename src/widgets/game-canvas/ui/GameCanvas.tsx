@@ -1,9 +1,14 @@
 import { memo, useEffect, useRef } from 'react';
 import Phaser from 'phaser';
 import { createGameConfig } from '../../../shared/lib/phaser/createGameConfig';
+import type { GameSetupConfig } from '../../../shared/config/game-setup';
 import './GameCanvas.css';
 
-function GameCanvasComponent() {
+export type GameCanvasProps = {
+  setup: GameSetupConfig | null;
+};
+
+function GameCanvasComponent({ setup }: GameCanvasProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const gameRef = useRef<Phaser.Game | null>(null);
 
@@ -49,7 +54,7 @@ function GameCanvasComponent() {
       gameRef.current?.destroy(true);
       gameRef.current = null;
     };
-  }, []);
+  }, [setup]);
 
   return (
     <div className="game-canvas-shell">
@@ -59,4 +64,3 @@ function GameCanvasComponent() {
 }
 
 export const GameCanvas = memo(GameCanvasComponent);
-
