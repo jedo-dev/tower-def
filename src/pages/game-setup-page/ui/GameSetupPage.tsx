@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef, type CSSProperties } from 'react';
 import { BuilderFaction, builderFactions, DEFAULT_BUILDER_FACTION } from '../../../entities/builder-faction';
 import { EnemyFaction, enemyFactions, DEFAULT_ENEMY_FACTION } from '../../../entities/enemy-faction';
 import { Difficulty, difficulties, DEFAULT_DIFFICULTY } from '../../../entities/difficulty';
@@ -15,8 +15,8 @@ export type GameSetupPageProps = {
 const STEP_TITLES: Record<SetupStep, string> = {
   'builder-race': 'Choose Your Race',
   'enemy-faction': 'Select Enemy Faction',
-  'difficulty': 'Choose Difficulty',
-  'summary': 'Match Summary',
+  difficulty: 'Choose Difficulty',
+  summary: 'Match Summary',
 };
 
 const BUILDER_BACKGROUND_VIDEO: Partial<Record<BuilderFaction, string>> = {
@@ -31,6 +31,8 @@ export function GameSetupPage({ onStartGame, onNavigate }: GameSetupPageProps) {
   const [builderRace, setBuilderRace] = useState<BuilderFaction>(DEFAULT_BUILDER_FACTION);
   const [enemyFactionSelected, setEnemyFactionSelected] = useState<EnemyFaction>(DEFAULT_ENEMY_FACTION);
   const [difficultySelected, setDifficultySelected] = useState<Difficulty>(DEFAULT_DIFFICULTY);
+  const [isRaceVisible, setIsRaceVisible] = useState(true);
+  const transitionTimeoutRef = useRef<number | null>(null);
 
   const handleNext = useCallback(() => {
     switch (step) {
@@ -76,55 +78,94 @@ export function GameSetupPage({ onStartGame, onNavigate }: GameSetupPageProps) {
   const currentBuilderIndex = builderFactions.findIndex((f) => f.id === builderRace);
   const currentBuilderVideo = BUILDER_BACKGROUND_VIDEO[builderRace];
 
-  const handleBuilderRaceSwitch = useCallback((direction: 'prev' | 'next') => {
-    const factionCount = builderFactions.length;
-    if (factionCount === 0) {
-      return;
-    }
+  useEffect(() => {
+    return () => {
+      if (transitionTimeoutRef.current !== null) {
+        window.clearTimeout(transitionTimeoutRef.current);
+      }
+    };
+  }, []);
 
-    const currentIndex = builderFactions.findIndex((f) => f.id === builderRace);
-    const safeCurrentIndex = currentIndex >= 0 ? currentIndex : 0;
-    const nextIndex =
-      direction === 'next'
-        ? (safeCurrentIndex + 1) % factionCount
-        : (safeCurrentIndex - 1 + factionCount) % factionCount;
+  const switchBuilderRaceWithFade = useCallback(
+    (nextRace: BuilderFaction) => {
+      if (nextRace === builderRace) {
+        return;
+      }
 
-    setBuilderRace(builderFactions[nextIndex].id);
-  }, [builderRace]);
+      if (transitionTimeoutRef.current !== null) {
+        window.clearTimeout(transitionTimeoutRef.current);
+      }
+
+      setIsRaceVisible(false);
+      transitionTimeoutRef.current = window.setTimeout(() => {
+        setBuilderRace(nextRace);
+        setIsRaceVisible(true);
+        transitionTimeoutRef.current = null;
+      }, 180);
+    },
+    [builderRace],
+  );
+
+  const handleBuilderRaceSwitch = useCallback(
+    (direction: 'prev' | 'next') => {
+      const factionCount = builderFactions.length;
+      if (factionCount === 0) {
+        return;
+      }
+
+      const currentIndex = builderFactions.findIndex((f) => f.id === builderRace);
+      const safeCurrentIndex = currentIndex >= 0 ? currentIndex : 0;
+      const nextIndex =
+        direction === 'next'
+          ? (safeCurrentIndex + 1) % factionCount
+          : (safeCurrentIndex - 1 + factionCount) % factionCount;
+
+      switchBuilderRaceWithFade(builderFactions[nextIndex].id);
+    },
+    [builderRace, switchBuilderRaceWithFade],
+  );
 
   return (
-    <main className="game-setup-page">
-      <header className="setup-header">
-        <button
-          type="button"
-          className="setup-back-button"
-          onClick={handleBack}
-          aria-label="Go back"
-        >
-          ←
-        </button>
-        <h1 className="setup-title">{STEP_TITLES[step]}</h1>
-        <div className="setup-progress">
-          {['builder-race', 'enemy-faction', 'difficulty', 'summary'].map((s, idx) => (
-            <div
-              key={s}
-              className={`setup-progress-dot${step === s ? ' setup-progress-dot-active' : ''}${
-                ['builder-race', 'enemy-faction', 'difficulty', 'summary'].indexOf(step) > idx
-                  ? ' setup-progress-dot-complete'
-                  : ''
-              }`}
-            />
-          ))}
-        </div>
-      </header>
+    <main className={`game-setup-page${step === 'builder-race' ? ' game-setup-page-race-mode' : ''}`}>
+      {step !== 'builder-race' && (
+        <header className="setup-header">
+          <button type="button" className="setup-back-button" onClick={handleBack} aria-label="Go back">
+            {'<'}
+          </button>
+          <h1 className="setup-title">{STEP_TITLES[step]}</h1>
+          <div className="setup-progress">
+            {['builder-race', 'enemy-faction', 'difficulty', 'summary'].map((s, idx) => (
+              <div
+                key={s}
+                className={`setup-progress-dot${step === s ? ' setup-progress-dot-active' : ''}${
+                  ['builder-race', 'enemy-faction', 'difficulty', 'summary'].indexOf(step) > idx
+                    ? ' setup-progress-dot-complete'
+                    : ''
+                }`}
+              />
+            ))}
+          </div>
+        </header>
+      )}
 
       <div className="setup-content">
         {step === 'builder-race' && (
           <div className="setup-race-selector">
-            <div
-              className="setup-race-preview"
-              style={{ '--card-theme': currentBuilderConfig.themeColor } as React.CSSProperties}
-            >
+            <div className="setup-race-topbar">
+              <button type="button" className="setup-back-button" onClick={handleBack} aria-label="Go back">
+                {'<'}
+              </button>
+              <div className="setup-progress">
+                {builderFactions.map((faction) => (
+                  <div
+                    key={faction.id}
+                    className={`setup-progress-dot${builderRace === faction.id ? ' setup-progress-dot-active' : ''}`}
+                  />
+                ))}
+              </div>
+            </div>
+
+            <div className={`setup-race-preview${isRaceVisible ? ' setup-race-preview-visible' : ''}`}>
               {currentBuilderVideo ? (
                 <video
                   key={builderRace}
@@ -137,15 +178,21 @@ export function GameSetupPage({ onStartGame, onNavigate }: GameSetupPageProps) {
                   aria-hidden
                 />
               ) : null}
-              <div className="setup-race-preview-overlay" aria-hidden />
+
+              <div
+                className="setup-race-preview-overlay"
+                style={{ '--card-theme': currentBuilderConfig.themeColor } as CSSProperties}
+                aria-hidden
+              />
 
               <button
                 type="button"
                 className="setup-race-arrow setup-race-arrow-left"
                 onClick={() => handleBuilderRaceSwitch('prev')}
                 aria-label="Previous race"
+                disabled={!isRaceVisible}
               >
-                ‹
+                {'<'}
               </button>
 
               <button
@@ -153,8 +200,9 @@ export function GameSetupPage({ onStartGame, onNavigate }: GameSetupPageProps) {
                 className="setup-race-arrow setup-race-arrow-right"
                 onClick={() => handleBuilderRaceSwitch('next')}
                 aria-label="Next race"
+                disabled={!isRaceVisible}
               >
-                ›
+                {'>'}
               </button>
 
               <div className="setup-race-info">
@@ -169,6 +217,10 @@ export function GameSetupPage({ onStartGame, onNavigate }: GameSetupPageProps) {
             <div className="setup-race-index" aria-live="polite">
               {currentBuilderIndex + 1} / {builderFactions.length}
             </div>
+
+            <button type="button" className="setup-next-button" onClick={handleNext}>
+              Choose Race
+            </button>
           </div>
         )}
 
@@ -180,7 +232,7 @@ export function GameSetupPage({ onStartGame, onNavigate }: GameSetupPageProps) {
                 type="button"
                 className={`setup-card${enemyFactionSelected === faction.id ? ' setup-card-selected' : ''}`}
                 onClick={() => setEnemyFactionSelected(faction.id)}
-                style={{ '--card-theme': getEnemyThemeColor(faction.id) } as React.CSSProperties}
+                style={{ '--card-theme': getEnemyThemeColor(faction.id) } as CSSProperties}
               >
                 <div className="setup-card-icon" />
                 <h2 className="setup-card-name">{faction.name}</h2>
@@ -211,21 +263,19 @@ export function GameSetupPage({ onStartGame, onNavigate }: GameSetupPageProps) {
           <div className="setup-summary">
             <div className="setup-summary-block">
               <span className="setup-summary-label">Builder Race</span>
-              <span className="setup-summary-value" style={{ '--theme': currentBuilderConfig.themeColor } as React.CSSProperties}>
+              <span className="setup-summary-value" style={{ '--theme': currentBuilderConfig.themeColor } as CSSProperties}>
                 {currentBuilderConfig.name}
               </span>
             </div>
             <div className="setup-summary-block">
               <span className="setup-summary-label">Enemy Faction</span>
-              <span className="setup-summary-value" style={{ '--theme': getEnemyThemeColor(enemyFactionSelected) } as React.CSSProperties}>
+              <span className="setup-summary-value" style={{ '--theme': getEnemyThemeColor(enemyFactionSelected) } as CSSProperties}>
                 {currentEnemyConfig.name}
               </span>
             </div>
             <div className="setup-summary-block">
               <span className="setup-summary-label">Difficulty</span>
-              <span className="setup-summary-value setup-summary-value-diff">
-                {currentDifficultyConfig.name}
-              </span>
+              <span className="setup-summary-value setup-summary-value-diff">{currentDifficultyConfig.name}</span>
             </div>
             <div className="setup-summary-block">
               <span className="setup-summary-label">Starter Tower</span>
@@ -237,15 +287,13 @@ export function GameSetupPage({ onStartGame, onNavigate }: GameSetupPageProps) {
         )}
       </div>
 
-      <footer className="setup-footer">
-        <button
-          type="button"
-          className="setup-next-button"
-          onClick={handleNext}
-        >
-          {step === 'builder-race' ? 'Choose Race' : step === 'summary' ? 'Start Game' : 'Continue'}
-        </button>
-      </footer>
+      {step !== 'builder-race' && (
+        <footer className="setup-footer">
+          <button type="button" className="setup-next-button" onClick={handleNext}>
+            {step === 'summary' ? 'Start Game' : 'Continue'}
+          </button>
+        </footer>
+      )}
     </main>
   );
 }
