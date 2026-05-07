@@ -19,6 +19,13 @@ const STEP_TITLES: Record<SetupStep, string> = {
   'summary': 'Match Summary',
 };
 
+const BUILDER_BACKGROUND_VIDEO: Partial<Record<BuilderFaction, string>> = {
+  [BuilderFaction.UNDEAD]: '/assets/video/undead.mp4',
+  [BuilderFaction.ORC]: '/assets/video/orc.mp4',
+  [BuilderFaction.HUMAN]: '/assets/video/human.mp4',
+  [BuilderFaction.ELF]: '/assets/video/elf.mp4',
+};
+
 export function GameSetupPage({ onStartGame, onNavigate }: GameSetupPageProps) {
   const [step, setStep] = useState<SetupStep>('builder-race');
   const [builderRace, setBuilderRace] = useState<BuilderFaction>(DEFAULT_BUILDER_FACTION);
@@ -66,6 +73,24 @@ export function GameSetupPage({ onStartGame, onNavigate }: GameSetupPageProps) {
   const currentBuilderConfig = builderFactions.find((f) => f.id === builderRace) ?? builderFactions[0];
   const currentEnemyConfig = enemyFactions.find((f) => f.id === enemyFactionSelected) ?? enemyFactions[0];
   const currentDifficultyConfig = difficulties.find((d) => d.id === difficultySelected) ?? difficulties[0];
+  const currentBuilderIndex = builderFactions.findIndex((f) => f.id === builderRace);
+  const currentBuilderVideo = BUILDER_BACKGROUND_VIDEO[builderRace];
+
+  const handleBuilderRaceSwitch = useCallback((direction: 'prev' | 'next') => {
+    const factionCount = builderFactions.length;
+    if (factionCount === 0) {
+      return;
+    }
+
+    const currentIndex = builderFactions.findIndex((f) => f.id === builderRace);
+    const safeCurrentIndex = currentIndex >= 0 ? currentIndex : 0;
+    const nextIndex =
+      direction === 'next'
+        ? (safeCurrentIndex + 1) % factionCount
+        : (safeCurrentIndex - 1 + factionCount) % factionCount;
+
+    setBuilderRace(builderFactions[nextIndex].id);
+  }, [builderRace]);
 
   return (
     <main className="game-setup-page">
@@ -95,21 +120,55 @@ export function GameSetupPage({ onStartGame, onNavigate }: GameSetupPageProps) {
 
       <div className="setup-content">
         {step === 'builder-race' && (
-          <div className="setup-cards">
-            {builderFactions.map((faction) => (
+          <div className="setup-race-selector">
+            <div
+              className="setup-race-preview"
+              style={{ '--card-theme': currentBuilderConfig.themeColor } as React.CSSProperties}
+            >
+              {currentBuilderVideo ? (
+                <video
+                  key={builderRace}
+                  className="setup-race-preview-video"
+                  src={currentBuilderVideo}
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  aria-hidden
+                />
+              ) : null}
+              <div className="setup-race-preview-overlay" aria-hidden />
+
               <button
-                key={faction.id}
                 type="button"
-                className={`setup-card${builderRace === faction.id ? ' setup-card-selected' : ''}`}
-                onClick={() => setBuilderRace(faction.id)}
-                style={{ '--card-theme': faction.themeColor } as React.CSSProperties}
+                className="setup-race-arrow setup-race-arrow-left"
+                onClick={() => handleBuilderRaceSwitch('prev')}
+                aria-label="Previous race"
               >
-                <div className="setup-card-icon" />
-                <h2 className="setup-card-name">{faction.name}</h2>
-                <p className="setup-card-desc">{faction.description}</p>
-                <p className="setup-card-tower">Starter: {faction.towerIds[0]?.replace('_tower', '') || 'None'}</p>
+                ‹
               </button>
-            ))}
+
+              <button
+                type="button"
+                className="setup-race-arrow setup-race-arrow-right"
+                onClick={() => handleBuilderRaceSwitch('next')}
+                aria-label="Next race"
+              >
+                ›
+              </button>
+
+              <div className="setup-race-info">
+                <h2 className="setup-card-name">{currentBuilderConfig.name}</h2>
+                <p className="setup-card-desc">{currentBuilderConfig.description}</p>
+                <p className="setup-card-tower">
+                  Starter: {currentBuilderConfig.towerIds[0]?.replace('_tower', '') || 'None'}
+                </p>
+              </div>
+            </div>
+
+            <div className="setup-race-index" aria-live="polite">
+              {currentBuilderIndex + 1} / {builderFactions.length}
+            </div>
           </div>
         )}
 
@@ -184,7 +243,7 @@ export function GameSetupPage({ onStartGame, onNavigate }: GameSetupPageProps) {
           className="setup-next-button"
           onClick={handleNext}
         >
-          {step === 'summary' ? 'Start Game' : 'Continue'}
+          {step === 'builder-race' ? 'Choose Race' : step === 'summary' ? 'Start Game' : 'Continue'}
         </button>
       </footer>
     </main>
