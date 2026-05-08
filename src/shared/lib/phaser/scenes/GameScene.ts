@@ -20,6 +20,7 @@ import {
   type WavePhaseState,
 } from '../../../../features/wave-phase';
 import { ECONOMY_BALANCE } from '../../../constants/economy';
+import { TowerCombatConfig } from '../../../constants/tower';
 import { GRID_DEFAULT_ROW_CENTER, GRID_DIMENSIONS } from '../../../constants/grid';
 import {
   TerrainAssetKey,
@@ -97,10 +98,10 @@ const CREEP_BASE_COLOR = 0xffffff;
 const CREEP_HIT_FLASH_COLOR = 0xffffff;
 const CREEP_HIT_FLASH_DURATION_MS = 90;
 const CREEP_DEATH_FADE_DURATION_MS = 180;
-const PROJECTILE_MIN_LIFETIME_MS = 180;
-const PROJECTILE_MAX_LIFETIME_MS = 320;
-const PROJECTILE_DISPLAY_SIZE_PX = 22;
-const PROJECTILE_RENDER_DEPTH = 30;
+const PROJECTILE_MIN_LIFETIME_MS = 200;
+const PROJECTILE_MAX_LIFETIME_MS = 350;
+const PROJECTILE_DISPLAY_SIZE_PX = 24;
+const PROJECTILE_RENDER_DEPTH = 35;
 const DAMAGE_NUMBERS_ENABLED = true;
 const DAMAGE_NUMBER_LIFETIME_MS = 420;
 const DAMAGE_NUMBER_RISE_PX = 12;
@@ -470,6 +471,14 @@ export class GameScene extends Phaser.Scene {
     return;
   }
 
+  private getSelectedTowerRangeCells(): number {
+    const towerType = this.selectedTowerType ?? 'archer';
+    if (towerType === 'splash') {
+      return TowerCombatConfig.SPLASH_RANGE_CELLS;
+    }
+    return TowerCombatConfig.ARCHER_RANGE_CELLS;
+  }
+
   private updateBuildPreview(): void {
     if (!this.buildPreviewOverlay) {
       return;
@@ -495,6 +504,15 @@ export class GameScene extends Phaser.Scene {
     const markerSize = GRID_DIMENSIONS.cellSize * 0.2;
     const centerX = x + GRID_DIMENSIONS.cellSize / 2;
     const centerY = y + GRID_DIMENSIONS.cellSize / 2;
+
+    const rangeCells = this.getSelectedTowerRangeCells();
+    const rangeRadiusPx = rangeCells * GRID_DIMENSIONS.cellSize;
+    const rangeColor = isBuildCellValid ? 0x3ecf78 : 0xe55a4f;
+
+    this.buildPreviewOverlay.fillStyle(rangeColor, 0.12);
+    this.buildPreviewOverlay.lineStyle(1, rangeColor, 0.35);
+    this.buildPreviewOverlay.fillCircle(centerX, centerY, rangeRadiusPx);
+    this.buildPreviewOverlay.strokeCircle(centerX, centerY, rangeRadiusPx);
 
     this.buildPreviewOverlay.fillStyle(fillColor, 0.42);
     this.buildPreviewOverlay.fillRect(x, y, GRID_DIMENSIONS.cellSize, GRID_DIMENSIONS.cellSize);
@@ -1067,7 +1085,7 @@ export class GameScene extends Phaser.Scene {
       TOWER_SPRITE_KEYS.UNDEAD_BONE_ARCHER,
       frame,
     );
-    const displaySize = isSplash ? PROJECTILE_DISPLAY_SIZE_PX * 1.8 : PROJECTILE_DISPLAY_SIZE_PX;
+    const displaySize = isSplash ? PROJECTILE_DISPLAY_SIZE_PX * 1.6 : PROJECTILE_DISPLAY_SIZE_PX;
     projectile.setDisplaySize(displaySize, displaySize);
     projectile.setOrigin(0.5);
     projectile.setDepth(PROJECTILE_RENDER_DEPTH);
@@ -1372,9 +1390,10 @@ export class GameScene extends Phaser.Scene {
     this.pendingWaveSpawns = this.pendingWaveSpawns.filter((spawn) => spawn.spawnAtMs > nowMs);
 
     for (const spawn of readySpawns) {
+      const creepTypeFromUnit = this.getCreepTypeFromUnit(spawn.unit);
       const waveCreep: CreepEntity = {
         id: `wave:creep:${this.currentWaveNumber}:${spawn.sequenceIndex}`,
-        type: 'basic',
+        type: creepTypeFromUnit,
         hp: spawn.unit.health,
         lifeState: 'alive',
         speed: spawn.unit.speed,
@@ -1768,7 +1787,15 @@ export class GameScene extends Phaser.Scene {
   }
 
   private buildWaveQueue(): { type: 'skeleton' | 'ghoul' | 'crypt_fiend' | 'gargoyle'; index: number }[] {
-    return this.pendingWaveSpawns.map((spawn, idx) => {
+    const queue: { type: 'skeleton' | 'ghoul' | 'crypt_fiend' | 'gargoyle'; index: number }[] = [];
+
+    for (const creep of this.activeCreeps) {
+      if (creep.entity.status !== 'alive') continue;
+      const creepType = this.mapEntityToCreepType(creep.entity);
+      queue.push({ type: creepType, index: queue.length });
+    }
+
+    for (const spawn of this.pendingWaveSpawns) {
       let creepType: 'skeleton' | 'ghoul' | 'crypt_fiend' | 'gargoyle' = 'skeleton';
       if (spawn.unit.id.includes('ghoul')) {
         creepType = 'ghoul';
@@ -1777,8 +1804,24 @@ export class GameScene extends Phaser.Scene {
       } else if (spawn.unit.id.includes('gargoyle')) {
         creepType = 'gargoyle';
       }
-      return { type: creepType, index: idx };
-    });
+      queue.push({ type: creepType, index: queue.length });
+    }
+
+    return queue;
+  }
+
+  private mapEntityToCreepType(creep: CreepEntity): 'skeleton' | 'ghoul' | 'crypt_fiend' | 'gargoyle' {
+    if (creep.type === 'fast') return 'gargoyle';
+    if (creep.type === 'tank') return 'crypt_fiend';
+    if (creep.type === 'swarm') return 'ghoul';
+    return 'skeleton';
+  }
+
+  private getCreepTypeFromUnit(unit: UnitConfig): 'basic' | 'fast' | 'tank' | 'swarm' {
+    if (unit.id.includes('gargoyle')) return 'fast';
+    if (unit.id.includes('crypt_fiend')) return 'tank';
+    if (unit.id.includes('ghoul')) return 'swarm';
+    return 'basic';
   }
 
   private getCurrentBuilderFaction(): BuilderFactionConfig {
