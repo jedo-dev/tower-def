@@ -1,25 +1,21 @@
 import Phaser from 'phaser';
 import {
-  canSpendGold,
-  isGameOverByLives,
-  spendGold,
-  subtractLives,
-} from '../../../../entities/player-resources';
+  BuilderFaction,
+  builderFactions,
+  DEFAULT_BUILDER_FACTION,
+  type BuilderFactionConfig,
+} from '../../../../entities/builder-faction';
+import { createInitialTowerCombatRuntime } from '../../../../entities/tower';
+import { undeadUnits, type UnitConfig } from '../../../../entities/unit';
+import { calculateWaveStartPath } from '../../../../entities/wave';
 import {
   canPerformBuildActions as canPerformBuildActionsByPhase,
   createInitialWavePhaseState,
   isWaveActionAllowed,
   startNextWaveCycle,
-  transitionToGameOver,
   type WavePhaseState,
 } from '../../../../features/wave-phase';
-import { TowerCombatConfig } from '../../../constants/tower';
 import { GRID_DIMENSIONS } from '../../../constants/grid';
-import {
-  TerrainAssetKey,
-  TERRAIN_TILESET_ASSET_PATHS,
-  TERRAIN_TILESET_FRAME,
-} from '../../../constants/terrain';
 import {
   TOWER_ANIMATION_KEYS,
   TOWER_BONE_ARCHER_ANIMATION_FRAMES,
@@ -31,22 +27,29 @@ import {
   UNIT_SPRITE_KEYS,
   UNIT_SPRITE_SHEET_FRAME,
 } from '../../../constants/sprites';
-import { calculateWaveStartPath } from '../../../../entities/wave';
-import { undeadUnits, type UnitConfig } from '../../../../entities/unit';
 import {
-  BuilderFaction,
-  builderFactions,
-  DEFAULT_BUILDER_FACTION,
-  type BuilderFactionConfig,
-} from '../../../../entities/builder-faction';
+  TERRAIN_TILESET_ASSET_PATHS,
+  TERRAIN_TILESET_FRAME,
+  TerrainAssetKey,
+} from '../../../constants/terrain';
+import { TowerCombatConfig } from '../../../constants/tower';
+import type { GridCell, GridModel } from '../../../types/grid';
+import type { GridPosition } from '../../../types/pathfinding';
 import {
-  TOWER_COMBAT_STATS_BY_TYPE,
-  createInitialTowerCombatRuntime,
-} from '../../../../entities/tower';
+  getGameSetupConfig,
+  onGameCommand,
+  publishGameHudSnapshot,
+} from '../../game-bridge/bridge';
+import type { GameHudSnapshot, HudFactionType } from '../../game-bridge/types';
 import { createGridModel } from '../../grid/createGridModel';
 import { validateTowerPlacementPath } from '../../pathfinding/validateTowerPlacementPath';
-import { isUndeadDecorationTileIndex, resolveUndeadTerrainTileIndex } from '../terrain/undeadTerrain';
-import { GameSoundManager } from '../sound/GameSoundManager';
+import {
+  isBuildCellValid as isBuildCellValidRuntime,
+  tryPlaceTowerAtHoveredCell as tryPlaceTowerAtHoveredCellRuntime,
+  trySellTowerAtHoveredCell as trySellTowerAtHoveredCellRuntime,
+  type BuildRuntimeDeps,
+  type BuildRuntimeState,
+} from '../runtime/build/gameSceneBuildRuntime';
 import {
   removeDeadCreepsFromActiveWave as removeDeadCreepsFromCombatRuntime,
   updateCreepHitFeedback as updateCreepHitFeedbackRuntime,
@@ -58,6 +61,38 @@ import {
   type CombatRuntimeDependencies,
   type CombatRuntimeState,
 } from '../runtime/combat/gameSceneCombatRuntime';
+import {
+  toGridCell as toGridCellRuntime,
+  updateBuildPreview as updateBuildPreviewRuntime,
+  updateGridOverlayVisualState as updateGridOverlayVisualStateRuntime,
+  type GridPreviewConfig,
+} from '../runtime/grid/gameSceneGridPreviewRuntime';
+import {
+  clearGridLabels as clearGridLabelsRuntime,
+  clearTerrainSprites as clearTerrainSpritesRuntime,
+  drawGridCell as drawGridCellRuntime,
+  drawGrid as drawGridRuntime,
+  type GridRendererConfig,
+  type GridRendererDeps,
+  type GridRendererState,
+} from '../runtime/grid/gameSceneGridRenderer';
+import {
+  canProcessUserAction as canProcessUserActionRuntime,
+  handleGameOut as handleGameOutRuntime,
+  handlePointerDown as handlePointerDownRuntime,
+  handlePointerMove as handlePointerMoveRuntime,
+  handlePointerUp as handlePointerUpRuntime,
+  markUserActionProcessed as markUserActionProcessedRuntime,
+  type InputControllerConfig,
+  type InputControllerDependencies,
+  type InputControllerState,
+} from '../runtime/input/gameSceneInputController';
+import {
+  moveCreepsAlongPath as moveCreepsAlongPathRuntime,
+  type MovementRuntimeConfig,
+  type MovementRuntimeDeps,
+  type MovementRuntimeState,
+} from '../runtime/movement/gameSceneMovementRuntime';
 import {
   applyWaveCompletionRewardIfResolved as applyWaveCompletionRewardIfResolvedRuntime,
   initializeWaveRuntime as initializeWaveRuntimeModule,
@@ -71,15 +106,7 @@ import {
   type WaveRuntimeDependencies,
   type WaveRuntimeState,
 } from '../runtime/wave/gameSceneWaveRuntime';
-import {
-  onGameCommand,
-  publishGameHudSnapshot,
-  getGameSetupConfig,
-} from '../../game-bridge/bridge';
-import type { GameHudSnapshot, HudFactionType } from '../../game-bridge/types';
-import type { GridPosition } from '../../../types/pathfinding';
-import type { GridCell, GridModel } from '../../../types/grid';
-import type { TowerEntity } from '../../../../entities/tower';
+import { GameSoundManager } from '../sound/GameSoundManager';
 import {
   ACTION_COOLDOWN_MS,
   ARCHER_PROJECTILE_VISUAL_MODE,
@@ -94,9 +121,9 @@ import {
   CREEP_HIT_FLASH_COLOR,
   CREEP_HIT_FLASH_DURATION_MS,
   CREEP_MAX_SIMULATION_DELTA_MS,
-  DAMAGE_NUMBERS_ENABLED,
   DAMAGE_NUMBER_LIFETIME_MS,
   DAMAGE_NUMBER_RISE_PX,
+  DAMAGE_NUMBERS_ENABLED,
   DEFAULT_TOWER_COST,
   DEV_FPS_REPORT_INTERVAL_MS,
   EARLY_WAVE_START_BONUS_PLACEHOLDER_ELIGIBLE,
@@ -143,7 +170,11 @@ import {
   WAVE_FIRST_SPAWN_DELAY_MS,
   WAVE_SPAWN_INTERVAL_MS,
 } from './gameScene.constants';
-import { buildHudWaveQueue, mapEnemyFactionToHudFaction, mapUnitToCreepType } from './gameScene.helpers';
+import {
+  buildHudWaveQueue,
+  mapEnemyFactionToHudFaction,
+  mapUnitToCreepType,
+} from './gameScene.helpers';
 import type {
   CreepRenderState,
   DamageNumberState,
@@ -189,10 +220,10 @@ export class GameScene extends Phaser.Scene {
   private selectedTowerType: 'archer' | 'splash' | null = null;
   private selectedBuilderFactionId = DEFAULT_BUILDER_FACTION;
   private selectedFaction: HudFactionType = 'undead';
-  private activeTouchGesture:
-    | { startedAtMs: number; startX: number; startY: number; soldByLongPress: boolean }
-    | null = null;
-  private lastActionAtMs = Number.NEGATIVE_INFINITY;
+  private inputControllerState: InputControllerState = {
+    activeTouchGesture: null,
+    lastActionAtMs: Number.NEGATIVE_INFINITY,
+  };
   private devFpsReportElapsedMs = 0;
   private lastPublishedAutoStartSecondsLeft: number | null = null;
   private soundManager: GameSoundManager | null = null;
@@ -217,6 +248,40 @@ export class GameScene extends Phaser.Scene {
     waveSpawnIntervalMs: WAVE_SPAWN_INTERVAL_MS,
     waveFirstSpawnDelayMs: WAVE_FIRST_SPAWN_DELAY_MS,
     earlyWaveStartBonusPlaceholderEligible: EARLY_WAVE_START_BONUS_PLACEHOLDER_ELIGIBLE,
+  };
+  private readonly inputControllerConfig: InputControllerConfig = {
+    actionCooldownMs: ACTION_COOLDOWN_MS,
+    touchTapMinDurationMs: TOUCH_TAP_MIN_DURATION_MS,
+    touchTapMaxDurationMs: TOUCH_TAP_MAX_DURATION_MS,
+    touchTapMaxMovePx: TOUCH_TAP_MAX_MOVE_PX,
+    touchLongPressMinDurationMs: TOUCH_LONG_PRESS_MIN_DURATION_MS,
+  };
+  private readonly gridPreviewConfig: GridPreviewConfig = {
+    previewValidFill: PREVIEW_VALID_FILL,
+    previewValidStroke: PREVIEW_VALID_STROKE,
+    previewInvalidFill: PREVIEW_INVALID_FILL,
+    previewInvalidStroke: PREVIEW_INVALID_STROKE,
+    gridBuildAlpha: GRID_BUILD_ALPHA,
+    gridIdleAlpha: GRID_IDLE_ALPHA,
+  };
+  private readonly gridRendererConfig: GridRendererConfig = {
+    terrainRenderDepth: TERRAIN_RENDER_DEPTH,
+    terrainBaseTileAlpha: TERRAIN_BASE_TILE_ALPHA,
+    terrainDecorationTileAlpha: TERRAIN_DECORATION_TILE_ALPHA,
+    terrainBaseTileTint: TERRAIN_BASE_TILE_TINT,
+    terrainDecorationTileTint: TERRAIN_DECORATION_TILE_TINT,
+    gridLineWidth: GRID_LINE_WIDTH,
+    gridLineColor: GRID_LINE_COLOR,
+    gridBuildAlpha: GRID_BUILD_ALPHA,
+    entranceExitLabelFontFamily: ENTRANCE_EXIT_LABEL_FONT_FAMILY,
+    entranceExitLabelFontSizePx: ENTRANCE_EXIT_LABEL_FONT_SIZE_PX,
+    entranceExitLabelColor: ENTRANCE_EXIT_LABEL_COLOR,
+    entranceExitLabelRenderDepth: ENTRANCE_EXIT_LABEL_RENDER_DEPTH,
+  };
+  private readonly movementRuntimeConfig: MovementRuntimeConfig = {
+    creepMaxSimulationDeltaMs: CREEP_MAX_SIMULATION_DELTA_MS,
+    creepBaseMoveSpeedPxPerSec: CREEP_BASE_MOVE_SPEED_PX_PER_SEC,
+    restartDelayMs: RESTART_DELAY_MS,
   };
 
   constructor() {
@@ -358,43 +423,15 @@ export class GameScene extends Phaser.Scene {
   }
 
   private drawGrid(): void {
-    this.gridGraphics ??= this.add.graphics();
-    this.gridGraphics.clear();
-    this.gridGraphics.setDepth(GRID_OVERLAY_RENDER_DEPTH);
-    this.clearTerrainSprites();
-    this.clearGridLabels();
-
-    const grid = createGridModel({
-      entrance: ENTRANCE_CELL,
-      exit: EXIT_CELL,
-    });
+    const rendererState = this.getGridRendererState();
+    const grid = drawGridRuntime(
+      rendererState,
+      this.getGridRendererDeps(),
+      this.gridRendererConfig,
+      GRID_OVERLAY_RENDER_DEPTH,
+    );
+    this.applyGridRendererState(rendererState);
     this.gridModel = grid;
-
-    for (const cell of grid.cells) {
-      this.drawGridCell(cell);
-
-      if (cell.role === 'entrance' || cell.role === 'exit') {
-        const x = cell.x * GRID_DIMENSIONS.cellSize;
-        const y = cell.y * GRID_DIMENSIONS.cellSize;
-
-        const label = this.add
-          .text(
-            x + GRID_DIMENSIONS.cellSize / 2,
-            y + GRID_DIMENSIONS.cellSize / 2,
-            cell.role === 'entrance' ? 'IN' : 'OUT',
-            {
-              fontFamily: ENTRANCE_EXIT_LABEL_FONT_FAMILY,
-              fontSize: ENTRANCE_EXIT_LABEL_FONT_SIZE_PX,
-              color: ENTRANCE_EXIT_LABEL_COLOR,
-            },
-          )
-          .setOrigin(0.5);
-        label.setDepth(ENTRANCE_EXIT_LABEL_RENDER_DEPTH);
-        this.gridLabels.push(label);
-      }
-    }
-
-    this.drawGridLines(grid);
     this.updateGridOverlayVisualState();
     this.initializeWaveRuntime(grid);
   }
@@ -445,17 +482,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   private toGridCell(worldX: number, worldY: number): GridPosition | null {
-    const x = Math.floor(worldX / GRID_DIMENSIONS.cellSize);
-    const y = Math.floor(worldY / GRID_DIMENSIONS.cellSize);
-
-    const isInsideGrid =
-      x >= 0 && x < GRID_DIMENSIONS.cols && y >= 0 && y < GRID_DIMENSIONS.rows;
-
-    if (!isInsideGrid) {
-      return null;
-    }
-
-    return { x, y };
+    return toGridCellRuntime(worldX, worldY);
   }
 
   private updateHoveredCellDebugRegistry(): void {
@@ -541,6 +568,124 @@ export class GameScene extends Phaser.Scene {
     };
   }
 
+  private getInputControllerDependencies(): InputControllerDependencies {
+    return {
+      nowMs: () => this.time.now,
+      toGridCell: (worldX, worldY) => this.toGridCell(worldX, worldY),
+      setHoveredCell: (cell) => {
+        this.hoveredCell = cell;
+      },
+      clearHoveredCell: () => {
+        this.hoveredCell = null;
+      },
+      updateHoveredCellDebugRegistry: () => this.updateHoveredCellDebugRegistry(),
+      updateBuildPreview: () => this.updateBuildPreview(),
+      tryPlaceTowerAtHoveredCell: () => this.tryPlaceTowerAtHoveredCell(),
+      trySellTowerAtHoveredCell: () => this.trySellTowerAtHoveredCell(),
+    };
+  }
+
+  private getBuildRuntimeState(): BuildRuntimeState {
+    return {
+      gridModel: this.gridModel,
+      hoveredCell: this.hoveredCell,
+      playerGold: this.playerGold,
+      playerLives: this.playerLives,
+      placedTowerCostsByCellKey: this.placedTowerCostsByCellKey,
+    };
+  }
+
+  private getBuildRuntimeDeps(): BuildRuntimeDeps {
+    return {
+      canPerformPlace: () =>
+        this.canProcessUserAction() &&
+        isWaveActionAllowed(this.wavePhaseState, 'place-tower') &&
+        !this.isGameOver,
+      canPerformSell: () =>
+        this.canProcessUserAction() &&
+        isWaveActionAllowed(this.wavePhaseState, 'sell-tower') &&
+        !this.isGameOver,
+      selectedTowerType: this.selectedTowerType,
+      resolveTowerCost: (towerType) => {
+        const towerConfig = towerType === 'splash' ? PLAGUE_TOWER_CONFIG : BONE_ARCHER_TOWER_CONFIG;
+        return towerConfig?.costGold ?? DEFAULT_TOWER_COST;
+      },
+      toGridCellKey: (position) => this.toGridCellKey(position),
+      toTowerId: (position) => this.toTowerId(position),
+      validateTowerPlacementPath: (grid, position) => validateTowerPlacementPath(grid, position),
+      sellRefundRatio: SELL_REFUND_RATIO,
+      defaultTowerCost: DEFAULT_TOWER_COST,
+    };
+  }
+
+  private getMovementRuntimeState(): MovementRuntimeState {
+    return {
+      activeCreeps: this.activeCreeps,
+      activeCreepPath: this.activeCreepPath,
+      playerGold: this.playerGold,
+      playerLives: this.playerLives,
+      isGameOver: this.isGameOver,
+      restartScheduledAtMs: this.restartScheduledAtMs,
+      wavePhaseState: this.wavePhaseState,
+    };
+  }
+
+  private getMovementRuntimeDeps(): MovementRuntimeDeps {
+    return {
+      nowMs: () => this.time.now,
+      toCellCenter: (position) => this.toCellCenter(position),
+      onLivesUpdated: (lives) => {
+        this.playerLives = lives;
+        this.registry.set('economy.lives', this.playerLives);
+      },
+      onGameOverUpdated: (isGameOver) => {
+        this.isGameOver = isGameOver;
+        this.registry.set('phase.game.over', this.isGameOver);
+      },
+      onWavePhaseUpdated: (nextWavePhase) => {
+        this.wavePhaseState = nextWavePhase;
+      },
+      onEscapedCountUpdated: (escapedCount) => {
+        this.registry.set('wave.escapedCreeps', escapedCount);
+      },
+      onBuildStateNeedsRefresh: () => {
+        this.registry.set('phase.build.active', this.canPerformBuildActions());
+        this.updateGridOverlayVisualState();
+        this.updateBuildPreview();
+      },
+      onHudChanged: () => this.publishHudSnapshot(),
+    };
+  }
+
+  private getGridRendererState(): GridRendererState {
+    return {
+      gridGraphics: this.gridGraphics,
+      terrainSprites: this.terrainSprites,
+      gridLabels: this.gridLabels,
+    };
+  }
+
+  private applyGridRendererState(state: GridRendererState): void {
+    this.gridGraphics = state.gridGraphics;
+    this.terrainSprites = state.terrainSprites;
+    this.gridLabels = state.gridLabels;
+  }
+
+  private getGridRendererDeps(): GridRendererDeps {
+    return {
+      scene: this,
+      selectedBuilderFactionId: this.selectedBuilderFactionId,
+      undeadFactionId: BuilderFaction.UNDEAD,
+      entranceCell: ENTRANCE_CELL,
+      exitCell: EXIT_CELL,
+      createGridModel: () =>
+        createGridModel({
+          entrance: ENTRANCE_CELL,
+          exit: EXIT_CELL,
+        }),
+    };
+  }
+
   private getSelectedTowerRangeCells(): number {
     const towerType = this.selectedTowerType ?? 'archer';
     if (towerType === 'splash') {
@@ -550,364 +695,113 @@ export class GameScene extends Phaser.Scene {
   }
 
   private updateBuildPreview(): void {
-    if (!this.buildPreviewOverlay) {
-      return;
-    }
-
-    this.buildPreviewOverlay.clear();
-
-    if (!this.canPerformBuildActions()) {
-      this.updateGridOverlayVisualState();
-      return;
-    }
-
-    if (!this.hoveredCell || !this.gridModel) {
-      this.updateGridOverlayVisualState();
-      return;
-    }
-
-    const isBuildCellValid = this.isBuildCellValid(this.hoveredCell, this.gridModel);
-    const x = this.hoveredCell.x * GRID_DIMENSIONS.cellSize;
-    const y = this.hoveredCell.y * GRID_DIMENSIONS.cellSize;
-    const fillColor = isBuildCellValid ? PREVIEW_VALID_FILL : PREVIEW_INVALID_FILL;
-    const strokeColor = isBuildCellValid ? PREVIEW_VALID_STROKE : PREVIEW_INVALID_STROKE;
-    const markerSize = GRID_DIMENSIONS.cellSize * 0.2;
-    const centerX = x + GRID_DIMENSIONS.cellSize / 2;
-    const centerY = y + GRID_DIMENSIONS.cellSize / 2;
-
-    const rangeCells = this.getSelectedTowerRangeCells();
-    const rangeRadiusPx = rangeCells * GRID_DIMENSIONS.cellSize;
-    const rangeColor = isBuildCellValid ? 0x3ecf78 : 0xe55a4f;
-
-    this.buildPreviewOverlay.fillStyle(rangeColor, 0.12);
-    this.buildPreviewOverlay.lineStyle(1, rangeColor, 0.35);
-    this.buildPreviewOverlay.fillCircle(centerX, centerY, rangeRadiusPx);
-    this.buildPreviewOverlay.strokeCircle(centerX, centerY, rangeRadiusPx);
-
-    this.buildPreviewOverlay.fillStyle(fillColor, 0.42);
-    this.buildPreviewOverlay.fillRect(x, y, GRID_DIMENSIONS.cellSize, GRID_DIMENSIONS.cellSize);
-    this.buildPreviewOverlay.lineStyle(2, strokeColor, 1);
-    this.buildPreviewOverlay.strokeRect(x + 1, y + 1, GRID_DIMENSIONS.cellSize - 2, GRID_DIMENSIONS.cellSize - 2);
-
-    this.buildPreviewOverlay.lineStyle(2, strokeColor, 0.95);
-    this.buildPreviewOverlay.beginPath();
-    this.buildPreviewOverlay.moveTo(centerX - markerSize, centerY);
-    this.buildPreviewOverlay.lineTo(centerX + markerSize, centerY);
-
-    if (isBuildCellValid) {
-      this.buildPreviewOverlay.moveTo(centerX, centerY - markerSize);
-      this.buildPreviewOverlay.lineTo(centerX, centerY + markerSize);
-    } else {
-      this.buildPreviewOverlay.moveTo(centerX - markerSize, centerY - markerSize);
-      this.buildPreviewOverlay.lineTo(centerX + markerSize, centerY + markerSize);
-      this.buildPreviewOverlay.moveTo(centerX - markerSize, centerY + markerSize);
-      this.buildPreviewOverlay.lineTo(centerX + markerSize, centerY - markerSize);
-    }
-
-    this.buildPreviewOverlay.strokePath();
-    this.updateGridOverlayVisualState();
+    updateBuildPreviewRuntime(
+      {
+        overlay: this.buildPreviewOverlay,
+        gridGraphics: this.gridGraphics,
+        gridModel: this.gridModel,
+        hoveredCell: this.hoveredCell,
+        canPerformBuildActions: this.canPerformBuildActions(),
+        selectedTowerRangeCells: this.getSelectedTowerRangeCells(),
+        isBuildCellValid: (cellPosition, grid) => this.isBuildCellValid(cellPosition, grid),
+      },
+      this.gridPreviewConfig,
+    );
   }
 
   private moveCreepsAlongPath(deltaMs: number): void {
-    if (this.activeCreepPath.length === 0 || this.activeCreeps.length === 0) {
-      return;
-    }
-
-    const normalizedDeltaMs = Math.min(deltaMs, CREEP_MAX_SIMULATION_DELTA_MS);
-    for (const creep of this.activeCreeps) {
-      if (creep.entity.status !== 'alive') {
-        continue;
-      }
-      const normalizedStepDistance =
-        (normalizedDeltaMs / 1000) * CREEP_BASE_MOVE_SPEED_PX_PER_SEC * creep.entity.speed;
-
-      const nextPathIndex = creep.entity.pathIndex + 1;
-
-      if (nextPathIndex >= this.activeCreepPath.length) {
-        this.markCreepEscaped(creep);
-        continue;
-      }
-
-      const nextPoint = this.activeCreepPath[nextPathIndex];
-      const nextCenter = this.toCellCenter(nextPoint);
-      const dx = nextCenter.x - creep.sprite.x;
-      const dy = nextCenter.y - creep.sprite.y;
-      const distanceToNext = Math.hypot(dx, dy);
-
-      if (distanceToNext <= normalizedStepDistance) {
-        creep.sprite.setPosition(nextCenter.x, nextCenter.y);
-        creep.entity.pathIndex = nextPathIndex;
-        creep.entity.position = { x: nextPoint.x, y: nextPoint.y };
-
-        if (nextPathIndex >= this.activeCreepPath.length - 1) {
-          this.markCreepEscaped(creep);
-        }
-        continue;
-      }
-
-      const ratio = normalizedStepDistance / distanceToNext;
-      const nextX = creep.sprite.x + dx * ratio;
-      const nextY = creep.sprite.y + dy * ratio;
-      creep.sprite.setPosition(nextX, nextY);
-      creep.sprite.rotation = Math.atan2(dy, dx);
-    }
+    const state = this.getMovementRuntimeState();
+    moveCreepsAlongPathRuntime(
+      state,
+      this.getMovementRuntimeDeps(),
+      this.movementRuntimeConfig,
+      deltaMs,
+    );
+    this.playerLives = state.playerLives;
+    this.isGameOver = state.isGameOver;
+    this.restartScheduledAtMs = state.restartScheduledAtMs;
+    this.wavePhaseState = state.wavePhaseState;
   }
 
   private isBuildCellValid(cellPosition: GridPosition, grid: GridModel): boolean {
-    const cell = grid.cells.find(
-      (candidate) => candidate.x === cellPosition.x && candidate.y === cellPosition.y,
+    return isBuildCellValidRuntime(
+      this.getBuildRuntimeState(),
+      this.getBuildRuntimeDeps(),
+      cellPosition,
+      grid,
     );
-
-    if (!cell) {
-      return false;
-    }
-
-    if (cell.role !== 'empty') {
-      return false;
-    }
-
-    if (!cell.isWalkable || cell.isOccupied) {
-      return false;
-    }
-
-    if (!canSpendGold({ gold: this.playerGold }, DEFAULT_TOWER_COST)) {
-      return false;
-    }
-
-    return validateTowerPlacementPath(grid, cellPosition);
   }
 
   private tryPlaceTowerAtHoveredCell(): void {
-    if (!this.canProcessUserAction()) {
-      return;
-    }
-
-    if (!isWaveActionAllowed(this.wavePhaseState, 'place-tower') || this.isGameOver) {
-      return;
-    }
-
-    if (!this.hoveredCell || !this.gridModel) {
-      return;
-    }
-
-    const hoveredCell = this.hoveredCell;
-
-    if (!this.isBuildCellValid(this.hoveredCell, this.gridModel)) {
-      return;
-    }
-
-    const targetCell = this.gridModel.cells.find(
-      (cell) => cell.x === hoveredCell.x && cell.y === hoveredCell.y,
+    const result = tryPlaceTowerAtHoveredCellRuntime(
+      this.getBuildRuntimeState(),
+      this.getBuildRuntimeDeps(),
     );
-
-    if (!targetCell) {
+    if (!result.success || !result.changedCell || !result.placedTower || !result.towerType) {
       return;
     }
 
-    const spendGoldResult = spendGold(
-      { gold: this.playerGold, lives: this.playerLives },
-      DEFAULT_TOWER_COST,
-    );
-
-    if (!spendGoldResult.spent) {
-      return;
-    }
-
-    targetCell.isOccupied = true;
-    targetCell.isWalkable = false;
-    const towerType = this.selectedTowerType ?? 'archer';
-    const towerConfig = towerType === 'splash' ? PLAGUE_TOWER_CONFIG : BONE_ARCHER_TOWER_CONFIG;
-    const towerCost = towerConfig?.costGold ?? DEFAULT_TOWER_COST;
-    this.placedTowerCostsByCellKey.set(
-      this.toGridCellKey(hoveredCell),
-      towerCost,
-    );
-    const towerEntity: TowerEntity = {
-      id: this.toTowerId(hoveredCell),
-      position: { x: hoveredCell.x, y: hoveredCell.y },
-      cost: towerCost,
-      type: towerType,
-      combatStats: TOWER_COMBAT_STATS_BY_TYPE[towerType],
-    };
-    const towerSprite = towerType === 'splash'
-      ? this.createPlacedPlagueSprite(towerEntity.position)
-      : this.createPlacedBoneArcherSprite(towerEntity.position);
+    const towerSprite =
+      result.towerType === 'splash'
+        ? this.createPlacedPlagueSprite(result.placedTower.position)
+        : this.createPlacedBoneArcherSprite(result.placedTower.position);
     this.activeTowers.push({
-      entity: towerEntity,
+      entity: result.placedTower,
       runtime: createInitialTowerCombatRuntime(),
       sprite: towerSprite,
     });
-    this.playerGold = spendGoldResult.resources.gold;
+    this.playerGold = result.playerGold;
     this.registry.set('economy.gold', this.playerGold);
     this.markUserActionProcessed();
     this.publishHudSnapshot();
 
-    this.drawGridCell(targetCell);
+    this.drawGridCell(result.changedCell);
     this.updateBuildPreview();
-
   }
 
   private trySellTowerAtHoveredCell(): void {
-    if (!this.canProcessUserAction()) {
-      return;
-    }
-
-    if (!isWaveActionAllowed(this.wavePhaseState, 'sell-tower') || this.isGameOver) {
-      return;
-    }
-
-    if (!this.hoveredCell || !this.gridModel) {
-      return;
-    }
-
-    const hoveredCell = this.hoveredCell;
-    const hoveredCellKey = this.toGridCellKey(hoveredCell);
-    const towerCost = this.placedTowerCostsByCellKey.get(hoveredCellKey);
-
-    if (towerCost === undefined) {
-      return;
-    }
-
-    const targetCell = this.gridModel.cells.find(
-      (cell) => cell.x === hoveredCell.x && cell.y === hoveredCell.y,
+    const result = trySellTowerAtHoveredCellRuntime(
+      this.getBuildRuntimeState(),
+      this.getBuildRuntimeDeps(),
     );
-
-    if (!targetCell || targetCell.role !== 'empty' || !targetCell.isOccupied) {
+    if (!result.success || !result.changedCell || !result.removedTowerId) {
       return;
     }
 
-    targetCell.isOccupied = false;
-    targetCell.isWalkable = true;
-    this.placedTowerCostsByCellKey.delete(hoveredCellKey);
     this.activeTowers = this.activeTowers.filter((tower) => {
-      const shouldKeep = tower.entity.id !== this.toTowerId(hoveredCell);
+      const shouldKeep = tower.entity.id !== result.removedTowerId;
       if (!shouldKeep) {
         this.playBoneArcherSellAnimation(tower);
       }
       return shouldKeep;
     });
-
-    const refundAmount = Math.floor(towerCost * SELL_REFUND_RATIO);
-    this.registry.set('economy.lastSellRefund', refundAmount);
+    this.registry.set('economy.lastSellRefund', result.refundAmount);
     this.markUserActionProcessed();
     this.publishHudSnapshot();
 
-    this.drawGridCell(targetCell);
+    this.drawGridCell(result.changedCell);
     this.updateBuildPreview();
-
   }
 
   private drawGridCell(cell: GridCell): void {
-    const x = cell.x * GRID_DIMENSIONS.cellSize;
-    const y = cell.y * GRID_DIMENSIONS.cellSize;
-    this.renderTerrainCell(cell);
-
-    if (!this.gridGraphics) {
-      return;
-    }
-
-    if (cell.isOccupied) {
-      this.gridGraphics.fillStyle(0x263347, 0.55);
-      this.gridGraphics.fillRect(x, y, GRID_DIMENSIONS.cellSize, GRID_DIMENSIONS.cellSize);
-    }
-  }
-
-  private renderTerrainCell(cell: GridCell): void {
-    if (!this.hasUndeadTilesetTexture()) {
-      this.renderFallbackTerrainCell(cell);
-      return;
-    }
-
-    const tileIndex = this.resolveTerrainTileIndexForCell(cell);
-    const x = cell.x * GRID_DIMENSIONS.cellSize;
-    const y = cell.y * GRID_DIMENSIONS.cellSize;
-    const sprite = this.add.image(
-      x,
-      y,
-      TerrainAssetKey.UNDEAD_TILESET,
-      tileIndex,
-    );
-    sprite.setOrigin(0, 0);
-    sprite.setDisplaySize(GRID_DIMENSIONS.cellSize, GRID_DIMENSIONS.cellSize);
-    sprite.setDepth(TERRAIN_RENDER_DEPTH);
-    if (isUndeadDecorationTileIndex(tileIndex)) {
-      sprite.setAlpha(TERRAIN_DECORATION_TILE_ALPHA);
-      sprite.setTint(TERRAIN_DECORATION_TILE_TINT);
-    } else {
-      sprite.setAlpha(TERRAIN_BASE_TILE_ALPHA);
-      sprite.setTint(TERRAIN_BASE_TILE_TINT);
-    }
-    this.terrainSprites.push(sprite);
-  }
-
-  private hasUndeadTilesetTexture(): boolean {
-    return this.textures.exists(TerrainAssetKey.UNDEAD_TILESET);
-  }
-
-  private renderFallbackTerrainCell(cell: GridCell): void {
-    if (!this.gridGraphics) {
-      return;
-    }
-
-    const x = cell.x * GRID_DIMENSIONS.cellSize;
-    const y = cell.y * GRID_DIMENSIONS.cellSize;
-    const fillColor =
-      cell.role === 'entrance'
-        ? 0x1e8f48
-        : cell.role === 'exit'
-          ? 0xaf4536
-          : 0x253248;
-
-    this.gridGraphics.fillStyle(fillColor, 1);
-    this.gridGraphics.fillRect(x, y, GRID_DIMENSIONS.cellSize, GRID_DIMENSIONS.cellSize);
-  }
-
-  private resolveTerrainTileIndexForCell(cell: GridCell): number {
-    if (this.selectedBuilderFactionId !== BuilderFaction.UNDEAD) {
-      return resolveUndeadTerrainTileIndex({
-        position: { x: cell.x, y: cell.y },
-        entrance: ENTRANCE_CELL,
-        exit: EXIT_CELL,
-        cols: GRID_DIMENSIONS.cols,
-        rows: GRID_DIMENSIONS.rows,
-      });
-    }
-
-    // TODO: switch terrain resolver per builder faction when non-Undead terrain tilesets are implemented.
-    return resolveUndeadTerrainTileIndex({
-      position: { x: cell.x, y: cell.y },
-      entrance: ENTRANCE_CELL,
-      exit: EXIT_CELL,
-      cols: GRID_DIMENSIONS.cols,
-      rows: GRID_DIMENSIONS.rows,
-    });
-  }
-
-  private drawGridLines(grid: GridModel): void {
-    if (!this.gridGraphics) {
-      return;
-    }
-
-    this.gridGraphics.lineStyle(GRID_LINE_WIDTH, GRID_LINE_COLOR, GRID_BUILD_ALPHA);
-    for (const cell of grid.cells) {
-      const x = cell.x * GRID_DIMENSIONS.cellSize;
-      const y = cell.y * GRID_DIMENSIONS.cellSize;
-      this.gridGraphics.strokeRect(x, y, GRID_DIMENSIONS.cellSize, GRID_DIMENSIONS.cellSize);
-    }
+    const rendererState = this.getGridRendererState();
+    drawGridCellRuntime(rendererState, this.getGridRendererDeps(), this.gridRendererConfig, cell);
+    this.applyGridRendererState(rendererState);
   }
 
   private updateGridOverlayVisualState(): void {
-    if (!this.gridGraphics) {
-      return;
-    }
-
-    const targetAlpha = this.canPerformBuildActions() ? GRID_BUILD_ALPHA : GRID_IDLE_ALPHA;
-    this.gridGraphics.setAlpha(targetAlpha);
+    updateGridOverlayVisualStateRuntime(
+      this.gridGraphics,
+      this.canPerformBuildActions(),
+      this.gridPreviewConfig,
+    );
   }
 
   private applyNearestNeighborFiltering(): void {
     if (this.textures.exists(TerrainAssetKey.UNDEAD_TILESET)) {
-      this.textures.get(TerrainAssetKey.UNDEAD_TILESET).setFilter(Phaser.Textures.FilterMode.NEAREST);
+      this.textures
+        .get(TerrainAssetKey.UNDEAD_TILESET)
+        .setFilter(Phaser.Textures.FilterMode.NEAREST);
     }
     Object.values(UNIT_SPRITE_KEYS).forEach((spriteKey) => {
       if (this.textures.exists(spriteKey)) {
@@ -922,13 +816,15 @@ export class GameScene extends Phaser.Scene {
   }
 
   private clearTerrainSprites(): void {
-    this.terrainSprites.forEach((sprite) => sprite.destroy());
-    this.terrainSprites = [];
+    const rendererState = this.getGridRendererState();
+    clearTerrainSpritesRuntime(rendererState);
+    this.applyGridRendererState(rendererState);
   }
 
   private clearGridLabels(): void {
-    this.gridLabels.forEach((label) => label.destroy());
-    this.gridLabels = [];
+    const rendererState = this.getGridRendererState();
+    clearGridLabelsRuntime(rendererState);
+    this.applyGridRendererState(rendererState);
   }
 
   private toGridCellKey(position: GridPosition): string {
@@ -961,36 +857,6 @@ export class GameScene extends Phaser.Scene {
       x: position.x * GRID_DIMENSIONS.cellSize + GRID_DIMENSIONS.cellSize / 2,
       y: position.y * GRID_DIMENSIONS.cellSize + GRID_DIMENSIONS.cellSize / 2,
     };
-  }
-
-  private markCreepEscaped(creep: CreepRenderState): void {
-    if (creep.entity.status === 'escaped') {
-      return;
-    }
-
-    creep.entity.status = 'escaped';
-    const nextResources = subtractLives(
-      { gold: this.playerGold, lives: this.playerLives },
-      1,
-    );
-    this.playerLives = nextResources.lives;
-    this.registry.set('economy.lives', this.playerLives);
-
-    if (isGameOverByLives({ lives: this.playerLives })) {
-      this.isGameOver = true;
-      this.wavePhaseState = transitionToGameOver(this.wavePhaseState);
-      this.restartScheduledAtMs ??= this.time.now + RESTART_DELAY_MS;
-      this.registry.set('phase.build.active', this.canPerformBuildActions());
-      this.registry.set('phase.game.over', this.isGameOver);
-      this.updateGridOverlayVisualState();
-      this.updateBuildPreview();
-    }
-    this.publishHudSnapshot();
-
-    const escapedCount = this.activeCreeps.filter(
-      (candidate) => candidate.entity.status === 'escaped',
-    ).length;
-    this.registry.set('wave.escapedCreeps', escapedCount);
   }
 
   private removeDeadCreepsFromActiveWave(deltaMs: number): void {
@@ -1216,8 +1082,7 @@ export class GameScene extends Phaser.Scene {
 
   private createPlacedBoneArcherSprite(position: GridPosition): Phaser.GameObjects.Sprite {
     const center = this.toCellCenter(position);
-    const spriteKey =
-      BONE_ARCHER_TOWER_CONFIG?.spriteKey ?? TOWER_SPRITE_KEYS.UNDEAD_BONE_ARCHER;
+    const spriteKey = BONE_ARCHER_TOWER_CONFIG?.spriteKey ?? TOWER_SPRITE_KEYS.UNDEAD_BONE_ARCHER;
     const sprite = this.add.sprite(center.x, center.y, spriteKey, 0);
     sprite.setDepth(TOWER_RENDER_DEPTH);
     sprite.setDisplaySize(
@@ -1226,23 +1091,19 @@ export class GameScene extends Phaser.Scene {
     );
     sprite.setOrigin(BONE_ARCHER_ORIGIN_X, BONE_ARCHER_ORIGIN_Y);
     sprite.play(TOWER_ANIMATION_KEYS.UNDEAD_BONE_ARCHER_BUILD);
-    sprite.once(
-      `animationcomplete-${TOWER_ANIMATION_KEYS.UNDEAD_BONE_ARCHER_BUILD}`,
-      () => {
-        if (!sprite.scene) {
-          return;
-        }
-        sprite.play(TOWER_ANIMATION_KEYS.UNDEAD_BONE_ARCHER_IDLE);
-      },
-    );
+    sprite.once(`animationcomplete-${TOWER_ANIMATION_KEYS.UNDEAD_BONE_ARCHER_BUILD}`, () => {
+      if (!sprite.scene) {
+        return;
+      }
+      sprite.play(TOWER_ANIMATION_KEYS.UNDEAD_BONE_ARCHER_IDLE);
+    });
 
     return sprite;
   }
 
   private createPlacedPlagueSprite(position: GridPosition): Phaser.GameObjects.Sprite {
     const center = this.toCellCenter(position);
-    const spriteKey =
-      PLAGUE_TOWER_CONFIG?.spriteKey ?? TOWER_SPRITE_KEYS.UNDEAD_BONE_ARCHER;
+    const spriteKey = PLAGUE_TOWER_CONFIG?.spriteKey ?? TOWER_SPRITE_KEYS.UNDEAD_BONE_ARCHER;
     const sprite = this.add.sprite(center.x, center.y, spriteKey, 0);
     sprite.setDepth(TOWER_RENDER_DEPTH);
     sprite.setDisplaySize(
@@ -1252,15 +1113,12 @@ export class GameScene extends Phaser.Scene {
     sprite.setOrigin(PLAGUE_TOWER_ORIGIN_X, PLAGUE_TOWER_ORIGIN_Y);
     sprite.setTint(0x44aa44);
     sprite.play(TOWER_ANIMATION_KEYS.UNDEAD_BONE_ARCHER_BUILD);
-    sprite.once(
-      `animationcomplete-${TOWER_ANIMATION_KEYS.UNDEAD_BONE_ARCHER_BUILD}`,
-      () => {
-        if (!sprite.scene) {
-          return;
-        }
-        sprite.play(TOWER_ANIMATION_KEYS.UNDEAD_BONE_ARCHER_IDLE);
-      },
-    );
+    sprite.once(`animationcomplete-${TOWER_ANIMATION_KEYS.UNDEAD_BONE_ARCHER_BUILD}`, () => {
+      if (!sprite.scene) {
+        return;
+      }
+      sprite.play(TOWER_ANIMATION_KEYS.UNDEAD_BONE_ARCHER_IDLE);
+    });
 
     return sprite;
   }
@@ -1275,15 +1133,12 @@ export class GameScene extends Phaser.Scene {
     }
 
     tower.sprite.play(TOWER_ANIMATION_KEYS.UNDEAD_BONE_ARCHER_ATTACK, true);
-    tower.sprite.once(
-      `animationcomplete-${TOWER_ANIMATION_KEYS.UNDEAD_BONE_ARCHER_ATTACK}`,
-      () => {
-        if (!tower.sprite.active) {
-          return;
-        }
-        tower.sprite.play(TOWER_ANIMATION_KEYS.UNDEAD_BONE_ARCHER_IDLE, true);
-      },
-    );
+    tower.sprite.once(`animationcomplete-${TOWER_ANIMATION_KEYS.UNDEAD_BONE_ARCHER_ATTACK}`, () => {
+      if (!tower.sprite.active) {
+        return;
+      }
+      tower.sprite.play(TOWER_ANIMATION_KEYS.UNDEAD_BONE_ARCHER_IDLE, true);
+    });
   }
 
   private playBoneArcherSellAnimation(tower: TowerRenderState): void {
@@ -1292,16 +1147,13 @@ export class GameScene extends Phaser.Scene {
     }
 
     tower.sprite.play(TOWER_ANIMATION_KEYS.UNDEAD_BONE_ARCHER_SELL, true);
-    tower.sprite.once(
-      `animationcomplete-${TOWER_ANIMATION_KEYS.UNDEAD_BONE_ARCHER_SELL}`,
-      () => {
-        if (!tower.sprite.active) {
-          return;
-        }
+    tower.sprite.once(`animationcomplete-${TOWER_ANIMATION_KEYS.UNDEAD_BONE_ARCHER_SELL}`, () => {
+      if (!tower.sprite.active) {
+        return;
+      }
 
-        tower.sprite.destroy();
-      },
-    );
+      tower.sprite.destroy();
+    });
   }
 
   private playPlagueAttackAnimation(tower: TowerRenderState): void {
@@ -1336,89 +1188,45 @@ export class GameScene extends Phaser.Scene {
   }
 
   private handlePointerMove(pointer: Phaser.Input.Pointer): void {
-    this.hoveredCell = this.toGridCell(pointer.worldX, pointer.worldY);
-    this.updateHoveredCellDebugRegistry();
-    this.updateBuildPreview();
-
-    if (!pointer.primaryDown || !pointer.wasTouch || !this.activeTouchGesture) {
-      return;
-    }
-
-    const durationMs = this.time.now - this.activeTouchGesture.startedAtMs;
-    const moveDistance = Math.hypot(
-      pointer.worldX - this.activeTouchGesture.startX,
-      pointer.worldY - this.activeTouchGesture.startY,
+    handlePointerMoveRuntime(
+      this.inputControllerState,
+      this.getInputControllerDependencies(),
+      this.inputControllerConfig,
+      pointer,
     );
-    const isStillPressingCell = moveDistance <= TOUCH_TAP_MAX_MOVE_PX;
-
-    if (
-      !this.activeTouchGesture.soldByLongPress
-      && isStillPressingCell
-      && durationMs >= TOUCH_LONG_PRESS_MIN_DURATION_MS
-    ) {
-      this.trySellTowerAtHoveredCell();
-      this.activeTouchGesture.soldByLongPress = true;
-    }
   }
 
   private canProcessUserAction(): boolean {
-    return this.time.now - this.lastActionAtMs >= ACTION_COOLDOWN_MS;
+    return canProcessUserActionRuntime(
+      this.inputControllerState,
+      this.time.now,
+      this.inputControllerConfig.actionCooldownMs,
+    );
   }
 
   private markUserActionProcessed(): void {
-    this.lastActionAtMs = this.time.now;
+    markUserActionProcessedRuntime(this.inputControllerState, this.time.now);
   }
 
   private handlePointerDown(pointer: Phaser.Input.Pointer): void {
-    if (pointer.wasTouch) {
-      this.activeTouchGesture = {
-        startedAtMs: this.time.now,
-        startX: pointer.worldX,
-        startY: pointer.worldY,
-        soldByLongPress: false,
-      };
-      return;
-    }
-
-    if (pointer.button === 0) {
-      this.tryPlaceTowerAtHoveredCell();
-      return;
-    }
-
-    if (pointer.button !== 2) {
-      return;
-    }
-
-    this.trySellTowerAtHoveredCell();
+    handlePointerDownRuntime(
+      this.inputControllerState,
+      this.getInputControllerDependencies(),
+      pointer,
+    );
   }
 
   private handlePointerUp(pointer: Phaser.Input.Pointer): void {
-    if (!pointer.wasTouch || !this.activeTouchGesture) {
-      return;
-    }
-
-    const durationMs = this.time.now - this.activeTouchGesture.startedAtMs;
-    const moveDistance = Math.hypot(
-      pointer.worldX - this.activeTouchGesture.startX,
-      pointer.worldY - this.activeTouchGesture.startY,
+    handlePointerUpRuntime(
+      this.inputControllerState,
+      this.getInputControllerDependencies(),
+      this.inputControllerConfig,
+      pointer,
     );
-    const isTap =
-      durationMs >= TOUCH_TAP_MIN_DURATION_MS
-      && durationMs <= TOUCH_TAP_MAX_DURATION_MS
-      && moveDistance <= TOUCH_TAP_MAX_MOVE_PX;
-
-    if (isTap && !this.activeTouchGesture.soldByLongPress) {
-      this.tryPlaceTowerAtHoveredCell();
-    }
-
-    this.activeTouchGesture = null;
   }
 
   private handleGameOut(): void {
-    this.activeTouchGesture = null;
-    this.hoveredCell = null;
-    this.updateHoveredCellDebugRegistry();
-    this.updateBuildPreview();
+    handleGameOutRuntime(this.inputControllerState, this.getInputControllerDependencies());
   }
 
   private destroyAllCreeps(): void {
@@ -1482,9 +1290,7 @@ export class GameScene extends Phaser.Scene {
 
   private publishHudSnapshot(): void {
     const autoStartSecondsLeft =
-      !this.isGameOver
-      && this.canPerformBuildActions()
-      && this.nextWaveStartsAtMs !== null
+      !this.isGameOver && this.canPerformBuildActions() && this.nextWaveStartsAtMs !== null
         ? Math.max(0, Math.ceil((this.nextWaveStartsAtMs - this.time.now) / 1000))
         : null;
 
@@ -1497,20 +1303,23 @@ export class GameScene extends Phaser.Scene {
       builderFactionName: currentBuilderFaction.name,
       waveNumber: this.currentWaveNumber,
       phase: this.wavePhaseState.phase,
-      canStartWave:
-        !this.isGameOver
-        && this.canPerformBuildActions(),
+      canStartWave: !this.isGameOver && this.canPerformBuildActions(),
       selectedTowerType: this.selectedTowerType,
       selectedFaction: this.selectedFaction,
       autoStartSecondsLeft,
       waveQueue,
-      pendingCreepCount: this.pendingWaveSpawns.length + this.activeCreeps.filter(c => c.entity.status === 'alive').length,
+      pendingCreepCount:
+        this.pendingWaveSpawns.length +
+        this.activeCreeps.filter((c) => c.entity.status === 'alive').length,
     };
 
     publishGameHudSnapshot(snapshot);
   }
 
-  private buildWaveQueue(): { type: 'skeleton' | 'ghoul' | 'crypt_fiend' | 'gargoyle'; index: number }[] {
+  private buildWaveQueue(): {
+    type: 'skeleton' | 'ghoul' | 'crypt_fiend' | 'gargoyle';
+    index: number;
+  }[] {
     const queue = buildHudWaveQueue(this.activeCreeps);
 
     for (const spawn of this.pendingWaveSpawns) {
@@ -1537,7 +1346,9 @@ export class GameScene extends Phaser.Scene {
   }
 
   private getCurrentBuilderFaction(): BuilderFactionConfig {
-    const faction = builderFactions.find((candidate) => candidate.id === this.selectedBuilderFactionId);
+    const faction = builderFactions.find(
+      (candidate) => candidate.id === this.selectedBuilderFactionId,
+    );
     return faction ?? builderFactions[0];
   }
 
@@ -1601,8 +1412,8 @@ export class GameScene extends Phaser.Scene {
     this.nextWaveStartsAtMs = null;
     this.restartScheduledAtMs = null;
     this.placedTowerCostsByCellKey.clear();
-    this.activeTouchGesture = null;
-    this.lastActionAtMs = Number.NEGATIVE_INFINITY;
+    this.inputControllerState.activeTouchGesture = null;
+    this.inputControllerState.lastActionAtMs = Number.NEGATIVE_INFINITY;
     this.devFpsReportElapsedMs = 0;
     this.lastPublishedAutoStartSecondsLeft = null;
     this.soundManager = null;
