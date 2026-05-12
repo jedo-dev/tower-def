@@ -1,27 +1,20 @@
 import Phaser from 'phaser';
 import {
-  addGold,
-  applyEarlyWaveStartBonusPlaceholder,
   canSpendGold,
-  createInitialPlayerResources,
   isGameOverByLives,
   spendGold,
   subtractLives,
 } from '../../../../entities/player-resources';
 import {
   canPerformBuildActions as canPerformBuildActionsByPhase,
-  completeWaveIfResolved,
   createInitialWavePhaseState,
   isWaveActionAllowed,
-  resetWavePhaseState,
   startNextWaveCycle,
-  transitionCompletedToBuild,
   transitionToGameOver,
   type WavePhaseState,
 } from '../../../../features/wave-phase';
-import { ECONOMY_BALANCE } from '../../../constants/economy';
 import { TowerCombatConfig } from '../../../constants/tower';
-import { GRID_DEFAULT_ROW_CENTER, GRID_DIMENSIONS } from '../../../constants/grid';
+import { GRID_DIMENSIONS } from '../../../constants/grid';
 import {
   TerrainAssetKey,
   TERRAIN_TILESET_ASSET_PATHS,
@@ -30,7 +23,6 @@ import {
 import {
   TOWER_ANIMATION_KEYS,
   TOWER_BONE_ARCHER_ANIMATION_FRAMES,
-  TOWER_BONE_ARCHER_EFFECT_FRAMES,
   TOWER_SPRITE_ASSETS,
   TOWER_SPRITE_KEYS,
   TOWER_SPRITE_SHEET_FRAME,
@@ -39,8 +31,7 @@ import {
   UNIT_SPRITE_KEYS,
   UNIT_SPRITE_SHEET_FRAME,
 } from '../../../constants/sprites';
-import { calculateWaveStartPath, generateWaveUnits } from '../../../../entities/wave';
-import { applyDamageToCreep, isCreepDead } from '../../../../entities/creep';
+import { calculateWaveStartPath } from '../../../../entities/wave';
 import { undeadUnits, type UnitConfig } from '../../../../entities/unit';
 import {
   BuilderFaction,
@@ -49,18 +40,37 @@ import {
   type BuilderFactionConfig,
 } from '../../../../entities/builder-faction';
 import {
-  buildableTowers,
   TOWER_COMBAT_STATS_BY_TYPE,
-  canTowerAttack,
-  consumeTowerAttack,
   createInitialTowerCombatRuntime,
-  selectTowerTarget,
-  tickTowerCooldown,
 } from '../../../../entities/tower';
 import { createGridModel } from '../../grid/createGridModel';
 import { validateTowerPlacementPath } from '../../pathfinding/validateTowerPlacementPath';
 import { isUndeadDecorationTileIndex, resolveUndeadTerrainTileIndex } from '../terrain/undeadTerrain';
 import { GameSoundManager } from '../sound/GameSoundManager';
+import {
+  removeDeadCreepsFromActiveWave as removeDeadCreepsFromCombatRuntime,
+  updateCreepHitFeedback as updateCreepHitFeedbackRuntime,
+  updateDamageNumbers as updateDamageNumbersRuntime,
+  updateImpactEffects as updateImpactEffectsRuntime,
+  updateProjectiles as updateProjectilesRuntime,
+  updateTowerCombat as updateTowerCombatRuntime,
+  type CombatRuntimeConfig,
+  type CombatRuntimeDependencies,
+  type CombatRuntimeState,
+} from '../runtime/combat/gameSceneCombatRuntime';
+import {
+  applyWaveCompletionRewardIfResolved as applyWaveCompletionRewardIfResolvedRuntime,
+  initializeWaveRuntime as initializeWaveRuntimeModule,
+  processPendingWaveSpawns as processPendingWaveSpawnsRuntime,
+  resetRunToInitialState as resetRunToInitialStateRuntime,
+  spawnWaveCreeps as spawnWaveCreepsRuntime,
+  tryRestartRun as tryRestartRunRuntime,
+  tryStartNextWave as tryStartNextWaveRuntime,
+  updateAutoWaveCountdown as updateAutoWaveCountdownRuntime,
+  type WaveRuntimeConfig,
+  type WaveRuntimeDependencies,
+  type WaveRuntimeState,
+} from '../runtime/wave/gameSceneWaveRuntime';
 import {
   onGameCommand,
   publishGameHudSnapshot,
@@ -69,126 +79,79 @@ import {
 import type { GameHudSnapshot, HudFactionType } from '../../game-bridge/types';
 import type { GridPosition } from '../../../types/pathfinding';
 import type { GridCell, GridModel } from '../../../types/grid';
-import type { CreepEntity } from '../../../../entities/creep';
-import type { TowerCombatRuntime, TowerEntity } from '../../../../entities/tower';
-
-const ENTRANCE_CELL = { x: 0, y: GRID_DEFAULT_ROW_CENTER };
-const EXIT_CELL = { x: GRID_DIMENSIONS.cols - 1, y: GRID_DEFAULT_ROW_CENTER };
-const DEFAULT_TOWER_COST = 50;
-const SELL_REFUND_RATIO = ECONOMY_BALANCE.towerSellRatio;
-const CREEP_BASE_MOVE_SPEED_PX_PER_SEC = 80;
-const CREEP_MAX_SIMULATION_DELTA_MS = 34;
-const INITIAL_PLAYER_RESOURCES = createInitialPlayerResources();
-const EARLY_WAVE_START_BONUS_PLACEHOLDER_ELIGIBLE = false;
-const AUTO_WAVE_START_DELAY_MS = 30000;
-const RESTART_DELAY_MS = 1200;
-const ACTION_COOLDOWN_MS = 160;
-const TOUCH_TAP_MIN_DURATION_MS = 70;
-const TOUCH_TAP_MAX_DURATION_MS = 250;
-const TOUCH_TAP_MAX_MOVE_PX = 12;
-const TOUCH_LONG_PRESS_MIN_DURATION_MS = 450;
-const DEV_FPS_REPORT_INTERVAL_MS = 500;
-const PREVIEW_VALID_FILL = 0x3ecf78;
-const PREVIEW_VALID_STROKE = 0xaaf5c8;
-const PREVIEW_INVALID_FILL = 0xe55a4f;
-const PREVIEW_INVALID_STROKE = 0xffb8b2;
-const GRID_PIXEL_WIDTH = GRID_DIMENSIONS.cols * GRID_DIMENSIONS.cellSize;
-const GRID_PIXEL_HEIGHT = GRID_DIMENSIONS.rows * GRID_DIMENSIONS.cellSize;
-const CREEP_BASE_COLOR = 0xffffff;
-const CREEP_HIT_FLASH_COLOR = 0xffffff;
-const CREEP_HIT_FLASH_DURATION_MS = 90;
-const CREEP_DEATH_FADE_DURATION_MS = 180;
-const PROJECTILE_MIN_LIFETIME_MS = 200;
-const PROJECTILE_MAX_LIFETIME_MS = 350;
-const PROJECTILE_DISPLAY_SIZE_PX = 24;
-const PROJECTILE_RENDER_DEPTH = 70;
-const IMPACT_EFFECT_LIFETIME_MS = 120;
-const IMPACT_EFFECT_RENDER_DEPTH = 72;
-const ARCHER_PROJECTILE_VISUAL_MODE: 'projectile' | 'attackEffect' = 'attackEffect';
-const DAMAGE_NUMBERS_ENABLED = true;
-const DAMAGE_NUMBER_LIFETIME_MS = 420;
-const DAMAGE_NUMBER_RISE_PX = 12;
-const WAVE_SPAWN_INTERVAL_MS = 350;
-const WAVE_FIRST_SPAWN_DELAY_MS = 200;
-const BONE_ARCHER_TOWER_ID = 'undead_bone_archer_tower';
-const PLAGUE_TOWER_ID = 'undead_plague_tower';
-const BONE_ARCHER_TOWER_CONFIG =
-  buildableTowers.find((tower) => tower.id === BONE_ARCHER_TOWER_ID) ?? null;
-const PLAGUE_TOWER_CONFIG =
-  buildableTowers.find((tower) => tower.id === PLAGUE_TOWER_ID) ?? null;
-const TOWER_VISUAL_SCALE_IN_CELLS = 1.3;
-const BONE_ARCHER_ORIGIN_X = 0.5;
-const BONE_ARCHER_ORIGIN_Y = 0.82;
-const PLAGUE_TOWER_ORIGIN_X = 0.5;
-const PLAGUE_TOWER_ORIGIN_Y = 0.75;
-const GRID_LINE_COLOR = 0x5f6f8f;
-const GRID_IDLE_ALPHA = 0.08;
-const GRID_BUILD_ALPHA = 0.42;
-const GRID_LINE_WIDTH = 1;
-const ENTRANCE_EXIT_LABEL_FONT_FAMILY = 'Arial';
-const ENTRANCE_EXIT_LABEL_FONT_SIZE_PX = '10px';
-const ENTRANCE_EXIT_LABEL_COLOR = '#ffffff';
-const TERRAIN_RENDER_DEPTH = -20;
-const GRID_OVERLAY_RENDER_DEPTH = 10;
-const ENTRANCE_EXIT_LABEL_RENDER_DEPTH = 20;
-const TOWER_RENDER_DEPTH = 40;
-const CREEP_RENDER_DEPTH = 45;
-const CREEP_VISUAL_SIZE_PX = 28;
-const TERRAIN_BASE_TILE_ALPHA = 0.72;
-const TERRAIN_DECORATION_TILE_ALPHA = 0.62;
-const TERRAIN_BASE_TILE_TINT = 0xc3cbbf;
-const TERRAIN_DECORATION_TILE_TINT = 0xb7bfae;
-const BUILD_PREVIEW_RENDER_DEPTH = 15;
-
-function mapEnemyFactionToHudFaction(faction: string): HudFactionType {
-  if (faction === 'ORC' || faction === 'HUMAN' || faction === 'ELF') {
-    return faction.toLowerCase() as HudFactionType;
-  }
-  return 'undead';
-}
-
-
-type CreepRenderState = {
-  entity: CreepEntity;
-  sprite: Phaser.GameObjects.Sprite;
-  hitFlashRemainingMs: number;
-  deathFadeRemainingMs: number;
-};
-
-type TowerRenderState = {
-  entity: TowerEntity;
-  runtime: TowerCombatRuntime;
-  sprite: Phaser.GameObjects.Sprite;
-};
-
-type ProjectileState = {
-  sprite: Phaser.GameObjects.Sprite;
-  fromX: number;
-  fromY: number;
-  toX: number;
-  toY: number;
-  isSplash: boolean;
-  remainingMs: number;
-  maxLifetimeMs: number;
-};
-
-type ImpactEffectState = {
-  sprite: Phaser.GameObjects.Sprite;
-  remainingMs: number;
-  maxLifetimeMs: number;
-};
-
-type DamageNumberState = {
-  text: Phaser.GameObjects.Text;
-  startY: number;
-  remainingMs: number;
-};
-
-type PendingWaveSpawn = {
-  unit: UnitConfig;
-  spawnAtMs: number;
-  sequenceIndex: number;
-};
+import type { TowerEntity } from '../../../../entities/tower';
+import {
+  ACTION_COOLDOWN_MS,
+  ARCHER_PROJECTILE_VISUAL_MODE,
+  AUTO_WAVE_START_DELAY_MS,
+  BONE_ARCHER_ORIGIN_X,
+  BONE_ARCHER_ORIGIN_Y,
+  BONE_ARCHER_TOWER_CONFIG,
+  BUILD_PREVIEW_RENDER_DEPTH,
+  CREEP_BASE_COLOR,
+  CREEP_BASE_MOVE_SPEED_PX_PER_SEC,
+  CREEP_DEATH_FADE_DURATION_MS,
+  CREEP_HIT_FLASH_COLOR,
+  CREEP_HIT_FLASH_DURATION_MS,
+  CREEP_MAX_SIMULATION_DELTA_MS,
+  DAMAGE_NUMBERS_ENABLED,
+  DAMAGE_NUMBER_LIFETIME_MS,
+  DAMAGE_NUMBER_RISE_PX,
+  DEFAULT_TOWER_COST,
+  DEV_FPS_REPORT_INTERVAL_MS,
+  EARLY_WAVE_START_BONUS_PLACEHOLDER_ELIGIBLE,
+  ENTRANCE_CELL,
+  ENTRANCE_EXIT_LABEL_COLOR,
+  ENTRANCE_EXIT_LABEL_FONT_FAMILY,
+  ENTRANCE_EXIT_LABEL_FONT_SIZE_PX,
+  ENTRANCE_EXIT_LABEL_RENDER_DEPTH,
+  EXIT_CELL,
+  GRID_BUILD_ALPHA,
+  GRID_IDLE_ALPHA,
+  GRID_LINE_COLOR,
+  GRID_LINE_WIDTH,
+  GRID_OVERLAY_RENDER_DEPTH,
+  GRID_PIXEL_HEIGHT,
+  GRID_PIXEL_WIDTH,
+  IMPACT_EFFECT_LIFETIME_MS,
+  IMPACT_EFFECT_RENDER_DEPTH,
+  INITIAL_PLAYER_RESOURCES,
+  PLAGUE_TOWER_CONFIG,
+  PLAGUE_TOWER_ORIGIN_X,
+  PLAGUE_TOWER_ORIGIN_Y,
+  PREVIEW_INVALID_FILL,
+  PREVIEW_INVALID_STROKE,
+  PREVIEW_VALID_FILL,
+  PREVIEW_VALID_STROKE,
+  PROJECTILE_DISPLAY_SIZE_PX,
+  PROJECTILE_MAX_LIFETIME_MS,
+  PROJECTILE_MIN_LIFETIME_MS,
+  PROJECTILE_RENDER_DEPTH,
+  RESTART_DELAY_MS,
+  SELL_REFUND_RATIO,
+  TERRAIN_BASE_TILE_ALPHA,
+  TERRAIN_BASE_TILE_TINT,
+  TERRAIN_DECORATION_TILE_ALPHA,
+  TERRAIN_DECORATION_TILE_TINT,
+  TERRAIN_RENDER_DEPTH,
+  TOUCH_LONG_PRESS_MIN_DURATION_MS,
+  TOUCH_TAP_MAX_DURATION_MS,
+  TOUCH_TAP_MAX_MOVE_PX,
+  TOUCH_TAP_MIN_DURATION_MS,
+  TOWER_RENDER_DEPTH,
+  TOWER_VISUAL_SCALE_IN_CELLS,
+  WAVE_FIRST_SPAWN_DELAY_MS,
+  WAVE_SPAWN_INTERVAL_MS,
+} from './gameScene.constants';
+import { buildHudWaveQueue, mapEnemyFactionToHudFaction, mapUnitToCreepType } from './gameScene.helpers';
+import type {
+  CreepRenderState,
+  DamageNumberState,
+  ImpactEffectState,
+  PendingWaveSpawn,
+  ProjectileState,
+  TowerRenderState,
+} from './gameScene.types';
 
 export class GameScene extends Phaser.Scene {
   public static readonly KEY = 'GameScene';
@@ -233,6 +196,28 @@ export class GameScene extends Phaser.Scene {
   private devFpsReportElapsedMs = 0;
   private lastPublishedAutoStartSecondsLeft: number | null = null;
   private soundManager: GameSoundManager | null = null;
+  private readonly combatRuntimeConfig: CombatRuntimeConfig = {
+    archerProjectileVisualMode: ARCHER_PROJECTILE_VISUAL_MODE,
+    creepBaseColor: CREEP_BASE_COLOR,
+    creepHitFlashColor: CREEP_HIT_FLASH_COLOR,
+    creepHitFlashDurationMs: CREEP_HIT_FLASH_DURATION_MS,
+    creepDeathFadeDurationMs: CREEP_DEATH_FADE_DURATION_MS,
+    projectileMinLifetimeMs: PROJECTILE_MIN_LIFETIME_MS,
+    projectileMaxLifetimeMs: PROJECTILE_MAX_LIFETIME_MS,
+    projectileDisplaySizePx: PROJECTILE_DISPLAY_SIZE_PX,
+    projectileRenderDepth: PROJECTILE_RENDER_DEPTH,
+    impactEffectLifetimeMs: IMPACT_EFFECT_LIFETIME_MS,
+    impactEffectRenderDepth: IMPACT_EFFECT_RENDER_DEPTH,
+    damageNumbersEnabled: DAMAGE_NUMBERS_ENABLED,
+    damageNumberLifetimeMs: DAMAGE_NUMBER_LIFETIME_MS,
+    damageNumberRisePx: DAMAGE_NUMBER_RISE_PX,
+  };
+  private readonly waveRuntimeConfig: WaveRuntimeConfig = {
+    autoWaveStartDelayMs: AUTO_WAVE_START_DELAY_MS,
+    waveSpawnIntervalMs: WAVE_SPAWN_INTERVAL_MS,
+    waveFirstSpawnDelayMs: WAVE_FIRST_SPAWN_DELAY_MS,
+    earlyWaveStartBonusPlaceholderEligible: EARLY_WAVE_START_BONUS_PLACEHOLDER_ELIGIBLE,
+  };
 
   constructor() {
     super(GameScene.KEY);
@@ -415,26 +400,20 @@ export class GameScene extends Phaser.Scene {
   }
 
   private initializeWaveRuntime(grid: GridModel): void {
-    const waveStartPath = calculateWaveStartPath(grid);
-    this.activeCreepPath = waveStartPath;
-    this.activeCreeps.forEach((creep) => creep.sprite.destroy());
-    this.activeCreeps = [];
+    const state = this.getWaveRuntimeState();
+    initializeWaveRuntimeModule(
+      state,
+      this.waveRuntimeConfig,
+      this.getWaveRuntimeDependencies(),
+      grid,
+    );
+    this.activeCreepPath = state.activeCreepPath;
+    this.activeCreeps = state.activeCreeps;
+    this.playerGold = state.playerGold;
+    this.nextWaveStartsAtMs = state.nextWaveStartsAtMs;
     this.destroyAllTowerSprites();
     this.activeTowers = [];
-    this.isWaveCompletionRewardGranted = false;
-    this.applyEarlyWaveStartBonusPlaceholder();
-
-    if (waveStartPath.length === 0) {
-      this.nextWaveStartsAtMs = null;
-      this.publishHudSnapshot();
-      return;
-    }
-
-    this.nextWaveStartsAtMs = this.time.now + AUTO_WAVE_START_DELAY_MS;
-    this.registry.set('phase.build.active', this.canPerformBuildActions());
-    this.updateGridOverlayVisualState();
-    this.updateBuildPreview();
-    this.publishHudSnapshot();
+    this.isWaveCompletionRewardGranted = state.isWaveCompletionRewardGranted;
   }
 
   private registerGridHoverDetection(): void {
@@ -481,6 +460,85 @@ export class GameScene extends Phaser.Scene {
 
   private updateHoveredCellDebugRegistry(): void {
     return;
+  }
+
+  private getCombatRuntimeState(): CombatRuntimeState {
+    return {
+      activeCreeps: this.activeCreeps,
+      activeTowers: this.activeTowers,
+      activeProjectiles: this.activeProjectiles,
+      activeImpactEffects: this.activeImpactEffects,
+      activeDamageNumbers: this.activeDamageNumbers,
+      playerGold: this.playerGold,
+      playerLives: this.playerLives,
+    };
+  }
+
+  private applyCombatRuntimeState(state: CombatRuntimeState): void {
+    this.activeCreeps = state.activeCreeps;
+    this.activeTowers = state.activeTowers;
+    this.activeProjectiles = state.activeProjectiles;
+    this.activeImpactEffects = state.activeImpactEffects;
+    this.activeDamageNumbers = state.activeDamageNumbers;
+    this.playerGold = state.playerGold;
+    this.playerLives = state.playerLives;
+  }
+
+  private getWaveRuntimeState(): WaveRuntimeState {
+    return {
+      activeCreepPath: this.activeCreepPath,
+      activeCreeps: this.activeCreeps,
+      pendingWaveSpawns: this.pendingWaveSpawns,
+      wavePhaseState: this.wavePhaseState,
+      isWaveCompletionRewardGranted: this.isWaveCompletionRewardGranted,
+      nextWaveStartsAtMs: this.nextWaveStartsAtMs,
+      restartScheduledAtMs: this.restartScheduledAtMs,
+      playerGold: this.playerGold,
+      playerLives: this.playerLives,
+      isGameOver: this.isGameOver,
+      currentWaveNumber: this.currentWaveNumber,
+      lastPublishedAutoStartSecondsLeft: this.lastPublishedAutoStartSecondsLeft,
+    };
+  }
+
+  private getCombatRuntimeDependencies(): CombatRuntimeDependencies {
+    return {
+      scene: this,
+      toCellCenter: (position) => this.toCellCenter(position),
+      playArcherAttackAnimation: (tower) => this.playBoneArcherAttackAnimation(tower),
+      playSplashAttackAnimation: (tower) => this.playPlagueAttackAnimation(tower),
+      playSound: (key) => this.soundManager?.play(key),
+      onGoldUpdated: (nextGold) => {
+        this.playerGold = nextGold;
+        this.registry.set('economy.gold', this.playerGold);
+      },
+      onHudChanged: () => this.publishHudSnapshot(),
+    };
+  }
+
+  private getWaveRuntimeDependencies(): WaveRuntimeDependencies {
+    return {
+      nowMs: () => this.time.now,
+      getSelectedFactionUnits: () => this.getSelectedFactionUnits(),
+      getSpriteKeyByUnit: (unit) => this.getSpriteKeyByUnit(unit),
+      getAnimationKeyByUnit: (unit) => this.getAnimationKeyByUnit(unit),
+      getCreepTypeFromUnit: (unit) => this.getCreepTypeFromUnit(unit),
+      toCellCenter: (position) => this.toCellCenter(position),
+      onGoldUpdated: (nextGold) => {
+        this.playerGold = nextGold;
+        this.registry.set('economy.gold', this.playerGold);
+      },
+      onWavePhaseChanged: (nextPhase) => {
+        this.wavePhaseState = nextPhase;
+      },
+      onBuildStateUpdated: () => {
+        this.registry.set('phase.build.active', this.canPerformBuildActions());
+        this.updateGridOverlayVisualState();
+        this.updateBuildPreview();
+      },
+      onHudChanged: () => this.publishHudSnapshot(),
+      createCreepSprite: (x, y, spriteKey) => this.add.sprite(x, y, spriteKey, 0),
+    };
   }
 
   private getSelectedTowerRangeCells(): number {
@@ -936,348 +994,49 @@ export class GameScene extends Phaser.Scene {
   }
 
   private removeDeadCreepsFromActiveWave(deltaMs: number): void {
-    const aliveCreeps: CreepRenderState[] = [];
-
-    for (const creep of this.activeCreeps) {
-      if (!isCreepDead(creep.entity)) {
-        aliveCreeps.push(creep);
-        continue;
-      }
-
-      if (creep.deathFadeRemainingMs <= 0) {
-        creep.deathFadeRemainingMs = CREEP_DEATH_FADE_DURATION_MS;
-      }
-
-      creep.deathFadeRemainingMs = Math.max(0, creep.deathFadeRemainingMs - deltaMs);
-      const alpha = creep.deathFadeRemainingMs / CREEP_DEATH_FADE_DURATION_MS;
-      creep.sprite.setAlpha(alpha);
-
-      if (creep.deathFadeRemainingMs > 0) {
-        aliveCreeps.push(creep);
-        continue;
-      }
-
-      creep.sprite.destroy();
-    }
-
-    this.activeCreeps = aliveCreeps;
+    this.activeCreeps = removeDeadCreepsFromCombatRuntime(
+      this.activeCreeps,
+      deltaMs,
+      this.combatRuntimeConfig.creepDeathFadeDurationMs,
+    );
   }
 
   private updateTowerCombat(deltaMs: number): void {
-    if (this.activeTowers.length === 0 || this.activeCreeps.length === 0) {
-      return;
-    }
-
-    const creepsForTargeting = this.activeCreeps.map((creep) => creep.entity);
-
-    for (const tower of this.activeTowers) {
-      tower.runtime = tickTowerCooldown(tower.runtime, deltaMs);
-
-      if (!canTowerAttack(tower.entity, tower.runtime)) {
-        continue;
-      }
-
-      const targetCreep = selectTowerTarget(tower.entity, creepsForTargeting);
-
-      if (!targetCreep) {
-        continue;
-      }
-
-      const targetRenderState = this.activeCreeps.find(
-        (creep) => creep.entity.id === targetCreep.id,
-      );
-
-      if (!targetRenderState) {
-        continue;
-      }
-
-      const isSplashTower = tower.entity.type === 'splash';
-      const splashRadius = tower.entity.combatStats.splashRadius ?? 0;
-
-      if (isSplashTower && splashRadius > 0) {
-        this.applySplashDamage(tower, targetRenderState);
-      } else {
-        this.applySingleTargetDamage(tower, targetRenderState);
-      }
-
-      tower.runtime = consumeTowerAttack(tower.entity, tower.runtime);
-      if (isSplashTower) {
-        this.playPlagueAttackAnimation(tower);
-      } else {
-        this.playBoneArcherAttackAnimation(tower);
-      }
-      this.spawnProjectileFeedback(tower.entity, targetRenderState.entity.position, isSplashTower);
-      this.soundManager?.play('attack');
-    }
-  }
-
-  private applySingleTargetDamage(tower: TowerRenderState, targetRenderState: CreepRenderState): void {
-    const damageResult = applyDamageToCreep(
-      targetRenderState.entity,
-      tower.entity.combatStats.damage,
+    const state = this.getCombatRuntimeState();
+    updateTowerCombatRuntime(
+      state,
+      this.getCombatRuntimeDependencies(),
+      this.combatRuntimeConfig,
+      deltaMs,
     );
-
-    targetRenderState.entity = damageResult.creep;
-    this.applyCreepHitFeedback(targetRenderState);
-    this.soundManager?.play('hit');
-    this.spawnDamageNumber(
-      targetRenderState.entity.position,
-      tower.entity.combatStats.damage,
-    );
-
-    if (damageResult.killed) {
-      this.handleCreepKill();
-    }
-  }
-
-  private applySplashDamage(tower: TowerRenderState, targetRenderState: CreepRenderState): void {
-    const splashRadius = tower.entity.combatStats.splashRadius ?? 1.5;
-    const towerCenter = tower.entity.position;
-    const splashRadiusPx = splashRadius * GRID_DIMENSIONS.cellSize;
-
-    const creepsInSplashRadius = this.activeCreeps.filter((creep) => {
-      if (creep.entity.status !== 'alive') {
-        return false;
-      }
-      const creepCenter = this.toCellCenter(creep.entity.position);
-      const towerCenterPx = this.toCellCenter(towerCenter);
-      const distance = Math.hypot(creepCenter.x - towerCenterPx.x, creepCenter.y - towerCenterPx.y);
-      return distance <= splashRadiusPx;
-    });
-
-    let totalDamageDealt = 0;
-    for (const creep of creepsInSplashRadius) {
-      const damageResult = applyDamageToCreep(
-        creep.entity,
-        tower.entity.combatStats.damage,
-      );
-
-      creep.entity = damageResult.creep;
-      this.applyCreepHitFeedback(creep);
-      totalDamageDealt += tower.entity.combatStats.damage;
-
-      if (damageResult.killed) {
-        this.handleCreepKill();
-      }
-    }
-
-    this.soundManager?.play('hit');
-    this.spawnDamageNumber(
-      targetRenderState.entity.position,
-      totalDamageDealt,
-    );
-  }
-
-  private handleCreepKill(): void {
-    const nextResources = addGold(
-      { gold: this.playerGold, lives: this.playerLives },
-      ECONOMY_BALANCE.creepKillRewardGold,
-    );
-    this.playerGold = nextResources.gold;
-    this.registry.set('economy.gold', this.playerGold);
-    this.soundManager?.play('death');
-    this.publishHudSnapshot();
-  }
-
-  private spawnProjectileFeedback(
-    tower: TowerEntity,
-    to: GridPosition,
-    isSplash: boolean = false,
-  ): void {
-    const fromCenter = this.toCellCenter(tower.position);
-    const toCenter = this.toCellCenter(to);
-    const lifetimeMs = Math.max(
-      PROJECTILE_MIN_LIFETIME_MS,
-      Math.min(PROJECTILE_MAX_LIFETIME_MS, Math.round(tower.combatStats.attackCooldownMs * 0.28)),
-    );
-    const frame = isSplash
-      ? TOWER_BONE_ARCHER_EFFECT_FRAMES.projectile
-      : ARCHER_PROJECTILE_VISUAL_MODE === 'projectile'
-        ? TOWER_BONE_ARCHER_EFFECT_FRAMES.projectile
-        : TOWER_BONE_ARCHER_EFFECT_FRAMES.attackEffect;
-    const projectile = this.add.sprite(
-      fromCenter.x,
-      fromCenter.y,
-      TOWER_SPRITE_KEYS.UNDEAD_BONE_ARCHER,
-      frame,
-    );
-    const displaySize = isSplash ? PROJECTILE_DISPLAY_SIZE_PX * 1.6 : PROJECTILE_DISPLAY_SIZE_PX;
-    projectile.setDisplaySize(displaySize, displaySize);
-    projectile.setOrigin(0.5);
-    projectile.setDepth(PROJECTILE_RENDER_DEPTH);
-    if (isSplash) {
-      projectile.setTint(0x44ff44);
-    }
-    this.activeProjectiles.push({
-      sprite: projectile,
-      fromX: fromCenter.x,
-      fromY: fromCenter.y,
-      toX: toCenter.x,
-      toY: toCenter.y,
-      isSplash,
-      remainingMs: lifetimeMs,
-      maxLifetimeMs: lifetimeMs,
-    });
+    this.applyCombatRuntimeState(state);
   }
 
   private updateProjectiles(deltaMs: number): void {
-    if (this.activeProjectiles.length === 0) {
-      return;
-    }
-
-    const nextProjectiles: ProjectileState[] = [];
-
-    for (const projectile of this.activeProjectiles) {
-      const remainingMs = projectile.remainingMs - deltaMs;
-
-      if (remainingMs <= 0) {
-        this.spawnImpactEffect(projectile.toX, projectile.toY, projectile.isSplash);
-        projectile.sprite.destroy();
-        continue;
-      }
-
-      const progress = 1 - remainingMs / projectile.maxLifetimeMs;
-      const x = projectile.fromX + (projectile.toX - projectile.fromX) * progress;
-      const y = projectile.fromY + (projectile.toY - projectile.fromY) * progress;
-      projectile.sprite.setPosition(x, y);
-      projectile.sprite.setAlpha(1 - progress * 0.35);
-      nextProjectiles.push({
-        sprite: projectile.sprite,
-        fromX: projectile.fromX,
-        fromY: projectile.fromY,
-        toX: projectile.toX,
-        toY: projectile.toY,
-        isSplash: projectile.isSplash,
-        remainingMs,
-        maxLifetimeMs: projectile.maxLifetimeMs,
-      });
-    }
-
-    this.activeProjectiles = nextProjectiles;
-  }
-
-  private spawnImpactEffect(x: number, y: number, isSplash: boolean): void {
-    const frame = isSplash
-      ? TOWER_BONE_ARCHER_EFFECT_FRAMES.attackEffect
-      : TOWER_BONE_ARCHER_EFFECT_FRAMES.projectile;
-    const effect = this.add.sprite(x, y, TOWER_SPRITE_KEYS.UNDEAD_BONE_ARCHER, frame);
-    const size = isSplash ? PROJECTILE_DISPLAY_SIZE_PX * 1.7 : PROJECTILE_DISPLAY_SIZE_PX * 1.25;
-    effect.setDisplaySize(size, size);
-    effect.setOrigin(0.5);
-    effect.setDepth(IMPACT_EFFECT_RENDER_DEPTH);
-    if (isSplash) {
-      effect.setTint(0x66ff88);
-    }
-
-    this.activeImpactEffects.push({
-      sprite: effect,
-      remainingMs: IMPACT_EFFECT_LIFETIME_MS,
-      maxLifetimeMs: IMPACT_EFFECT_LIFETIME_MS,
-    });
+    const state = this.getCombatRuntimeState();
+    updateProjectilesRuntime(
+      state,
+      this.getCombatRuntimeDependencies(),
+      this.combatRuntimeConfig,
+      deltaMs,
+    );
+    this.applyCombatRuntimeState(state);
   }
 
   private updateImpactEffects(deltaMs: number): void {
-    if (this.activeImpactEffects.length === 0) {
-      return;
-    }
-
-    const nextEffects: ImpactEffectState[] = [];
-
-    for (const effect of this.activeImpactEffects) {
-      const remainingMs = effect.remainingMs - deltaMs;
-
-      if (remainingMs <= 0) {
-        effect.sprite.destroy();
-        continue;
-      }
-
-      effect.sprite.setAlpha(remainingMs / effect.maxLifetimeMs);
-      nextEffects.push({
-        sprite: effect.sprite,
-        remainingMs,
-        maxLifetimeMs: effect.maxLifetimeMs,
-      });
-    }
-
-    this.activeImpactEffects = nextEffects;
-  }
-
-  private spawnDamageNumber(position: GridPosition, damage: number): void {
-    if (!DAMAGE_NUMBERS_ENABLED) {
-      return;
-    }
-
-    const center = this.toCellCenter(position);
-    const text = this.add.text(center.x, center.y - 10, `${damage}`, {
-      fontFamily: 'Trebuchet MS',
-      fontSize: '11px',
-      color: '#ffe9a8',
-      stroke: '#1d2536',
-      strokeThickness: 2,
-    });
-    text.setOrigin(0.5);
-
-    this.activeDamageNumbers.push({
-      text,
-      startY: text.y,
-      remainingMs: DAMAGE_NUMBER_LIFETIME_MS,
-    });
+    const state = this.getCombatRuntimeState();
+    updateImpactEffectsRuntime(state, deltaMs);
+    this.applyCombatRuntimeState(state);
   }
 
   private updateDamageNumbers(deltaMs: number): void {
-    if (this.activeDamageNumbers.length === 0) {
-      return;
-    }
-
-    const next: DamageNumberState[] = [];
-
-    for (const numberState of this.activeDamageNumbers) {
-      const remainingMs = numberState.remainingMs - deltaMs;
-
-      if (remainingMs <= 0) {
-        numberState.text.destroy();
-        continue;
-      }
-
-      const progress = 1 - remainingMs / DAMAGE_NUMBER_LIFETIME_MS;
-      numberState.text.setAlpha(1 - progress);
-      numberState.text.setY(numberState.startY - DAMAGE_NUMBER_RISE_PX * progress);
-      next.push({
-        ...numberState,
-        remainingMs,
-      });
-    }
-
-    this.activeDamageNumbers = next;
-  }
-
-  private applyCreepHitFeedback(creep: CreepRenderState): void {
-    creep.hitFlashRemainingMs = CREEP_HIT_FLASH_DURATION_MS;
-    creep.sprite.setTint(CREEP_HIT_FLASH_COLOR);
+    const state = this.getCombatRuntimeState();
+    updateDamageNumbersRuntime(state, this.combatRuntimeConfig, deltaMs);
+    this.applyCombatRuntimeState(state);
   }
 
   private updateCreepHitFeedback(deltaMs: number): void {
-    for (const creep of this.activeCreeps) {
-      if (creep.hitFlashRemainingMs <= 0) {
-        continue;
-      }
-
-      creep.hitFlashRemainingMs = Math.max(0, creep.hitFlashRemainingMs - deltaMs);
-
-      if (creep.hitFlashRemainingMs === 0) {
-        creep.sprite.setTint(CREEP_BASE_COLOR);
-        continue;
-      }
-
-      const progress = creep.hitFlashRemainingMs / CREEP_HIT_FLASH_DURATION_MS;
-      const tint = Phaser.Display.Color.Interpolate.ColorWithColor(
-        Phaser.Display.Color.ValueToColor(CREEP_BASE_COLOR),
-        Phaser.Display.Color.ValueToColor(CREEP_HIT_FLASH_COLOR),
-        100,
-        Math.round(progress * 100),
-      );
-      creep.sprite.setTint(Phaser.Display.Color.GetColor(tint.r, tint.g, tint.b));
-    }
+    updateCreepHitFeedbackRuntime(this.activeCreeps, this.combatRuntimeConfig, deltaMs);
   }
 
   private updatePerformanceTelemetry(deltaMs: number): void {
@@ -1292,109 +1051,43 @@ export class GameScene extends Phaser.Scene {
   }
 
   private applyWaveCompletionRewardIfResolved(): void {
-    if (this.isWaveCompletionRewardGranted) {
-      return;
-    }
-
-    if (this.pendingWaveSpawns.length > 0) {
-      return;
-    }
-
-    if (this.activeCreeps.length === 0) {
-      return;
-    }
-
-    const hasAliveCreep = this.activeCreeps.some(
-      (creep) => creep.entity.status === 'alive',
+    const state = this.getWaveRuntimeState();
+    applyWaveCompletionRewardIfResolvedRuntime(
+      state,
+      this.waveRuntimeConfig,
+      this.getWaveRuntimeDependencies(),
     );
-
-    if (hasAliveCreep) {
-      return;
-    }
-
-    this.wavePhaseState = completeWaveIfResolved(
-      this.wavePhaseState,
-      this.activeCreeps.map((creep) => creep.entity),
-    );
-
-    const nextResources = addGold(
-      { gold: this.playerGold, lives: this.playerLives },
-      ECONOMY_BALANCE.waveCompletionRewardGold,
-    );
-    this.playerGold = nextResources.gold;
-    this.registry.set('economy.gold', this.playerGold);
-    this.isWaveCompletionRewardGranted = true;
-    this.wavePhaseState = transitionCompletedToBuild(this.wavePhaseState);
-    this.registry.set('phase.build.active', this.canPerformBuildActions());
-    this.updateGridOverlayVisualState();
-    this.updateBuildPreview();
-    this.nextWaveStartsAtMs ??= this.time.now + AUTO_WAVE_START_DELAY_MS;
-    this.publishHudSnapshot();
+    this.wavePhaseState = state.wavePhaseState;
+    this.playerGold = state.playerGold;
+    this.isWaveCompletionRewardGranted = state.isWaveCompletionRewardGranted;
+    this.nextWaveStartsAtMs = state.nextWaveStartsAtMs;
   }
 
   private updateAutoWaveCountdown(nowMs: number): void {
-    if (!this.canPerformBuildActions() || this.nextWaveStartsAtMs === null) {
-      if (this.lastPublishedAutoStartSecondsLeft !== null) {
-        this.lastPublishedAutoStartSecondsLeft = null;
-        this.publishHudSnapshot();
-      }
-      return;
+    const state = this.getWaveRuntimeState();
+    const changed = updateAutoWaveCountdownRuntime(state, nowMs, this.canPerformBuildActions());
+    this.lastPublishedAutoStartSecondsLeft = state.lastPublishedAutoStartSecondsLeft;
+    if (changed) {
+      this.publishHudSnapshot();
     }
-
-    const nextSecondsLeft = Math.max(
-      0,
-      Math.ceil((this.nextWaveStartsAtMs - nowMs) / 1000),
-    );
-
-    if (this.lastPublishedAutoStartSecondsLeft === nextSecondsLeft) {
-      return;
-    }
-
-    this.lastPublishedAutoStartSecondsLeft = nextSecondsLeft;
-    this.publishHudSnapshot();
-  }
-
-  private applyEarlyWaveStartBonusPlaceholder(): void {
-    const result = applyEarlyWaveStartBonusPlaceholder(
-      { gold: this.playerGold, lives: this.playerLives },
-      ECONOMY_BALANCE.earlyWaveStartBonusGold,
-      EARLY_WAVE_START_BONUS_PLACEHOLDER_ELIGIBLE,
-    );
-
-    this.playerGold = result.resources.gold;
-    this.registry.set('economy.gold', this.playerGold);
-    this.registry.set('economy.earlyWaveStartBonus.granted', result.granted);
-    this.publishHudSnapshot();
   }
 
   private tryStartNextWave(nowMs: number): void {
-    if (this.nextWaveStartsAtMs === null) {
-      return;
-    }
-
-    if (nowMs < this.nextWaveStartsAtMs) {
-      return;
-    }
-
+    const state = this.getWaveRuntimeState();
+    if (!tryStartNextWaveRuntime(state, nowMs)) return;
+    this.nextWaveStartsAtMs = state.nextWaveStartsAtMs;
     if (!this.gridModel) {
       this.nextWaveStartsAtMs = null;
       return;
     }
-
     this.startNextWaveFromBuildState();
   }
 
   private tryRestartRun(nowMs: number): void {
-    if (this.restartScheduledAtMs === null) {
-      return;
-    }
-
-    if (nowMs < this.restartScheduledAtMs) {
-      return;
-    }
-
-    this.restartScheduledAtMs = null;
-    this.resetRunToInitialState();
+    const state = this.getWaveRuntimeState();
+    const shouldRestart = tryRestartRunRuntime(state, nowMs);
+    this.restartScheduledAtMs = state.restartScheduledAtMs;
+    if (shouldRestart) this.resetRunToInitialState();
   }
 
   private resetRunToInitialState(): void {
@@ -1406,17 +1099,18 @@ export class GameScene extends Phaser.Scene {
     this.hoveredCell = null;
     this.updateHoveredCellDebugRegistry();
     this.buildPreviewOverlay?.clear();
-    this.nextWaveStartsAtMs = null;
-    this.activeCreepPath = [];
-    this.pendingWaveSpawns = [];
-    this.isWaveCompletionRewardGranted = false;
-
-    const initialResources = createInitialPlayerResources();
-    this.playerGold = initialResources.gold;
-    this.playerLives = initialResources.lives;
-    this.wavePhaseState = resetWavePhaseState();
-    this.isGameOver = false;
-    this.currentWaveNumber = 1;
+    const state = this.getWaveRuntimeState();
+    resetRunToInitialStateRuntime(state);
+    this.nextWaveStartsAtMs = state.nextWaveStartsAtMs;
+    this.activeCreepPath = state.activeCreepPath;
+    this.pendingWaveSpawns = state.pendingWaveSpawns;
+    this.isWaveCompletionRewardGranted = state.isWaveCompletionRewardGranted;
+    this.playerGold = state.playerGold;
+    this.playerLives = state.playerLives;
+    this.wavePhaseState = state.wavePhaseState;
+    this.isGameOver = state.isGameOver;
+    this.currentWaveNumber = state.currentWaveNumber;
+    this.lastPublishedAutoStartSecondsLeft = state.lastPublishedAutoStartSecondsLeft;
 
     this.registry.set('economy.gold', this.playerGold);
     this.registry.set('economy.lives', this.playerLives);
@@ -1431,58 +1125,17 @@ export class GameScene extends Phaser.Scene {
   }
 
   private spawnWaveCreeps(): void {
-    this.destroyAllCreeps();
-    this.pendingWaveSpawns = [];
-    const units = generateWaveUnits({
-      waveNumber: this.currentWaveNumber,
-      factionUnits: this.getSelectedFactionUnits(),
-    });
-
-    const firstSpawnAtMs = this.time.now + WAVE_FIRST_SPAWN_DELAY_MS;
-    this.pendingWaveSpawns = units.map((unit, index) => ({
-      unit,
-      sequenceIndex: index,
-      spawnAtMs: firstSpawnAtMs + index * WAVE_SPAWN_INTERVAL_MS,
-    }));
+    const state = this.getWaveRuntimeState();
+    spawnWaveCreepsRuntime(state, this.waveRuntimeConfig, this.getWaveRuntimeDependencies());
+    this.activeCreeps = state.activeCreeps;
+    this.pendingWaveSpawns = state.pendingWaveSpawns;
   }
 
   private processPendingWaveSpawns(nowMs: number): void {
-    if (this.pendingWaveSpawns.length === 0 || this.activeCreepPath.length === 0) {
-      return;
-    }
-
-    const startPoint = this.toCellCenter(this.activeCreepPath[0]);
-    const readySpawns = this.pendingWaveSpawns.filter((spawn) => spawn.spawnAtMs <= nowMs);
-    this.pendingWaveSpawns = this.pendingWaveSpawns.filter((spawn) => spawn.spawnAtMs > nowMs);
-
-    for (const spawn of readySpawns) {
-      const creepTypeFromUnit = this.getCreepTypeFromUnit(spawn.unit);
-      const waveCreep: CreepEntity = {
-        id: `wave:creep:${this.currentWaveNumber}:${spawn.sequenceIndex}`,
-        type: creepTypeFromUnit,
-        hp: spawn.unit.health,
-        lifeState: 'alive',
-        speed: spawn.unit.speed,
-        status: 'alive',
-        position: { ...this.activeCreepPath[0] },
-        pathIndex: 0,
-      };
-
-      const spriteKey = this.getSpriteKeyByUnit(spawn.unit);
-      const animationKey = this.getAnimationKeyByUnit(spawn.unit);
-      const sprite = this.add.sprite(startPoint.x, startPoint.y, spriteKey, 0);
-      sprite.setDisplaySize(CREEP_VISUAL_SIZE_PX, CREEP_VISUAL_SIZE_PX);
-      sprite.setDepth(CREEP_RENDER_DEPTH);
-      sprite.setTint(CREEP_BASE_COLOR);
-      sprite.play(animationKey);
-
-      this.activeCreeps.push({
-        entity: waveCreep,
-        sprite,
-        hitFlashRemainingMs: 0,
-        deathFadeRemainingMs: 0,
-      });
-    }
+    const state = this.getWaveRuntimeState();
+    processPendingWaveSpawnsRuntime(state, this.getWaveRuntimeDependencies(), nowMs);
+    this.pendingWaveSpawns = state.pendingWaveSpawns;
+    this.activeCreeps = state.activeCreeps;
   }
 
   private getSelectedFactionUnits(): UnitConfig[] {
@@ -1858,35 +1511,29 @@ export class GameScene extends Phaser.Scene {
   }
 
   private buildWaveQueue(): { type: 'skeleton' | 'ghoul' | 'crypt_fiend' | 'gargoyle'; index: number }[] {
-    const queue: { type: 'skeleton' | 'ghoul' | 'crypt_fiend' | 'gargoyle'; index: number }[] = [];
-
-    for (const creep of this.activeCreeps) {
-      if (creep.entity.status !== 'alive') continue;
-      const creepType = this.mapEntityToCreepType(creep.entity);
-      queue.push({ type: creepType, index: queue.length });
-    }
+    const queue = buildHudWaveQueue(this.activeCreeps);
 
     for (const spawn of this.pendingWaveSpawns) {
-      let creepType: 'skeleton' | 'ghoul' | 'crypt_fiend' | 'gargoyle' = 'skeleton';
       if (spawn.unit.id.includes('ghoul')) {
-        creepType = 'ghoul';
-      } else if (spawn.unit.id.includes('crypt_fiend')) {
-        creepType = 'crypt_fiend';
-      } else if (spawn.unit.id.includes('gargoyle')) {
-        creepType = 'gargoyle';
+        queue.push({ type: 'ghoul', index: queue.length });
+        continue;
       }
-      queue.push({ type: creepType, index: queue.length });
+      if (spawn.unit.id.includes('crypt_fiend')) {
+        queue.push({ type: 'crypt_fiend', index: queue.length });
+        continue;
+      }
+      if (spawn.unit.id.includes('gargoyle')) {
+        queue.push({ type: 'gargoyle', index: queue.length });
+        continue;
+      }
+      queue.push({ type: 'skeleton', index: queue.length });
     }
 
     return queue;
   }
 
-  private mapEntityToCreepType(_creep: CreepEntity): 'skeleton' | 'ghoul' | 'crypt_fiend' | 'gargoyle' {
-    return 'skeleton';
-  }
-
-  private getCreepTypeFromUnit(_unit: UnitConfig): 'basic' {
-    return 'basic';
+  private getCreepTypeFromUnit(unit: UnitConfig): 'basic' {
+    return mapUnitToCreepType(unit);
   }
 
   private getCurrentBuilderFaction(): BuilderFactionConfig {
