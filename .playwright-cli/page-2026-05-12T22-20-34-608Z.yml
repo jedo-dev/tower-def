@@ -1,0 +1,12 @@
+- main [ref=e18]:
+  - generic [ref=e20]:
+    - button "Go back" [ref=e22] [cursor=pointer]: <
+    - generic [ref=e28]:
+      - button "Previous race" [ref=e31] [cursor=pointer]: <
+      - button "Next race" [ref=e32] [cursor=pointer]: ">"
+      - generic [ref=e33]:
+        - heading "Undead" [level=2] [ref=e34]
+        - paragraph [ref=e35]: Dark necromantic builders focused on relentless pressure.
+        - paragraph [ref=e36]: "Starter: undead_bone_archer"
+    - generic [ref=e37]: 1 / 4
+    - button "Choose Race" [ref=e38] [cursor=pointer]

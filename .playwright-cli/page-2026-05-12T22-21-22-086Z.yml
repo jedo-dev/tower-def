@@ -1,0 +1,18 @@
+- main [ref=e18]:
+  - generic [ref=e39]:
+    - button "Go back" [ref=e40] [cursor=pointer]: <
+    - heading "Match Summary" [level=1] [ref=e84]
+  - generic [ref=e85]:
+    - generic [ref=e86]:
+      - generic [ref=e87]: Builder Race
+      - generic [ref=e88]: Undead
+    - generic [ref=e89]:
+      - generic [ref=e90]: Enemy Faction
+      - generic [ref=e91]: Undead
+    - generic [ref=e92]:
+      - generic [ref=e93]: Difficulty
+      - generic [ref=e94]: Normal
+    - generic [ref=e95]:
+      - generic [ref=e96]: Starter Tower
+      - generic [ref=e97]: bone archer tower
+  - button "Start Game" [active] [ref=e98] [cursor=pointer]

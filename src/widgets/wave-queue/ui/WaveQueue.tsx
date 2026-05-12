@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, type CSSProperties } from 'react';
 import './WaveQueue.css';
 import { useGameHudSnapshot } from '../../../shared/lib/game-bridge/useGameHudSnapshot';
 import type { HudCreepType } from '../../../shared/lib/game-bridge/types';
@@ -13,6 +13,8 @@ const CREEP_SPRITES: Record<HudCreepType, string> = {
   crypt_fiend: cryptFiendSprite,
   gargoyle: gargoyleSprite,
 };
+
+const CREEP_SHEET_FRAMES = 4;
 
 function WaveQueueComponent() {
   const snapshot = useGameHudSnapshot();
@@ -49,11 +51,19 @@ function WaveQueueComponent() {
             className="wave-queue-icon"
             title={item.type}
           >
-            <img
-              src={CREEP_SPRITES[item.type]}
-              alt={item.type}
-              className="wave-queue-sprite"
-            />
+            <div className="wave-queue-sprite-viewport" aria-label={item.type}>
+              <img
+                src={CREEP_SPRITES[item.type]}
+                alt={item.type}
+                className="wave-queue-sprite-strip"
+                style={
+                  {
+                    '--wave-queue-frames': CREEP_SHEET_FRAMES,
+                    '--wave-queue-anim-delay': `${(item.index % CREEP_SHEET_FRAMES) * -0.15}s`,
+                  } as CSSProperties
+                }
+              />
+            </div>
           </div>
         ))}
         {waveQueue.length > 8 && (

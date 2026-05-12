@@ -81,23 +81,34 @@
   }
 }
 
-.wave-queue-sprite {
+.wave-queue-sprite-viewport {
   width: 20px;
   height: 20px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.wave-queue-sprite-strip {
+  --wave-queue-frames: 4;
+  --wave-queue-anim-delay: 0s;
+  width: calc(20px * var(--wave-queue-frames));
+  height: 20px;
   image-rendering: pixelated;
-  animation: waveQueueIdle 1.2s ease-in-out infinite;
+  animation:
+    waveQueueSpriteWalk 0.7s steps(4) infinite,
+    waveQueueIdle 1.2s ease-in-out infinite;
+  animation-delay: var(--wave-queue-anim-delay), var(--wave-queue-anim-delay);
 }
 
-.wave-queue-icon:nth-child(2n) .wave-queue-sprite {
-  animation-delay: -0.3s;
-}
-
-.wave-queue-icon:nth-child(3n) .wave-queue-sprite {
-  animation-delay: -0.6s;
-}
-
-.wave-queue-icon:nth-child(4n) .wave-queue-sprite {
-  animation-delay: -0.9s;
+@keyframes waveQueueSpriteWalk {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-80px);
+  }
 }
 
 .wave-queue-icon::before {

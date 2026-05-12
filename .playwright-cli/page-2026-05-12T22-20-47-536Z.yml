@@ -1,0 +1,22 @@
+- main [ref=e18]:
+  - generic [ref=e39]:
+    - button "Go back" [ref=e40] [cursor=pointer]: <
+    - heading "Select Enemy Faction" [level=1] [ref=e41]
+  - generic [ref=e47]:
+    - 'button "Undead Relentless legions of skeletal warriors and crypt horrors. Creeps: Skeleton" [ref=e48] [cursor=pointer]':
+      - heading "Undead" [level=2] [ref=e50]
+      - paragraph [ref=e51]: Relentless legions of skeletal warriors and crypt horrors.
+      - paragraph [ref=e52]: "Creeps: Skeleton"
+    - 'button "Orc Savage warbands of brutish grunts and wolf riders. Creeps: Grunt" [ref=e53] [cursor=pointer]':
+      - heading "Orc" [level=2] [ref=e55]
+      - paragraph [ref=e56]: Savage warbands of brutish grunts and wolf riders.
+      - paragraph [ref=e57]: "Creeps: Grunt"
+    - 'button "Human Orderly forces of militia and siege weapons. Creeps: Militia" [ref=e58] [cursor=pointer]':
+      - heading "Human" [level=2] [ref=e60]
+      - paragraph [ref=e61]: Orderly forces of militia and siege weapons.
+      - paragraph [ref=e62]: "Creeps: Militia"
+    - 'button "Elf Swift archers and mystical creatures of the forest. Creeps: Archer" [ref=e63] [cursor=pointer]':
+      - heading "Elf" [level=2] [ref=e65]
+      - paragraph [ref=e66]: Swift archers and mystical creatures of the forest.
+      - paragraph [ref=e67]: "Creeps: Archer"
+  - button "Continue" [ref=e69] [cursor=pointer]

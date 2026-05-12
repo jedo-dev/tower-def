@@ -1080,11 +1080,15 @@ export class GameScene extends Phaser.Scene {
     });
   }
 
+  private resolveTowerRenderDepth(position: GridPosition): number {
+    return TOWER_RENDER_DEPTH + position.y * 10 + position.x * 0.01;
+  }
+
   private createPlacedBoneArcherSprite(position: GridPosition): Phaser.GameObjects.Sprite {
     const center = this.toCellCenter(position);
     const spriteKey = BONE_ARCHER_TOWER_CONFIG?.spriteKey ?? TOWER_SPRITE_KEYS.UNDEAD_BONE_ARCHER;
     const sprite = this.add.sprite(center.x, center.y, spriteKey, 0);
-    sprite.setDepth(TOWER_RENDER_DEPTH);
+    sprite.setDepth(this.resolveTowerRenderDepth(position));
     sprite.setDisplaySize(
       GRID_DIMENSIONS.cellSize * TOWER_VISUAL_SCALE_IN_CELLS,
       GRID_DIMENSIONS.cellSize * TOWER_VISUAL_SCALE_IN_CELLS,
@@ -1105,7 +1109,7 @@ export class GameScene extends Phaser.Scene {
     const center = this.toCellCenter(position);
     const spriteKey = PLAGUE_TOWER_CONFIG?.spriteKey ?? TOWER_SPRITE_KEYS.UNDEAD_BONE_ARCHER;
     const sprite = this.add.sprite(center.x, center.y, spriteKey, 0);
-    sprite.setDepth(TOWER_RENDER_DEPTH);
+    sprite.setDepth(this.resolveTowerRenderDepth(position));
     sprite.setDisplaySize(
       GRID_DIMENSIONS.cellSize * TOWER_VISUAL_SCALE_IN_CELLS * 1.1,
       GRID_DIMENSIONS.cellSize * TOWER_VISUAL_SCALE_IN_CELLS * 1.1,
