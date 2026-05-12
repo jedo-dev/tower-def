@@ -101,7 +101,10 @@ const CREEP_DEATH_FADE_DURATION_MS = 180;
 const PROJECTILE_MIN_LIFETIME_MS = 200;
 const PROJECTILE_MAX_LIFETIME_MS = 350;
 const PROJECTILE_DISPLAY_SIZE_PX = 24;
-const PROJECTILE_RENDER_DEPTH = 35;
+const PROJECTILE_RENDER_DEPTH = 70;
+const IMPACT_EFFECT_LIFETIME_MS = 120;
+const IMPACT_EFFECT_RENDER_DEPTH = 72;
+const ARCHER_PROJECTILE_VISUAL_MODE: 'projectile' | 'attackEffect' = 'attackEffect';
 const DAMAGE_NUMBERS_ENABLED = true;
 const DAMAGE_NUMBER_LIFETIME_MS = 420;
 const DAMAGE_NUMBER_RISE_PX = 12;
@@ -164,6 +167,13 @@ type ProjectileState = {
   fromY: number;
   toX: number;
   toY: number;
+  isSplash: boolean;
+  remainingMs: number;
+  maxLifetimeMs: number;
+};
+
+type ImpactEffectState = {
+  sprite: Phaser.GameObjects.Sprite;
   remainingMs: number;
   maxLifetimeMs: number;
 };
@@ -203,6 +213,7 @@ export class GameScene extends Phaser.Scene {
   private pendingWaveSpawns: PendingWaveSpawn[] = [];
   private activeTowers: TowerRenderState[] = [];
   private activeProjectiles: ProjectileState[] = [];
+  private activeImpactEffects: ImpactEffectState[] = [];
   private activeDamageNumbers: DamageNumberState[] = [];
   private pointerMoveHandler: ((pointer: Phaser.Input.Pointer) => void) | null = null;
   private pointerDownHandler: ((pointer: Phaser.Input.Pointer) => void) | null = null;
@@ -356,6 +367,7 @@ export class GameScene extends Phaser.Scene {
     this.applyWaveCompletionRewardIfResolved();
     this.tryStartNextWave(_time);
     this.updateProjectiles(delta);
+    this.updateImpactEffects(delta);
     this.updateDamageNumbers(delta);
     this.updatePerformanceTelemetry(delta);
   }
@@ -1078,7 +1090,11 @@ export class GameScene extends Phaser.Scene {
       PROJECTILE_MIN_LIFETIME_MS,
       Math.min(PROJECTILE_MAX_LIFETIME_MS, Math.round(tower.combatStats.attackCooldownMs * 0.28)),
     );
-    const frame = TOWER_BONE_ARCHER_EFFECT_FRAMES.projectile;
+    const frame = isSplash
+      ? TOWER_BONE_ARCHER_EFFECT_FRAMES.projectile
+      : ARCHER_PROJECTILE_VISUAL_MODE === 'projectile'
+        ? TOWER_BONE_ARCHER_EFFECT_FRAMES.projectile
+        : TOWER_BONE_ARCHER_EFFECT_FRAMES.attackEffect;
     const projectile = this.add.sprite(
       fromCenter.x,
       fromCenter.y,
@@ -1098,6 +1114,7 @@ export class GameScene extends Phaser.Scene {
       fromY: fromCenter.y,
       toX: toCenter.x,
       toY: toCenter.y,
+      isSplash,
       remainingMs: lifetimeMs,
       maxLifetimeMs: lifetimeMs,
     });
@@ -1114,6 +1131,7 @@ export class GameScene extends Phaser.Scene {
       const remainingMs = projectile.remainingMs - deltaMs;
 
       if (remainingMs <= 0) {
+        this.spawnImpactEffect(projectile.toX, projectile.toY, projectile.isSplash);
         projectile.sprite.destroy();
         continue;
       }
@@ -1129,12 +1147,59 @@ export class GameScene extends Phaser.Scene {
         fromY: projectile.fromY,
         toX: projectile.toX,
         toY: projectile.toY,
+        isSplash: projectile.isSplash,
         remainingMs,
         maxLifetimeMs: projectile.maxLifetimeMs,
       });
     }
 
     this.activeProjectiles = nextProjectiles;
+  }
+
+  private spawnImpactEffect(x: number, y: number, isSplash: boolean): void {
+    const frame = isSplash
+      ? TOWER_BONE_ARCHER_EFFECT_FRAMES.attackEffect
+      : TOWER_BONE_ARCHER_EFFECT_FRAMES.projectile;
+    const effect = this.add.sprite(x, y, TOWER_SPRITE_KEYS.UNDEAD_BONE_ARCHER, frame);
+    const size = isSplash ? PROJECTILE_DISPLAY_SIZE_PX * 1.7 : PROJECTILE_DISPLAY_SIZE_PX * 1.25;
+    effect.setDisplaySize(size, size);
+    effect.setOrigin(0.5);
+    effect.setDepth(IMPACT_EFFECT_RENDER_DEPTH);
+    if (isSplash) {
+      effect.setTint(0x66ff88);
+    }
+
+    this.activeImpactEffects.push({
+      sprite: effect,
+      remainingMs: IMPACT_EFFECT_LIFETIME_MS,
+      maxLifetimeMs: IMPACT_EFFECT_LIFETIME_MS,
+    });
+  }
+
+  private updateImpactEffects(deltaMs: number): void {
+    if (this.activeImpactEffects.length === 0) {
+      return;
+    }
+
+    const nextEffects: ImpactEffectState[] = [];
+
+    for (const effect of this.activeImpactEffects) {
+      const remainingMs = effect.remainingMs - deltaMs;
+
+      if (remainingMs <= 0) {
+        effect.sprite.destroy();
+        continue;
+      }
+
+      effect.sprite.setAlpha(remainingMs / effect.maxLifetimeMs);
+      nextEffects.push({
+        sprite: effect.sprite,
+        remainingMs,
+        maxLifetimeMs: effect.maxLifetimeMs,
+      });
+    }
+
+    this.activeImpactEffects = nextEffects;
   }
 
   private spawnDamageNumber(position: GridPosition, damage: number): void {
@@ -1335,6 +1400,7 @@ export class GameScene extends Phaser.Scene {
   private resetRunToInitialState(): void {
     this.destroyAllCreeps();
     this.destroyAllProjectiles();
+    this.destroyAllImpactEffects();
     this.destroyAllTowerSprites();
     this.placedTowerCostsByCellKey.clear();
     this.hoveredCell = null;
@@ -1717,6 +1783,11 @@ export class GameScene extends Phaser.Scene {
     this.activeProjectiles = [];
   }
 
+  private destroyAllImpactEffects(): void {
+    this.activeImpactEffects.forEach((effect) => effect.sprite.destroy());
+    this.activeImpactEffects = [];
+  }
+
   private destroyAllDamageNumbers(): void {
     this.activeDamageNumbers.forEach((numberState) => numberState.text.destroy());
     this.activeDamageNumbers = [];
@@ -1810,17 +1881,11 @@ export class GameScene extends Phaser.Scene {
     return queue;
   }
 
-  private mapEntityToCreepType(creep: CreepEntity): 'skeleton' | 'ghoul' | 'crypt_fiend' | 'gargoyle' {
-    if (creep.type === 'fast') return 'gargoyle';
-    if (creep.type === 'tank') return 'crypt_fiend';
-    if (creep.type === 'swarm') return 'ghoul';
+  private mapEntityToCreepType(_creep: CreepEntity): 'skeleton' | 'ghoul' | 'crypt_fiend' | 'gargoyle' {
     return 'skeleton';
   }
 
-  private getCreepTypeFromUnit(unit: UnitConfig): 'basic' | 'fast' | 'tank' | 'swarm' {
-    if (unit.id.includes('gargoyle')) return 'fast';
-    if (unit.id.includes('crypt_fiend')) return 'tank';
-    if (unit.id.includes('ghoul')) return 'swarm';
+  private getCreepTypeFromUnit(_unit: UnitConfig): 'basic' {
     return 'basic';
   }
 
@@ -1874,6 +1939,7 @@ export class GameScene extends Phaser.Scene {
 
     this.destroyAllCreeps();
     this.destroyAllProjectiles();
+    this.destroyAllImpactEffects();
     this.destroyAllTowerSprites();
     this.destroyAllDamageNumbers();
     this.buildPreviewOverlay?.destroy();

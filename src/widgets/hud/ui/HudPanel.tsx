@@ -55,7 +55,17 @@ function HudPanelComponent({ setup }: HudPanelProps) {
         
         <div className="hud-center">
           {snapshot.autoStartSecondsLeft !== null ? (
-            <span className="hud-timer">Auto: {formatCountdown(snapshot.autoStartSecondsLeft)}</span>
+            <div className="hud-timer-actions">
+              <span className="hud-timer">Auto: {formatCountdown(snapshot.autoStartSecondsLeft)}</span>
+              <button
+                type="button"
+                className="hud-force-start-btn"
+                disabled={viewModel.isStartWaveDisabled}
+                onClick={() => sendGameCommand('start-wave', undefined)}
+              >
+                Force Start
+              </button>
+            </div>
           ) : (
             <button
               type="button"
