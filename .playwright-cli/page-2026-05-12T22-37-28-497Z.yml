@@ -1,0 +1,10 @@
+- main [ref=e3]:
+  - generic [ref=e6]:
+    - generic [ref=e7]:
+      - heading "Tower Defense" [level=1] [ref=e8]
+      - paragraph [ref=e9]: Warcraft-inspired pixel TD prototype
+    - navigation [ref=e12]:
+      - button "New Game" [ref=e13] [cursor=pointer]
+      - button "Settings" [disabled] [ref=e14]
+      - button "Exit" [disabled] [ref=e15]
+    - paragraph [ref=e17]: v0.1.0-alpha

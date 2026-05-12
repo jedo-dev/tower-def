@@ -14,8 +14,8 @@ export function GamePage({ setup }: GamePageProps) {
       <div className="game-viewport">
         <WaveQueue />
         <GameCanvas setup={setup} />
+        <HudPanel setup={setup} />
       </div>
-      <HudPanel setup={setup} />
     </main>
   );
 }

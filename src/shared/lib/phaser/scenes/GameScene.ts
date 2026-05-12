@@ -475,10 +475,13 @@ export class GameScene extends Phaser.Scene {
     const viewportWidth = this.scale.width;
     const viewportHeight = this.scale.height;
     const zoom = Math.min(viewportWidth / GRID_PIXEL_WIDTH, viewportHeight / GRID_PIXEL_HEIGHT);
+    const worldViewHeight = viewportHeight / zoom;
+    const verticalOverflow = Math.max(0, worldViewHeight - GRID_PIXEL_HEIGHT);
+    const centerY = GRID_PIXEL_HEIGHT / 2 + verticalOverflow / 2;
 
     this.cameras.main.setZoom(zoom);
     this.cameras.main.setBounds(0, 0, GRID_PIXEL_WIDTH, GRID_PIXEL_HEIGHT, true);
-    this.cameras.main.centerOn(GRID_PIXEL_WIDTH / 2, GRID_PIXEL_HEIGHT / 2);
+    this.cameras.main.centerOn(GRID_PIXEL_WIDTH / 2, centerY);
   }
 
   private toGridCell(worldX: number, worldY: number): GridPosition | null {

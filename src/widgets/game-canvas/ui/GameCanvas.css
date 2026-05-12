@@ -3,6 +3,8 @@
   display: flex;
   align-items: stretch;
   justify-content: center;
+  margin-top: auto;
+  margin-bottom: 96px;
 }
 
 .game-canvas-container {
@@ -13,4 +15,10 @@
   overflow: hidden;
   background: #1a1f2c;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
+}
+
+@media (max-width: 380px) {
+  .game-canvas-shell {
+    margin-bottom: 50px;
+  }
 }

@@ -5,7 +5,7 @@
   padding: max(8px, var(--safe-area-top)) max(8px, var(--safe-area-right)) max(8px, var(--safe-area-bottom)) max(8px, var(--safe-area-left));
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 0;
   min-height: 100vh;
   min-height: 100dvh;
   box-sizing: border-box;
@@ -15,20 +15,36 @@
   position: relative;
   flex: 1;
   min-height: 0;
+  display: flex;
+  flex-direction: column;
   border: 2px solid #2a3040;
   border-radius: 8px;
   overflow: hidden;
   background: #1a1f2c;
 }
 
+.game-viewport > .hud-panel {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 8px;
+  z-index: 120;
+}
+
 @media (max-width: 380px) {
   .game-page {
     padding: max(4px, var(--safe-area-top)) max(4px, var(--safe-area-right)) max(4px, var(--safe-area-bottom)) max(4px, var(--safe-area-left));
-    gap: 4px;
+    gap: 0;
   }
 
   .game-viewport {
     border-width: 1px;
     border-radius: 4px;
+  }
+
+  .game-viewport > .hud-panel {
+    left: 4px;
+    right: 4px;
+    bottom: 4px;
   }
 }
