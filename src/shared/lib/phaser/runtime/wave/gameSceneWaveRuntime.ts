@@ -112,6 +112,8 @@ export function applyWaveCompletionRewardIfResolved(
   );
   state.playerGold = nextResources.gold;
   deps.onGoldUpdated(state.playerGold);
+  deps.playSound('economy.wave_reward');
+  deps.playSound('ui.wave_complete');
 
   state.isWaveCompletionRewardGranted = true;
   state.nextWaveStartsAtMs ??= deps.nowMs() + config.autoWaveStartDelayMs;

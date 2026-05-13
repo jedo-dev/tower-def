@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { FactionAudioId, SoundCategory, type SoundId } from './audio.types';
-import { AUDIO_CONSTANTS, SOUND_REGISTRY } from './audio.constants';
+import { AUDIO_CONSTANTS, SOUND_ASSET_PATHS, SOUND_REGISTRY } from './audio.constants';
 import type { HudFactionType } from '../../game-bridge/types';
 
 type ActiveSound = {
@@ -25,6 +25,7 @@ export class GameAudioManager {
   private categoryPlayCounts: Map<SoundCategory, number> = new Map();
   private lastCleanupCheckMs: number = 0;
   private selectedFaction: FactionAudioId = FactionAudioId.UNDEAD;
+  private soundKeyById: Map<SoundId, string> = new Map();
 
   constructor(scene: Phaser.Scene, enabled: boolean = true, masterVolume: number = AUDIO_CONSTANTS.DEFAULT_MASTER_VOLUME) {
     this.scene = scene;
@@ -90,7 +91,11 @@ export class GameAudioManager {
       }
     }
 
-    return this.doPlay(soundId, config, position);
+    const played = this.doPlay(soundId, config, position);
+    if (!played) {
+      this.decrementCategoryCount(config.category);
+    }
+    return played;
   }
 
   public playFactionVariant(baseSoundId: SoundId, position?: { x: number; y: number }): boolean {
@@ -99,14 +104,12 @@ export class GameAudioManager {
       return this.play(baseSoundId, position);
     }
 
-    const factionConfig = config.factionTags.includes(this.selectedFaction);
-    if (factionConfig) {
-      return this.play(baseSoundId, position);
+    const factionVariant = `${baseSoundId}.${this.selectedFaction}` as SoundId;
+    if (SOUND_REGISTRY[factionVariant]) {
+      return this.play(factionVariant, position);
     }
 
-    const defaultSound = config.factionTags[0];
-    const factionSoundId = `${baseSoundId}.${defaultSound}` as SoundId;
-    return this.play(factionSoundId, position);
+    return this.play(baseSoundId, position);
   }
 
   public stopAll(): void {
@@ -212,7 +215,10 @@ export class GameAudioManager {
     }
 
     if (sound) {
-      sound.play();
+      sound.play({
+        seek: config.startOffsetSec,
+        duration: config.maxDurationSec ?? undefined,
+      });
 
       this.activeSounds.push({
         sound,
@@ -232,7 +238,7 @@ export class GameAudioManager {
   }
 
   private getAudioKey(soundId: SoundId): string {
-    return `audio.${soundId}`;
+    return this.soundKeyById.get(soundId) ?? `audio.${soundId}`;
   }
 
   private removeFinishedSound(sound: Phaser.Sound.BaseSound): void {
@@ -241,9 +247,13 @@ export class GameAudioManager {
       const removed = this.activeSounds[index];
       this.activeSounds.splice(index, 1);
 
-      const categoryCount = this.categoryPlayCounts.get(removed.category) ?? 1;
-      this.categoryPlayCounts.set(removed.category, Math.max(0, categoryCount - 1));
+      this.decrementCategoryCount(removed.category);
     }
+  }
+
+  private decrementCategoryCount(category: SoundCategory): void {
+    const categoryCount = this.categoryPlayCounts.get(category) ?? 1;
+    this.categoryPlayCounts.set(category, Math.max(0, categoryCount - 1));
   }
 
   private cleanupFinishedSounds(): void {
@@ -258,26 +268,27 @@ export class GameAudioManager {
   }
 
   public preload(): void {
-    Object.keys(SOUND_REGISTRY).forEach((soundId) => {
-      const key = this.getAudioKey(soundId as SoundId);
+    const loadedPathToKey = new Map<string, string>();
+    (Object.keys(SOUND_REGISTRY) as SoundId[]).forEach((soundId) => {
+      const assetPath = SOUND_ASSET_PATHS[soundId];
+      if (!assetPath) {
+        return;
+      }
+
+      const existingKey = loadedPathToKey.get(assetPath);
+      if (existingKey) {
+        this.soundKeyById.set(soundId, existingKey);
+        return;
+      }
+
+      const key = `audio.${soundId}`;
+      this.soundKeyById.set(soundId, key);
+      loadedPathToKey.set(assetPath, key);
+
       if (!this.scene.cache.audio.exists(key)) {
-        this.loadSound(soundId as SoundId);
+        this.scene.load.audio(key, [assetPath]);
       }
     });
-  }
-
-  private loadSound(soundId: SoundId): void {
-    const key = this.getAudioKey(soundId);
-    const config = SOUND_REGISTRY[soundId];
-
-    let path = soundId.replace(/\./g, '/');
-    if (config.loop) {
-      path = `assets/audio/ambient/${path}`;
-    } else {
-      path = `assets/audio/sfx/${path}`;
-    }
-
-    this.scene.load.audio(key, [`${path}.mp3`, `${path}.wav`, `${path}.ogg`]);
   }
 
   public destroy(): void {

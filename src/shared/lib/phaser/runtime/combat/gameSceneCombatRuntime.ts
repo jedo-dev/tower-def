@@ -60,6 +60,7 @@ function handleCreepKill(state: CombatRuntimeState, deps: CombatRuntimeDependenc
   state.playerGold = nextResources.gold;
   deps.onGoldUpdated(state.playerGold);
   deps.playSound('combat.creep_death.basic');
+  deps.playSound('economy.gold_gain');
   deps.onHudChanged();
 }
 

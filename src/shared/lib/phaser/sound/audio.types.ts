@@ -70,7 +70,15 @@ export type SoundId =
   | 'economy.life_lost'
   | 'economy.wave_reward'
   | 'combat.tower_attack.archer'
+  | 'combat.tower_attack.archer.undead'
+  | 'combat.tower_attack.archer.orc'
+  | 'combat.tower_attack.archer.human'
+  | 'combat.tower_attack.archer.elf'
   | 'combat.tower_attack.splash'
+  | 'combat.tower_attack.splash.undead'
+  | 'combat.tower_attack.splash.orc'
+  | 'combat.tower_attack.splash.human'
+  | 'combat.tower_attack.splash.elf'
   | 'combat.creep_hit'
   | 'combat.creep_death.basic'
   | 'combat.creep_death.elite'
@@ -90,6 +98,8 @@ export type SoundPlaybackConfig = {
   pitchMin: number;
   pitchMax: number;
   cooldownMs: number;
+  maxDurationSec: number | null;
+  startOffsetSec: number;
   category: SoundCategory;
   loop: boolean;
   spatial: boolean;
@@ -101,6 +111,8 @@ export const DEFAULT_SOUND_CONFIG: SoundPlaybackConfig = {
   pitchMin: 0.95,
   pitchMax: 1.05,
   cooldownMs: 0,
+  maxDurationSec: null,
+  startOffsetSec: 0,
   category: SoundCategory.SYSTEM,
   loop: false,
   spatial: false,

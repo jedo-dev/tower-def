@@ -213,6 +213,7 @@ export class GameScene extends Phaser.Scene {
   private pointerMoveHandler: ((pointer: Phaser.Input.Pointer) => void) | null = null;
   private pointerDownHandler: ((pointer: Phaser.Input.Pointer) => void) | null = null;
   private pointerUpHandler: ((pointer: Phaser.Input.Pointer) => void) | null = null;
+  private pointerAudioUnlockHandler: (() => void) | null = null;
   private scaleResizeHandler: (() => void) | null = null;
   private gameOutHandler: (() => void) | null = null;
   private unsubscribeStartWaveCommand: (() => void) | null = null;
@@ -290,6 +291,9 @@ export class GameScene extends Phaser.Scene {
   }
 
   public preload(): void {
+    this.soundManager = new GameAudioManager(this);
+    this.soundManager.preload();
+
     if (!this.textures.exists(TerrainAssetKey.UNDEAD_TILESET)) {
       this.load.spritesheet(
         TerrainAssetKey.UNDEAD_TILESET,
@@ -332,9 +336,9 @@ export class GameScene extends Phaser.Scene {
     this.buildPreviewOverlay = this.add.graphics();
     this.buildPreviewOverlay.setDepth(BUILD_PREVIEW_RENDER_DEPTH);
     this.input.mouse?.disableContextMenu();
-    this.soundManager = new GameAudioManager(this);
     this.registerMobileAudioUnlock();
     this.registerPointerInteractionForAudio();
+    this.soundManager?.setFaction(this.selectedFaction);
     if (!this.anims.exists(UNIT_ANIMATION_KEYS.UNDEAD_SKELETON_WALK)) {
       this.anims.create({
         key: UNIT_ANIMATION_KEYS.UNDEAD_SKELETON_WALK,
@@ -390,6 +394,7 @@ export class GameScene extends Phaser.Scene {
     });
     this.unsubscribeFactionSelectCommand = onGameCommand('select-faction', (payload) => {
       this.selectedFaction = payload.faction;
+      this.soundManager?.setFaction(this.selectedFaction);
       this.registry.set('wave.selectedFaction', this.selectedFaction);
       this.publishHudSnapshot();
     });
@@ -471,6 +476,7 @@ export class GameScene extends Phaser.Scene {
   private registerMobileAudioUnlock(): void {
     const unlockAudio = () => {
       this.soundManager?.unlock();
+      this.ensureBaseAmbientPlaying();
     };
 
     this.input.once('pointerdown', unlockAudio);
@@ -483,9 +489,17 @@ export class GameScene extends Phaser.Scene {
         return;
       }
       this.soundManager.unlock();
+      this.ensureBaseAmbientPlaying();
     };
 
+    this.pointerAudioUnlockHandler = handleInteraction;
     this.input.on('pointerdown', handleInteraction);
+  }
+
+  private ensureBaseAmbientPlaying(): void {
+    if (!this.soundManager?.isPlaying('ambient.map')) {
+      this.soundManager?.play('ambient.map');
+    }
   }
 
   private registerScaleResizeHandling(): void {
@@ -560,7 +574,13 @@ export class GameScene extends Phaser.Scene {
       toCellCenter: (position) => this.toCellCenter(position),
       playArcherAttackAnimation: (tower) => this.playBoneArcherAttackAnimation(tower),
       playSplashAttackAnimation: (tower) => this.playPlagueAttackAnimation(tower),
-      playSound: (soundId: SoundId) => this.soundManager?.play(soundId),
+      playSound: (soundId: SoundId) => {
+        if (soundId === 'combat.tower_attack.archer' || soundId === 'combat.tower_attack.splash') {
+          this.soundManager?.playFactionVariant(soundId);
+          return;
+        }
+        this.soundManager?.play(soundId);
+      },
       onGoldUpdated: (nextGold) => {
         this.playerGold = nextGold;
         this.registry.set('economy.gold', this.playerGold);
@@ -668,6 +688,10 @@ export class GameScene extends Phaser.Scene {
       onGameOverUpdated: (isGameOver) => {
         this.isGameOver = isGameOver;
         this.registry.set('phase.game.over', this.isGameOver);
+        if (isGameOver) {
+          this.soundManager?.stopSound('ambient.tension');
+          this.ensureBaseAmbientPlaying();
+        }
       },
       onWavePhaseUpdated: (nextWavePhase) => {
         this.wavePhaseState = nextWavePhase;
@@ -681,6 +705,7 @@ export class GameScene extends Phaser.Scene {
         this.updateBuildPreview();
       },
       onHudChanged: () => this.publishHudSnapshot(),
+      playSound: (soundId: SoundId) => this.soundManager?.play(soundId),
     };
   }
 
@@ -765,6 +790,7 @@ export class GameScene extends Phaser.Scene {
       this.getBuildRuntimeDeps(),
     );
     if (!result.success || !result.changedCell || !result.placedTower || !result.towerType) {
+      this.soundManager?.play('combat.invalid_build');
       return;
     }
 
@@ -779,6 +805,8 @@ export class GameScene extends Phaser.Scene {
     });
     this.playerGold = result.playerGold;
     this.registry.set('economy.gold', this.playerGold);
+    this.soundManager?.play('combat.successful_build');
+    this.soundManager?.play('economy.gold_spent');
     this.markUserActionProcessed();
     this.publishHudSnapshot();
 
@@ -803,6 +831,8 @@ export class GameScene extends Phaser.Scene {
       return shouldKeep;
     });
     this.registry.set('economy.lastSellRefund', result.refundAmount);
+    this.soundManager?.play('combat.sell_tower');
+    this.soundManager?.play('economy.refund');
     this.markUserActionProcessed();
     this.publishHudSnapshot();
 
@@ -954,6 +984,10 @@ export class GameScene extends Phaser.Scene {
     this.playerGold = state.playerGold;
     this.isWaveCompletionRewardGranted = state.isWaveCompletionRewardGranted;
     this.nextWaveStartsAtMs = state.nextWaveStartsAtMs;
+    if (this.canPerformBuildActions()) {
+      this.soundManager?.stopSound('ambient.tension');
+      this.ensureBaseAmbientPlaying();
+    }
   }
 
   private updateAutoWaveCountdown(nowMs: number): void {
@@ -1013,6 +1047,8 @@ export class GameScene extends Phaser.Scene {
     this.registry.remove('wave.escapedCreeps');
     this.registry.remove('economy.lastSellRefund');
     this.publishHudSnapshot();
+    this.soundManager?.stopSound('ambient.tension');
+    this.ensureBaseAmbientPlaying();
 
     this.drawGrid();
   }
@@ -1289,6 +1325,7 @@ export class GameScene extends Phaser.Scene {
     if (this.isGameOver || !this.canPerformBuildActions()) {
       return;
     }
+    this.soundManager?.play('ui.wave_start');
 
     this.nextWaveStartsAtMs = null;
     this.startNextWaveFromBuildState();
@@ -1309,6 +1346,10 @@ export class GameScene extends Phaser.Scene {
     this.activeCreepPath = wavePath;
     this.spawnWaveCreeps();
     this.wavePhaseState = startNextWaveCycle(this.wavePhaseState);
+    this.ensureBaseAmbientPlaying();
+    if (!this.soundManager?.isPlaying('ambient.tension')) {
+      this.soundManager?.play('ambient.tension');
+    }
     this.registry.set('phase.build.active', this.canPerformBuildActions());
     this.updateGridOverlayVisualState();
     this.updateBuildPreview();
@@ -1403,6 +1444,10 @@ export class GameScene extends Phaser.Scene {
     if (this.pointerUpHandler) {
       this.input.off('pointerup', this.pointerUpHandler);
       this.pointerUpHandler = null;
+    }
+    if (this.pointerAudioUnlockHandler) {
+      this.input.off('pointerdown', this.pointerAudioUnlockHandler);
+      this.pointerAudioUnlockHandler = null;
     }
 
     if (this.gameOutHandler) {

@@ -1,6 +1,7 @@
 import { isGameOverByLives, subtractLives } from '../../../../../entities/player-resources';
 import { transitionToGameOver, type WavePhaseState } from '../../../../../features/wave-phase';
 import type { GridPosition } from '../../../../types/pathfinding';
+import type { SoundId } from '../../sound/audio.types';
 import type { CreepRenderState } from '../../scenes/gameScene.types';
 
 export type MovementRuntimeConfig = {
@@ -28,6 +29,7 @@ export type MovementRuntimeDeps = {
   onEscapedCountUpdated: (escapedCount: number) => void;
   onBuildStateNeedsRefresh: () => void;
   onHudChanged: () => void;
+  playSound: (soundId: SoundId) => void;
 };
 
 function markCreepEscaped(
@@ -41,6 +43,8 @@ function markCreepEscaped(
   }
 
   creep.entity.status = 'escaped';
+  deps.playSound('combat.creep_escape');
+  deps.playSound('economy.life_lost');
   const nextResources = subtractLives({ gold: state.playerGold, lives: state.playerLives }, 1);
   state.playerLives = nextResources.lives;
   deps.onLivesUpdated(state.playerLives);
@@ -52,6 +56,7 @@ function markCreepEscaped(
     deps.onWavePhaseUpdated(state.wavePhaseState);
     deps.onGameOverUpdated(state.isGameOver);
     deps.onBuildStateNeedsRefresh();
+    deps.playSound('ui.game_over');
   }
 
   deps.onHudChanged();

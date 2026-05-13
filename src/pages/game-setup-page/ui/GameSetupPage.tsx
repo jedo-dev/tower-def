@@ -129,7 +129,7 @@ export function GameSetupPage({ onStartGame, onNavigate }: GameSetupPageProps) {
     <main className={`game-setup-page${step === 'builder-race' ? ' game-setup-page-race-mode' : ''}`}>
       {step !== 'builder-race' && (
         <header className="setup-header">
-          <button type="button" className="setup-back-button" onClick={handleBack} aria-label="Go back">
+          <button type="button" className="setup-back-button" onClick={handleBack} aria-label="Go back" data-sound="ui.close">
             {'<'}
           </button>
           <h1 className="setup-title">{STEP_TITLES[step]}</h1>
@@ -152,7 +152,7 @@ export function GameSetupPage({ onStartGame, onNavigate }: GameSetupPageProps) {
         {step === 'builder-race' && (
           <div className="setup-race-selector">
             <div className="setup-race-topbar">
-              <button type="button" className="setup-back-button" onClick={handleBack} aria-label="Go back">
+              <button type="button" className="setup-back-button" onClick={handleBack} aria-label="Go back" data-sound="ui.close">
                 {'<'}
               </button>
               <div className="setup-progress">
@@ -191,6 +191,7 @@ export function GameSetupPage({ onStartGame, onNavigate }: GameSetupPageProps) {
                 onClick={() => handleBuilderRaceSwitch('prev')}
                 aria-label="Previous race"
                 disabled={!isRaceVisible}
+                data-sound="ui.faction_select"
               >
                 {'<'}
               </button>
@@ -201,6 +202,7 @@ export function GameSetupPage({ onStartGame, onNavigate }: GameSetupPageProps) {
                 onClick={() => handleBuilderRaceSwitch('next')}
                 aria-label="Next race"
                 disabled={!isRaceVisible}
+                data-sound="ui.faction_select"
               >
                 {'>'}
               </button>
@@ -218,7 +220,7 @@ export function GameSetupPage({ onStartGame, onNavigate }: GameSetupPageProps) {
               {currentBuilderIndex + 1} / {builderFactions.length}
             </div>
 
-            <button type="button" className="setup-next-button" onClick={handleNext}>
+            <button type="button" className="setup-next-button" onClick={handleNext} data-sound="ui.success">
               Choose Race
             </button>
           </div>
@@ -233,6 +235,7 @@ export function GameSetupPage({ onStartGame, onNavigate }: GameSetupPageProps) {
                 className={`setup-card${enemyFactionSelected === faction.id ? ' setup-card-selected' : ''}`}
                 onClick={() => setEnemyFactionSelected(faction.id)}
                 style={{ '--card-theme': getEnemyThemeColor(faction.id) } as CSSProperties}
+                data-sound="ui.faction_select"
               >
                 <div className="setup-card-icon" />
                 <h2 className="setup-card-name">{faction.name}</h2>
@@ -251,6 +254,7 @@ export function GameSetupPage({ onStartGame, onNavigate }: GameSetupPageProps) {
                 type="button"
                 className={`setup-difficulty-btn${difficultySelected === diff.id ? ' setup-difficulty-btn-selected' : ''}`}
                 onClick={() => setDifficultySelected(diff.id)}
+                data-sound="ui.build_select"
               >
                 <span className="setup-difficulty-name">{diff.name}</span>
                 <span className="setup-difficulty-desc">{diff.description}</span>
@@ -289,7 +293,7 @@ export function GameSetupPage({ onStartGame, onNavigate }: GameSetupPageProps) {
 
       {step !== 'builder-race' && (
         <footer className="setup-footer">
-          <button type="button" className="setup-next-button" onClick={handleNext}>
+          <button type="button" className="setup-next-button" onClick={handleNext} data-sound="ui.success">
             {step === 'summary' ? 'Start Game' : 'Continue'}
           </button>
         </footer>
