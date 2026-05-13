@@ -42,6 +42,7 @@ import {
 } from '../../game-bridge/bridge';
 import type { GameHudSnapshot, HudFactionType } from '../../game-bridge/types';
 import { createGridModel } from '../../grid/createGridModel';
+import type { SoundId } from '../sound/audio.types';
 import { validateTowerPlacementPath } from '../../pathfinding/validateTowerPlacementPath';
 import {
   isBuildCellValid as isBuildCellValidRuntime,
@@ -106,7 +107,7 @@ import {
   type WaveRuntimeDependencies,
   type WaveRuntimeState,
 } from '../runtime/wave/gameSceneWaveRuntime';
-import { GameSoundManager } from '../sound/GameSoundManager';
+import { GameAudioManager } from '../sound/GameAudioManager';
 import {
   ACTION_COOLDOWN_MS,
   ARCHER_PROJECTILE_VISUAL_MODE,
@@ -226,7 +227,7 @@ export class GameScene extends Phaser.Scene {
   };
   private devFpsReportElapsedMs = 0;
   private lastPublishedAutoStartSecondsLeft: number | null = null;
-  private soundManager: GameSoundManager | null = null;
+  private soundManager: GameAudioManager | null = null;
   private readonly combatRuntimeConfig: CombatRuntimeConfig = {
     archerProjectileVisualMode: ARCHER_PROJECTILE_VISUAL_MODE,
     creepBaseColor: CREEP_BASE_COLOR,
@@ -331,7 +332,9 @@ export class GameScene extends Phaser.Scene {
     this.buildPreviewOverlay = this.add.graphics();
     this.buildPreviewOverlay.setDepth(BUILD_PREVIEW_RENDER_DEPTH);
     this.input.mouse?.disableContextMenu();
-    this.soundManager = new GameSoundManager(this);
+    this.soundManager = new GameAudioManager(this);
+    this.registerMobileAudioUnlock();
+    this.registerPointerInteractionForAudio();
     if (!this.anims.exists(UNIT_ANIMATION_KEYS.UNDEAD_SKELETON_WALK)) {
       this.anims.create({
         key: UNIT_ANIMATION_KEYS.UNDEAD_SKELETON_WALK,
@@ -465,6 +468,26 @@ export class GameScene extends Phaser.Scene {
     this.input.on('gameout', this.gameOutHandler);
   }
 
+  private registerMobileAudioUnlock(): void {
+    const unlockAudio = () => {
+      this.soundManager?.unlock();
+    };
+
+    this.input.once('pointerdown', unlockAudio);
+    this.input.keyboard?.once('keydown', unlockAudio);
+  }
+
+  private registerPointerInteractionForAudio(): void {
+    const handleInteraction = () => {
+      if (!this.soundManager) {
+        return;
+      }
+      this.soundManager.unlock();
+    };
+
+    this.input.on('pointerdown', handleInteraction);
+  }
+
   private registerScaleResizeHandling(): void {
     this.scaleResizeHandler = this.applyResponsiveCamera.bind(this);
     this.scale.on(Phaser.Scale.Events.RESIZE, this.scaleResizeHandler);
@@ -537,7 +560,7 @@ export class GameScene extends Phaser.Scene {
       toCellCenter: (position) => this.toCellCenter(position),
       playArcherAttackAnimation: (tower) => this.playBoneArcherAttackAnimation(tower),
       playSplashAttackAnimation: (tower) => this.playPlagueAttackAnimation(tower),
-      playSound: (key) => this.soundManager?.play(key),
+      playSound: (soundId: SoundId) => this.soundManager?.play(soundId),
       onGoldUpdated: (nextGold) => {
         this.playerGold = nextGold;
         this.registry.set('economy.gold', this.playerGold);
@@ -568,6 +591,7 @@ export class GameScene extends Phaser.Scene {
       },
       onHudChanged: () => this.publishHudSnapshot(),
       createCreepSprite: (x, y, spriteKey) => this.add.sprite(x, y, spriteKey, 0),
+      playSound: (soundId: SoundId) => this.soundManager?.play(soundId),
     };
   }
 
@@ -1423,6 +1447,7 @@ export class GameScene extends Phaser.Scene {
     this.inputControllerState.lastActionAtMs = Number.NEGATIVE_INFINITY;
     this.devFpsReportElapsedMs = 0;
     this.lastPublishedAutoStartSecondsLeft = null;
+    this.soundManager?.destroy();
     this.soundManager = null;
     this.hoveredCell = null;
   }

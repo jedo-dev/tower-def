@@ -6,6 +6,7 @@ import { ECONOMY_BALANCE } from '../../../../constants/economy';
 import { GRID_DIMENSIONS } from '../../../../constants/grid';
 import { TOWER_BONE_ARCHER_EFFECT_FRAMES, TOWER_SPRITE_KEYS } from '../../../../constants/sprites';
 import type { GridPosition } from '../../../../types/pathfinding';
+import type { SoundId } from '../../sound/audio.types';
 import type {
   CreepRenderState,
   DamageNumberState,
@@ -36,7 +37,7 @@ export type CombatRuntimeDependencies = {
   toCellCenter: (position: GridPosition) => { x: number; y: number };
   playArcherAttackAnimation: (tower: TowerRenderState) => void;
   playSplashAttackAnimation: (tower: TowerRenderState) => void;
-  playSound: (key: 'attack' | 'hit' | 'death') => void;
+  playSound: (soundId: SoundId) => void;
   onGoldUpdated: (nextGold: number) => void;
   onHudChanged: () => void;
 };
@@ -58,7 +59,7 @@ function handleCreepKill(state: CombatRuntimeState, deps: CombatRuntimeDependenc
   );
   state.playerGold = nextResources.gold;
   deps.onGoldUpdated(state.playerGold);
-  deps.playSound('death');
+  deps.playSound('combat.creep_death.basic');
   deps.onHudChanged();
 }
 
@@ -133,7 +134,7 @@ function applySingleTargetDamage(
 
   targetRenderState.entity = damageResult.creep;
   applyCreepHitFeedback(targetRenderState, config);
-  deps.playSound('hit');
+  deps.playSound('combat.creep_hit');
   spawnDamageNumber(state, deps, config, targetRenderState.entity.position, tower.entity.combatStats.damage);
 
   if (damageResult.killed) {
@@ -174,7 +175,7 @@ function applySplashDamage(
     }
   }
 
-  deps.playSound('hit');
+  deps.playSound('combat.creep_hit');
   spawnDamageNumber(state, deps, config, targetRenderState.entity.position, totalDamageDealt);
 }
 
@@ -266,7 +267,7 @@ export function updateTowerCombat(
       deps.playArcherAttackAnimation(tower);
     }
     spawnProjectileFeedback(state, deps, config, tower, targetRenderState.entity.position, isSplashTower);
-    deps.playSound('attack');
+    deps.playSound(isSplashTower ? 'combat.tower_attack.splash' : 'combat.tower_attack.archer');
   }
 }
 

@@ -16,6 +16,7 @@ import { ECONOMY_BALANCE } from '../../../../constants/economy';
 import { CREEP_RENDER_DEPTH, CREEP_VISUAL_SIZE_PX } from '../../scenes/gameScene.constants';
 import type { GridModel } from '../../../../types/grid';
 import type { GridPosition } from '../../../../types/pathfinding';
+import type { SoundId } from '../../sound/audio.types';
 import type { CreepRenderState, PendingWaveSpawn } from '../../scenes/gameScene.types';
 
 export type WaveRuntimeState = {
@@ -52,6 +53,7 @@ export type WaveRuntimeDependencies = {
   onBuildStateUpdated: () => void;
   onHudChanged: () => void;
   createCreepSprite: (x: number, y: number, spriteKey: string, animationKey: string) => Phaser.GameObjects.Sprite;
+  playSound: (soundId: SoundId) => void;
 };
 
 export function initializeWaveRuntime(
