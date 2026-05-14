@@ -1,4 +1,4 @@
-export type { StartWaveResult, WavePhase, WavePhaseState } from './model/types';
+export type { StartWaveResult, WavePhaseState } from './model/types';
 export type { WaveAction } from './model/state';
 export {
   canPerformBuildActions,

@@ -209,7 +209,16 @@ export function App() {
   }
 
   if (route === 'game') {
-    return <GamePage setup={gameSetup} />;
+    return (
+      <GamePage
+        setup={gameSetup}
+        onNavigate={handleNavigate}
+        sfxVolume={sfxVolume}
+        ambientVolume={ambientVolume}
+        onSfxVolumeChange={setSfxVolume}
+        onAmbientVolumeChange={setAmbientVolume}
+      />
+    );
   }
 
   if (route === 'settings') {

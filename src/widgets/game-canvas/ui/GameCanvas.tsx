@@ -1,16 +1,66 @@
-import { memo, useEffect, useRef } from 'react';
+import { useEffect, useRef, useImperativeHandle, forwardRef, useCallback } from 'react';
 import Phaser from 'phaser';
-import { createGameConfig } from '../../../shared/lib/phaser/createGameConfig';
 import type { GameSetupConfig } from '../../../shared/config/game-setup';
+import { getGameSetupConfig } from '../../../shared/lib/game-bridge/bridge';
 import './GameCanvas.css';
 
 export type GameCanvasProps = {
   setup: GameSetupConfig | null;
 };
 
-function GameCanvasComponent({ setup }: GameCanvasProps) {
+export type GameCanvasRef = {
+  pause: () => void;
+  resume: () => void;
+  setSfxVolume: (volume: number) => void;
+  setAmbientVolume: (volume: number) => void;
+};
+
+function GameCanvasComponent({ setup }: GameCanvasProps, ref: React.Ref<GameCanvasRef>) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const gameRef = useRef<Phaser.Game | null>(null);
+  const sfxVolumeRef = useRef(0.2);
+  const ambientVolumeRef = useRef(0.15);
+
+  const pause = useCallback(() => {
+    if (gameRef.current) {
+      gameRef.current.scene.pause('default');
+    }
+  }, []);
+
+  const resume = useCallback(() => {
+    if (gameRef.current) {
+      gameRef.current.scene.resume('default');
+    }
+  }, []);
+
+  const setSfxVolume = useCallback((volume: number) => {
+    sfxVolumeRef.current = volume;
+    // Apply to Phaser game if needed
+    if (gameRef.current) {
+      const scene = gameRef.current.scene.getScene('default');
+      if (scene && 'setSfxVolume' in scene) {
+        (scene as unknown as { setSfxVolume: (v: number) => void }).setSfxVolume(volume);
+      }
+    }
+  }, []);
+
+  const setAmbientVolume = useCallback((volume: number) => {
+    ambientVolumeRef.current = volume;
+    // Apply to Phaser game if needed
+    if (gameRef.current) {
+      const scene = gameRef.current.scene.getScene('default');
+      if (scene && 'setAmbientVolume' in scene) {
+        (scene as unknown as { setAmbientVolume: (v: number) => void }).setAmbientVolume(volume);
+      }
+    }
+  }, []);
+
+  useImperativeHandle(ref, () => ({
+    pause,
+    resume,
+    setSfxVolume,
+    setAmbientVolume,
+  }), [pause, resume, setSfxVolume, setAmbientVolume]);
 
   useEffect(() => {
     if (!containerRef.current || gameRef.current) {
@@ -63,4 +113,4 @@ function GameCanvasComponent({ setup }: GameCanvasProps) {
   );
 }
 
-export const GameCanvas = memo(GameCanvasComponent);
+export const GameCanvas = forwardRef(GameCanvasComponent);

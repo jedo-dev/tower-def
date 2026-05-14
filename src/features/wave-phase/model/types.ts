@@ -1,7 +1,7 @@
-export type WavePhase = 'build' | 'wave' | 'completed' | 'game-over';
+import type { GamePhase } from '../../../shared/lib/game-bridge/types';
 
 export type WavePhaseState = {
-  phase: WavePhase;
+  phase: GamePhase;
 };
 
 export type StartWaveResult = {

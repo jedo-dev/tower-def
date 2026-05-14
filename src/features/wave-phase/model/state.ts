@@ -1,4 +1,5 @@
-import type { StartWaveResult, WavePhase, WavePhaseState } from './types';
+import type { GamePhase } from '../../../shared/lib/game-bridge/types';
+import type { StartWaveResult, WavePhaseState } from './types';
 import type { CreepEntity } from '../../../entities/creep';
 
 export type WaveAction = 'place-tower' | 'sell-tower';
@@ -13,7 +14,7 @@ export function resetWavePhaseState(): WavePhaseState {
   return createInitialWavePhaseState();
 }
 
-export function setWavePhase(state: WavePhaseState, phase: WavePhase): WavePhaseState {
+export function setWavePhase(state: WavePhaseState, phase: GamePhase): WavePhaseState {
   return {
     ...state,
     phase,
