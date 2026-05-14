@@ -22,7 +22,7 @@ export function StartPage({ onNavigate }: StartPageProps) {
       <div className="start-page-content">
         <div className="start-title-block">
           <h1 className="start-title">Tower Defense</h1>
-          <p className="start-subtitle">Warcraft-inspired pixel TD prototype</p>
+          <p className="start-subtitle">pixel TD prototype</p>
         </div>
 
         <div className="start-emblem">
