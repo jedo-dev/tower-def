@@ -39,17 +39,10 @@ export function StartPage({ onNavigate }: StartPageProps) {
           </button>
           <button
             type="button"
-            className="start-button start-button-disabled"
-            disabled
+            className="start-button start-button-secondary"
+            onClick={() => onNavigate('settings')}
           >
             Settings
-          </button>
-          <button
-            type="button"
-            className="start-button start-button-disabled"
-            disabled
-          >
-            Exit
           </button>
         </nav>
 

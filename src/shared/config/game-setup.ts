@@ -8,4 +8,4 @@ export type GameSetupConfig = {
   difficulty: Difficulty;
 };
 
-export type AppRoute = 'start' | 'setup' | 'game';
+export type AppRoute = 'start' | 'setup' | 'game' | 'settings';

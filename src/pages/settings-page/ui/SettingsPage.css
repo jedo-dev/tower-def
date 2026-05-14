@@ -1,0 +1,112 @@
+.settings-page {
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(180deg, #0d1117 0%, #161b22 50%, #1c2128 100%);
+  padding: max(8px, var(--safe-area-top)) max(8px, var(--safe-area-right)) max(8px, var(--safe-area-bottom)) max(8px, var(--safe-area-left));
+  box-sizing: border-box;
+}
+
+.settings-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 32px;
+}
+
+.settings-back-button {
+  width: 44px;
+  height: 44px;
+  border: 2px solid #30363d;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #21262d 0%, #161b22 100%);
+  color: #c9d1d9;
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.settings-back-button:hover {
+  background: linear-gradient(180deg, #30363d 0%, #21262d 100%);
+  border-color: #484f58;
+}
+
+.settings-title {
+  flex: 1;
+  font-family: 'Trebuchet MS', 'Lucida Sans', sans-serif;
+  font-size: 20px;
+  font-weight: 600;
+  color: #ffd700;
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+  margin: 0;
+  text-align: center;
+}
+
+.settings-content {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.settings-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border: 2px solid #30363d;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #21262d 0%, #161b22 100%);
+}
+
+.settings-label {
+  font-family: 'Trebuchet MS', 'Lucida Sans', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.settings-slider {
+  width: 100%;
+  height: 8px;
+  border-radius: 4px;
+  background: #30363d;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+}
+
+.settings-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #ffd700 0%, #d4a000 100%);
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.settings-slider::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #ffd700 0%, #d4a000 100%);
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.settings-value {
+  font-family: 'Trebuchet MS', 'Lucida Sans', sans-serif;
+  font-size: 14px;
+  color: #8b949e;
+  text-align: right;
+}

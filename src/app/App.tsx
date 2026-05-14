@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { StartPage } from '../pages/start-page';
 import { GameSetupPage } from '../pages/game-setup-page';
 import { GamePage } from '../pages/game-page/GamePage';
+import { SettingsPage } from '../pages/settings-page';
 import type { AppRoute, GameSetupConfig } from '../shared/config/game-setup';
 import { setGameSetupConfig } from '../shared/lib/game-bridge/bridge';
 import type { SoundId } from '../shared/lib/phaser/sound/audio.types';
@@ -55,6 +56,8 @@ const UI_AUDIO_PATHS: Record<SoundId, string> = {
 export function App() {
   const [route, setRoute] = useState<AppRoute>('start');
   const [gameSetup, setGameSetup] = useState<GameSetupConfig | null>(null);
+  const [sfxVolume, setSfxVolume] = useState(0.2);
+  const [ambientVolume, setAmbientVolume] = useState(0.15);
   const ambientRef = useRef<HTMLAudioElement | null>(null);
   const routeRef = useRef<AppRoute>('start');
   const isUiAudioUnlockedRef = useRef(false);
@@ -69,9 +72,9 @@ export function App() {
       return;
     }
     const audio = new Audio(path);
-    audio.volume = volume;
+    audio.volume = volume * sfxVolume;
     void audio.play().catch(() => undefined);
-  }, []);
+  }, [sfxVolume]);
 
   const handleNavigate = useCallback((newRoute: AppRoute) => {
     setRoute(newRoute);
@@ -90,7 +93,7 @@ export function App() {
   useEffect(() => {
     const ambient = new Audio('/assets/audio/sfx/ambient/ambient_map_01.wav');
     ambient.loop = true;
-    ambient.volume = 0.15;
+    ambient.volume = ambientVolume;
     ambient.preload = 'auto';
     ambientRef.current = ambient;
 
@@ -99,7 +102,7 @@ export function App() {
         return;
       }
       isUiAudioUnlockedRef.current = true;
-      if (routeRef.current === 'start' || routeRef.current === 'setup') {
+      if (routeRef.current === 'start' || routeRef.current === 'setup' || routeRef.current === 'settings') {
         void ambient.play().catch(() => undefined);
       }
     };
@@ -120,12 +123,18 @@ export function App() {
   }, []);
 
   useEffect(() => {
+    if (ambientRef.current) {
+      ambientRef.current.volume = ambientVolume;
+    }
+  }, [ambientVolume]);
+
+  useEffect(() => {
     const ambient = ambientRef.current;
     if (!ambient || !isUiAudioUnlockedRef.current) {
       return;
     }
 
-    if (route === 'start' || route === 'setup') {
+    if (route === 'start' || route === 'setup' || route === 'settings') {
       void ambient.play().catch(() => undefined);
       return;
     }
@@ -201,6 +210,18 @@ export function App() {
 
   if (route === 'game') {
     return <GamePage setup={gameSetup} />;
+  }
+
+  if (route === 'settings') {
+    return (
+      <SettingsPage
+        onNavigate={handleNavigate}
+        sfxVolume={sfxVolume}
+        ambientVolume={ambientVolume}
+        onSfxVolumeChange={setSfxVolume}
+        onAmbientVolumeChange={setAmbientVolume}
+      />
+    );
   }
 
   return <StartPage onNavigate={handleNavigate} />;
