@@ -111,27 +111,27 @@
 }
 
 .start-button-primary {
-  background: linear-gradient(180deg, #238636 0%, #196c2e 100%);
-  border-color: #2ea043;
+  background: linear-gradient(180deg, #e67e22 0%, #d35400 100%);
+  border-color: #e67e22;
   color: #ffffff;
   box-shadow:
-    0 2px 0 #0d5316,
+    0 2px 0 #a04000,
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 .start-button-primary:hover {
-  background: linear-gradient(180deg, #2ea043 0%, #238636 100%);
+  background: linear-gradient(180deg, #f39c12 0%, #e67e22 100%);
   transform: translateY(-1px);
   box-shadow:
-    0 3px 0 #0d5316,
-    0 4px 12px rgba(46, 160, 67, 0.3),
+    0 3px 0 #a04000,
+    0 4px 12px rgba(230, 126, 34, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 .start-button-primary:active {
   transform: translateY(1px);
   box-shadow:
-    0 1px 0 #0d5316,
+    0 1px 0 #a04000,
     inset 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
