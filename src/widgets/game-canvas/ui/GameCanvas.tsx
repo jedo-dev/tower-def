@@ -1,7 +1,7 @@
 import { useEffect, useRef, useImperativeHandle, forwardRef, useCallback } from 'react';
 import Phaser from 'phaser';
 import type { GameSetupConfig } from '../../../shared/config/game-setup';
-import { getGameSetupConfig } from '../../../shared/lib/game-bridge/bridge';
+import { createGameConfig } from '../../../shared/lib/phaser/createGameConfig';
 import './GameCanvas.css';
 
 export type GameCanvasProps = {
@@ -15,7 +15,7 @@ export type GameCanvasRef = {
   setAmbientVolume: (volume: number) => void;
 };
 
-function GameCanvasComponent({ setup }: GameCanvasProps, ref: React.Ref<GameCanvasRef>) {
+function GameCanvasComponent({ setup }: GameCanvasProps, ref: React.RefCallback<GameCanvasRef>) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const gameRef = useRef<Phaser.Game | null>(null);
   const sfxVolumeRef = useRef(0.2);
@@ -113,4 +113,4 @@ function GameCanvasComponent({ setup }: GameCanvasProps, ref: React.Ref<GameCanv
   );
 }
 
-export const GameCanvas = forwardRef(GameCanvasComponent);
+export const GameCanvas = forwardRef<GameCanvasRef, GameCanvasProps>(GameCanvasComponent);

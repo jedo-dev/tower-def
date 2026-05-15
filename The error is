@@ -1,0 +1,2 @@
+Uncaught ReferenceError: createGameConfig is not defined
+    at GameCanvas.tsx:69:29
