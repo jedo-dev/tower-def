@@ -1,5 +1,22 @@
+@font-face {
+  font-family: 'Exo 2';
+  src: url('../../assets/fonts/Exo2-VariableFont_wght.ttf') format('truetype');
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Exo 2';
+  src: url('../../assets/fonts/Exo2-Italic-VariableFont_wght.ttf') format('truetype');
+  font-style: italic;
+  font-weight: 100 900;
+  font-display: swap;
+}
+
 :root {
-  font-family: 'Trebuchet MS', 'Segoe UI', Tahoma, sans-serif;
+  --font-family-ui: 'Exo 2', 'Segoe UI', Tahoma, sans-serif;
+  font-family: var(--font-family-ui);
   background: #12151d;
   color: #ecf2ff;
   font-size: 16px;
@@ -33,4 +50,5 @@ body {
   min-height: 100svh;
   background: radial-gradient(circle at top, #1a2233 0%, #11151f 55%, #0d1119 100%);
   color: var(--color-text-primary);
+  font-family: var(--font-family-ui);
 }

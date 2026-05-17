@@ -104,7 +104,7 @@ function spawnDamageNumber(
 
   const center = deps.toCellCenter(position);
   const text = deps.scene.add.text(center.x, center.y - 10, `${damage}`, {
-    fontFamily: 'Trebuchet MS',
+    fontFamily: 'Exo 2, Segoe UI, Tahoma, sans-serif',
     fontSize: '11px',
     color: '#ffe9a8',
     stroke: '#1d2536',
