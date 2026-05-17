@@ -1,4 +1,5 @@
 import type { AppRoute } from '../../../shared/config/game-setup';
+import { FantasyButton } from '../../../shared/ui/fantasy-button';
 import './StartPage.css';
 
 export type StartPageProps = {
@@ -30,20 +31,20 @@ export function StartPage({ onNavigate }: StartPageProps) {
         </div>
 
         <nav className="start-menu">
-          <button
-            type="button"
-            className="start-button start-button-primary"
+          <FantasyButton
+            className="start-button-primary"
+            tone="emerald"
             onClick={() => onNavigate('setup')}
           >
             New Game
-          </button>
-          <button
-            type="button"
-            className="start-button start-button-secondary"
+          </FantasyButton>
+          <FantasyButton
+            className="start-button-secondary"
+            tone="steel"
             onClick={() => onNavigate('settings')}
           >
             Settings
-          </button>
+          </FantasyButton>
         </nav>
 
         <footer className="start-footer">
