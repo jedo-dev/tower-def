@@ -3,13 +3,13 @@
   --button-bg-mid: #12390f;
   --button-bg-bottom: #0a2509;
   --button-glow: rgba(121, 209, 92, 0.28);
-  --button-border-main: #8f6e2d;
+  --button-border-main: #4a4030;
   --button-border-dark: #3a2c12;
-  --button-border-inner: #6e5220;
+  --button-border-inner: #372f21;
   --button-label: #f2d58e;
   --button-label-shadow: #3e2f10;
-  --button-gem-top: #090A09;
-  --button-gem-bottom: #1f88b2;
+  --button-gem-top: #090a09;
+  --button-gem-bottom: #145874;
   --button-focus: #d8ff9c;
   position: relative;
   display: inline-flex;
@@ -20,11 +20,7 @@
   padding: 11px 28px;
   border: 2px solid var(--button-border-main);
   border-radius: 2px;
-  background:
-    linear-gradient(180deg, rgba(219, 242, 152, 0.2) 0%, rgba(219, 242, 152, 0.06) 14%, rgba(0, 0, 0, 0) 26%),
-    linear-gradient(180deg, rgba(8, 28, 6, 0) 0 34%, rgba(5, 17, 4, 0.55) 34% 64%, rgba(8, 28, 6, 0) 64% 100%),
-    radial-gradient(70% 160% at 50% 50%, rgba(99, 170, 59, 0.2) 0%, rgba(99, 170, 59, 0) 72%),
-    linear-gradient(180deg, var(--button-bg-top) 0%, var(--button-bg-mid) 50%, var(--button-bg-bottom) 100%);
+  background: #ff000000;
   color: var(--button-label);
   cursor: pointer;
   text-transform: uppercase;
@@ -35,26 +31,33 @@
     0 0 0 3px var(--button-border-inner) inset,
     0 7px 18px rgba(0, 0, 0, 0.45),
     0 0 30px var(--button-glow);
-  transition: transform 0.16s ease, box-shadow 0.16s ease, filter 0.16s ease, border-color 0.16s ease;
+  transition:
+    transform 0.16s ease,
+    box-shadow 0.16s ease,
+    filter 0.16s ease,
+    border-color 0.16s ease;
   isolation: isolate;
   overflow: visible;
+  background: black;
 }
 
 .fantasy-button__frame,
+.fantasy-button__inner-panel,
 .fantasy-button__shine,
 .fantasy-button__corner,
 .fantasy-button__gem {
   pointer-events: none;
 }
 
+.fantasy-button__inner-panel {
+  display: none;
+}
+
 .fantasy-button__frame {
   position: absolute;
-  inset: 7px 14px;
-  border: 1px solid rgba(126, 165, 70, 0.52);
+
   border-radius: 2px;
-  box-shadow:
-    0 0 0 1px rgba(11, 29, 9, 0.95) inset,
-    0 0 0 2px rgba(93, 125, 44, 0.2);
+
   z-index: 1;
 }
 
@@ -67,37 +70,11 @@
   z-index: 1;
 }
 
-.fantasy-button::before {
-  content: '';
-  position: absolute;
-  left: 12px;
-  right: 12px;
-  top: 4px;
-  height: 1px;
-  border-radius: 1px;
-  background: linear-gradient(90deg, rgba(226, 194, 118, 0.3) 0%, rgba(244, 216, 146, 0.75) 50%, rgba(226, 194, 118, 0.3) 100%);
-  z-index: 2;
-  pointer-events: none;
-}
-
-.fantasy-button::after {
-  content: '';
-  position: absolute;
-  left: 14px;
-  right: 14px;
-  bottom: 6px;
-  height: 1px;
-  border-radius: 1px;
-  background: linear-gradient(90deg, rgba(125, 175, 65, 0) 0%, rgba(125, 175, 65, 0.55) 50%, rgba(125, 175, 65, 0) 100%);
-  z-index: 2;
-  pointer-events: none;
-}
-
 .fantasy-button__corner {
   position: absolute;
   width: 18px;
   height: 18px;
-  background: linear-gradient(180deg, #a98543 0%, #64461c 100%);
+  background: #433d2ecf;
   border: 1px solid #2f230e;
   z-index: 2;
 }
@@ -105,32 +82,32 @@
 .fantasy-button__corner--top-left {
   top: -2px;
   left: -2px;
-  clip-path: polygon(0 0, 100% 0, 35% 35%, 0 100%);
+  clip-path: polygon(0 0, 100% 0, 58% 42%, 0 100%);
 }
 
 .fantasy-button__corner--top-right {
   top: -2px;
   right: -2px;
-  clip-path: polygon(0 0, 100% 0, 100% 100%, 65% 35%);
+  clip-path: polygon(-30% 0%, 100% 0, 100% 130%, 50% 50%);
 }
 
 .fantasy-button__corner--bottom-left {
   left: -2px;
   bottom: -2px;
-  clip-path: polygon(0 0, 35% 65%, 100% 100%, 0 100%);
+  clip-path: polygon(0 0, 58% 42%, 100% 100%, 0 100%);
 }
 
 .fantasy-button__corner--bottom-right {
   right: -2px;
   bottom: -2px;
-  clip-path: polygon(65% 65%, 100% 0, 100% 100%, 0 100%);
+  clip-path: polygon(42% 58%, 100% 0, 100% 100%, 0 100%);
 }
 
 .fantasy-button__gem {
   position: absolute;
   top: 50%;
-  width: 18px;
-  height: 18px;
+  width: 14px;
+  height: 14px;
   transform: translateY(-50%) rotate(45deg);
   background: linear-gradient(180deg, var(--button-gem-top) 0%, var(--button-gem-bottom) 100%);
   border: 2px solid var(--button-border-main);
@@ -139,20 +116,22 @@
     0 0 9px rgba(110, 231, 255, 0.4);
   z-index: 3;
 }
-
-.fantasy-button__gem::before,
-.fantasy-button__gem::after {
-  content: '';
+.fantasy-button__litle_gem {
   position: absolute;
-  width: 10px;
-  height: 2px;
-  top: 50%;
-  transform: translateY(-50%) rotate(-45deg);
-  background: linear-gradient(90deg, #b79045 0%, #6d4f1f 100%);
-  border: 1px solid #3b2c12;
-  border-radius: 1px;
+  top: 7px;
+  right: 4px;
+  width: 5px;
+  height: 5px;
+  transform: translateY(-50%) rotate(47deg);
+  background: linear-gradient(180deg, var(--button-gem-top) 0%, var(--button-gem-bottom) 100%);
+  border: 1px solid var(--button-border-main);
+  box-shadow:
+    0 0 0 1px var(--button-border-dark),
+    0 0 9px rgba(110, 231, 255, 0.4);
+  z-index: 3;
 }
 
+.fantasy-button__gem::before,
 .fantasy-button__gem--left::before {
   left: -11px;
 }
@@ -172,11 +151,11 @@
 }
 
 .fantasy-button__gem--left {
-  left: -13px;
+  left: -8px;
 }
 
 .fantasy-button__gem--right {
-  right: -13px;
+  right: -8px;
 }
 
 .fantasy-button__label {
@@ -184,11 +163,11 @@
   z-index: 4;
   font-family: var(--font-family-ui);
   font-size: 22px;
-  font-weight: 700;
+  font-weight: 500;
   line-height: 1;
   letter-spacing: 1.2px;
   color: var(--button-label);
-  font-family: 'Times New Roman', Georgia, serif;
+
   text-shadow:
     0 1px 0 var(--button-label-shadow),
     0 0 10px rgba(255, 226, 156, 0.18);
@@ -202,6 +181,10 @@
     0 0 0 3px var(--button-border-inner) inset,
     0 10px 20px rgba(0, 0, 0, 0.52),
     0 0 36px var(--button-glow);
+
+  .fantasy-button__inner-panel {
+    background: #3f0803;
+  }
 }
 
 .fantasy-button:active:not(:disabled) {
@@ -253,4 +236,41 @@
   --button-gem-top: #b8d2ff;
   --button-gem-bottom: #5a7db5;
   --button-focus: #b7d4ff;
+}
+
+.fantasy-button--emerald {
+  min-height: 62px;
+}
+
+.fantasy-button--emerald .fantasy-button__inner-panel {
+  display: block;
+  position: absolute;
+  inset: 4px 3px;
+  z-index: 0;
+  clip-path: polygon(
+    10px 0,
+    calc(100% - 10px) 0,
+    100% 10px,
+    100% calc(100% - 10px),
+    calc(100% - 10px) 100%,
+    10px 100%,
+    0 calc(100% - 10px),
+    0 10px
+  );
+  background: #121112;
+  box-shadow:
+    0 0 0 1px rgba(17, 43, 14, 0.95) inset,
+    0 0 0 2px rgba(115, 161, 58, 0.3) inset;
+}
+
+.fantasy-button--emerald .fantasy-button__frame {
+}
+
+.fantasy-button--emerald::before {
+  left: 16px;
+  right: 16px;
+  top: 5px;
+}
+
+.fantasy-button--emerald::after {
 }
