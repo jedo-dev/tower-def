@@ -1,4 +1,4 @@
-import { memo, useState } from 'react';
+import { memo, useState, type CSSProperties } from 'react';
 import './HudPanel.css';
 import { sendGameCommand } from '../../../shared/lib/game-bridge/bridge';
 import { useGameHudSnapshot } from '../../../shared/lib/game-bridge/useGameHudSnapshot';
@@ -44,15 +44,15 @@ function HudPanelComponent({ setup }: HudPanelProps) {
         aria-label={isExpanded ? 'Collapse HUD' : 'Expand HUD'}
         onClick={() => setIsExpanded(!isExpanded)}
       >
-        <span className={`hud-toggle-icon${isExpanded ? ' hud-toggle-icon-up' : ''}`}>▲</span>
+        <span className={`hud-toggle-icon${isExpanded ? ' hud-toggle-icon-up' : ''}`}>^</span>
       </button>
 
       <div className="hud-top-row">
         <div className="hud-resource">
-          <span className="hud-resource-icon">💰</span>
+          <span className="hud-resource-icon">$</span>
           <span className="hud-resource-value">{snapshot.gold}</span>
         </div>
-        
+
         <div className="hud-center">
           {snapshot.autoStartSecondsLeft !== null ? (
             <div className="hud-timer-actions">
@@ -77,9 +77,9 @@ function HudPanelComponent({ setup }: HudPanelProps) {
             </button>
           )}
         </div>
-        
+
         <div className="hud-resource">
-          <span className="hud-resource-icon">❤️</span>
+          <span className="hud-resource-icon">HP</span>
           <span className="hud-resource-value">{snapshot.lives}</span>
         </div>
       </div>
@@ -92,7 +92,7 @@ function HudPanelComponent({ setup }: HudPanelProps) {
                 key={btn.type}
                 type="button"
                 className={`hud-tower-btn${snapshot.selectedTowerType === btn.type ? ' hud-tower-btn-selected' : ''}`}
-                style={{ '--tower-color': btn.color } as React.CSSProperties}
+                style={{ '--tower-color': btn.color } as CSSProperties}
                 onClick={() => sendGameCommand('select-tower', { towerType: snapshot.selectedTowerType === btn.type ? null : btn.type })}
               >
                 {btn.label}

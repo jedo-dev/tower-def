@@ -51,4 +51,5 @@ body {
   background: radial-gradient(circle at top, #1a2233 0%, #11151f 55%, #0d1119 100%);
   color: var(--color-text-primary);
   font-family: var(--font-family-ui);
+  overflow: hidden;
 }

@@ -1,276 +1,53 @@
 .fantasy-button {
-  --button-bg-top: #194f14;
-  --button-bg-mid: #12390f;
-  --button-bg-bottom: #0a2509;
-  --button-glow: rgba(121, 209, 92, 0.28);
-  --button-border-main: #4a4030;
-  --button-border-dark: #3a2c12;
-  --button-border-inner: #372f21;
-  --button-label: #f2d58e;
-  --button-label-shadow: #3e2f10;
-  --button-gem-top: #090a09;
-  --button-gem-bottom: #145874;
-  --button-focus: #d8ff9c;
-  position: relative;
+  --button-image: url('../../../../assets/ui-presets/btn_green_normal.png');
   display: inline-flex;
-  align-items: center;
-  justify-content: center;
   width: 100%;
   min-height: 56px;
-  padding: 11px 28px;
-  border: 2px solid var(--button-border-main);
-  border-radius: 2px;
-  background: #ff000000;
-  color: var(--button-label);
+  align-items: center;
+  justify-content: center;
+  padding: 12px 28px;
+  border: 32px solid transparent;
+  border-image: var(--button-image) 80 fill / 32px / 0 round;
+  background: transparent;
+  color: #f3e2ba;
   cursor: pointer;
   text-transform: uppercase;
-  letter-spacing: 1.2px;
-  text-shadow: 0 1px 0 var(--button-label-shadow);
-  box-shadow:
-    0 0 0 1px var(--button-border-dark) inset,
-    0 0 0 3px var(--button-border-inner) inset,
-    0 7px 18px rgba(0, 0, 0, 0.45),
-    0 0 30px var(--button-glow);
-  transition:
-    transform 0.16s ease,
-    box-shadow 0.16s ease,
-    filter 0.16s ease,
-    border-color 0.16s ease;
-  isolation: isolate;
-  overflow: visible;
-  background: black;
-}
-
-.fantasy-button__frame,
-.fantasy-button__inner-panel,
-.fantasy-button__shine,
-.fantasy-button__corner,
-.fantasy-button__gem {
-  pointer-events: none;
-}
-
-.fantasy-button__inner-panel {
-  display: none;
-}
-
-.fantasy-button__frame {
-  position: absolute;
-
-  border-radius: 2px;
-
-  z-index: 1;
-}
-
-.fantasy-button__shine {
-  position: absolute;
-  inset: 10px 26px auto;
-  height: 10px;
-  border-radius: 2px;
-  background: linear-gradient(180deg, rgba(210, 239, 142, 0.24) 0%, rgba(210, 239, 142, 0) 100%);
-  z-index: 1;
-}
-
-.fantasy-button__corner {
-  position: absolute;
-  width: 18px;
-  height: 18px;
-  background: #433d2ecf;
-  border: 1px solid #2f230e;
-  z-index: 2;
-}
-
-.fantasy-button__corner--top-left {
-  top: -2px;
-  left: -2px;
-  clip-path: polygon(0 0, 100% 0, 58% 42%, 0 100%);
-}
-
-.fantasy-button__corner--top-right {
-  top: -2px;
-  right: -2px;
-  clip-path: polygon(-30% 0%, 100% 0, 100% 130%, 50% 50%);
-}
-
-.fantasy-button__corner--bottom-left {
-  left: -2px;
-  bottom: -2px;
-  clip-path: polygon(0 0, 58% 42%, 100% 100%, 0 100%);
-}
-
-.fantasy-button__corner--bottom-right {
-  right: -2px;
-  bottom: -2px;
-  clip-path: polygon(42% 58%, 100% 0, 100% 100%, 0 100%);
-}
-
-.fantasy-button__gem {
-  position: absolute;
-  top: 50%;
-  width: 14px;
-  height: 14px;
-  transform: translateY(-50%) rotate(45deg);
-  background: linear-gradient(180deg, var(--button-gem-top) 0%, var(--button-gem-bottom) 100%);
-  border: 2px solid var(--button-border-main);
-  box-shadow:
-    0 0 0 1px var(--button-border-dark),
-    0 0 9px rgba(110, 231, 255, 0.4);
-  z-index: 3;
-}
-.fantasy-button__litle_gem {
-  position: absolute;
-  top: 7px;
-  right: 4px;
-  width: 5px;
-  height: 5px;
-  transform: translateY(-50%) rotate(47deg);
-  background: linear-gradient(180deg, var(--button-gem-top) 0%, var(--button-gem-bottom) 100%);
-  border: 1px solid var(--button-border-main);
-  box-shadow:
-    0 0 0 1px var(--button-border-dark),
-    0 0 9px rgba(110, 231, 255, 0.4);
-  z-index: 3;
-}
-
-.fantasy-button__gem::before,
-.fantasy-button__gem--left::before {
-  left: -11px;
-}
-
-.fantasy-button__gem--left::after {
-  left: -11px;
-  top: calc(50% + 5px);
-}
-
-.fantasy-button__gem--right::before {
-  right: -11px;
-}
-
-.fantasy-button__gem--right::after {
-  right: -11px;
-  top: calc(50% + 5px);
-}
-
-.fantasy-button__gem--left {
-  left: -8px;
-}
-
-.fantasy-button__gem--right {
-  right: -8px;
+  letter-spacing: 0.06em;
+  touch-action: manipulation;
 }
 
 .fantasy-button__label {
-  position: relative;
-  z-index: 4;
   font-family: var(--font-family-ui);
   font-size: 22px;
-  font-weight: 500;
+  font-weight: 700;
   line-height: 1;
-  letter-spacing: 1.2px;
-  color: var(--button-label);
-
-  text-shadow:
-    0 1px 0 var(--button-label-shadow),
-    0 0 10px rgba(255, 226, 156, 0.18);
-}
-
-.fantasy-button:hover:not(:disabled) {
-  transform: translateY(-1px);
-  filter: brightness(1.07);
-  box-shadow:
-    0 0 0 1px var(--button-border-dark) inset,
-    0 0 0 3px var(--button-border-inner) inset,
-    0 10px 20px rgba(0, 0, 0, 0.52),
-    0 0 36px var(--button-glow);
-
-  .fantasy-button__inner-panel {
-    background: #3f0803;
-  }
-}
-
-.fantasy-button:active:not(:disabled) {
-  transform: translateY(1px);
-  filter: brightness(0.95);
-  box-shadow:
-    0 0 0 1px var(--button-border-dark) inset,
-    0 0 0 3px var(--button-border-inner) inset,
-    0 3px 9px rgba(0, 0, 0, 0.6),
-    inset 0 3px 10px rgba(0, 0, 0, 0.3);
+  color: inherit;
+  text-shadow: 0 1px 0 rgba(29, 15, 2, 0.8);
 }
 
 .fantasy-button:focus-visible {
-  outline: 2px solid var(--button-focus);
+  outline: 2px solid #f2da96;
   outline-offset: 2px;
 }
 
 .fantasy-button:disabled {
+  opacity: 0.5;
   cursor: not-allowed;
-  opacity: 0.62;
-  filter: grayscale(0.15);
+  filter: grayscale(0.2);
 }
 
 .fantasy-button--ember {
-  --button-bg-top: #5b2e0f;
-  --button-bg-mid: #49230c;
-  --button-bg-bottom: #2f1408;
-  --button-glow: rgba(236, 137, 74, 0.26);
-  --button-border-main: #a9773c;
-  --button-border-dark: #3f260f;
-  --button-border-inner: #74491e;
-  --button-label: #ffd6a7;
-  --button-label-shadow: #4a230f;
-  --button-gem-top: #ffc089;
-  --button-gem-bottom: #c5663d;
-  --button-focus: #ffd1a0;
+  --button-image: url('../../../../assets/ui-presets/btn_red_normal.png');
+}
+
+.fantasy-button--ember:hover:not(:disabled) {
+  --button-image: url('../../../../assets/ui-presets/btn_red_hover.png');
 }
 
 .fantasy-button--steel {
-  --button-bg-top: #3b4252;
-  --button-bg-mid: #2a303b;
-  --button-bg-bottom: #1b2028;
-  --button-glow: rgba(126, 167, 231, 0.2);
-  --button-border-main: #95a6bf;
-  --button-border-dark: #263345;
-  --button-border-inner: #50627d;
-  --button-label: #e6eefc;
-  --button-label-shadow: #2c394d;
-  --button-gem-top: #b8d2ff;
-  --button-gem-bottom: #5a7db5;
-  --button-focus: #b7d4ff;
+  --button-image: url('../../../../assets/ui-presets/btn_gray_normal.png');
 }
 
 .fantasy-button--emerald {
-  min-height: 62px;
-}
-
-.fantasy-button--emerald .fantasy-button__inner-panel {
-  display: block;
-  position: absolute;
-  inset: 4px 3px;
-  z-index: 0;
-  clip-path: polygon(
-    10px 0,
-    calc(100% - 10px) 0,
-    100% 10px,
-    100% calc(100% - 10px),
-    calc(100% - 10px) 100%,
-    10px 100%,
-    0 calc(100% - 10px),
-    0 10px
-  );
-  background: #121112;
-  box-shadow:
-    0 0 0 1px rgba(17, 43, 14, 0.95) inset,
-    0 0 0 2px rgba(115, 161, 58, 0.3) inset;
-}
-
-.fantasy-button--emerald .fantasy-button__frame {
-}
-
-.fantasy-button--emerald::before {
-  left: 16px;
-  right: 16px;
-  top: 5px;
-}
-
-.fantasy-button--emerald::after {
+  --button-image: url('../../../../assets/ui-presets/btn_green_normal.png');
 }

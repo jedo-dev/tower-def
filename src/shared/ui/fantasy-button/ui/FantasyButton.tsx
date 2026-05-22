@@ -24,16 +24,6 @@ export function FantasyButton({
 
   return (
     <button type={type} className={mergedClassName} {...rest}>
-      <span className='fantasy-button__inner-panel' aria-hidden />
-      <span className='fantasy-button__frame' aria-hidden />
-
-      <span className='fantasy-button__corner fantasy-button__corner--top-left' aria-hidden />
-      <span className='fantasy-button__corner fantasy-button__corner--top-right' aria-hidden />
-      <span className='fantasy-button__corner fantasy-button__corner--bottom-left' aria-hidden />
-      <span className='fantasy-button__corner fantasy-button__corner--bottom-right' aria-hidden />
-      <span className='fantasy-button__gem fantasy-button__gem--left' aria-hidden />
-      <span className='fantasy-button__gem fantasy-button__gem--right' aria-hidden />
-       <span className='fantasy-button__gem fantasy-button__litle_gem' aria-hidden />
       <span className='fantasy-button__label'>{children}</span>
     </button>
   );

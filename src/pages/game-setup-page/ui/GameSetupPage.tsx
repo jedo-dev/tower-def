@@ -75,8 +75,8 @@ export function GameSetupPage({ onStartGame, onNavigate }: GameSetupPageProps) {
   const currentBuilderConfig = builderFactions.find((f) => f.id === builderRace) ?? builderFactions[0];
   const currentEnemyConfig = enemyFactions.find((f) => f.id === enemyFactionSelected) ?? enemyFactions[0];
   const currentDifficultyConfig = difficulties.find((d) => d.id === difficultySelected) ?? difficulties[0];
-  const currentBuilderIndex = builderFactions.findIndex((f) => f.id === builderRace);
   const currentBuilderVideo = BUILDER_BACKGROUND_VIDEO[builderRace];
+  const starterTowerName = formatTowerName(currentBuilderConfig.towerIds[0]);
 
   useEffect(() => {
     return () => {
@@ -155,6 +155,7 @@ export function GameSetupPage({ onStartGame, onNavigate }: GameSetupPageProps) {
               <button type="button" className="setup-back-button" onClick={handleBack} aria-label="Go back" data-sound="ui.close">
                 {'<'}
               </button>
+              <h1 className="setup-race-title">{STEP_TITLES[step]}</h1>
               <div className="setup-progress">
                 {builderFactions.map((faction) => (
                   <div
@@ -166,24 +167,26 @@ export function GameSetupPage({ onStartGame, onNavigate }: GameSetupPageProps) {
             </div>
 
             <div className={`setup-race-preview${isRaceVisible ? ' setup-race-preview-visible' : ''}`}>
-              {currentBuilderVideo ? (
-                <video
-                  key={builderRace}
-                  className="setup-race-preview-video"
-                  src={currentBuilderVideo}
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
+              <div className="setup-race-media">
+                {currentBuilderVideo ? (
+                  <video
+                    key={builderRace}
+                    className="setup-race-preview-video"
+                    src={currentBuilderVideo}
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    aria-hidden
+                  />
+                ) : null}
+
+                <div
+                  className="setup-race-preview-overlay"
+                  style={{ '--card-theme': currentBuilderConfig.themeColor } as CSSProperties}
                   aria-hidden
                 />
-              ) : null}
-
-              <div
-                className="setup-race-preview-overlay"
-                style={{ '--card-theme': currentBuilderConfig.themeColor } as CSSProperties}
-                aria-hidden
-              />
+              </div>
 
               <button
                 type="button"
@@ -211,17 +214,14 @@ export function GameSetupPage({ onStartGame, onNavigate }: GameSetupPageProps) {
                 <h2 className="setup-card-name">{currentBuilderConfig.name}</h2>
                 <p className="setup-card-desc">{currentBuilderConfig.description}</p>
                 <p className="setup-card-tower">
-                  Starter: {currentBuilderConfig.towerIds[0]?.replace('_tower', '') || 'None'}
+                  Starter Tower
+                  <span className="setup-card-tower-value">{starterTowerName}</span>
                 </p>
               </div>
             </div>
 
-            <div className="setup-race-index" aria-live="polite">
-              {currentBuilderIndex + 1} / {builderFactions.length}
-            </div>
-
             <button type="button" className="setup-next-button" onClick={handleNext} data-sound="ui.success">
-              Choose Race
+              Choose
             </button>
           </div>
         )}
@@ -283,9 +283,7 @@ export function GameSetupPage({ onStartGame, onNavigate }: GameSetupPageProps) {
             </div>
             <div className="setup-summary-block">
               <span className="setup-summary-label">Starter Tower</span>
-              <span className="setup-summary-value">
-                {currentBuilderConfig.towerIds[0]?.replace(/_/g, ' ').replace('undead ', '') || 'Basic'}
-              </span>
+              <span className="setup-summary-value">{starterTowerName}</span>
             </div>
           </div>
         )}
@@ -313,4 +311,17 @@ function getEnemyThemeColor(faction: EnemyFaction): string {
     case EnemyFaction.ELF:
       return '#6bbf89';
   }
+}
+
+function formatTowerName(towerId: string | undefined): string {
+  if (!towerId) {
+    return 'None';
+  }
+
+  return towerId
+    .replace(/_tower$/i, '')
+    .split('_')
+    .filter((chunk) => chunk.length > 0 && chunk.toLowerCase() !== 'undead')
+    .map((chunk) => chunk[0].toUpperCase() + chunk.slice(1).toLowerCase())
+    .join(' ');
 }
