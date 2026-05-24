@@ -3,7 +3,6 @@ import type { BuilderFaction } from '../../../../../entities/builder-faction';
 import { GRID_DIMENSIONS } from '../../../../constants/grid';
 import { builderFactionToTerrainFaction, getPropForCell, TILES } from '../../../../../assets/registry';
 import type { GridCell, GridModel } from '../../../../types/grid';
-import type { GridPosition } from '../../../../types/pathfinding';
 
 export type GridRendererConfig = {
   terrainRenderDepth: number;
@@ -29,8 +28,7 @@ export type GridRendererState = {
 export type GridRendererDeps = {
   scene: Phaser.Scene;
   selectedBuilderFactionId: BuilderFaction;
-  entranceCell: GridPosition;
-  exitCell: GridPosition;
+  pathCellKeys: ReadonlySet<string>;
   mapSeed: number;
   createGridModel: () => GridModel;
 };
@@ -46,14 +44,7 @@ export function clearGridLabels(state: GridRendererState): void {
 }
 
 function isPathCell(cell: GridCell, deps: GridRendererDeps): boolean {
-  if (cell.role === 'entrance' || cell.role === 'exit') {
-    return true;
-  }
-
-  const pathRow = deps.entranceCell.y;
-  const minX = Math.min(deps.entranceCell.x, deps.exitCell.x);
-  const maxX = Math.max(deps.entranceCell.x, deps.exitCell.x);
-  return cell.y === pathRow && cell.x >= minX && cell.x <= maxX;
+  return deps.pathCellKeys.has(`${cell.x}:${cell.y}`);
 }
 
 function renderFallbackTerrainCell(

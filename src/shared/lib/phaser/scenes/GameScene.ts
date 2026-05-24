@@ -193,6 +193,7 @@ export class GameScene extends Phaser.Scene {
   private terrainSprites: Phaser.GameObjects.Image[] = [];
   private gridLabels: Phaser.GameObjects.Text[] = [];
   private buildPreviewOverlay: Phaser.GameObjects.Graphics | null = null;
+  private pathCellKeys = new Set<string>();
   private placedTowerCostsByCellKey = new Map<string, number>();
   private playerGold = INITIAL_PLAYER_RESOURCES.gold;
   private playerLives = INITIAL_PLAYER_RESOURCES.lives;
@@ -739,8 +740,7 @@ export class GameScene extends Phaser.Scene {
     return {
       scene: this,
       selectedBuilderFactionId: this.selectedBuilderFactionId,
-      entranceCell: ENTRANCE_CELL,
-      exitCell: EXIT_CELL,
+      pathCellKeys: this.pathCellKeys,
       mapSeed: this.mapSeed,
       createGridModel: () =>
         createGridModel({
@@ -1033,6 +1033,7 @@ export class GameScene extends Phaser.Scene {
     this.hoveredCell = null;
     this.updateHoveredCellDebugRegistry();
     this.buildPreviewOverlay?.clear();
+    this.pathCellKeys.clear();
     const state = this.getWaveRuntimeState();
     resetRunToInitialStateRuntime(state);
     this.nextWaveStartsAtMs = state.nextWaveStartsAtMs;
@@ -1351,6 +1352,8 @@ export class GameScene extends Phaser.Scene {
     }
 
     this.activeCreepPath = wavePath;
+    this.pathCellKeys = new Set(wavePath.map((cell) => `${cell.x}:${cell.y}`));
+    this.redrawTerrainTiles();
     this.spawnWaveCreeps();
     this.wavePhaseState = startNextWaveCycle(this.wavePhaseState);
     this.ensureBaseAmbientPlaying();
@@ -1393,6 +1396,18 @@ export class GameScene extends Phaser.Scene {
     };
 
     publishGameHudSnapshot(snapshot);
+  }
+
+  private redrawTerrainTiles(): void {
+    if (!this.gridModel) {
+      return;
+    }
+
+    const rendererState = this.getGridRendererState();
+    for (const cell of this.gridModel.cells) {
+      drawGridCellRuntime(rendererState, this.getGridRendererDeps(), this.gridRendererConfig, cell);
+    }
+    this.applyGridRendererState(rendererState);
   }
 
   private buildWaveQueue(): {
@@ -1485,6 +1500,7 @@ export class GameScene extends Phaser.Scene {
     this.destroyAllDamageNumbers();
     this.buildPreviewOverlay?.destroy();
     this.buildPreviewOverlay = null;
+    this.pathCellKeys.clear();
     this.gridGraphics?.destroy();
     this.gridGraphics = null;
     this.clearTerrainSprites();
