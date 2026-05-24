@@ -44,7 +44,7 @@
 
 .setup-title {
   flex: 1;
-  font-family: var(--font-family-ui);
+  font-family: var(--font-family-display);
   font-size: 20px;
   font-weight: 700;
   color: #e5cb98;
@@ -112,9 +112,9 @@
     'back progress';
   align-items: center;
   column-gap: 14px;
-  row-gap: 8px;
-  margin-bottom: 10px;
-  padding-top: 22px;
+  row-gap: 6px;
+  margin-bottom: 8px;
+  padding-top: 18px;
 }
 
 .setup-race-topbar::before {
@@ -123,8 +123,8 @@
   top: 0;
   left: 50%;
   transform: translateX(-50%);
-  width: min(64%, 300px);
-  height: 24px;
+  width: min(56%, 260px);
+  height: 20px;
   background: url('../../../assets/ui-presets/divider.png') center / contain no-repeat;
   pointer-events: none;
 }
@@ -136,8 +136,8 @@
 .setup-race-title {
   grid-area: title;
   margin: 0;
-  font-family: var(--font-family-ui);
-  font-size: 20px;
+  font-family: var(--font-family-display);
+  font-size: 18px;
   font-weight: 700;
   line-height: 1;
   color: #e4c68c;
@@ -154,7 +154,7 @@
 
 .setup-race-preview {
   position: relative;
-  margin-top: 8px;
+  margin-top: 6px;
   flex: 1;
   min-height: 0;
   overflow: hidden;
@@ -177,12 +177,12 @@
 
 .setup-race-media {
   position: absolute;
-  inset: 10px;
+  inset: 6px;
   overflow: hidden;
   z-index: 1;
   background: #101927;
-  border: 22px solid transparent;
-  border-image: url('../../../assets/ui-presets/thin_border.png') 90 fill / 14px / 0 stretch;
+  border: 14px solid transparent;
+  border-image: url('../../../assets/ui-presets/thin_border.png') 90 fill / 10px / 0 stretch;
 }
 
 .setup-race-preview-video {
@@ -232,15 +232,15 @@
   position: absolute;
   left: 0;
   right: 0;
-  bottom: 58px;
+  bottom: 52px;
   z-index: 5;
   padding: 20px;
   text-align: center;
 }
 
 .setup-card-name {
-  font-family: var(--font-family-ui);
-  font-size: 24px;
+  font-family: var(--font-family-display);
+  font-size: 20px;
   font-weight: 700;
   color: #8fd191;
   margin: 0 0 10px;
@@ -251,15 +251,15 @@
 }
 
 .setup-card-desc {
-  font-family: var(--font-family-ui);
-  font-size: 13px;
+  font-family: var(--font-family-accent);
+  font-size: 11px;
   color: #cad2de;
   margin: 0 0 14px;
   line-height: 1.24;
 }
 
 .setup-card-tower {
-  font-family: var(--font-family-ui);
+  font-family: var(--font-family-display);
   font-size: 9px;
   color: #aeb8c9;
   margin: 0;
@@ -270,7 +270,8 @@
 .setup-card-tower-value {
   display: block;
   margin-top: 8px;
-  font-size: 14px;
+  font-size: 12px;
+  font-family: var(--font-family-display);
   font-weight: 700;
   letter-spacing: 0.08em;
   color: #87cf7f;
@@ -279,7 +280,7 @@
 .setup-next-button {
   width: 100%;
   margin: 0;
-  font-family: var(--font-family-ui);
+  font-family: var(--font-family-display);
   font-size: 22px;
   font-weight: 700;
   min-height: 74px;
@@ -309,7 +310,8 @@
 .setup-cards {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
+  gap: 10px;
+  align-content: start;
 }
 
 .setup-cards-vertical {
@@ -322,26 +324,53 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 16px 12px;
-  border: 28px solid transparent;
-  border-image: url('../../../assets/ui-presets/thin_border.png') 90 fill / 16px / 0 stretch;
+  min-height: 300px;
+  justify-content: flex-start;
+  gap: 8px;
+  padding: 12px 10px 14px;
+  border: 18px solid transparent;
+  border-image: url('../../../assets/ui-presets/thin_border.png') 90 fill / 10px / 0 stretch;
+  background: rgba(6, 12, 23, 0.86);
   cursor: pointer;
   transition: all 0.2s ease;
   text-align: center;
 }
 
 .setup-card-selected {
-  border-color: #d6bc87;
+  filter: brightness(1.08);
 }
 
 .setup-card-icon {
-  width: 44px;
-  height: 44px;
+  width: 54px;
+  height: 54px;
   border-radius: 0;
   background:
     radial-gradient(circle at center, var(--card-theme, #5c8cff) 0%, rgba(0, 0, 0, 0.4) 60%),
     url('../../../assets/ui-presets/icon_frame_square.png') center / 100% 100% no-repeat;
   margin-bottom: 12px;
+}
+
+.setup-card .setup-card-name {
+  margin: 0;
+  font-size: 16px;
+  color: #9ed89a;
+  font-family: var(--font-family-display);
+}
+
+.setup-card .setup-card-desc {
+  margin: 0;
+  font-size: 8px;
+  line-height: 1.32;
+  color: #bdc8da;
+  font-family: var(--font-family-accent);
+}
+
+.setup-card .setup-card-tower {
+  margin-top: auto;
+  font-size: 7px;
+  letter-spacing: 0.16em;
+  color: #9eaec8;
+  font-family: var(--font-family-display);
 }
 
 .setup-difficulty-btn {
@@ -360,7 +389,7 @@
 }
 
 .setup-difficulty-name {
-  font-family: var(--font-family-ui);
+  font-family: var(--font-family-display);
   font-size: 16px;
   font-weight: 700;
   color: #efe4ca;
@@ -368,7 +397,7 @@
 }
 
 .setup-difficulty-desc {
-  font-family: var(--font-family-ui);
+  font-family: var(--font-family-accent);
   font-size: 12px;
   color: #adb7ca;
   margin: 0;
@@ -391,13 +420,13 @@
 }
 
 .setup-summary-label {
-  font-family: var(--font-family-ui);
+  font-family: var(--font-family-accent);
   font-size: 14px;
   color: #adb7ca;
 }
 
 .setup-summary-value {
-  font-family: var(--font-family-ui);
+  font-family: var(--font-family-display);
   font-size: 14px;
   font-weight: 700;
   color: var(--theme, #efe4ca);
@@ -418,5 +447,9 @@
 
   .setup-next-button {
     font-size: 18px;
+  }
+
+  .setup-card {
+    min-height: 268px;
   }
 }

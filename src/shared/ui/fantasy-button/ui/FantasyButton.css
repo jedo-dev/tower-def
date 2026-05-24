@@ -17,7 +17,7 @@
 }
 
 .fantasy-button__label {
-  font-family: var(--font-family-ui);
+  font-family: var(--font-family-display);
   font-size: 22px;
   font-weight: 700;
   line-height: 1;

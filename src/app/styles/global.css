@@ -14,8 +14,27 @@
   font-display: swap;
 }
 
+@font-face {
+  font-family: 'Cinzel';
+  src: url('../../assets/fonts/Cinzel-VariableFont_wght.ttf') format('truetype');
+  font-style: normal;
+  font-weight: 400 900;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Marcellus';
+  src: url('../../assets/fonts/Marcellus-Regular.ttf') format('truetype');
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
 :root {
   --font-family-ui: 'Exo 2', 'Segoe UI', Tahoma, sans-serif;
+  --font-family-display: 'Cinzel', 'Times New Roman', serif;
+  --font-family-accent: 'Marcellus', 'Georgia', serif;
+  --font-family-stats: 'Cinzel', 'Exo 2', serif;
   font-family: var(--font-family-ui);
   background: #12151d;
   color: #ecf2ff;

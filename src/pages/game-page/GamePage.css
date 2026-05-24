@@ -12,8 +12,8 @@
   display: flex;
   flex-direction: column;
   height: calc(100dvh - 16px - var(--safe-area-top) - var(--safe-area-bottom));
-  border: 38px solid transparent;
-  border-image: url('../../assets/ui-presets/panel_frame.png') 90 fill / 28px / 0 stretch;
+  border: 26px solid transparent;
+  border-image: url('../../assets/ui-presets/thin_border.png') 90 fill / 16px / 0 stretch;
   overflow: hidden;
 }
 

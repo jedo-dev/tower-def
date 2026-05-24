@@ -43,14 +43,14 @@
   font-family: var(--font-family-ui);
 }
 
-.hud-resource-value { font-size: 18px; font-weight: 700; color: #f0e3c0; }
-.hud-timer { font-size: 12px; color: #d9cbab; }
+.hud-resource-value { font-family: var(--font-family-stats); font-size: 20px; font-weight: 700; color: #f0e3c0; }
+.hud-timer { font-family: var(--font-family-stats); font-size: 12px; color: #d9cbab; }
 
 .hud-start-btn, .hud-force-start-btn, .hud-tower-btn {
   border: 0;
   min-height: 44px;
   padding: 8px 14px;
-  font-family: var(--font-family-ui);
+  font-family: var(--font-family-display);
   text-transform: uppercase;
   color: #f0e3c0;
   cursor: pointer;
@@ -88,13 +88,13 @@
 }
 
 .hud-info-label, .hud-selected-label { color: #98a4bf; }
-.hud-info-value, .hud-selected-value { color: #e6dfcd; font-weight: 600; }
+.hud-info-value, .hud-selected-value { color: #e6dfcd; font-weight: 600; font-family: var(--font-family-accent); }
 .hud-info-value-diff { color: #f0d188; }
 
 .hud-selected-info {
   gap: 8px;
   min-height: 44px;
   padding: 0 8px;
-  border: 26px solid transparent;
-  border-image: url('../../../assets/ui-presets/panel_frame.png') 90 fill / 18px / 0 stretch;
+  border: 20px solid transparent;
+  border-image: url('../../../assets/ui-presets/thin_border.png') 90 fill / 10px / 0 stretch;
 }

@@ -30,9 +30,9 @@
   font-family: var(--font-family-ui);
 }
 
-.wave-queue-label { font-size: 12px; color: #f1d9a0; }
-.wave-queue-count { font-size: 10px; color: #b8bfd0; }
-.wave-queue-empty-text { font-size: 11px; color: #95a0b9; }
+.wave-queue-label { font-family: var(--font-family-display); font-size: 12px; color: #f1d9a0; }
+.wave-queue-count { font-family: var(--font-family-stats); font-size: 10px; color: #b8bfd0; }
+.wave-queue-empty-text { font-family: var(--font-family-accent); font-size: 11px; color: #95a0b9; }
 
 .wave-queue-icon,
 .wave-queue-more {
