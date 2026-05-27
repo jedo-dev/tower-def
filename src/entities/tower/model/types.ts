@@ -1,17 +1,15 @@
 import type { GridPosition } from '../../../shared/types/pathfinding';
 import { TowerCombatConfig } from '../../../shared/constants/tower';
-import type { BuilderFaction } from '../../builder-faction/model/types';
+import type { RaceId } from '../../../shared/types/content-ids';
+import { TowerTypeId } from '../../../shared/types/content-ids';
 
 export type TowerId = string;
 
-export type TowerType = 'archer' | 'splash';
+export type TowerType = TowerTypeId;
 
-export const TowerTypeConfig = {
-  ARCHER: 'archer',
-  SPLASH: 'splash',
-} as const;
+export const TowerTypeConfig = TowerTypeId;
 
-export type BuildableTowerType = (typeof TowerTypeConfig)[keyof typeof TowerTypeConfig];
+export type BuildableTowerType = TowerTypeId;
 
 export type BuildableTowerId =
   | 'undead_bone_archer_tower'
@@ -23,7 +21,7 @@ export type BuildableTowerId =
 export type BuildableTowerConfig = {
   id: BuildableTowerId;
   name: string;
-  faction: BuilderFaction;
+  faction: RaceId;
   towerType: BuildableTowerType;
   costGold: number;
   damage: number;
@@ -40,7 +38,7 @@ export type TowerCombatStats = {
   splashRadius?: number;
 };
 
-export const TOWER_COMBAT_STATS_BY_TYPE: Record<TowerType, TowerCombatStats> = {
+export const TOWER_COMBAT_STATS_BY_TYPE: Record<TowerTypeId, TowerCombatStats> = {
   archer: {
     range: TowerCombatConfig.ARCHER_RANGE_CELLS,
     damage: TowerCombatConfig.ARCHER_DAMAGE,

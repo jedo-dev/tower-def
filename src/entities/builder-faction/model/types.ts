@@ -1,14 +1,10 @@
 import type { BuildableTowerId } from '../../tower/model/types';
+import { RaceId } from '../../../shared/types/content-ids';
 
-export enum BuilderFaction {
-  UNDEAD = 'UNDEAD',
-  ORC = 'ORC',
-  HUMAN = 'HUMAN',
-  ELF = 'ELF',
-}
+export { RaceId as BuilderFaction };
 
 export type BuilderFactionConfig = {
-  id: BuilderFaction;
+  id: RaceId;
   name: string;
   description: string;
   themeColor: string;

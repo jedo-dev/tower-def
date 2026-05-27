@@ -1,8 +1,9 @@
 import type { GridPosition } from '../../../shared/types/pathfinding';
+import type { CreepTypeId } from '../../../shared/types/content-ids';
 
 export type CreepId = string;
 
-export type CreepType = 'basic';
+export type CreepType = CreepTypeId;
 
 export type CreepLifeState = 'alive' | 'dead';
 

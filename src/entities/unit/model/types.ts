@@ -1,9 +1,6 @@
-export enum Faction {
-  UNDEAD = 'UNDEAD',
-  ORC = 'ORC',
-  HUMAN = 'HUMAN',
-  ELF = 'ELF',
-}
+import { RaceId } from '../../../shared/types/content-ids';
+
+export { RaceId as Faction };
 
 export enum UnitTier {
   TIER_1 = 1,
@@ -27,7 +24,7 @@ export type UnitId =
 export type UnitConfig = {
   id: UnitId;
   name: string;
-  faction: Faction;
+  faction: RaceId;
   tier: UnitTier;
   health: number;
   speed: number;

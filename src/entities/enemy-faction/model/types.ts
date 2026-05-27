@@ -1,12 +1,9 @@
-export enum EnemyFaction {
-  UNDEAD = 'UNDEAD',
-  ORC = 'ORC',
-  HUMAN = 'HUMAN',
-  ELF = 'ELF',
-}
+import { RaceId } from '../../../shared/types/content-ids';
+
+export { RaceId as EnemyFaction };
 
 export type EnemyFactionConfig = {
-  id: EnemyFaction;
+  id: RaceId;
   name: string;
   description: string;
   creepStyle: string;
