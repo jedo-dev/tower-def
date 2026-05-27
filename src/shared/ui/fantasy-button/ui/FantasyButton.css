@@ -1,0 +1,53 @@
+.fantasy-button {
+  --button-image: url('../../../../assets/ui-presets/btn_green_normal.png');
+  display: inline-flex;
+  width: 100%;
+  min-height: 56px;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 28px;
+  border: 32px solid transparent;
+  border-image: var(--button-image) 80 fill / 32px / 0 round;
+  background: transparent;
+  color: #f3e2ba;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  touch-action: manipulation;
+}
+
+.fantasy-button__label {
+  font-family: var(--font-family-display);
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1;
+  color: inherit;
+  text-shadow: 0 1px 0 rgba(29, 15, 2, 0.8);
+}
+
+.fantasy-button:focus-visible {
+  outline: 2px solid #f2da96;
+  outline-offset: 2px;
+}
+
+.fantasy-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  filter: grayscale(0.2);
+}
+
+.fantasy-button--ember {
+  --button-image: url('../../../../assets/ui-presets/btn_red_normal.png');
+}
+
+.fantasy-button--ember:hover:not(:disabled) {
+  --button-image: url('../../../../assets/ui-presets/btn_red_hover.png');
+}
+
+.fantasy-button--steel {
+  --button-image: url('../../../../assets/ui-presets/btn_gray_normal.png');
+}
+
+.fantasy-button--emerald {
+  --button-image: url('../../../../assets/ui-presets/btn_green_normal.png');
+}

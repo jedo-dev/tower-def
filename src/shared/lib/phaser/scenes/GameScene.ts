@@ -1,6 +1,5 @@
 import Phaser from 'phaser';
 import {
-  BuilderFaction,
   builderFactions,
   DEFAULT_BUILDER_FACTION,
   type BuilderFactionConfig,
@@ -28,10 +27,10 @@ import {
   UNIT_SPRITE_SHEET_FRAME,
 } from '../../../constants/sprites';
 import {
-  TERRAIN_TILESET_ASSET_PATHS,
-  TERRAIN_TILESET_FRAME,
-  TerrainAssetKey,
-} from '../../../constants/terrain';
+  PROPS,
+  TILES,
+  type Faction,
+} from '../../../../assets/registry';
 import { TowerCombatConfig } from '../../../constants/tower';
 import type { GridCell, GridModel } from '../../../types/grid';
 import type { GridPosition } from '../../../types/pathfinding';
@@ -194,6 +193,7 @@ export class GameScene extends Phaser.Scene {
   private terrainSprites: Phaser.GameObjects.Image[] = [];
   private gridLabels: Phaser.GameObjects.Text[] = [];
   private buildPreviewOverlay: Phaser.GameObjects.Graphics | null = null;
+  private pathCellKeys = new Set<string>();
   private placedTowerCostsByCellKey = new Map<string, number>();
   private playerGold = INITIAL_PLAYER_RESOURCES.gold;
   private playerLives = INITIAL_PLAYER_RESOURCES.lives;
@@ -222,6 +222,7 @@ export class GameScene extends Phaser.Scene {
   private selectedTowerType: 'archer' | 'splash' | null = null;
   private selectedBuilderFactionId = DEFAULT_BUILDER_FACTION;
   private selectedFaction: HudFactionType = 'undead';
+  private readonly mapSeed = 1337;
   private inputControllerState: InputControllerState = {
     activeTouchGesture: null,
     lastActionAtMs: Number.NEGATIVE_INFINITY,
@@ -294,16 +295,28 @@ export class GameScene extends Phaser.Scene {
     this.soundManager = new GameAudioManager(this);
     this.soundManager.preload();
 
-    if (!this.textures.exists(TerrainAssetKey.UNDEAD_TILESET)) {
-      this.load.spritesheet(
-        TerrainAssetKey.UNDEAD_TILESET,
-        TERRAIN_TILESET_ASSET_PATHS[TerrainAssetKey.UNDEAD_TILESET],
-        {
-          frameWidth: TERRAIN_TILESET_FRAME.width,
-          frameHeight: TERRAIN_TILESET_FRAME.height,
-        },
-      );
-    }
+    const factions = Object.keys(TILES) as Faction[];
+    factions.forEach((faction) => {
+      const urls = [TILES[faction].ground, TILES[faction].path, ...PROPS[faction]];
+      urls.forEach((url) => {
+        const textureKey = `terrain:${faction}:${url}`;
+        if (!this.textures.exists(textureKey)) {
+          this.load.image(textureKey, url);
+        }
+      });
+    });
+
+    this.load.once(Phaser.Loader.Events.COMPLETE, () => {
+      factions.forEach((faction) => {
+        const urls = [TILES[faction].ground, TILES[faction].path, ...PROPS[faction]];
+        urls.forEach((url) => {
+          const textureKey = `terrain:${faction}:${url}`;
+          if (this.textures.exists(textureKey)) {
+            this.textures.get(textureKey).setFilter(Phaser.Textures.FilterMode.LINEAR);
+          }
+        });
+      });
+    });
 
     Object.entries(UNIT_SPRITE_ASSETS).forEach(([key, assetPath]) => {
       if (!this.textures.exists(key)) {
@@ -727,9 +740,8 @@ export class GameScene extends Phaser.Scene {
     return {
       scene: this,
       selectedBuilderFactionId: this.selectedBuilderFactionId,
-      undeadFactionId: BuilderFaction.UNDEAD,
-      entranceCell: ENTRANCE_CELL,
-      exitCell: EXIT_CELL,
+      pathCellKeys: this.pathCellKeys,
+      mapSeed: this.mapSeed,
       createGridModel: () =>
         createGridModel({
           entrance: ENTRANCE_CELL,
@@ -855,11 +867,6 @@ export class GameScene extends Phaser.Scene {
   }
 
   private applyNearestNeighborFiltering(): void {
-    if (this.textures.exists(TerrainAssetKey.UNDEAD_TILESET)) {
-      this.textures
-        .get(TerrainAssetKey.UNDEAD_TILESET)
-        .setFilter(Phaser.Textures.FilterMode.NEAREST);
-    }
     Object.values(UNIT_SPRITE_KEYS).forEach((spriteKey) => {
       if (this.textures.exists(spriteKey)) {
         this.textures.get(spriteKey).setFilter(Phaser.Textures.FilterMode.NEAREST);
@@ -1026,6 +1033,7 @@ export class GameScene extends Phaser.Scene {
     this.hoveredCell = null;
     this.updateHoveredCellDebugRegistry();
     this.buildPreviewOverlay?.clear();
+    this.pathCellKeys.clear();
     const state = this.getWaveRuntimeState();
     resetRunToInitialStateRuntime(state);
     this.nextWaveStartsAtMs = state.nextWaveStartsAtMs;
@@ -1344,6 +1352,8 @@ export class GameScene extends Phaser.Scene {
     }
 
     this.activeCreepPath = wavePath;
+    this.pathCellKeys = new Set(wavePath.map((cell) => `${cell.x}:${cell.y}`));
+    this.redrawTerrainTiles();
     this.spawnWaveCreeps();
     this.wavePhaseState = startNextWaveCycle(this.wavePhaseState);
     this.ensureBaseAmbientPlaying();
@@ -1386,6 +1396,18 @@ export class GameScene extends Phaser.Scene {
     };
 
     publishGameHudSnapshot(snapshot);
+  }
+
+  private redrawTerrainTiles(): void {
+    if (!this.gridModel) {
+      return;
+    }
+
+    const rendererState = this.getGridRendererState();
+    for (const cell of this.gridModel.cells) {
+      drawGridCellRuntime(rendererState, this.getGridRendererDeps(), this.gridRendererConfig, cell);
+    }
+    this.applyGridRendererState(rendererState);
   }
 
   private buildWaveQueue(): {
@@ -1478,6 +1500,7 @@ export class GameScene extends Phaser.Scene {
     this.destroyAllDamageNumbers();
     this.buildPreviewOverlay?.destroy();
     this.buildPreviewOverlay = null;
+    this.pathCellKeys.clear();
     this.gridGraphics?.destroy();
     this.gridGraphics = null;
     this.clearTerrainSprites();

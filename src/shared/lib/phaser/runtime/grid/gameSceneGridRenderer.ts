@@ -1,9 +1,8 @@
 import type Phaser from 'phaser';
+import type { BuilderFaction } from '../../../../../entities/builder-faction';
 import { GRID_DIMENSIONS } from '../../../../constants/grid';
-import { TerrainAssetKey } from '../../../../constants/terrain';
-import { isUndeadDecorationTileIndex, resolveUndeadTerrainTileIndex } from '../../terrain/undeadTerrain';
+import { builderFactionToTerrainFaction, getPropForCell, TILES } from '../../../../../assets/registry';
 import type { GridCell, GridModel } from '../../../../types/grid';
-import type { GridPosition } from '../../../../types/pathfinding';
 
 export type GridRendererConfig = {
   terrainRenderDepth: number;
@@ -28,10 +27,9 @@ export type GridRendererState = {
 
 export type GridRendererDeps = {
   scene: Phaser.Scene;
-  selectedBuilderFactionId: string;
-  undeadFactionId: string;
-  entranceCell: GridPosition;
-  exitCell: GridPosition;
+  selectedBuilderFactionId: BuilderFaction;
+  pathCellKeys: ReadonlySet<string>;
+  mapSeed: number;
   createGridModel: () => GridModel;
 };
 
@@ -45,24 +43,8 @@ export function clearGridLabels(state: GridRendererState): void {
   state.gridLabels = [];
 }
 
-function resolveTerrainTileIndexForCell(cell: GridCell, deps: GridRendererDeps): number {
-  if (deps.selectedBuilderFactionId !== deps.undeadFactionId) {
-    return resolveUndeadTerrainTileIndex({
-      position: { x: cell.x, y: cell.y },
-      entrance: deps.entranceCell,
-      exit: deps.exitCell,
-      cols: GRID_DIMENSIONS.cols,
-      rows: GRID_DIMENSIONS.rows,
-    });
-  }
-
-  return resolveUndeadTerrainTileIndex({
-    position: { x: cell.x, y: cell.y },
-    entrance: deps.entranceCell,
-    exit: deps.exitCell,
-    cols: GRID_DIMENSIONS.cols,
-    rows: GRID_DIMENSIONS.rows,
-  });
+function isPathCell(cell: GridCell, deps: GridRendererDeps): boolean {
+  return deps.pathCellKeys.has(`${cell.x}:${cell.y}`);
 }
 
 function renderFallbackTerrainCell(
@@ -92,25 +74,54 @@ export function drawGridCell(
   config: GridRendererConfig,
   cell: GridCell,
 ): void {
+  state.terrainSprites = state.terrainSprites.filter((sprite) => {
+    const sameCell = sprite.getData('cellX') === cell.x && sprite.getData('cellY') === cell.y;
+    if (sameCell) {
+      sprite.destroy();
+      return false;
+    }
+    return true;
+  });
+
   const x = cell.x * GRID_DIMENSIONS.cellSize;
   const y = cell.y * GRID_DIMENSIONS.cellSize;
+  const faction = builderFactionToTerrainFaction(deps.selectedBuilderFactionId);
+  const tile = isPathCell(cell, deps) ? TILES[faction].path : TILES[faction].ground;
+  const terrainKey = `terrain:${faction}:${tile}`;
 
-  if (!deps.scene.textures.exists(TerrainAssetKey.UNDEAD_TILESET)) {
+  if (!deps.scene.textures.exists(terrainKey)) {
     renderFallbackTerrainCell(state, cell);
   } else {
-    const tileIndex = resolveTerrainTileIndexForCell(cell, deps);
-    const sprite = deps.scene.add.image(x, y, TerrainAssetKey.UNDEAD_TILESET, tileIndex);
+    const sprite = deps.scene.add.image(x, y, terrainKey);
     sprite.setOrigin(0, 0);
     sprite.setDisplaySize(GRID_DIMENSIONS.cellSize, GRID_DIMENSIONS.cellSize);
     sprite.setDepth(config.terrainRenderDepth);
-    if (isUndeadDecorationTileIndex(tileIndex)) {
-      sprite.setAlpha(config.terrainDecorationTileAlpha);
-      sprite.setTint(config.terrainDecorationTileTint);
-    } else {
-      sprite.setAlpha(config.terrainBaseTileAlpha);
-      sprite.setTint(config.terrainBaseTileTint);
-    }
+    sprite.setAlpha(config.terrainBaseTileAlpha);
+    sprite.setTint(config.terrainBaseTileTint);
+    sprite.setData('cellX', cell.x);
+    sprite.setData('cellY', cell.y);
     state.terrainSprites.push(sprite);
+
+    if (!isPathCell(cell, deps) && !cell.isOccupied) {
+      const propUrl = getPropForCell(cell.x, cell.y, faction, deps.mapSeed);
+      if (propUrl) {
+        const propKey = `terrain:${faction}:${propUrl}`;
+        if (deps.scene.textures.exists(propKey)) {
+          const propSprite = deps.scene.add.image(
+            x + GRID_DIMENSIONS.cellSize / 2,
+            y + GRID_DIMENSIONS.cellSize,
+            propKey,
+          );
+          propSprite.setOrigin(0.5, 1);
+          const targetWidth = GRID_DIMENSIONS.cellSize * 0.8;
+          propSprite.setScale(targetWidth / propSprite.width);
+          propSprite.setDepth(config.terrainRenderDepth + 1);
+          propSprite.setData('cellX', cell.x);
+          propSprite.setData('cellY', cell.y);
+          state.terrainSprites.push(propSprite);
+        }
+      }
+    }
   }
 
   if (!state.gridGraphics) {
