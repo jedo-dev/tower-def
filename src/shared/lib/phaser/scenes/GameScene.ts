@@ -4,7 +4,13 @@ import {
   DEFAULT_BUILDER_FACTION,
   type BuilderFactionConfig,
 } from '../../../../entities/builder-faction';
-import { createInitialTowerCombatRuntime } from '../../../../entities/tower';
+import {
+  canAffordUpgrade,
+  createInitialTowerCombatRuntime,
+  getTowerStatsForLevel,
+  getUpgradeCost,
+} from '../../../../entities/tower';
+import { spendGold } from '../../../../entities/player-resources';
 import { undeadUnits, type UnitConfig } from '../../../../entities/unit';
 import { calculateWaveStartPath } from '../../../../entities/wave';
 import {
@@ -220,6 +226,8 @@ export class GameScene extends Phaser.Scene {
   private unsubscribeStartWaveCommand: (() => void) | null = null;
   private unsubscribeTowerSelectCommand: (() => void) | null = null;
   private unsubscribeFactionSelectCommand: (() => void) | null = null;
+  private unsubscribeUpgradeTowerCommand: (() => void) | null = null;
+  private unsubscribeSellTowerCommand: (() => void) | null = null;
   private selectedTowerType: 'archer' | 'splash' | null = null;
   private selectedBuilderFactionId = DEFAULT_BUILDER_FACTION;
   private selectedFaction: HudFactionType = 'undead';
@@ -411,6 +419,12 @@ export class GameScene extends Phaser.Scene {
       this.soundManager?.setFaction(this.selectedFaction);
       this.registry.set('wave.selectedFaction', this.selectedFaction);
       this.publishHudSnapshot();
+    });
+    this.unsubscribeUpgradeTowerCommand = onGameCommand('upgrade-tower', (payload) => {
+      this.handleUpgradeTowerCommand(payload.towerId);
+    });
+    this.unsubscribeSellTowerCommand = onGameCommand('sell-tower', (payload) => {
+      this.handleSellTowerCommand(payload.towerId);
     });
     this.registry.set('economy.gold', this.playerGold);
     this.registry.set('economy.lives', this.playerLives);
@@ -882,6 +896,98 @@ export class GameScene extends Phaser.Scene {
     return this.activeTowers.find(
       (tower) => tower.entity.position.x === position.x && tower.entity.position.y === position.y,
     );
+  }
+
+  private handleUpgradeTowerCommand(towerId: string): void {
+    if (this.isGameOver || !this.canPerformBuildActions()) {
+      return;
+    }
+
+    const tower = this.activeTowers.find((t) => t.entity.id === towerId);
+    if (!tower) {
+      return;
+    }
+
+    const { entity } = tower;
+    const upgradeCheck = canAffordUpgrade(entity.type, entity.level, this.playerGold);
+    if (!upgradeCheck.allowed) {
+      this.soundManager?.play('combat.invalid_build');
+      return;
+    }
+
+    const upgradeCost = getUpgradeCost(entity.type, entity.level);
+    if (upgradeCost === null || upgradeCost <= 0) {
+      return;
+    }
+
+    const nextLevel = entity.level + 1;
+    const nextStats = getTowerStatsForLevel(entity.type, nextLevel);
+    if (!nextStats) {
+      return;
+    }
+
+    const spendResult = spendGold(
+      { gold: this.playerGold, lives: this.playerLives },
+      upgradeCost,
+    );
+    if (!spendResult.spent) {
+      this.soundManager?.play('combat.invalid_build');
+      return;
+    }
+
+    entity.level = nextLevel;
+    entity.combatStats = { ...nextStats };
+    this.playerGold = spendResult.resources.gold;
+    this.registry.set('economy.gold', this.playerGold);
+    this.soundManager?.play('ui.success');
+    this.soundManager?.play('economy.gold_spent');
+    this.publishHudSnapshot();
+
+    publishGameEvent('selected-tower', {
+      tower: {
+        id: entity.id,
+        type: entity.type,
+        level: entity.level,
+        position: { x: entity.position.x, y: entity.position.y },
+        cost: entity.cost,
+        combatStats: { ...entity.combatStats },
+      },
+    });
+  }
+
+  private handleSellTowerCommand(towerId: string): void {
+    if (this.isGameOver || !this.canPerformBuildActions()) {
+      return;
+    }
+
+    const tower = this.activeTowers.find((t) => t.entity.id === towerId);
+    if (!tower) {
+      return;
+    }
+
+    this.activeTowers = this.activeTowers.filter((t) => t.entity.id !== towerId);
+    this.playBoneArcherSellAnimation(tower);
+
+    const sellRefundRatio = SELL_REFUND_RATIO;
+    const refundAmount = Math.floor(tower.entity.cost * sellRefundRatio);
+    this.playerGold += refundAmount;
+    this.registry.set('economy.gold', this.playerGold);
+    this.registry.set('economy.lastSellRefund', refundAmount);
+
+    const cell = this.gridModel?.cells.find(
+      (c) => c.x === tower.entity.position.x && c.y === tower.entity.position.y,
+    );
+    if (cell) {
+      cell.isOccupied = false;
+      cell.isWalkable = true;
+      this.drawGridCell(cell);
+    }
+
+    this.soundManager?.play('combat.sell_tower');
+    this.soundManager?.play('economy.refund');
+    this.publishHudSnapshot();
+    publishGameEvent('selected-tower', { tower: null });
+    this.updateBuildPreview();
   }
 
   private drawGridCell(cell: GridCell): void {
@@ -1533,6 +1639,14 @@ export class GameScene extends Phaser.Scene {
     if (this.unsubscribeFactionSelectCommand) {
       this.unsubscribeFactionSelectCommand();
       this.unsubscribeFactionSelectCommand = null;
+    }
+    if (this.unsubscribeUpgradeTowerCommand) {
+      this.unsubscribeUpgradeTowerCommand();
+      this.unsubscribeUpgradeTowerCommand = null;
+    }
+    if (this.unsubscribeSellTowerCommand) {
+      this.unsubscribeSellTowerCommand();
+      this.unsubscribeSellTowerCommand = null;
     }
 
     this.destroyAllCreeps();
