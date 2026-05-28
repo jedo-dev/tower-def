@@ -1,0 +1,123 @@
+.tower-action-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border: 34px solid transparent;
+  border-image: url('../../../assets/ui-presets/hud_bar.png') 85 fill / 24px / 0 stretch;
+}
+
+.tower-action-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.tower-action-title {
+  font-family: var(--font-family-display);
+  font-size: 14px;
+  color: #f0e3c0;
+  text-transform: uppercase;
+}
+
+.tower-action-level {
+  font-family: var(--font-family-stats);
+  font-size: 12px;
+  color: #d9cbab;
+}
+
+.tower-action-close {
+  width: 44px;
+  height: 44px;
+  border: 0;
+  background: url('../../../assets/ui-presets/btn_small_square.png') center / 100% 100% no-repeat;
+  color: #dfd4b3;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tower-action-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 11px;
+  min-height: 44px;
+  padding: 0 8px;
+  border: 20px solid transparent;
+  border-image: url('../../../assets/ui-presets/thin_border.png') 90 fill / 10px / 0 stretch;
+}
+
+.tower-action-stat-label {
+  color: #98a4bf;
+}
+
+.tower-action-stat-value {
+  color: #e6dfcd;
+  font-weight: 600;
+  font-family: var(--font-family-accent);
+}
+
+.tower-action-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.tower-action-btn {
+  border: 0;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 8px 14px;
+  font-family: var(--font-family-display);
+  text-transform: uppercase;
+  font-size: 12px;
+  color: #f0e3c0;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+
+.tower-action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.tower-action-btn-upgrade {
+  background: url('../../../assets/ui-presets/btn_green_normal.png') center / 100% 100% no-repeat;
+}
+
+.tower-action-btn-upgrade:hover:not(:disabled) {
+  background-image: url('../../../assets/ui-presets/btn_green_hover.png');
+}
+
+.tower-action-btn-sell {
+  background: url('../../../assets/ui-presets/btn_red_normal.png') center / 100% 100% no-repeat;
+}
+
+.tower-action-btn-sell:hover:not(:disabled) {
+  background-image: url('../../../assets/ui-presets/btn_red_hover.png');
+}
+
+.tower-action-btn-cost {
+  font-family: var(--font-family-stats);
+  font-size: 11px;
+  color: #d9cbab;
+}
+
+.tower-action-max-label {
+  font-family: var(--font-family-stats);
+  font-size: 11px;
+  color: #98a4bf;
+  text-align: center;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

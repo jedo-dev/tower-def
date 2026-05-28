@@ -40,6 +40,8 @@ export type GameCommandMap = {
   'start-wave': undefined;
   'select-tower': { towerType: HudTowerType | null };
   'select-faction': { faction: HudFactionType };
+  'upgrade-tower': { towerId: string };
+  'sell-tower': { towerId: string };
 };
 
 export type GameEventMap = {
