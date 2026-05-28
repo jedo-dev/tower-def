@@ -19,7 +19,19 @@ export type UnitId =
   | 'undead_abomination'
   | 'undead_necromancer'
   | 'undead_banshee'
-  | 'undead_frost_wyrm';
+  | 'undead_frost_wyrm'
+  | 'orc_grunt'
+  | 'orc_wolf_rider'
+  | 'orc_troll'
+  | 'orc_headhunter'
+  | 'human_militia'
+  | 'human_footman'
+  | 'human_rifleman'
+  | 'human_siege_engine'
+  | 'elf_archer'
+  | 'elf_huntress'
+  | 'elf_dryad'
+  | 'elf_chimera';
 
 export type UnitConfig = {
   id: UnitId;

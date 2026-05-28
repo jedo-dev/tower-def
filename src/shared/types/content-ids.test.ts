@@ -15,7 +15,8 @@ import {
 import { builderFactions, BuilderFaction } from '../../entities/builder-faction';
 import { enemyFactions, EnemyFaction } from '../../entities/enemy-faction';
 import { buildableTowers } from '../../entities/tower';
-import { undeadUnits, Faction } from '../../entities/unit';
+import { undeadUnits, orcUnits, humanUnits, elfUnits, Faction } from '../../entities/unit';
+import { raceRegistries } from '../../entities/race-registry';
 
 describe('shared/types/content-ids', () => {
   describe('RaceId', () => {
@@ -118,6 +119,55 @@ describe('shared/types/content-ids', () => {
     it('every undead unit references a RaceId faction', () => {
       for (const unit of undeadUnits) {
         expect(isRaceId(unit.faction)).toBe(true);
+      }
+    });
+
+    it('every orc unit references a RaceId faction', () => {
+      for (const unit of orcUnits) {
+        expect(isRaceId(unit.faction)).toBe(true);
+      }
+    });
+
+    it('every human unit references a RaceId faction', () => {
+      for (const unit of humanUnits) {
+        expect(isRaceId(unit.faction)).toBe(true);
+      }
+    });
+
+    it('every elf unit references a RaceId faction', () => {
+      for (const unit of elfUnits) {
+        expect(isRaceId(unit.faction)).toBe(true);
+      }
+    });
+  });
+
+  describe('race registries use canonical IDs', () => {
+    it('every race registry entry references a valid RaceId', () => {
+      for (const raceId of RACE_IDS) {
+        const registry = raceRegistries[raceId];
+        expect(registry).toBeDefined();
+        expect(isRaceId(registry.raceId)).toBe(true);
+      }
+    });
+
+    it('every race registry has a non-empty name', () => {
+      for (const raceId of RACE_IDS) {
+        const registry = raceRegistries[raceId];
+        expect(registry.name.length).toBeGreaterThan(0);
+      }
+    });
+
+    it('every race registry has at least one buildable tower', () => {
+      for (const raceId of RACE_IDS) {
+        const registry = raceRegistries[raceId];
+        expect(registry.buildableTowerIds.length).toBeGreaterThan(0);
+      }
+    });
+
+    it('every race registry has at least one sendable creep', () => {
+      for (const raceId of RACE_IDS) {
+        const registry = raceRegistries[raceId];
+        expect(registry.sendableCreepIds.length).toBeGreaterThan(0);
       }
     });
   });
