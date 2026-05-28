@@ -4,6 +4,7 @@ export {
 } from './model/types';
 
 export { buildDecisionContext } from './model/buildDecisionContext';
+export { scoreTowerPlacement, scoreAllPlacements } from './model/scoreTowerPlacement';
 
 export type {
   BuildAction,
@@ -18,3 +19,5 @@ export type {
   ThreatAssessment,
   UpgradeAction,
 } from './model/types';
+
+export type { PlacementScore } from './model/scoreTowerPlacement';
