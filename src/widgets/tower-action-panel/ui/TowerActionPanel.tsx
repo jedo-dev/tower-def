@@ -1,7 +1,7 @@
 import { memo } from 'react';
 import './TowerActionPanel.css';
 import { sendGameCommand } from '../../../shared/lib/game-bridge/bridge';
-import { useSelectedTower } from '../../../shared/lib/game-bridge/useSelectedTower';
+import { clearSelectedTower, useSelectedTower } from '../../../shared/lib/game-bridge/useSelectedTower';
 import { useGameHudSnapshot } from '../../../shared/lib/game-bridge/useGameHudSnapshot';
 import {
   canAffordUpgrade,
@@ -45,7 +45,7 @@ function TowerActionPanelComponent() {
   }
 
   function handleClose(): void {
-    sendGameCommand('select-tower', { towerType: null });
+    clearSelectedTower();
   }
 
   return (

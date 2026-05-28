@@ -1427,6 +1427,10 @@ export class GameScene extends Phaser.Scene {
       return;
     }
 
+    if (this.hoveredCell) {
+      publishGameEvent('selected-tower', { tower: null });
+    }
+
     handlePointerDownRuntime(
       this.inputControllerState,
       this.getInputControllerDependencies(),
@@ -1438,6 +1442,10 @@ export class GameScene extends Phaser.Scene {
     if (pointer.wasTouch && this.trySelectTowerAtHoveredCell()) {
       this.inputControllerState.activeTouchGesture = null;
       return;
+    }
+
+    if (pointer.wasTouch && this.hoveredCell) {
+      publishGameEvent('selected-tower', { tower: null });
     }
 
     handlePointerUpRuntime(
