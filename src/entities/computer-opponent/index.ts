@@ -5,6 +5,7 @@ export {
 
 export { buildDecisionContext } from './model/buildDecisionContext';
 export { scoreTowerPlacement, scoreAllPlacements } from './model/scoreTowerPlacement';
+export { planBuildDecision } from './model/planBuildDecision';
 
 export type {
   BuildAction,
@@ -21,3 +22,4 @@ export type {
 } from './model/types';
 
 export type { PlacementScore } from './model/scoreTowerPlacement';
+export type { BuildPlannerInput } from './model/planBuildDecision';
