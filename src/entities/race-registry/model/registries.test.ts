@@ -57,6 +57,13 @@ describe('entities/race-registry', () => {
       }
     });
 
+    it('every registry has a defined non-empty starter tower id', () => {
+      for (const entry of getAllRaceRegistries()) {
+        expect(entry.starterTowerId).toBeDefined();
+        expect(entry.starterTowerId.length).toBeGreaterThan(0);
+      }
+    });
+
     it('every registry has at least one buildable tower', () => {
       for (const entry of getAllRaceRegistries()) {
         expect(entry.buildableTowerIds.length).toBeGreaterThan(0);
@@ -127,7 +134,7 @@ describe('entities/race-registry', () => {
   });
 
   describe('no duplicate ids across registries', () => {
-    it('buildable tower ids are unique per race', () => {
+    it('buildable tower ids are unique across all races', () => {
       const allTowerIds: string[] = [];
       for (const entry of getAllRaceRegistries()) {
         allTowerIds.push(...entry.buildableTowerIds);
@@ -136,13 +143,33 @@ describe('entities/race-registry', () => {
       expect(uniqueTowerIds.size).toBe(allTowerIds.length);
     });
 
-    it('sendable creep ids are unique per race', () => {
+    it('sendable creep ids are unique across all races', () => {
       const allCreepIds: string[] = [];
       for (const entry of getAllRaceRegistries()) {
         allCreepIds.push(...entry.sendableCreepIds);
       }
       const uniqueCreepIds = new Set(allCreepIds);
       expect(uniqueCreepIds.size).toBe(allCreepIds.length);
+    });
+
+    it('no tower appears in multiple race registries', () => {
+      const towerToRace = new Map<string, RaceId>();
+      for (const entry of getAllRaceRegistries()) {
+        for (const towerId of entry.buildableTowerIds) {
+          expect(towerToRace.has(towerId)).toBe(false);
+          towerToRace.set(towerId, entry.raceId);
+        }
+      }
+    });
+
+    it('no creep appears in multiple race registries', () => {
+      const creepToRace = new Map<string, RaceId>();
+      for (const entry of getAllRaceRegistries()) {
+        for (const creepId of entry.sendableCreepIds) {
+          expect(creepToRace.has(creepId)).toBe(false);
+          creepToRace.set(creepId, entry.raceId);
+        }
+      }
     });
   });
 
