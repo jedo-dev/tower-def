@@ -8,6 +8,20 @@ export type WaveQueueItem = {
   index: number;
 };
 
+export type SelectedTowerSnapshot = {
+  id: string;
+  type: HudTowerType;
+  level: number;
+  position: { x: number; y: number };
+  cost: number;
+  combatStats: {
+    damage: number;
+    range: number;
+    attackCooldownMs: number;
+    splashRadius?: number;
+  };
+};
+
 export type GameHudSnapshot = {
   gold: number;
   lives: number;
@@ -26,4 +40,8 @@ export type GameCommandMap = {
   'start-wave': undefined;
   'select-tower': { towerType: HudTowerType | null };
   'select-faction': { faction: HudFactionType };
+};
+
+export type GameEventMap = {
+  'selected-tower': { tower: SelectedTowerSnapshot | null };
 };

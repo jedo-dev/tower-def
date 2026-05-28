@@ -37,9 +37,10 @@ import type { GridPosition } from '../../../types/pathfinding';
 import {
   getGameSetupConfig,
   onGameCommand,
+  publishGameEvent,
   publishGameHudSnapshot,
 } from '../../game-bridge/bridge';
-import type { GameHudSnapshot, HudFactionType } from '../../game-bridge/types';
+import type { GameHudSnapshot, HudFactionType, SelectedTowerSnapshot } from '../../game-bridge/types';
 import { createGridModel } from '../../grid/createGridModel';
 import type { SoundId } from '../sound/audio.types';
 import { validateTowerPlacementPath } from '../../pathfinding/validateTowerPlacementPath';
@@ -847,9 +848,40 @@ export class GameScene extends Phaser.Scene {
     this.soundManager?.play('economy.refund');
     this.markUserActionProcessed();
     this.publishHudSnapshot();
+    publishGameEvent('selected-tower', { tower: null });
 
     this.drawGridCell(result.changedCell);
     this.updateBuildPreview();
+  }
+
+  private trySelectTowerAtHoveredCell(): boolean {
+    if (!this.hoveredCell || !this.gridModel) {
+      return false;
+    }
+
+    const tower = this.findTowerAtPosition(this.hoveredCell);
+    if (!tower) {
+      return false;
+    }
+
+    const snapshot: SelectedTowerSnapshot = {
+      id: tower.entity.id,
+      type: tower.entity.type,
+      level: tower.entity.level,
+      position: { x: tower.entity.position.x, y: tower.entity.position.y },
+      cost: tower.entity.cost,
+      combatStats: { ...tower.entity.combatStats },
+    };
+
+    publishGameEvent('selected-tower', { tower: snapshot });
+    this.soundManager?.play('ui.click');
+    return true;
+  }
+
+  private findTowerAtPosition(position: GridPosition): TowerRenderState | undefined {
+    return this.activeTowers.find(
+      (tower) => tower.entity.position.x === position.x && tower.entity.position.y === position.y,
+    );
   }
 
   private drawGridCell(cell: GridCell): void {
@@ -1059,6 +1091,7 @@ export class GameScene extends Phaser.Scene {
     this.ensureBaseAmbientPlaying();
 
     this.drawGrid();
+    publishGameEvent('selected-tower', { tower: null });
   }
 
   private spawnWaveCreeps(): void {
@@ -1284,6 +1317,10 @@ export class GameScene extends Phaser.Scene {
   }
 
   private handlePointerDown(pointer: Phaser.Input.Pointer): void {
+    if (this.trySelectTowerAtHoveredCell()) {
+      return;
+    }
+
     handlePointerDownRuntime(
       this.inputControllerState,
       this.getInputControllerDependencies(),
@@ -1292,6 +1329,11 @@ export class GameScene extends Phaser.Scene {
   }
 
   private handlePointerUp(pointer: Phaser.Input.Pointer): void {
+    if (pointer.wasTouch && this.trySelectTowerAtHoveredCell()) {
+      this.inputControllerState.activeTouchGesture = null;
+      return;
+    }
+
     handlePointerUpRuntime(
       this.inputControllerState,
       this.getInputControllerDependencies(),

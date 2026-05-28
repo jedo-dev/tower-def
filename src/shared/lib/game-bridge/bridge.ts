@@ -1,13 +1,16 @@
-import type { GameCommandMap, GameHudSnapshot } from './types';
+import type { GameCommandMap, GameEventMap, GameHudSnapshot } from './types';
 import type { GameSetupConfig } from '../../config/game-setup';
 
 type CommandName = keyof GameCommandMap;
 type CommandHandler<T extends CommandName> = (payload: GameCommandMap[T]) => void;
+type EventName = keyof GameEventMap;
+type EventHandler<T extends EventName> = (payload: GameEventMap[T]) => void;
 type Unsubscribe = () => void;
 
 const SNAPSHOT_EVENT = 'game-bridge:snapshot';
 
 const commandHandlers = new Map<CommandName, Set<CommandHandler<CommandName>>>();
+const eventHandlers = new Map<EventName, Set<EventHandler<EventName>>>();
 const snapshotEventTarget = new EventTarget();
 
 let gameSetupConfig: GameSetupConfig | null = null;
@@ -85,5 +88,40 @@ export function sendGameCommand<T extends CommandName>(
 
   handlers.forEach((handler) => {
     (handler as CommandHandler<T>)(payload);
+  });
+}
+
+export function onGameEvent<T extends EventName>(
+  event: T,
+  handler: EventHandler<T>,
+): Unsubscribe {
+  const handlers = eventHandlers.get(event) ?? new Set<EventHandler<EventName>>();
+  handlers.add(handler as EventHandler<EventName>);
+  eventHandlers.set(event, handlers);
+
+  return () => {
+    const currentHandlers = eventHandlers.get(event);
+    if (!currentHandlers) {
+      return;
+    }
+
+    currentHandlers.delete(handler as EventHandler<EventName>);
+    if (currentHandlers.size === 0) {
+      eventHandlers.delete(event);
+    }
+  };
+}
+
+export function publishGameEvent<T extends EventName>(
+  event: T,
+  payload: GameEventMap[T],
+): void {
+  const handlers = eventHandlers.get(event);
+  if (!handlers) {
+    return;
+  }
+
+  handlers.forEach((handler) => {
+    (handler as EventHandler<T>)(payload);
   });
 }
