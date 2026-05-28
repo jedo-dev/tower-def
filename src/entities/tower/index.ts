@@ -7,6 +7,17 @@ export {
   tickTowerCooldown,
 } from './model/cooldown';
 export { getCreepsInTowerRange, selectTowerTarget } from './model/targeting';
+export {
+  canAffordUpgrade,
+  getSellValue,
+  getTotalInvestedGold,
+  getTowerStatsForLevel,
+  getUpgradeCost,
+  isMaxLevel,
+  createTowerLevel,
+  INITIAL_TOWER_LEVEL,
+} from './model/upgrade';
+export type { UpgradeCheckResult } from './model/upgrade';
 export type {
   BuildableTowerConfig,
   BuildableTowerId,
@@ -15,6 +26,9 @@ export type {
   TowerEntity,
   TowerId,
   TowerType,
+  TowerLevelStats,
+  TowerUpgradeLevel,
+  TowerTypeUpgradeConfig,
 } from './model/types';
-export { TowerTypeConfig } from './model/types';
+export { TowerTypeConfig, TOWER_UPGRADE_CONFIG, TowerUpgradeBalance, TOWER_BASE_LEVEL } from './model/types';
 export type { TowerCombatRuntime } from './model/cooldown';

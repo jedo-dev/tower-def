@@ -13,6 +13,7 @@ function createTower(overrides?: Partial<TowerEntity>): TowerEntity {
     type: 'archer',
     cost: 100,
     position: { x: 0, y: 0 },
+    level: 1,
     combatStats: TOWER_COMBAT_STATS_BY_TYPE.archer,
     ...overrides,
   };

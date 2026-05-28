@@ -1,6 +1,6 @@
 import { canSpendGold, spendGold } from '../../../../../entities/player-resources';
 import type { TowerEntity } from '../../../../../entities/tower';
-import { TOWER_COMBAT_STATS_BY_TYPE } from '../../../../../entities/tower';
+import { TOWER_BASE_LEVEL, TOWER_COMBAT_STATS_BY_TYPE } from '../../../../../entities/tower';
 import type { GridCell, GridModel } from '../../../../types/grid';
 import type { GridPosition } from '../../../../types/pathfinding';
 
@@ -94,6 +94,7 @@ export function tryPlaceTowerAtHoveredCell(
     position: { x: hoveredCell.x, y: hoveredCell.y },
     cost: towerCost,
     type: towerType,
+    level: TOWER_BASE_LEVEL,
     combatStats: TOWER_COMBAT_STATS_BY_TYPE[towerType],
   };
 

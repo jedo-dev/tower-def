@@ -3,6 +3,9 @@ import { TowerCombatConfig } from '../../../shared/constants/tower';
 import type { RaceId } from '../../../shared/types/content-ids';
 import { TowerTypeId } from '../../../shared/types/content-ids';
 
+export type { TowerLevelStats, TowerUpgradeLevel, TowerTypeUpgradeConfig } from '../../../shared/constants/tower';
+export { TOWER_UPGRADE_CONFIG, TowerUpgradeBalance } from '../../../shared/constants/tower';
+
 export type TowerId = string;
 
 export type TowerType = TowerTypeId;
@@ -52,10 +55,13 @@ export const TOWER_COMBAT_STATS_BY_TYPE: Record<TowerTypeId, TowerCombatStats> =
   },
 };
 
+export const TOWER_BASE_LEVEL = 1;
+
 export type TowerEntity = {
   id: TowerId;
   position: GridPosition;
   cost: number;
   type: TowerType;
+  level: number;
   combatStats: TowerCombatStats;
 };
