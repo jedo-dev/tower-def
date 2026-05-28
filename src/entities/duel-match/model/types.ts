@@ -1,5 +1,6 @@
 import type { RaceId } from '../../../shared/types/content-ids';
 import type { UnitId } from '../../unit/model/types';
+import type { UnitTier } from '../../unit/model/types';
 
 export type DuelRoundNumber = number;
 
@@ -44,13 +45,16 @@ export type DuelSendCreepResult = {
   state: DuelMatchState;
   sent: boolean;
   cost: number;
+  incomeBonus: number;
 };
+
+export type TierEconomyTable = Readonly<Record<UnitTier, number>>;
 
 export type DuelMatchConfig = {
   startingHp: number;
   startingGold: number;
   startingIncome: number;
-  sendCreepBaseCost: number;
-  sendCreepIncomeBonus: number;
+  sendCreepCostByTier: TierEconomyTable;
+  sendCreepIncomeBonusByTier: TierEconomyTable;
   hpLossPerLeakedCreep: number;
 };

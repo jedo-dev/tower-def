@@ -1,5 +1,6 @@
-import type { UnitId } from '../../unit/model/types';
+import type { UnitId, UnitTier } from '../../unit/model/types';
 import { DUEL_MATCH_BALANCE } from './balance';
+import { canAffordSend, getIncomeBonusByTier, getSendCostByTier } from './sendEconomy';
 import type {
   DuelIncomePayoutResult,
   DuelMatchState,
@@ -98,22 +99,25 @@ export function sendCreep(
   state: DuelMatchState,
   isPlayer: boolean,
   creepId: UnitId,
+  tier: UnitTier,
 ): DuelSendCreepResult {
   const duelist = isPlayer ? state.player : state.opponent;
-  const cost = DUEL_MATCH_BALANCE.sendCreepBaseCost;
+  const cost = getSendCostByTier(tier);
+  const incomeBonus = getIncomeBonusByTier(tier);
 
-  if (duelist.gold < cost) {
+  if (!canAffordSend(duelist.gold, tier)) {
     return {
       state,
       sent: false,
       cost,
+      incomeBonus,
     };
   }
 
   const updatedDuelist = {
     ...duelist,
     gold: duelist.gold - cost,
-    income: duelist.income + DUEL_MATCH_BALANCE.sendCreepIncomeBonus,
+    income: duelist.income + incomeBonus,
     sendQueue: [...duelist.sendQueue, creepId],
   };
 
@@ -126,15 +130,17 @@ export function sendCreep(
     },
     sent: true,
     cost,
+    incomeBonus,
   };
 }
 
 export function canAffordSendCreep(
   state: DuelMatchState,
   isPlayer: boolean,
+  tier: UnitTier,
 ): boolean {
   const duelist = isPlayer ? state.player : state.opponent;
-  return duelist.gold >= DUEL_MATCH_BALANCE.sendCreepBaseCost;
+  return canAffordSend(duelist.gold, tier);
 }
 
 export function clearSendQueue(state: DuelMatchState): DuelMatchState {
