@@ -1,6 +1,7 @@
 import type { RaceId } from '../../../shared/types/content-ids';
 import type { UnitId } from '../../unit/model/types';
 import type { UnitTier } from '../../unit/model/types';
+import type { BattlefieldState } from './battlefield';
 
 export type DuelRoundNumber = number;
 
@@ -12,6 +13,7 @@ export type DuelistState = {
   income: number;
   raceId: RaceId;
   sendQueue: UnitId[];
+  battlefield: BattlefieldState;
 };
 
 export type DuelMatchState = {

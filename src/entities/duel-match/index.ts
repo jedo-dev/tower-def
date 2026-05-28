@@ -4,6 +4,23 @@ export {
   SEND_CREEP_COST_BY_TIER,
   SEND_CREEP_INCOME_BONUS_BY_TIER,
 } from './model/balance';
+export type {
+  AddCreepEntry,
+  BattlefieldLeakResult,
+  BattlefieldState,
+} from './model/battlefield';
+export {
+  addCreeps,
+  addTower,
+  countAliveCreeps,
+  countLeakedCreeps,
+  createBattlefieldState,
+  markDeadCreeps,
+  markLeakedCreeps,
+  removeDeadCreeps,
+  removeLeakedCreeps,
+  removeTower,
+} from './model/battlefieldOps';
 export {
   canAffordSendCreep,
   clearSendQueue,
@@ -19,7 +36,14 @@ export {
   getSendCostByTier,
   lookupTierValue,
 } from './model/sendEconomy';
-export { createInitialDuelMatchState } from './model/state';
+export {
+  createInitialDuelMatchState,
+  DEFAULT_ENTRANCE,
+  DEFAULT_EXIT,
+} from './model/state';
+export type {
+  BattlefieldInitParams,
+} from './model/state';
 export type {
   DuelIncomePayoutResult,
   DuelMatchConfig,
