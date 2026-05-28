@@ -3,6 +3,8 @@ export {
   STRATEGY_INTENTS,
 } from './model/types';
 
+export { buildDecisionContext } from './model/buildDecisionContext';
+
 export type {
   BuildAction,
   ComputerAction,
