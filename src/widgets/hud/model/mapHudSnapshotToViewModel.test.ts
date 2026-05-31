@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { mapHudSnapshotToViewModel } from './mapHudSnapshotToViewModel';
+import { mapBattlefieldViewToggleToViewModel, mapHudSnapshotToViewModel } from './mapHudSnapshotToViewModel';
 import type { GameHudSnapshot } from '../../../shared/lib/game-bridge/types';
 
 function createSnapshot(overrides: Partial<GameHudSnapshot> = {}): GameHudSnapshot {
@@ -60,6 +60,42 @@ describe('mapHudSnapshotToViewModel', () => {
     expect(vm.selectedTowerLabel).toBe('None');
     expect(vm.modeLabel).toBe('Sell (placeholder)');
     expect(vm.isArcherSelected).toBe(false);
+  });
+
+  it('hides opponent battlefield toggle during build phase', () => {
+    const vm = mapBattlefieldViewToggleToViewModel(
+      createSnapshot({ phase: 'build' }),
+      'player',
+    );
+
+    expect(vm.isVisible).toBe(false);
+    expect(vm.nextView).toBe('opponent');
+    expect(vm.ariaLabel).toBe('Show opponent battlefield');
+  });
+
+  it('shows opponent battlefield toggle during battle phase', () => {
+    const vm = mapBattlefieldViewToggleToViewModel(
+      createSnapshot({ phase: 'wave' }),
+      'player',
+    );
+
+    expect(vm.isVisible).toBe(true);
+    expect(vm.isOpponentActive).toBe(false);
+    expect(vm.label).toBe('Enemy');
+    expect(vm.nextView).toBe('opponent');
+  });
+
+  it('marks opponent battlefield toggle active with a return aria label', () => {
+    const vm = mapBattlefieldViewToggleToViewModel(
+      createSnapshot({ phase: 'wave' }),
+      'opponent',
+    );
+
+    expect(vm.isVisible).toBe(true);
+    expect(vm.isOpponentActive).toBe(true);
+    expect(vm.label).toBe('Mine');
+    expect(vm.ariaLabel).toBe('Show player battlefield');
+    expect(vm.nextView).toBe('player');
   });
 });
 

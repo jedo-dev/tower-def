@@ -1,8 +1,9 @@
 import { memo, useState, type CSSProperties } from 'react';
 import './HudPanel.css';
 import { sendGameCommand } from '../../../shared/lib/game-bridge/bridge';
+import { useBattlefieldView } from '../../../shared/lib/game-bridge/useBattlefieldView';
 import { useGameHudSnapshot } from '../../../shared/lib/game-bridge/useGameHudSnapshot';
-import { mapHudSnapshotToViewModel } from '../model/mapHudSnapshotToViewModel';
+import { mapBattlefieldViewToggleToViewModel, mapHudSnapshotToViewModel } from '../model/mapHudSnapshotToViewModel';
 import type { HudFactionType, HudTowerType } from '../../../shared/lib/game-bridge/types';
 import type { GameSetupConfig } from '../../../shared/config/game-setup';
 
@@ -34,7 +35,9 @@ const TOWER_BUTTONS: { type: HudTowerType; label: string; color: string }[] = [
 function HudPanelComponent({ setup }: HudPanelProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const snapshot = useGameHudSnapshot();
+  const activeBattlefieldView = useBattlefieldView();
   const viewModel = mapHudSnapshotToViewModel(snapshot);
+  const battlefieldViewToggle = mapBattlefieldViewToggleToViewModel(snapshot, activeBattlefieldView);
 
   return (
     <section className={`hud-panel${isExpanded ? ' hud-panel-expanded' : ''}`} aria-label="Game HUD">
@@ -54,7 +57,17 @@ function HudPanelComponent({ setup }: HudPanelProps) {
         </div>
 
         <div className="hud-center">
-          {snapshot.autoStartSecondsLeft !== null ? (
+          {battlefieldViewToggle.isVisible ? (
+            <button
+              type="button"
+              className={`hud-battlefield-view-btn${battlefieldViewToggle.isOpponentActive ? ' hud-battlefield-view-btn-active' : ''}`}
+              aria-label={battlefieldViewToggle.ariaLabel}
+              aria-pressed={battlefieldViewToggle.isOpponentActive}
+              onClick={() => sendGameCommand('switch-battlefield-view', { view: battlefieldViewToggle.nextView })}
+            >
+              {battlefieldViewToggle.label}
+            </button>
+          ) : snapshot.autoStartSecondsLeft !== null ? (
             <div className="hud-timer-actions">
               <span className="hud-timer">Auto: {formatCountdown(snapshot.autoStartSecondsLeft)}</span>
               <button

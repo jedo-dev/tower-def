@@ -1,4 +1,4 @@
-import type { GameHudSnapshot } from '../../../shared/lib/game-bridge/types';
+import type { BattlefieldView, GameHudSnapshot } from '../../../shared/lib/game-bridge/types';
 
 export type HudViewModel = {
   phaseLabel: string;
@@ -6,6 +6,14 @@ export type HudViewModel = {
   modeLabel: string;
   isStartWaveDisabled: boolean;
   isArcherSelected: boolean;
+};
+
+export type BattlefieldViewToggleViewModel = {
+  isVisible: boolean;
+  isOpponentActive: boolean;
+  label: string;
+  ariaLabel: string;
+  nextView: BattlefieldView;
 };
 
 export function mapHudSnapshotToViewModel(snapshot: GameHudSnapshot): HudViewModel {
@@ -20,6 +28,21 @@ export function mapHudSnapshotToViewModel(snapshot: GameHudSnapshot): HudViewMod
     modeLabel,
     isStartWaveDisabled: isWaveActive || !snapshot.canStartWave,
     isArcherSelected: snapshot.selectedTowerType === 'archer',
+  };
+}
+
+export function mapBattlefieldViewToggleToViewModel(
+  snapshot: GameHudSnapshot,
+  activeView: BattlefieldView,
+): BattlefieldViewToggleViewModel {
+  const isOpponentActive = activeView === 'opponent';
+
+  return {
+    isVisible: snapshot.phase === 'wave',
+    isOpponentActive,
+    label: isOpponentActive ? 'Mine' : 'Enemy',
+    ariaLabel: isOpponentActive ? 'Show player battlefield' : 'Show opponent battlefield',
+    nextView: isOpponentActive ? 'player' : 'opponent',
   };
 }
 
