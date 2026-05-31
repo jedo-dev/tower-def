@@ -10,6 +10,10 @@ export type {
   BattlefieldState,
 } from './model/battlefield';
 export {
+  canPlayerInteractWithVisibleBattlefield,
+  createVisibleBattlefieldSnapshot,
+} from './model/battlefieldView';
+export {
   addCreeps,
   addTower,
   countAliveCreeps,
@@ -56,3 +60,7 @@ export type {
   DuelistState,
   TierEconomyTable,
 } from './model/types';
+export type {
+  BattlefieldPlayerInteraction,
+  VisibleBattlefieldSnapshot,
+} from './model/battlefieldView';
