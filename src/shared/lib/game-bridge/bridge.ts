@@ -1,4 +1,4 @@
-import type { GameCommandMap, GameEventMap, GameHudSnapshot } from './types';
+import type { BattlefieldView, GameCommandMap, GameEventMap, GameHudSnapshot } from './types';
 import type { GameSetupConfig } from '../../config/game-setup';
 
 type CommandName = keyof GameCommandMap;
@@ -41,6 +41,40 @@ let snapshot: GameHudSnapshot = {
   pendingCreepCount: 0,
 };
 
+let activeBattlefieldView: BattlefieldView = 'player';
+
+function isBattlefieldViewSwitchAllowed(view: BattlefieldView, phase: GameHudSnapshot['phase']): boolean {
+  return view === 'player' || phase === 'wave';
+}
+
+function publishBattlefieldViewChanged(
+  requestedView: BattlefieldView,
+  accepted: boolean,
+  reason?: 'not_battle_phase',
+): void {
+  publishGameEvent('battlefield-view-changed', {
+    activeView: activeBattlefieldView,
+    requestedView,
+    accepted,
+    ...(reason ? { reason } : {}),
+  });
+}
+
+export function getActiveBattlefieldView(): BattlefieldView {
+  return activeBattlefieldView;
+}
+
+export function requestBattlefieldView(view: BattlefieldView): boolean {
+  if (!isBattlefieldViewSwitchAllowed(view, snapshot.phase)) {
+    publishBattlefieldViewChanged(view, false, 'not_battle_phase');
+    return false;
+  }
+
+  activeBattlefieldView = view;
+  publishBattlefieldViewChanged(view, true);
+  return true;
+}
+
 export function getGameHudSnapshot(): GameHudSnapshot {
   return snapshot;
 }
@@ -53,6 +87,10 @@ export function subscribeGameHudSnapshot(onChange: () => void): Unsubscribe {
 
 export function publishGameHudSnapshot(nextSnapshot: GameHudSnapshot): void {
   snapshot = nextSnapshot;
+  if (snapshot.phase !== 'wave' && activeBattlefieldView !== 'player') {
+    activeBattlefieldView = 'player';
+    publishBattlefieldViewChanged('player', true);
+  }
   snapshotEventTarget.dispatchEvent(new Event(SNAPSHOT_EVENT));
 }
 
@@ -81,6 +119,10 @@ export function sendGameCommand<T extends CommandName>(
   command: T,
   payload: GameCommandMap[T],
 ): void {
+  if (command === 'switch-battlefield-view') {
+    requestBattlefieldView((payload as GameCommandMap['switch-battlefield-view']).view);
+  }
+
   const handlers = commandHandlers.get(command);
   if (!handlers) {
     return;

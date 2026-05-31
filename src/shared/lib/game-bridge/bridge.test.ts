@@ -1,6 +1,13 @@
 import { describe, expect, it, vi } from 'vitest';
-import { onGameEvent, publishGameEvent } from './bridge';
-import type { SelectedTowerSnapshot } from './types';
+import {
+  getActiveBattlefieldView,
+  onGameCommand,
+  onGameEvent,
+  publishGameEvent,
+  publishGameHudSnapshot,
+  sendGameCommand,
+} from './bridge';
+import type { BattlefieldView, GameHudSnapshot, SelectedTowerSnapshot } from './types';
 
 function createTestTowerSnapshot(overrides?: Partial<SelectedTowerSnapshot>): SelectedTowerSnapshot {
   return {
@@ -14,6 +21,23 @@ function createTestTowerSnapshot(overrides?: Partial<SelectedTowerSnapshot>): Se
       range: 3,
       attackCooldownMs: 800,
     },
+    ...overrides,
+  };
+}
+
+function createTestHudSnapshot(overrides?: Partial<GameHudSnapshot>): GameHudSnapshot {
+  return {
+    gold: 100,
+    lives: 20,
+    builderFactionName: 'Undead',
+    waveNumber: 1,
+    phase: 'build',
+    canStartWave: true,
+    selectedTowerType: null,
+    selectedFaction: 'undead',
+    autoStartSecondsLeft: null,
+    waveQueue: [],
+    pendingCreepCount: 0,
     ...overrides,
   };
 }
@@ -119,5 +143,83 @@ describe('game bridge event system', () => {
     expect(payload.tower.combatStats.splashRadius).toBe(1.5);
 
     unsubscribe();
+  });
+
+  it('allows switching to opponent battlefield during battle phase', () => {
+    publishGameHudSnapshot(createTestHudSnapshot({ phase: 'wave' }));
+    const handler = vi.fn();
+    const unsubscribe = onGameEvent('battlefield-view-changed', handler);
+
+    sendGameCommand('switch-battlefield-view', { view: 'opponent' });
+
+    expect(getActiveBattlefieldView()).toBe<BattlefieldView>('opponent');
+    expect(handler).toHaveBeenCalledOnce();
+    expect(handler).toHaveBeenCalledWith({
+      activeView: 'opponent',
+      requestedView: 'opponent',
+      accepted: true,
+    });
+
+    unsubscribe();
+    sendGameCommand('switch-battlefield-view', { view: 'player' });
+  });
+
+  it('rejects opponent battlefield switching during build phase', () => {
+    publishGameHudSnapshot(createTestHudSnapshot({ phase: 'build' }));
+    const handler = vi.fn();
+    const unsubscribe = onGameEvent('battlefield-view-changed', handler);
+
+    sendGameCommand('switch-battlefield-view', { view: 'opponent' });
+
+    expect(getActiveBattlefieldView()).toBe<BattlefieldView>('player');
+    expect(handler).toHaveBeenCalledOnce();
+    expect(handler).toHaveBeenCalledWith({
+      activeView: 'player',
+      requestedView: 'opponent',
+      accepted: false,
+      reason: 'not_battle_phase',
+    });
+
+    unsubscribe();
+  });
+
+  it('publishes active view events when switching back to player battlefield', () => {
+    publishGameHudSnapshot(createTestHudSnapshot({ phase: 'wave' }));
+    sendGameCommand('switch-battlefield-view', { view: 'opponent' });
+    const handler = vi.fn();
+    const unsubscribe = onGameEvent('battlefield-view-changed', handler);
+
+    sendGameCommand('switch-battlefield-view', { view: 'player' });
+
+    expect(getActiveBattlefieldView()).toBe<BattlefieldView>('player');
+    expect(handler).toHaveBeenCalledOnce();
+    expect(handler).toHaveBeenCalledWith({
+      activeView: 'player',
+      requestedView: 'player',
+      accepted: true,
+    });
+
+    unsubscribe();
+  });
+
+  it('switch command is delivered through the typed bridge without a scene instance', () => {
+    publishGameHudSnapshot(createTestHudSnapshot({ phase: 'wave' }));
+    const commandHandler = vi.fn();
+    const eventHandler = vi.fn();
+    const unsubscribeCommand = onGameCommand('switch-battlefield-view', commandHandler);
+    const unsubscribeEvent = onGameEvent('battlefield-view-changed', eventHandler);
+
+    sendGameCommand('switch-battlefield-view', { view: 'opponent' });
+
+    expect(commandHandler).toHaveBeenCalledWith({ view: 'opponent' });
+    expect(eventHandler).toHaveBeenCalledWith({
+      activeView: 'opponent',
+      requestedView: 'opponent',
+      accepted: true,
+    });
+
+    unsubscribeCommand();
+    unsubscribeEvent();
+    sendGameCommand('switch-battlefield-view', { view: 'player' });
   });
 });

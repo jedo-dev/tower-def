@@ -2,6 +2,7 @@ export type GamePhase = 'build' | 'wave' | 'completed' | 'game-over';
 export type HudTowerType = 'archer' | 'splash';
 export type HudFactionType = 'undead' | 'orc' | 'human' | 'elf';
 export type HudCreepType = 'skeleton' | 'ghoul' | 'crypt_fiend' | 'gargoyle';
+export type BattlefieldView = 'player' | 'opponent';
 
 export type WaveQueueItem = {
   type: HudCreepType;
@@ -42,8 +43,15 @@ export type GameCommandMap = {
   'select-faction': { faction: HudFactionType };
   'upgrade-tower': { towerId: string };
   'sell-tower': { towerId: string };
+  'switch-battlefield-view': { view: BattlefieldView };
 };
 
 export type GameEventMap = {
   'selected-tower': { tower: SelectedTowerSnapshot | null };
+  'battlefield-view-changed': {
+    activeView: BattlefieldView;
+    requestedView: BattlefieldView;
+    accepted: boolean;
+    reason?: 'not_battle_phase';
+  };
 };
