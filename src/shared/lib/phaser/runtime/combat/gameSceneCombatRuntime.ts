@@ -68,6 +68,7 @@ function spawnImpactEffect(
   state: CombatRuntimeState,
   deps: CombatRuntimeDependencies,
   config: CombatRuntimeConfig,
+  spriteKey: string,
   x: number,
   y: number,
   isSplash: boolean,
@@ -75,7 +76,7 @@ function spawnImpactEffect(
   const frame = isSplash
     ? TOWER_BONE_ARCHER_EFFECT_FRAMES.attackEffect
     : TOWER_BONE_ARCHER_EFFECT_FRAMES.projectile;
-  const effect = deps.scene.add.sprite(x, y, TOWER_SPRITE_KEYS.UNDEAD_BONE_ARCHER, frame);
+  const effect = deps.scene.add.sprite(x, y, spriteKey, frame);
   const size = isSplash ? config.projectileDisplaySizePx * 1.7 : config.projectileDisplaySizePx * 1.25;
   effect.setDisplaySize(size, size);
   effect.setOrigin(0.5);
@@ -199,8 +200,9 @@ function spawnProjectileFeedback(
     : config.archerProjectileVisualMode === 'projectile'
       ? TOWER_BONE_ARCHER_EFFECT_FRAMES.projectile
       : TOWER_BONE_ARCHER_EFFECT_FRAMES.attackEffect;
+  const effectSpriteKey = isSplash ? TOWER_SPRITE_KEYS.UNDEAD_BONE_ARCHER : tower.sprite.texture.key;
 
-  const projectile = deps.scene.add.sprite(fromCenter.x, fromCenter.y, TOWER_SPRITE_KEYS.UNDEAD_BONE_ARCHER, frame);
+  const projectile = deps.scene.add.sprite(fromCenter.x, fromCenter.y, effectSpriteKey, frame);
   const displaySize = isSplash ? config.projectileDisplaySizePx * 1.6 : config.projectileDisplaySizePx;
   projectile.setDisplaySize(displaySize, displaySize);
   projectile.setOrigin(0.5);
@@ -211,6 +213,7 @@ function spawnProjectileFeedback(
 
   state.activeProjectiles.push({
     sprite: projectile,
+    effectSpriteKey,
     fromX: fromCenter.x,
     fromY: fromCenter.y,
     toX: toCenter.x,
@@ -320,7 +323,15 @@ export function updateProjectiles(
     const remainingMs = projectile.remainingMs - deltaMs;
 
     if (remainingMs <= 0) {
-      spawnImpactEffect(state, deps, config, projectile.toX, projectile.toY, projectile.isSplash);
+      spawnImpactEffect(
+        state,
+        deps,
+        config,
+        projectile.effectSpriteKey,
+        projectile.toX,
+        projectile.toY,
+        projectile.isSplash,
+      );
       projectile.sprite.destroy();
       continue;
     }
@@ -332,6 +343,7 @@ export function updateProjectiles(
     projectile.sprite.setAlpha(1 - progress * 0.35);
     nextProjectiles.push({
       sprite: projectile.sprite,
+      effectSpriteKey: projectile.effectSpriteKey,
       fromX: projectile.fromX,
       fromY: projectile.fromY,
       toX: projectile.toX,

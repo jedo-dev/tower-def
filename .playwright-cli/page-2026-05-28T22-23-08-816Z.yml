@@ -1,0 +1,18 @@
+- main [ref=e24]:
+  - generic [ref=e53]:
+    - button "Go back" [ref=e54] [cursor=pointer]: <
+    - heading "Match Summary" [level=1] [ref=e98]
+  - generic [ref=e99]:
+    - generic [ref=e100]:
+      - generic [ref=e101]: Builder Race
+      - generic [ref=e102]: Elf
+    - generic [ref=e103]:
+      - generic [ref=e104]: Enemy Faction
+      - generic [ref=e105]: Undead
+    - generic [ref=e106]:
+      - generic [ref=e107]: Difficulty
+      - generic [ref=e108]: Normal
+    - generic [ref=e109]:
+      - generic [ref=e110]: Starter Tower
+      - generic [ref=e111]: Elf Moon Archer
+  - button "Start Game" [active] [ref=e112] [cursor=pointer]

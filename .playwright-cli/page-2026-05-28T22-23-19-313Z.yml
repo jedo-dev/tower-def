@@ -1,0 +1,15 @@
+- main [ref=e113]:
+  - generic [ref=e114]:
+    - generic "Wave queue" [ref=e115]:
+      - generic [ref=e117]: Wave 1
+      - generic [ref=e119]: No enemies
+    - region "Game HUD" [ref=e123]:
+      - button "Expand HUD" [ref=e124] [cursor=pointer]: ^
+      - generic [ref=e125]:
+        - generic [ref=e126]:
+          - generic [ref=e127]: $
+          - generic [ref=e128]: "0"
+        - button "Start Wave" [disabled] [ref=e130] [cursor=pointer]
+        - generic [ref=e131]:
+          - generic [ref=e132]: HP
+          - generic [ref=e133]: "0"

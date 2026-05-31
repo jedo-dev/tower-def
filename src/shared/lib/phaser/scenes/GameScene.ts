@@ -6,9 +6,11 @@ import {
 } from '../../../../entities/builder-faction';
 import {
   canAffordUpgrade,
+  buildableTowers,
   createInitialTowerCombatRuntime,
   getTowerStatsForLevel,
   getUpgradeCost,
+  type BuildableTowerConfig,
 } from '../../../../entities/tower';
 import { spendGold } from '../../../../entities/player-resources';
 import { undeadUnits, type UnitConfig } from '../../../../entities/unit';
@@ -23,6 +25,7 @@ import {
 import { GRID_DIMENSIONS } from '../../../constants/grid';
 import {
   TOWER_ANIMATION_KEYS,
+  TOWER_ANIMATION_SETS,
   TOWER_BONE_ARCHER_ANIMATION_FRAMES,
   TOWER_SPRITE_ASSETS,
   TOWER_SPRITE_KEYS,
@@ -405,7 +408,7 @@ export class GameScene extends Phaser.Scene {
         repeat: -1,
       });
     }
-    this.createBoneArcherTowerAnimations();
+    this.createTowerAnimations();
     this.unsubscribeStartWaveCommand = onGameCommand('start-wave', () => {
       this.handleStartWaveCommand();
     });
@@ -600,7 +603,7 @@ export class GameScene extends Phaser.Scene {
     return {
       scene: this,
       toCellCenter: (position) => this.toCellCenter(position),
-      playArcherAttackAnimation: (tower) => this.playBoneArcherAttackAnimation(tower),
+      playArcherAttackAnimation: (tower) => this.playArcherAttackAnimation(tower),
       playSplashAttackAnimation: (tower) => this.playPlagueAttackAnimation(tower),
       playSound: (soundId: SoundId) => {
         if (soundId === 'combat.tower_attack.archer' || soundId === 'combat.tower_attack.splash') {
@@ -682,7 +685,7 @@ export class GameScene extends Phaser.Scene {
         !this.isGameOver,
       selectedTowerType: this.selectedTowerType,
       resolveTowerCost: (towerType) => {
-        const towerConfig = towerType === 'splash' ? PLAGUE_TOWER_CONFIG : BONE_ARCHER_TOWER_CONFIG;
+        const towerConfig = this.getBuildableTowerConfig(towerType);
         return towerConfig?.costGold ?? DEFAULT_TOWER_COST;
       },
       toGridCellKey: (position) => this.toGridCellKey(position),
@@ -824,7 +827,7 @@ export class GameScene extends Phaser.Scene {
     const towerSprite =
       result.towerType === 'splash'
         ? this.createPlacedPlagueSprite(result.placedTower.position)
-        : this.createPlacedBoneArcherSprite(result.placedTower.position);
+        : this.createPlacedArcherSprite(result.placedTower.position);
     this.activeTowers.push({
       entity: result.placedTower,
       runtime: createInitialTowerCombatRuntime(),
@@ -1236,40 +1239,25 @@ export class GameScene extends Phaser.Scene {
     return UNIT_SPRITE_KEYS.UNDEAD_GHOUL;
   }
 
-  private createBoneArcherTowerAnimations(): void {
-    this.createTowerAnimation(
-      TOWER_ANIMATION_KEYS.UNDEAD_BONE_ARCHER_BUILD,
-      TOWER_BONE_ARCHER_ANIMATION_FRAMES.build,
-      10,
-      0,
-    );
-    this.createTowerAnimation(
-      TOWER_ANIMATION_KEYS.UNDEAD_BONE_ARCHER_IDLE,
-      TOWER_BONE_ARCHER_ANIMATION_FRAMES.idle,
-      8,
-      -1,
-    );
-    this.createTowerAnimation(
-      TOWER_ANIMATION_KEYS.UNDEAD_BONE_ARCHER_ATTACK,
-      TOWER_BONE_ARCHER_ANIMATION_FRAMES.attack,
-      14,
-      0,
-    );
-    this.createTowerAnimation(
-      TOWER_ANIMATION_KEYS.UNDEAD_BONE_ARCHER_HIT_REACTION,
-      TOWER_BONE_ARCHER_ANIMATION_FRAMES.hitReaction,
-      10,
-      0,
-    );
-    this.createTowerAnimation(
-      TOWER_ANIMATION_KEYS.UNDEAD_BONE_ARCHER_SELL,
-      TOWER_BONE_ARCHER_ANIMATION_FRAMES.sell,
-      10,
-      0,
-    );
+  private createTowerAnimations(): void {
+    Object.values(TOWER_SPRITE_KEYS).forEach((spriteKey) => {
+      const animationSet = this.getTowerAnimationSet(spriteKey);
+      this.createTowerAnimation(spriteKey, animationSet.build, TOWER_BONE_ARCHER_ANIMATION_FRAMES.build, 10, 0);
+      this.createTowerAnimation(spriteKey, animationSet.idle, TOWER_BONE_ARCHER_ANIMATION_FRAMES.idle, 8, -1);
+      this.createTowerAnimation(spriteKey, animationSet.attack, TOWER_BONE_ARCHER_ANIMATION_FRAMES.attack, 14, 0);
+      this.createTowerAnimation(
+        spriteKey,
+        animationSet.hitReaction,
+        TOWER_BONE_ARCHER_ANIMATION_FRAMES.hitReaction,
+        10,
+        0,
+      );
+      this.createTowerAnimation(spriteKey, animationSet.sell, TOWER_BONE_ARCHER_ANIMATION_FRAMES.sell, 10, 0);
+    });
   }
 
   private createTowerAnimation(
+    spriteKey: string,
     key: string,
     frameIndexes: readonly number[],
     frameRate: number,
@@ -1282,7 +1270,7 @@ export class GameScene extends Phaser.Scene {
     this.anims.create({
       key,
       frames: frameIndexes.map((frame) => ({
-        key: TOWER_SPRITE_KEYS.UNDEAD_BONE_ARCHER,
+        key: spriteKey,
         frame,
       })),
       frameRate,
@@ -1294,9 +1282,10 @@ export class GameScene extends Phaser.Scene {
     return TOWER_RENDER_DEPTH + position.y * 10 + position.x * 0.01;
   }
 
-  private createPlacedBoneArcherSprite(position: GridPosition): Phaser.GameObjects.Sprite {
+  private createPlacedArcherSprite(position: GridPosition): Phaser.GameObjects.Sprite {
     const center = this.toCellCenter(position);
-    const spriteKey = BONE_ARCHER_TOWER_CONFIG?.spriteKey ?? TOWER_SPRITE_KEYS.UNDEAD_BONE_ARCHER;
+    const spriteKey = this.getArcherTowerSpriteKey();
+    const animationSet = this.getTowerAnimationSet(spriteKey);
     const sprite = this.add.sprite(center.x, center.y, spriteKey, 0);
     sprite.setDepth(this.resolveTowerRenderDepth(position));
     sprite.setDisplaySize(
@@ -1304,12 +1293,12 @@ export class GameScene extends Phaser.Scene {
       GRID_DIMENSIONS.cellSize * TOWER_VISUAL_SCALE_IN_CELLS,
     );
     sprite.setOrigin(BONE_ARCHER_ORIGIN_X, BONE_ARCHER_ORIGIN_Y);
-    sprite.play(TOWER_ANIMATION_KEYS.UNDEAD_BONE_ARCHER_BUILD);
-    sprite.once(`animationcomplete-${TOWER_ANIMATION_KEYS.UNDEAD_BONE_ARCHER_BUILD}`, () => {
+    sprite.play(animationSet.build);
+    sprite.once(`animationcomplete-${animationSet.build}`, () => {
       if (!sprite.scene) {
         return;
       }
-      sprite.play(TOWER_ANIMATION_KEYS.UNDEAD_BONE_ARCHER_IDLE);
+      sprite.play(animationSet.idle);
     });
 
     return sprite;
@@ -1337,7 +1326,7 @@ export class GameScene extends Phaser.Scene {
     return sprite;
   }
 
-  private playBoneArcherAttackAnimation(tower: TowerRenderState): void {
+  private playArcherAttackAnimation(tower: TowerRenderState): void {
     if (tower.entity.type !== 'archer') {
       return;
     }
@@ -1346,12 +1335,13 @@ export class GameScene extends Phaser.Scene {
       return;
     }
 
-    tower.sprite.play(TOWER_ANIMATION_KEYS.UNDEAD_BONE_ARCHER_ATTACK, true);
-    tower.sprite.once(`animationcomplete-${TOWER_ANIMATION_KEYS.UNDEAD_BONE_ARCHER_ATTACK}`, () => {
+    const animationSet = this.getTowerAnimationSet(tower.sprite.texture.key);
+    tower.sprite.play(animationSet.attack, true);
+    tower.sprite.once(`animationcomplete-${animationSet.attack}`, () => {
       if (!tower.sprite.active) {
         return;
       }
-      tower.sprite.play(TOWER_ANIMATION_KEYS.UNDEAD_BONE_ARCHER_IDLE, true);
+      tower.sprite.play(animationSet.idle, true);
     });
   }
 
@@ -1360,8 +1350,9 @@ export class GameScene extends Phaser.Scene {
       return;
     }
 
-    tower.sprite.play(TOWER_ANIMATION_KEYS.UNDEAD_BONE_ARCHER_SELL, true);
-    tower.sprite.once(`animationcomplete-${TOWER_ANIMATION_KEYS.UNDEAD_BONE_ARCHER_SELL}`, () => {
+    const animationSet = this.getTowerAnimationSet(tower.sprite.texture.key);
+    tower.sprite.play(animationSet.sell, true);
+    tower.sprite.once(`animationcomplete-${animationSet.sell}`, () => {
       if (!tower.sprite.active) {
         return;
       }
@@ -1600,6 +1591,33 @@ export class GameScene extends Phaser.Scene {
       (candidate) => candidate.id === this.selectedBuilderFactionId,
     );
     return faction ?? builderFactions[0];
+  }
+
+  private getBuildableTowerConfig(towerType: 'archer' | 'splash'): BuildableTowerConfig | null {
+    const factionTower = buildableTowers.find(
+      (tower) => tower.faction === this.selectedBuilderFactionId && tower.towerType === towerType,
+    );
+    if (factionTower) {
+      return factionTower;
+    }
+
+    return towerType === 'splash' ? PLAGUE_TOWER_CONFIG : BONE_ARCHER_TOWER_CONFIG;
+  }
+
+  private getArcherTowerSpriteKey(): string {
+    const spriteKey = this.getBuildableTowerConfig('archer')?.spriteKey ?? TOWER_SPRITE_KEYS.UNDEAD_BONE_ARCHER;
+    if (this.textures.exists(spriteKey)) {
+      return spriteKey;
+    }
+
+    return TOWER_SPRITE_KEYS.UNDEAD_BONE_ARCHER;
+  }
+
+  private getTowerAnimationSet(spriteKey: string): (typeof TOWER_ANIMATION_SETS)[keyof typeof TOWER_ANIMATION_SETS] {
+    return (
+      TOWER_ANIMATION_SETS[spriteKey as keyof typeof TOWER_ANIMATION_SETS] ??
+      TOWER_ANIMATION_SETS[TOWER_SPRITE_KEYS.UNDEAD_BONE_ARCHER]
+    );
   }
 
   private handleSceneShutdown(): void {

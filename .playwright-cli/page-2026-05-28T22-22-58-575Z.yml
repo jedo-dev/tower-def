@@ -1,0 +1,18 @@
+- main [ref=e24]:
+  - generic [ref=e53]:
+    - button "Go back" [ref=e54] [cursor=pointer]: <
+    - heading "Choose Difficulty" [level=1] [ref=e84]
+  - generic [ref=e85]:
+    - button "Easy Relaxed gameplay for beginners." [ref=e86] [cursor=pointer]:
+      - generic [ref=e87]: Easy
+      - generic [ref=e88]: Relaxed gameplay for beginners.
+    - button "Normal Standard challenge for experienced players." [ref=e89] [cursor=pointer]:
+      - generic [ref=e90]: Normal
+      - generic [ref=e91]: Standard challenge for experienced players.
+    - button "Hard Tough opponents for veterans." [ref=e92] [cursor=pointer]:
+      - generic [ref=e93]: Hard
+      - generic [ref=e94]: Tough opponents for veterans.
+    - button "Nightmare Extreme difficulty for the brave." [ref=e95] [cursor=pointer]:
+      - generic [ref=e96]: Nightmare
+      - generic [ref=e97]: Extreme difficulty for the brave.
+  - button "Continue" [active] [ref=e83] [cursor=pointer]

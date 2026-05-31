@@ -18,6 +18,7 @@ export type TowerRenderState = {
 
 export type ProjectileState = {
   sprite: Phaser.GameObjects.Sprite;
+  effectSpriteKey: string;
   fromX: number;
   fromY: number;
   toX: number;

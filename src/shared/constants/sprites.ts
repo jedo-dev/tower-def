@@ -31,10 +31,12 @@ export const UNIT_ANIMATION_KEYS = {
 
 export const TOWER_SPRITE_KEYS = {
   UNDEAD_BONE_ARCHER: 'tower.undead.bone_archer',
+  ELF_MOON_ARCHER: 'tower.elf.moon_archer',
 } as const;
 
 export const TOWER_SPRITE_ASSETS: Record<(typeof TOWER_SPRITE_KEYS)[keyof typeof TOWER_SPRITE_KEYS], string> = {
   [TOWER_SPRITE_KEYS.UNDEAD_BONE_ARCHER]: '/assets/towers/undead_bone_archer.svg',
+  [TOWER_SPRITE_KEYS.ELF_MOON_ARCHER]: '/assets/towers/elf_moon_archer.png',
 };
 
 export const TOWER_SPRITE_SHEET_FRAME = {
@@ -48,6 +50,11 @@ export const TOWER_ANIMATION_KEYS = {
   UNDEAD_BONE_ARCHER_ATTACK: 'tower.undead.bone_archer.attack',
   UNDEAD_BONE_ARCHER_HIT_REACTION: 'tower.undead.bone_archer.hitReaction',
   UNDEAD_BONE_ARCHER_SELL: 'tower.undead.bone_archer.sell',
+  ELF_MOON_ARCHER_BUILD: 'tower.elf.moon_archer.build',
+  ELF_MOON_ARCHER_IDLE: 'tower.elf.moon_archer.idle',
+  ELF_MOON_ARCHER_ATTACK: 'tower.elf.moon_archer.attack',
+  ELF_MOON_ARCHER_HIT_REACTION: 'tower.elf.moon_archer.hitReaction',
+  ELF_MOON_ARCHER_SELL: 'tower.elf.moon_archer.sell',
 } as const;
 
 export const TOWER_BONE_ARCHER_ANIMATION_FRAMES = {
@@ -61,4 +68,21 @@ export const TOWER_BONE_ARCHER_ANIMATION_FRAMES = {
 export const TOWER_BONE_ARCHER_EFFECT_FRAMES = {
   projectile: 12,
   attackEffect: 13,
+} as const;
+
+export const TOWER_ANIMATION_SETS = {
+  [TOWER_SPRITE_KEYS.UNDEAD_BONE_ARCHER]: {
+    build: TOWER_ANIMATION_KEYS.UNDEAD_BONE_ARCHER_BUILD,
+    idle: TOWER_ANIMATION_KEYS.UNDEAD_BONE_ARCHER_IDLE,
+    attack: TOWER_ANIMATION_KEYS.UNDEAD_BONE_ARCHER_ATTACK,
+    hitReaction: TOWER_ANIMATION_KEYS.UNDEAD_BONE_ARCHER_HIT_REACTION,
+    sell: TOWER_ANIMATION_KEYS.UNDEAD_BONE_ARCHER_SELL,
+  },
+  [TOWER_SPRITE_KEYS.ELF_MOON_ARCHER]: {
+    build: TOWER_ANIMATION_KEYS.ELF_MOON_ARCHER_BUILD,
+    idle: TOWER_ANIMATION_KEYS.ELF_MOON_ARCHER_IDLE,
+    attack: TOWER_ANIMATION_KEYS.ELF_MOON_ARCHER_ATTACK,
+    hitReaction: TOWER_ANIMATION_KEYS.ELF_MOON_ARCHER_HIT_REACTION,
+    sell: TOWER_ANIMATION_KEYS.ELF_MOON_ARCHER_SELL,
+  },
 } as const;
