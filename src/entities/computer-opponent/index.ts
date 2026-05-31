@@ -7,6 +7,7 @@ export { buildDecisionContext } from './model/buildDecisionContext';
 export { scoreTowerPlacement, scoreAllPlacements } from './model/scoreTowerPlacement';
 export { planBuildDecision } from './model/planBuildDecision';
 export { planSendCreeps } from './model/planSendCreeps';
+export { applyComputerSendStrategy } from './model/applyComputerSendStrategy';
 export {
   COMPUTER_DECISION_DEBUG_SNAPSHOT_LIMIT,
   createComputerDecisionDebugRecorder,
@@ -39,4 +40,8 @@ export type { ComputerDecisionDebugRecorder } from './model/decisionDebugSnapsho
 export type { PlacementScore } from './model/scoreTowerPlacement';
 export type { BuildPlannerInput } from './model/planBuildDecision';
 export type { SendPlannerInput, SendPlannerOutput } from './model/planSendCreeps';
+export type {
+  ApplyComputerSendStrategyInput,
+  ApplyComputerSendStrategyResult,
+} from './model/applyComputerSendStrategy';
 export type { ComputerDifficultyPreset } from './model/difficultyPresets';
