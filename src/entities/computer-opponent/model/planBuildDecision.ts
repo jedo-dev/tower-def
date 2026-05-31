@@ -14,6 +14,7 @@ import type {
   UpgradeAction,
 } from './types';
 import { StrategyIntent } from './types';
+import type { ComputerDecisionDebugRecorder } from './decisionDebugSnapshots';
 import { scoreAllPlacements, type PlacementScore } from './scoreTowerPlacement';
 
 export type BuildPlannerInput = {
@@ -21,6 +22,7 @@ export type BuildPlannerInput = {
   grid: GridModel;
   existingTowers: readonly TowerEntity[];
   path: readonly GridPosition[];
+  debugRecorder?: ComputerDecisionDebugRecorder;
 };
 
 type SpendBudgetConfig = {
@@ -149,27 +151,32 @@ function selectIntent(context: DecisionContext): StrategyIntent {
 }
 
 export function planBuildDecision(input: BuildPlannerInput): DecisionOutput {
-  const { context, grid, existingTowers, path } = input;
+  const { context, grid, existingTowers, path, debugRecorder } = input;
+
+  function finish(output: DecisionOutput): DecisionOutput {
+    debugRecorder?.recordBuildDecision(context, output);
+    return output;
+  }
 
   if (context.phase !== 'build') {
-    return {
+    return finish({
       intent: StrategyIntent.SAVE_GOLD,
       actions: [{ kind: 'save' }],
       reasoning: 'Not in build phase, cannot take build actions',
       confidenceScore: 1,
-    };
+    });
   }
 
   const intent = selectIntent(context);
   const budget = computeSpendBudget(context.gold, context.difficulty);
 
   if (budget <= 0) {
-    return {
+    return finish({
       intent: StrategyIntent.SAVE_GOLD,
       actions: [{ kind: 'save' }],
       reasoning: 'No budget available for spending',
       confidenceScore: 1,
-    };
+    });
   }
 
   const actions: ComputerAction[] = [];
@@ -207,10 +214,10 @@ export function planBuildDecision(input: BuildPlannerInput): DecisionOutput {
     reasoningParts.push('No beneficial actions within budget, saving gold');
   }
 
-  return {
+  return finish({
     intent,
     actions,
     reasoning: reasoningParts.join('; '),
     confidenceScore: 0.8,
-  };
+  });
 }

@@ -244,11 +244,11 @@ describe('entities/computer-opponent/types', () => {
     it('SendCreepAction has correct kind', () => {
       const action: SendCreepAction = {
         kind: 'send_creep',
-        creepTypeId: 'basic',
+        creepTypeId: 'undead_skeleton',
       };
 
       expect(action.kind).toBe('send_creep');
-      expect(action.creepTypeId).toBe('basic');
+      expect(action.creepTypeId).toBe('undead_skeleton');
     });
 
     it('SaveAction has correct kind', () => {
@@ -263,7 +263,7 @@ describe('entities/computer-opponent/types', () => {
       const actions: ComputerAction[] = [
         { kind: 'build', towerType: TowerTypeId.ARCHER, position: { x: 0, y: 0 } },
         { kind: 'upgrade', towerId: 'tower_1' },
-        { kind: 'send_creep', creepTypeId: 'basic' },
+        { kind: 'send_creep', creepTypeId: 'undead_skeleton' },
         { kind: 'save' },
       ];
 

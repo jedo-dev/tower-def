@@ -7,6 +7,7 @@ import { Difficulty } from '../../difficulty/model/types';
 import type { TowerEntity } from '../../tower/model/types';
 import type { DecisionContext } from './types';
 import { StrategyIntent } from './types';
+import { createComputerDecisionDebugRecorder } from './decisionDebugSnapshots';
 import { planBuildDecision } from './planBuildDecision';
 
 const ENTRANCE = { x: 0, y: 7 };
@@ -350,6 +351,36 @@ describe('entities/computer-opponent/planBuildDecision', () => {
       const result2 = planBuildDecision(input);
 
       expect(result1).toEqual(result2);
+    });
+  });
+
+  describe('debug snapshots', () => {
+    it('records a bounded optional snapshot only when recorder is provided', () => {
+      const context = createTestContext({
+        mazeCoverage: {
+          totalWalkableCells: 150,
+          occupiedCells: 5,
+          towerCount: 1,
+        },
+      });
+      const grid = createTestGrid();
+      const path = createTestPath();
+      const debugRecorder = createComputerDecisionDebugRecorder(1);
+
+      planBuildDecision({
+        context,
+        grid,
+        existingTowers: [],
+        path,
+        debugRecorder,
+      });
+
+      const snapshots = debugRecorder.getSnapshots();
+      expect(snapshots).toHaveLength(1);
+      expect(snapshots[0].round).toBe(context.round);
+      expect(snapshots[0].intent).toBe(StrategyIntent.EXTEND_MAZE);
+      expect(snapshots[0].kind).toBe('build');
+      expect(snapshots[0].reasoning).toContain('Building');
     });
   });
 });

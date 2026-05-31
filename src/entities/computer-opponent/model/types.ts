@@ -2,6 +2,7 @@ import type { RaceId } from '../../../shared/types/content-ids';
 import type { TowerTypeId } from '../../../shared/types/content-ids';
 import type { GridPosition } from '../../../shared/types/pathfinding';
 import type { Difficulty } from '../../difficulty/model/types';
+import type { UnitId } from '../../unit/model/types';
 
 export const StrategyIntent = {
   DEFEND: 'defend',
@@ -52,6 +53,7 @@ export type DecisionContext = {
   affordableTowers: readonly TowerTypeId[];
   upgradeableTowerIds: readonly string[];
   availableBuildPositions: readonly GridPosition[];
+  intent?: StrategyIntent;
 };
 
 export type BuildAction = {
@@ -67,7 +69,7 @@ export type UpgradeAction = {
 
 export type SendCreepAction = {
   kind: 'send_creep';
-  creepTypeId: string;
+  creepTypeId: UnitId;
 };
 
 export type SaveAction = {
@@ -88,4 +90,27 @@ export type ComputerOpponentStrategy = {
   raceId: RaceId;
   currentIntent: StrategyIntent;
   decisionHistory: readonly DecisionOutput[];
+};
+
+export type ComputerDecisionDebugKind = 'build' | 'upgrade' | 'send' | 'save';
+
+export type ComputerDecisionDebugSnapshot = {
+  id: number;
+  round: number;
+  phase: DecisionContext['phase'];
+  kind: ComputerDecisionDebugKind;
+  intent: StrategyIntent;
+  goldBefore: number;
+  incomeBefore: number;
+  hpBefore: number;
+  actionCount: number;
+  actionSummary: string;
+  reasoning: string;
+  confidenceScore: number;
+  threatLevel: ThreatAssessment['threatLevel'];
+  incomingCreepCount: number;
+  estimatedLeakCount: number;
+  towerCount: number;
+  occupiedCells: number;
+  totalWalkableCells: number;
 };

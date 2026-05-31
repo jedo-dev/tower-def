@@ -1,4 +1,5 @@
 import type { TowerTypeId } from '../../../shared/types/content-ids';
+import type { RaceId } from '../../../shared/types/content-ids';
 import type { GridPosition } from '../../../shared/types/pathfinding';
 import type { Difficulty } from '../../difficulty/model/types';
 import type { DuelMatchState, DuelistState } from '../../duel-match/model/types';

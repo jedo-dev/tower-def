@@ -4,6 +4,8 @@ import { Difficulty } from '../../difficulty/model/types';
 import { getSendCostByTier, getIncomeBonusByTier } from '../../duel-match/model/sendEconomy';
 import { resolveUnitConfigById } from '../../unit/model/registry';
 import type { DecisionContext } from './types';
+import { StrategyIntent } from './types';
+import { createComputerDecisionDebugRecorder } from './decisionDebugSnapshots';
 import { planSendCreeps } from './planSendCreeps';
 
 function createTestContext(overrides?: Partial<DecisionContext>): DecisionContext {
@@ -212,6 +214,25 @@ describe('entities/computer-opponent/planSendCreeps', () => {
       const result2 = planSendCreeps(input);
 
       expect(result1).toEqual(result2);
+    });
+  });
+
+  describe('debug snapshots', () => {
+    it('records optional send decision snapshot when recorder is provided', () => {
+      const context = createTestContext({
+        gold: 1000,
+        intent: StrategyIntent.PRESSURE,
+      });
+      const debugRecorder = createComputerDecisionDebugRecorder(1);
+
+      planSendCreeps({ context, debugRecorder });
+
+      const snapshots = debugRecorder.getSnapshots();
+      expect(snapshots).toHaveLength(1);
+      expect(snapshots[0].kind).toBe('send');
+      expect(snapshots[0].intent).toBe(StrategyIntent.PRESSURE);
+      expect(snapshots[0].goldBefore).toBe(1000);
+      expect(snapshots[0].actionSummary).toContain('send');
     });
   });
 });

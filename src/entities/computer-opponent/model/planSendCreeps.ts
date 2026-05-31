@@ -6,9 +6,12 @@ import { resolveUnitConfigById } from '../../unit/model/registry';
 import { Difficulty } from '../../difficulty/model/types';
 import type { DecisionContext, SendCreepAction } from './types';
 import { StrategyIntent } from './types';
+import { createSendDecisionOutput } from './decisionDebugSnapshots';
+import type { ComputerDecisionDebugRecorder } from './decisionDebugSnapshots';
 
 export type SendPlannerInput = {
   context: DecisionContext;
+  debugRecorder?: ComputerDecisionDebugRecorder;
 };
 
 export type SendPlannerOutput = {
@@ -98,39 +101,44 @@ function selectCreepsToSend(
 }
 
 export function planSendCreeps(input: SendPlannerInput): SendPlannerOutput {
-  const { context } = input;
+  const { context, debugRecorder } = input;
+
+  function finish(output: SendPlannerOutput): SendPlannerOutput {
+    debugRecorder?.recordSendDecision(context, createSendDecisionOutput(context, output));
+    return output;
+  }
 
   if (!shouldSendCreeps(context)) {
-    return {
+    return finish({
       actions: [],
       totalCost: 0,
       totalIncomeBonus: 0,
       reasoning: context.phase !== 'build'
         ? 'Not in build phase, cannot send creeps'
         : 'High threat detected, saving gold for defense',
-    };
+    });
   }
 
   const budget = computeSendBudget(context.gold, context.difficulty);
 
   if (budget <= 0) {
-    return {
+    return finish({
       actions: [],
       totalCost: 0,
       totalIncomeBonus: 0,
       reasoning: 'No budget available for sending creeps',
-    };
+    });
   }
 
   const selectedCreeps = selectCreepsToSend(context, budget);
 
   if (selectedCreeps.length === 0) {
-    return {
+    return finish({
       actions: [],
       totalCost: 0,
       totalIncomeBonus: 0,
       reasoning: 'No affordable creeps available for sending',
-    };
+    });
   }
 
   const actions: SendCreepAction[] = [];
@@ -145,10 +153,10 @@ export function planSendCreeps(input: SendPlannerInput): SendPlannerOutput {
 
   const intentLabel = context.intent === StrategyIntent.PRESSURE ? 'pressure' : 'economy';
 
-  return {
+  return finish({
     actions,
     totalCost,
     totalIncomeBonus,
     reasoning: `Sending ${actions.length} creeps for ${intentLabel} (${totalCost} gold, +${totalIncomeBonus} income)`,
-  };
+  });
 }
