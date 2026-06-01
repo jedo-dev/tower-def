@@ -13,8 +13,16 @@ import {
   type BuildableTowerConfig,
 } from '../../../../entities/tower';
 import { spendGold } from '../../../../entities/player-resources';
-import { undeadUnits, type UnitConfig } from '../../../../entities/unit';
+import { applyComputerSendStrategy } from '../../../../entities/computer-opponent';
+import {
+  createInitialDuelMatchState,
+  startRound,
+  type DuelMatchState,
+} from '../../../../entities/duel-match';
+import { DEFAULT_DIFFICULTY, type Difficulty } from '../../../../entities/difficulty';
+import { resolveUnitConfigById, undeadUnits, type UnitConfig } from '../../../../entities/unit';
 import { calculateWaveStartPath } from '../../../../entities/wave';
+import { RaceId } from '../../../types/content-ids';
 import {
   canPerformBuildActions as canPerformBuildActionsByPhase,
   createInitialWavePhaseState,
@@ -234,6 +242,8 @@ export class GameScene extends Phaser.Scene {
   private selectedTowerType: 'archer' | 'splash' | null = null;
   private selectedBuilderFactionId = DEFAULT_BUILDER_FACTION;
   private selectedFaction: HudFactionType = 'undead';
+  private selectedDifficulty: Difficulty = DEFAULT_DIFFICULTY;
+  private duelMatchState: DuelMatchState = createInitialDuelMatchState(RaceId.UNDEAD, RaceId.UNDEAD);
   private readonly mapSeed = 1337;
   private inputControllerState: InputControllerState = {
     activeTouchGesture: null,
@@ -419,6 +429,12 @@ export class GameScene extends Phaser.Scene {
     });
     this.unsubscribeFactionSelectCommand = onGameCommand('select-faction', (payload) => {
       this.selectedFaction = payload.faction;
+      if (this.canPerformBuildActions()) {
+        this.duelMatchState = createInitialDuelMatchState(
+          RaceId.UNDEAD,
+          this.mapHudFactionToRaceId(this.selectedFaction),
+        );
+      }
       this.soundManager?.setFaction(this.selectedFaction);
       this.registry.set('wave.selectedFaction', this.selectedFaction);
       this.publishHudSnapshot();
@@ -624,6 +640,7 @@ export class GameScene extends Phaser.Scene {
     return {
       nowMs: () => this.time.now,
       getSelectedFactionUnits: () => this.getSelectedFactionUnits(),
+      getAdditionalWaveUnits: () => this.getComputerSendWaveUnits(),
       getSpriteKeyByUnit: (unit) => this.getSpriteKeyByUnit(unit),
       getAnimationKeyByUnit: (unit) => this.getAnimationKeyByUnit(unit),
       getCreepTypeFromUnit: (unit) => this.getCreepTypeFromUnit(unit),
@@ -1053,8 +1070,14 @@ export class GameScene extends Phaser.Scene {
     if (setupConfig) {
       this.selectedBuilderFactionId = setupConfig.builderFaction;
       this.selectedFaction = mapEnemyFactionToHudFaction(setupConfig.enemyFaction);
+      this.selectedDifficulty = setupConfig.difficulty;
       this.registry.set('game.setup', setupConfig);
     }
+
+    this.duelMatchState = createInitialDuelMatchState(
+      RaceId.UNDEAD,
+      this.mapHudFactionToRaceId(this.selectedFaction),
+    );
   }
 
   private toCellCenter(position: GridPosition): { x: number; y: number } {
@@ -1133,6 +1156,14 @@ export class GameScene extends Phaser.Scene {
     this.isWaveCompletionRewardGranted = state.isWaveCompletionRewardGranted;
     this.nextWaveStartsAtMs = state.nextWaveStartsAtMs;
     if (this.canPerformBuildActions()) {
+      this.duelMatchState = {
+        ...this.duelMatchState,
+        phase: 'build',
+        player: { ...this.duelMatchState.player, sendQueue: [] },
+        opponent: { ...this.duelMatchState.opponent, sendQueue: [] },
+      };
+    }
+    if (this.canPerformBuildActions()) {
       this.soundManager?.stopSound('ambient.tension');
       this.ensureBaseAmbientPlaying();
     }
@@ -1187,6 +1218,10 @@ export class GameScene extends Phaser.Scene {
     this.isGameOver = state.isGameOver;
     this.currentWaveNumber = state.currentWaveNumber;
     this.lastPublishedAutoStartSecondsLeft = state.lastPublishedAutoStartSecondsLeft;
+    this.duelMatchState = createInitialDuelMatchState(
+      RaceId.UNDEAD,
+      this.mapHudFactionToRaceId(this.selectedFaction),
+    );
 
     this.registry.set('economy.gold', this.playerGold);
     this.registry.set('economy.lives', this.playerLives);
@@ -1501,7 +1536,9 @@ export class GameScene extends Phaser.Scene {
     this.activeCreepPath = wavePath;
     this.pathCellKeys = new Set(wavePath.map((cell) => `${cell.x}:${cell.y}`));
     this.redrawTerrainTiles();
+    this.applyComputerBuildPhaseSendStrategy();
     this.spawnWaveCreeps();
+    this.duelMatchState = startRound(this.duelMatchState).state;
     this.wavePhaseState = startNextWaveCycle(this.wavePhaseState);
     this.ensureBaseAmbientPlaying();
     if (!this.soundManager?.isPlaying('ambient.tension')) {
@@ -1529,6 +1566,8 @@ export class GameScene extends Phaser.Scene {
     const snapshot: GameHudSnapshot = {
       gold: this.playerGold,
       lives: this.playerLives,
+      opponentGold: this.duelMatchState.opponent.gold,
+      opponentIncome: this.duelMatchState.opponent.income,
       builderFactionName: currentBuilderFaction.name,
       waveNumber: this.currentWaveNumber,
       phase: this.wavePhaseState.phase,
@@ -1537,6 +1576,7 @@ export class GameScene extends Phaser.Scene {
       selectedFaction: this.selectedFaction,
       autoStartSecondsLeft,
       waveQueue,
+      opponentSendQueue: this.buildOpponentSendQueue(),
       pendingCreepCount:
         this.pendingWaveSpawns.length +
         this.activeCreeps.filter((c) => c.entity.status === 'alive').length,
@@ -1580,6 +1620,101 @@ export class GameScene extends Phaser.Scene {
     }
 
     return queue;
+  }
+
+  private buildOpponentSendQueue(): {
+    type: 'skeleton' | 'ghoul' | 'crypt_fiend' | 'gargoyle';
+    index: number;
+  }[] {
+    return this.duelMatchState.opponent.sendQueue.map((unitId, index) => ({
+      type: this.mapUnitIdToHudCreepType(unitId),
+      index,
+    }));
+  }
+
+  private getComputerSendWaveUnits(): UnitConfig[] {
+    return this.duelMatchState.opponent.sendQueue.map((unitId) => resolveUnitConfigById(unitId));
+  }
+
+  private applyComputerBuildPhaseSendStrategy(): void {
+    if (this.duelMatchState.phase !== 'build') {
+      return;
+    }
+
+    const opponent = this.duelMatchState.opponent;
+    const totalWalkableCells = opponent.battlefield.grid.cells.filter((cell) => cell.isWalkable).length;
+    const occupiedCells = opponent.battlefield.grid.cells.filter((cell) => cell.isOccupied).length;
+    const result = applyComputerSendStrategy({
+      state: this.duelMatchState,
+      context: {
+        gold: opponent.gold,
+        income: opponent.income,
+        hp: opponent.hp,
+        raceId: opponent.raceId,
+        difficulty: this.selectedDifficulty,
+        round: this.currentWaveNumber,
+        phase: 'build',
+        mazeCoverage: {
+          totalWalkableCells,
+          occupiedCells,
+          towerCount: opponent.battlefield.towers.length,
+        },
+        threat: {
+          incomingCreepCount: this.duelMatchState.player.sendQueue.length,
+          estimatedLeakCount: 0,
+          threatLevel: 'low',
+        },
+        leakHistory: [],
+        affordableTowers: [],
+        upgradeableTowerIds: [],
+        availableBuildPositions: [],
+      },
+    });
+    this.duelMatchState = result.state;
+    this.registry.set('duel.opponent.sendCount', result.sentCount);
+    this.registry.set('duel.opponent.gold', this.duelMatchState.opponent.gold);
+    this.registry.set('duel.opponent.income', this.duelMatchState.opponent.income);
+  }
+
+  private mapUnitIdToHudCreepType(unitId: string): 'skeleton' | 'ghoul' | 'crypt_fiend' | 'gargoyle' {
+    if (
+      unitId.includes('ghoul') ||
+      unitId.includes('grunt') ||
+      unitId.includes('footman') ||
+      unitId.includes('huntress')
+    ) {
+      return 'ghoul';
+    }
+    if (
+      unitId.includes('crypt_fiend') ||
+      unitId.includes('troll') ||
+      unitId.includes('rifleman') ||
+      unitId.includes('dryad')
+    ) {
+      return 'crypt_fiend';
+    }
+    if (
+      unitId.includes('gargoyle') ||
+      unitId.includes('rider') ||
+      unitId.includes('engine') ||
+      unitId.includes('chimera')
+    ) {
+      return 'gargoyle';
+    }
+    return 'skeleton';
+  }
+
+  private mapHudFactionToRaceId(faction: HudFactionType): RaceId {
+    switch (faction) {
+      case 'orc':
+        return RaceId.ORC;
+      case 'human':
+        return RaceId.HUMAN;
+      case 'elf':
+        return RaceId.ELF;
+      case 'undead':
+        return RaceId.UNDEAD;
+    }
   }
 
   private getCreepTypeFromUnit(unit: UnitConfig): 'basic' {

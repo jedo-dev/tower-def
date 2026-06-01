@@ -29,6 +29,8 @@ function createTestHudSnapshot(overrides?: Partial<GameHudSnapshot>): GameHudSna
   return {
     gold: 100,
     lives: 20,
+    opponentGold: 500,
+    opponentIncome: 50,
     builderFactionName: 'Undead',
     waveNumber: 1,
     phase: 'build',
@@ -37,6 +39,7 @@ function createTestHudSnapshot(overrides?: Partial<GameHudSnapshot>): GameHudSna
     selectedFaction: 'undead',
     autoStartSecondsLeft: null,
     waveQueue: [],
+    opponentSendQueue: [],
     pendingCreepCount: 0,
     ...overrides,
   };

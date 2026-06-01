@@ -30,6 +30,8 @@ export function clearGameSetupConfig(): void {
 let snapshot: GameHudSnapshot = {
   gold: 0,
   lives: 0,
+  opponentGold: 0,
+  opponentIncome: 0,
   builderFactionName: 'Undead',
   waveNumber: 1,
   phase: 'build',
@@ -38,6 +40,7 @@ let snapshot: GameHudSnapshot = {
   selectedFaction: 'undead',
   autoStartSecondsLeft: null,
   waveQueue: [],
+  opponentSendQueue: [],
   pendingCreepCount: 0,
 };
 

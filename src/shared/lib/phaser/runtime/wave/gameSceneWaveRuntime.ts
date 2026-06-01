@@ -44,6 +44,7 @@ export type WaveRuntimeConfig = {
 export type WaveRuntimeDependencies = {
   nowMs: () => number;
   getSelectedFactionUnits: () => UnitConfig[];
+  getAdditionalWaveUnits: (waveNumber: number) => UnitConfig[];
   getSpriteKeyByUnit: (unit: UnitConfig) => string;
   getAnimationKeyByUnit: (unit: UnitConfig) => string;
   getCreepTypeFromUnit: (unit: UnitConfig) => 'basic';
@@ -179,9 +180,11 @@ export function spawnWaveCreeps(
     waveNumber: state.currentWaveNumber,
     factionUnits: deps.getSelectedFactionUnits(),
   });
+  const additionalUnits = deps.getAdditionalWaveUnits(state.currentWaveNumber);
+  const waveUnits = [...units, ...additionalUnits];
 
   const firstSpawnAtMs = deps.nowMs() + config.waveFirstSpawnDelayMs;
-  state.pendingWaveSpawns = units.map((unit, index) => ({
+  state.pendingWaveSpawns = waveUnits.map((unit, index) => ({
     unit,
     sequenceIndex: index,
     spawnAtMs: firstSpawnAtMs + index * config.waveSpawnIntervalMs,

@@ -133,6 +133,15 @@ function HudPanelComponent({ setup }: HudPanelProps) {
             <span className="hud-info-value">{viewModel.phaseLabel}</span>
           </div>
 
+          <div className="hud-info-row">
+            <span className="hud-info-label">Enemy gold:</span>
+            <span className="hud-info-value">{snapshot.opponentGold}</span>
+            <span className="hud-info-label">Enemy income:</span>
+            <span className="hud-info-value">{snapshot.opponentIncome}</span>
+            <span className="hud-info-label">Enemy sends:</span>
+            <span className="hud-info-value">{snapshot.opponentSendQueue.length}</span>
+          </div>
+
           <div className="hud-selected-info">
             <span className="hud-selected-label">Selected:</span>
             <span className="hud-selected-value">{viewModel.selectedTowerLabel}</span>

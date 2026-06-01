@@ -26,6 +26,8 @@ export type SelectedTowerSnapshot = {
 export type GameHudSnapshot = {
   gold: number;
   lives: number;
+  opponentGold: number;
+  opponentIncome: number;
   builderFactionName: string;
   waveNumber: number;
   phase: GamePhase;
@@ -34,6 +36,7 @@ export type GameHudSnapshot = {
   selectedFaction: HudFactionType;
   autoStartSecondsLeft: number | null;
   waveQueue: WaveQueueItem[];
+  opponentSendQueue: WaveQueueItem[];
   pendingCreepCount: number;
 };
 
