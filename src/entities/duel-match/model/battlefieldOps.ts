@@ -1,5 +1,8 @@
 import type { GridPosition } from '../../../shared/types/pathfinding';
+import { CreepTypeId } from '../../../shared/types/content-ids';
+import { resolveUnitConfigById } from '../../unit/model/registry';
 import type { TowerEntity } from '../../tower/model/types';
+import type { DuelMatchState } from './types';
 import type {
   AddCreepEntry,
   BattlefieldLeakResult,
@@ -15,6 +18,54 @@ export function createBattlefieldState(
     towers: [],
     creeps: [],
     path,
+    leakedCount: 0,
+  };
+}
+
+function createSendCreepEntries(
+  sender: 'player' | 'opponent',
+  round: number,
+  battlefield: BattlefieldState,
+  unitIds: DuelMatchState['player']['sendQueue'],
+): AddCreepEntry[] {
+  const entrance = battlefield.path[0] ?? battlefield.grid.entrance;
+
+  return unitIds.map((unitId, index) => {
+    const unit = resolveUnitConfigById(unitId);
+    return {
+      id: `${sender}:send:${round}:${index}:${unit.id}`,
+      typeId: CreepTypeId.BASIC,
+      hp: unit.health,
+      speed: unit.speed,
+      entrance,
+    };
+  });
+}
+
+export function routeQueuedSendsToBattlefields(state: DuelMatchState): DuelMatchState {
+  const playerTargetEntries = createSendCreepEntries(
+    'opponent',
+    state.round + 1,
+    state.player.battlefield,
+    state.opponent.sendQueue,
+  );
+  const opponentTargetEntries = createSendCreepEntries(
+    'player',
+    state.round + 1,
+    state.opponent.battlefield,
+    state.player.sendQueue,
+  );
+
+  return {
+    ...state,
+    player: {
+      ...state.player,
+      battlefield: addCreeps(state.player.battlefield, playerTargetEntries),
+    },
+    opponent: {
+      ...state.opponent,
+      battlefield: addCreeps(state.opponent.battlefield, opponentTargetEntries),
+    },
   };
 }
 
@@ -120,6 +171,7 @@ export function removeLeakedCreeps(battlefield: BattlefieldState): BattlefieldLe
     battlefield: {
       ...battlefield,
       creeps: battlefield.creeps.filter((creep) => creep.status !== 'escaped'),
+      leakedCount: battlefield.leakedCount + leaked.length,
     },
     leakedCount: leaked.length,
   };

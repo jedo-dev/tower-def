@@ -24,6 +24,7 @@ export {
   removeDeadCreeps,
   removeLeakedCreeps,
   removeTower,
+  routeQueuedSendsToBattlefields,
 } from './model/battlefieldOps';
 export {
   canAffordSendCreep,

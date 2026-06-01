@@ -14,8 +14,11 @@ import {
   removeDeadCreeps,
   removeLeakedCreeps,
   removeTower,
+  routeQueuedSendsToBattlefields,
 } from './battlefieldOps';
 import { createInitialDuelMatchState, DEFAULT_ENTRANCE, DEFAULT_EXIT } from './state';
+import { sendCreep } from './lifecycle';
+import { UnitTier } from '../../unit/model/types';
 
 function createTestBattlefield(): BattlefieldState {
   const grid = createGridModel({ entrance: DEFAULT_ENTRANCE, exit: DEFAULT_EXIT });
@@ -55,6 +58,7 @@ describe('entities/duel-match/battlefield', () => {
       expect(battlefield.grid).toBeDefined();
       expect(battlefield.towers).toEqual([]);
       expect(battlefield.creeps).toEqual([]);
+      expect(battlefield.leakedCount).toBe(0);
       expect(battlefield.path.length).toBeGreaterThan(0);
     });
 
@@ -337,43 +341,53 @@ describe('entities/duel-match/battlefield', () => {
     });
 
     it('player sends spawn on opponent field (cross-spawn rule)', () => {
-      const state = createInitialDuelMatchState(RaceId.UNDEAD, RaceId.ORC);
-      const opponentEntry: AddCreepEntry = {
-        id: 'player_send_1',
-        typeId: 'basic',
-        hp: 100,
-        speed: 1,
-        entrance: DEFAULT_ENTRANCE,
-      };
+      const state = sendCreep(
+        createInitialDuelMatchState(RaceId.UNDEAD, RaceId.ORC),
+        true,
+        'undead_skeleton',
+        UnitTier.TIER_1,
+      ).state;
 
-      const updatedOpponentBf = addCreeps(
-        state.opponent.battlefield,
-        [opponentEntry],
-      );
+      const routedState = routeQueuedSendsToBattlefields(state);
 
-      expect(updatedOpponentBf.creeps).toHaveLength(1);
-      expect(updatedOpponentBf.creeps[0].id).toBe('player_send_1');
-      expect(state.player.battlefield.creeps).toHaveLength(0);
+      expect(routedState.opponent.battlefield.creeps).toHaveLength(1);
+      expect(routedState.opponent.battlefield.creeps[0].id).toBe('player:send:1:0:undead_skeleton');
+      expect(routedState.opponent.battlefield.creeps[0].position).toEqual(DEFAULT_ENTRANCE);
+      expect(routedState.player.battlefield.creeps).toHaveLength(0);
+      expect(state.opponent.battlefield.creeps).toHaveLength(0);
     });
 
     it('computer sends spawn on player field (cross-spawn rule)', () => {
-      const state = createInitialDuelMatchState(RaceId.UNDEAD, RaceId.ORC);
-      const opponentSendEntry: AddCreepEntry = {
-        id: 'opponent_send_1',
-        typeId: 'basic',
-        hp: 100,
-        speed: 1,
-        entrance: DEFAULT_ENTRANCE,
-      };
+      const state = sendCreep(
+        createInitialDuelMatchState(RaceId.UNDEAD, RaceId.ORC),
+        false,
+        'orc_grunt',
+        UnitTier.TIER_1,
+      ).state;
 
-      const updatedPlayerBf = addCreeps(
-        state.player.battlefield,
-        [opponentSendEntry],
-      );
+      const routedState = routeQueuedSendsToBattlefields(state);
 
-      expect(updatedPlayerBf.creeps).toHaveLength(1);
-      expect(updatedPlayerBf.creeps[0].id).toBe('opponent_send_1');
-      expect(state.opponent.battlefield.creeps).toHaveLength(0);
+      expect(routedState.player.battlefield.creeps).toHaveLength(1);
+      expect(routedState.player.battlefield.creeps[0].id).toBe('opponent:send:1:0:orc_grunt');
+      expect(routedState.player.battlefield.creeps[0].position).toEqual(DEFAULT_ENTRANCE);
+      expect(routedState.opponent.battlefield.creeps).toHaveLength(0);
+      expect(state.player.battlefield.creeps).toHaveLength(0);
+    });
+
+    it('routes both send queues without sharing creep arrays', () => {
+      let state = createInitialDuelMatchState(RaceId.UNDEAD, RaceId.ORC);
+      state = sendCreep(state, true, 'undead_skeleton', UnitTier.TIER_1).state;
+      state = sendCreep(state, false, 'orc_grunt', UnitTier.TIER_1).state;
+
+      const routedState = routeQueuedSendsToBattlefields(state);
+
+      expect(routedState.player.battlefield.creeps.map((creep) => creep.id)).toEqual([
+        'opponent:send:1:0:orc_grunt',
+      ]);
+      expect(routedState.opponent.battlefield.creeps.map((creep) => creep.id)).toEqual([
+        'player:send:1:0:undead_skeleton',
+      ]);
+      expect(routedState.player.battlefield.creeps).not.toBe(routedState.opponent.battlefield.creeps);
     });
 
     it('tower placement on one battlefield does not affect the other', () => {
@@ -401,7 +415,9 @@ describe('entities/duel-match/battlefield', () => {
 
       expect(leakedCount).toBe(1);
       expect(cleanPlayerBf.creeps).toHaveLength(0);
+      expect(cleanPlayerBf.leakedCount).toBe(1);
       expect(state.opponent.battlefield.creeps).toHaveLength(0);
+      expect(state.opponent.battlefield.leakedCount).toBe(0);
     });
   });
 });

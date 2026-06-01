@@ -16,6 +16,7 @@ import { spendGold } from '../../../../entities/player-resources';
 import { applyComputerSendStrategy } from '../../../../entities/computer-opponent';
 import {
   createInitialDuelMatchState,
+  routeQueuedSendsToBattlefields,
   startRound,
   type DuelMatchState,
 } from '../../../../entities/duel-match';
@@ -1629,6 +1630,7 @@ export class GameScene extends Phaser.Scene {
     this.pathCellKeys = new Set(wavePath.map((cell) => `${cell.x}:${cell.y}`));
     this.redrawTerrainTiles();
     this.applyComputerBuildPhaseSendStrategy();
+    this.duelMatchState = routeQueuedSendsToBattlefields(this.duelMatchState);
     this.spawnWaveCreeps();
     this.duelMatchState = startRound(this.duelMatchState).state;
     this.wavePhaseState = startNextWaveCycle(this.wavePhaseState);

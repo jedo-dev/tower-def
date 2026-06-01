@@ -8,11 +8,12 @@ export type BattlefieldState = {
   towers: TowerEntity[];
   creeps: CreepEntity[];
   path: GridPosition[];
+  leakedCount: number;
 };
 
 export type AddCreepEntry = {
   id: string;
-  typeId: string;
+  typeId: CreepEntity['type'];
   hp: number;
   speed: number;
   entrance: GridPosition;
