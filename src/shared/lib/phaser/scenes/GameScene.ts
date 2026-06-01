@@ -55,10 +55,12 @@ import type { GridPosition } from '../../../types/pathfinding';
 import {
   getGameSetupConfig,
   onGameCommand,
+  onGameEvent,
   publishGameEvent,
   publishGameHudSnapshot,
 } from '../../game-bridge/bridge';
 import type {
+  BattlefieldView,
   GameHudSnapshot,
   HudFactionType,
   MatchOutcomeStatus,
@@ -234,8 +236,10 @@ export class GameScene extends Phaser.Scene {
   private currentWaveNumber = 1;
   private activeCreepPath: GridPosition[] = [];
   private activeCreeps: CreepRenderState[] = [];
+  private opponentCreeps: CreepRenderState[] = [];
   private pendingWaveSpawns: PendingWaveSpawn[] = [];
   private activeTowers: TowerRenderState[] = [];
+  private opponentTowers: TowerRenderState[] = [];
   private activeProjectiles: ProjectileState[] = [];
   private activeImpactEffects: ImpactEffectState[] = [];
   private activeDamageNumbers: DamageNumberState[] = [];
@@ -250,6 +254,7 @@ export class GameScene extends Phaser.Scene {
   private unsubscribeFactionSelectCommand: (() => void) | null = null;
   private unsubscribeUpgradeTowerCommand: (() => void) | null = null;
   private unsubscribeSellTowerCommand: (() => void) | null = null;
+  private unsubscribeBattlefieldViewEvent: (() => void) | null = null;
   private selectedTowerType: 'archer' | 'splash' | null = null;
   private selectedBuilderFactionId = DEFAULT_BUILDER_FACTION;
   private selectedFaction: HudFactionType = 'undead';
@@ -257,6 +262,7 @@ export class GameScene extends Phaser.Scene {
   private duelMatchState: DuelMatchState = createInitialDuelMatchState(RaceId.UNDEAD, RaceId.UNDEAD);
   private matchOutcomeStatus: MatchOutcomeStatus = 'active';
   private matchWinner: HudFactionType | null = null;
+  private activeBattlefieldView: BattlefieldView = 'player';
   private readonly mapSeed = 1337;
   private inputControllerState: InputControllerState = {
     activeTouchGesture: null,
@@ -459,6 +465,15 @@ export class GameScene extends Phaser.Scene {
     this.unsubscribeSellTowerCommand = onGameCommand('sell-tower', (payload) => {
       this.handleSellTowerCommand(payload.towerId);
     });
+    this.unsubscribeBattlefieldViewEvent = onGameEvent('battlefield-view-changed', (payload) => {
+      if (!payload.accepted) {
+        return;
+      }
+
+      this.activeBattlefieldView = payload.activeView;
+      this.renderVisibleBattlefield();
+      this.publishHudSnapshot();
+    });
     this.registry.set('economy.gold', this.playerGold);
     this.registry.set('economy.lives', this.playerLives);
     this.registry.set('phase.build.active', this.canPerformBuildActions());
@@ -480,6 +495,7 @@ export class GameScene extends Phaser.Scene {
 
     this.processPendingWaveSpawns(_time);
     this.moveCreepsAlongPath(delta);
+    this.moveOpponentCreepsAlongPath(delta);
     this.updateTowerCombat(delta);
     this.updateCreepHitFeedback(delta);
     this.removeDeadCreepsFromActiveWave(delta);
@@ -519,6 +535,7 @@ export class GameScene extends Phaser.Scene {
     this.nextWaveStartsAtMs = state.nextWaveStartsAtMs;
     this.destroyAllTowerSprites();
     this.activeTowers = [];
+    this.destroyOpponentBattlefieldRenderState();
     this.isWaveCompletionRewardGranted = state.isWaveCompletionRewardGranted;
   }
 
@@ -707,10 +724,12 @@ export class GameScene extends Phaser.Scene {
   private getBuildRuntimeDeps(): BuildRuntimeDeps {
     return {
       canPerformPlace: () =>
+        this.activeBattlefieldView === 'player' &&
         this.canProcessUserAction() &&
         isWaveActionAllowed(this.wavePhaseState, 'place-tower') &&
         !this.isGameOver,
       canPerformSell: () =>
+        this.activeBattlefieldView === 'player' &&
         this.canProcessUserAction() &&
         isWaveActionAllowed(this.wavePhaseState, 'sell-tower') &&
         !this.isGameOver,
@@ -883,6 +902,42 @@ export class GameScene extends Phaser.Scene {
     this.wavePhaseState = state.wavePhaseState;
   }
 
+  private moveOpponentCreepsAlongPath(deltaMs: number): void {
+    if (this.opponentCreeps.length === 0) {
+      return;
+    }
+
+    const state: MovementRuntimeState = {
+      activeCreeps: this.opponentCreeps,
+      activeCreepPath: this.duelMatchState.opponent.battlefield.path,
+      playerGold: this.duelMatchState.opponent.gold,
+      playerLives: this.duelMatchState.opponent.hp,
+      isGameOver: this.isGameOver,
+      restartScheduledAtMs: this.restartScheduledAtMs,
+      wavePhaseState: this.wavePhaseState,
+    };
+
+    moveCreepsAlongPathRuntime(
+      state,
+      {
+        ...this.getMovementRuntimeDeps(),
+        onLivesUpdated: () => undefined,
+        onGameOverUpdated: () => undefined,
+        shouldEndRunOnLivesDepleted: () => false,
+        onWavePhaseUpdated: () => undefined,
+        onEscapedCountUpdated: (escapedCount) => {
+          this.registry.set('duel.opponent.escapedCreeps', escapedCount);
+        },
+        onBuildStateNeedsRefresh: () => undefined,
+        onHudChanged: () => this.publishHudSnapshot(),
+      },
+      this.movementRuntimeConfig,
+      deltaMs,
+    );
+
+    this.opponentCreeps = state.activeCreeps;
+  }
+
   private isBuildCellValid(cellPosition: GridPosition, grid: GridModel): boolean {
     return isBuildCellValidRuntime(
       this.getBuildRuntimeState(),
@@ -893,6 +948,10 @@ export class GameScene extends Phaser.Scene {
   }
 
   private tryPlaceTowerAtHoveredCell(): void {
+    if (this.activeBattlefieldView !== 'player') {
+      return;
+    }
+
     const result = tryPlaceTowerAtHoveredCellRuntime(
       this.getBuildRuntimeState(),
       this.getBuildRuntimeDeps(),
@@ -923,6 +982,10 @@ export class GameScene extends Phaser.Scene {
   }
 
   private trySellTowerAtHoveredCell(): void {
+    if (this.activeBattlefieldView !== 'player') {
+      return;
+    }
+
     const result = trySellTowerAtHoveredCellRuntime(
       this.getBuildRuntimeState(),
       this.getBuildRuntimeDeps(),
@@ -1123,6 +1186,10 @@ export class GameScene extends Phaser.Scene {
       return false;
     }
 
+    if (this.activeBattlefieldView !== 'player') {
+      return false;
+    }
+
     return canPerformBuildActionsByPhase(this.wavePhaseState);
   }
 
@@ -1288,6 +1355,7 @@ export class GameScene extends Phaser.Scene {
 
   private resetRunToInitialState(): void {
     this.destroyAllCreeps();
+    this.destroyOpponentBattlefieldRenderState();
     this.destroyAllProjectiles();
     this.destroyAllImpactEffects();
     this.destroyAllTowerSprites();
@@ -1631,6 +1699,7 @@ export class GameScene extends Phaser.Scene {
     this.redrawTerrainTiles();
     this.applyComputerBuildPhaseSendStrategy();
     this.duelMatchState = routeQueuedSendsToBattlefields(this.duelMatchState);
+    this.syncOpponentBattlefieldRenderStateFromDuel();
     this.spawnWaveCreeps();
     this.duelMatchState = startRound(this.duelMatchState).state;
     this.wavePhaseState = startNextWaveCycle(this.wavePhaseState);
@@ -1645,7 +1714,75 @@ export class GameScene extends Phaser.Scene {
     this.nextWaveStartsAtMs = null;
     this.currentWaveNumber += 1;
     this.registry.set('wave.number', this.currentWaveNumber);
+    this.renderVisibleBattlefield();
     this.publishHudSnapshot();
+  }
+
+  private renderVisibleBattlefield(): void {
+    const showOpponent = this.activeBattlefieldView === 'opponent';
+
+    this.activeTowers.forEach((tower) => tower.sprite.setVisible(!showOpponent));
+    this.activeCreeps.forEach((creep) => creep.sprite.setVisible(!showOpponent));
+    this.activeProjectiles.forEach((projectile) => projectile.sprite.setVisible(!showOpponent));
+    this.activeImpactEffects.forEach((effect) => effect.sprite.setVisible(!showOpponent));
+    this.activeDamageNumbers.forEach((numberState) => numberState.text.setVisible(!showOpponent));
+
+    this.opponentTowers.forEach((tower) => tower.sprite.setVisible(showOpponent));
+    this.opponentCreeps.forEach((creep) => creep.sprite.setVisible(showOpponent));
+
+    const visiblePath = showOpponent
+      ? this.duelMatchState.opponent.battlefield.path
+      : this.activeCreepPath;
+    this.pathCellKeys = new Set(visiblePath.map((cell) => `${cell.x}:${cell.y}`));
+    this.redrawTerrainTiles();
+  }
+
+  private syncOpponentBattlefieldRenderStateFromDuel(): void {
+    this.destroyOpponentBattlefieldRenderState();
+
+    const opponentBattlefield = this.duelMatchState.opponent.battlefield;
+    this.opponentTowers = opponentBattlefield.towers.map((tower) => {
+      const sprite =
+        tower.type === 'splash'
+          ? this.createPlacedPlagueSprite(tower.position)
+          : this.createPlacedArcherSprite(tower.position);
+      const runtime = createInitialTowerCombatRuntime();
+      sprite.setVisible(this.activeBattlefieldView === 'opponent');
+      return {
+        entity: tower,
+        runtime,
+        sprite,
+      };
+    });
+
+    this.opponentCreeps = opponentBattlefield.creeps
+      .filter((creep) => creep.lifeState === 'alive')
+      .map((creep) => {
+        const position = this.toCellCenter(creep.position);
+        const sprite = this.createOpponentCreepSprite(position.x, position.y);
+        sprite.setVisible(this.activeBattlefieldView === 'opponent');
+        return {
+          entity: { ...creep },
+          sprite,
+          hitFlashRemainingMs: 0,
+          deathFadeRemainingMs: 0,
+        };
+      });
+  }
+
+  private createOpponentCreepSprite(x: number, y: number): Phaser.GameObjects.Sprite {
+    const sprite = this.add.sprite(x, y, UNIT_SPRITE_KEYS.UNDEAD_SKELETON, 0);
+    sprite.setDisplaySize(PROJECTILE_DISPLAY_SIZE_PX, PROJECTILE_DISPLAY_SIZE_PX);
+    sprite.setDepth(TOWER_RENDER_DEPTH - 1);
+    sprite.play(UNIT_ANIMATION_KEYS.UNDEAD_SKELETON_WALK);
+    return sprite;
+  }
+
+  private destroyOpponentBattlefieldRenderState(): void {
+    this.opponentCreeps.forEach((creep) => creep.sprite.destroy());
+    this.opponentCreeps = [];
+    this.opponentTowers.forEach((tower) => tower.sprite.destroy());
+    this.opponentTowers = [];
   }
 
   private publishHudSnapshot(): void {
@@ -1933,11 +2070,16 @@ export class GameScene extends Phaser.Scene {
       this.unsubscribeSellTowerCommand();
       this.unsubscribeSellTowerCommand = null;
     }
+    if (this.unsubscribeBattlefieldViewEvent) {
+      this.unsubscribeBattlefieldViewEvent();
+      this.unsubscribeBattlefieldViewEvent = null;
+    }
 
     this.destroyAllCreeps();
     this.destroyAllProjectiles();
     this.destroyAllImpactEffects();
     this.destroyAllTowerSprites();
+    this.destroyOpponentBattlefieldRenderState();
     this.destroyAllDamageNumbers();
     this.buildPreviewOverlay?.destroy();
     this.buildPreviewOverlay = null;
