@@ -125,7 +125,9 @@ describe('entities/computer-opponent/applyComputerBuildStrategy', () => {
     );
     expect(builtCell?.isOccupied).toBe(true);
     expect(builtCell?.isWalkable).toBe(false);
-    expect(findPathBfs(result.state.opponent.battlefield.grid).found).toBe(true);
+    const pathResult = findPathBfs(result.state.opponent.battlefield.grid);
+    expect(pathResult.found).toBe(true);
+    expect(result.state.opponent.battlefield.path).toEqual(pathResult.path);
   });
 
   it('upgrades computer towers on the opponent battlefield without mutating player battlefield', () => {

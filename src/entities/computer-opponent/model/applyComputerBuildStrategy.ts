@@ -8,6 +8,7 @@ import { TOWER_BASE_LEVEL, TOWER_COMBAT_STATS_BY_TYPE } from '../../tower/model/
 import { canAffordUpgrade, getTowerStatsForLevel, getUpgradeCost } from '../../tower/model/upgrade';
 import type { TowerTypeId } from '../../../shared/types/content-ids';
 import type { GridPosition } from '../../../shared/types/pathfinding';
+import { findPathBfs } from '../../../shared/lib/pathfinding/hasPathBfs';
 import { validateTowerPlacementPath } from '../../../shared/lib/pathfinding/validateTowerPlacementPath';
 import type { ComputerDecisionDebugRecorder } from './decisionDebugSnapshots';
 import { planBuildDecision } from './planBuildDecision';
@@ -71,6 +72,18 @@ function applyBuildToBattlefield(
   };
 }
 
+function recalculateBattlefieldPath(battlefield: BattlefieldState): BattlefieldState {
+  const pathResult = findPathBfs(battlefield.grid);
+  if (!pathResult.found || pathResult.path.length === 0) {
+    return battlefield;
+  }
+
+  return {
+    ...battlefield,
+    path: pathResult.path,
+  };
+}
+
 function upgradeTower(tower: TowerEntity): TowerEntity | null {
   const nextLevel = tower.level + 1;
   const nextStats = getTowerStatsForLevel(tower.type, nextLevel);
@@ -115,6 +128,7 @@ export function applyComputerBuildStrategy(
 
       const tower = createComputerTower(action.towerType, action.position, cost);
       battlefield = applyBuildToBattlefield(battlefield, tower);
+      battlefield = recalculateBattlefieldPath(battlefield);
       gold -= cost;
       spentGold += cost;
       builtCount += 1;
