@@ -31,6 +31,11 @@ function createTestHudSnapshot(overrides?: Partial<GameHudSnapshot>): GameHudSna
     lives: 20,
     opponentGold: 500,
     opponentIncome: 50,
+    opponentLives: 20,
+    matchOutcome: {
+      status: 'active',
+      winner: null,
+    },
     builderFactionName: 'Undead',
     waveNumber: 1,
     phase: 'build',

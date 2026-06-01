@@ -25,6 +25,7 @@ export type MovementRuntimeDeps = {
   toCellCenter: (position: GridPosition) => { x: number; y: number };
   onLivesUpdated: (lives: number) => void;
   onGameOverUpdated: (isGameOver: boolean) => void;
+  shouldEndRunOnLivesDepleted: () => boolean;
   onWavePhaseUpdated: (nextWavePhase: WavePhaseState) => void;
   onEscapedCountUpdated: (escapedCount: number) => void;
   onBuildStateNeedsRefresh: () => void;
@@ -49,7 +50,7 @@ function markCreepEscaped(
   state.playerLives = nextResources.lives;
   deps.onLivesUpdated(state.playerLives);
 
-  if (isGameOverByLives({ lives: state.playerLives })) {
+  if (isGameOverByLives({ lives: state.playerLives }) && deps.shouldEndRunOnLivesDepleted()) {
     state.isGameOver = true;
     state.wavePhaseState = transitionToGameOver(state.wavePhaseState);
     state.restartScheduledAtMs ??= deps.nowMs() + config.restartDelayMs;

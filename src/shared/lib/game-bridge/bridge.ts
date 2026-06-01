@@ -32,6 +32,11 @@ let snapshot: GameHudSnapshot = {
   lives: 0,
   opponentGold: 0,
   opponentIncome: 0,
+  opponentLives: 0,
+  matchOutcome: {
+    status: 'active',
+    winner: null,
+  },
   builderFactionName: 'Undead',
   waveNumber: 1,
   phase: 'build',

@@ -3,6 +3,7 @@ export type HudTowerType = 'archer' | 'splash';
 export type HudFactionType = 'undead' | 'orc' | 'human' | 'elf';
 export type HudCreepType = 'skeleton' | 'ghoul' | 'crypt_fiend' | 'gargoyle';
 export type BattlefieldView = 'player' | 'opponent';
+export type MatchOutcomeStatus = 'active' | 'player-won' | 'player-lost' | 'draw';
 
 export type WaveQueueItem = {
   type: HudCreepType;
@@ -28,6 +29,11 @@ export type GameHudSnapshot = {
   lives: number;
   opponentGold: number;
   opponentIncome: number;
+  opponentLives: number;
+  matchOutcome: {
+    status: MatchOutcomeStatus;
+    winner: HudFactionType | null;
+  };
   builderFactionName: string;
   waveNumber: number;
   phase: GamePhase;

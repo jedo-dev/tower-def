@@ -57,7 +57,12 @@ import {
   publishGameEvent,
   publishGameHudSnapshot,
 } from '../../game-bridge/bridge';
-import type { GameHudSnapshot, HudFactionType, SelectedTowerSnapshot } from '../../game-bridge/types';
+import type {
+  GameHudSnapshot,
+  HudFactionType,
+  MatchOutcomeStatus,
+  SelectedTowerSnapshot,
+} from '../../game-bridge/types';
 import { createGridModel } from '../../grid/createGridModel';
 import type { SoundId } from '../sound/audio.types';
 import { validateTowerPlacementPath } from '../../pathfinding/validateTowerPlacementPath';
@@ -111,6 +116,11 @@ import {
   type MovementRuntimeDeps,
   type MovementRuntimeState,
 } from '../runtime/movement/gameSceneMovementRuntime';
+import {
+  applyDuelRoundEnd as applyDuelRoundEndRuntime,
+  type DuelMatchRuntimeDeps,
+  type DuelMatchRuntimeState,
+} from '../runtime/duel/gameSceneDuelRuntime';
 import {
   applyWaveCompletionRewardIfResolved as applyWaveCompletionRewardIfResolvedRuntime,
   initializeWaveRuntime as initializeWaveRuntimeModule,
@@ -244,6 +254,8 @@ export class GameScene extends Phaser.Scene {
   private selectedFaction: HudFactionType = 'undead';
   private selectedDifficulty: Difficulty = DEFAULT_DIFFICULTY;
   private duelMatchState: DuelMatchState = createInitialDuelMatchState(RaceId.UNDEAD, RaceId.UNDEAD);
+  private matchOutcomeStatus: MatchOutcomeStatus = 'active';
+  private matchWinner: HudFactionType | null = null;
   private readonly mapSeed = 1337;
   private inputControllerState: InputControllerState = {
     activeTouchGesture: null,
@@ -434,6 +446,7 @@ export class GameScene extends Phaser.Scene {
           RaceId.UNDEAD,
           this.mapHudFactionToRaceId(this.selectedFaction),
         );
+        this.playerLives = this.duelMatchState.player.hp;
       }
       this.soundManager?.setFaction(this.selectedFaction);
       this.registry.set('wave.selectedFaction', this.selectedFaction);
@@ -731,7 +744,7 @@ export class GameScene extends Phaser.Scene {
       toCellCenter: (position) => this.toCellCenter(position),
       onLivesUpdated: (lives) => {
         this.playerLives = lives;
-        this.registry.set('economy.lives', this.playerLives);
+        this.registry.set('economy.lives', this.duelMatchState.player.hp);
       },
       onGameOverUpdated: (isGameOver) => {
         this.isGameOver = isGameOver;
@@ -741,6 +754,7 @@ export class GameScene extends Phaser.Scene {
           this.ensureBaseAmbientPlaying();
         }
       },
+      shouldEndRunOnLivesDepleted: () => false,
       onWavePhaseUpdated: (nextWavePhase) => {
         this.wavePhaseState = nextWavePhase;
       },
@@ -754,6 +768,52 @@ export class GameScene extends Phaser.Scene {
       },
       onHudChanged: () => this.publishHudSnapshot(),
       playSound: (soundId: SoundId) => this.soundManager?.play(soundId),
+    };
+  }
+
+  private getDuelMatchRuntimeState(): DuelMatchRuntimeState {
+    return {
+      duelMatchState: this.duelMatchState,
+      wavePhaseState: this.wavePhaseState,
+      isGameOver: this.isGameOver,
+      nextWaveStartsAtMs: this.nextWaveStartsAtMs,
+      restartScheduledAtMs: this.restartScheduledAtMs,
+    };
+  }
+
+  private applyDuelMatchRuntimeState(state: DuelMatchRuntimeState): void {
+    this.duelMatchState = state.duelMatchState;
+    this.wavePhaseState = state.wavePhaseState;
+    this.isGameOver = state.isGameOver;
+    this.nextWaveStartsAtMs = state.nextWaveStartsAtMs;
+    this.restartScheduledAtMs = state.restartScheduledAtMs;
+  }
+
+  private getDuelMatchRuntimeDeps(): DuelMatchRuntimeDeps {
+    return {
+      onDuelMatchStateUpdated: (state) => {
+        this.duelMatchState = state;
+        this.playerLives = state.player.hp;
+        this.registry.set('economy.lives', this.playerLives);
+        this.registry.set('duel.opponent.hp', state.opponent.hp);
+      },
+      onGameOverUpdated: (isGameOver) => {
+        this.isGameOver = isGameOver;
+        this.registry.set('phase.game.over', this.isGameOver);
+        if (isGameOver) {
+          this.soundManager?.stopSound('ambient.tension');
+          this.ensureBaseAmbientPlaying();
+        }
+      },
+      onWavePhaseUpdated: (nextWavePhase) => {
+        this.wavePhaseState = nextWavePhase;
+      },
+      onBuildStateNeedsRefresh: () => {
+        this.registry.set('phase.build.active', this.canPerformBuildActions());
+        this.updateGridOverlayVisualState();
+        this.updateBuildPreview();
+      },
+      playGameOverSound: () => this.soundManager?.play('ui.game_over'),
     };
   }
 
@@ -1146,6 +1206,7 @@ export class GameScene extends Phaser.Scene {
 
   private applyWaveCompletionRewardIfResolved(): void {
     const state = this.getWaveRuntimeState();
+    const wasWaveCompletionRewardGranted = state.isWaveCompletionRewardGranted;
     applyWaveCompletionRewardIfResolvedRuntime(
       state,
       this.waveRuntimeConfig,
@@ -1155,6 +1216,9 @@ export class GameScene extends Phaser.Scene {
     this.playerGold = state.playerGold;
     this.isWaveCompletionRewardGranted = state.isWaveCompletionRewardGranted;
     this.nextWaveStartsAtMs = state.nextWaveStartsAtMs;
+    if (!wasWaveCompletionRewardGranted && state.isWaveCompletionRewardGranted) {
+      this.applyDuelRoundEndFromResolvedWave();
+    }
     if (this.canPerformBuildActions()) {
       this.duelMatchState = {
         ...this.duelMatchState,
@@ -1167,6 +1231,31 @@ export class GameScene extends Phaser.Scene {
       this.soundManager?.stopSound('ambient.tension');
       this.ensureBaseAmbientPlaying();
     }
+  }
+
+  private applyDuelRoundEndFromResolvedWave(): void {
+    const duelRuntimeState = this.getDuelMatchRuntimeState();
+    const playerLeakedCreeps = this.activeCreeps.filter(
+      (creep) => creep.entity.status === 'escaped',
+    ).length;
+    const opponentLeakedCreeps = this.duelMatchState.player.sendQueue.length;
+    const result = applyDuelRoundEndRuntime({
+      state: duelRuntimeState,
+      deps: this.getDuelMatchRuntimeDeps(),
+      playerLeakedCreeps,
+      opponentLeakedCreeps,
+    });
+
+    this.applyDuelMatchRuntimeState(duelRuntimeState);
+    this.matchWinner = result.winner === null ? null : this.mapRaceIdToHudFaction(result.winner);
+    this.matchOutcomeStatus = this.resolveMatchOutcomeStatus(result.isMatchOver);
+    this.registry.set('duel.match.outcome', this.matchOutcomeStatus);
+    if (this.matchWinner !== null) {
+      this.registry.set('duel.match.winner', this.matchWinner);
+    } else {
+      this.registry.remove('duel.match.winner');
+    }
+    this.publishHudSnapshot();
   }
 
   private updateAutoWaveCountdown(nowMs: number): void {
@@ -1222,6 +1311,9 @@ export class GameScene extends Phaser.Scene {
       RaceId.UNDEAD,
       this.mapHudFactionToRaceId(this.selectedFaction),
     );
+    this.playerLives = this.duelMatchState.player.hp;
+    this.matchOutcomeStatus = 'active';
+    this.matchWinner = null;
 
     this.registry.set('economy.gold', this.playerGold);
     this.registry.set('economy.lives', this.playerLives);
@@ -1565,9 +1657,14 @@ export class GameScene extends Phaser.Scene {
 
     const snapshot: GameHudSnapshot = {
       gold: this.playerGold,
-      lives: this.playerLives,
+      lives: this.duelMatchState.player.hp,
       opponentGold: this.duelMatchState.opponent.gold,
       opponentIncome: this.duelMatchState.opponent.income,
+      opponentLives: this.duelMatchState.opponent.hp,
+      matchOutcome: {
+        status: this.matchOutcomeStatus,
+        winner: this.matchWinner,
+      },
       builderFactionName: currentBuilderFaction.name,
       waveNumber: this.currentWaveNumber,
       phase: this.wavePhaseState.phase,
@@ -1715,6 +1812,31 @@ export class GameScene extends Phaser.Scene {
       case 'undead':
         return RaceId.UNDEAD;
     }
+  }
+
+  private mapRaceIdToHudFaction(raceId: RaceId): HudFactionType {
+    switch (raceId) {
+      case RaceId.ORC:
+        return 'orc';
+      case RaceId.HUMAN:
+        return 'human';
+      case RaceId.ELF:
+        return 'elf';
+      case RaceId.UNDEAD:
+        return 'undead';
+    }
+  }
+
+  private resolveMatchOutcomeStatus(isMatchOver: boolean): MatchOutcomeStatus {
+    if (!isMatchOver) {
+      return 'active';
+    }
+    const isPlayerDead = this.duelMatchState.player.hp <= 0;
+    const isOpponentDead = this.duelMatchState.opponent.hp <= 0;
+    if (isPlayerDead && isOpponentDead) {
+      return 'draw';
+    }
+    return isOpponentDead ? 'player-won' : 'player-lost';
   }
 
   private getCreepTypeFromUnit(unit: UnitConfig): 'basic' {

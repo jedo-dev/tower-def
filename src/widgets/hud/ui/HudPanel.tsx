@@ -138,9 +138,18 @@ function HudPanelComponent({ setup }: HudPanelProps) {
             <span className="hud-info-value">{snapshot.opponentGold}</span>
             <span className="hud-info-label">Enemy income:</span>
             <span className="hud-info-value">{snapshot.opponentIncome}</span>
+            <span className="hud-info-label">Enemy HP:</span>
+            <span className="hud-info-value">{snapshot.opponentLives}</span>
             <span className="hud-info-label">Enemy sends:</span>
             <span className="hud-info-value">{snapshot.opponentSendQueue.length}</span>
           </div>
+
+          {snapshot.matchOutcome.status !== 'active' && (
+            <div className="hud-info-row" role="status">
+              <span className="hud-info-label">Match:</span>
+              <span className="hud-info-value">{snapshot.matchOutcome.status}</span>
+            </div>
+          )}
 
           <div className="hud-selected-info">
             <span className="hud-selected-label">Selected:</span>
