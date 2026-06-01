@@ -230,4 +230,23 @@ describe('game bridge event system', () => {
     unsubscribeEvent();
     sendGameCommand('switch-battlefield-view', { view: 'player' });
   });
+
+  it('keeps widgets and pages behind the typed bridge instead of direct scene calls', () => {
+    const sources = import.meta.glob('../../../{widgets,pages}/**/*.{ts,tsx}', {
+      eager: true,
+      query: '?raw',
+      import: 'default',
+    }) as Record<string, string>;
+    const forbiddenPatterns = [
+      /GameScene/,
+      /shared[\\/]lib[\\/]phaser[\\/]scenes/,
+      /\.scene\.(get|start|stop|pause|resume|restart)/,
+    ];
+
+    const offenders = Object.entries(sources)
+      .filter(([, source]) => forbiddenPatterns.some((pattern) => pattern.test(source)))
+      .map(([filePath]) => filePath);
+
+    expect(offenders).toEqual([]);
+  });
 });
