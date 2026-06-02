@@ -110,15 +110,15 @@ describe('entities/computer-opponent/applyComputerBuildStrategy', () => {
     const result = applyComputerBuildStrategy({ state, context });
 
     expect(result.decision.intent).toBe(StrategyIntent.EXTEND_MAZE);
-    expect(result.builtCount).toBe(1);
+    expect(result.builtCount).toBeGreaterThanOrEqual(1);
     expect(result.upgradedCount).toBe(0);
     expect(result.state.player).toBe(state.player);
-    expect(result.state.opponent.battlefield.towers).toHaveLength(1);
+    expect(result.state.opponent.battlefield.towers).toHaveLength(result.builtCount);
 
     const builtTower = result.state.opponent.battlefield.towers[0];
     expect(builtTower.id).toBe(`computer:tower:${builtTower.position.x}:${builtTower.position.y}`);
     expect(context.availableBuildPositions).toContainEqual(builtTower.position);
-    expect(result.state.opponent.gold).toBe(state.opponent.gold - builtTower.cost);
+    expect(result.state.opponent.gold).toBe(state.opponent.gold - result.spentGold);
 
     const builtCell = result.state.opponent.battlefield.grid.cells.find(
       (cell) => cell.x === builtTower.position.x && cell.y === builtTower.position.y,

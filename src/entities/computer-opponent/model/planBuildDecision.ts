@@ -2,6 +2,7 @@ import type { TowerTypeId } from '../../../shared/types/content-ids';
 import type { GridModel } from '../../../shared/types/grid';
 import type { GridPosition } from '../../../shared/types/pathfinding';
 import type { TowerEntity } from '../../tower/model/types';
+import { TOWER_BASE_LEVEL, TOWER_COMBAT_STATS_BY_TYPE } from '../../tower/model/types';
 import { getUpgradeCost } from '../../tower/model/upgrade';
 import { getRaceRegistry } from '../../race-registry/model/registries';
 import { buildableTowers } from '../../tower/model/config/buildableTowers';
@@ -27,18 +28,23 @@ export type BuildPlannerInput = {
 
 type SpendBudgetConfig = {
   maxSpendRatioPerRound: number;
+  maxBuildActionsPerRound: number;
+  minGoldReserveRatio: number;
 };
 
 const SPEND_BUDGET_BY_DIFFICULTY: Record<Difficulty, SpendBudgetConfig> = {
-  [Difficulty.EASY]: { maxSpendRatioPerRound: 0.3 },
-  [Difficulty.NORMAL]: { maxSpendRatioPerRound: 0.5 },
-  [Difficulty.HARD]: { maxSpendRatioPerRound: 0.7 },
-  [Difficulty.NIGHTMARE]: { maxSpendRatioPerRound: 0.9 },
+  [Difficulty.EASY]: { maxSpendRatioPerRound: 0.4, maxBuildActionsPerRound: 1, minGoldReserveRatio: 0.35 },
+  [Difficulty.NORMAL]: { maxSpendRatioPerRound: 0.6, maxBuildActionsPerRound: 2, minGoldReserveRatio: 0.25 },
+  [Difficulty.HARD]: { maxSpendRatioPerRound: 0.85, maxBuildActionsPerRound: 3, minGoldReserveRatio: 0.15 },
+  [Difficulty.NIGHTMARE]: { maxSpendRatioPerRound: 0.95, maxBuildActionsPerRound: 3, minGoldReserveRatio: 0.1 },
 };
 
 function computeSpendBudget(gold: number, difficulty: Difficulty): number {
   const config = SPEND_BUDGET_BY_DIFFICULTY[difficulty];
-  return Math.floor(gold * config.maxSpendRatioPerRound);
+  const reserveGold = Math.floor(gold * config.minGoldReserveRatio);
+  const ratioBudget = Math.floor(gold * config.maxSpendRatioPerRound);
+  const reserveBudget = Math.max(0, gold - reserveGold);
+  return Math.min(ratioBudget, reserveBudget);
 }
 
 function getTowerCostForType(towerType: TowerTypeId, raceId: string): number | null {
@@ -86,8 +92,19 @@ function findBestBuild(
   existingTowers: readonly TowerEntity[],
   path: readonly GridPosition[],
   budget: number,
+  excludedPositions: readonly GridPosition[] = [],
 ): BuildAction | null {
   if (context.affordableTowers.length === 0 || context.availableBuildPositions.length === 0) {
+    return null;
+  }
+
+  const candidatePositions = context.availableBuildPositions.filter(
+    (position) =>
+      !excludedPositions.some(
+        (excluded) => excluded.x === position.x && excluded.y === position.y,
+      ),
+  );
+  if (candidatePositions.length === 0) {
     return null;
   }
 
@@ -102,7 +119,7 @@ function findBestBuild(
     const scores = scoreAllPlacements({
       grid,
       towerType,
-      positions: context.availableBuildPositions,
+      positions: candidatePositions,
       existingTowers,
       path,
     });
@@ -168,6 +185,7 @@ export function planBuildDecision(input: BuildPlannerInput): DecisionOutput {
   }
 
   const intent = selectIntent(context);
+  const spendConfig = SPEND_BUDGET_BY_DIFFICULTY[context.difficulty];
   const budget = computeSpendBudget(context.gold, context.difficulty);
 
   if (budget <= 0) {
@@ -181,6 +199,9 @@ export function planBuildDecision(input: BuildPlannerInput): DecisionOutput {
 
   const actions: ComputerAction[] = [];
   let remainingBudget = budget;
+  let plannedTowerStates = [...existingTowers];
+  const plannedBuildPositions: GridPosition[] = [];
+  let buildActionsCount = 0;
   const reasoningParts: string[] = [];
 
   if (intent === StrategyIntent.UPGRADE || intent === StrategyIntent.DEFEND) {
@@ -199,14 +220,80 @@ export function planBuildDecision(input: BuildPlannerInput): DecisionOutput {
   }
 
   if (intent === StrategyIntent.DEFEND || intent === StrategyIntent.EXTEND_MAZE) {
-    const build = findBestBuild(context, grid, existingTowers, path, remainingBudget);
+    const build = findBestBuild(
+      context,
+      grid,
+      plannedTowerStates,
+      path,
+      remainingBudget,
+      plannedBuildPositions,
+    );
     if (build) {
       const cost = getTowerCostForType(build.towerType, context.raceId);
       if (cost !== null) {
         actions.push(build);
+        plannedBuildPositions.push(build.position);
+        plannedTowerStates = [
+          ...plannedTowerStates,
+          {
+            id: `planned:tower:${build.position.x}:${build.position.y}`,
+            position: build.position,
+            cost,
+            type: build.towerType,
+            level: TOWER_BASE_LEVEL,
+            combatStats: { ...TOWER_COMBAT_STATS_BY_TYPE[build.towerType] },
+          },
+        ];
+        remainingBudget -= cost;
+        buildActionsCount += 1;
         reasoningParts.push(`Building ${build.towerType} at (${build.position.x},${build.position.y}) for ${cost} gold`);
       }
     }
+  }
+
+  const shouldTryAdditionalBuilds =
+    intent === StrategyIntent.DEFEND ||
+    intent === StrategyIntent.EXTEND_MAZE ||
+    intent === StrategyIntent.UPGRADE;
+  while (
+    shouldTryAdditionalBuilds &&
+    buildActionsCount < spendConfig.maxBuildActionsPerRound
+  ) {
+    const build = findBestBuild(
+      context,
+      grid,
+      plannedTowerStates,
+      path,
+      remainingBudget,
+      plannedBuildPositions,
+    );
+    if (!build) {
+      break;
+    }
+
+    const cost = getTowerCostForType(build.towerType, context.raceId);
+    if (cost === null || cost > remainingBudget) {
+      break;
+    }
+
+    actions.push(build);
+    plannedBuildPositions.push(build.position);
+    plannedTowerStates = [
+      ...plannedTowerStates,
+      {
+        id: `planned:tower:${build.position.x}:${build.position.y}`,
+        position: build.position,
+        cost,
+        type: build.towerType,
+        level: TOWER_BASE_LEVEL,
+        combatStats: { ...TOWER_COMBAT_STATS_BY_TYPE[build.towerType] },
+      },
+    ];
+    remainingBudget -= cost;
+    buildActionsCount += 1;
+    reasoningParts.push(
+      `Building ${build.towerType} at (${build.position.x},${build.position.y}) for ${cost} gold (extra)`,
+    );
   }
 
   if (actions.length === 0) {

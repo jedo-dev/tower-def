@@ -254,6 +254,38 @@ describe('entities/computer-opponent/planBuildDecision', () => {
       expect(result.actions).toHaveLength(1);
       expect(result.actions[0]).toEqual({ kind: 'save' });
     });
+
+    it('plans multiple build actions on higher difficulties when budget allows', () => {
+      const context = createTestContext({
+        gold: 600,
+        difficulty: Difficulty.HARD,
+        affordableTowers: [TowerTypeId.ARCHER],
+        availableBuildPositions: [
+          { x: 2, y: 4 },
+          { x: 3, y: 4 },
+          { x: 4, y: 4 },
+          { x: 5, y: 4 },
+          { x: 6, y: 4 },
+        ],
+        mazeCoverage: {
+          totalWalkableCells: 150,
+          occupiedCells: 4,
+          towerCount: 1,
+        },
+      });
+      const grid = createTestGrid();
+      const path = createTestPath();
+
+      const result = planBuildDecision({
+        context,
+        grid,
+        existingTowers: [],
+        path,
+      });
+
+      const buildActions = result.actions.filter((action) => action.kind === 'build');
+      expect(buildActions.length).toBeGreaterThanOrEqual(2);
+    });
   });
 
   describe('intent selection', () => {
