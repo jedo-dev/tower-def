@@ -7,7 +7,7 @@ import {
   publishGameHudSnapshot,
   sendGameCommand,
 } from './bridge';
-import type { BattlefieldView, GameHudSnapshot, SelectedTowerSnapshot } from './types';
+import type { BattlefieldView, CreepSendQueueItem, GameHudSnapshot, SelectedTowerSnapshot } from './types';
 
 function createTestTowerSnapshot(overrides?: Partial<SelectedTowerSnapshot>): SelectedTowerSnapshot {
   return {
@@ -229,6 +229,68 @@ describe('game bridge event system', () => {
     unsubscribeCommand();
     unsubscribeEvent();
     sendGameCommand('switch-battlefield-view', { view: 'player' });
+  });
+
+  it('dispatches send-creep commands through the typed bridge without Phaser rendering', () => {
+    const commandHandler = vi.fn();
+    const unsubscribeCommand = onGameCommand('send-creep', commandHandler);
+
+    sendGameCommand('send-creep', { creepTypeId: 'undead_skeleton' });
+
+    expect(commandHandler).toHaveBeenCalledOnce();
+    expect(commandHandler).toHaveBeenCalledWith({ creepTypeId: 'undead_skeleton' });
+
+    unsubscribeCommand();
+  });
+
+  it('delivers typed send rejection events without a scene instance', () => {
+    const eventHandler = vi.fn();
+    const unsubscribeEvent = onGameEvent('creep-send-rejected', eventHandler);
+
+    publishGameEvent('creep-send-rejected', {
+      creepTypeId: 'orc_grunt',
+      reason: 'insufficient_gold',
+      gold: 12,
+      requiredGold: 25,
+    });
+
+    expect(eventHandler).toHaveBeenCalledOnce();
+    expect(eventHandler).toHaveBeenCalledWith({
+      creepTypeId: 'orc_grunt',
+      reason: 'insufficient_gold',
+      gold: 12,
+      requiredGold: 25,
+    });
+
+    unsubscribeEvent();
+  });
+
+  it('delivers typed queue, income, and opponent HP events without Phaser rendering', () => {
+    const queueHandler = vi.fn();
+    const incomeHandler = vi.fn();
+    const opponentHpHandler = vi.fn();
+    const unsubscribeQueue = onGameEvent('send-queue-updated', queueHandler);
+    const unsubscribeIncome = onGameEvent('income-updated', incomeHandler);
+    const unsubscribeOpponentHp = onGameEvent('opponent-hp-updated', opponentHpHandler);
+    const queue: CreepSendQueueItem[] = [
+      { creepTypeId: 'undead_skeleton', index: 0 },
+      { creepTypeId: 'undead_ghoul', index: 1 },
+    ];
+
+    publishGameEvent('send-queue-updated', { owner: 'player', queue });
+    publishGameEvent('income-updated', { owner: 'player', income: 55, delta: 5 });
+    publishGameEvent('opponent-hp-updated', { hp: 16, previousHp: 20, delta: -4 });
+
+    expect(queueHandler).toHaveBeenCalledOnce();
+    expect(queueHandler).toHaveBeenCalledWith({ owner: 'player', queue });
+    expect(incomeHandler).toHaveBeenCalledOnce();
+    expect(incomeHandler).toHaveBeenCalledWith({ owner: 'player', income: 55, delta: 5 });
+    expect(opponentHpHandler).toHaveBeenCalledOnce();
+    expect(opponentHpHandler).toHaveBeenCalledWith({ hp: 16, previousHp: 20, delta: -4 });
+
+    unsubscribeQueue();
+    unsubscribeIncome();
+    unsubscribeOpponentHp();
   });
 
   it('keeps widgets and pages behind the typed bridge instead of direct scene calls', () => {
