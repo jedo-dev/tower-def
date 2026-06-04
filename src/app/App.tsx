@@ -59,6 +59,7 @@ export function App() {
   const [sfxVolume, setSfxVolume] = useState(0.2);
   const [ambientVolume, setAmbientVolume] = useState(0.15);
   const ambientRef = useRef<HTMLAudioElement | null>(null);
+  const ambientVolumeRef = useRef(ambientVolume);
   const routeRef = useRef<AppRoute>('start');
   const isUiAudioUnlockedRef = useRef(false);
   const lastHoverAtMsRef = useRef(0);
@@ -93,7 +94,7 @@ export function App() {
   useEffect(() => {
     const ambient = new Audio('/assets/audio/sfx/ambient/ambient_map_01.wav');
     ambient.loop = true;
-    ambient.volume = ambientVolume;
+    ambient.volume = ambientVolumeRef.current;
     ambient.preload = 'auto';
     ambientRef.current = ambient;
 
@@ -123,6 +124,7 @@ export function App() {
   }, []);
 
   useEffect(() => {
+    ambientVolumeRef.current = ambientVolume;
     if (ambientRef.current) {
       ambientRef.current.volume = ambientVolume;
     }

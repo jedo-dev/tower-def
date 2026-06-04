@@ -29,6 +29,14 @@
   position: absolute;
   left: 8px;
   right: 8px;
-  bottom: 180px;
+  bottom: 318px;
   z-index: 121;
+}
+
+.game-viewport > [data-creep-send-panel='true'] {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 172px;
+  z-index: 119;
 }

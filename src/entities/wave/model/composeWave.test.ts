@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { undeadUnits, orcUnits } from '../../unit';
+import { undeadUnits } from '../../unit';
 import { buildWavePreview, composeWave } from './composeWave';
 import type { WaveComposition } from './composition';
 

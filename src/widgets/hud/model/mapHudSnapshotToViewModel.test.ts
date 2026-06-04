@@ -5,6 +5,7 @@ import type { GameHudSnapshot } from '../../../shared/lib/game-bridge/types';
 function createSnapshot(overrides: Partial<GameHudSnapshot> = {}): GameHudSnapshot {
   return {
     gold: 100,
+    income: 50,
     lives: 20,
     opponentGold: 500,
     opponentIncome: 50,
@@ -21,6 +22,7 @@ function createSnapshot(overrides: Partial<GameHudSnapshot> = {}): GameHudSnapsh
     selectedFaction: 'undead',
     autoStartSecondsLeft: null,
     waveQueue: [],
+    playerSendQueue: [],
     opponentSendQueue: [],
     pendingCreepCount: 0,
     ...overrides,

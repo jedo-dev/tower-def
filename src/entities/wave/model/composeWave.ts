@@ -10,13 +10,13 @@ import type {
 export type ComposeWaveInput = {
   waveId: string;
   round: number;
-  baselineUnits: UnitConfig[];
-  playerSendQueue: UnitId[];
-  opponentSendQueue: UnitId[];
+  baselineUnits: readonly UnitConfig[];
+  playerSendQueue: readonly UnitId[];
+  opponentSendQueue: readonly UnitId[];
 };
 
 function resolveSendQueueToEntries(
-  queue: UnitId[],
+  queue: readonly UnitId[],
   source: 'player-send' | 'opponent-send',
 ): WaveCompositionEntry[] {
   return queue.map((unitId) => ({

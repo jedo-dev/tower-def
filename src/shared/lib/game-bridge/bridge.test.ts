@@ -28,6 +28,7 @@ function createTestTowerSnapshot(overrides?: Partial<SelectedTowerSnapshot>): Se
 function createTestHudSnapshot(overrides?: Partial<GameHudSnapshot>): GameHudSnapshot {
   return {
     gold: 100,
+    income: 50,
     lives: 20,
     opponentGold: 500,
     opponentIncome: 50,
@@ -44,6 +45,7 @@ function createTestHudSnapshot(overrides?: Partial<GameHudSnapshot>): GameHudSna
     selectedFaction: 'undead',
     autoStartSecondsLeft: null,
     waveQueue: [],
+    playerSendQueue: [],
     opponentSendQueue: [],
     pendingCreepCount: 0,
     ...overrides,

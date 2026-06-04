@@ -207,7 +207,7 @@ describe('entities/computer-opponent/computerBehaviorSimulation', () => {
     expect(firstRound.buildOutput.intent).toBe(StrategyIntent.EXTEND_MAZE);
     expect(firstRound.buildOutput.actions.some((action) => action.kind === 'build')).toBe(true);
     expect(firstRound.sendActionCount).toBeGreaterThan(0);
-    expect(state.towers).toHaveLength(1);
+    expect(state.towers).toHaveLength(3);
 
     state = {
       ...state,

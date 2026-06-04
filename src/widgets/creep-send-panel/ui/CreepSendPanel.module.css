@@ -1,0 +1,104 @@
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  border: 20px solid transparent;
+  border-image: url('../../../assets/ui-presets/thin_border.png') 90 fill / 10px / 0 stretch;
+  color: var(--color-text-primary);
+  font-family: var(--font-family-ui);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.title {
+  font-family: var(--font-family-display);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.meta {
+  display: flex;
+  gap: 8px;
+  color: var(--color-text-secondary);
+  font-family: var(--font-family-stats);
+  font-size: 11px;
+}
+
+.buttons {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.button {
+  min-height: 44px;
+  min-width: 44px;
+  border: 0;
+  padding: 8px;
+  background: url('../../../assets/ui-presets/btn_gray_normal.png') center / 100% 100% no-repeat;
+  color: var(--color-text-primary);
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+
+.button:disabled {
+  cursor: not-allowed;
+  opacity: 0.62;
+}
+
+.button:not(:disabled):hover,
+.button:not(:disabled):focus-visible {
+  background-image: url('../../../assets/ui-presets/btn_green_normal.png');
+  outline: none;
+}
+
+.buttonName {
+  display: block;
+  overflow: hidden;
+  color: var(--color-text-primary);
+  font-family: var(--font-family-display);
+  font-size: 12px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.buttonStats {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+  color: var(--color-text-secondary);
+  font-family: var(--font-family-stats);
+  font-size: 11px;
+}
+
+.buttonReason {
+  display: block;
+  overflow: hidden;
+  color: var(--color-text-muted);
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.queue {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 24px;
+  color: var(--color-text-muted);
+  font-size: 11px;
+}
+
+.phaseNote {
+  color: var(--color-text-secondary);
+}

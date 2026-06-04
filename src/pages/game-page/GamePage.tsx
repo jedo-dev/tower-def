@@ -1,4 +1,5 @@
 import { GameCanvas } from '../../widgets/game-canvas/ui/GameCanvas';
+import { CreepSendPanel } from '../../widgets/creep-send-panel';
 import { HudPanel } from '../../widgets/hud/ui/HudPanel';
 import { TowerActionPanel } from '../../widgets/tower-action-panel';
 import { WaveQueue } from '../../widgets/wave-queue';
@@ -16,6 +17,7 @@ export function GamePage({ setup }: GamePageProps) {
         <WaveQueue />
         <GameCanvas setup={setup} />
         <TowerActionPanel />
+        <CreepSendPanel setup={setup} />
         <HudPanel setup={setup} />
       </div>
     </main>

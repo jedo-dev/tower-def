@@ -29,6 +29,7 @@ export function clearGameSetupConfig(): void {
 
 let snapshot: GameHudSnapshot = {
   gold: 0,
+  income: 0,
   lives: 0,
   opponentGold: 0,
   opponentIncome: 0,
@@ -45,6 +46,7 @@ let snapshot: GameHudSnapshot = {
   selectedFaction: 'undead',
   autoStartSecondsLeft: null,
   waveQueue: [],
+  playerSendQueue: [],
   opponentSendQueue: [],
   pendingCreepCount: 0,
 };

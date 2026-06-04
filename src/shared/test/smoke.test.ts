@@ -20,6 +20,7 @@ import { mapBattlefieldViewToggleToViewModel } from '../../widgets/hud/model/map
 function createHudSnapshot(overrides?: Partial<GameHudSnapshot>): GameHudSnapshot {
   return {
     gold: 100,
+    income: 50,
     lives: 20,
     opponentGold: 500,
     opponentIncome: 50,
@@ -36,6 +37,7 @@ function createHudSnapshot(overrides?: Partial<GameHudSnapshot>): GameHudSnapsho
     selectedFaction: 'orc',
     autoStartSecondsLeft: null,
     waveQueue: [],
+    playerSendQueue: [],
     opponentSendQueue: [],
     pendingCreepCount: 0,
     ...overrides,

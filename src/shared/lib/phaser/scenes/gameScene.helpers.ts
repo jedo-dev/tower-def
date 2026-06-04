@@ -11,11 +11,13 @@ export function mapEnemyFactionToHudFaction(faction: string): HudFactionType {
   return 'undead';
 }
 
-export function mapEntityToWaveQueueType(_creep: CreepEntity): HudWaveQueueItem['type'] {
+export function mapEntityToWaveQueueType(creep: CreepEntity): HudWaveQueueItem['type'] {
+  void creep;
   return 'ghoul';
 }
 
-export function mapUnitToCreepType(_unit: UnitConfig): 'basic' {
+export function mapUnitToCreepType(unit: UnitConfig): 'basic' {
+  void unit;
   return 'basic';
 }
 

@@ -217,8 +217,15 @@ export class GameAudioManager {
     if (sound) {
       sound.play({
         seek: config.startOffsetSec,
-        duration: config.maxDurationSec ?? undefined,
       });
+
+      if (config.maxDurationSec !== null) {
+        this.scene.time.delayedCall(config.maxDurationSec * 1000, () => {
+          if (sound.isPlaying) {
+            sound.stop();
+          }
+        });
+      }
 
       this.activeSounds.push({
         sound,

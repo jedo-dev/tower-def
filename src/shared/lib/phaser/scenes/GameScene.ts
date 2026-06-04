@@ -21,12 +21,15 @@ import {
 import {
   addCreeps,
   createInitialDuelMatchState,
+  getSendCostByTier,
   routeQueuedSendsToBattlefields,
+  sendCreep,
   startRound,
   type AddCreepEntry,
   type DuelMatchState,
 } from '../../../../entities/duel-match';
 import { DEFAULT_DIFFICULTY, type Difficulty } from '../../../../entities/difficulty';
+import { getRaceRegistry } from '../../../../entities/race-registry';
 import { resolveUnitConfigById, undeadUnits, type UnitConfig } from '../../../../entities/unit';
 import { calculateWaveStartPath, generateWaveUnits } from '../../../../entities/wave';
 import { CreepTypeId, RaceId } from '../../../types/content-ids';
@@ -261,6 +264,7 @@ export class GameScene extends Phaser.Scene {
   private unsubscribeStartWaveCommand: (() => void) | null = null;
   private unsubscribeTowerSelectCommand: (() => void) | null = null;
   private unsubscribeFactionSelectCommand: (() => void) | null = null;
+  private unsubscribeSendCreepCommand: (() => void) | null = null;
   private unsubscribeUpgradeTowerCommand: (() => void) | null = null;
   private unsubscribeSellTowerCommand: (() => void) | null = null;
   private unsubscribeBattlefieldViewEvent: (() => void) | null = null;
@@ -459,7 +463,7 @@ export class GameScene extends Phaser.Scene {
       this.selectedFaction = payload.faction;
       if (this.canPerformBuildActions()) {
         this.duelMatchState = createInitialDuelMatchState(
-          RaceId.UNDEAD,
+          this.selectedBuilderFactionId,
           this.mapHudFactionToRaceId(this.selectedFaction),
         );
         this.playerLives = this.duelMatchState.player.hp;
@@ -467,6 +471,9 @@ export class GameScene extends Phaser.Scene {
       this.soundManager?.setFaction(this.selectedFaction);
       this.registry.set('wave.selectedFaction', this.selectedFaction);
       this.publishHudSnapshot();
+    });
+    this.unsubscribeSendCreepCommand = onGameCommand('send-creep', (payload) => {
+      this.handleSendCreepCommand(payload.creepTypeId);
     });
     this.unsubscribeUpgradeTowerCommand = onGameCommand('upgrade-tower', (payload) => {
       this.handleUpgradeTowerCommand(payload.towerId);
@@ -1261,6 +1268,67 @@ export class GameScene extends Phaser.Scene {
     return canPerformBuildActionsByPhase(this.wavePhaseState);
   }
 
+  private handleSendCreepCommand(creepTypeId: string): void {
+    if (this.isGameOver || this.matchOutcomeStatus !== 'active') {
+      publishGameEvent('creep-send-rejected', {
+        creepTypeId,
+        reason: 'match_over',
+        gold: this.duelMatchState.player.gold,
+      });
+      return;
+    }
+
+    if (!this.canPerformBuildActions()) {
+      publishGameEvent('creep-send-rejected', {
+        creepTypeId,
+        reason: 'not_build_phase',
+        gold: this.duelMatchState.player.gold,
+      });
+      return;
+    }
+
+    const builderRace = getRaceRegistry(this.selectedBuilderFactionId);
+    const sendableCreepTypeId = builderRace.sendableCreepIds.find(
+      (candidate) => candidate === creepTypeId,
+    );
+    if (!sendableCreepTypeId) {
+      publishGameEvent('creep-send-rejected', {
+        creepTypeId,
+        reason: 'invalid_creep',
+        gold: this.duelMatchState.player.gold,
+      });
+      return;
+    }
+
+    const unit = resolveUnitConfigById(sendableCreepTypeId);
+    const result = sendCreep(this.duelMatchState, true, unit.id, unit.tier);
+    if (!result.sent) {
+      publishGameEvent('creep-send-rejected', {
+        creepTypeId,
+        reason: 'insufficient_gold',
+        gold: this.duelMatchState.player.gold,
+        requiredGold: getSendCostByTier(unit.tier),
+      });
+      return;
+    }
+
+    const previousIncome = this.duelMatchState.player.income;
+    this.duelMatchState = result.state;
+    publishGameEvent('send-queue-updated', {
+      owner: 'player',
+      queue: this.duelMatchState.player.sendQueue.map((queuedCreepTypeId, index) => ({
+        creepTypeId: queuedCreepTypeId,
+        index,
+      })),
+    });
+    publishGameEvent('income-updated', {
+      owner: 'player',
+      income: this.duelMatchState.player.income,
+      delta: this.duelMatchState.player.income - previousIncome,
+    });
+    this.publishHudSnapshot();
+  }
+
   private loadSetupConfig(): void {
     const setupConfig = getGameSetupConfig();
     if (setupConfig) {
@@ -1271,7 +1339,7 @@ export class GameScene extends Phaser.Scene {
     }
 
     this.duelMatchState = createInitialDuelMatchState(
-      RaceId.UNDEAD,
+      this.selectedBuilderFactionId,
       this.mapHudFactionToRaceId(this.selectedFaction),
     );
   }
@@ -1552,7 +1620,7 @@ export class GameScene extends Phaser.Scene {
     this.currentWaveNumber = state.currentWaveNumber;
     this.lastPublishedAutoStartSecondsLeft = state.lastPublishedAutoStartSecondsLeft;
     this.duelMatchState = createInitialDuelMatchState(
-      RaceId.UNDEAD,
+      this.selectedBuilderFactionId,
       this.mapHudFactionToRaceId(this.selectedFaction),
     );
     this.playerLives = this.duelMatchState.player.hp;
@@ -2021,6 +2089,7 @@ export class GameScene extends Phaser.Scene {
 
     const snapshot: GameHudSnapshot = {
       gold: this.playerGold,
+      income: this.duelMatchState.player.income,
       lives: this.duelMatchState.player.hp,
       opponentGold: this.duelMatchState.opponent.gold,
       opponentIncome: this.duelMatchState.opponent.income,
@@ -2037,6 +2106,7 @@ export class GameScene extends Phaser.Scene {
       selectedFaction: this.selectedFaction,
       autoStartSecondsLeft,
       waveQueue,
+      playerSendQueue: this.buildPlayerSendQueue(),
       opponentSendQueue: this.buildOpponentSendQueue(),
       pendingCreepCount:
         this.pendingWaveSpawns.length +
@@ -2088,6 +2158,16 @@ export class GameScene extends Phaser.Scene {
     index: number;
   }[] {
     return this.duelMatchState.opponent.sendQueue.map((unitId, index) => ({
+      type: this.mapUnitIdToHudCreepType(unitId),
+      index,
+    }));
+  }
+
+  private buildPlayerSendQueue(): {
+    type: 'skeleton' | 'ghoul' | 'crypt_fiend' | 'gargoyle';
+    index: number;
+  }[] {
+    return this.duelMatchState.player.sendQueue.map((unitId, index) => ({
       type: this.mapUnitIdToHudCreepType(unitId),
       index,
     }));
@@ -2289,6 +2369,10 @@ export class GameScene extends Phaser.Scene {
     if (this.unsubscribeFactionSelectCommand) {
       this.unsubscribeFactionSelectCommand();
       this.unsubscribeFactionSelectCommand = null;
+    }
+    if (this.unsubscribeSendCreepCommand) {
+      this.unsubscribeSendCreepCommand();
+      this.unsubscribeSendCreepCommand = null;
     }
     if (this.unsubscribeUpgradeTowerCommand) {
       this.unsubscribeUpgradeTowerCommand();
