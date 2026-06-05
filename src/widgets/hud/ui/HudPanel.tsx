@@ -97,6 +97,15 @@ function HudPanelComponent({ setup }: HudPanelProps) {
         </div>
       </div>
 
+      <div
+        className={`hud-pressure hud-pressure-${viewModel.pressure.level}`}
+        role="status"
+        aria-label={viewModel.pressure.ariaLabel}
+      >
+        <span className="hud-pressure-label">{viewModel.pressure.label}</span>
+        <span className="hud-pressure-detail">{viewModel.pressure.detail}</span>
+      </div>
+
       {isExpanded && (
         <div className="hud-expanded-content">
           <div className="hud-tower-buttons">

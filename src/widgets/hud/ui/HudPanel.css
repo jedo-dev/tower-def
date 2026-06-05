@@ -32,6 +32,36 @@
 .hud-center { flex: 1; display: flex; justify-content: center; }
 .hud-timer-actions { gap: 8px; }
 
+.hud-pressure {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 44px;
+  padding: 6px 10px;
+  border: 20px solid transparent;
+  border-image: url('../../../assets/ui-presets/thin_border.png') 90 fill / 10px / 0 stretch;
+  font-family: var(--font-family-ui);
+}
+
+.hud-pressure-label {
+  color: var(--color-text-primary);
+  font-family: var(--font-family-display);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.hud-pressure-detail {
+  color: var(--color-text-muted);
+  font-size: 11px;
+  text-align: right;
+}
+
+.hud-pressure-low .hud-pressure-label { color: var(--color-pressure-low); }
+.hud-pressure-medium .hud-pressure-label { color: var(--color-pressure-medium); }
+.hud-pressure-high .hud-pressure-label { color: var(--color-pressure-high); }
+
 .hud-resource {
   display: flex;
   align-items: center;

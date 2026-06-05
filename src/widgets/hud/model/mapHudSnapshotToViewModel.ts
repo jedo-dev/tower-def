@@ -6,6 +6,18 @@ export type HudViewModel = {
   modeLabel: string;
   isStartWaveDisabled: boolean;
   isArcherSelected: boolean;
+  pressure: HudPressureViewModel;
+};
+
+export type HudPressureLevel = 'none' | 'low' | 'medium' | 'high';
+
+export type HudPressureViewModel = {
+  level: HudPressureLevel;
+  label: string;
+  detail: string;
+  queuedCount: number;
+  incomingCount: number;
+  ariaLabel: string;
 };
 
 export type BattlefieldViewToggleViewModel = {
@@ -28,7 +40,43 @@ export function mapHudSnapshotToViewModel(snapshot: GameHudSnapshot): HudViewMod
     modeLabel,
     isStartWaveDisabled: isWaveActive || !snapshot.canStartWave,
     isArcherSelected: snapshot.selectedTowerType === 'archer',
+    pressure: mapHudPressureToViewModel(snapshot),
   };
+}
+
+export function mapHudPressureToViewModel(snapshot: GameHudSnapshot): HudPressureViewModel {
+  const queuedCount = snapshot.opponentSendQueue.length;
+  const incomingCount = snapshot.phase === 'wave' ? snapshot.pendingCreepCount : 0;
+  const pressureCount = snapshot.phase === 'wave' ? incomingCount : queuedCount;
+  const level = mapPressureLevel(pressureCount);
+  const label = snapshot.phase === 'wave' ? `Incoming ${incomingCount}` : `Enemy sends ${queuedCount}`;
+  const detail = snapshot.phase === 'wave'
+    ? `${queuedCount} queued by enemy`
+    : queuedCount === 0
+      ? 'No pressure queued'
+      : 'Queued for next wave';
+
+  return {
+    level,
+    label,
+    detail,
+    queuedCount,
+    incomingCount,
+    ariaLabel: `${label}. ${detail}. Pressure ${level}`,
+  };
+}
+
+function mapPressureLevel(count: number): HudPressureLevel {
+  if (count >= 8) {
+    return 'high';
+  }
+  if (count >= 4) {
+    return 'medium';
+  }
+  if (count > 0) {
+    return 'low';
+  }
+  return 'none';
 }
 
 export function mapBattlefieldViewToggleToViewModel(

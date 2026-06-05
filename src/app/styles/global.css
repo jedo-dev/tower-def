@@ -45,6 +45,9 @@
   --color-text-primary: #eff4ff;
   --color-text-secondary: #bed0ee;
   --color-text-muted: #9fb2d4;
+  --color-pressure-low: #f0d188;
+  --color-pressure-medium: #ffb15f;
+  --color-pressure-high: #ff7b6b;
   --safe-area-top: env(safe-area-inset-top, 0px);
   --safe-area-right: env(safe-area-inset-right, 0px);
   --safe-area-bottom: env(safe-area-inset-bottom, 0px);

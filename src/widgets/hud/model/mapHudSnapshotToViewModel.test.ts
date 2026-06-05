@@ -72,6 +72,48 @@ describe('mapHudSnapshotToViewModel', () => {
     expect(vm.isArcherSelected).toBe(false);
   });
 
+  it('shows queued enemy sends during build phase', () => {
+    const vm = mapHudSnapshotToViewModel(
+      createSnapshot({
+        phase: 'build',
+        opponentSendQueue: [
+          { type: 'skeleton', index: 0 },
+          { type: 'ghoul', index: 1 },
+          { type: 'crypt_fiend', index: 2 },
+          { type: 'gargoyle', index: 3 },
+        ],
+      }),
+    );
+
+    expect(vm.pressure).toEqual({
+      level: 'medium',
+      label: 'Enemy sends 4',
+      detail: 'Queued for next wave',
+      queuedCount: 4,
+      incomingCount: 0,
+      ariaLabel: 'Enemy sends 4. Queued for next wave. Pressure medium',
+    });
+  });
+
+  it('shows active incoming creep pressure during wave phase', () => {
+    const vm = mapHudSnapshotToViewModel(
+      createSnapshot({
+        phase: 'wave',
+        pendingCreepCount: 8,
+        opponentSendQueue: [{ type: 'skeleton', index: 0 }],
+      }),
+    );
+
+    expect(vm.pressure).toEqual({
+      level: 'high',
+      label: 'Incoming 8',
+      detail: '1 queued by enemy',
+      queuedCount: 1,
+      incomingCount: 8,
+      ariaLabel: 'Incoming 8. 1 queued by enemy. Pressure high',
+    });
+  });
+
   it('hides opponent battlefield toggle during build phase', () => {
     const vm = mapBattlefieldViewToggleToViewModel(
       createSnapshot({ phase: 'build' }),
