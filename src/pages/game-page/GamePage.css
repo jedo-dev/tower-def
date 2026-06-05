@@ -8,10 +8,15 @@
 }
 
 .game-viewport {
+  --game-edge-gap: 8px;
+  --hud-stack-space: 250px;
+  --creep-send-stack-space: 170px;
+
   position: relative;
   display: flex;
   flex-direction: column;
   height: calc(100dvh - 16px - var(--safe-area-top) - var(--safe-area-bottom));
+  box-sizing: border-box;
   border: 26px solid transparent;
   border-image: url('../../assets/ui-presets/thin_border.png') 90 fill / 16px / 0 stretch;
   overflow: hidden;
@@ -19,24 +24,31 @@
 
 .game-viewport > .hud-panel {
   position: absolute;
-  left: 8px;
-  right: 8px;
-  bottom: 8px;
+  left: var(--game-edge-gap);
+  right: var(--game-edge-gap);
+  bottom: var(--game-edge-gap);
   z-index: 120;
 }
 
 .game-viewport > .tower-action-panel {
   position: absolute;
-  left: 8px;
-  right: 8px;
-  bottom: 318px;
+  left: var(--game-edge-gap);
+  right: var(--game-edge-gap);
+  bottom: calc(var(--game-edge-gap) + var(--hud-stack-space) + var(--creep-send-stack-space));
   z-index: 121;
 }
 
 .game-viewport > [data-creep-send-panel='true'] {
   position: absolute;
-  left: 8px;
-  right: 8px;
-  bottom: 172px;
+  left: var(--game-edge-gap);
+  right: var(--game-edge-gap);
+  bottom: calc(var(--game-edge-gap) + var(--hud-stack-space));
   z-index: 119;
+}
+
+@media (max-width: 380px) {
+  .game-viewport {
+    --hud-stack-space: 258px;
+    --creep-send-stack-space: 162px;
+  }
 }
