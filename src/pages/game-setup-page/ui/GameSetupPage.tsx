@@ -31,6 +31,7 @@ export function GameSetupPage({ onStartGame, onNavigate }: GameSetupPageProps) {
   const [builderRace, setBuilderRace] = useState<BuilderFaction>(DEFAULT_BUILDER_FACTION);
   const [enemyFactionSelected, setEnemyFactionSelected] = useState<EnemyFaction>(DEFAULT_ENEMY_FACTION);
   const [difficultySelected, setDifficultySelected] = useState<Difficulty>(DEFAULT_DIFFICULTY);
+  const [useDynamicEndpoints, setUseDynamicEndpoints] = useState(false);
   const [isRaceVisible, setIsRaceVisible] = useState(true);
   const transitionTimeoutRef = useRef<number | null>(null);
 
@@ -50,10 +51,13 @@ export function GameSetupPage({ onStartGame, onNavigate }: GameSetupPageProps) {
           builderFaction: builderRace,
           enemyFaction: enemyFactionSelected,
           difficulty: difficultySelected,
+          endpoints: useDynamicEndpoints
+            ? { mode: 'dynamic', seed: Math.floor(Math.random() * 0x7fffffff) }
+            : { mode: 'fixed' },
         });
         break;
     }
-  }, [step, builderRace, enemyFactionSelected, difficultySelected, onStartGame]);
+  }, [step, builderRace, enemyFactionSelected, difficultySelected, useDynamicEndpoints, onStartGame]);
 
   const handleBack = useCallback(() => {
     switch (step) {
@@ -285,6 +289,22 @@ export function GameSetupPage({ onStartGame, onNavigate }: GameSetupPageProps) {
               <span className="setup-summary-label">Starter Tower</span>
               <span className="setup-summary-value">{starterTowerName}</span>
             </div>
+            <label className="setup-summary-block setup-endpoints-toggle">
+              <span className="setup-summary-label">Dynamic Entrances</span>
+              <span className="setup-endpoints-control">
+                <input
+                  type="checkbox"
+                  className="setup-endpoints-checkbox"
+                  checked={useDynamicEndpoints}
+                  onChange={(event) => setUseDynamicEndpoints(event.target.checked)}
+                  aria-label="Randomize entrance and exit positions on map edges"
+                  data-sound="ui.build_select"
+                />
+                <span className="setup-summary-value">
+                  {useDynamicEndpoints ? 'Random edges' : 'Classic lane'}
+                </span>
+              </span>
+            </label>
           </div>
         )}
       </div>

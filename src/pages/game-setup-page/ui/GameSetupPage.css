@@ -453,3 +453,21 @@
     min-height: 268px;
   }
 }
+
+.setup-endpoints-toggle {
+  cursor: pointer;
+}
+
+.setup-endpoints-control {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.setup-endpoints-checkbox {
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
+  accent-color: #5c8cff;
+  cursor: pointer;
+}
