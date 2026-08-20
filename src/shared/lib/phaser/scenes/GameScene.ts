@@ -1268,7 +1268,18 @@ export class GameScene extends Phaser.Scene {
     return canPerformBuildActionsByPhase(this.wavePhaseState);
   }
 
+  private syncDuelPlayerGoldFromWallet(): void {
+    if (this.duelMatchState.player.gold === this.playerGold) {
+      return;
+    }
+    this.duelMatchState = {
+      ...this.duelMatchState,
+      player: { ...this.duelMatchState.player, gold: this.playerGold },
+    };
+  }
+
   private handleSendCreepCommand(creepTypeId: string): void {
+    this.syncDuelPlayerGoldFromWallet();
     if (this.isGameOver || this.matchOutcomeStatus !== 'active') {
       publishGameEvent('creep-send-rejected', {
         creepTypeId,
@@ -1314,6 +1325,8 @@ export class GameScene extends Phaser.Scene {
 
     const previousIncome = this.duelMatchState.player.income;
     this.duelMatchState = result.state;
+    this.playerGold = this.duelMatchState.player.gold;
+    this.registry.set('economy.gold', this.playerGold);
     publishGameEvent('send-queue-updated', {
       owner: 'player',
       queue: this.duelMatchState.player.sendQueue.map((queuedCreepTypeId, index) => ({
@@ -1562,6 +1575,7 @@ export class GameScene extends Phaser.Scene {
       this.playerGold += result.playerIncomePaid;
       this.registry.set('economy.gold', this.playerGold);
     }
+    this.syncDuelPlayerGoldFromWallet();
     this.matchWinner = result.winner === null ? null : this.mapRaceIdToHudFaction(result.winner);
     this.matchOutcomeStatus = this.resolveMatchOutcomeStatus(result.isMatchOver);
     this.registry.set('duel.match.outcome', this.matchOutcomeStatus);
