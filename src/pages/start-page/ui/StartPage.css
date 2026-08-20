@@ -57,7 +57,7 @@
   font-size: clamp(32px, 9vw, 48px);
   margin: 0;
   text-transform: uppercase;
-  color: #f1deb2;
+  color: var(--color-text-gold);
 }
 
 .start-subtitle {
@@ -66,7 +66,7 @@
   margin: 6px 0 0;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: #c8cddd;
+  color: var(--color-text-secondary);
 }
 
 .start-emblem { display: none; }
@@ -93,7 +93,7 @@
   height: 52px;
   border: 0;
   background: url('../../../assets/ui-presets/btn_small_square.png') center / 100% 100% no-repeat;
-  color: #d2c8a8;
+  color: var(--color-text-gold-dim);
   font-size: 22px;
   cursor: pointer;
 }
@@ -107,5 +107,5 @@
   font-family: var(--font-family-accent);
   font-size: 13px;
   margin: 0;
-  color: #9ea8be;
+  color: var(--color-text-label);
 }

@@ -15,12 +15,16 @@ export function GamePage({ setup }: GamePageProps) {
   return (
     <main className="game-page">
       <div className="game-viewport">
-        <WaveQueue />
-        <DuelEventFeed />
-        <GameCanvas setup={setup} />
-        <TowerActionPanel />
-        <CreepSendPanel setup={setup} />
-        <HudPanel setup={setup} />
+        <div className="game-canvas-area">
+          <WaveQueue />
+          <DuelEventFeed />
+          <GameCanvas setup={setup} />
+        </div>
+        <div className="game-panels">
+          <TowerActionPanel />
+          <CreepSendPanel setup={setup} />
+          <HudPanel setup={setup} />
+        </div>
       </div>
     </main>
   );

@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import './TowerActionPanel.css';
+import styles from './TowerActionPanel.module.css';
 import { sendGameCommand } from '../../../shared/lib/game-bridge/bridge';
 import { clearSelectedTower, useSelectedTower } from '../../../shared/lib/game-bridge/useSelectedTower';
 import { useGameHudSnapshot } from '../../../shared/lib/game-bridge/useGameHudSnapshot';
@@ -49,13 +49,13 @@ function TowerActionPanelComponent() {
   }
 
   return (
-    <section className="tower-action-panel" aria-label="Tower actions">
-      <div className="tower-action-header">
-        <span className="tower-action-title">{formatTowerType(type)}</span>
-        <span className="tower-action-level">Lv {level}</span>
+    <section className={styles.panel} aria-label="Tower actions">
+      <div className={styles.header}>
+        <span className={styles.title}>{formatTowerType(type)}</span>
+        <span className={styles.level}>Lv {level}</span>
         <button
           type="button"
-          className="tower-action-close"
+          className={styles.close}
           aria-label="Close tower panel"
           onClick={handleClose}
         >
@@ -63,47 +63,47 @@ function TowerActionPanelComponent() {
         </button>
       </div>
 
-      <div className="tower-action-stats">
-        <span className="tower-action-stat-label">DMG:</span>
-        <span className="tower-action-stat-value">{combatStats.damage}</span>
-        <span className="tower-action-stat-label">RNG:</span>
-        <span className="tower-action-stat-value">{combatStats.range.toFixed(1)}</span>
-        <span className="tower-action-stat-label">SPD:</span>
-        <span className="tower-action-stat-value">{combatStats.attackCooldownMs}ms</span>
+      <div className={styles.stats}>
+        <span className={styles.statLabel}>DMG:</span>
+        <span className={styles.statValue}>{combatStats.damage}</span>
+        <span className={styles.statLabel}>RNG:</span>
+        <span className={styles.statValue}>{combatStats.range.toFixed(1)}</span>
+        <span className={styles.statLabel}>SPD:</span>
+        <span className={styles.statValue}>{combatStats.attackCooldownMs}ms</span>
         {combatStats.splashRadius !== undefined && (
           <>
-            <span className="tower-action-stat-label">AOE:</span>
-            <span className="tower-action-stat-value">{combatStats.splashRadius.toFixed(1)}</span>
+            <span className={styles.statLabel}>AOE:</span>
+            <span className={styles.statValue}>{combatStats.splashRadius.toFixed(1)}</span>
           </>
         )}
       </div>
 
-      <div className="tower-action-buttons">
+      <div className={styles.buttons}>
         {maxed ? (
-          <div className="tower-action-max-label">MAX LEVEL</div>
+          <div className={styles.maxLabel}>MAX LEVEL</div>
         ) : (
           <button
             type="button"
-            className="tower-action-btn tower-action-btn-upgrade"
+            className={`${styles.actionBtn} ${styles.upgradeBtn}`}
             disabled={!canUpgrade}
             aria-label={`Upgrade tower to level ${level + 1}`}
             onClick={handleUpgrade}
           >
             <span>Upgrade</span>
             {upgradeCost !== null && (
-              <span className="tower-action-btn-cost">${upgradeCost}</span>
+              <span className={styles.btnCost}>${upgradeCost}</span>
             )}
           </button>
         )}
 
         <button
           type="button"
-          className="tower-action-btn tower-action-btn-sell"
+          className={`${styles.actionBtn} ${styles.sellBtn}`}
           aria-label={`Sell tower for ${sellValue} gold`}
           onClick={handleSell}
         >
           <span>Sell</span>
-          <span className="tower-action-btn-cost">${sellValue}</span>
+          <span className={styles.btnCost}>${sellValue}</span>
         </button>
       </div>
     </section>

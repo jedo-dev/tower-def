@@ -1,5 +1,5 @@
 import { memo, useEffect, useRef, useState } from 'react';
-import './DuelEventFeed.css';
+import styles from './DuelEventFeed.module.css';
 import { onGameEvent } from '../../../shared/lib/game-bridge/bridge';
 import {
   appendFeedEntry,
@@ -10,6 +10,13 @@ import {
   type DuelFeedEntry,
   type DuelFeedEntryKind,
 } from '../model/duelEventFeed';
+
+const ENTRY_KIND_CLASS: Record<DuelFeedEntryKind, string> = {
+  send: '',
+  income: styles.entryIncome,
+  damage: styles.entryDamage,
+  rejected: styles.entryRejected,
+};
 
 function DuelEventFeedComponent() {
   const [entries, setEntries] = useState<DuelFeedEntry[]>([]);
@@ -51,9 +58,12 @@ function DuelEventFeedComponent() {
   }
 
   return (
-    <div className="duel-event-feed" role="log" aria-label="Duel events" aria-live="polite">
+    <div className={styles.feed} role="log" aria-label="Duel events" aria-live="polite">
       {entries.map((entry) => (
-        <div key={entry.id} className={`duel-event-feed-entry duel-event-feed-entry-${entry.kind}`}>
+        <div
+          key={entry.id}
+          className={`${styles.entry}${ENTRY_KIND_CLASS[entry.kind] ? ` ${ENTRY_KIND_CLASS[entry.kind]}` : ''}`}
+        >
           {entry.text}
         </div>
       ))}

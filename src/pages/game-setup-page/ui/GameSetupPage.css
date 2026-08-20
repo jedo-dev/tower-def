@@ -28,7 +28,7 @@
   border: 0;
   border-radius: 0;
   background: url('../../../assets/ui-presets/btn_small_square.png') center / 100% 100% no-repeat;
-  color: #d7bf8e;
+  color: var(--color-text-gold-dim);
   font-size: 28px;
   line-height: 1;
   cursor: pointer;
@@ -47,7 +47,7 @@
   font-family: var(--font-family-display);
   font-size: 20px;
   font-weight: 700;
-  color: #e5cb98;
+  color: var(--color-text-gold);
   text-shadow: 0 1px 0 #3b2b11;
   margin: 0;
   text-align: center;
@@ -71,13 +71,13 @@
 }
 
 .setup-progress-dot-active {
-  background: #f3cc6b;
-  border-color: #f7de98;
+  background: var(--color-accent-gold);
+  border-color: var(--color-text-gold);
   box-shadow: 0 0 12px rgba(243, 204, 107, 0.52);
 }
 
 .setup-progress-dot-complete {
-  background: #5c8f5b;
+  background: var(--color-success);
 }
 
 .setup-content {
@@ -140,7 +140,7 @@
   font-size: 18px;
   font-weight: 700;
   line-height: 1;
-  color: #e4c68c;
+  color: var(--color-text-gold-dim);
   text-transform: uppercase;
   letter-spacing: 0.06em;
   text-shadow: 0 2px 0 #453219, 0 0 14px rgba(239, 204, 132, 0.25);
@@ -180,7 +180,7 @@
   inset: 6px;
   overflow: hidden;
   z-index: 1;
-  background: #101927;
+  background: var(--color-surface-canvas);
   border: 14px solid transparent;
   border-image: url('../../../assets/ui-presets/thin_border.png') 90 fill / 10px / 0 stretch;
 }
@@ -212,7 +212,7 @@
   border: 0;
   border-radius: 0;
   background: url('../../../assets/ui-presets/btn_small_square.png') center / 100% 100% no-repeat;
-  color: #dfc891;
+  color: var(--color-text-gold-dim);
   font-size: 34px;
   line-height: 1;
   cursor: pointer;
@@ -242,18 +242,18 @@
   font-family: var(--font-family-display);
   font-size: 20px;
   font-weight: 700;
-  color: #8fd191;
+  color: var(--color-text-success);
   margin: 0 0 10px;
   line-height: 0.92;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  text-shadow: 0 2px 0 #12311a, 0 0 12px rgba(143, 209, 145, 0.42);
+  text-shadow: 0 2px 0 #12311a, 0 0 12px rgba(143, 206, 154, 0.42);
 }
 
 .setup-card-desc {
   font-family: var(--font-family-accent);
   font-size: 11px;
-  color: #cad2de;
+  color: var(--color-text-secondary);
   margin: 0 0 14px;
   line-height: 1.24;
 }
@@ -261,7 +261,7 @@
 .setup-card-tower {
   font-family: var(--font-family-display);
   font-size: 9px;
-  color: #aeb8c9;
+  color: var(--color-text-label);
   margin: 0;
   text-transform: uppercase;
   letter-spacing: 0.2em;
@@ -274,7 +274,7 @@
   font-family: var(--font-family-display);
   font-weight: 700;
   letter-spacing: 0.08em;
-  color: #87cf7f;
+  color: var(--color-text-success);
 }
 
 .setup-next-button {
@@ -287,7 +287,7 @@
   padding: 12px 20px;
   border: 0;
   background: url('../../../assets/ui-presets/btn_green_normal.png') center / 100% 100% no-repeat;
-  color: #f2d9a2;
+  color: var(--color-text-gold);
   cursor: pointer;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -345,7 +345,7 @@
   height: 54px;
   border-radius: 0;
   background:
-    radial-gradient(circle at center, var(--card-theme, #5c8cff) 0%, rgba(0, 0, 0, 0.4) 60%),
+    radial-gradient(circle at center, var(--card-theme, var(--color-primary)) 0%, rgba(0, 0, 0, 0.4) 60%),
     url('../../../assets/ui-presets/icon_frame_square.png') center / 100% 100% no-repeat;
   margin-bottom: 12px;
 }
@@ -353,7 +353,7 @@
 .setup-card .setup-card-name {
   margin: 0;
   font-size: 16px;
-  color: #9ed89a;
+  color: var(--color-text-success);
   font-family: var(--font-family-display);
 }
 
@@ -361,7 +361,7 @@
   margin: 0;
   font-size: 8px;
   line-height: 1.32;
-  color: #bdc8da;
+  color: var(--color-text-secondary);
   font-family: var(--font-family-accent);
 }
 
@@ -369,7 +369,7 @@
   margin-top: auto;
   font-size: 7px;
   letter-spacing: 0.16em;
-  color: #9eaec8;
+  color: var(--color-text-label);
   font-family: var(--font-family-display);
 }
 
@@ -385,21 +385,21 @@
 }
 
 .setup-difficulty-btn-selected {
-  border-color: #d9c68f;
+  border-color: var(--color-text-gold-dim);
 }
 
 .setup-difficulty-name {
   font-family: var(--font-family-display);
   font-size: 16px;
   font-weight: 700;
-  color: #efe4ca;
+  color: var(--color-text-parchment);
   margin-bottom: 4px;
 }
 
 .setup-difficulty-desc {
   font-family: var(--font-family-accent);
   font-size: 12px;
-  color: #adb7ca;
+  color: var(--color-text-muted);
   margin: 0;
 }
 
@@ -422,18 +422,18 @@
 .setup-summary-label {
   font-family: var(--font-family-accent);
   font-size: 14px;
-  color: #adb7ca;
+  color: var(--color-text-muted);
 }
 
 .setup-summary-value {
   font-family: var(--font-family-display);
   font-size: 14px;
   font-weight: 700;
-  color: var(--theme, #efe4ca);
+  color: var(--theme, var(--color-text-parchment));
 }
 
 .setup-summary-value-diff {
-  color: #f1d38d;
+  color: var(--color-accent-gold);
 }
 
 .setup-footer {
@@ -468,6 +468,6 @@
   width: 22px;
   height: 22px;
   min-width: 22px;
-  accent-color: #5c8cff;
+  accent-color: var(--color-primary);
   cursor: pointer;
 }

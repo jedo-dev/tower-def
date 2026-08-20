@@ -21,7 +21,7 @@
   height: 44px;
   border: 0;
   background: url('../../../assets/ui-presets/btn_small_square.png') center / 100% 100% no-repeat;
-  color: #dfcda6;
+  color: var(--color-text-gold-dim);
   font-size: 26px;
   cursor: pointer;
 }
@@ -30,7 +30,7 @@
   margin: 0;
   text-align: center;
   font-family: var(--font-family-ui);
-  color: #ecd8aa;
+  color: var(--color-text-gold);
   text-transform: uppercase;
 }
 
@@ -48,7 +48,7 @@
 
 .settings-label, .settings-value {
   font-family: var(--font-family-ui);
-  color: #dcd4c2;
+  color: var(--color-text-parchment);
 }
 
 .settings-slider { width: 100%; }

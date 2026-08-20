@@ -1,9 +1,10 @@
-import { memo, useState, type CSSProperties } from 'react';
-import './HudPanel.css';
+import { memo, useState } from 'react';
+import styles from './HudPanel.module.css';
 import { sendGameCommand } from '../../../shared/lib/game-bridge/bridge';
 import { useBattlefieldView } from '../../../shared/lib/game-bridge/useBattlefieldView';
 import { useGameHudSnapshot } from '../../../shared/lib/game-bridge/useGameHudSnapshot';
 import { mapBattlefieldViewToggleToViewModel, mapHudSnapshotToViewModel } from '../model/mapHudSnapshotToViewModel';
+import type { HudPressureLevel } from '../model/mapHudSnapshotToViewModel';
 import type { HudFactionType, HudTowerType } from '../../../shared/lib/game-bridge/types';
 import type { GameSetupConfig } from '../../../shared/config/game-setup';
 
@@ -27,10 +28,21 @@ function mapFactionToDisplayName(faction: HudFactionType): string {
   }
 }
 
-const TOWER_BUTTONS: { type: HudTowerType; label: string; color: string }[] = [
-  { type: 'archer', label: 'Archer', color: '#5c8cff' },
-  { type: 'splash', label: 'Plague', color: '#44aa44' },
+const TOWER_BUTTONS: { type: HudTowerType; label: string }[] = [
+  { type: 'archer', label: 'Archer' },
+  { type: 'splash', label: 'Plague' },
 ];
+
+const PRESSURE_LEVEL_CLASS: Record<HudPressureLevel, string> = {
+  none: '',
+  low: styles.pressureLow,
+  medium: styles.pressureMedium,
+  high: styles.pressureHigh,
+};
+
+function joinClassNames(...classNames: (string | false)[]): string {
+  return classNames.filter(Boolean).join(' ');
+}
 
 function HudPanelComponent({ setup }: HudPanelProps) {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -40,27 +52,30 @@ function HudPanelComponent({ setup }: HudPanelProps) {
   const battlefieldViewToggle = mapBattlefieldViewToggleToViewModel(snapshot, activeBattlefieldView);
 
   return (
-    <section className={`hud-panel${isExpanded ? ' hud-panel-expanded' : ''}`} aria-label="Game HUD">
+    <section className={styles.panel} aria-label="Game HUD">
       <button
         type="button"
-        className="hud-toggle"
+        className={styles.toggle}
         aria-label={isExpanded ? 'Collapse HUD' : 'Expand HUD'}
         onClick={() => setIsExpanded(!isExpanded)}
       >
-        <span className={`hud-toggle-icon${isExpanded ? ' hud-toggle-icon-up' : ''}`}>^</span>
+        <span className={joinClassNames(styles.toggleIcon, isExpanded && styles.toggleIconUp)}>^</span>
       </button>
 
-      <div className="hud-top-row">
-        <div className="hud-resource">
-          <span className="hud-resource-icon">$</span>
-          <span className="hud-resource-value">{snapshot.gold}</span>
+      <div className={styles.topRow}>
+        <div className={styles.resource}>
+          <span className={styles.resourceIcon}>$</span>
+          <span className={styles.resourceValue}>{snapshot.gold}</span>
         </div>
 
-        <div className="hud-center">
+        <div className={styles.center}>
           {battlefieldViewToggle.isVisible ? (
             <button
               type="button"
-              className={`hud-battlefield-view-btn${battlefieldViewToggle.isOpponentActive ? ' hud-battlefield-view-btn-active' : ''}`}
+              className={joinClassNames(
+                styles.battlefieldViewBtn,
+                battlefieldViewToggle.isOpponentActive && styles.battlefieldViewBtnActive,
+              )}
               aria-label={battlefieldViewToggle.ariaLabel}
               aria-pressed={battlefieldViewToggle.isOpponentActive}
               onClick={() => sendGameCommand('switch-battlefield-view', { view: battlefieldViewToggle.nextView })}
@@ -68,11 +83,11 @@ function HudPanelComponent({ setup }: HudPanelProps) {
               {battlefieldViewToggle.label}
             </button>
           ) : snapshot.autoStartSecondsLeft !== null ? (
-            <div className="hud-timer-actions">
-              <span className="hud-timer">Auto: {formatCountdown(snapshot.autoStartSecondsLeft)}</span>
+            <div className={styles.timerActions}>
+              <span className={styles.timer}>Auto: {formatCountdown(snapshot.autoStartSecondsLeft)}</span>
               <button
                 type="button"
-                className="hud-force-start-btn"
+                className={styles.forceStartBtn}
                 disabled={viewModel.isStartWaveDisabled}
                 onClick={() => sendGameCommand('start-wave', undefined)}
               >
@@ -82,7 +97,7 @@ function HudPanelComponent({ setup }: HudPanelProps) {
           ) : (
             <button
               type="button"
-              className="hud-start-btn"
+              className={styles.startBtn}
               disabled={viewModel.isStartWaveDisabled}
               onClick={() => sendGameCommand('start-wave', undefined)}
             >
@@ -91,35 +106,37 @@ function HudPanelComponent({ setup }: HudPanelProps) {
           )}
         </div>
 
-        <div className="hud-resource">
-          <span className="hud-resource-icon">HP</span>
-          <span className="hud-resource-value">{snapshot.lives}</span>
+        <div className={styles.resource}>
+          <span className={styles.resourceIcon}>HP</span>
+          <span className={styles.resourceValue}>{snapshot.lives}</span>
         </div>
       </div>
 
       <div
-        className={`hud-pressure hud-pressure-${viewModel.pressure.level}`}
+        className={joinClassNames(styles.pressure, PRESSURE_LEVEL_CLASS[viewModel.pressure.level])}
         role="status"
         aria-label={viewModel.pressure.ariaLabel}
       >
-        <span className="hud-pressure-label">{viewModel.pressure.label}</span>
-        <span className="hud-pressure-detail">{viewModel.pressure.detail}</span>
+        <span className={styles.pressureLabel}>{viewModel.pressure.label}</span>
+        <span className={styles.pressureDetail}>{viewModel.pressure.detail}</span>
       </div>
 
-      <div className="hud-duel-row" role="status" aria-label={viewModel.duel.ariaLabel}>
-        <span className="hud-duel-side">{viewModel.duel.playerLine}</span>
-        <span className="hud-duel-side hud-duel-side-enemy">{viewModel.duel.opponentLine}</span>
+      <div className={styles.duelRow} role="status" aria-label={viewModel.duel.ariaLabel}>
+        <span className={styles.duelSide}>{viewModel.duel.playerLine}</span>
+        <span className={joinClassNames(styles.duelSide, styles.duelSideEnemy)}>{viewModel.duel.opponentLine}</span>
       </div>
 
       {isExpanded && (
-        <div className="hud-expanded-content">
-          <div className="hud-tower-buttons">
+        <div className={styles.expandedContent}>
+          <div className={styles.towerButtons}>
             {TOWER_BUTTONS.map((btn) => (
               <button
                 key={btn.type}
                 type="button"
-                className={`hud-tower-btn${snapshot.selectedTowerType === btn.type ? ' hud-tower-btn-selected' : ''}`}
-                style={{ '--tower-color': btn.color } as CSSProperties}
+                className={joinClassNames(
+                  styles.towerBtn,
+                  snapshot.selectedTowerType === btn.type && styles.towerBtnSelected,
+                )}
                 onClick={() => sendGameCommand('select-tower', { towerType: snapshot.selectedTowerType === btn.type ? null : btn.type })}
               >
                 {btn.label}
@@ -127,47 +144,47 @@ function HudPanelComponent({ setup }: HudPanelProps) {
             ))}
           </div>
 
-          <div className="hud-info-row">
-            <span className="hud-info-label">Race:</span>
-            <span className="hud-info-value">{snapshot.builderFactionName}</span>
-            <span className="hud-info-label">Enemy:</span>
-            <span className="hud-info-value">{mapFactionToDisplayName(snapshot.selectedFaction)}</span>
+          <div className={styles.infoRow}>
+            <span className={styles.infoLabel}>Race:</span>
+            <span className={styles.infoValue}>{snapshot.builderFactionName}</span>
+            <span className={styles.infoLabel}>Enemy:</span>
+            <span className={styles.infoValue}>{mapFactionToDisplayName(snapshot.selectedFaction)}</span>
             {setup?.difficulty && (
               <>
-                <span className="hud-info-label">Diff:</span>
-                <span className="hud-info-value hud-info-value-diff">{setup.difficulty}</span>
+                <span className={styles.infoLabel}>Diff:</span>
+                <span className={joinClassNames(styles.infoValue, styles.infoValueDiff)}>{setup.difficulty}</span>
               </>
             )}
           </div>
 
-          <div className="hud-info-row">
-            <span className="hud-info-label">Wave:</span>
-            <span className="hud-info-value">{snapshot.waveNumber}</span>
-            <span className="hud-info-label">Phase:</span>
-            <span className="hud-info-value">{viewModel.phaseLabel}</span>
+          <div className={styles.infoRow}>
+            <span className={styles.infoLabel}>Wave:</span>
+            <span className={styles.infoValue}>{snapshot.waveNumber}</span>
+            <span className={styles.infoLabel}>Phase:</span>
+            <span className={styles.infoValue}>{viewModel.phaseLabel}</span>
           </div>
 
-          <div className="hud-info-row">
-            <span className="hud-info-label">Enemy gold:</span>
-            <span className="hud-info-value">{snapshot.opponentGold}</span>
-            <span className="hud-info-label">Enemy income:</span>
-            <span className="hud-info-value">{snapshot.opponentIncome}</span>
-            <span className="hud-info-label">Enemy HP:</span>
-            <span className="hud-info-value">{snapshot.opponentLives}</span>
-            <span className="hud-info-label">Enemy sends:</span>
-            <span className="hud-info-value">{snapshot.opponentSendQueue.length}</span>
+          <div className={styles.infoRow}>
+            <span className={styles.infoLabel}>Enemy gold:</span>
+            <span className={styles.infoValue}>{snapshot.opponentGold}</span>
+            <span className={styles.infoLabel}>Enemy income:</span>
+            <span className={styles.infoValue}>{snapshot.opponentIncome}</span>
+            <span className={styles.infoLabel}>Enemy HP:</span>
+            <span className={styles.infoValue}>{snapshot.opponentLives}</span>
+            <span className={styles.infoLabel}>Enemy sends:</span>
+            <span className={styles.infoValue}>{snapshot.opponentSendQueue.length}</span>
           </div>
 
           {snapshot.matchOutcome.status !== 'active' && (
-            <div className="hud-info-row" role="status">
-              <span className="hud-info-label">Match:</span>
-              <span className="hud-info-value">{snapshot.matchOutcome.status}</span>
+            <div className={styles.infoRow} role="status">
+              <span className={styles.infoLabel}>Match:</span>
+              <span className={styles.infoValue}>{snapshot.matchOutcome.status}</span>
             </div>
           )}
 
-          <div className="hud-selected-info">
-            <span className="hud-selected-label">Selected:</span>
-            <span className="hud-selected-value">{viewModel.selectedTowerLabel}</span>
+          <div className={styles.selectedInfo}>
+            <span className={styles.selectedLabel}>Selected:</span>
+            <span className={styles.selectedValue}>{viewModel.selectedTowerLabel}</span>
           </div>
         </div>
       )}

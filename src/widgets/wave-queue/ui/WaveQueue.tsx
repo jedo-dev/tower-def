@@ -1,5 +1,5 @@
 import { memo, type CSSProperties } from 'react';
-import './WaveQueue.css';
+import styles from './WaveQueue.module.css';
 import { useGameHudSnapshot } from '../../../shared/lib/game-bridge/useGameHudSnapshot';
 import type { HudCreepType, WaveQueueItem } from '../../../shared/lib/game-bridge/types';
 import { mapWaveQueueToViewModel } from '../model/mapWaveQueueToViewModel';
@@ -24,14 +24,14 @@ function CreepIcons({ items, sectionKey }: { items: WaveQueueItem[]; sectionKey:
       {items.slice(0, MAX_VISIBLE_ICONS).map((item) => (
         <div
           key={`${sectionKey}-${item.type}-${item.index}`}
-          className="wave-queue-icon"
+          className={styles.icon}
           title={item.type}
         >
-          <div className="wave-queue-sprite-viewport" aria-label={item.type}>
+          <div className={styles.spriteViewport} aria-label={item.type}>
             <img
               src={CREEP_SPRITES[item.type]}
               alt={item.type}
-              className="wave-queue-sprite-strip"
+              className={styles.spriteStrip}
               style={
                 {
                   '--wave-queue-frames': CREEP_SHEET_FRAMES,
@@ -43,7 +43,7 @@ function CreepIcons({ items, sectionKey }: { items: WaveQueueItem[]; sectionKey:
         </div>
       ))}
       {items.length > MAX_VISIBLE_ICONS && (
-        <div className="wave-queue-more">+{items.length - MAX_VISIBLE_ICONS}</div>
+        <div className={styles.more}>+{items.length - MAX_VISIBLE_ICONS}</div>
       )}
     </>
   );
@@ -54,32 +54,32 @@ function WaveQueueComponent() {
   const viewModel = mapWaveQueueToViewModel(snapshot);
 
   return (
-    <div className="wave-queue" aria-label="Wave queue">
-      <div className="wave-queue-header">
-        <span className="wave-queue-label">{viewModel.headerLabel}</span>
+    <div className={styles.queue} aria-label="Wave queue">
+      <div className={styles.header}>
+        <span className={styles.label}>{viewModel.headerLabel}</span>
         {viewModel.countLabel !== null && (
-          <span className="wave-queue-count">{viewModel.countLabel}</span>
+          <span className={styles.count}>{viewModel.countLabel}</span>
         )}
       </div>
 
       {viewModel.baselineHint !== null && (
-        <div className="wave-queue-baseline-hint">{viewModel.baselineHint}</div>
+        <div className={styles.baselineHint}>{viewModel.baselineHint}</div>
       )}
 
       {viewModel.sections.map((section) => (
-        <div key={section.key} className="wave-queue-section">
+        <div key={section.key} className={styles.section}>
           {section.key !== 'live' && (
-            <span className="wave-queue-section-label">{section.label}</span>
+            <span className={styles.sectionLabel}>{section.label}</span>
           )}
-          <div className="wave-queue-content">
+          <div className={styles.content}>
             <CreepIcons items={section.items} sectionKey={section.key} />
           </div>
         </div>
       ))}
 
       {viewModel.emptyText !== null && (
-        <div className="wave-queue-empty">
-          <span className="wave-queue-empty-text">{viewModel.emptyText}</span>
+        <div className={styles.empty}>
+          <span className={styles.emptyText}>{viewModel.emptyText}</span>
         </div>
       )}
     </div>

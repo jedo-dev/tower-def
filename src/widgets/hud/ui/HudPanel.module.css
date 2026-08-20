@@ -1,0 +1,159 @@
+.panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+  border: 24px solid transparent;
+  border-image: url('../../../assets/ui-presets/hud_bar.png') 85 fill / 24px / 0 stretch;
+}
+
+.toggle {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: var(--touch-target-min);
+  height: var(--touch-target-min);
+  border: 0;
+  background: url('../../../assets/ui-presets/btn_small_square.png') center / 100% 100% no-repeat;
+  color: var(--color-text-gold-dim);
+  cursor: pointer;
+}
+
+.toggleIcon { display: inline-block; }
+.toggleIconUp { transform: rotate(180deg); }
+
+.topRow, .timerActions, .infoRow, .selectedInfo {
+  display: flex;
+  align-items: center;
+}
+
+.topRow { justify-content: space-between; gap: var(--space-md); }
+.center { flex: 1; display: flex; justify-content: center; }
+.timerActions { gap: var(--space-md); }
+
+.pressure {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  min-height: 24px;
+  padding: var(--space-xs) 10px;
+  border: 14px solid transparent;
+  border-image: url('../../../assets/ui-presets/thin_border.png') 90 fill / 10px / 0 stretch;
+  font-family: var(--font-family-ui);
+}
+
+.pressureLabel {
+  color: var(--color-text-primary);
+  font-family: var(--font-family-display);
+  font-size: var(--font-size-sm);
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.pressureDetail {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  text-align: right;
+}
+
+.pressureLow .pressureLabel { color: var(--color-pressure-low); }
+.pressureMedium .pressureLabel { color: var(--color-pressure-medium); }
+.pressureHigh .pressureLabel { color: var(--color-pressure-high); }
+
+.resource {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  min-width: 70px;
+}
+
+.resourceIcon, .resourceValue, .timer, .infoLabel, .infoValue, .selectedLabel, .selectedValue {
+  font-family: var(--font-family-ui);
+}
+
+.resourceValue { font-family: var(--font-family-stats); font-size: var(--font-size-xl); font-weight: 700; color: var(--color-text-gold); }
+.timer { font-family: var(--font-family-stats); font-size: var(--font-size-sm); color: var(--color-text-gold-dim); }
+
+.startBtn, .forceStartBtn, .towerBtn, .battlefieldViewBtn {
+  border: 0;
+  min-height: var(--touch-target-min);
+  padding: var(--space-md) 14px;
+  font-family: var(--font-family-display);
+  text-transform: uppercase;
+  color: var(--color-text-gold);
+  cursor: pointer;
+  background: url('../../../assets/ui-presets/btn_red_normal.png') center / 100% 100% no-repeat;
+}
+
+.startBtn:hover:not(:disabled), .forceStartBtn:hover:not(:disabled) {
+  background-image: url('../../../assets/ui-presets/btn_red_hover.png');
+}
+
+.battlefieldViewBtn {
+  min-width: 64px;
+  background-image: url('../../../assets/ui-presets/btn_gray_normal.png');
+}
+
+.battlefieldViewBtnActive {
+  background-image: url('../../../assets/ui-presets/btn_green_normal.png');
+}
+
+.towerButtons {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(var(--touch-target-min), 1fr));
+  gap: var(--space-md);
+}
+
+.towerBtn {
+  background-image: url('../../../assets/ui-presets/btn_gray_normal.png');
+}
+
+.towerBtnSelected {
+  background-image: url('../../../assets/ui-presets/btn_green_normal.png');
+}
+
+.expandedContent {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.infoRow {
+  flex-wrap: wrap;
+  gap: var(--space-md);
+  font-size: var(--font-size-xs);
+}
+
+.infoLabel, .selectedLabel { color: var(--color-text-label); }
+.infoValue, .selectedValue { color: var(--color-text-parchment); font-weight: 600; font-family: var(--font-family-accent); }
+.infoValueDiff { color: var(--color-accent-gold); }
+
+.selectedInfo {
+  gap: var(--space-md);
+  min-height: 28px;
+  padding: 0 var(--space-md);
+  border: 14px solid transparent;
+  border-image: url('../../../assets/ui-presets/thin_border.png') 90 fill / 10px / 0 stretch;
+}
+
+.duelRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  padding: var(--space-2xs) 10px;
+  font-family: var(--font-family-ui);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.duelSide {
+  white-space: nowrap;
+}
+
+.duelSideEnemy {
+  color: var(--color-text-danger);
+}

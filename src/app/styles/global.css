@@ -31,27 +31,88 @@
 }
 
 :root {
+  /* Typography: families */
   --font-family-ui: 'Exo 2', 'Segoe UI', Tahoma, sans-serif;
   --font-family-display: 'Cinzel', 'Times New Roman', serif;
   --font-family-accent: 'Marcellus', 'Georgia', serif;
   --font-family-stats: 'Cinzel', 'Exo 2', serif;
-  font-family: var(--font-family-ui);
-  background: #12151d;
-  color: #ecf2ff;
-  font-size: 16px;
-  line-height: 1.4;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
+
+  /* Typography: sizes */
+  --font-size-2xs: 10px;
+  --font-size-xs: 11px;
+  --font-size-sm: 12px;
+  --font-size-md: 14px;
+  --font-size-lg: 16px;
+  --font-size-xl: 20px;
+
+  /* Core palette */
+  --color-primary: #5c8cff;
+  --color-success: #44aa44;
+  --color-danger: #ff7b6b;
+  --color-warning: #ffb15f;
+
+  /* Text colors */
   --color-text-primary: #eff4ff;
   --color-text-secondary: #bed0ee;
   --color-text-muted: #9fb2d4;
+  --color-text-label: #98a4bf;
+  --color-text-danger: #e08585;
+  --color-text-success: #8fce9a;
+  --color-text-warning: #e0c285;
+
+  /* Parchment / gold accents (fantasy UI chrome) */
+  --color-text-gold: #f0e3c0;
+  --color-text-gold-dim: #d9cbab;
+  --color-text-parchment: #e6dfcd;
+  --color-accent-gold: #f0d188;
+
+  /* Wave pressure indicator */
   --color-pressure-low: #f0d188;
   --color-pressure-medium: #ffb15f;
   --color-pressure-high: #ff7b6b;
+
+  /* Faction theme colors */
+  --color-faction-undead: #5c8cff;
+  --color-faction-orc: #d97b39;
+  --color-faction-human: #5e94d6;
+  --color-faction-elf: #6bbf89;
+
+  /* Surfaces and borders */
+  --color-surface-app: #12151d;
+  --color-surface-canvas: #1a1f2c;
+  --color-surface-overlay: rgba(10, 14, 24, 0.72);
+  --color-border-strong: #3a4964;
+
+  /* Spacing scale */
+  --space-2xs: 2px;
+  --space-xs: 4px;
+  --space-sm: 6px;
+  --space-md: 8px;
+  --space-lg: 12px;
+  --space-xl: 16px;
+  --space-2xl: 24px;
+
+  /* Radii */
+  --radius-sm: 4px;
+  --radius-md: 10px;
+  --radius-pill: 999px;
+
+  /* Sizing */
+  --touch-target-min: 44px;
+
+  /* Safe areas */
   --safe-area-top: env(safe-area-inset-top, 0px);
   --safe-area-right: env(safe-area-inset-right, 0px);
   --safe-area-bottom: env(safe-area-inset-bottom, 0px);
   --safe-area-left: env(safe-area-inset-left, 0px);
+
+  font-family: var(--font-family-ui);
+  background: var(--color-surface-app);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-lg);
+  line-height: 1.4;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
 }
 
 *,

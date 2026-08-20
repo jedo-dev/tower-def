@@ -1,9 +1,9 @@
 .panel {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 10px;
-  border: 20px solid transparent;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+  border: 16px solid transparent;
   border-image: url('../../../assets/ui-presets/thin_border.png') 90 fill / 10px / 0 stretch;
   color: var(--color-text-primary);
   font-family: var(--font-family-ui);
@@ -34,15 +34,15 @@
 
 .buttons {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-sm);
 }
 
 .button {
-  min-height: 44px;
-  min-width: 44px;
+  min-height: var(--touch-target-min);
+  min-width: var(--touch-target-min);
   border: 0;
-  padding: 8px;
+  padding: var(--space-sm);
   background: url('../../../assets/ui-presets/btn_gray_normal.png') center / 100% 100% no-repeat;
   color: var(--color-text-primary);
   cursor: pointer;
@@ -74,11 +74,12 @@
 
 .buttonStats {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
-  gap: 6px;
+  gap: var(--space-2xs) var(--space-sm);
   color: var(--color-text-secondary);
   font-family: var(--font-family-stats);
-  font-size: 11px;
+  font-size: var(--font-size-2xs);
 }
 
 .buttonReason {
@@ -94,9 +95,9 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  min-height: 24px;
+  min-height: 20px;
   color: var(--color-text-muted);
-  font-size: 11px;
+  font-size: var(--font-size-xs);
 }
 
 .phaseNote {

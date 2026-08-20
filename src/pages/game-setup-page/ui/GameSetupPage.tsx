@@ -3,6 +3,7 @@ import { BuilderFaction, builderFactions, DEFAULT_BUILDER_FACTION } from '../../
 import { EnemyFaction, enemyFactions, DEFAULT_ENEMY_FACTION } from '../../../entities/enemy-faction';
 import { Difficulty, difficulties, DEFAULT_DIFFICULTY } from '../../../entities/difficulty';
 import type { GameSetupConfig, AppRoute } from '../../../shared/config/game-setup';
+import { FACTION_THEME_COLOR_VARS } from '../../../shared/constants/theme';
 import './GameSetupPage.css';
 
 type SetupStep = 'builder-race' | 'enemy-faction' | 'difficulty' | 'summary';
@@ -323,13 +324,13 @@ export function GameSetupPage({ onStartGame, onNavigate }: GameSetupPageProps) {
 function getEnemyThemeColor(faction: EnemyFaction): string {
   switch (faction) {
     case EnemyFaction.UNDEAD:
-      return '#5c8cff';
+      return FACTION_THEME_COLOR_VARS.undead;
     case EnemyFaction.ORC:
-      return '#d97b39';
+      return FACTION_THEME_COLOR_VARS.orc;
     case EnemyFaction.HUMAN:
-      return '#5e94d6';
+      return FACTION_THEME_COLOR_VARS.human;
     case EnemyFaction.ELF:
-      return '#6bbf89';
+      return FACTION_THEME_COLOR_VARS.elf;
   }
 }
 

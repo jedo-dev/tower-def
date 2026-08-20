@@ -1,0 +1,91 @@
+.queue {
+  position: absolute;
+  top: var(--space-md);
+  left: var(--space-md);
+  right: var(--space-md);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding: 10px;
+  border: 34px solid transparent;
+  border-image: url('../../../assets/ui-presets/hud_bar.png') 85 fill / 22px / 0 stretch;
+}
+
+.header,
+.content,
+.empty {
+  display: flex;
+  align-items: center;
+}
+
+.header { justify-content: space-between; }
+.content { gap: var(--space-sm); flex-wrap: wrap; min-height: 24px; }
+.empty { justify-content: center; min-height: 24px; }
+
+.label,
+.count,
+.emptyText,
+.more {
+  font-family: var(--font-family-ui);
+}
+
+.label { font-family: var(--font-family-display); font-size: var(--font-size-sm); color: var(--color-text-gold); }
+.count { font-family: var(--font-family-stats); font-size: var(--font-size-2xs); color: var(--color-text-muted); }
+.emptyText { font-family: var(--font-family-accent); font-size: var(--font-size-xs); color: var(--color-text-label); }
+
+.icon,
+.more {
+  width: 24px;
+  height: 24px;
+  border: 0;
+  background: url('../../../assets/ui-presets/icon_frame_square.png') center / 100% 100% no-repeat;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.more { font-size: var(--font-size-2xs); color: var(--color-text-gold-dim); }
+
+.spriteViewport {
+  width: 18px;
+  height: 18px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.spriteStrip {
+  --wave-queue-frames: 4;
+  --wave-queue-anim-delay: 0s;
+  width: calc(18px * var(--wave-queue-frames));
+  height: 18px;
+  image-rendering: pixelated;
+  animation: spriteWalk 0.7s steps(4) infinite;
+  animation-delay: var(--wave-queue-anim-delay);
+}
+
+@keyframes spriteWalk {
+  from { transform: translateX(0); }
+  to { transform: translateX(-72px); }
+}
+
+.baselineHint {
+  font-family: var(--font-family-ui);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  padding: var(--space-2xs) 0;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+}
+
+.sectionLabel {
+  font-family: var(--font-family-ui);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-danger);
+}
