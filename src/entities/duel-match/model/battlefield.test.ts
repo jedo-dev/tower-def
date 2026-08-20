@@ -11,6 +11,7 @@ import {
   createBattlefieldState,
   markDeadCreeps,
   markLeakedCreeps,
+  reconcileBattlefieldsForNextRound,
   removeDeadCreeps,
   removeLeakedCreeps,
   removeTower,
@@ -418,6 +419,61 @@ describe('entities/duel-match/battlefield', () => {
       expect(cleanPlayerBf.leakedCount).toBe(1);
       expect(state.opponent.battlefield.creeps).toHaveLength(0);
       expect(state.opponent.battlefield.leakedCount).toBe(0);
+    });
+  });
+
+  describe('reconcileBattlefieldsForNextRound', () => {
+    it('clears player battlefield creeps owned by the live wave runtime', () => {
+      let state = createInitialDuelMatchState(RaceId.UNDEAD, RaceId.ORC);
+      state = sendCreep(state, false, 'orc_grunt', UnitTier.TIER_1).state;
+      state = routeQueuedSendsToBattlefields(state);
+      expect(state.player.battlefield.creeps).toHaveLength(1);
+
+      const reconciled = reconcileBattlefieldsForNextRound(state);
+
+      expect(reconciled.player.battlefield.creeps).toHaveLength(0);
+    });
+
+    it('prunes dead and escaped creeps from the opponent battlefield and keeps alive ones', () => {
+      const state = createInitialDuelMatchState(RaceId.UNDEAD, RaceId.ORC);
+      let opponentBf = addCreeps(state.opponent.battlefield, [
+        createTestCreepEntry({ id: 'alive1', entrance: DEFAULT_ENTRANCE }),
+        createTestCreepEntry({ id: 'dead1', entrance: DEFAULT_ENTRANCE }),
+        createTestCreepEntry({ id: 'leak1', entrance: DEFAULT_EXIT }),
+      ]);
+      opponentBf = {
+        ...opponentBf,
+        creeps: opponentBf.creeps.map((creep) =>
+          creep.id === 'dead1' ? { ...creep, hp: 0 } : creep,
+        ),
+      };
+      opponentBf = markDeadCreeps(opponentBf);
+      opponentBf = markLeakedCreeps(opponentBf, DEFAULT_EXIT);
+      const stateWithCreeps = {
+        ...state,
+        opponent: { ...state.opponent, battlefield: opponentBf },
+      };
+
+      const reconciled = reconcileBattlefieldsForNextRound(stateWithCreeps);
+
+      expect(reconciled.opponent.battlefield.creeps.map((creep) => creep.id)).toEqual(['alive1']);
+      expect(reconciled.opponent.battlefield.leakedCount).toBe(1);
+    });
+
+    it('does not grow battlefields across repeated rounds with sends', () => {
+      let state = createInitialDuelMatchState(RaceId.UNDEAD, RaceId.ORC);
+      for (let round = 0; round < 5; round += 1) {
+        state = sendCreep(state, false, 'orc_grunt', UnitTier.TIER_1).state;
+        state = routeQueuedSendsToBattlefields(state);
+        state = reconcileBattlefieldsForNextRound(state);
+        state = {
+          ...state,
+          player: { ...state.player, sendQueue: [] },
+          opponent: { ...state.opponent, sendQueue: [] },
+        };
+      }
+
+      expect(state.player.battlefield.creeps).toHaveLength(0);
     });
   });
 });

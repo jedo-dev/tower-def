@@ -177,6 +177,28 @@ export function removeLeakedCreeps(battlefield: BattlefieldState): BattlefieldLe
   };
 }
 
+export function reconcileBattlefieldsForNextRound(state: DuelMatchState): DuelMatchState {
+  const opponentWithoutDead = removeDeadCreeps(state.opponent.battlefield);
+  const opponentLeakResult = removeLeakedCreeps(opponentWithoutDead);
+
+  return {
+    ...state,
+    player: {
+      ...state.player,
+      // Player-side creeps are owned by the live wave runtime (spawned via
+      // getAdditionalWaveUnits); keeping routed copies here double-counts them.
+      battlefield: {
+        ...state.player.battlefield,
+        creeps: [],
+      },
+    },
+    opponent: {
+      ...state.opponent,
+      battlefield: opponentLeakResult.battlefield,
+    },
+  };
+}
+
 export function countAliveCreeps(battlefield: BattlefieldState): number {
   return battlefield.creeps.filter((creep) => creep.lifeState === 'alive').length;
 }

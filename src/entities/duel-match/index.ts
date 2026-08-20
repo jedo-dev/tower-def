@@ -23,6 +23,7 @@ export {
   markLeakedCreeps,
   removeDeadCreeps,
   removeLeakedCreeps,
+  reconcileBattlefieldsForNextRound,
   removeTower,
   routeQueuedSendsToBattlefields,
 } from './model/battlefieldOps';

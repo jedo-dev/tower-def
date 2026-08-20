@@ -22,6 +22,7 @@ import {
   addCreeps,
   createInitialDuelMatchState,
   getSendCostByTier,
+  reconcileBattlefieldsForNextRound,
   routeQueuedSendsToBattlefields,
   sendCreep,
   startRound,
@@ -1990,6 +1991,7 @@ export class GameScene extends Phaser.Scene {
     this.redrawTerrainTiles();
     this.applyComputerBuildPhaseStrategies();
     this.duelMatchState = routeQueuedSendsToBattlefields(this.duelMatchState);
+    this.duelMatchState = reconcileBattlefieldsForNextRound(this.duelMatchState);
     this.duelMatchState = this.addBaselineWaveToOpponentBattlefield(this.duelMatchState);
     this.syncOpponentBattlefieldRenderStateFromDuel();
     this.spawnWaveCreeps();
@@ -2061,7 +2063,7 @@ export class GameScene extends Phaser.Scene {
     });
 
     this.opponentCreeps = opponentBattlefield.creeps
-      .filter((creep) => creep.lifeState === 'alive')
+      .filter((creep) => creep.status === 'alive')
       .map((creep) => {
         const position = this.toCellCenter(creep.position);
         const sprite = this.createOpponentCreepSprite(position.x, position.y);
