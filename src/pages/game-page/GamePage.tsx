@@ -1,5 +1,6 @@
 import { GameCanvas } from '../../widgets/game-canvas/ui/GameCanvas';
 import { CreepSendPanel } from '../../widgets/creep-send-panel';
+import { DuelEventFeed } from '../../widgets/duel-event-feed';
 import { HudPanel } from '../../widgets/hud/ui/HudPanel';
 import { TowerActionPanel } from '../../widgets/tower-action-panel';
 import { WaveQueue } from '../../widgets/wave-queue';
@@ -15,6 +16,7 @@ export function GamePage({ setup }: GamePageProps) {
     <main className="game-page">
       <div className="game-viewport">
         <WaveQueue />
+        <DuelEventFeed />
         <GameCanvas setup={setup} />
         <TowerActionPanel />
         <CreepSendPanel setup={setup} />
