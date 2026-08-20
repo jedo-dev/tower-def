@@ -37,6 +37,7 @@ import type {
   MatchOutcomeStatus,
 } from '../../game-bridge/types';
 import { createGridModel } from '../../grid/createGridModel';
+import { generateEdgeEndpoints, type EdgeEndpoints } from '../../grid/generateEdgeEndpoints';
 import type { SoundId } from '../sound/audio.types';
 import { validateTowerPlacementPath } from '../../pathfinding/validateTowerPlacementPath';
 import {
@@ -136,6 +137,7 @@ import {
   BUILD_PREVIEW_RENDER_DEPTH,
   DEFAULT_TOWER_COST,
   DEV_FPS_REPORT_INTERVAL_MS,
+  DEFAULT_MAP_SEED,
   ENTRANCE_CELL,
   EXIT_CELL,
   GRID_OVERLAY_RENDER_DEPTH,
@@ -195,7 +197,8 @@ export class GameScene extends Phaser.Scene {
   private matchOutcomeStatus: MatchOutcomeStatus = 'active';
   private matchWinner: HudFactionType | null = null;
   private activeBattlefieldView: BattlefieldView = 'player';
-  private readonly mapSeed = 1337;
+  private mapSeed = DEFAULT_MAP_SEED;
+  private mapEndpoints: EdgeEndpoints = { entrance: ENTRANCE_CELL, exit: EXIT_CELL };
   private inputControllerState: InputControllerState = {
     activeTouchGesture: null,
     lastActionAtMs: Number.NEGATIVE_INFINITY,
@@ -531,8 +534,8 @@ export class GameScene extends Phaser.Scene {
       mapSeed: this.mapSeed,
       createGridModel: () =>
         createGridModel({
-          entrance: ENTRANCE_CELL,
-          exit: EXIT_CELL,
+          entrance: this.mapEndpoints.entrance,
+          exit: this.mapEndpoints.exit,
         }),
     };
   }
@@ -604,9 +607,18 @@ export class GameScene extends Phaser.Scene {
       this.registry.set('game.setup', setupConfig);
     }
 
+    if (setupConfig?.endpoints?.mode === 'dynamic') {
+      this.mapSeed = setupConfig.endpoints.seed;
+      this.mapEndpoints = generateEdgeEndpoints(setupConfig.endpoints.seed);
+    } else {
+      this.mapSeed = DEFAULT_MAP_SEED;
+      this.mapEndpoints = { entrance: ENTRANCE_CELL, exit: EXIT_CELL };
+    }
+
     this.duelMatchState = createInitialDuelMatchState(
       this.selectedBuilderFactionId,
       mapHudFactionToRaceId(this.selectedFaction),
+      this.mapEndpoints,
     );
     this.opponentLeakHistory = [];
     this.computerDecisionRecorder.clear();

@@ -5,6 +5,7 @@ import { GRID_DEFAULT_ROW_CENTER, GRID_DIMENSIONS } from '../../../constants/gri
 
 export const ENTRANCE_CELL = { x: 0, y: GRID_DEFAULT_ROW_CENTER };
 export const EXIT_CELL = { x: GRID_DIMENSIONS.cols - 1, y: GRID_DEFAULT_ROW_CENTER };
+export const DEFAULT_MAP_SEED = 1337;
 export const DEFAULT_TOWER_COST = 50;
 export const SELL_REFUND_RATIO = ECONOMY_BALANCE.towerSellRatio;
 export const CREEP_BASE_MOVE_SPEED_PX_PER_SEC = 80;
@@ -62,6 +63,10 @@ export const ENTRANCE_EXIT_LABEL_COLOR = '#ffffff';
 export const TERRAIN_RENDER_DEPTH = -20;
 export const GRID_OVERLAY_RENDER_DEPTH = 10;
 export const ENTRANCE_EXIT_LABEL_RENDER_DEPTH = 20;
+export const ENDPOINT_ENTRANCE_MARKER_COLOR = 0x2ecc71;
+export const ENDPOINT_EXIT_MARKER_COLOR = 0xe74c3c;
+export const ENDPOINT_MARKER_FILL_ALPHA = 0.22;
+export const ENDPOINT_MARKER_LINE_WIDTH = 2;
 export const TOWER_RENDER_DEPTH = 40;
 export const CREEP_RENDER_DEPTH = 45;
 export const CREEP_VISUAL_SIZE_PX = 28;

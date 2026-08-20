@@ -17,6 +17,10 @@ export type GridRendererConfig = {
   entranceExitLabelFontSizePx: string;
   entranceExitLabelColor: string;
   entranceExitLabelRenderDepth: number;
+  entranceMarkerColor: number;
+  exitMarkerColor: number;
+  endpointMarkerFillAlpha: number;
+  endpointMarkerLineWidth: number;
 };
 
 export type GridRendererState = {
@@ -171,6 +175,24 @@ export function drawGrid(
     if (cell.role === 'entrance' || cell.role === 'exit') {
       const x = cell.x * GRID_DIMENSIONS.cellSize;
       const y = cell.y * GRID_DIMENSIONS.cellSize;
+
+      // Marker stays visible on every terrain tileset, incl. dynamic maps.
+      const markerColor =
+        cell.role === 'entrance' ? config.entranceMarkerColor : config.exitMarkerColor;
+      state.gridGraphics.fillStyle(markerColor, config.endpointMarkerFillAlpha);
+      state.gridGraphics.fillRect(
+        x + 1,
+        y + 1,
+        GRID_DIMENSIONS.cellSize - 2,
+        GRID_DIMENSIONS.cellSize - 2,
+      );
+      state.gridGraphics.lineStyle(config.endpointMarkerLineWidth, markerColor, 1);
+      state.gridGraphics.strokeRect(
+        x + 1,
+        y + 1,
+        GRID_DIMENSIONS.cellSize - 2,
+        GRID_DIMENSIONS.cellSize - 2,
+      );
 
       const label = deps.scene
         .add
