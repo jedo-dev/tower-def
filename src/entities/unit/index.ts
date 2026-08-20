@@ -5,6 +5,7 @@ export { getHumanUnitsByTier, humanUnits } from './model/config/human';
 export { getElfUnitsByTier, elfUnits } from './model/config/elf';
 export {
   getAllUnitConfigs,
+  getUnitsByFaction,
   resolveUnitConfigById,
   tryResolveUnitConfigById,
 } from './model/registry';

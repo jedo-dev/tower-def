@@ -31,7 +31,14 @@ import {
 } from '../../../../entities/duel-match';
 import { DEFAULT_DIFFICULTY, type Difficulty } from '../../../../entities/difficulty';
 import { getRaceRegistry } from '../../../../entities/race-registry';
-import { resolveUnitConfigById, undeadUnits, type UnitConfig } from '../../../../entities/unit';
+import {
+  getUnitsByFaction,
+  resolveUnitConfigById,
+  tryResolveUnitConfigById,
+  undeadUnits,
+  type UnitConfig,
+  type UnitId,
+} from '../../../../entities/unit';
 import { calculateWaveStartPath, generateWaveUnits } from '../../../../entities/wave';
 import { CreepTypeId, RaceId } from '../../../types/content-ids';
 import {
@@ -50,6 +57,7 @@ import {
   TOWER_SPRITE_KEYS,
   TOWER_SPRITE_SHEET_FRAME,
   UNIT_ANIMATION_KEYS,
+  UNIT_FACTION_TINTS,
   UNIT_SPRITE_ASSETS,
   UNIT_SPRITE_KEYS,
   UNIT_SPRITE_SHEET_FRAME,
@@ -178,6 +186,7 @@ import {
   GRID_IDLE_ALPHA,
   GRID_LINE_COLOR,
   GRID_LINE_WIDTH,
+  CREEP_VISUAL_SIZE_PX,
   GRID_OVERLAY_RENDER_DEPTH,
   GRID_PIXEL_HEIGHT,
   GRID_PIXEL_WIDTH,
@@ -721,6 +730,7 @@ export class GameScene extends Phaser.Scene {
       getSpriteKeyByUnit: (unit) => this.getSpriteKeyByUnit(unit),
       getAnimationKeyByUnit: (unit) => this.getAnimationKeyByUnit(unit),
       getCreepTypeFromUnit: (unit) => this.getCreepTypeFromUnit(unit),
+      getCreepTintByUnit: (unit) => this.getCreepTintByUnit(unit),
       toCellCenter: (position) => this.toCellCenter(position),
       onGoldUpdated: (nextGold) => {
         this.playerGold = nextGold;
@@ -1676,11 +1686,8 @@ export class GameScene extends Phaser.Scene {
   }
 
   private getSelectedFactionUnits(): UnitConfig[] {
-    if (this.selectedFaction === 'undead') {
-      return undeadUnits;
-    }
-
-    return undeadUnits;
+    const factionUnits = getUnitsByFaction(this.mapHudFactionToRaceId(this.selectedFaction));
+    return factionUnits.length > 0 ? [...factionUnits] : [...undeadUnits];
   }
 
   private addBaselineWaveToOpponentBattlefield(state: DuelMatchState): DuelMatchState {
@@ -1720,8 +1727,30 @@ export class GameScene extends Phaser.Scene {
     if (unit.id === 'undead_gargoyle') {
       return UNIT_SPRITE_KEYS.UNDEAD_GARGOYLE;
     }
+    if (unit.id === 'undead_ghoul') {
+      return UNIT_SPRITE_KEYS.UNDEAD_GHOUL;
+    }
 
-    return UNIT_SPRITE_KEYS.UNDEAD_GHOUL;
+    return this.getFallbackSpriteKeyByTier(unit.tier);
+  }
+
+  // Only undead spritesheets exist; non-undead units reuse them by tier and
+  // get a faction tint so races stay distinguishable.
+  private getFallbackSpriteKeyByTier(tier: number): string {
+    if (tier <= 1) {
+      return UNIT_SPRITE_KEYS.UNDEAD_SKELETON;
+    }
+    if (tier === 2) {
+      return UNIT_SPRITE_KEYS.UNDEAD_GHOUL;
+    }
+    if (tier === 3) {
+      return UNIT_SPRITE_KEYS.UNDEAD_CRYPT_FIEND;
+    }
+    return UNIT_SPRITE_KEYS.UNDEAD_GARGOYLE;
+  }
+
+  private getCreepTintByUnit(unit: UnitConfig): number {
+    return UNIT_FACTION_TINTS[unit.faction] ?? 0xffffff;
   }
 
   private createTowerAnimations(): void {
@@ -1867,17 +1896,20 @@ export class GameScene extends Phaser.Scene {
   }
 
   private getAnimationKeyByUnit(unit: UnitConfig): string {
-    if (unit.id === 'undead_skeleton') {
-      return UNIT_ANIMATION_KEYS.UNDEAD_SKELETON_WALK;
-    }
-    if (unit.id === 'undead_crypt_fiend') {
-      return UNIT_ANIMATION_KEYS.UNDEAD_CRYPT_FIEND_WALK;
-    }
-    if (unit.id === 'undead_gargoyle') {
-      return UNIT_ANIMATION_KEYS.UNDEAD_GARGOYLE_WALK;
-    }
+    return this.getWalkAnimationKeyBySpriteKey(this.getSpriteKeyByUnit(unit));
+  }
 
-    return UNIT_ANIMATION_KEYS.UNDEAD_GHOUL_WALK;
+  private getWalkAnimationKeyBySpriteKey(spriteKey: string): string {
+    switch (spriteKey) {
+      case UNIT_SPRITE_KEYS.UNDEAD_SKELETON:
+        return UNIT_ANIMATION_KEYS.UNDEAD_SKELETON_WALK;
+      case UNIT_SPRITE_KEYS.UNDEAD_CRYPT_FIEND:
+        return UNIT_ANIMATION_KEYS.UNDEAD_CRYPT_FIEND_WALK;
+      case UNIT_SPRITE_KEYS.UNDEAD_GARGOYLE:
+        return UNIT_ANIMATION_KEYS.UNDEAD_GARGOYLE_WALK;
+      default:
+        return UNIT_ANIMATION_KEYS.UNDEAD_GHOUL_WALK;
+    }
   }
 
   private handlePointerMove(pointer: Phaser.Input.Pointer): void {
@@ -2066,7 +2098,7 @@ export class GameScene extends Phaser.Scene {
       .filter((creep) => creep.status === 'alive')
       .map((creep) => {
         const position = this.toCellCenter(creep.position);
-        const sprite = this.createOpponentCreepSprite(position.x, position.y);
+        const sprite = this.createOpponentCreepSprite(position.x, position.y, creep.id);
         sprite.setVisible(this.activeBattlefieldView === 'opponent');
         return {
           entity: { ...creep },
@@ -2077,11 +2109,24 @@ export class GameScene extends Phaser.Scene {
       });
   }
 
-  private createOpponentCreepSprite(x: number, y: number): Phaser.GameObjects.Sprite {
-    const sprite = this.add.sprite(x, y, UNIT_SPRITE_KEYS.UNDEAD_SKELETON, 0);
-    sprite.setDisplaySize(PROJECTILE_DISPLAY_SIZE_PX, PROJECTILE_DISPLAY_SIZE_PX);
+  // Duel battlefield creeps only carry an id; the source unit id is its last
+  // ':'-separated segment (see createSendCreepEntries / baseline entries).
+  private resolveUnitConfigFromBattlefieldCreepId(creepId: string): UnitConfig | undefined {
+    const unitIdSegment = creepId.split(':').at(-1);
+    if (!unitIdSegment) {
+      return undefined;
+    }
+    return tryResolveUnitConfigById(unitIdSegment as UnitId);
+  }
+
+  private createOpponentCreepSprite(x: number, y: number, creepId: string): Phaser.GameObjects.Sprite {
+    const unit = this.resolveUnitConfigFromBattlefieldCreepId(creepId);
+    const spriteKey = unit ? this.getSpriteKeyByUnit(unit) : UNIT_SPRITE_KEYS.UNDEAD_SKELETON;
+    const sprite = this.add.sprite(x, y, spriteKey, 0);
+    sprite.setDisplaySize(CREEP_VISUAL_SIZE_PX, CREEP_VISUAL_SIZE_PX);
     sprite.setDepth(TOWER_RENDER_DEPTH - 1);
-    sprite.play(UNIT_ANIMATION_KEYS.UNDEAD_SKELETON_WALK);
+    sprite.setTint(unit ? this.getCreepTintByUnit(unit) : 0xffffff);
+    sprite.play(this.getWalkAnimationKeyBySpriteKey(spriteKey));
     return sprite;
   }
 

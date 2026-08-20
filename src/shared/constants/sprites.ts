@@ -1,3 +1,4 @@
+import { RaceId } from '../types/content-ids';
 import skeletonSprite from '../sprite/skeleton.svg';
 import ghoulSprite from '../sprite/ghoul.svg';
 import cryptFiendSprite from '../sprite/undead_crypt_fiend.svg';
@@ -15,6 +16,15 @@ export const UNIT_SPRITE_ASSETS: Record<(typeof UNIT_SPRITE_KEYS)[keyof typeof U
   [UNIT_SPRITE_KEYS.UNDEAD_GHOUL]: ghoulSprite,
   [UNIT_SPRITE_KEYS.UNDEAD_CRYPT_FIEND]: cryptFiendSprite,
   [UNIT_SPRITE_KEYS.UNDEAD_GARGOYLE]: gargoyleSprite,
+};
+
+// Dedicated art exists only for undead units; other factions reuse the undead
+// sheets with a faction tint until per-race sprites land.
+export const UNIT_FACTION_TINTS: Record<RaceId, number> = {
+  [RaceId.UNDEAD]: 0xffffff,
+  [RaceId.ORC]: 0x8fce6a,
+  [RaceId.HUMAN]: 0xf2d38b,
+  [RaceId.ELF]: 0x9bdcd6,
 };
 
 export const UNIT_SPRITE_SHEET_FRAME = {

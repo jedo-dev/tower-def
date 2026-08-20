@@ -30,3 +30,7 @@ export function tryResolveUnitConfigById(unitId: UnitId): UnitConfig | undefined
 export function getAllUnitConfigs(): readonly UnitConfig[] {
   return ALL_UNITS;
 }
+
+export function getUnitsByFaction(faction: UnitConfig['faction']): readonly UnitConfig[] {
+  return ALL_UNITS.filter((unit) => unit.faction === faction);
+}

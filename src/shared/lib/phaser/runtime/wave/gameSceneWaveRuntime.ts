@@ -48,6 +48,7 @@ export type WaveRuntimeDependencies = {
   getSpriteKeyByUnit: (unit: UnitConfig) => string;
   getAnimationKeyByUnit: (unit: UnitConfig) => string;
   getCreepTypeFromUnit: (unit: UnitConfig) => 'basic';
+  getCreepTintByUnit?: (unit: UnitConfig) => number;
   toCellCenter: (position: GridPosition) => { x: number; y: number };
   onGoldUpdated: (nextGold: number) => void;
   onWavePhaseChanged: (nextPhase: WavePhaseState) => void;
@@ -220,7 +221,7 @@ export function processPendingWaveSpawns(
     const sprite = deps.createCreepSprite(startPoint.x, startPoint.y, spriteKey, animationKey);
     sprite.setDisplaySize(CREEP_VISUAL_SIZE_PX, CREEP_VISUAL_SIZE_PX);
     sprite.setDepth(CREEP_RENDER_DEPTH);
-    sprite.setTint(0xffffff);
+    sprite.setTint(deps.getCreepTintByUnit?.(spawn.unit) ?? 0xffffff);
     sprite.play(animationKey);
 
     state.activeCreeps.push({
