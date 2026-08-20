@@ -70,3 +70,22 @@
   from { transform: translateX(0); }
   to { transform: translateX(-72px); }
 }
+
+.wave-queue-baseline-hint {
+  font-family: var(--font-family-ui);
+  font-size: 11px;
+  color: var(--color-text-secondary, #b9c2d6);
+  padding: 2px 0;
+}
+
+.wave-queue-section {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.wave-queue-section-label {
+  font-family: var(--font-family-ui);
+  font-size: 11px;
+  color: var(--color-text-danger, #e08585);
+}
