@@ -17,6 +17,8 @@ import {
   applyComputerBuildStrategy,
   applyComputerSendStrategy,
   buildDecisionContext,
+  createComputerDecisionDebugRecorder,
+  type LeakHistoryEntry,
 } from '../../../../entities/computer-opponent';
 import {
   addCreeps,
@@ -283,6 +285,10 @@ export class GameScene extends Phaser.Scene {
   private selectedFaction: HudFactionType = 'undead';
   private selectedDifficulty: Difficulty = DEFAULT_DIFFICULTY;
   private duelMatchState: DuelMatchState = createInitialDuelMatchState(RaceId.UNDEAD, RaceId.UNDEAD);
+
+  private opponentLeakHistory: LeakHistoryEntry[] = [];
+
+  private readonly computerDecisionRecorder = createComputerDecisionDebugRecorder();
   private matchOutcomeStatus: MatchOutcomeStatus = 'active';
   private matchWinner: HudFactionType | null = null;
   private activeBattlefieldView: BattlefieldView = 'player';
@@ -1366,6 +1372,8 @@ export class GameScene extends Phaser.Scene {
       this.selectedBuilderFactionId,
       this.mapHudFactionToRaceId(this.selectedFaction),
     );
+    this.opponentLeakHistory = [];
+    this.computerDecisionRecorder.clear();
   }
 
   private toCellCenter(position: GridPosition): { x: number; y: number } {
@@ -1566,6 +1574,15 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
+  private static readonly OPPONENT_LEAK_HISTORY_LIMIT = 10;
+
+  private recordOpponentLeakHistory(round: number, leakedCount: number): void {
+    this.opponentLeakHistory.push({ round, leakedCount });
+    if (this.opponentLeakHistory.length > GameScene.OPPONENT_LEAK_HISTORY_LIMIT) {
+      this.opponentLeakHistory.shift();
+    }
+  }
+
   private applyDuelRoundEndFromResolvedWave(): void {
     const duelRuntimeState = this.getDuelMatchRuntimeState();
     const playerLeakedCreeps = this.activeCreeps.filter(
@@ -1574,6 +1591,7 @@ export class GameScene extends Phaser.Scene {
     const opponentLeakedCreeps = this.opponentCreeps.filter(
       (creep) => creep.entity.status === 'escaped',
     ).length;
+    this.recordOpponentLeakHistory(this.duelMatchState.round, opponentLeakedCreeps);
     const result = applyDuelRoundEndRuntime({
       state: duelRuntimeState,
       deps: this.getDuelMatchRuntimeDeps(),
@@ -1626,6 +1644,8 @@ export class GameScene extends Phaser.Scene {
   }
 
   private resetRunToInitialState(): void {
+    this.opponentLeakHistory = [];
+    this.computerDecisionRecorder.clear();
     this.destroyAllCreeps();
     this.destroyOpponentBattlefieldRenderState();
     this.destroyAllProjectiles();
@@ -2250,11 +2270,12 @@ export class GameScene extends Phaser.Scene {
     const buildContext = buildDecisionContext({
       matchState: this.duelMatchState,
       difficulty: this.selectedDifficulty,
-      leakHistory: [],
+      leakHistory: this.opponentLeakHistory,
     });
     const buildResult = applyComputerBuildStrategy({
       state: this.duelMatchState,
       context: buildContext,
+      debugRecorder: this.computerDecisionRecorder,
     });
     this.duelMatchState = buildResult.state;
     this.registry.set('duel.opponent.builtCount', buildResult.builtCount);
@@ -2264,16 +2285,23 @@ export class GameScene extends Phaser.Scene {
     const sendContext = buildDecisionContext({
       matchState: this.duelMatchState,
       difficulty: this.selectedDifficulty,
-      leakHistory: [],
+      leakHistory: this.opponentLeakHistory,
     });
     const sendResult = applyComputerSendStrategy({
       state: this.duelMatchState,
       context: sendContext,
+      debugRecorder: this.computerDecisionRecorder,
     });
     this.duelMatchState = sendResult.state;
     this.registry.set('duel.opponent.sendCount', sendResult.sentCount);
     this.registry.set('duel.opponent.gold', this.duelMatchState.opponent.gold);
     this.registry.set('duel.opponent.income', this.duelMatchState.opponent.income);
+    if (import.meta.env.DEV) {
+      this.registry.set(
+        'duel.opponent.decisionSnapshots',
+        [...this.computerDecisionRecorder.getSnapshots()],
+      );
+    }
   }
 
   private mapUnitIdToHudCreepType(unitId: string): 'skeleton' | 'ghoul' | 'crypt_fiend' | 'gargoyle' {
