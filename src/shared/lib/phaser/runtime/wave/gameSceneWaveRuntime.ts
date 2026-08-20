@@ -1,3 +1,4 @@
+import type Phaser from 'phaser';
 import {
   addGold,
   applyEarlyWaveStartBonusPlaceholder,
@@ -5,10 +6,12 @@ import {
 } from '../../../../../entities/player-resources';
 import {
   completeWaveIfResolved,
+  createInitialWavePhaseState,
   resetWavePhaseState,
   transitionCompletedToBuild,
   type WavePhaseState,
 } from '../../../../../features/wave-phase';
+import type { BattlefieldRenderState } from '../battlefield/battlefieldRenderState';
 import { calculateWaveStartPath, generateWaveUnits } from '../../../../../entities/wave';
 import type { CreepEntity } from '../../../../../entities/creep';
 import type { UnitConfig } from '../../../../../entities/unit';
@@ -57,6 +60,35 @@ export type WaveRuntimeDependencies = {
   createCreepSprite: (x: number, y: number, spriteKey: string, animationKey: string) => Phaser.GameObjects.Sprite;
   playSound: (soundId: SoundId) => void;
 };
+
+/**
+ * Creates the long-lived player run state owned by the scene. Wave and
+ * movement runtime functions mutate it in place, so no per-call rebuilding or
+ * copy-back is required. The creep list delegates to the battlefield render
+ * state so both runtimes share a single source of truth.
+ */
+export function createPlayerWaveRuntimeState(battlefield: BattlefieldRenderState): WaveRuntimeState {
+  const initialResources = createInitialPlayerResources();
+  return {
+    get activeCreeps() {
+      return battlefield.creeps;
+    },
+    set activeCreeps(nextCreeps: CreepRenderState[]) {
+      battlefield.creeps = nextCreeps;
+    },
+    activeCreepPath: [],
+    pendingWaveSpawns: [],
+    wavePhaseState: createInitialWavePhaseState(),
+    isWaveCompletionRewardGranted: false,
+    nextWaveStartsAtMs: null,
+    restartScheduledAtMs: null,
+    playerGold: initialResources.gold,
+    playerLives: initialResources.lives,
+    isGameOver: false,
+    currentWaveNumber: 1,
+    lastPublishedAutoStartSecondsLeft: null,
+  };
+}
 
 export function initializeWaveRuntime(
   state: WaveRuntimeState,
@@ -232,4 +264,3 @@ export function processPendingWaveSpawns(
     });
   }
 }
-import type Phaser from 'phaser';
