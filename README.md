@@ -1,73 +1,41 @@
-# React + TypeScript + Vite
+# Tower Def
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A Warcraft 3–inspired tower defense duel for mobile web. Build mazes of towers
+to defend your lane, or invest gold into sending creeps at your opponent to
+grow your income — classic WC3 custom-map economics against a computer
+opponent.
 
-Currently, two official plugins are available:
+## Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- React 19 + TypeScript (strict) + Vite
+- Phaser 4 for the game loop and rendering
+- Feature-Sliced Design (`app` / `pages` / `widgets` / `features` / `entities` / `shared`)
+- Typed React↔Phaser bridge (`src/shared/lib/game-bridge`) — React never touches the scene directly
+- Vitest (unit tests over pure domain logic)
 
-## React Compiler
+## Development
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
+npm run dev        # Vite dev server
+npx vitest run     # test suite
+npx tsc --noEmit -p tsconfig.app.json   # typecheck
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Project docs
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+- `docs/00-vision.md` — vision and long-term goals
+- `docs/01-game-design-brief.md` — game design brief
+- `docs/07-duel-mode-expansion-plan.md` — duel mode roadmap
+- `AGENTS.md` — engineering rules (FSD boundaries, bridge contract, testing)
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Task tracking
+
+Issues live in [beads](https://github.com/steveyegge/beads) (`.beads/`):
+
+```bash
+bd ready     # what is unblocked
+bd show <id> # task details
 ```
+
+Commit format: `tower-def-<issue-id>: description`.
