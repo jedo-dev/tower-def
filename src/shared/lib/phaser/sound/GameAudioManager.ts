@@ -1,6 +1,11 @@
 import Phaser from 'phaser';
 import { FactionAudioId, SoundCategory, type SoundId } from './audio.types';
 import { AUDIO_CONSTANTS, SOUND_ASSET_PATHS, SOUND_REGISTRY } from './audio.constants';
+import {
+  getAmbientUserScale,
+  getSfxUserScale,
+  subscribeAudioSettings,
+} from '../../audio/audioSettingsStore';
 import type { HudFactionType } from '../../game-bridge/types';
 
 type ActiveSound = {
@@ -27,10 +32,31 @@ export class GameAudioManager {
   private selectedFaction: FactionAudioId = FactionAudioId.UNDEAD;
   private soundKeyById: Map<SoundId, string> = new Map();
 
+  private unsubscribeSettings: (() => void) | null = null;
+
   constructor(scene: Phaser.Scene, enabled: boolean = true, masterVolume: number = AUDIO_CONSTANTS.DEFAULT_MASTER_VOLUME) {
     this.scene = scene;
     this.enabled = enabled;
     this.masterVolume = masterVolume;
+    this.unsubscribeSettings = subscribeAudioSettings(() => {
+      this.applyUserVolumeToActiveAmbient();
+    });
+  }
+
+  private getUserScaleByCategory(category: SoundCategory): number {
+    return category === SoundCategory.AMBIENT ? getAmbientUserScale() : getSfxUserScale();
+  }
+
+  private applyUserVolumeToActiveAmbient(): void {
+    for (const active of this.activeSounds) {
+      if (active.category !== SoundCategory.AMBIENT) {
+        continue;
+      }
+      const config = SOUND_REGISTRY[active.soundId];
+      (active.sound as Phaser.Sound.WebAudioSound).setVolume(
+        config.volume * this.masterVolume * getAmbientUserScale(),
+      );
+    }
   }
 
   public unlock(): void {
@@ -189,7 +215,7 @@ export class GameAudioManager {
     }
 
     const pitch = config.pitchMin + Math.random() * (config.pitchMax - config.pitchMin);
-    let volume = config.volume * this.masterVolume;
+    let volume = config.volume * this.masterVolume * this.getUserScaleByCategory(config.category);
 
     if (config.spatial && position) {
       const listener = this.scene.cameras.main;
@@ -299,6 +325,8 @@ export class GameAudioManager {
   }
 
   public destroy(): void {
+    this.unsubscribeSettings?.();
+    this.unsubscribeSettings = null;
     this.stopAll();
     this.cooldowns.clear();
     this.categoryPlayCounts.clear();
