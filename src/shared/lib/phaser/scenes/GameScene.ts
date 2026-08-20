@@ -1558,6 +1558,10 @@ export class GameScene extends Phaser.Scene {
     });
 
     this.applyDuelMatchRuntimeState(duelRuntimeState);
+    if (result.playerIncomePaid > 0) {
+      this.playerGold += result.playerIncomePaid;
+      this.registry.set('economy.gold', this.playerGold);
+    }
     this.matchWinner = result.winner === null ? null : this.mapRaceIdToHudFaction(result.winner);
     this.matchOutcomeStatus = this.resolveMatchOutcomeStatus(result.isMatchOver);
     this.registry.set('duel.match.outcome', this.matchOutcomeStatus);

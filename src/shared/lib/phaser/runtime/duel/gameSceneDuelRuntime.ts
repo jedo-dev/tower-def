@@ -1,4 +1,4 @@
-import { endRound } from '../../../../../entities/duel-match';
+import { endRound, payIncome } from '../../../../../entities/duel-match';
 import type { DuelMatchState, DuelRoundEndResult } from '../../../../../entities/duel-match';
 import { transitionToGameOver, type WavePhaseState } from '../../../../../features/wave-phase';
 
@@ -25,7 +25,10 @@ export type ApplyDuelRoundEndInput = {
   opponentLeakedCreeps: number;
 };
 
-export type ApplyDuelRoundEndResult = DuelRoundEndResult;
+export type ApplyDuelRoundEndResult = DuelRoundEndResult & {
+  playerIncomePaid: number;
+  opponentIncomePaid: number;
+};
 
 export function applyDuelRoundEnd(input: ApplyDuelRoundEndInput): ApplyDuelRoundEndResult {
   const result = endRound(
@@ -34,7 +37,17 @@ export function applyDuelRoundEnd(input: ApplyDuelRoundEndInput): ApplyDuelRound
     input.opponentLeakedCreeps,
   );
 
-  input.state.duelMatchState = result.state;
+  let playerIncomePaid = 0;
+  let opponentIncomePaid = 0;
+  let nextState = result.state;
+  if (!result.isMatchOver) {
+    const payout = payIncome(nextState);
+    nextState = payout.state;
+    playerIncomePaid = payout.playerIncomePaid;
+    opponentIncomePaid = payout.opponentIncomePaid;
+  }
+
+  input.state.duelMatchState = nextState;
   input.deps.onDuelMatchStateUpdated(input.state.duelMatchState);
 
   if (result.isMatchOver) {
@@ -48,5 +61,10 @@ export function applyDuelRoundEnd(input: ApplyDuelRoundEndInput): ApplyDuelRound
     input.deps.playGameOverSound();
   }
 
-  return result;
+  return {
+    ...result,
+    state: nextState,
+    playerIncomePaid,
+    opponentIncomePaid,
+  };
 }
