@@ -1,13 +1,20 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
+  clearGameSetupConfig,
   getActiveBattlefieldView,
+  getGameSetupConfig,
   onGameCommand,
   onGameEvent,
   publishGameEvent,
   publishGameHudSnapshot,
   sendGameCommand,
+  setGameSetupConfig,
 } from './bridge';
 import type { BattlefieldView, CreepSendQueueItem, GameHudSnapshot, SelectedTowerSnapshot } from './types';
+import type { GameSetupConfig } from '../../config/game-setup';
+import { BuilderFaction } from '../../../entities/builder-faction';
+import { EnemyFaction } from '../../../entities/enemy-faction';
+import { Difficulty } from '../../../entities/difficulty';
 
 function createTestTowerSnapshot(overrides?: Partial<SelectedTowerSnapshot>): SelectedTowerSnapshot {
   return {
@@ -293,6 +300,34 @@ describe('game bridge event system', () => {
     unsubscribeQueue();
     unsubscribeIncome();
     unsubscribeOpponentHp();
+  });
+
+  it('carries a fixed-endpoints setup payload through the bridge', () => {
+    const config: GameSetupConfig = {
+      builderFaction: BuilderFaction.UNDEAD,
+      enemyFaction: EnemyFaction.ORC,
+      difficulty: Difficulty.NORMAL,
+      endpoints: { mode: 'fixed' },
+    };
+
+    setGameSetupConfig(config);
+    expect(getGameSetupConfig()).toEqual(config);
+    clearGameSetupConfig();
+    expect(getGameSetupConfig()).toBeNull();
+  });
+
+  it('carries a dynamic-endpoints setup payload with its seed through the bridge', () => {
+    const config: GameSetupConfig = {
+      builderFaction: BuilderFaction.ELF,
+      enemyFaction: EnemyFaction.HUMAN,
+      difficulty: Difficulty.HARD,
+      endpoints: { mode: 'dynamic', seed: 20260821 },
+    };
+
+    setGameSetupConfig(config);
+    const stored = getGameSetupConfig();
+    expect(stored?.endpoints).toEqual({ mode: 'dynamic', seed: 20260821 });
+    clearGameSetupConfig();
   });
 
   it('keeps widgets and pages behind the typed bridge instead of direct scene calls', () => {
