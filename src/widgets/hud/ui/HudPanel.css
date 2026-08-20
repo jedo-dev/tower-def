@@ -137,3 +137,22 @@
   border: 20px solid transparent;
   border-image: url('../../../assets/ui-presets/thin_border.png') 90 fill / 10px / 0 stretch;
 }
+
+.hud-duel-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 2px 10px;
+  font-family: var(--font-family-ui);
+  font-size: 12px;
+  color: var(--color-text-secondary, #b9c2d6);
+}
+
+.hud-duel-side {
+  white-space: nowrap;
+}
+
+.hud-duel-side-enemy {
+  color: var(--color-text-danger, #e08585);
+}

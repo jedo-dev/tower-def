@@ -106,6 +106,11 @@ function HudPanelComponent({ setup }: HudPanelProps) {
         <span className="hud-pressure-detail">{viewModel.pressure.detail}</span>
       </div>
 
+      <div className="hud-duel-row" role="status" aria-label={viewModel.duel.ariaLabel}>
+        <span className="hud-duel-side">{viewModel.duel.playerLine}</span>
+        <span className="hud-duel-side hud-duel-side-enemy">{viewModel.duel.opponentLine}</span>
+      </div>
+
       {isExpanded && (
         <div className="hud-expanded-content">
           <div className="hud-tower-buttons">

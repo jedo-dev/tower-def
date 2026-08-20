@@ -58,18 +58,33 @@ describe('mapHudSnapshotToViewModel', () => {
     );
 
     expect(vm.selectedTowerLabel).toBe('Archer');
-    expect(vm.modeLabel).toBe('Build (placeholder)');
+    expect(vm.modeLabel).toBe('Build: Archer');
     expect(vm.isArcherSelected).toBe(true);
   });
 
-  it('maps no selection to sell placeholder mode', () => {
+  it('maps no selection to inspect mode', () => {
     const vm = mapHudSnapshotToViewModel(
       createSnapshot({ selectedTowerType: null }),
     );
 
     expect(vm.selectedTowerLabel).toBe('None');
-    expect(vm.modeLabel).toBe('Sell (placeholder)');
+    expect(vm.modeLabel).toBe('Tap a tower to inspect');
     expect(vm.isArcherSelected).toBe(false);
+  });
+
+  it('maps duel readability lines from snapshot fields', () => {
+    const vm = mapHudSnapshotToViewModel(
+      createSnapshot({
+        income: 35,
+        opponentLives: 14,
+        opponentIncome: 60,
+      }),
+    );
+
+    expect(vm.duel.playerLine).toBe('You +35');
+    expect(vm.duel.opponentLine).toBe('Enemy 14 HP · +60');
+    expect(vm.duel.ariaLabel).toContain('income 35');
+    expect(vm.duel.ariaLabel).toContain('14 lives');
   });
 
   it('shows queued enemy sends during build phase', () => {

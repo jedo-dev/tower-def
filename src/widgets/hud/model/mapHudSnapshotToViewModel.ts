@@ -7,6 +7,13 @@ export type HudViewModel = {
   isStartWaveDisabled: boolean;
   isArcherSelected: boolean;
   pressure: HudPressureViewModel;
+  duel: HudDuelViewModel;
+};
+
+export type HudDuelViewModel = {
+  playerLine: string;
+  opponentLine: string;
+  ariaLabel: string;
 };
 
 export type HudPressureLevel = 'none' | 'low' | 'medium' | 'high';
@@ -31,7 +38,9 @@ export type BattlefieldViewToggleViewModel = {
 export function mapHudSnapshotToViewModel(snapshot: GameHudSnapshot): HudViewModel {
   const phaseLabel = snapshot.phase === 'game-over' ? 'Game Over' : snapshot.phase;
   const selectedTowerLabel = snapshot.selectedTowerType === null ? 'None' : snapshot.selectedTowerType === 'splash' ? 'Plague' : 'Archer';
-  const modeLabel = snapshot.selectedTowerType === null ? 'Sell (placeholder)' : 'Build (placeholder)';
+  const modeLabel = snapshot.selectedTowerType === null
+    ? 'Tap a tower to inspect'
+    : `Build: ${selectedTowerLabel}`;
   const isWaveActive = snapshot.phase === 'wave';
 
   return {
@@ -41,6 +50,21 @@ export function mapHudSnapshotToViewModel(snapshot: GameHudSnapshot): HudViewMod
     isStartWaveDisabled: isWaveActive || !snapshot.canStartWave,
     isArcherSelected: snapshot.selectedTowerType === 'archer',
     pressure: mapHudPressureToViewModel(snapshot),
+    duel: mapHudDuelToViewModel(snapshot),
+  };
+}
+
+export function mapHudDuelToViewModel(snapshot: GameHudSnapshot): HudDuelViewModel {
+  const playerLine = `You +${snapshot.income}`;
+  const opponentLine = `Enemy ${snapshot.opponentLives} HP · +${snapshot.opponentIncome}`;
+
+  return {
+    playerLine,
+    opponentLine,
+    ariaLabel:
+      `Your income ${snapshot.income} gold per round. ` +
+      `Opponent has ${snapshot.opponentLives} lives and income ${snapshot.opponentIncome}. ` +
+      `Opponent queued ${snapshot.opponentSendQueue.length} sends, you queued ${snapshot.playerSendQueue.length}`,
   };
 }
 
