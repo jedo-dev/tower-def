@@ -15,7 +15,9 @@ export function createGameConfig(container: HTMLDivElement): Phaser.Types.Core.G
     backgroundColor: '#1a1f2c',
     scene: [GameScene],
     scale: {
-      mode: Phaser.Scale.NONE,
+      // Single scaling pipeline: Phaser resizes the canvas to its parent,
+      // registerResponsiveCamera re-fits the world zoom on each RESIZE event.
+      mode: Phaser.Scale.RESIZE,
     },
   };
 }
