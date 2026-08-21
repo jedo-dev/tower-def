@@ -2,34 +2,39 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-sm);
-  padding: var(--space-md);
-  border: 16px solid transparent;
-  border-image: url('../../../assets/ui-presets/thin_border.png') 23 fill / 10px / 0 stretch;
+  padding: var(--space-md) var(--space-lg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  box-shadow: var(--shadow-sm);
   color: var(--color-text-primary);
   font-family: var(--font-family-ui);
 }
 
 .header {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   justify-content: space-between;
-  gap: 8px;
+  gap: var(--space-md);
 }
 
 .title {
   font-family: var(--font-family-display);
-  font-size: 12px;
+  font-size: var(--font-size-2xs);
   font-weight: 800;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
+  color: var(--color-text-label);
 }
 
 .meta {
   display: flex;
-  gap: 8px;
-  color: var(--color-text-secondary);
+  gap: var(--space-md);
   font-family: var(--font-family-stats);
-  font-size: 11px;
+  font-size: var(--font-size-2xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-secondary);
 }
 
 .buttons {
@@ -38,68 +43,86 @@
   gap: var(--space-sm);
 }
 
+/* Send chip: tier name over cost/income, procedural fill. */
 .button {
   min-height: var(--touch-target-min);
-  min-width: var(--touch-target-min);
-  border: 0;
-  padding: var(--space-sm);
-  background: url('../../../assets/ui-presets/btn_gray_normal.png') center / 100% 100% no-repeat;
+  padding: var(--space-xs) var(--space-sm);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  background: var(--glass-bg-soft);
   color: var(--color-text-primary);
   cursor: pointer;
   font: inherit;
-  text-align: left;
-}
-
-.button:disabled {
-  cursor: not-allowed;
-  opacity: 0.62;
+  text-align: center;
+  transition:
+    border-color var(--duration-med) var(--ease-out),
+    background var(--duration-med) var(--ease-out),
+    transform var(--duration-fast) var(--ease-out);
 }
 
 .button:not(:disabled):hover,
 .button:not(:disabled):focus-visible {
-  background-image: url('../../../assets/ui-presets/btn_green_normal.png');
+  transform: translateY(-1px);
+  border-color: var(--color-success);
+  background: var(--glass-bg-raised);
   outline: none;
+}
+
+.button:not(:disabled):active {
+  transform: translateY(1px);
+}
+
+.button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
 }
 
 .buttonName {
   display: block;
   overflow: hidden;
-  color: var(--color-text-primary);
   font-family: var(--font-family-display);
-  font-size: 12px;
+  font-size: var(--font-size-2xs);
   font-weight: 700;
+  letter-spacing: 0.04em;
   text-overflow: ellipsis;
   white-space: nowrap;
+  color: var(--color-text-primary);
 }
 
 .buttonStats {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  gap: var(--space-2xs) var(--space-sm);
-  color: var(--color-text-secondary);
+  justify-content: center;
+  gap: var(--space-sm);
   font-family: var(--font-family-stats);
   font-size: var(--font-size-2xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-muted);
 }
 
+/* The rejection reason is conveyed by the disabled state and the tooltip;
+ * spelling it out under every chip doubled the panel height. */
 .buttonReason {
-  display: block;
-  overflow: hidden;
+  display: none;
+}
+
+/* Queue summary shares the header line instead of owning a row. */
+.queue {
+  flex: 1 1 auto;
+  min-width: 0;
+  text-align: center;
+  font-size: var(--font-size-2xs);
   color: var(--color-text-muted);
-  font-size: 10px;
+  overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.queue {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  min-height: 20px;
-  color: var(--color-text-muted);
-  font-size: var(--font-size-xs);
-}
-
 .phaseNote {
   color: var(--color-text-secondary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .button {
+    transition: none;
+  }
 }

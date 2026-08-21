@@ -22,6 +22,13 @@ function CreepSendPanelComponent({ setup }: CreepSendPanelProps) {
     <section className={styles.panel} data-creep-send-panel="true" aria-label="Creep sending panel">
       <div className={styles.header}>
         <span className={styles.title}>Send {viewModel.raceName}</span>
+        <span className={styles.queue} aria-live="polite">
+          {viewModel.isBattleActive ? (
+            <span className={styles.phaseNote}>Locked in battle</span>
+          ) : (
+            <span>{viewModel.queueSummary}</span>
+          )}
+        </span>
         <span className={styles.meta} aria-label={`Gold ${viewModel.gold}, income ${viewModel.income}`}>
           <span>${viewModel.gold}</span>
           <span>INC {viewModel.income}</span>
@@ -51,11 +58,6 @@ function CreepSendPanelComponent({ setup }: CreepSendPanelProps) {
             )}
           </button>
         ))}
-      </div>
-
-      <div className={styles.queue} aria-live="polite">
-        <span>Queue: {viewModel.queueSummary}</span>
-        {viewModel.isBattleActive && <span className={styles.phaseNote}>Sending locked in battle</span>}
       </div>
     </section>
   );

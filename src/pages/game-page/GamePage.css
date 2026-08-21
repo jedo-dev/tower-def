@@ -2,24 +2,22 @@
   width: 100%;
   max-width: 480px;
   margin: 0 auto;
-  padding: max(8px, var(--safe-area-top)) max(8px, var(--safe-area-right)) max(8px, var(--safe-area-bottom)) max(8px, var(--safe-area-left));
+  padding: max(var(--space-sm), var(--safe-area-top)) max(var(--space-sm), var(--safe-area-right)) max(var(--space-sm), var(--safe-area-bottom)) max(var(--space-sm), var(--safe-area-left));
   height: 100dvh;
   box-sizing: border-box;
 }
 
 /*
- * Mobile-first flex column: the canvas area takes all remaining space,
- * the control panels stack below it in normal flow (no absolute overlays
- * covering the battlefield). Verified target viewports: 360x800, 390x844.
+ * Mobile-first flex column: the battlefield takes every pixel the controls
+ * do not need. The controls are a thin stack, not framed panels - the old
+ * border-image chrome plus stacked rows ate roughly half the screen.
  */
 .game-viewport {
   display: flex;
   flex-direction: column;
-  gap: var(--space-md);
+  gap: var(--space-sm);
   height: 100%;
   box-sizing: border-box;
-  border: 20px solid transparent;
-  border-image: url('../../assets/ui-presets/thin_border.png') 23 fill / 16px / 0 stretch;
   overflow: hidden;
 }
 
@@ -30,16 +28,21 @@
   flex: 1 1 auto;
   min-height: 0;
   display: flex;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
 }
 
-/* Panels never swallow the battlefield: they are capped and scroll inside
- * when expanded content does not fit (e.g. expanded HUD + tower panel). */
+/* Controls stay a strip: capped low enough that the battlefield always
+ * keeps the majority of the viewport, scrolling only when the HUD is
+ * expanded and a tower is selected at the same time. */
 .game-panels {
   flex: 0 0 auto;
   display: flex;
   flex-direction: column;
-  gap: var(--space-md);
-  max-height: 55dvh;
+  gap: var(--space-sm);
+  max-height: 38dvh;
   overflow-y: auto;
   overscroll-behavior: contain;
 }

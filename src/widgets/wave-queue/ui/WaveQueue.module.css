@@ -1,3 +1,4 @@
+/* Compact floating strip: one row over the battlefield, never a panel. */
 .queue {
   position: absolute;
   top: var(--space-md);
@@ -5,47 +6,93 @@
   right: var(--space-md);
   z-index: 100;
   display: flex;
-  flex-direction: column;
-  gap: var(--space-sm);
-  padding: 10px;
-  border: 34px solid transparent;
-  border-image: url('../../../assets/ui-presets/hud_bar.png') 21 fill / 22px / 0 stretch;
+  align-items: center;
+  gap: var(--space-md);
+  min-height: 32px;
+  padding: var(--space-2xs) var(--space-lg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-pill);
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  box-shadow: var(--shadow-sm);
+  pointer-events: none;
 }
 
-.header,
-.content,
+.header {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-sm);
+  flex: 0 0 auto;
+}
+
+.content {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+}
+
 .empty {
   display: flex;
   align-items: center;
+  flex: 1 1 auto;
+  justify-content: flex-end;
 }
 
-.header { justify-content: space-between; }
-.content { gap: var(--space-sm); flex-wrap: wrap; min-height: 24px; }
-.empty { justify-content: center; min-height: 24px; }
+.label {
+  font-family: var(--font-family-display);
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-accent-gold);
+  white-space: nowrap;
+}
 
-.label,
 .count,
 .emptyText,
-.more {
+.baselineHint,
+.sectionLabel {
   font-family: var(--font-family-ui);
+  font-size: var(--font-size-2xs);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 
-.label { font-family: var(--font-family-display); font-size: var(--font-size-sm); color: var(--color-text-gold); }
-.count { font-family: var(--font-family-stats); font-size: var(--font-size-2xs); color: var(--color-text-muted); }
-.emptyText { font-family: var(--font-family-accent); font-size: var(--font-size-xs); color: var(--color-text-label); }
+.count { color: var(--color-text-secondary); }
+.emptyText { color: var(--color-text-label); }
+.baselineHint { color: var(--color-text-muted); flex: 0 0 auto; }
+.sectionLabel { color: var(--color-text-danger); flex: 0 0 auto; }
 
-.icon,
-.more {
-  width: 24px;
-  height: 24px;
-  border: 0;
-  background: url('../../../assets/ui-presets/icon_frame_square.png') center / 100% 100% no-repeat;
+/* Sections sit inline in the strip instead of stacking into rows. */
+.section {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  min-width: 0;
+  overflow: hidden;
+}
+
+.icon {
+  width: 22px;
+  height: 22px;
+  flex: 0 0 auto;
   display: flex;
   align-items: center;
   justify-content: center;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.06);
 }
 
-.more { font-size: var(--font-size-2xs); color: var(--color-text-gold-dim); }
+.more {
+  flex: 0 0 auto;
+  font-family: var(--font-family-stats);
+  font-size: var(--font-size-2xs);
+  color: var(--color-text-muted);
+}
 
 .spriteViewport {
   width: 18px;
@@ -71,21 +118,8 @@
   to { transform: translateX(-72px); }
 }
 
-.baselineHint {
-  font-family: var(--font-family-ui);
-  font-size: var(--font-size-xs);
-  color: var(--color-text-secondary);
-  padding: var(--space-2xs) 0;
-}
-
-.section {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2xs);
-}
-
-.sectionLabel {
-  font-family: var(--font-family-ui);
-  font-size: var(--font-size-xs);
-  color: var(--color-text-danger);
+@media (prefers-reduced-motion: reduce) {
+  .spriteStrip {
+    animation: none;
+  }
 }

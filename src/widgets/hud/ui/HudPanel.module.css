@@ -1,104 +1,209 @@
+/* Compact bottom bar: one action row plus a single status line. Everything
+ * else lives behind the expand toggle so the battlefield keeps the screen. */
 .panel {
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: var(--space-sm);
-  padding: var(--space-md);
-  border: 24px solid transparent;
-  border-image: url('../../../assets/ui-presets/hud_bar.png') 21 fill / 24px / 0 stretch;
+  gap: var(--space-xs);
+  padding: var(--space-md) var(--space-lg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  box-shadow: var(--shadow-md), var(--shadow-inset-top);
 }
 
 .toggle {
   position: absolute;
-  top: -12px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: var(--touch-target-min);
-  height: var(--touch-target-min);
-  border: 0;
-  background: url('../../../assets/ui-presets/btn_small_square.png') center / 100% 100% no-repeat;
-  color: var(--color-text-gold-dim);
+  top: var(--space-xs);
+  right: var(--space-xs);
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  line-height: 1;
   cursor: pointer;
+  transition: color var(--duration-med) var(--ease-out), border-color var(--duration-med) var(--ease-out);
 }
 
-.toggleIcon { display: inline-block; }
+.toggle:hover {
+  color: var(--color-text-primary);
+  border-color: var(--glass-border-strong);
+}
+
+.toggle:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.toggleIcon {
+  display: inline-block;
+  transition: transform var(--duration-med) var(--ease-out);
+}
+
 .toggleIconUp { transform: rotate(180deg); }
 
-.topRow, .timerActions, .infoRow, .selectedInfo {
+.topRow {
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  padding-right: 32px;
 }
 
-.topRow { justify-content: space-between; gap: var(--space-md); }
-.center { flex: 1; display: flex; justify-content: center; }
-.timerActions { gap: var(--space-md); }
+.center {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+}
 
+.timerActions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+/* Pressure and duel numbers share one line instead of two framed strips. */
 .pressure {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-md);
-  min-height: 24px;
-  padding: var(--space-xs) 10px;
-  border: 14px solid transparent;
-  border-image: url('../../../assets/ui-presets/thin_border.png') 23 fill / 10px / 0 stretch;
   font-family: var(--font-family-ui);
+  font-size: var(--font-size-2xs);
 }
 
 .pressureLabel {
-  color: var(--color-text-primary);
   font-family: var(--font-family-display);
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-2xs);
   font-weight: 800;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
+  color: var(--color-text-primary);
+  white-space: nowrap;
 }
 
 .pressureDetail {
   color: var(--color-text-muted);
-  font-size: var(--font-size-xs);
   text-align: right;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .pressureLow .pressureLabel { color: var(--color-pressure-low); }
 .pressureMedium .pressureLabel { color: var(--color-pressure-medium); }
 .pressureHigh .pressureLabel { color: var(--color-pressure-high); }
 
-.resource {
+.duelRow {
   display: flex;
   align-items: center;
-  gap: var(--space-sm);
-  min-width: 70px;
-}
-
-.resourceIcon, .resourceValue, .timer, .infoLabel, .infoValue, .selectedLabel, .selectedValue {
+  justify-content: space-between;
+  gap: var(--space-md);
   font-family: var(--font-family-ui);
+  font-size: var(--font-size-2xs);
+  color: var(--color-text-secondary);
 }
 
-.resourceValue { font-family: var(--font-family-stats); font-size: var(--font-size-xl); font-weight: 700; color: var(--color-text-gold); }
-.timer { font-family: var(--font-family-stats); font-size: var(--font-size-sm); color: var(--color-text-gold-dim); }
+.duelSide { white-space: nowrap; }
+.duelSideEnemy { color: var(--color-text-danger); }
 
-.startBtn, .forceStartBtn, .towerBtn, .battlefieldViewBtn {
-  border: 0;
-  min-height: var(--touch-target-min);
-  padding: var(--space-md) 14px;
-  font-family: var(--font-family-display);
+.resource {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-xs);
+  min-width: 58px;
+}
+
+.resourceIcon {
+  font-family: var(--font-family-ui);
+  font-size: var(--font-size-2xs);
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--color-text-gold);
-  cursor: pointer;
-  background: url('../../../assets/ui-presets/btn_red_normal.png') center / 100% 100% no-repeat;
+  color: var(--color-text-label);
 }
 
-.startBtn:hover:not(:disabled), .forceStartBtn:hover:not(:disabled) {
-  background-image: url('../../../assets/ui-presets/btn_red_hover.png');
+.resourceValue {
+  font-family: var(--font-family-stats);
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-accent-gold);
 }
 
+/* Procedural controls: gradient fills, no bitmap skins. */
+.startBtn,
+.forceStartBtn,
+.towerBtn,
 .battlefieldViewBtn {
-  min-width: 64px;
-  background-image: url('../../../assets/ui-presets/btn_gray_normal.png');
+  min-height: 36px;
+  padding: var(--space-sm) var(--space-lg);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: var(--radius-md);
+  background: var(--gradient-steel);
+  box-shadow: var(--shadow-sm), var(--shadow-inset-top);
+  color: #fff;
+  font-family: var(--font-family-display);
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: filter var(--duration-fast) var(--ease-out), box-shadow var(--duration-med) var(--ease-out);
 }
+
+.startBtn,
+.forceStartBtn {
+  background: var(--gradient-ember);
+}
+
+.startBtn:hover:not(:disabled),
+.forceStartBtn:hover:not(:disabled) {
+  box-shadow: var(--shadow-md), 0 0 18px var(--glow-ember);
+}
+
+.startBtn:active:not(:disabled),
+.forceStartBtn:active:not(:disabled),
+.towerBtn:active:not(:disabled),
+.battlefieldViewBtn:active:not(:disabled) {
+  filter: brightness(0.94);
+}
+
+.startBtn:disabled,
+.forceStartBtn:disabled,
+.towerBtn:disabled {
+  cursor: not-allowed;
+  filter: grayscale(0.6) brightness(0.72);
+}
+
+.startBtn:focus-visible,
+.forceStartBtn:focus-visible,
+.towerBtn:focus-visible,
+.battlefieldViewBtn:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.battlefieldViewBtn { min-width: 64px; }
 
 .battlefieldViewBtnActive {
-  background-image: url('../../../assets/ui-presets/btn_green_normal.png');
+  background: var(--gradient-emerald);
+  box-shadow: var(--shadow-sm), 0 0 16px var(--glow-emerald);
+}
+
+.timer {
+  font-family: var(--font-family-stats);
+  font-size: var(--font-size-sm);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
 }
 
 .towerButtons {
@@ -107,53 +212,60 @@
   gap: var(--space-md);
 }
 
-.towerBtn {
-  background-image: url('../../../assets/ui-presets/btn_gray_normal.png');
-}
-
 .towerBtnSelected {
-  background-image: url('../../../assets/ui-presets/btn_green_normal.png');
+  background: var(--gradient-emerald);
+  box-shadow: var(--shadow-sm), 0 0 16px var(--glow-emerald);
 }
 
 .expandedContent {
   display: flex;
   flex-direction: column;
   gap: var(--space-md);
+  margin-top: var(--space-xs);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--glass-border);
 }
 
 .infoRow {
-  flex-wrap: wrap;
-  gap: var(--space-md);
-  font-size: var(--font-size-xs);
-}
-
-.infoLabel, .selectedLabel { color: var(--color-text-label); }
-.infoValue, .selectedValue { color: var(--color-text-parchment); font-weight: 600; font-family: var(--font-family-accent); }
-.infoValueDiff { color: var(--color-accent-gold); }
-
-.selectedInfo {
-  gap: var(--space-md);
-  min-height: 28px;
-  padding: 0 var(--space-md);
-  border: 14px solid transparent;
-  border-image: url('../../../assets/ui-presets/thin_border.png') 23 fill / 10px / 0 stretch;
-}
-
-.duelRow {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: var(--space-md);
-  padding: var(--space-2xs) 10px;
+  flex-wrap: wrap;
+  gap: var(--space-xs) var(--space-md);
   font-family: var(--font-family-ui);
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-2xs);
+}
+
+.infoLabel,
+.selectedLabel {
+  color: var(--color-text-label);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.infoValue,
+.selectedValue {
+  font-family: var(--font-family-ui);
+  font-weight: 600;
   color: var(--color-text-secondary);
 }
 
-.duelSide {
-  white-space: nowrap;
+.infoValueDiff { color: var(--color-accent-gold); }
+
+.selectedInfo {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  font-family: var(--font-family-ui);
+  font-size: var(--font-size-2xs);
 }
 
-.duelSideEnemy {
-  color: var(--color-text-danger);
+@media (prefers-reduced-motion: reduce) {
+  .toggle,
+  .toggleIcon,
+  .startBtn,
+  .forceStartBtn,
+  .towerBtn,
+  .battlefieldViewBtn {
+    transition: none;
+  }
 }
