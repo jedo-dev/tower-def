@@ -253,7 +253,8 @@ export function processPendingWaveSpawns(
     const sprite = deps.createCreepSprite(startPoint.x, startPoint.y, spriteKey, animationKey);
     sprite.setDisplaySize(CREEP_VISUAL_SIZE_PX, CREEP_VISUAL_SIZE_PX);
     sprite.setDepth(CREEP_RENDER_DEPTH);
-    sprite.setTint(deps.getCreepTintByUnit?.(spawn.unit) ?? 0xffffff);
+    const baseTint = deps.getCreepTintByUnit?.(spawn.unit) ?? 0xffffff;
+    sprite.setTint(baseTint);
     sprite.play(animationKey);
 
     state.activeCreeps.push({
@@ -261,6 +262,7 @@ export function processPendingWaveSpawns(
       sprite,
       hitFlashRemainingMs: 0,
       deathFadeRemainingMs: 0,
+      baseTint,
     });
   }
 }

@@ -5,6 +5,7 @@ import {
   type LeakHistoryEntry,
 } from '../../../../entities/computer-opponent';
 import {
+  clearSendQueue,
   createInitialDuelMatchState,
   reconcileBattlefieldsForNextRound,
   routeQueuedSendsToBattlefields,
@@ -177,6 +178,7 @@ export class GameScene extends Phaser.Scene {
     gridGraphics: null,
     terrainSprites: [],
     gridLabels: [],
+    endpointMarkers: [],
   };
   private buildPreviewOverlay: Phaser.GameObjects.Graphics | null = null;
   private pathCellKeys = new Set<string>();
@@ -620,6 +622,12 @@ export class GameScene extends Phaser.Scene {
       mapHudFactionToRaceId(this.selectedFaction),
       this.mapEndpoints,
     );
+    // Both duelists must start from the same purse; the scene wallet is the
+    // source of truth, so seed it from the duel balance table instead of the
+    // solo-play starting gold.
+    this.playerGold = this.duelMatchState.player.gold;
+    this.playerLives = this.duelMatchState.player.hp;
+    this.registry.set('economy.gold', this.playerGold);
     this.opponentLeakHistory = [];
     this.computerDecisionRecorder.clear();
   }
@@ -646,12 +654,12 @@ export class GameScene extends Phaser.Scene {
       this.applyDuelRoundEndFromResolvedWave();
     }
     if (this.canPerformBuildActions()) {
-      this.duelMatchState = {
-        ...this.duelMatchState,
-        phase: 'build',
-        player: { ...this.duelMatchState.player, sendQueue: [] },
-        opponent: { ...this.duelMatchState.opponent, sendQueue: [] },
-      };
+      // Send queues must NOT be cleared here: this runs every frame of the
+      // build phase, which is exactly when the player queues sends. They are
+      // consumed and cleared at wave start instead.
+      if (this.duelMatchState.phase !== 'build') {
+        this.duelMatchState = { ...this.duelMatchState, phase: 'build' };
+      }
       this.soundManager?.stopSound('ambient.tension');
       this.ensureBaseAmbientPlaying();
     }
@@ -686,11 +694,19 @@ export class GameScene extends Phaser.Scene {
       opponentLeakedCreeps,
     });
 
+    const previousOpponentHp = this.duelMatchState.opponent.hp;
     this.duelMatchState = duelRuntimeState.duelMatchState;
     this.wavePhaseState = duelRuntimeState.wavePhaseState;
     this.isGameOver = duelRuntimeState.isGameOver;
     this.runState.nextWaveStartsAtMs = duelRuntimeState.nextWaveStartsAtMs;
     this.runState.restartScheduledAtMs = duelRuntimeState.restartScheduledAtMs;
+    if (result.opponentHpLost > 0) {
+      publishGameEvent('opponent-hp-updated', {
+        hp: this.duelMatchState.opponent.hp,
+        previousHp: previousOpponentHp,
+        delta: -result.opponentHpLost,
+      });
+    }
     if (result.playerIncomePaid > 0) {
       this.playerGold += result.playerIncomePaid;
       this.registry.set('economy.gold', this.playerGold);
@@ -870,6 +886,8 @@ export class GameScene extends Phaser.Scene {
     );
     this.syncOpponentBattlefieldRenderStateFromDuel();
     spawnWaveCreepsRuntime(this.runState, WAVE_RUNTIME_CONFIG, this.wiring.waveRuntimeDeps);
+    // Queues have now been routed onto battlefields and spawned as creeps.
+    this.duelMatchState = clearSendQueue(this.duelMatchState);
     this.duelMatchState = startRound(this.duelMatchState).state;
     this.wavePhaseState = startNextWaveCycle(this.wavePhaseState);
     this.ensureBaseAmbientPlaying();
@@ -889,7 +907,10 @@ export class GameScene extends Phaser.Scene {
 
   private renderVisibleBattlefield(): void {
     const showOpponent = this.activeBattlefieldView === 'opponent';
-    if (showOpponent) {
+    // The opponent field is built once per wave; rebuilding it on every view
+    // toggle would drop escaped creeps (losing their leak damage) and reset
+    // tower cooldowns, granting a free volley per toggle.
+    if (showOpponent && this.opponentField.creeps.length === 0 && this.opponentField.towers.length === 0) {
       this.syncOpponentBattlefieldRenderStateFromDuel();
     }
 

@@ -252,11 +252,13 @@ export function rebuildOpponentBattlefieldRenderState(
       const position = toCellCenter(creep.position);
       const sprite = createOpponentCreepSprite(scene, position.x, position.y, creep.id);
       sprite.setVisible(visible);
+      const unit = resolveUnitConfigFromBattlefieldCreepId(creep.id);
       return {
         entity: { ...creep },
         sprite,
         hitFlashRemainingMs: 0,
         deathFadeRemainingMs: 0,
+        baseTint: unit ? getCreepTintByUnit(unit) : 0xffffff,
       };
     });
 }

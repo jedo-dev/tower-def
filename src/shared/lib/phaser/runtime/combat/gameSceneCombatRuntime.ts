@@ -417,14 +417,18 @@ export function updateCreepHitFeedback(
 
     creep.hitFlashRemainingMs = Math.max(0, creep.hitFlashRemainingMs - deltaMs);
 
+    // Restore the creep's own faction tint, not the global white base, or
+    // non-undead races turn white the first time they are hit.
+    const baseColor = creep.baseTint ?? config.creepBaseColor;
+
     if (creep.hitFlashRemainingMs === 0) {
-      creep.sprite.setTint(config.creepBaseColor);
+      creep.sprite.setTint(baseColor);
       continue;
     }
 
     const progress = creep.hitFlashRemainingMs / config.creepHitFlashDurationMs;
     const tint = Phaser.Display.Color.Interpolate.ColorWithColor(
-      Phaser.Display.Color.ValueToColor(config.creepBaseColor),
+      Phaser.Display.Color.ValueToColor(baseColor),
       Phaser.Display.Color.ValueToColor(config.creepHitFlashColor),
       100,
       Math.round(progress * 100),

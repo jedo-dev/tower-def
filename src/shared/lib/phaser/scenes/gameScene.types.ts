@@ -8,6 +8,8 @@ export type CreepRenderState = {
   sprite: Phaser.GameObjects.Sprite;
   hitFlashRemainingMs: number;
   deathFadeRemainingMs: number;
+  /** Faction tint to restore after a hit flash; white when untinted. */
+  baseTint?: number;
 };
 
 export type TowerRenderState = {

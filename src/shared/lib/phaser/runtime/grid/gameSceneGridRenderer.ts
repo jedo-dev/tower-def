@@ -27,6 +27,7 @@ export type GridRendererState = {
   gridGraphics: Phaser.GameObjects.Graphics | null;
   terrainSprites: Phaser.GameObjects.Image[];
   gridLabels: Phaser.GameObjects.Text[];
+  endpointMarkers: Phaser.GameObjects.Graphics[];
 };
 
 export type GridRendererDeps = {
@@ -45,6 +46,8 @@ export function clearTerrainSprites(state: GridRendererState): void {
 export function clearGridLabels(state: GridRendererState): void {
   state.gridLabels.forEach((label) => label.destroy());
   state.gridLabels = [];
+  state.endpointMarkers.forEach((marker) => marker.destroy());
+  state.endpointMarkers = [];
 }
 
 function isPathCell(cell: GridCell, deps: GridRendererDeps): boolean {
@@ -176,23 +179,28 @@ export function drawGrid(
       const x = cell.x * GRID_DIMENSIONS.cellSize;
       const y = cell.y * GRID_DIMENSIONS.cellSize;
 
-      // Marker stays visible on every terrain tileset, incl. dynamic maps.
+      // Markers live on their own layer: the shared grid overlay is dimmed to
+      // gridIdleAlpha during waves, which would fade them out exactly when the
+      // player needs to read the lane.
       const markerColor =
         cell.role === 'entrance' ? config.entranceMarkerColor : config.exitMarkerColor;
-      state.gridGraphics.fillStyle(markerColor, config.endpointMarkerFillAlpha);
-      state.gridGraphics.fillRect(
+      const marker = deps.scene.add.graphics();
+      marker.setDepth(config.entranceExitLabelRenderDepth - 1);
+      marker.fillStyle(markerColor, config.endpointMarkerFillAlpha);
+      marker.fillRect(
         x + 1,
         y + 1,
         GRID_DIMENSIONS.cellSize - 2,
         GRID_DIMENSIONS.cellSize - 2,
       );
-      state.gridGraphics.lineStyle(config.endpointMarkerLineWidth, markerColor, 1);
-      state.gridGraphics.strokeRect(
+      marker.lineStyle(config.endpointMarkerLineWidth, markerColor, 1);
+      marker.strokeRect(
         x + 1,
         y + 1,
         GRID_DIMENSIONS.cellSize - 2,
         GRID_DIMENSIONS.cellSize - 2,
       );
+      state.endpointMarkers.push(marker);
 
       const label = deps.scene
         .add

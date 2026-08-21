@@ -165,6 +165,10 @@ export class GameAudioManager {
       if (active.sound.isPlaying) {
         active.sound.stop();
       }
+      // Release the category slot taken at play time, otherwise repeated
+      // stop/play cycles exhaust MAX_SIMULTANEOUS_SAME_CATEGORY and the
+      // category goes permanently silent.
+      this.decrementCategoryCount(active.category);
     });
     this.activeSounds = this.activeSounds.filter((a) => a.soundId !== soundId);
   }
