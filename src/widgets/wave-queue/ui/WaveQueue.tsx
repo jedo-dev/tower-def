@@ -21,9 +21,9 @@ const MAX_VISIBLE_ICONS = 8;
 function CreepIcons({ items, sectionKey }: { items: WaveQueueItem[]; sectionKey: string }) {
   return (
     <>
-      {items.slice(0, MAX_VISIBLE_ICONS).map((item) => (
+      {items.slice(0, MAX_VISIBLE_ICONS).map((item, position) => (
         <div
-          key={`${sectionKey}-${item.type}-${item.index}`}
+          key={`${sectionKey}-${position}`}
           className={styles.icon}
           title={item.type}
         >

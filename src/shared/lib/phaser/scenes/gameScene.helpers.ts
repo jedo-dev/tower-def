@@ -32,19 +32,15 @@ export function mapUnitToCreepType(unit: UnitConfig): 'basic' {
 }
 
 export function buildHudWaveQueue(activeCreeps: CreepRenderState[]): HudWaveQueueItem[] {
+  // Index the filtered list sequentially: positional indexes of the source
+  // array leave gaps after dead creeps and collide with the pending-spawn
+  // indexes appended in buildHudWaveQueueWithPending (queue.length-based).
   return activeCreeps
-    .map((creep, index) => {
-      if (creep.entity.status !== 'alive') {
-        return null;
-      }
-
-      const creepType = mapEntityToWaveQueueType(creep.entity);
-      return {
-        type: creepType,
-        index,
-      };
-    })
-    .filter((creep): creep is HudWaveQueueItem => creep !== null);
+    .filter((creep) => creep.entity.status === 'alive')
+    .map((creep, index) => ({
+      type: mapEntityToWaveQueueType(creep.entity),
+      index,
+    }));
 }
 
 export function buildHudWaveQueueWithPending(
