@@ -7,5 +7,5 @@ export type {
 } from './model/composition';
 export { spawnCreepsFromWave } from './model/spawnCreepsFromWave';
 export { calculateWaveStartPath } from './model/calculateWavePath';
-export { generateWaveUnits } from './model/generateWaveUnits';
+export { generateWaveUnits, WAVE_UNIT_COUNT_BOUNDS } from './model/generateWaveUnits';
 export { buildWavePreview, composeWave } from './model/composeWave';

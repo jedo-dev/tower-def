@@ -1,7 +1,13 @@
 import { UnitTier, type UnitConfig } from '../../unit';
 
-const MIN_WAVE_UNITS = 5;
-const MAX_WAVE_UNITS = 14;
+/** A wave always fields at least this many creeps and never more than the cap. */
+export const WAVE_UNIT_COUNT_BOUNDS = {
+  min: 5,
+  max: 14,
+} as const;
+
+const MIN_WAVE_UNITS = WAVE_UNIT_COUNT_BOUNDS.min;
+const MAX_WAVE_UNITS = WAVE_UNIT_COUNT_BOUNDS.max;
 const TIER_VALUE_BY_TIER: Record<UnitTier, number> = {
   [UnitTier.TIER_1]: 1,
   [UnitTier.TIER_2]: 2,
