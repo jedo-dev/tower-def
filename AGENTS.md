@@ -277,6 +277,7 @@ If requirements are unclear:
 - `/docs/03-backlog.md`
 - `/docs/04-decisions.md`
 - `/docs/06-agent-workflow.md`
+- `/docs/08-content-authoring.md` (before touching creature or tower stats)
 
 ---
 
@@ -289,11 +290,22 @@ Do NOT implement yet:
 - Crypto/WebRTC
 - Save system
 - Advanced UI
-- Tower modifiers
-- Resistances
 - Boss logic
 - Asset pipeline
 - Animations
+
+Tower modifiers (slow, poison, and the archetypes built on them) and creature
+resistances left the restriction list once the status effect and tower
+archetype epics were opened. Implement them only through their Beads tasks.
+
+## Content Rules (MANDATORY)
+
+Creature and tower stats are authored data, not code:
+
+- Stats live in JSON under `src/content/`, never as tier formulas.
+- Content is validated on load; invalid files must fail fast with the file and
+  entity id in the message.
+- See `/docs/08-content-authoring.md` before editing content or its schema.
 
 ---
 
