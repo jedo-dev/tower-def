@@ -13,6 +13,8 @@
     "verbatimModuleSyntax": true,
     "moduleDetection": "force",
     "noEmit": true,
+    /* Creature and tower stats are authored as JSON content under src/content. */
+    "resolveJsonModule": true,
     "jsx": "react-jsx",
 
     /* Linting */

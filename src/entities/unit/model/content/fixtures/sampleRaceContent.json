@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "race": "UNDEAD",
+  "units": [
+    {
+      "id": "undead_skeleton",
+      "name": "Skeleton",
+      "tier": 1,
+      "health": 110,
+      "speed": 1.3,
+      "armor": 0,
+      "damage": 12,
+      "rewardGold": 6,
+      "spriteKey": "unit.undead.skeleton",
+      "description": "Restless bones marching from forgotten crypts."
+    },
+    {
+      "id": "undead_ghoul",
+      "name": "Ghoul",
+      "tier": 1,
+      "health": 80,
+      "speed": 1.9,
+      "armor": 0,
+      "damage": 14,
+      "rewardGold": 7,
+      "spriteKey": "unit.undead.ghoul"
+    }
+  ]
+}
