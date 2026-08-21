@@ -55,6 +55,10 @@ import {
 } from '../runtime/assets/gameSceneAssetLoader';
 import { ensurePlaceholderTextures } from '../runtime/assets/placeholderTexture';
 import {
+  startMissingArtReport,
+  stopMissingArtReport,
+} from '../runtime/assets/missingArtReport';
+import {
   createBattlefieldRenderState,
   destroyBattlefieldCreeps,
   destroyBattlefieldImpactEffects,
@@ -334,6 +338,7 @@ export class GameScene extends Phaser.Scene {
 
   public create(): void {
     this.isSceneCleanedUp = false;
+    startMissingArtReport();
     ensurePlaceholderTextures(this);
     this.loadSetupConfig();
     this.cameras.main.setBackgroundColor('#1a1f2c');
@@ -1015,6 +1020,7 @@ export class GameScene extends Phaser.Scene {
 
     this.isSceneCleanedUp = true;
 
+    stopMissingArtReport();
     this.teardownCallbacks.forEach((teardown) => teardown());
     this.teardownCallbacks.length = 0;
 
