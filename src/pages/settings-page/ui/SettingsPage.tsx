@@ -1,5 +1,11 @@
+import type { CSSProperties } from 'react';
 import type { AppRoute } from '../../../shared/config/game-setup';
 import './SettingsPage.css';
+
+// Drives the filled part of the range track (WebKit has no native progress).
+function fillStyle(volume: number): CSSProperties {
+  return { '--fill': `${Math.round(volume * 100)}%` } as CSSProperties;
+}
 
 export type SettingsPageProps = {
   onNavigate: (route: AppRoute) => void;
@@ -45,6 +51,7 @@ export function SettingsPage({
             value={sfxVolume * 100}
             onChange={(e) => onSfxVolumeChange(Number(e.target.value) / 100)}
             className="settings-slider"
+            style={fillStyle(sfxVolume)}
           />
           <span className="settings-value">{Math.round(sfxVolume * 100)}%</span>
         </div>
@@ -61,6 +68,7 @@ export function SettingsPage({
             value={ambientVolume * 100}
             onChange={(e) => onAmbientVolumeChange(Number(e.target.value) / 100)}
             className="settings-slider"
+            style={fillStyle(ambientVolume)}
           />
           <span className="settings-value">{Math.round(ambientVolume * 100)}%</span>
         </div>

@@ -1,53 +1,151 @@
 .fantasy-button {
-  --button-image: url('../../../../assets/ui-presets/btn_green_normal.png');
+  --button-gradient: var(--gradient-emerald);
+  --button-glow: var(--glow-emerald);
+
+  position: relative;
   display: inline-flex;
   width: 100%;
   min-height: 56px;
   align-items: center;
   justify-content: center;
-  padding: 12px 28px;
-  border: 32px solid transparent;
-  border-image: var(--button-image) 80 fill / 32px / 0 round;
-  background: transparent;
-  color: #f3e2ba;
+  padding: 14px 26px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: var(--radius-lg);
+  background: var(--button-gradient);
+  box-shadow: var(--shadow-md), var(--shadow-inset-top);
+  color: #fff;
   cursor: pointer;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+  isolation: isolate;
+  overflow: hidden;
   touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    transform var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-med) var(--ease-out),
+    filter var(--duration-fast) var(--ease-out);
+}
+
+/* Top gloss: the highlight that used to be painted into the button PNG. */
+.fantasy-button::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--glass-gloss);
+  pointer-events: none;
+}
+
+/* Sheen that sweeps across on hover. */
+.fantasy-button::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -60%;
+  width: 45%;
+  background: linear-gradient(
+    100deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.28) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: skewX(-18deg);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--duration-fast) linear;
 }
 
 .fantasy-button__label {
+  position: relative;
+  z-index: 1;
   font-family: var(--font-family-display);
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 700;
   line-height: 1;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   color: inherit;
-  text-shadow: 0 1px 0 rgba(29, 15, 2, 0.8);
+  text-shadow: 0 1px 2px rgba(8, 12, 20, 0.55);
+}
+
+.fantasy-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-lg), var(--shadow-inset-top), 0 0 28px var(--button-glow);
+}
+
+.fantasy-button:hover:not(:disabled)::after {
+  opacity: 1;
+  animation: fantasy-button-sheen 620ms var(--ease-out);
+}
+
+.fantasy-button:active:not(:disabled) {
+  transform: translateY(1px);
+  filter: brightness(0.94);
+  box-shadow: var(--shadow-sm), inset 0 2px 6px rgba(6, 10, 18, 0.45);
 }
 
 .fantasy-button:focus-visible {
-  outline: 2px solid #f2da96;
-  outline-offset: 2px;
+  outline: none;
+  box-shadow: var(--focus-ring), var(--shadow-md);
 }
 
 .fantasy-button:disabled {
-  opacity: 0.5;
   cursor: not-allowed;
-  filter: grayscale(0.2);
+  filter: grayscale(0.65) brightness(0.7);
+  box-shadow: var(--shadow-sm);
+  opacity: 0.65;
 }
 
 .fantasy-button--ember {
-  --button-image: url('../../../../assets/ui-presets/btn_red_normal.png');
-}
-
-.fantasy-button--ember:hover:not(:disabled) {
-  --button-image: url('../../../../assets/ui-presets/btn_red_hover.png');
-}
-
-.fantasy-button--steel {
-  --button-image: url('../../../../assets/ui-presets/btn_gray_normal.png');
+  --button-gradient: var(--gradient-ember);
+  --button-glow: var(--glow-ember);
 }
 
 .fantasy-button--emerald {
-  --button-image: url('../../../../assets/ui-presets/btn_green_normal.png');
+  --button-gradient: var(--gradient-emerald);
+  --button-glow: var(--glow-emerald);
+}
+
+.fantasy-button--steel {
+  --button-gradient: var(--gradient-steel);
+  --button-glow: var(--glow-steel);
+}
+
+/* Quiet variant: glass instead of a solid accent fill. */
+.fantasy-button--ghost {
+  --button-glow: var(--glow-steel);
+  background: var(--glass-bg-soft);
+  border-color: var(--glass-border);
+  backdrop-filter: blur(var(--glass-blur));
+  color: var(--color-text-secondary);
+}
+
+.fantasy-button--ghost:hover:not(:disabled) {
+  border-color: var(--glass-border-strong);
+  color: var(--color-text-primary);
+}
+
+@keyframes fantasy-button-sheen {
+  from {
+    left: -60%;
+  }
+  to {
+    left: 120%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fantasy-button,
+  .fantasy-button::after {
+    transition: none;
+  }
+
+  .fantasy-button:hover:not(:disabled) {
+    transform: none;
+  }
+
+  .fantasy-button:hover:not(:disabled)::after {
+    animation: none;
+    opacity: 0;
+  }
 }

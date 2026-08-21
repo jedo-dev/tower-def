@@ -83,6 +83,37 @@
   --color-surface-overlay: rgba(10, 14, 24, 0.72);
   --color-border-strong: #3a4964;
 
+  /* Procedural chrome: glass surfaces replace the old PNG frames */
+  --glass-bg: linear-gradient(158deg, rgba(32, 43, 66, 0.74) 0%, rgba(13, 18, 29, 0.86) 100%);
+  --glass-bg-soft: linear-gradient(158deg, rgba(44, 58, 86, 0.5) 0%, rgba(16, 22, 35, 0.66) 100%);
+  --glass-bg-raised: linear-gradient(158deg, rgba(56, 73, 106, 0.6) 0%, rgba(21, 28, 44, 0.78) 100%);
+  --glass-border: rgba(152, 180, 226, 0.18);
+  --glass-border-strong: rgba(178, 205, 250, 0.34);
+  --glass-blur: 16px;
+  --glass-gloss: linear-gradient(180deg, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0) 46%);
+
+  /* Elevation */
+  --shadow-sm: 0 2px 8px rgba(4, 7, 14, 0.45);
+  --shadow-md: 0 10px 26px rgba(4, 7, 14, 0.5);
+  --shadow-lg: 0 24px 64px rgba(3, 6, 12, 0.62);
+  --shadow-inset-top: inset 0 1px 0 rgba(255, 255, 255, 0.16);
+
+  /* Accent gradients */
+  --gradient-ember: linear-gradient(165deg, #ffa76a 0%, #f2683f 46%, #c33f2b 100%);
+  --gradient-emerald: linear-gradient(165deg, #74ebac 0%, #33b978 46%, #1b7d54 100%);
+  --gradient-steel: linear-gradient(165deg, #93abd2 0%, #55688f 48%, #33415c 100%);
+  --gradient-gold: linear-gradient(180deg, #fff4d6 0%, #f0d188 52%, #c9a24f 100%);
+
+  /* Glow colors paired with the gradients above */
+  --glow-ember: rgba(242, 104, 63, 0.5);
+  --glow-emerald: rgba(51, 185, 120, 0.45);
+  --glow-steel: rgba(120, 152, 204, 0.38);
+
+  /* Motion */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --duration-fast: 120ms;
+  --duration-med: 220ms;
+
   /* Spacing scale */
   --space-2xs: 2px;
   --space-xs: 4px;
@@ -95,7 +126,12 @@
   /* Radii */
   --radius-sm: 4px;
   --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
   --radius-pill: 999px;
+
+  /* Focus ring used by every procedural control */
+  --focus-ring: 0 0 0 2px rgba(10, 15, 25, 0.95), 0 0 0 4px var(--color-accent-gold);
 
   /* Sizing */
   --touch-target-min: 44px;

@@ -48,7 +48,7 @@ export function StartPage({ onNavigate }: StartPageProps) {
           </FantasyButton>
           <FantasyButton
             className="start-button-secondary start-button-danger"
-            tone="emerald"
+            tone="ghost"
             onClick={() => onNavigate('start')}
           >
             Exit

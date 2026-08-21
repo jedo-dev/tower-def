@@ -171,7 +171,10 @@ export function GameSetupPage({ onStartGame, onNavigate }: GameSetupPageProps) {
               </div>
             </div>
 
-            <div className={`setup-race-preview${isRaceVisible ? ' setup-race-preview-visible' : ''}`}>
+            <div
+              className={`setup-race-preview${isRaceVisible ? ' setup-race-preview-visible' : ''}`}
+              style={{ '--card-theme': currentBuilderConfig.themeColor } as CSSProperties}
+            >
               <div className="setup-race-media">
                 {currentBuilderVideo ? (
                   <video
@@ -186,11 +189,7 @@ export function GameSetupPage({ onStartGame, onNavigate }: GameSetupPageProps) {
                   />
                 ) : null}
 
-                <div
-                  className="setup-race-preview-overlay"
-                  style={{ '--card-theme': currentBuilderConfig.themeColor } as CSSProperties}
-                  aria-hidden
-                />
+                <div className="setup-race-preview-overlay" aria-hidden />
               </div>
 
               <button
