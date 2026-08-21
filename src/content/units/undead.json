@@ -1,0 +1,102 @@
+{
+  "schemaVersion": 1,
+  "race": "UNDEAD",
+  "units": [
+    {
+      "id": "undead_skeleton",
+      "name": "Skeleton",
+      "tier": 1,
+      "health": 105,
+      "speed": 1.3,
+      "armor": 0,
+      "damage": 11,
+      "rewardGold": 6,
+      "spriteKey": "unit.undead.skeleton",
+      "description": "Restless bones marching from forgotten crypts."
+    },
+    {
+      "id": "undead_ghoul",
+      "name": "Ghoul",
+      "tier": 1,
+      "health": 80,
+      "speed": 1.95,
+      "armor": 0,
+      "damage": 14,
+      "rewardGold": 7,
+      "spriteKey": "unit.undead.ghoul",
+      "description": "Feral clawed scavenger that outruns slow defenses."
+    },
+    {
+      "id": "undead_crypt_fiend",
+      "name": "Crypt Fiend",
+      "tier": 2,
+      "health": 210,
+      "speed": 1.05,
+      "armor": 3,
+      "damage": 18,
+      "rewardGold": 11,
+      "spriteKey": "unit.undead.crypt_fiend",
+      "description": "A spider-like horror wrapped in deathly chitin."
+    },
+    {
+      "id": "undead_gargoyle",
+      "name": "Gargoyle",
+      "tier": 3,
+      "health": 230,
+      "speed": 1.7,
+      "armor": 1,
+      "damage": 24,
+      "rewardGold": 17,
+      "spriteKey": "unit.undead.gargoyle",
+      "description": "Winged stone predator that dives past the front line."
+    },
+    {
+      "id": "undead_abomination",
+      "name": "Abomination",
+      "tier": 4,
+      "health": 520,
+      "speed": 0.7,
+      "armor": 4,
+      "damage": 45,
+      "rewardGold": 22,
+      "spriteKey": "unit.undead.abomination",
+      "description": "Patchworked brute that soaks damage instead of dodging it."
+    },
+    {
+      "id": "undead_necromancer",
+      "name": "Necromancer",
+      "tier": 5,
+      "health": 330,
+      "speed": 1.15,
+      "armor": 2,
+      "damage": 30,
+      "rewardGold": 28,
+      "spriteKey": "unit.undead.necromancer",
+      "description": "Dark acolyte worth killing early and worth gold when you do."
+    },
+    {
+      "id": "undead_banshee",
+      "name": "Banshee",
+      "tier": 5,
+      "health": 300,
+      "speed": 1.4,
+      "armor": 1,
+      "damage": 34,
+      "rewardGold": 28,
+      "spriteKey": "unit.undead.banshee",
+      "description": "Wailing spirit drifting between life and oblivion."
+    },
+    {
+      "id": "undead_frost_wyrm",
+      "name": "Frost Wyrm",
+      "tier": 6,
+      "health": 620,
+      "speed": 1.25,
+      "armor": 5,
+      "damage": 60,
+      "rewardGold": 34,
+      "spriteKey": "unit.undead.frost_wyrm",
+      "description": "Ancient dragon bound to ice and undeath."
+    }
+  ]
+}
