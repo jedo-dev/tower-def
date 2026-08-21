@@ -52,6 +52,10 @@ export type WaveRuntimeDependencies = {
   getAnimationKeyByUnit: (unit: UnitConfig) => string;
   getCreepTypeFromUnit: (unit: UnitConfig) => 'basic';
   getCreepTintByUnit?: (unit: UnitConfig) => number;
+  /** Applies the difficulty reward modifier; identity when not provided. */
+  scaleReward?: (baseReward: number) => number;
+  /** Applies difficulty health/speed modifiers to creeps attacking the player. */
+  scaleCreepStats?: (stats: { health: number; speed: number }) => { health: number; speed: number };
   toCellCenter: (position: GridPosition) => { x: number; y: number };
   onGoldUpdated: (nextGold: number) => void;
   onWavePhaseChanged: (nextPhase: WavePhaseState) => void;
@@ -142,7 +146,8 @@ export function applyWaveCompletionRewardIfResolved(
 
   const nextResources = addGold(
     { gold: state.playerGold, lives: state.playerLives },
-    ECONOMY_BALANCE.waveCompletionRewardGold,
+    deps.scaleReward?.(ECONOMY_BALANCE.waveCompletionRewardGold)
+      ?? ECONOMY_BALANCE.waveCompletionRewardGold,
   );
   state.playerGold = nextResources.gold;
   deps.onGoldUpdated(state.playerGold);
@@ -237,12 +242,16 @@ export function processPendingWaveSpawns(
 
   for (const spawn of readySpawns) {
     const creepTypeFromUnit = deps.getCreepTypeFromUnit(spawn.unit);
+    const scaledStats = deps.scaleCreepStats?.({
+      health: spawn.unit.health,
+      speed: spawn.unit.speed,
+    }) ?? { health: spawn.unit.health, speed: spawn.unit.speed };
     const waveCreep: CreepEntity = {
       id: `wave:creep:${state.currentWaveNumber}:${spawn.sequenceIndex}`,
       type: creepTypeFromUnit,
-      hp: spawn.unit.health,
+      hp: scaledStats.health,
       lifeState: 'alive',
-      speed: spawn.unit.speed,
+      speed: scaledStats.speed,
       status: 'alive',
       position: { ...state.activeCreepPath[0] },
       pathIndex: 0,

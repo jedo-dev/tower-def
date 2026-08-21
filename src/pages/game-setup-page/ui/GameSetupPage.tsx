@@ -262,6 +262,20 @@ export function GameSetupPage({ onStartGame, onNavigate }: GameSetupPageProps) {
               >
                 <span className="setup-difficulty-name">{diff.name}</span>
                 <span className="setup-difficulty-desc">{diff.description}</span>
+                <span className="setup-difficulty-modifiers">
+                  <span className="setup-difficulty-chip">
+                    Gold {formatModifier(diff.startingGoldModifier)}
+                  </span>
+                  <span className="setup-difficulty-chip">
+                    Creep HP {formatModifier(diff.creepHealthModifier)}
+                  </span>
+                  <span className="setup-difficulty-chip">
+                    Speed {formatModifier(diff.creepSpeedModifier)}
+                  </span>
+                  <span className="setup-difficulty-chip">
+                    Rewards {formatModifier(diff.rewardModifier)}
+                  </span>
+                </span>
               </button>
             ))}
           </div>
@@ -318,6 +332,10 @@ export function GameSetupPage({ onStartGame, onNavigate }: GameSetupPageProps) {
       )}
     </main>
   );
+}
+
+function formatModifier(modifier: number): string {
+  return `${Math.round(modifier * 100)}%`;
 }
 
 function getEnemyThemeColor(faction: EnemyFaction): string {

@@ -12,7 +12,11 @@ import {
   startRound,
   type DuelMatchState,
 } from '../../../../entities/duel-match';
-import { DEFAULT_DIFFICULTY, type Difficulty } from '../../../../entities/difficulty';
+import {
+  DEFAULT_DIFFICULTY,
+  scaleStartingGold,
+  type Difficulty,
+} from '../../../../entities/difficulty';
 import { resolveUnitConfigById, type UnitConfig } from '../../../../entities/unit';
 import { calculateWaveStartPath } from '../../../../entities/wave';
 import { RaceId } from '../../../types/content-ids';
@@ -267,6 +271,7 @@ export class GameScene extends Phaser.Scene {
     },
     getSelectedFactionUnits: () => this.getSelectedFactionUnits(),
     getComputerSendWaveUnits: () => this.getComputerSendWaveUnits(),
+    getSelectedDifficulty: () => this.selectedDifficulty,
     refreshBuildState: () => this.refreshBuildState(),
     publishHudSnapshot: () => this.publishHudSnapshot(),
     handleGameOverUpdated: (isGameOver) => this.handleGameOverUpdated(isGameOver),
@@ -625,10 +630,10 @@ export class GameScene extends Phaser.Scene {
       mapHudFactionToRaceId(this.selectedFaction),
       this.mapEndpoints,
     );
-    // Both duelists must start from the same purse; the scene wallet is the
-    // source of truth, so seed it from the duel balance table instead of the
-    // solo-play starting gold.
-    this.playerGold = this.duelMatchState.player.gold;
+    // The scene wallet is the source of truth: seed it from the duel balance
+    // table (so the AI starts level with the player) and let the difficulty
+    // preset tilt it.
+    this.playerGold = scaleStartingGold(this.duelMatchState.player.gold, this.selectedDifficulty);
     this.playerLives = this.duelMatchState.player.hp;
     this.registry.set('economy.gold', this.playerGold);
     this.opponentLeakHistory = [];
@@ -770,7 +775,7 @@ export class GameScene extends Phaser.Scene {
       // would desync the grid from a generated dynamic layout.
       this.mapEndpoints,
     );
-    this.playerGold = this.duelMatchState.player.gold;
+    this.playerGold = scaleStartingGold(this.duelMatchState.player.gold, this.selectedDifficulty);
     this.playerLives = this.duelMatchState.player.hp;
     this.matchOutcomeStatus = 'active';
     this.matchWinner = null;

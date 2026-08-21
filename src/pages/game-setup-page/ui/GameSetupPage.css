@@ -594,3 +594,28 @@
     transition: none;
   }
 }
+
+.setup-difficulty-modifiers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  margin-top: var(--space-md);
+}
+
+.setup-difficulty-chip {
+  padding: var(--space-2xs) var(--space-md);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.05);
+  font-family: var(--font-family-ui);
+  font-size: var(--font-size-2xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.setup-difficulty-btn-selected .setup-difficulty-chip {
+  border-color: rgba(240, 209, 136, 0.4);
+  color: var(--color-text-secondary);
+}
