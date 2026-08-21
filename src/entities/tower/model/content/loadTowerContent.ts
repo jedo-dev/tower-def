@@ -80,6 +80,7 @@ function parseOnHitEffects(
       effectId,
       magnitude: effect.magnitude === undefined ? undefined : readNumber(effect, 'magnitude', location),
       durationMs: effect.durationMs === undefined ? undefined : readNumber(effect, 'durationMs', location),
+      maxStacks: effect.maxStacks === undefined ? undefined : readNumber(effect, 'maxStacks', location),
     };
   });
 }

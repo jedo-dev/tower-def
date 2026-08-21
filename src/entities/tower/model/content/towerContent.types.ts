@@ -12,6 +12,7 @@ export type TowerOnHitEffectEntry = {
   effectId: string;
   magnitude?: number;
   durationMs?: number;
+  maxStacks?: number;
 };
 
 export type TowerContentEntry = {
@@ -71,6 +72,7 @@ export const TOWER_ON_HIT_EFFECT_KEYS: readonly (keyof TowerOnHitEffectEntry)[] 
   'effectId',
   'magnitude',
   'durationMs',
+  'maxStacks',
 ];
 
 export const TOWER_CONTENT_REQUIRED_KEYS: readonly (keyof TowerContentEntry)[] = [

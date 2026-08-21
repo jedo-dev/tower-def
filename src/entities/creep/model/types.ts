@@ -39,6 +39,8 @@ export type ActiveEffect = {
   magnitude: number;
   remainingMs: number;
   stacks: number;
+  /** Cap for this instance; an upgraded tower can raise it above the default. */
+  maxStacks: number;
   /** Time until the next damage tick; unused by effects that do not tick. */
   nextTickInMs: number;
 };

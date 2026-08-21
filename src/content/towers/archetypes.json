@@ -35,6 +35,23 @@
         }
       ],
       "description": "Trades damage for control: every hit chills its target."
+    },
+    {
+      "id": "poison",
+      "name": "Poison",
+      "attackKind": "single-target",
+      "damage": 8,
+      "range": 3,
+      "attackCooldownMs": 1000,
+      "onHitEffects": [
+        {
+          "effectId": "poison",
+          "magnitude": 6,
+          "durationMs": 4000,
+          "maxStacks": 3
+        }
+      ],
+      "description": "Little damage up front, punishing over a long wave. Poison ignores armor."
     }
   ]
 }

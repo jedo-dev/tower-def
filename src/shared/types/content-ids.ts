@@ -16,6 +16,7 @@ export const TowerTypeId = {
   SINGLE: 'single',
   SPLASH: 'splash',
   FROST: 'frost',
+  POISON: 'poison',
 } as const;
 
 export type TowerTypeId = (typeof TowerTypeId)[keyof typeof TowerTypeId];
@@ -24,6 +25,7 @@ export const TOWER_TYPE_IDS: readonly TowerTypeId[] = [
   TowerTypeId.SINGLE,
   TowerTypeId.SPLASH,
   TowerTypeId.FROST,
+  TowerTypeId.POISON,
 ] as const;
 
 /**

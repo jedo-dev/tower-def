@@ -19,6 +19,8 @@ export type ApplyEffectInput = {
   magnitude?: number;
   /** Overrides the balance duration. */
   durationMs?: number;
+  /** Raises the stack cap for this application; never lowers the balance cap. */
+  maxStacks?: number;
 };
 
 export type CreepEffectTickResult = {
@@ -43,6 +45,7 @@ function createEffect(definition: EffectDefinition, input: ApplyEffectInput): Ac
     magnitude: input.magnitude ?? definition.magnitude,
     remainingMs: input.durationMs ?? definition.durationMs,
     stacks: 1,
+    maxStacks: Math.max(definition.maxStacks, input.maxStacks ?? definition.maxStacks),
     nextTickInMs: definition.tickIntervalMs,
   };
 }
@@ -55,13 +58,19 @@ function mergeEffect(
   const incoming = createEffect(definition, input);
 
   switch (definition.stackingRule) {
-    case EffectStackingRule.STACK:
+    case EffectStackingRule.STACK: {
+      // The stronger tower also sets the cap, so upgrading one poison tower
+      // lifts the ceiling instead of being ignored by the older stacks.
+      const maxStacks = Math.max(existing.maxStacks, incoming.maxStacks);
+
       return {
         ...existing,
         magnitude: Math.max(existing.magnitude, incoming.magnitude),
         remainingMs: incoming.remainingMs,
-        stacks: Math.min(existing.stacks + 1, definition.maxStacks),
+        maxStacks,
+        stacks: Math.min(existing.stacks + 1, maxStacks),
       };
+    }
     case EffectStackingRule.REFRESH:
       return {
         ...existing,

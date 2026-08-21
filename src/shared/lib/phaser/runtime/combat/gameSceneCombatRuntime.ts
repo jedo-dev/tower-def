@@ -163,6 +163,7 @@ function applyTowerOnHitEffects(
       effectId: effect.effectId,
       magnitude: effect.magnitude,
       durationMs: effect.durationMs,
+      maxStacks: effect.maxStacks,
     });
   }
 }

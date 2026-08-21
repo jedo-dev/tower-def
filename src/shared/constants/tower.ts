@@ -73,7 +73,50 @@ function createFrostLevel(level: 1 | 2 | 3, upgradeCostGold: number): TowerUpgra
   };
 }
 
+export enum PoisonTowerBalance {
+  DAMAGE = 8,
+  RANGE_CELLS = 3,
+  ATTACK_COOLDOWN_MS = 1000,
+  LEVEL_2_COST_GOLD = 50,
+  LEVEL_3_COST_GOLD = 95,
+  POISON_DURATION_MS = 4000,
+}
+
+/** Poison upgrades buy pressure over time: deeper stacks and harder ticks. */
+const POISON_TICK_DAMAGE_BY_LEVEL = [6, 8, 11] as const;
+const POISON_MAX_STACKS_BY_LEVEL = [3, 4, 5] as const;
+
+function createPoisonLevel(level: 1 | 2 | 3, upgradeCostGold: number): TowerUpgradeLevel {
+  const levelIndex = level - 1;
+  return {
+    level,
+    upgradeCostGold,
+    stats: {
+      damage: PoisonTowerBalance.DAMAGE + levelIndex * 2,
+      range: PoisonTowerBalance.RANGE_CELLS + levelIndex * TowerUpgradeBalance.RANGE_INCREASE_PER_LEVEL,
+      attackCooldownMs:
+        PoisonTowerBalance.ATTACK_COOLDOWN_MS - levelIndex * TowerUpgradeBalance.COOLDOWN_REDUCTION_PER_LEVEL,
+      onHitEffects: [
+        {
+          effectId: EffectId.POISON,
+          magnitude: POISON_TICK_DAMAGE_BY_LEVEL[levelIndex],
+          durationMs: PoisonTowerBalance.POISON_DURATION_MS,
+          maxStacks: POISON_MAX_STACKS_BY_LEVEL[levelIndex],
+        },
+      ],
+    },
+  };
+}
+
 export const TOWER_UPGRADE_CONFIG: Record<string, TowerTypeUpgradeConfig> = {
+  poison: {
+    maxLevel: TowerUpgradeBalance.MAX_LEVEL,
+    levels: [
+      createPoisonLevel(1, 0),
+      createPoisonLevel(2, PoisonTowerBalance.LEVEL_2_COST_GOLD),
+      createPoisonLevel(3, PoisonTowerBalance.LEVEL_3_COST_GOLD),
+    ],
+  },
   frost: {
     maxLevel: TowerUpgradeBalance.MAX_LEVEL,
     levels: [

@@ -43,7 +43,8 @@ export const EFFECT_DEFINITIONS: Record<EffectId, EffectDefinition> = {
     magnitude: 6,
     durationMs: 4_000,
     tickIntervalMs: 500,
-    maxStacks: 5,
+    // Default cap; an upgraded poison tower declares a higher one.
+    maxStacks: 3,
     stackingRule: EffectStackingRule.STACK,
   },
   [EffectId.BURN]: {

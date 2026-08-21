@@ -40,6 +40,7 @@ describe('applyEffectToCreep', () => {
       magnitude: POISON.magnitude,
       remainingMs: POISON.durationMs,
       stacks: 1,
+      maxStacks: POISON.maxStacks,
       nextTickInMs: POISON.tickIntervalMs,
     });
   });
@@ -229,5 +230,39 @@ describe('getEffectiveSpeedMultiplier', () => {
     const creep = applyEffectToCreep(createCreep(), { effectId: EffectId.CHILL, magnitude: 0.95 });
 
     expect(getEffectiveSpeedMultiplier(creep)).toBe(EFFECT_BALANCE.minimumSpeedMultiplier);
+  });
+});
+
+describe('tower-specific stack caps', () => {
+  it('lets a tower raise the cap above the balance default', () => {
+    let creep = createCreep();
+
+    for (let application = 0; application < 10; application += 1) {
+      creep = applyEffectToCreep(creep, { effectId: EffectId.POISON, maxStacks: POISON.maxStacks + 2 });
+    }
+
+    expect(findActiveEffect(creep, EffectId.POISON)?.stacks).toBe(POISON.maxStacks + 2);
+  });
+
+  it('never lets a tower lower the balance cap', () => {
+    let creep = createCreep();
+
+    for (let application = 0; application < 10; application += 1) {
+      creep = applyEffectToCreep(creep, { effectId: EffectId.POISON, maxStacks: 1 });
+    }
+
+    expect(findActiveEffect(creep, EffectId.POISON)?.stacks).toBe(POISON.maxStacks);
+  });
+
+  it('lifts an existing stack ceiling when a stronger tower joins in', () => {
+    let creep = createCreep();
+
+    for (let application = 0; application < 6; application += 1) {
+      creep = applyEffectToCreep(creep, { effectId: EffectId.POISON });
+    }
+
+    creep = applyEffectToCreep(creep, { effectId: EffectId.POISON, maxStacks: POISON.maxStacks + 1 });
+
+    expect(findActiveEffect(creep, EffectId.POISON)?.maxStacks).toBe(POISON.maxStacks + 1);
   });
 });
