@@ -17,7 +17,7 @@ export {
   tickCreepEffects,
 } from './model/effects';
 export type { ApplyEffectInput, CreepEffectTickResult } from './model/effects';
-export { applyDamageToCreep } from './model/damage';
+export { applyDamageToCreep, calculateMitigatedDamage, getEffectiveArmor } from './model/damage';
 export { filterActiveWaveCreeps } from './model/runtime';
 export { isCreepAlive, isCreepDead, setCreepLifeState } from './model/lifeState';
-export type { ApplyCreepDamageResult } from './model/damage';
+export type { ApplyCreepDamageOptions, ApplyCreepDamageResult } from './model/damage';

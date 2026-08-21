@@ -135,7 +135,13 @@ function applySingleTargetDamage(
   targetRenderState.entity = damageResult.creep;
   applyCreepHitFeedback(targetRenderState, config);
   deps.playSound('combat.creep_hit');
-  spawnDamageNumber(battlefield, deps, config, targetRenderState.entity.position, tower.entity.combatStats.damage);
+  spawnDamageNumber(
+    battlefield,
+    deps,
+    config,
+    targetRenderState.entity.position,
+    Math.round(damageResult.damageApplied),
+  );
 
   if (damageResult.killed) {
     handleCreepKill(deps);
@@ -168,7 +174,7 @@ function applySplashDamage(
     const damageResult = applyDamageToCreep(creep.entity, tower.entity.combatStats.damage);
     creep.entity = damageResult.creep;
     applyCreepHitFeedback(creep, config);
-    totalDamageDealt += tower.entity.combatStats.damage;
+    totalDamageDealt += damageResult.damageApplied;
 
     if (damageResult.killed) {
       handleCreepKill(deps);
@@ -176,7 +182,7 @@ function applySplashDamage(
   }
 
   deps.playSound('combat.creep_hit');
-  spawnDamageNumber(battlefield, deps, config, targetRenderState.entity.position, totalDamageDealt);
+  spawnDamageNumber(battlefield, deps, config, targetRenderState.entity.position, Math.round(totalDamageDealt));
 }
 
 function spawnProjectileFeedback(
@@ -307,7 +313,7 @@ export function updateCreepEffects(
       continue;
     }
 
-    const damageResult = applyDamageToCreep(creep.entity, tickResult.damage);
+    const damageResult = applyDamageToCreep(creep.entity, tickResult.damage, { ignoreArmor: true });
     creep.entity = damageResult.creep;
     spawnDamageNumber(
       battlefield,

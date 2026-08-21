@@ -55,14 +55,14 @@ src/content/
 | `tier` | yes | 1 to 6. Drives wave budget and duel send cost, **not** the stats. |
 | `health` | yes | Hit points at spawn, before difficulty scaling. |
 | `speed` | yes | Path speed multiplier. `1.0` is the baseline step rate. |
-| `armor` | yes | Flat damage reduction (see the damage model). |
+| `armor` | yes | Armor points. Each point removes a share of a direct hit (see `shared/constants/damage.ts`); damage over time ignores armor. |
 | `damage` | yes | Damage the creature deals; reserved for duel pressure. |
 | `rewardGold` | yes | Gold the defender earns for the kill. |
 | `spriteKey` | yes | Art key, `unit.<race>.<name>`. Missing art falls back to a placeholder. |
 | `description` | no | Flavour text. Cosmetic only. |
 | `moveType` | no | `ground` (default) or `air`. |
 | `sizeClass` | no | `small`, `medium` (default) or `large`. |
-| `armorType` | no | `unarmored`, `light` (default) or `heavy`. |
+| `armorType` | no | `unarmored`, `light` (default) or `heavy`. Shifts effective armor points. |
 
 Unknown fields are rejected: add the field to the schema first
 (`src/entities/unit/model/content/unitContent.types.ts`), then to content.
