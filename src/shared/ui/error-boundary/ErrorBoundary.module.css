@@ -1,0 +1,42 @@
+.boundary {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-lg);
+  padding: var(--space-2xl) var(--space-xl);
+  min-height: 200px;
+  text-align: center;
+  background: var(--color-surface-overlay);
+  border-radius: var(--radius-md);
+  color: var(--color-text-primary);
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-family-display);
+  font-size: var(--font-size-xl);
+  color: var(--color-danger);
+}
+
+.message {
+  margin: 0;
+  font-family: var(--font-family-ui);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  max-width: 40ch;
+  overflow-wrap: anywhere;
+}
+
+.recoverButton {
+  min-height: var(--touch-target-min);
+  min-width: var(--touch-target-min);
+  padding: 0 var(--space-xl);
+  font-family: var(--font-family-ui);
+  font-size: var(--font-size-md);
+  color: var(--color-text-primary);
+  background: var(--color-primary);
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}

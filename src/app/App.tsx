@@ -5,6 +5,7 @@ import { GamePage } from '../pages/game-page/GamePage';
 import { SettingsPage } from '../pages/settings-page';
 import type { AppRoute, GameSetupConfig } from '../shared/config/game-setup';
 import { setGameSetupConfig } from '../shared/lib/game-bridge/bridge';
+import { ErrorBoundary } from '../shared/ui/error-boundary';
 import type { SoundId } from '../shared/lib/phaser/sound/audio.types';
 import { SOUND_ASSET_PATHS } from '../shared/lib/phaser/sound/audio.constants';
 import {
@@ -186,7 +187,14 @@ export function App() {
   }
 
   if (route === 'game') {
-    return <GamePage setup={gameSetup} />;
+    return (
+      <ErrorBoundary
+        recoverLabel="Back to menu"
+        onRecover={() => handleNavigate('start')}
+      >
+        <GamePage setup={gameSetup} />
+      </ErrorBoundary>
+    );
   }
 
   if (route === 'settings') {
