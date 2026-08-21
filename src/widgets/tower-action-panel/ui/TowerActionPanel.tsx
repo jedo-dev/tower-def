@@ -18,6 +18,7 @@ const TOWER_DISPLAY_NAMES: Record<HudTowerType, string> = {
   [TowerTypeId.SPLASH]: 'Plague Tower',
   [TowerTypeId.FROST]: 'Frost Tower',
   [TowerTypeId.POISON]: 'Poison Tower',
+  [TowerTypeId.CHAIN]: 'Chain Tower',
 };
 
 function formatTowerType(type: HudTowerType): string {

@@ -17,6 +17,7 @@ export const TowerTypeId = {
   SPLASH: 'splash',
   FROST: 'frost',
   POISON: 'poison',
+  CHAIN: 'chain',
 } as const;
 
 export type TowerTypeId = (typeof TowerTypeId)[keyof typeof TowerTypeId];
@@ -26,6 +27,7 @@ export const TOWER_TYPE_IDS: readonly TowerTypeId[] = [
   TowerTypeId.SPLASH,
   TowerTypeId.FROST,
   TowerTypeId.POISON,
+  TowerTypeId.CHAIN,
 ] as const;
 
 /**
@@ -36,6 +38,7 @@ export const TOWER_TYPE_IDS: readonly TowerTypeId[] = [
 export const TowerAttackKind = {
   SINGLE_TARGET: 'single-target',
   SPLASH: 'splash',
+  CHAIN: 'chain',
 } as const;
 
 export type TowerAttackKind = (typeof TowerAttackKind)[keyof typeof TowerAttackKind];
@@ -43,6 +46,7 @@ export type TowerAttackKind = (typeof TowerAttackKind)[keyof typeof TowerAttackK
 export const TOWER_ATTACK_KINDS: readonly TowerAttackKind[] = [
   TowerAttackKind.SINGLE_TARGET,
   TowerAttackKind.SPLASH,
+  TowerAttackKind.CHAIN,
 ] as const;
 
 export const CreepTypeId = {

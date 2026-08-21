@@ -1,5 +1,9 @@
 import { TowerAttackKind } from '../../../../types/content-ids';
-import { getTowerAttackKind, getTowerOnHitEffects } from '../../../../../entities/tower';
+import {
+  getTowerArchetype,
+  getTowerAttackKind,
+  getTowerOnHitEffects,
+} from '../../../../../entities/tower';
 import Phaser from 'phaser';
 import { addGold, type PlayerResources } from '../../../../../entities/player-resources';
 import {
@@ -232,6 +236,99 @@ function applySplashDamage(
   spawnDamageNumber(battlefield, deps, config, targetRenderState.entity.position, Math.round(totalDamageDealt));
 }
 
+/**
+ * Picks the creeps an arc jumps to. Selection is by distance and then id, so a
+ * given battlefield state always produces the same chain.
+ */
+function selectChainTargets(
+  battlefield: BattlefieldRenderState,
+  deps: CombatRuntimeDependencies,
+  from: CreepRenderState,
+  bounces: number,
+  bounceRangeCells: number,
+): CreepRenderState[] {
+  const visited = new Set<string>([from.entity.id]);
+  const chain: CreepRenderState[] = [];
+  let current = from;
+
+  for (let bounce = 0; bounce < bounces; bounce += 1) {
+    const currentCenter = deps.toCellCenter(current.entity.position);
+    const rangePx = bounceRangeCells * GRID_DIMENSIONS.cellSize;
+
+    const next = battlefield.creeps
+      .filter((creep) => creep.entity.status === 'alive' && !visited.has(creep.entity.id))
+      .map((creep) => {
+        const center = deps.toCellCenter(creep.entity.position);
+        return {
+          creep,
+          distance: Math.hypot(center.x - currentCenter.x, center.y - currentCenter.y),
+        };
+      })
+      .filter((candidate) => candidate.distance <= rangePx)
+      .sort((left, right) => (
+        left.distance === right.distance
+          ? left.creep.entity.id.localeCompare(right.creep.entity.id)
+          : left.distance - right.distance
+      ))[0];
+
+    if (!next) {
+      break;
+    }
+
+    visited.add(next.creep.entity.id);
+    chain.push(next.creep);
+    current = next.creep;
+  }
+
+  return chain;
+}
+
+function applyChainDamage(
+  battlefield: BattlefieldRenderState,
+  deps: CombatRuntimeDependencies,
+  config: CombatRuntimeConfig,
+  tower: TowerRenderState,
+  targetRenderState: CreepRenderState,
+): void {
+  const chainShape = getTowerArchetype(tower.entity.type).chain;
+
+  applySingleTargetDamage(battlefield, deps, config, tower, targetRenderState);
+
+  if (!chainShape) {
+    return;
+  }
+
+  const chainTargets = selectChainTargets(
+    battlefield,
+    deps,
+    targetRenderState,
+    chainShape.bounces,
+    chainShape.bounceRangeCells,
+  );
+
+  let arcDamage = tower.entity.combatStats.damage;
+
+  for (const creep of chainTargets) {
+    arcDamage *= 1 - chainShape.damageFalloff;
+
+    const damageResult = applyDamageToCreep(creep.entity, arcDamage);
+    creep.entity = damageResult.creep;
+    applyTowerOnHitEffects(deps, config, tower, creep);
+    applyCreepHitFeedback(creep, config);
+    spawnDamageNumber(
+      battlefield,
+      deps,
+      config,
+      creep.entity.position,
+      Math.round(damageResult.damageApplied),
+    );
+
+    if (damageResult.killed) {
+      handleCreepKill(deps);
+    }
+  }
+}
+
 function spawnProjectileFeedback(
   battlefield: BattlefieldRenderState,
   deps: CombatRuntimeDependencies,
@@ -309,11 +406,14 @@ export function updateTowerCombat(
       continue;
     }
 
-    const isSplashTower = getTowerAttackKind(tower.entity.type) === TowerAttackKind.SPLASH;
+    const attackKind = getTowerAttackKind(tower.entity.type);
+    const isSplashTower = attackKind === TowerAttackKind.SPLASH;
     const splashRadius = tower.entity.combatStats.splashRadius ?? 0;
 
     if (isSplashTower && splashRadius > 0) {
       applySplashDamage(battlefield, deps, config, tower, targetRenderState);
+    } else if (attackKind === TowerAttackKind.CHAIN) {
+      applyChainDamage(battlefield, deps, config, tower, targetRenderState);
     } else {
       applySingleTargetDamage(battlefield, deps, config, tower, targetRenderState);
     }

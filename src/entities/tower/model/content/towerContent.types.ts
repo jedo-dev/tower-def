@@ -35,6 +35,13 @@ export type TowerContentFile = {
   towers: TowerContentEntry[];
 };
 
+export type TowerChainContentEntry = {
+  bounces: number;
+  bounceRangeCells: number;
+  /** Share of damage lost with each jump, 0.35 meaning each arc is 35% weaker. */
+  damageFalloff: number;
+};
+
 export type TowerArchetypeContentEntry = {
   id: string;
   name: string;
@@ -44,6 +51,7 @@ export type TowerArchetypeContentEntry = {
   attackCooldownMs: number;
   splashRadius?: number;
   onHitEffects?: TowerOnHitEffectEntry[];
+  chain?: TowerChainContentEntry;
   description: string;
 };
 
@@ -111,7 +119,20 @@ export const TOWER_ARCHETYPE_REQUIRED_KEYS: readonly (keyof TowerArchetypeConten
 export const TOWER_ARCHETYPE_OPTIONAL_KEYS: readonly (keyof TowerArchetypeContentEntry)[] = [
   'splashRadius',
   'onHitEffects',
+  'chain',
 ];
+
+export const TOWER_CHAIN_KEYS: readonly (keyof TowerChainContentEntry)[] = [
+  'bounces',
+  'bounceRangeCells',
+  'damageFalloff',
+];
+
+export const TOWER_CHAIN_BOUNDS = {
+  bounces: { min: 1, max: 6 },
+  bounceRangeCells: { min: 0.5, max: 6 },
+  damageFalloff: { min: 0, max: 0.9 },
+} as const;
 
 export const TOWER_ARCHETYPE_FILE_KEYS: readonly (keyof TowerArchetypeContentFile)[] = [
   'schemaVersion',

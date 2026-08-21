@@ -108,7 +108,37 @@ function createPoisonLevel(level: 1 | 2 | 3, upgradeCostGold: number): TowerUpgr
   };
 }
 
+export enum ChainTowerBalance {
+  DAMAGE = 16,
+  RANGE_CELLS = 3,
+  ATTACK_COOLDOWN_MS = 1100,
+  LEVEL_2_COST_GOLD = 55,
+  LEVEL_3_COST_GOLD = 105,
+}
+
+function createChainLevel(level: 1 | 2 | 3, upgradeCostGold: number): TowerUpgradeLevel {
+  const levelIndex = level - 1;
+  return {
+    level,
+    upgradeCostGold,
+    stats: {
+      damage: ChainTowerBalance.DAMAGE + levelIndex * TowerUpgradeBalance.DAMAGE_INCREASE_PER_LEVEL,
+      range: ChainTowerBalance.RANGE_CELLS + levelIndex * TowerUpgradeBalance.RANGE_INCREASE_PER_LEVEL,
+      attackCooldownMs:
+        ChainTowerBalance.ATTACK_COOLDOWN_MS - levelIndex * TowerUpgradeBalance.COOLDOWN_REDUCTION_PER_LEVEL,
+    },
+  };
+}
+
 export const TOWER_UPGRADE_CONFIG: Record<string, TowerTypeUpgradeConfig> = {
+  chain: {
+    maxLevel: TowerUpgradeBalance.MAX_LEVEL,
+    levels: [
+      createChainLevel(1, 0),
+      createChainLevel(2, ChainTowerBalance.LEVEL_2_COST_GOLD),
+      createChainLevel(3, ChainTowerBalance.LEVEL_3_COST_GOLD),
+    ],
+  },
   poison: {
     maxLevel: TowerUpgradeBalance.MAX_LEVEL,
     levels: [

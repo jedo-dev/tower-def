@@ -32,6 +32,8 @@ import {
   TOWER_CONTENT_FILE_KEYS,
   TOWER_CONTENT_OPTIONAL_KEYS,
   TOWER_CONTENT_REQUIRED_KEYS,
+  TOWER_CHAIN_BOUNDS,
+  TOWER_CHAIN_KEYS,
   TOWER_CONTENT_SCHEMA_VERSION,
   TOWER_ON_HIT_EFFECT_KEYS,
   TOWER_STAT_BOUNDS,
@@ -42,12 +44,19 @@ export type TowerContentSource = {
   data: unknown;
 };
 
+export type TowerChainDefinition = {
+  bounces: number;
+  bounceRangeCells: number;
+  damageFalloff: number;
+};
+
 export type TowerArchetypeDefinition = TowerCombatStats & {
   id: TowerTypeId;
   name: string;
   attackKind: TowerAttackKind;
   description: string;
   onHitEffects: TowerOnHitEffect[];
+  chain?: TowerChainDefinition;
 };
 
 const TOWER_ENTRY_KEYS: readonly string[] = [
@@ -95,6 +104,29 @@ function parseOptionalStat(
   }
 
   return readNumber(entry, key, location, TOWER_STAT_BOUNDS[key]);
+}
+
+function parseChain(
+  entry: Record<string, unknown>,
+  location: ContentLocation,
+): TowerChainDefinition | undefined {
+  if (entry.chain === undefined) {
+    return undefined;
+  }
+
+  const chain = readRecord(entry.chain, location);
+  assertKnownKeys(chain, TOWER_CHAIN_KEYS, location);
+
+  return {
+    bounces: readNumber(chain, 'bounces', location, TOWER_CHAIN_BOUNDS.bounces),
+    bounceRangeCells: readNumber(
+      chain,
+      'bounceRangeCells',
+      location,
+      TOWER_CHAIN_BOUNDS.bounceRangeCells,
+    ),
+    damageFalloff: readNumber(chain, 'damageFalloff', location, TOWER_CHAIN_BOUNDS.damageFalloff),
+  };
 }
 
 function parseTowerEntry(
@@ -189,11 +221,17 @@ function parseArchetypeEntry(
   assertKnownKeys(entry, ARCHETYPE_ENTRY_KEYS, location);
 
   const splashRadius = parseOptionalStat(entry, 'splashRadius', location);
+  const attackKind = readStringFrom(entry, 'attackKind', location, TOWER_ATTACK_KINDS);
+  const chain = parseChain(entry, location);
+
+  if (attackKind === 'chain' && !chain) {
+    throw new ContentValidationError(location, 'a chain archetype must declare its "chain" shape');
+  }
 
   return {
     id,
     name: readString(entry, 'name', location),
-    attackKind: readStringFrom(entry, 'attackKind', location, TOWER_ATTACK_KINDS),
+    attackKind,
     description: readString(entry, 'description', location),
     damage: readNumber(entry, 'damage', location, TOWER_STAT_BOUNDS.damage),
     range: readNumber(entry, 'range', location, TOWER_STAT_BOUNDS.range),
@@ -204,6 +242,7 @@ function parseArchetypeEntry(
       TOWER_STAT_BOUNDS.attackCooldownMs,
     ),
     ...(splashRadius === undefined ? {} : { splashRadius }),
+    ...(chain === undefined ? {} : { chain }),
     onHitEffects: parseOnHitEffects(entry, location),
   };
 }

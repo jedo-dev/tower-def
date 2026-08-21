@@ -52,6 +52,20 @@
         }
       ],
       "description": "Little damage up front, punishing over a long wave. Poison ignores armor."
+    },
+    {
+      "id": "chain",
+      "name": "Chain Lightning",
+      "attackKind": "chain",
+      "damage": 16,
+      "range": 3,
+      "attackCooldownMs": 1100,
+      "chain": {
+        "bounces": 2,
+        "bounceRangeCells": 2,
+        "damageFalloff": 0.35
+      },
+      "description": "Strikes a target then jumps to nearby creeps with weaker arcs."
     }
   ]
 }
