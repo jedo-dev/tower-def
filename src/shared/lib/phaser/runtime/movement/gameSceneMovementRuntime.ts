@@ -1,3 +1,4 @@
+import { getEffectiveSpeedMultiplier } from '../../../../../entities/creep';
 import { isGameOverByLives, subtractLives } from '../../../../../entities/player-resources';
 import { transitionToGameOver, type WavePhaseState } from '../../../../../features/wave-phase';
 import type { GridPosition } from '../../../../types/pathfinding';
@@ -83,13 +84,21 @@ export function moveCreepsAlongPath(
       continue;
     }
 
+    const speedMultiplier = getEffectiveSpeedMultiplier(creep.entity);
+
+    // A stunned creep holds its ground but must still be able to leak once it
+    // is already standing on the exit, so movement stops after the escape check.
     const normalizedStepDistance =
-      (normalizedDeltaMs / 1000) * config.creepBaseMoveSpeedPxPerSec * creep.entity.speed;
+      (normalizedDeltaMs / 1000) * config.creepBaseMoveSpeedPxPerSec * creep.entity.speed * speedMultiplier;
 
     const nextPathIndex = creep.entity.pathIndex + 1;
 
     if (nextPathIndex >= state.activeCreepPath.length) {
       markCreepEscaped(state, deps, config, creep);
+      continue;
+    }
+
+    if (normalizedStepDistance <= 0) {
       continue;
     }
 
