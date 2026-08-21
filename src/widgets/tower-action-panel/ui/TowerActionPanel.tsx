@@ -16,6 +16,7 @@ import { PlaceholderIcon } from '../../../shared/ui/placeholder-icon';
 const TOWER_DISPLAY_NAMES: Record<HudTowerType, string> = {
   [TowerTypeId.SINGLE]: 'Archer Tower',
   [TowerTypeId.SPLASH]: 'Plague Tower',
+  [TowerTypeId.FROST]: 'Frost Tower',
 };
 
 function formatTowerType(type: HudTowerType): string {

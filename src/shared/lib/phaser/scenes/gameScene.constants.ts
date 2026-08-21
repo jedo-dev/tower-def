@@ -78,6 +78,10 @@ export const CREEP_EFFECT_PIP_RENDER_DEPTH = 75;
  * Placeholder art shown for any creep or tower whose sprite has not been drawn
  * yet. Colours stay near-white so the race tint reads through the multiply.
  */
+/** Splash shots read green; effect towers borrow their effect colour instead. */
+export const PROJECTILE_SPLASH_TINT = 0x44ff44;
+export const IMPACT_EFFECT_SPLASH_TINT = 0x66ff88;
+
 export const PLACEHOLDER_PLATE_COLOR = '#d8dde8';
 export const PLACEHOLDER_BORDER_COLOR = '#7b869b';
 export const PLACEHOLDER_GLYPH_COLOR = '#2b3242';

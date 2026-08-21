@@ -1,5 +1,5 @@
 import { TowerAttackKind } from '../../../../types/content-ids';
-import { getTowerAttackKind } from '../../../../../entities/tower';
+import { getTowerAttackKind, getTowerOnHitEffects } from '../../../../../entities/tower';
 import Phaser from 'phaser';
 import { addGold, type PlayerResources } from '../../../../../entities/player-resources';
 import {
@@ -13,7 +13,12 @@ import { canTowerAttack, consumeTowerAttack, selectTowerTarget, tickTowerCooldow
 import { ECONOMY_BALANCE } from '../../../../constants/economy';
 import { GRID_DIMENSIONS } from '../../../../constants/grid';
 import { TOWER_BONE_ARCHER_EFFECT_FRAMES, TOWER_SPRITE_KEYS } from '../../../../constants/sprites';
-import { EffectId } from '../../../../types/content-ids';
+import {
+  CREEP_EFFECT_TINTS,
+  IMPACT_EFFECT_SPLASH_TINT,
+  PROJECTILE_SPLASH_TINT,
+} from '../../scenes/gameScene.constants';
+import { EffectId, type TowerTypeId } from '../../../../types/content-ids';
 import type { GridPosition } from '../../../../types/pathfinding';
 import type { SoundId } from '../../sound/audio.types';
 import type {
@@ -81,6 +86,7 @@ function spawnImpactEffect(
   x: number,
   y: number,
   isSplash: boolean,
+  towerType: TowerTypeId,
 ): void {
   const frame = isSplash
     ? TOWER_BONE_ARCHER_EFFECT_FRAMES.attackEffect
@@ -90,8 +96,10 @@ function spawnImpactEffect(
   effect.setDisplaySize(size, size);
   effect.setOrigin(0.5);
   effect.setDepth(config.impactEffectRenderDepth);
-  if (isSplash) {
-    effect.setTint(0x66ff88);
+
+  const tint = resolveShotTint(towerType, isSplash, IMPACT_EFFECT_SPLASH_TINT);
+  if (tint !== undefined) {
+    effect.setTint(tint);
   }
 
   battlefield.impactEffects.push({
@@ -137,6 +145,28 @@ function applyCreepHitFeedback(creep: CreepRenderState, config: CombatRuntimeCon
   creep.sprite.setTint(config.creepHitFlashColor);
 }
 
+function applyTowerOnHitEffects(
+  deps: CombatRuntimeDependencies,
+  config: CombatRuntimeConfig,
+  tower: TowerRenderState,
+  creep: CreepRenderState,
+): void {
+  const onHitEffects = tower.entity.combatStats.onHitEffects
+    ?? getTowerOnHitEffects(tower.entity.type);
+
+  if (onHitEffects.length === 0 || creep.entity.status !== 'alive') {
+    return;
+  }
+
+  for (const effect of onHitEffects) {
+    applyTowerEffectToCreep(deps, config, creep, {
+      effectId: effect.effectId,
+      magnitude: effect.magnitude,
+      durationMs: effect.durationMs,
+    });
+  }
+}
+
 function applySingleTargetDamage(
   battlefield: BattlefieldRenderState,
   deps: CombatRuntimeDependencies,
@@ -147,6 +177,7 @@ function applySingleTargetDamage(
   const damageResult = applyDamageToCreep(targetRenderState.entity, tower.entity.combatStats.damage);
 
   targetRenderState.entity = damageResult.creep;
+  applyTowerOnHitEffects(deps, config, tower, targetRenderState);
   applyCreepHitFeedback(targetRenderState, config);
   deps.playSound('combat.creep_hit');
   spawnDamageNumber(
@@ -187,6 +218,7 @@ function applySplashDamage(
   for (const creep of creepsInSplashRadius) {
     const damageResult = applyDamageToCreep(creep.entity, tower.entity.combatStats.damage);
     creep.entity = damageResult.creep;
+    applyTowerOnHitEffects(deps, config, tower, creep);
     applyCreepHitFeedback(creep, config);
     totalDamageDealt += damageResult.damageApplied;
 
@@ -225,12 +257,15 @@ function spawnProjectileFeedback(
   projectile.setDisplaySize(displaySize, displaySize);
   projectile.setOrigin(0.5);
   projectile.setDepth(config.projectileRenderDepth);
-  if (isSplash) {
-    projectile.setTint(0x44ff44);
+
+  const tint = resolveShotTint(tower.entity.type, isSplash, PROJECTILE_SPLASH_TINT);
+  if (tint !== undefined) {
+    projectile.setTint(tint);
   }
 
   battlefield.projectiles.push({
     sprite: projectile,
+    towerType: tower.entity.type,
     effectSpriteKey,
     fromX: fromCenter.x,
     fromY: fromCenter.y,
@@ -291,6 +326,20 @@ export function updateTowerCombat(
     spawnProjectileFeedback(battlefield, deps, config, tower, targetRenderState.entity.position, isSplashTower);
     deps.playSound(isSplashTower ? 'combat.tower_attack.splash' : 'combat.tower_attack.archer');
   }
+}
+
+/**
+ * A shot is coloured by what it does: an effect tower fires in its effect
+ * colour, a plain splash tower stays green.
+ */
+function resolveShotTint(towerType: TowerTypeId, isSplash: boolean, splashTint: number): number | undefined {
+  const [firstEffect] = getTowerOnHitEffects(towerType);
+
+  if (firstEffect) {
+    return CREEP_EFFECT_TINTS[firstEffect.effectId];
+  }
+
+  return isSplash ? splashTint : undefined;
 }
 
 const EFFECT_APPLIED_SOUND_BY_EFFECT: Partial<Record<EffectId, SoundId>> = {
@@ -438,6 +487,7 @@ export function updateProjectiles(
         projectile.toX,
         projectile.toY,
         projectile.isSplash,
+        projectile.towerType,
       );
       projectile.sprite.destroy();
       continue;
@@ -450,6 +500,7 @@ export function updateProjectiles(
     projectile.sprite.setAlpha(1 - progress * 0.35);
     nextProjectiles.push({
       sprite: projectile.sprite,
+      towerType: projectile.towerType,
       effectSpriteKey: projectile.effectSpriteKey,
       fromX: projectile.fromX,
       fromY: projectile.fromY,

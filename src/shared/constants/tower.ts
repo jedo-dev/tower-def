@@ -1,3 +1,6 @@
+import type { TowerOnHitEffect } from '../../entities/tower/model/types';
+import { EffectId } from '../types/content-ids';
+
 export enum TowerCombatConfig {
   ARCHER_RANGE_CELLS = 3,
   ARCHER_DAMAGE = 20,
@@ -13,6 +16,8 @@ export type TowerLevelStats = {
   range: number;
   attackCooldownMs: number;
   splashRadius?: number;
+  /** Effects applied on hit at this level; absent means the archetype default. */
+  onHitEffects?: TowerOnHitEffect[];
 };
 
 export type TowerUpgradeLevel = {
@@ -35,7 +40,48 @@ export enum TowerUpgradeBalance {
   COOLDOWN_REDUCTION_PER_LEVEL = 50,
 }
 
+export enum FrostTowerBalance {
+  DAMAGE = 13,
+  RANGE_CELLS = 3,
+  ATTACK_COOLDOWN_MS = 900,
+  LEVEL_2_COST_GOLD = 45,
+  LEVEL_3_COST_GOLD = 90,
+  CHILL_DURATION_MS = 2000,
+}
+
+/** Frost upgrades buy control first: the slow deepens faster than the damage. */
+const FROST_CHILL_MAGNITUDE_BY_LEVEL = [0.35, 0.45, 0.55] as const;
+
+function createFrostLevel(level: 1 | 2 | 3, upgradeCostGold: number): TowerUpgradeLevel {
+  const levelIndex = level - 1;
+  return {
+    level,
+    upgradeCostGold,
+    stats: {
+      damage: FrostTowerBalance.DAMAGE + levelIndex * 4,
+      range: FrostTowerBalance.RANGE_CELLS + levelIndex * TowerUpgradeBalance.RANGE_INCREASE_PER_LEVEL,
+      attackCooldownMs:
+        FrostTowerBalance.ATTACK_COOLDOWN_MS - levelIndex * TowerUpgradeBalance.COOLDOWN_REDUCTION_PER_LEVEL,
+      onHitEffects: [
+        {
+          effectId: EffectId.CHILL,
+          magnitude: FROST_CHILL_MAGNITUDE_BY_LEVEL[levelIndex],
+          durationMs: FrostTowerBalance.CHILL_DURATION_MS,
+        },
+      ],
+    },
+  };
+}
+
 export const TOWER_UPGRADE_CONFIG: Record<string, TowerTypeUpgradeConfig> = {
+  frost: {
+    maxLevel: TowerUpgradeBalance.MAX_LEVEL,
+    levels: [
+      createFrostLevel(1, 0),
+      createFrostLevel(2, FrostTowerBalance.LEVEL_2_COST_GOLD),
+      createFrostLevel(3, FrostTowerBalance.LEVEL_3_COST_GOLD),
+    ],
+  },
   // Keyed by archetype id; the ARCHER_* balance constants describe the
   // single-target archetype.
   single: {

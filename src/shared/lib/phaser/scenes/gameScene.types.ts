@@ -1,3 +1,4 @@
+import type { TowerTypeId } from '../../../types/content-ids';
 import type Phaser from 'phaser';
 import type { CreepEntity } from '../../../../entities/creep';
 import type { UnitConfig } from '../../../../entities/unit';
@@ -24,6 +25,8 @@ export type TowerRenderState = {
 
 export type ProjectileState = {
   sprite: Phaser.GameObjects.Sprite;
+  /** Archetype that fired the shot, so the impact matches the projectile. */
+  towerType: TowerTypeId;
   effectSpriteKey: string;
   fromX: number;
   fromY: number;

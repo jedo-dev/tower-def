@@ -19,6 +19,22 @@
       "attackCooldownMs": 1200,
       "splashRadius": 1.5,
       "description": "Area damage around the target, the answer to clustered waves."
+    },
+    {
+      "id": "frost",
+      "name": "Frost",
+      "attackKind": "single-target",
+      "damage": 13,
+      "range": 3,
+      "attackCooldownMs": 900,
+      "onHitEffects": [
+        {
+          "effectId": "chill",
+          "magnitude": 0.35,
+          "durationMs": 2000
+        }
+      ],
+      "description": "Trades damage for control: every hit chills its target."
     }
   ]
 }

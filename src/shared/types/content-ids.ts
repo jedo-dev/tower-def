@@ -15,6 +15,7 @@ export const RACE_IDS: readonly RaceId[] = [
 export const TowerTypeId = {
   SINGLE: 'single',
   SPLASH: 'splash',
+  FROST: 'frost',
 } as const;
 
 export type TowerTypeId = (typeof TowerTypeId)[keyof typeof TowerTypeId];
@@ -22,6 +23,7 @@ export type TowerTypeId = (typeof TowerTypeId)[keyof typeof TowerTypeId];
 export const TOWER_TYPE_IDS: readonly TowerTypeId[] = [
   TowerTypeId.SINGLE,
   TowerTypeId.SPLASH,
+  TowerTypeId.FROST,
 ] as const;
 
 /**

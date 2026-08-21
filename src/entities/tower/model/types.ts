@@ -51,6 +51,8 @@ export type TowerCombatStats = {
   damage: number;
   attackCooldownMs: number;
   splashRadius?: number;
+  /** Effects the tower puts on whatever it hits at its current level. */
+  onHitEffects?: TowerOnHitEffect[];
 };
 
 /**
@@ -72,6 +74,7 @@ export const TOWER_COMBAT_STATS_BY_TYPE: Record<TowerTypeId, TowerCombatStats> =
         damage: archetype.damage,
         attackCooldownMs: archetype.attackCooldownMs,
         ...(archetype.splashRadius === undefined ? {} : { splashRadius: archetype.splashRadius }),
+        ...(archetype.onHitEffects.length === 0 ? {} : { onHitEffects: archetype.onHitEffects }),
       },
     ];
   }),

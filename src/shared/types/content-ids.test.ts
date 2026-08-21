@@ -48,20 +48,22 @@ describe('shared/types/content-ids', () => {
   });
 
   describe('TowerTypeId', () => {
-    it('defines archer and splash with the original string values', () => {
+    it('names every archetype the game can build', () => {
       expect(TowerTypeId.SINGLE).toBe('single');
       expect(TowerTypeId.SPLASH).toBe('splash');
+      expect(TowerTypeId.FROST).toBe('frost');
     });
 
     it('exposes a centralized list with no duplicate keys', () => {
       const unique = new Set<string>(TOWER_TYPE_IDS);
       expect(unique.size).toBe(TOWER_TYPE_IDS.length);
-      expect(TOWER_TYPE_IDS).toHaveLength(2);
+      expect(TOWER_TYPE_IDS).toEqual(Object.values(TowerTypeId));
     });
 
     it('accepts known tower types and rejects unknown values', () => {
       expect(isTowerTypeId('single')).toBe(true);
       expect(isTowerTypeId('splash')).toBe(true);
+      expect(isTowerTypeId('frost')).toBe(true);
       expect(isTowerTypeId('cannon')).toBe(false);
     });
   });
