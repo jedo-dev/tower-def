@@ -15,6 +15,11 @@ import type {
   TowerRenderState,
 } from '../../scenes/gameScene.types';
 import type { BattlefieldRenderState } from '../battlefield/battlefieldRenderState';
+import {
+  destroyCreepRenderState,
+  refreshCreepEffectVisuals,
+  resolveCreepRestingTint,
+} from './creepEffectVisuals';
 
 export type CombatRuntimeConfig = {
   archerProjectileVisualMode: 'projectile' | 'attackEffect';
@@ -308,6 +313,7 @@ export function updateCreepEffects(
     }
 
     creep.entity = tickResult.creep;
+    refreshCreepEffectVisuals(deps.scene, creep, config.creepBaseColor);
 
     if (tickResult.damage <= 0) {
       continue;
@@ -356,7 +362,7 @@ export function removeDeadCreepsFromActiveWave(
       continue;
     }
 
-    creep.sprite.destroy();
+    destroyCreepRenderState(creep);
   }
 
   return aliveCreeps;
@@ -484,9 +490,9 @@ export function updateCreepHitFeedback(
 
     creep.hitFlashRemainingMs = Math.max(0, creep.hitFlashRemainingMs - deltaMs);
 
-    // Restore the creep's own faction tint, not the global white base, or
-    // non-undead races turn white the first time they are hit.
-    const baseColor = creep.baseTint ?? config.creepBaseColor;
+    // Restore what the creep should look like at rest: the dominant effect
+    // tint while an effect runs, otherwise its own faction tint.
+    const baseColor = resolveCreepRestingTint(creep, config.creepBaseColor);
 
     if (creep.hitFlashRemainingMs === 0) {
       creep.sprite.setTint(baseColor);

@@ -21,6 +21,7 @@ import type { GridModel } from '../../../../types/grid';
 import type { GridPosition } from '../../../../types/pathfinding';
 import type { SoundId } from '../../sound/audio.types';
 import type { CreepRenderState, PendingWaveSpawn } from '../../scenes/gameScene.types';
+import { destroyCreepRenderState } from '../combat/creepEffectVisuals';
 
 export type WaveRuntimeState = {
   activeCreepPath: GridPosition[];
@@ -102,7 +103,7 @@ export function initializeWaveRuntime(
 ): void {
   const waveStartPath = calculateWaveStartPath(grid);
   state.activeCreepPath = waveStartPath;
-  state.activeCreeps.forEach((creep) => creep.sprite.destroy());
+  state.activeCreeps.forEach((creep) => destroyCreepRenderState(creep));
   state.activeCreeps = [];
   state.isWaveCompletionRewardGranted = false;
 
@@ -210,7 +211,7 @@ export function spawnWaveCreeps(
   config: WaveRuntimeConfig,
   deps: WaveRuntimeDependencies,
 ): void {
-  state.activeCreeps.forEach((creep) => creep.sprite.destroy());
+  state.activeCreeps.forEach((creep) => destroyCreepRenderState(creep));
   state.activeCreeps = [];
   state.pendingWaveSpawns = [];
 

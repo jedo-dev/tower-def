@@ -10,6 +10,10 @@ export type CreepRenderState = {
   deathFadeRemainingMs: number;
   /** Faction tint to restore after a hit flash; white when untinted. */
   baseTint?: number;
+  /** Status pips shown while several effects run at once. */
+  effectPips?: Phaser.GameObjects.Text;
+  /** Effect set the sprite currently reflects, so repaints stay change-driven. */
+  effectVisualSignature?: string;
 };
 
 export type TowerRenderState = {

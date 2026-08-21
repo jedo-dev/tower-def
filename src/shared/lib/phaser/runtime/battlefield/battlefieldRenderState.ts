@@ -1,3 +1,4 @@
+import { destroyCreepRenderState } from '../combat/creepEffectVisuals';
 import type {
   CreepRenderState,
   DamageNumberState,
@@ -40,7 +41,7 @@ export function setBattlefieldRenderStateVisible(
 }
 
 export function destroyBattlefieldCreeps(battlefield: BattlefieldRenderState): void {
-  battlefield.creeps.forEach((creep) => creep.sprite.destroy());
+  battlefield.creeps.forEach((creep) => destroyCreepRenderState(creep));
   battlefield.creeps = [];
 }
 

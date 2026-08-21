@@ -2,6 +2,7 @@ import { createInitialPlayerResources } from '../../../../entities/player-resour
 import { buildableTowers } from '../../../../entities/tower';
 import { ECONOMY_BALANCE } from '../../../constants/economy';
 import { GRID_DEFAULT_ROW_CENTER, GRID_DIMENSIONS } from '../../../constants/grid';
+import { EffectId } from '../../../types/content-ids';
 
 export const ENTRANCE_CELL = { x: 0, y: GRID_DEFAULT_ROW_CENTER };
 export const EXIT_CELL = { x: GRID_DIMENSIONS.cols - 1, y: GRID_DEFAULT_ROW_CENTER };
@@ -48,6 +49,31 @@ export const DAMAGE_NUMBER_EFFECT_COLOR = '#9de8a4';
  * background tab cannot burst a wave down with backlogged ticks.
  */
 export const EFFECT_MAX_SIMULATION_DELTA_MS = CREEP_MAX_SIMULATION_DELTA_MS;
+
+/** Dominant-effect tints; the priority list decides which one a creep shows. */
+export const CREEP_EFFECT_TINTS: Record<EffectId, number> = {
+  [EffectId.STUN]: 0xf2f2f2,
+  [EffectId.BURN]: 0xff9d5c,
+  [EffectId.POISON]: 0x7ee081,
+  [EffectId.CHILL]: 0x6fb7ff,
+  [EffectId.ARMOR_BREAK]: 0xd9a3ff,
+};
+
+/** First match wins when a creep carries several effects at once. */
+export const CREEP_EFFECT_TINT_PRIORITY: readonly EffectId[] = [
+  EffectId.STUN,
+  EffectId.BURN,
+  EffectId.POISON,
+  EffectId.CHILL,
+  EffectId.ARMOR_BREAK,
+];
+
+/** Below this, the tint alone tells the story and no pips are drawn. */
+export const CREEP_EFFECT_PIP_MIN_EFFECTS = 2;
+export const CREEP_EFFECT_PIP_OFFSET_Y_PX = -14;
+export const CREEP_EFFECT_PIP_FONT_SIZE_PX = 9;
+export const CREEP_EFFECT_PIP_RENDER_DEPTH = 75;
+
 export const WAVE_SPAWN_INTERVAL_MS = 350;
 export const WAVE_FIRST_SPAWN_DELAY_MS = 200;
 export const BONE_ARCHER_TOWER_ID = 'undead_bone_archer_tower';
