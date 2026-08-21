@@ -1,5 +1,6 @@
 import {
   removeDeadCreepsFromActiveWave,
+  updateCreepEffects,
   updateCreepHitFeedback,
   updateDamageNumbers,
   updateImpactEffects,
@@ -52,6 +53,19 @@ export function updateBattlefieldTowerCombat(
   }
 
   updateTowerCombat(context.field, context.combatDeps, config, deltaMs);
+  context.afterFieldMutated();
+}
+
+export function updateBattlefieldCreepEffects(
+  context: BattlefieldUpdateContext,
+  config: CombatRuntimeConfig,
+  deltaMs: number,
+): void {
+  if (context.field.creeps.length === 0) {
+    return;
+  }
+
+  updateCreepEffects(context.field, context.combatDeps, config, deltaMs);
   context.afterFieldMutated();
 }
 

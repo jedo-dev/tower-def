@@ -67,6 +67,7 @@ import { rebuildOpponentBattlefieldRenderState } from '../runtime/battlefield/ba
 import {
   moveBattlefieldCreeps,
   removeDeadBattlefieldCreeps,
+  updateBattlefieldCreepEffects,
   updateBattlefieldCreepHitFeedback,
   updateBattlefieldDamageNumbers,
   updateBattlefieldImpactEffects,
@@ -384,6 +385,8 @@ export class GameScene extends Phaser.Scene {
     moveBattlefieldCreeps(this.wiring.opponentBattlefieldContext, MOVEMENT_RUNTIME_CONFIG, delta);
     updateBattlefieldTowerCombat(this.wiring.playerBattlefieldContext, COMBAT_RUNTIME_CONFIG, delta);
     updateBattlefieldTowerCombat(this.wiring.opponentBattlefieldContext, COMBAT_RUNTIME_CONFIG, delta);
+    updateBattlefieldCreepEffects(this.wiring.playerBattlefieldContext, COMBAT_RUNTIME_CONFIG, delta);
+    updateBattlefieldCreepEffects(this.wiring.opponentBattlefieldContext, COMBAT_RUNTIME_CONFIG, delta);
     updateBattlefieldCreepHitFeedback(this.wiring.playerBattlefieldContext, COMBAT_RUNTIME_CONFIG, delta);
     updateBattlefieldCreepHitFeedback(this.wiring.opponentBattlefieldContext, COMBAT_RUNTIME_CONFIG, delta);
     removeDeadBattlefieldCreeps(this.wiring.playerBattlefieldContext, COMBAT_RUNTIME_CONFIG, delta);

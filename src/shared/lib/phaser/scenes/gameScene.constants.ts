@@ -40,6 +40,14 @@ export const ARCHER_PROJECTILE_VISUAL_MODE: 'projectile' | 'attackEffect' = 'att
 export const DAMAGE_NUMBERS_ENABLED = true;
 export const DAMAGE_NUMBER_LIFETIME_MS = 420;
 export const DAMAGE_NUMBER_RISE_PX = 12;
+export const DAMAGE_NUMBER_HIT_COLOR = '#ffe9a8';
+/** Damage over time reads cooler and dimmer than a tower hit. */
+export const DAMAGE_NUMBER_EFFECT_COLOR = '#9de8a4';
+/**
+ * Effects advance by at most one clamped step per frame, so a long pause or a
+ * background tab cannot burst a wave down with backlogged ticks.
+ */
+export const EFFECT_MAX_SIMULATION_DELTA_MS = CREEP_MAX_SIMULATION_DELTA_MS;
 export const WAVE_SPAWN_INTERVAL_MS = 350;
 export const WAVE_FIRST_SPAWN_DELAY_MS = 200;
 export const BONE_ARCHER_TOWER_ID = 'undead_bone_archer_tower';

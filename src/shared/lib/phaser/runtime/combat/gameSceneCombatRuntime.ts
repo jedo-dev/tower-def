@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { addGold, type PlayerResources } from '../../../../../entities/player-resources';
-import { applyDamageToCreep, isCreepDead } from '../../../../../entities/creep';
+import { applyDamageToCreep, isCreepDead, tickCreepEffects } from '../../../../../entities/creep';
 import { canTowerAttack, consumeTowerAttack, selectTowerTarget, tickTowerCooldown } from '../../../../../entities/tower';
 import { ECONOMY_BALANCE } from '../../../../constants/economy';
 import { GRID_DIMENSIONS } from '../../../../constants/grid';
@@ -31,6 +31,9 @@ export type CombatRuntimeConfig = {
   damageNumbersEnabled: boolean;
   damageNumberLifetimeMs: number;
   damageNumberRisePx: number;
+  damageNumberHitColor: string;
+  damageNumberEffectColor: string;
+  effectMaxSimulationDeltaMs: number;
 };
 
 export type CombatRuntimeDependencies = {
@@ -84,12 +87,15 @@ function spawnImpactEffect(
   });
 }
 
+type DamageNumberSource = 'hit' | 'effect';
+
 function spawnDamageNumber(
   battlefield: BattlefieldRenderState,
   deps: CombatRuntimeDependencies,
   config: CombatRuntimeConfig,
   position: GridPosition,
   damage: number,
+  source: DamageNumberSource = 'hit',
 ): void {
   if (!config.damageNumbersEnabled) {
     return;
@@ -98,8 +104,8 @@ function spawnDamageNumber(
   const center = deps.toCellCenter(position);
   const text = deps.scene.add.text(center.x, center.y - 10, `${damage}`, {
     fontFamily: 'Exo 2, Segoe UI, Tahoma, sans-serif',
-    fontSize: '11px',
-    color: '#ffe9a8',
+    fontSize: source === 'effect' ? '10px' : '11px',
+    color: source === 'effect' ? config.damageNumberEffectColor : config.damageNumberHitColor,
     stroke: '#1d2536',
     strokeThickness: 2,
   });
@@ -264,6 +270,57 @@ export function updateTowerCombat(
     }
     spawnProjectileFeedback(battlefield, deps, config, tower, targetRenderState.entity.position, isSplashTower);
     deps.playSound(isSplashTower ? 'combat.tower_attack.splash' : 'combat.tower_attack.archer');
+  }
+}
+
+/**
+ * Advances status effects on every living creep and routes damage over time
+ * through the same damage and reward path as a tower hit, so a poison kill
+ * pays out exactly once.
+ */
+export function updateCreepEffects(
+  battlefield: BattlefieldRenderState,
+  deps: CombatRuntimeDependencies,
+  config: CombatRuntimeConfig,
+  deltaMs: number,
+): void {
+  if (battlefield.creeps.length === 0) {
+    return;
+  }
+
+  const clampedDeltaMs = Math.min(deltaMs, config.effectMaxSimulationDeltaMs);
+
+  for (const creep of battlefield.creeps) {
+    if (creep.entity.status !== 'alive') {
+      continue;
+    }
+
+    const tickResult = tickCreepEffects(creep.entity, clampedDeltaMs);
+
+    if (tickResult.creep === creep.entity) {
+      continue;
+    }
+
+    creep.entity = tickResult.creep;
+
+    if (tickResult.damage <= 0) {
+      continue;
+    }
+
+    const damageResult = applyDamageToCreep(creep.entity, tickResult.damage);
+    creep.entity = damageResult.creep;
+    spawnDamageNumber(
+      battlefield,
+      deps,
+      config,
+      creep.entity.position,
+      Math.round(tickResult.damage),
+      'effect',
+    );
+
+    if (damageResult.killed) {
+      handleCreepKill(deps);
+    }
   }
 }
 
