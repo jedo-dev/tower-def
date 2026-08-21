@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "race": "ELF",
+  "towers": [
+    {
+      "id": "elf_moon_archer_tower",
+      "name": "Moon Archer Tower",
+      "archetype": "archer",
+      "costGold": 50,
+      "damage": 22,
+      "range": 3.2,
+      "attackCooldownMs": 800,
+      "spriteKey": "tower.elf.moon_archer",
+      "description": "Moonlit archers strike swiftly from sacred boughs."
+    }
+  ]
+}

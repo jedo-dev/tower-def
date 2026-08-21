@@ -1,66 +1,35 @@
-import { BuilderFaction } from '../../../builder-faction/model/types';
-import type { BuildableTowerConfig } from '../types';
-import { TowerTypeConfig } from '../types';
+import { loadTowerContent } from '../content/loadTowerContent';
+import { TOWER_CONTENT_SOURCES } from '../content/towerContentSources';
+import type { BuildableTowerConfig, BuildableTowerId } from '../types';
 
-export const buildableTowers: BuildableTowerConfig[] = [
-  {
-    id: 'undead_bone_archer_tower',
-    name: 'Bone Archer Tower',
-    faction: BuilderFaction.UNDEAD,
-    towerType: TowerTypeConfig.ARCHER,
-    costGold: 50,
-    damage: 22,
-    range: 3.2,
-    attackCooldownMs: 800,
-    spriteKey: 'tower.undead.bone_archer',
-    description: 'Necromantic archer nest built from cursed remains.',
-  },
-  {
-    id: 'undead_plague_tower',
-    name: 'Plague Tower',
-    faction: BuilderFaction.UNDEAD,
-    towerType: TowerTypeConfig.SPLASH,
-    costGold: 75,
-    damage: 18,
-    range: 2.5,
-    attackCooldownMs: 1200,
-    spriteKey: 'tower.undead.plague',
-    description: 'Launches toxic projectiles that damage all nearby foes.',
-  },
-  {
-    id: 'orc_spear_watchtower',
-    name: 'Spear Watchtower',
-    faction: BuilderFaction.ORC,
-    towerType: TowerTypeConfig.ARCHER,
-    costGold: 50,
-    damage: 22,
-    range: 3.2,
-    attackCooldownMs: 800,
-    spriteKey: 'tower.orc.spear_watchtower',
-    description: 'A rugged orc platform hurling heavy spears.',
-  },
-  {
-    id: 'human_guard_archer_tower',
-    name: 'Guard Archer Tower',
-    faction: BuilderFaction.HUMAN,
-    towerType: TowerTypeConfig.ARCHER,
-    costGold: 50,
-    damage: 22,
-    range: 3.2,
-    attackCooldownMs: 800,
-    spriteKey: 'tower.human.guard_archer',
-    description: 'Disciplined marksmen watch over fortified walls.',
-  },
-  {
-    id: 'elf_moon_archer_tower',
-    name: 'Moon Archer Tower',
-    faction: BuilderFaction.ELF,
-    towerType: TowerTypeConfig.ARCHER,
-    costGold: 50,
-    damage: 22,
-    range: 3.2,
-    attackCooldownMs: 800,
-    spriteKey: 'tower.elf.moon_archer',
-    description: 'Moonlit archers strike swiftly from sacred boughs.',
-  },
-];
+/**
+ * Buildable towers of every race, authored in `src/content/towers/<race>.json`
+ * and validated once at module init.
+ */
+export const buildableTowers: BuildableTowerConfig[] = loadTowerContent(TOWER_CONTENT_SOURCES);
+
+const TOWER_BY_ID = new Map<BuildableTowerId, BuildableTowerConfig>(
+  buildableTowers.map((tower) => [tower.id, tower]),
+);
+
+export function tryResolveBuildableTowerById(
+  towerId: BuildableTowerId,
+): BuildableTowerConfig | undefined {
+  return TOWER_BY_ID.get(towerId);
+}
+
+export function resolveBuildableTowerById(towerId: BuildableTowerId): BuildableTowerConfig {
+  const tower = TOWER_BY_ID.get(towerId);
+
+  if (!tower) {
+    throw new Error(`Missing tower config for id: ${towerId}`);
+  }
+
+  return tower;
+}
+
+export function getBuildableTowersByFaction(
+  faction: BuildableTowerConfig['faction'],
+): BuildableTowerConfig[] {
+  return buildableTowers.filter((tower) => tower.faction === faction);
+}

@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "race": "UNDEAD",
+  "towers": [
+    {
+      "id": "undead_bone_archer_tower",
+      "name": "Bone Archer Tower",
+      "archetype": "archer",
+      "costGold": 50,
+      "damage": 22,
+      "range": 3.2,
+      "attackCooldownMs": 800,
+      "spriteKey": "tower.undead.bone_archer",
+      "description": "Necromantic archer nest built from cursed remains."
+    },
+    {
+      "id": "undead_plague_tower",
+      "name": "Plague Tower",
+      "archetype": "splash",
+      "costGold": 75,
+      "damage": 18,
+      "range": 2.5,
+      "attackCooldownMs": 1200,
+      "splashRadius": 1.5,
+      "spriteKey": "tower.undead.plague",
+      "description": "Launches toxic projectiles that damage all nearby foes."
+    }
+  ]
+}

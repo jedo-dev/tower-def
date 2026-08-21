@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "race": "ORC",
+  "towers": [
+    {
+      "id": "orc_spear_watchtower",
+      "name": "Spear Watchtower",
+      "archetype": "archer",
+      "costGold": 50,
+      "damage": 22,
+      "range": 3.2,
+      "attackCooldownMs": 800,
+      "spriteKey": "tower.orc.spear_watchtower",
+      "description": "A rugged orc platform hurling heavy spears."
+    }
+  ]
+}

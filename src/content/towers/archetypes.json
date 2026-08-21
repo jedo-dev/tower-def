@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "archetypes": [
+    {
+      "id": "archer",
+      "name": "Archer",
+      "damage": 20,
+      "range": 3,
+      "attackCooldownMs": 800,
+      "description": "Single target fire, the reliable baseline."
+    },
+    {
+      "id": "splash",
+      "name": "Splash",
+      "damage": 18,
+      "range": 2.5,
+      "attackCooldownMs": 1200,
+      "splashRadius": 1.5,
+      "description": "Area damage around the target, the answer to clustered waves."
+    }
+  ]
+}

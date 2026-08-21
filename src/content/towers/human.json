@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "race": "HUMAN",
+  "towers": [
+    {
+      "id": "human_guard_archer_tower",
+      "name": "Guard Archer Tower",
+      "archetype": "archer",
+      "costGold": 50,
+      "damage": 22,
+      "range": 3.2,
+      "attackCooldownMs": 800,
+      "spriteKey": "tower.human.guard_archer",
+      "description": "Disciplined marksmen watch over fortified walls."
+    }
+  ]
+}
