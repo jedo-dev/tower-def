@@ -75,6 +75,46 @@ export const UNIT_ARMOR_TYPES: readonly UnitArmorType[] = [
   UnitArmorType.HEAVY,
 ] as const;
 
+/** Timed effects a tower can put on a creep. */
+export const EffectId = {
+  CHILL: 'chill',
+  POISON: 'poison',
+  BURN: 'burn',
+  STUN: 'stun',
+  ARMOR_BREAK: 'armor_break',
+} as const;
+
+export type EffectId = (typeof EffectId)[keyof typeof EffectId];
+
+export const EFFECT_IDS: readonly EffectId[] = [
+  EffectId.CHILL,
+  EffectId.POISON,
+  EffectId.BURN,
+  EffectId.STUN,
+  EffectId.ARMOR_BREAK,
+] as const;
+
+/** What part of the creep an effect acts on. */
+export const EffectKind = {
+  MOVEMENT: 'movement',
+  DAMAGE_OVER_TIME: 'damage-over-time',
+  DEFENSE: 'defense',
+} as const;
+
+export type EffectKind = (typeof EffectKind)[keyof typeof EffectKind];
+
+/** What happens when an effect is applied to a creep that already has it. */
+export const EffectStackingRule = {
+  /** Reset the timer, keep one instance. */
+  REFRESH: 'refresh',
+  /** Add a stack up to the cap, each stack contributing its magnitude. */
+  STACK: 'stack',
+  /** Keep whichever application is stronger and drop the other. */
+  STRONGEST: 'strongest',
+} as const;
+
+export type EffectStackingRule = (typeof EffectStackingRule)[keyof typeof EffectStackingRule];
+
 declare const modifierIdBrand: unique symbol;
 
 export type ModifierId = string & { readonly [modifierIdBrand]: 'ModifierId' };
@@ -93,4 +133,8 @@ export function isTowerTypeId(value: string): value is TowerTypeId {
 
 export function isCreepTypeId(value: string): value is CreepTypeId {
   return (CREEP_TYPE_IDS as readonly string[]).includes(value);
+}
+
+export function isEffectId(value: string): value is EffectId {
+  return (EFFECT_IDS as readonly string[]).includes(value);
 }
