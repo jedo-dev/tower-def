@@ -188,6 +188,12 @@ Frame counts live in `PLACEHOLDER_UNIT_FRAME_COUNT` and
 `PLACEHOLDER_TOWER_FRAME_COUNT`; the placeholder is generated with exactly
 these frames so animation code needs no special case.
 
+## Generating the missing art
+
+Ready-to-paste image-generation prompts for every creep and tower live in
+`docs/09-sprite-prompts.md` - one self-contained prompt per sprite, with the frame
+layout, palette and style rules already baked in.
+
 ## Switching a placeholder off
 
 1. Drop the file in the location above.
