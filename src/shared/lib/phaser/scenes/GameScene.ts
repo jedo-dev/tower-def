@@ -427,6 +427,9 @@ export class GameScene extends Phaser.Scene {
       onGameCommand('sell-tower', (payload) => {
         handleSellTowerCommand(this.towerCommandDeps, payload.towerId);
       }),
+      onGameCommand('restart-match', () => {
+        this.resetRunToInitialState();
+      }),
       onGameEvent('battlefield-view-changed', (payload) => {
         if (!payload.accepted) {
           return;
@@ -763,10 +766,16 @@ export class GameScene extends Phaser.Scene {
     this.duelMatchState = createInitialDuelMatchState(
       this.selectedBuilderFactionId,
       mapHudFactionToRaceId(this.selectedFaction),
+      // Keep the map the match was set up with; rebuilding with defaults
+      // would desync the grid from a generated dynamic layout.
+      this.mapEndpoints,
     );
+    this.playerGold = this.duelMatchState.player.gold;
     this.playerLives = this.duelMatchState.player.hp;
     this.matchOutcomeStatus = 'active';
     this.matchWinner = null;
+    this.registry.remove('duel.match.winner');
+    this.registry.set('duel.match.outcome', this.matchOutcomeStatus);
 
     this.registry.set('economy.gold', this.playerGold);
     this.registry.set('economy.lives', this.playerLives);

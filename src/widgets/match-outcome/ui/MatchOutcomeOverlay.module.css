@@ -1,0 +1,115 @@
+.backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-xl);
+  background: radial-gradient(120% 90% at 50% 40%, rgba(8, 12, 20, 0.72) 0%, rgba(5, 8, 14, 0.92) 100%);
+  backdrop-filter: blur(4px);
+  animation: match-outcome-fade var(--duration-med) var(--ease-out);
+}
+
+.panel {
+  width: 100%;
+  max-width: 340px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-lg);
+  padding: var(--space-2xl) var(--space-xl);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-xl);
+  background: var(--glass-bg);
+  box-shadow: var(--shadow-lg), var(--shadow-inset-top);
+  text-align: center;
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-family-display);
+  font-size: 34px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.titleVictory {
+  background: var(--gradient-gold);
+  filter: drop-shadow(0 2px 14px rgba(240, 209, 136, 0.35));
+}
+
+.titleDefeat {
+  background: var(--gradient-ember);
+  filter: drop-shadow(0 2px 14px rgba(242, 104, 63, 0.32));
+}
+
+.titleDraw {
+  background: var(--gradient-steel);
+}
+
+.detail {
+  margin: 0;
+  font-family: var(--font-family-ui);
+  font-size: var(--font-size-md);
+  color: var(--color-text-secondary);
+}
+
+.stats {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-lg);
+  width: 100%;
+  padding: var(--space-lg) 0;
+  border-top: 1px solid var(--glass-border);
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+  flex: 1;
+}
+
+.statLabel {
+  font-family: var(--font-family-ui);
+  font-size: var(--font-size-2xs);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-text-label);
+}
+
+.statValue {
+  font-family: var(--font-family-stats);
+  font-size: var(--font-size-xl);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-primary);
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  width: 100%;
+}
+
+@keyframes match-outcome-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .backdrop {
+    animation: none;
+  }
+}

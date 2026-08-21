@@ -192,7 +192,7 @@ export function App() {
         recoverLabel="Back to menu"
         onRecover={() => handleNavigate('start')}
       >
-        <GamePage setup={gameSetup} />
+        <GamePage setup={gameSetup} onExit={() => handleNavigate('start')} />
       </ErrorBoundary>
     );
   }

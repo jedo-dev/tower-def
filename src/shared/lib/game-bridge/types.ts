@@ -67,6 +67,7 @@ export type GameCommandMap = {
   'upgrade-tower': { towerId: string };
   'sell-tower': { towerId: string };
   'switch-battlefield-view': { view: BattlefieldView };
+  'restart-match': undefined;
 };
 
 export type GameEventMap = {
