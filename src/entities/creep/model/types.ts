@@ -3,6 +3,7 @@ import {
   UnitArmorType,
   UnitMoveType,
   type CreepTypeId,
+  type EffectId,
 } from '../../../shared/types/content-ids';
 
 export type CreepId = string;
@@ -31,6 +32,17 @@ export const DEFAULT_CREEP_COMBAT_TRAITS: CreepCombatTraits = {
   moveType: UnitMoveType.GROUND,
 };
 
+/** One timed effect currently running on a creep. */
+export type ActiveEffect = {
+  id: EffectId;
+  /** Magnitude of a single stack, taken from the tower that applied it. */
+  magnitude: number;
+  remainingMs: number;
+  stacks: number;
+  /** Time until the next damage tick; unused by effects that do not tick. */
+  nextTickInMs: number;
+};
+
 export type CreepEntity = CreepCombatTraits & {
   id: CreepId;
   type: CreepType;
@@ -40,4 +52,6 @@ export type CreepEntity = CreepCombatTraits & {
   status: CreepStatus;
   position: GridPosition;
   pathIndex: number;
+  /** Absent means no effects; the effect helpers create the list on demand. */
+  activeEffects?: ActiveEffect[];
 };

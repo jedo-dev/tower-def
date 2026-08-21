@@ -1,4 +1,5 @@
 export type {
+  ActiveEffect,
   CreepCombatTraits,
   CreepEntity,
   CreepId,
@@ -7,6 +8,15 @@ export type {
   CreepType,
 } from './model/types';
 export { DEFAULT_CREEP_COMBAT_TRAITS } from './model/types';
+export {
+  applyEffectToCreep,
+  findActiveEffect,
+  getActiveEffects,
+  getEffectiveSpeedMultiplier,
+  removeEffectFromCreep,
+  tickCreepEffects,
+} from './model/effects';
+export type { ApplyEffectInput, CreepEffectTickResult } from './model/effects';
 export { applyDamageToCreep } from './model/damage';
 export { filterActiveWaveCreeps } from './model/runtime';
 export { isCreepAlive, isCreepDead, setCreepLifeState } from './model/lifeState';
