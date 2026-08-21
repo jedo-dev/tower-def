@@ -53,6 +53,7 @@ import {
   applyNearestNeighborFiltering,
   preloadGameSceneAssets,
 } from '../runtime/assets/gameSceneAssetLoader';
+import { ensurePlaceholderTextures } from '../runtime/assets/placeholderTexture';
 import {
   createBattlefieldRenderState,
   destroyBattlefieldCreeps,
@@ -333,6 +334,7 @@ export class GameScene extends Phaser.Scene {
 
   public create(): void {
     this.isSceneCleanedUp = false;
+    ensurePlaceholderTextures(this);
     this.loadSetupConfig();
     this.cameras.main.setBackgroundColor('#1a1f2c');
     this.cameras.main.roundPixels = true;

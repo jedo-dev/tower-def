@@ -74,6 +74,22 @@ export const CREEP_EFFECT_PIP_OFFSET_Y_PX = -14;
 export const CREEP_EFFECT_PIP_FONT_SIZE_PX = 9;
 export const CREEP_EFFECT_PIP_RENDER_DEPTH = 75;
 
+/**
+ * Placeholder art shown for any creep or tower whose sprite has not been drawn
+ * yet. Colours stay near-white so the race tint reads through the multiply.
+ */
+export const PLACEHOLDER_PLATE_COLOR = '#d8dde8';
+export const PLACEHOLDER_BORDER_COLOR = '#7b869b';
+export const PLACEHOLDER_GLYPH_COLOR = '#2b3242';
+export const PLACEHOLDER_GLYPH = '?';
+export const PLACEHOLDER_BORDER_WIDTH_PX = 2;
+export const PLACEHOLDER_BORDER_DASH_PX = 4;
+export const PLACEHOLDER_CORNER_RADIUS_PX = 4;
+/** Unit walk animations address frames 0 to 3. */
+export const PLACEHOLDER_UNIT_FRAME_COUNT = 4;
+/** Tower animation sets address frames 0 to 13, including projectile frames. */
+export const PLACEHOLDER_TOWER_FRAME_COUNT = 14;
+
 export const WAVE_SPAWN_INTERVAL_MS = 350;
 export const WAVE_FIRST_SPAWN_DELAY_MS = 200;
 export const BONE_ARCHER_TOWER_ID = 'undead_bone_archer_tower';
