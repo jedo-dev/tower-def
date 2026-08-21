@@ -11,27 +11,44 @@ export enum UnitTier {
   TIER_6 = 6,
 }
 
-export type UnitId =
-  | 'undead_skeleton'
-  | 'undead_ghoul'
-  | 'undead_crypt_fiend'
-  | 'undead_gargoyle'
-  | 'undead_abomination'
-  | 'undead_necromancer'
-  | 'undead_banshee'
-  | 'undead_frost_wyrm'
-  | 'orc_grunt'
-  | 'orc_wolf_rider'
-  | 'orc_troll'
-  | 'orc_headhunter'
-  | 'human_militia'
-  | 'human_footman'
-  | 'human_rifleman'
-  | 'human_siege_engine'
-  | 'elf_archer'
-  | 'elf_huntress'
-  | 'elf_dryad'
-  | 'elf_chimera';
+export const UNIT_TIERS: readonly UnitTier[] = [
+  UnitTier.TIER_1,
+  UnitTier.TIER_2,
+  UnitTier.TIER_3,
+  UnitTier.TIER_4,
+  UnitTier.TIER_5,
+  UnitTier.TIER_6,
+] as const;
+
+/**
+ * Every creature the game knows about. Authored content must resolve to one of
+ * these ids, so a renamed or invented id fails validation instead of spawning
+ * a creature nothing else can reference.
+ */
+export const UNIT_IDS = [
+  'undead_skeleton',
+  'undead_ghoul',
+  'undead_crypt_fiend',
+  'undead_gargoyle',
+  'undead_abomination',
+  'undead_necromancer',
+  'undead_banshee',
+  'undead_frost_wyrm',
+  'orc_grunt',
+  'orc_wolf_rider',
+  'orc_troll',
+  'orc_headhunter',
+  'human_militia',
+  'human_footman',
+  'human_rifleman',
+  'human_siege_engine',
+  'elf_archer',
+  'elf_huntress',
+  'elf_dryad',
+  'elf_chimera',
+] as const;
+
+export type UnitId = (typeof UNIT_IDS)[number];
 
 export type UnitConfig = {
   id: UnitId;
