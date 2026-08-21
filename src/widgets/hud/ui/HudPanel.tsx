@@ -1,4 +1,6 @@
-import { TowerTypeId } from '../../../shared/types/content-ids';
+import { RaceId } from '../../../shared/types/content-ids';
+import type { FactionThemeName } from '../../../shared/constants/theme';
+import { mapRaceRosterToBuildOptions } from '../model/mapRaceRosterToBuildOptions';
 import { memo, useState } from 'react';
 import styles from './HudPanel.module.css';
 import { sendGameCommand } from '../../../shared/lib/game-bridge/bridge';
@@ -6,7 +8,7 @@ import { useBattlefieldView } from '../../../shared/lib/game-bridge/useBattlefie
 import { useGameHudSnapshot } from '../../../shared/lib/game-bridge/useGameHudSnapshot';
 import { mapBattlefieldViewToggleToViewModel, mapHudSnapshotToViewModel } from '../model/mapHudSnapshotToViewModel';
 import type { HudPressureLevel } from '../model/mapHudSnapshotToViewModel';
-import type { HudFactionType, HudTowerType } from '../../../shared/lib/game-bridge/types';
+import type { HudFactionType } from '../../../shared/lib/game-bridge/types';
 import type { GameSetupConfig } from '../../../shared/config/game-setup';
 import { PlaceholderIcon } from '../../../shared/ui/placeholder-icon';
 
@@ -30,11 +32,6 @@ function mapFactionToDisplayName(faction: HudFactionType): string {
   }
 }
 
-const TOWER_BUTTONS: { type: HudTowerType; label: string }[] = [
-  { type: TowerTypeId.SINGLE, label: 'Archer' },
-  { type: TowerTypeId.SPLASH, label: 'Plague' },
-];
-
 const PRESSURE_LEVEL_CLASS: Record<HudPressureLevel, string> = {
   none: '',
   low: styles.pressureLow,
@@ -52,6 +49,14 @@ function HudPanelComponent({ setup }: HudPanelProps) {
   const activeBattlefieldView = useBattlefieldView();
   const viewModel = mapHudSnapshotToViewModel(snapshot);
   const battlefieldViewToggle = mapBattlefieldViewToggleToViewModel(snapshot, activeBattlefieldView);
+  // Recomputed per HUD snapshot event, not per frame: the bar only changes when
+  // gold, race or selection changes.
+  const builderFactionTheme = (setup?.builderFaction ?? RaceId.UNDEAD).toLowerCase() as FactionThemeName;
+  const buildOptions = mapRaceRosterToBuildOptions({
+    raceId: setup?.builderFaction ?? RaceId.UNDEAD,
+    gold: snapshot.gold,
+    selectedTowerType: snapshot.selectedTowerType,
+  });
 
   return (
     <section className={styles.panel} aria-label="Game HUD">
@@ -130,19 +135,28 @@ function HudPanelComponent({ setup }: HudPanelProps) {
 
       {isExpanded && (
         <div className={styles.expandedContent}>
-          <div className={styles.towerButtons}>
-            {TOWER_BUTTONS.map((btn) => (
+          <div className={styles.towerButtons} role="group" aria-label="Buildable towers">
+            {buildOptions.map((option) => (
               <button
-                key={btn.type}
+                key={option.towerId}
                 type="button"
                 className={joinClassNames(
                   styles.towerBtn,
-                  snapshot.selectedTowerType === btn.type && styles.towerBtnSelected,
+                  option.isSelected && styles.towerBtnSelected,
                 )}
-                onClick={() => sendGameCommand('select-tower', { towerType: snapshot.selectedTowerType === btn.type ? null : btn.type })}
+                disabled={!option.isAffordable && !option.isSelected}
+                aria-label={option.ariaLabel}
+                onClick={() => sendGameCommand('select-tower', {
+                  towerType: option.isSelected ? null : option.towerType,
+                })}
               >
-                <PlaceholderIcon label={btn.label} faction={snapshot.selectedFaction} />
-                {btn.label}
+                <PlaceholderIcon label={option.name} faction={builderFactionTheme} />
+                <span className={styles.towerBtnBody}>
+                  <span className={styles.towerBtnName}>{option.name}</span>
+                  <span className={styles.towerBtnMeta}>
+                    {option.costGold}g - {option.effectHint}
+                  </span>
+                </span>
               </button>
             ))}
           </div>
