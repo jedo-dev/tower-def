@@ -1,0 +1,129 @@
+ORC GRUNT — unit.orc.grunt
+Контракт листа: 128x128 = 4 ряда по 4 кадра 32x32.
+Порядок рядов: 0 вниз, 1 вбок (вправо), 2 вверх, 3 смерть.
+
+ВАРИАНТ А (дешёвый, 1 запрос) — весь лист одной картинкой, промт ниже.
+ВАРИАНТ Б (дороже, 4 запроса, стабильнее) — по рядам с референсом, см. ниже по файлу.
+
+
+==================== ВАРИАНТ А — ВЕСЬ ЛИСТ ОДНИМ ЗАПРОСОМ ====================
+
+A complete 16-frame character sprite sheet of an orc grunt for a tower defense game, HD pixel art.
+
+STYLE: HD pixel art in the 16-bit era JRPG / Warcraft III style - crisp pixel clusters, one clean 1px dark outline around the whole silhouette, a strictly limited palette of about 12-16 colours, soft dithered shading, subtle cool rim light from the upper left. NOT vector, NOT smooth digital painting, NOT a 3D render, NOT chibi-cute, NOT anime lineart. Dark fantasy mood, muted saturation, strong value contrast.
+
+SUBJECT: a brutish orc warrior, a GROUND WALKER. Broad shoulders far wider than his hips, thick neck, hunched forward posture, short bowed legs, olive-green skin, tusked lower jaw, small angry eyes under a heavy brow. Crude blackened-iron pauldron on one shoulder, dark leather straps, rust-orange cloth kilt and arm wraps, heavy two-handed iron axe. Red warpaint stripes on the face. He must LOOK heavy and slow-footed.
+
+PALETTE: rust orange #d97b39, dark leather brown, blackened iron grey, worn steel grey, red warpaint, bone white, olive-green orc skin, near-black outline. Nothing else.
+
+CONSISTENCY - THE MOST IMPORTANT RULE: the SAME orc appears in all 16 cells. Identical proportions, identical colours, identical pauldron, kilt, axe and warpaint, identical scale and identical eye level in every cell. Only the pose and the camera direction change between cells.
+
+SHEET LAYOUT: one square image, a grid of 4 columns x 4 rows = 16 equal square cells, read left to right, top row first. Each cell is one pixel-art frame rendered for a final size of 32x32 px, so keep the detail budget low enough to survive that downscale.
+
+ROW 1 (cells 1-4) - WALKING TOWARD THE VIEWER, front view: face, chest and the front of the kilt visible, axe held across the body.
+  cell 1 CONTACT - left leg stepping forward toward the viewer, right leg back, shoulders squared.
+  cell 2 PASSING DOWN - legs together under the hips, body at its lowest point, slight sway to one side.
+  cell 3 CONTACT MIRRORED - right leg stepping forward, left leg back.
+  cell 4 PASSING UP - legs together, body at its highest point, sway to the other side.
+
+ROW 2 (cells 5-8) - WALKING SIDEWAYS, strict profile, facing RIGHT.
+  cell 5 CONTACT - front leg fully extended forward with the heel planted, rear leg fully extended back on the toe, a wide clear gap between the legs, axe swung back behind the hips.
+  cell 6 PASSING DOWN - legs close together under the hips, free leg passing forward with a bent knee, body at its lowest, shoulders dipped.
+  cell 7 CONTACT MIRRORED - the opposite leg forward and planted, other leg extended back, wide stride, axe swung slightly forward.
+  cell 8 PASSING UP - legs close together, free leg passing back, body at its highest point of the plod, shoulders lifted.
+
+ROW 3 (cells 9-12) - WALKING AWAY FROM THE VIEWER, back view: back of the head and the pauldron visible, no face, the axe shaft crossing his back.
+  cell 9 CONTACT - left leg stepping away, right leg trailing.
+  cell 10 PASSING DOWN - legs together under the hips, body at its lowest.
+  cell 11 CONTACT MIRRORED - right leg stepping away, left leg trailing.
+  cell 12 PASSING UP - legs together, body at its highest.
+
+ROW 4 (cells 13-16) - DEATH, side view facing RIGHT, same camera as row 2.
+  cell 13 IMPACT - struck: head snapped back, torso arched backwards, arms flung wide, the axe leaving his grip, feet still on the ground.
+  cell 14 FALLING - knees buckling, body collapsing sideways and downward, the axe falling separately.
+  cell 15 DOWN - lying face down on the ground, limbs sprawled, the axe on the ground beside him, silhouette low and flat.
+  cell 16 FADING - the body mostly gone, only a faint flattened dark shape, a few scattered pixels of dust and the axe left behind.
+
+WITHIN EACH ROW the four poses must be visibly DIFFERENT from each other - never draw the same pose twice, exaggerate the stride if needed.
+
+BACKGROUND: one flat solid magenta #FF00FF across the whole image, behind and between the cells. No transparency, no gradient, no texture, no ground line, no horizontal stroke, no shadow under the feet, no glow bleeding onto the magenta.
+
+FRAMING: each character centred in its own cell with about 10% empty margin on every side, feet on a consistent baseline inside each row, nothing cropped - including the axe head. No borders, frames or grid lines drawn between cells.
+
+FORBIDDEN: no text, numbers, labels or watermarks anywhere in the image; no extra props, scenery or effects; never two characters in one cell; do not change the camera angle inside a row.
+
+
+==================== ВАРИАНТ Б — ПО РЯДАМ С РЕФЕРЕНСОМ ====================
+
+Порядок работы:
+1. Сгенерировать боковой ряд (ROW 1) без референса — он же даёт эталон персонажа.
+2. Вырезать из него один кадр, сохранить как ref.png.
+3. Остальные три ряда генерировать с ref.png в «Изображения для обработки».
+4. Нарезать все кадры, ужать nearest neighbor до 32x32, собрать лист 128x128.
+
+
+==================== ROW 1 — ХОДЬБА ВБОК (эталон персонажа) ====================
+
+A 4-frame side-view WALK CYCLE of an orc grunt, HD pixel art.
+
+STYLE: HD pixel art in the 16-bit era JRPG / Warcraft III style - crisp pixel clusters, one clean 1px dark outline around the whole silhouette, a strictly limited palette of about 12-16 colours, soft dithered shading, subtle cool rim light from the upper left. NOT vector, NOT smooth digital painting, NOT a 3D render, NOT chibi-cute, NOT anime lineart. Dark fantasy mood, muted saturation.
+
+SUBJECT: a brutish orc warrior, a GROUND WALKER. Broad shoulders far wider than his hips, thick neck, hunched forward posture, short bowed legs, olive-green skin, tusked lower jaw, small angry eyes under a heavy brow. Crude blackened-iron pauldron on one shoulder, dark leather straps, rust-orange cloth kilt and arm wraps, heavy two-handed iron axe held low across his body. Red warpaint stripes on the face. He must LOOK heavy and slow-footed.
+
+PALETTE: rust orange #d97b39, dark leather brown, blackened iron grey, worn steel grey, red warpaint, bone white, olive-green orc skin, near-black outline. Nothing else.
+
+CAMERA: strict side view, facing RIGHT in all four frames, identical scale and eye level, feet on one shared baseline.
+
+FOUR POSES, and they MUST be visibly different from each other:
+1 CONTACT - front leg fully extended forward with the heel planted, rear leg fully extended back on the toe, wide clear gap between the legs, axe swung back behind the hips.
+2 PASSING DOWN - legs close together under the hips, free leg passing forward with a bent knee, body at its LOWEST point, shoulders dipped.
+3 CONTACT MIRRORED - the opposite leg forward and planted, other leg extended back, wide stride, axe swung slightly forward.
+4 PASSING UP - legs close together, free leg passing back, body at its HIGHEST point of the plod, shoulders lifted.
+
+OUTPUT: one square image, a 2x2 grid of four equal cells - pose 1 top-left, 2 top-right, 3 bottom-left, 4 bottom-right. One flat solid magenta #FF00FF background across the whole image. No ground line, no horizontal stroke, no shadow under the feet, no gradient. No text anywhere. Each cell is rendered for a final size of 32x32 px, so keep detail low. Character centred in its cell with a 10% margin, nothing cropped, including the axe head.
+
+
+==================== ROW 0 — ХОДЬБА ВНИЗ (на зрителя) ====================
+Референс: ref.png
+
+Use the attached image as the exact character reference: the SAME orc grunt, same proportions, same palette, same armour, same axe, same 1px dark outline, same HD pixel-art style, same scale, same height.
+
+Now draw him seen FROM THE FRONT, walking TOWARD the viewer - a 4-frame walk cycle. His face, chest and the front of the kilt are visible; the axe is held across his body. Same character, new camera angle.
+
+FOUR POSES, visibly different from each other:
+1 CONTACT - left leg stepping forward toward the viewer, right leg back, shoulders squared.
+2 PASSING DOWN - legs together under the hips, body at its lowest, slight side-to-side sway.
+3 CONTACT MIRRORED - right leg stepping forward, left leg back.
+4 PASSING UP - legs together, body at its highest, sway to the other side.
+
+OUTPUT: one square image, a 2x2 grid of four equal cells - pose 1 top-left, 2 top-right, 3 bottom-left, 4 bottom-right. One flat solid magenta #FF00FF background. No ground line, no shadow under the feet, no gradient, no text. Each cell rendered for a final size of 32x32 px. Character centred with a 10% margin, nothing cropped.
+
+
+==================== ROW 2 — ХОДЬБА ВВЕРХ (от зрителя) ====================
+Референс: ref.png
+
+Use the attached image as the exact character reference: the SAME orc grunt, same proportions, same palette, same armour, same axe, same 1px dark outline, same HD pixel-art style, same scale, same height.
+
+Now draw him seen FROM BEHIND, walking AWAY from the viewer - a 4-frame walk cycle. The back of his head, the pauldron and the back of the kilt are visible, the axe shaft crosses his back. No face visible. Same character, new camera angle.
+
+FOUR POSES, visibly different from each other:
+1 CONTACT - left leg stepping away from the viewer, right leg trailing.
+2 PASSING DOWN - legs together under the hips, body at its lowest.
+3 CONTACT MIRRORED - right leg stepping away, left leg trailing.
+4 PASSING UP - legs together, body at its highest.
+
+OUTPUT: one square image, a 2x2 grid of four equal cells - pose 1 top-left, 2 top-right, 3 bottom-left, 4 bottom-right. One flat solid magenta #FF00FF background. No ground line, no shadow under the feet, no gradient, no text. Each cell rendered for a final size of 32x32 px. Character centred with a 10% margin, nothing cropped.
+
+
+==================== ROW 3 — СМЕРТЬ ====================
+Референс: ref.png
+
+Use the attached image as the exact character reference: the SAME orc grunt, same proportions, same palette, same armour, same axe, same 1px dark outline, same HD pixel-art style, same scale.
+
+Now draw his DEATH in 4 frames, side view facing RIGHT, the same camera and scale as the reference. Each frame is a clearly different stage - do not repeat a pose.
+1 IMPACT - struck: head snapped back, torso arched backwards, arms flung wide, the axe leaving his grip, feet still on the ground.
+2 FALLING - knees buckling, body collapsing sideways and downward, the axe already falling separately.
+3 DOWN - lying face down on the ground, limbs sprawled, the axe on the ground beside him, silhouette low and flat.
+4 FADING - the body mostly gone, only a faint flattened dark shape, a few scattered pixels of dust and the axe left behind.
+
+OUTPUT: one square image, a 2x2 grid of four equal cells - frame 1 top-left, 2 top-right, 3 bottom-left, 4 bottom-right. One flat solid magenta #FF00FF background. No ground line, no shadow, no gradient, no text. Each cell rendered for a final size of 32x32 px. Character centred with a 10% margin, nothing cropped.
