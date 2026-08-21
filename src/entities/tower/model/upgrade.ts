@@ -1,7 +1,8 @@
 import { ECONOMY_BALANCE } from '../../../shared/constants/economy';
 import type { TowerLevelStats } from '../../../shared/constants/tower';
-import type { TowerType } from './types';
+import type { TowerEntity, TowerType } from './types';
 import { TOWER_BASE_LEVEL, TOWER_UPGRADE_CONFIG } from './types';
+import { tryResolveBuildableTowerById } from './config/buildableTowers';
 
 export type UpgradeCheckResult = {
   allowed: boolean;
@@ -101,3 +102,29 @@ export function createTowerLevel(
 }
 
 export const INITIAL_TOWER_LEVEL = TOWER_BASE_LEVEL;
+
+/**
+ * Upgrade curve a placed tower follows: its own authored curve when it declares
+ * one, the archetype curve otherwise.
+ */
+export function resolveTowerUpgradeConfig(tower: TowerEntity) {
+  const authored = tower.buildableTowerId
+    ? tryResolveBuildableTowerById(tower.buildableTowerId)
+    : undefined;
+
+  if (authored?.levels && authored.levels.length > 0) {
+    return { maxLevel: authored.levels.length, levels: authored.levels };
+  }
+
+  return TOWER_UPGRADE_CONFIG[tower.type];
+}
+
+export function getTowerStatsForTowerLevel(
+  tower: TowerEntity,
+  level: number,
+): TowerLevelStats | null {
+  const config = resolveTowerUpgradeConfig(tower);
+  const levelConfig = config.levels.find((candidate) => candidate.level === level);
+
+  return levelConfig ? levelConfig.stats : null;
+}

@@ -206,6 +206,7 @@ function parseTowerEntry(
       TOWER_STAT_BOUNDS.attackCooldownMs,
     ),
     ...(splashRadius === undefined ? {} : { splashRadius }),
+    ...(entry.levels === undefined ? {} : { levels: parseLevels(entry, location) }),
     onHitEffects: parseOnHitEffects(entry, location),
     spriteKey: readString(entry, 'spriteKey', location),
     description: readString(entry, 'description', location),

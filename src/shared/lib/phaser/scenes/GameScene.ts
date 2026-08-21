@@ -539,6 +539,8 @@ export class GameScene extends Phaser.Scene {
         const towerConfig = resolveBuildableTowerConfig(this.selectedBuilderFactionId, towerType);
         return towerConfig?.costGold ?? DEFAULT_TOWER_COST;
       },
+      resolveBuildableTower: (towerType) =>
+        resolveBuildableTowerConfig(this.selectedBuilderFactionId, towerType),
       toGridCellKey: (position) => toGridCellKey(position),
       toTowerId: (position) => toTowerId(position),
       validateTowerPlacementPath: (grid, position) => validateTowerPlacementPath(grid, position),

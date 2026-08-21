@@ -5,7 +5,8 @@ import type Phaser from 'phaser';
 import {
   canAffordUpgrade,
   createInitialTowerCombatRuntime,
-  getTowerStatsForLevel,
+  getTowerStatsForTowerLevel,
+  tryResolveBuildableTowerById,
   getUpgradeCost,
 } from '../../../../../entities/tower';
 import { spendGold } from '../../../../../entities/player-resources';
@@ -51,9 +52,14 @@ export type TowerCommandDeps = {
 };
 
 function toSelectedTowerSnapshot(tower: BattlefieldRenderState['towers'][number]): SelectedTowerSnapshot {
+  const authoredTower = tower.entity.buildableTowerId
+    ? tryResolveBuildableTowerById(tower.entity.buildableTowerId)
+    : undefined;
+
   return {
     id: tower.entity.id,
     type: tower.entity.type,
+    ...(authoredTower ? { name: authoredTower.name } : {}),
     level: tower.entity.level,
     position: { x: tower.entity.position.x, y: tower.entity.position.y },
     cost: tower.entity.cost,
@@ -180,7 +186,7 @@ export function handleUpgradeTowerCommand(deps: TowerCommandDeps, towerId: strin
   }
 
   const nextLevel = entity.level + 1;
-  const nextStats = getTowerStatsForLevel(entity.type, nextLevel);
+  const nextStats = getTowerStatsForTowerLevel(entity, nextLevel);
   if (!nextStats) {
     return;
   }

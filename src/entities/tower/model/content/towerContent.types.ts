@@ -25,6 +25,8 @@ export type TowerContentEntry = {
   attackCooldownMs: number;
   splashRadius?: number;
   onHitEffects?: TowerOnHitEffectEntry[];
+  /** Optional per-tower upgrade curve; the archetype curve is used without it. */
+  levels?: TowerLevelContentEntry[];
   spriteKey: string;
   description: string;
 };
@@ -121,6 +123,7 @@ export const TOWER_CONTENT_REQUIRED_KEYS: readonly (keyof TowerContentEntry)[] =
 export const TOWER_CONTENT_OPTIONAL_KEYS: readonly (keyof TowerContentEntry)[] = [
   'splashRadius',
   'onHitEffects',
+  'levels',
 ];
 
 export const TOWER_CONTENT_FILE_KEYS: readonly (keyof TowerContentFile)[] = [

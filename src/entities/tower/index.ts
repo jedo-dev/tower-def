@@ -30,6 +30,8 @@ export {
   getSellValue,
   getTotalInvestedGold,
   getTowerStatsForLevel,
+  getTowerStatsForTowerLevel,
+  resolveTowerUpgradeConfig,
   getUpgradeCost,
   isMaxLevel,
   createTowerLevel,

@@ -39,7 +39,8 @@ function TowerActionPanelComponent() {
     return null;
   }
 
-  const { id, type, level, cost, combatStats } = selectedTower;
+  const { id, type, name, level, cost, combatStats } = selectedTower;
+  const towerName = name ?? formatTowerType(type);
   const upgradeCost = getUpgradeCost(type, level);
   const maxed = isMaxLevel(type, level);
   const upgradeCheck = canAffordUpgrade(type, level, snapshot.gold);
@@ -67,8 +68,8 @@ function TowerActionPanelComponent() {
   return (
     <section className={styles.panel} aria-label="Tower actions">
       <div className={styles.header}>
-        <PlaceholderIcon label={formatTowerType(type)} faction={snapshot.selectedFaction} />
-        <span className={styles.title}>{formatTowerType(type)}</span>
+        <PlaceholderIcon label={towerName} faction={snapshot.selectedFaction} />
+        <span className={styles.title}>{towerName}</span>
         <span className={styles.level}>Lv {level}</span>
         <button
           type="button"

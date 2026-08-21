@@ -1,6 +1,6 @@
 import { TowerTypeId } from '../../../../types/content-ids';
 import { canSpendGold, spendGold } from '../../../../../entities/player-resources';
-import type { TowerEntity } from '../../../../../entities/tower';
+import type { BuildableTowerConfig, TowerCombatStats, TowerEntity } from '../../../../../entities/tower';
 import { TOWER_BASE_LEVEL, TOWER_COMBAT_STATS_BY_TYPE } from '../../../../../entities/tower';
 import type { GridCell, GridModel } from '../../../../types/grid';
 import type { GridPosition } from '../../../../types/pathfinding';
@@ -18,6 +18,8 @@ export type BuildRuntimeDeps = {
   canPerformSell: () => boolean;
   selectedTowerType: TowerTypeId | null;
   resolveTowerCost: (towerType: TowerTypeId) => number;
+  /** Authored tower of the builder race for this archetype, when there is one. */
+  resolveBuildableTower?: (towerType: TowerTypeId) => BuildableTowerConfig | null;
   toGridCellKey: (position: GridPosition) => string;
   toTowerId: (position: GridPosition) => string;
   validateTowerPlacementPath: (grid: GridModel, position: GridPosition) => boolean;
@@ -39,6 +41,33 @@ export type BuildSellResult = {
   removedTowerId: string | null;
   refundAmount: number;
 };
+
+/**
+ * A tower fights with its authored numbers when content declares them, and with
+ * the archetype defaults otherwise.
+ */
+function resolvePlacementStats(
+  towerType: TowerTypeId,
+  authoredTower: BuildableTowerConfig | null,
+): TowerCombatStats {
+  const archetypeStats = TOWER_COMBAT_STATS_BY_TYPE[towerType];
+
+  if (!authoredTower) {
+    return { ...archetypeStats };
+  }
+
+  const authoredLevelOne = authoredTower.levels?.[0]?.stats;
+
+  return {
+    ...archetypeStats,
+    ...(authoredLevelOne ?? {}),
+    damage: authoredLevelOne?.damage ?? authoredTower.damage,
+    range: authoredLevelOne?.range ?? authoredTower.range,
+    attackCooldownMs: authoredLevelOne?.attackCooldownMs ?? authoredTower.attackCooldownMs,
+    ...(authoredTower.splashRadius === undefined ? {} : { splashRadius: authoredTower.splashRadius }),
+    ...(authoredTower.onHitEffects.length === 0 ? {} : { onHitEffects: authoredTower.onHitEffects }),
+  };
+}
 
 export function isBuildCellValid(
   state: BuildRuntimeState,
@@ -90,13 +119,16 @@ export function tryPlaceTowerAtHoveredCell(
   const towerCost = deps.resolveTowerCost(towerType);
   state.placedTowerCostsByCellKey.set(deps.toGridCellKey(hoveredCell), towerCost);
 
+  const authoredTower = deps.resolveBuildableTower?.(towerType) ?? null;
+
   const towerEntity: TowerEntity = {
     id: deps.toTowerId(hoveredCell),
     position: { x: hoveredCell.x, y: hoveredCell.y },
     cost: towerCost,
     type: towerType,
+    ...(authoredTower ? { buildableTowerId: authoredTower.id } : {}),
     level: TOWER_BASE_LEVEL,
-    combatStats: TOWER_COMBAT_STATS_BY_TYPE[towerType],
+    combatStats: resolvePlacementStats(towerType, authoredTower),
   };
 
   state.playerGold = spendGoldResult.resources.gold;

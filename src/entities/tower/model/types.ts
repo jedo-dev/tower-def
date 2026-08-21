@@ -8,6 +8,7 @@ import {
   loadTowerArchetypeContent,
   type TowerArchetypeDefinition,
   type TowerAuraDefinition,
+  type TowerLevelDefinition,
 } from './content/loadTowerContent';
 import type { BuildableTowerId } from './towerIds';
 
@@ -46,6 +47,8 @@ export type BuildableTowerConfig = {
   attackCooldownMs: number;
   splashRadius?: number;
   onHitEffects: TowerOnHitEffect[];
+  /** Per-tower upgrade curve; falls back to the archetype curve when absent. */
+  levels?: TowerLevelDefinition[];
   spriteKey: string;
   description: string;
 };
@@ -105,6 +108,8 @@ export type TowerEntity = {
   position: GridPosition;
   cost: number;
   type: TowerType;
+  /** Authored tower it was built from; absent for towers placed before content. */
+  buildableTowerId?: BuildableTowerId;
   level: number;
   /** Stats the tower actually fights with, support auras included. */
   combatStats: TowerCombatStats;

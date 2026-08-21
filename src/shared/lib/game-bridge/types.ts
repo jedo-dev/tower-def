@@ -34,6 +34,8 @@ export type SelectedTowerOnHitEffect = {
 export type SelectedTowerSnapshot = {
   id: string;
   type: HudTowerType;
+  /** Authored tower name, e.g. "Frost Wyrm Nest"; absent falls back to the archetype. */
+  name?: string;
   level: number;
   position: { x: number; y: number };
   cost: number;
