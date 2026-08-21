@@ -1,3 +1,4 @@
+import { TowerTypeId } from '../../../shared/types/content-ids';
 import type { BattlefieldView, GameHudSnapshot } from '../../../shared/lib/game-bridge/types';
 
 export type HudViewModel = {
@@ -37,7 +38,9 @@ export type BattlefieldViewToggleViewModel = {
 
 export function mapHudSnapshotToViewModel(snapshot: GameHudSnapshot): HudViewModel {
   const phaseLabel = snapshot.phase === 'game-over' ? 'Game Over' : snapshot.phase;
-  const selectedTowerLabel = snapshot.selectedTowerType === null ? 'None' : snapshot.selectedTowerType === 'splash' ? 'Plague' : 'Archer';
+  const selectedTowerLabel = snapshot.selectedTowerType === null
+    ? 'None'
+    : snapshot.selectedTowerType === TowerTypeId.SPLASH ? 'Plague' : 'Archer';
   const modeLabel = snapshot.selectedTowerType === null
     ? 'Tap a tower to inspect'
     : `Build: ${selectedTowerLabel}`;
@@ -48,7 +51,7 @@ export function mapHudSnapshotToViewModel(snapshot: GameHudSnapshot): HudViewMod
     selectedTowerLabel,
     modeLabel,
     isStartWaveDisabled: isWaveActive || !snapshot.canStartWave,
-    isArcherSelected: snapshot.selectedTowerType === 'archer',
+    isArcherSelected: snapshot.selectedTowerType === TowerTypeId.SINGLE,
     pressure: mapHudPressureToViewModel(snapshot),
     duel: mapHudDuelToViewModel(snapshot),
   };

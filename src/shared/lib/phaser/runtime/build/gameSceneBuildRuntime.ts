@@ -1,3 +1,4 @@
+import { TowerTypeId } from '../../../../types/content-ids';
 import { canSpendGold, spendGold } from '../../../../../entities/player-resources';
 import type { TowerEntity } from '../../../../../entities/tower';
 import { TOWER_BASE_LEVEL, TOWER_COMBAT_STATS_BY_TYPE } from '../../../../../entities/tower';
@@ -15,8 +16,8 @@ export type BuildRuntimeState = {
 export type BuildRuntimeDeps = {
   canPerformPlace: () => boolean;
   canPerformSell: () => boolean;
-  selectedTowerType: 'archer' | 'splash' | null;
-  resolveTowerCost: (towerType: 'archer' | 'splash') => number;
+  selectedTowerType: TowerTypeId | null;
+  resolveTowerCost: (towerType: TowerTypeId) => number;
   toGridCellKey: (position: GridPosition) => string;
   toTowerId: (position: GridPosition) => string;
   validateTowerPlacementPath: (grid: GridModel, position: GridPosition) => boolean;
@@ -29,7 +30,7 @@ export type BuildPlacementResult = {
   playerGold: number;
   changedCell: GridCell | null;
   placedTower: TowerEntity | null;
-  towerType: 'archer' | 'splash' | null;
+  towerType: TowerTypeId | null;
 };
 
 export type BuildSellResult = {
@@ -85,7 +86,7 @@ export function tryPlaceTowerAtHoveredCell(
   targetCell.isOccupied = true;
   targetCell.isWalkable = false;
 
-  const towerType = deps.selectedTowerType ?? 'archer';
+  const towerType = deps.selectedTowerType ?? TowerTypeId.SINGLE;
   const towerCost = deps.resolveTowerCost(towerType);
   state.placedTowerCostsByCellKey.set(deps.toGridCellKey(hoveredCell), towerCost);
 

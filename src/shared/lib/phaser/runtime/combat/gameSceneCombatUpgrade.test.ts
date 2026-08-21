@@ -17,11 +17,11 @@ import { spendGold, type PlayerResources } from '../../../../../entities/player-
 function createTestTower(overrides?: Partial<TowerEntity>): TowerEntity {
   return {
     id: 'tower:test:0',
-    type: 'archer',
+    type: 'single',
     cost: 50,
     position: { x: 5, y: 5 },
     level: 1,
-    combatStats: getTowerStatsForLevel('archer', 1)!,
+    combatStats: getTowerStatsForLevel('single', 1)!,
     ...overrides,
   };
 }

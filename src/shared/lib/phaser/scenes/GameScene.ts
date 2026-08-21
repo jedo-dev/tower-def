@@ -1,3 +1,4 @@
+import { TowerTypeId } from '../../../types/content-ids';
 import Phaser from 'phaser';
 import { DEFAULT_BUILDER_FACTION } from '../../../../entities/builder-faction';
 import {
@@ -199,7 +200,7 @@ export class GameScene extends Phaser.Scene {
   // creep list is shared with playerField (see createPlayerWaveRuntimeState).
   private readonly runState = createPlayerWaveRuntimeState(this.playerField);
   private readonly teardownCallbacks: Array<() => void> = [];
-  private selectedTowerType: 'archer' | 'splash' | null = null;
+  private selectedTowerType: TowerTypeId | null = null;
   private selectedBuilderFactionId = DEFAULT_BUILDER_FACTION;
   private selectedFaction: HudFactionType = 'undead';
   private selectedDifficulty: Difficulty = DEFAULT_DIFFICULTY;

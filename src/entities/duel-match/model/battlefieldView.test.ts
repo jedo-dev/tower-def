@@ -15,7 +15,7 @@ function createTestTower() {
     id: 'computer:tower:2:4',
     position: { x: 2, y: 4 },
     cost: 50,
-    type: 'archer' as const,
+    type: 'single' as const,
     level: 1,
     combatStats: {
       range: 3,

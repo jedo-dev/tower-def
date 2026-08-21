@@ -13,12 +13,12 @@ function createTestGrid() {
   return createGridModel({ entrance: ENTRANCE, exit: EXIT });
 }
 
-function createTestTower(overrides?: { id?: string; x?: number; y?: number; type?: 'archer' | 'splash' }): TowerEntity {
+function createTestTower(overrides?: { id?: string; x?: number; y?: number; type?: 'single' | 'splash' }): TowerEntity {
   return {
     id: overrides?.id ?? 'tower_1',
     position: { x: overrides?.x ?? 2, y: overrides?.y ?? 3 },
     cost: 50,
-    type: (overrides?.type ?? 'archer') as 'archer' | 'splash',
+    type: (overrides?.type ?? 'single') as 'single' | 'splash',
     level: 1,
     combatStats: {
       range: 3,
@@ -43,7 +43,7 @@ describe('entities/computer-opponent/scoreTowerPlacement', () => {
         const result = scoreTowerPlacement({
           grid,
           position: ENTRANCE,
-          towerType: TowerTypeId.ARCHER,
+          towerType: TowerTypeId.SINGLE,
           existingTowers: [],
           path,
         });
@@ -60,7 +60,7 @@ describe('entities/computer-opponent/scoreTowerPlacement', () => {
         const result = scoreTowerPlacement({
           grid,
           position: EXIT,
-          towerType: TowerTypeId.ARCHER,
+          towerType: TowerTypeId.SINGLE,
           existingTowers: [],
           path,
         });
@@ -87,7 +87,7 @@ describe('entities/computer-opponent/scoreTowerPlacement', () => {
         const result = scoreTowerPlacement({
           grid: occupiedGrid,
           position: { x: 3, y: 5 },
-          towerType: TowerTypeId.ARCHER,
+          towerType: TowerTypeId.SINGLE,
           existingTowers: [tower],
           path,
         });
@@ -113,7 +113,7 @@ describe('entities/computer-opponent/scoreTowerPlacement', () => {
         const result = scoreTowerPlacement({
           grid: corridorGrid,
           position: { x: 5, y: 7 },
-          towerType: TowerTypeId.ARCHER,
+          towerType: TowerTypeId.SINGLE,
           existingTowers: [],
           path,
         });
@@ -129,7 +129,7 @@ describe('entities/computer-opponent/scoreTowerPlacement', () => {
         const result = scoreTowerPlacement({
           grid,
           position: { x: 1, y: 1 },
-          towerType: TowerTypeId.ARCHER,
+          towerType: TowerTypeId.SINGLE,
           existingTowers: [],
           path,
         });
@@ -148,7 +148,7 @@ describe('entities/computer-opponent/scoreTowerPlacement', () => {
         const nearPath = scoreTowerPlacement({
           grid,
           position: { x: 1, y: 7 },
-          towerType: TowerTypeId.ARCHER,
+          towerType: TowerTypeId.SINGLE,
           existingTowers: [],
           path,
         });
@@ -156,7 +156,7 @@ describe('entities/computer-opponent/scoreTowerPlacement', () => {
         const farFromPath = scoreTowerPlacement({
           grid,
           position: { x: 0, y: 0 },
-          towerType: TowerTypeId.ARCHER,
+          towerType: TowerTypeId.SINGLE,
           existingTowers: [],
           path,
         });
@@ -172,7 +172,7 @@ describe('entities/computer-opponent/scoreTowerPlacement', () => {
         const archerScore = scoreTowerPlacement({
           grid,
           position,
-          towerType: TowerTypeId.ARCHER,
+          towerType: TowerTypeId.SINGLE,
           existingTowers: [],
           path,
         });
@@ -198,7 +198,7 @@ describe('entities/computer-opponent/scoreTowerPlacement', () => {
         const nearTower = scoreTowerPlacement({
           grid,
           position: { x: 4, y: 5 },
-          towerType: TowerTypeId.ARCHER,
+          towerType: TowerTypeId.SINGLE,
           existingTowers: [existingTower],
           path,
         });
@@ -206,7 +206,7 @@ describe('entities/computer-opponent/scoreTowerPlacement', () => {
         const farFromTower = scoreTowerPlacement({
           grid,
           position: { x: 8, y: 12 },
-          towerType: TowerTypeId.ARCHER,
+          towerType: TowerTypeId.SINGLE,
           existingTowers: [existingTower],
           path,
         });
@@ -221,7 +221,7 @@ describe('entities/computer-opponent/scoreTowerPlacement', () => {
         const result = scoreTowerPlacement({
           grid,
           position: { x: 5, y: 5 },
-          towerType: TowerTypeId.ARCHER,
+          towerType: TowerTypeId.SINGLE,
           existingTowers: [],
           path,
         });
@@ -239,7 +239,7 @@ describe('entities/computer-opponent/scoreTowerPlacement', () => {
         const input = {
           grid,
           position: { x: 4, y: 6 },
-          towerType: TowerTypeId.ARCHER as TowerTypeId,
+          towerType: TowerTypeId.SINGLE as TowerTypeId,
           existingTowers: [tower],
           path,
         };
@@ -266,7 +266,7 @@ describe('entities/computer-opponent/scoreTowerPlacement', () => {
 
       const scores = scoreAllPlacements({
         grid,
-        towerType: TowerTypeId.ARCHER,
+        towerType: TowerTypeId.SINGLE,
         positions,
         existingTowers: [],
         path,
@@ -290,7 +290,7 @@ describe('entities/computer-opponent/scoreTowerPlacement', () => {
 
       const scores = scoreAllPlacements({
         grid,
-        towerType: TowerTypeId.ARCHER,
+        towerType: TowerTypeId.SINGLE,
         positions,
         existingTowers: [],
         path,
@@ -309,7 +309,7 @@ describe('entities/computer-opponent/scoreTowerPlacement', () => {
 
       const scores = scoreAllPlacements({
         grid,
-        towerType: TowerTypeId.ARCHER,
+        towerType: TowerTypeId.SINGLE,
         positions: [],
         existingTowers: [],
         path,
@@ -331,7 +331,7 @@ describe('entities/computer-opponent/scoreTowerPlacement', () => {
 
       const input = {
         grid,
-        towerType: TowerTypeId.ARCHER as TowerTypeId,
+        towerType: TowerTypeId.SINGLE as TowerTypeId,
         positions,
         existingTowers: [tower],
         path,

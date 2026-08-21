@@ -23,9 +23,9 @@ function createTower(id: string, position: GridPosition, level = TOWER_BASE_LEVE
     id,
     position: { x: position.x, y: position.y },
     cost: 50,
-    type: TowerTypeId.ARCHER,
+    type: TowerTypeId.SINGLE,
     level,
-    combatStats: { ...TOWER_COMBAT_STATS_BY_TYPE[TowerTypeId.ARCHER] },
+    combatStats: { ...TOWER_COMBAT_STATS_BY_TYPE[TowerTypeId.SINGLE] },
   };
 }
 
@@ -56,7 +56,7 @@ function createContext(overrides?: Partial<DecisionContext>): DecisionContext {
       threatLevel: 'low',
     },
     leakHistory: [],
-    affordableTowers: [TowerTypeId.ARCHER],
+    affordableTowers: [TowerTypeId.SINGLE],
     upgradeableTowerIds: [],
     availableBuildPositions: [{ x: 4, y: 6 }, { x: 5, y: 8 }],
     ...overrides,
@@ -154,7 +154,7 @@ describe('entities/computer-opponent/applyComputerBuildStrategy', () => {
       upgradeableTowerIds: towers.map((tower) => tower.id),
       availableBuildPositions: [],
     });
-    const expectedUpgradeCost = getUpgradeCost(TowerTypeId.ARCHER, TOWER_BASE_LEVEL);
+    const expectedUpgradeCost = getUpgradeCost(TowerTypeId.SINGLE, TOWER_BASE_LEVEL);
 
     const result = applyComputerBuildStrategy({ state, context });
 

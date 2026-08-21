@@ -29,7 +29,7 @@ function createTestContext(overrides?: Partial<DecisionContext>): DecisionContex
       threatLevel: 'medium',
     },
     leakHistory: [],
-    affordableTowers: [TowerTypeId.ARCHER],
+    affordableTowers: [TowerTypeId.SINGLE],
     upgradeableTowerIds: ['tower_1'],
     availableBuildPositions: [{ x: 3, y: 5 }],
     ...overrides,
@@ -42,7 +42,7 @@ describe('entities/computer-opponent/decisionDebugSnapshots', () => {
     const context = createTestContext();
     const output: DecisionOutput = {
       intent: StrategyIntent.EXTEND_MAZE,
-      actions: [{ kind: 'build', towerType: TowerTypeId.ARCHER, position: { x: 3, y: 5 } }],
+      actions: [{ kind: 'build', towerType: TowerTypeId.SINGLE, position: { x: 3, y: 5 } }],
       reasoning: 'Coverage is low, extending maze',
       confidenceScore: 0.8,
     };
@@ -60,7 +60,7 @@ describe('entities/computer-opponent/decisionDebugSnapshots', () => {
         incomeBefore: 20,
         hpBefore: 18,
         actionCount: 1,
-        actionSummary: 'build archer at 3,5',
+        actionSummary: 'build single at 3,5',
         reasoning: 'Coverage is low, extending maze',
         confidenceScore: 0.8,
         threatLevel: 'medium',

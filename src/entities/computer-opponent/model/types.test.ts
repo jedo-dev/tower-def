@@ -68,7 +68,7 @@ describe('entities/computer-opponent/types', () => {
           threatLevel: 'low',
         },
         leakHistory: [],
-        affordableTowers: [TowerTypeId.ARCHER],
+        affordableTowers: [TowerTypeId.SINGLE],
         upgradeableTowerIds: ['tower_1'],
         availableBuildPositions: [{ x: 0, y: 0 }],
       };
@@ -222,12 +222,12 @@ describe('entities/computer-opponent/types', () => {
     it('BuildAction has correct kind', () => {
       const action: BuildAction = {
         kind: 'build',
-        towerType: TowerTypeId.ARCHER,
+        towerType: TowerTypeId.SINGLE,
         position: { x: 5, y: 10 },
       };
 
       expect(action.kind).toBe('build');
-      expect(action.towerType).toBe(TowerTypeId.ARCHER);
+      expect(action.towerType).toBe(TowerTypeId.SINGLE);
       expect(action.position).toEqual({ x: 5, y: 10 });
     });
 
@@ -261,7 +261,7 @@ describe('entities/computer-opponent/types', () => {
 
     it('ComputerAction union accepts all action types', () => {
       const actions: ComputerAction[] = [
-        { kind: 'build', towerType: TowerTypeId.ARCHER, position: { x: 0, y: 0 } },
+        { kind: 'build', towerType: TowerTypeId.SINGLE, position: { x: 0, y: 0 } },
         { kind: 'upgrade', towerId: 'tower_1' },
         { kind: 'send_creep', creepTypeId: 'undead_skeleton' },
         { kind: 'save' },
@@ -279,7 +279,7 @@ describe('entities/computer-opponent/types', () => {
     it('can be instantiated with all fields', () => {
       const output: DecisionOutput = {
         intent: StrategyIntent.DEFEND,
-        actions: [{ kind: 'build', towerType: TowerTypeId.ARCHER, position: { x: 3, y: 5 } }],
+        actions: [{ kind: 'build', towerType: TowerTypeId.SINGLE, position: { x: 3, y: 5 } }],
         reasoning: 'High threat level, need more defense',
         confidenceScore: 0.85,
       };
@@ -306,7 +306,7 @@ describe('entities/computer-opponent/types', () => {
       const output: DecisionOutput = {
         intent: StrategyIntent.EXTEND_MAZE,
         actions: [
-          { kind: 'build', towerType: TowerTypeId.ARCHER, position: { x: 1, y: 1 } },
+          { kind: 'build', towerType: TowerTypeId.SINGLE, position: { x: 1, y: 1 } },
           { kind: 'build', towerType: TowerTypeId.SPLASH, position: { x: 2, y: 2 } },
           { kind: 'upgrade', towerId: 'tower_1' },
         ],
@@ -352,7 +352,7 @@ describe('entities/computer-opponent/types', () => {
         decisionHistory: [
           {
             intent: StrategyIntent.DEFEND,
-            actions: [{ kind: 'build', towerType: TowerTypeId.ARCHER, position: { x: 1, y: 1 } }],
+            actions: [{ kind: 'build', towerType: TowerTypeId.SINGLE, position: { x: 1, y: 1 } }],
             reasoning: 'Initial defense',
             confidenceScore: 0.8,
           },

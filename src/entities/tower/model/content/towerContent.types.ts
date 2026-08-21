@@ -37,6 +37,7 @@ export type TowerContentFile = {
 export type TowerArchetypeContentEntry = {
   id: string;
   name: string;
+  attackKind: string;
   damage: number;
   range: number;
   attackCooldownMs: number;
@@ -98,6 +99,7 @@ export const TOWER_CONTENT_FILE_KEYS: readonly (keyof TowerContentFile)[] = [
 export const TOWER_ARCHETYPE_REQUIRED_KEYS: readonly (keyof TowerArchetypeContentEntry)[] = [
   'id',
   'name',
+  'attackKind',
   'damage',
   'range',
   'attackCooldownMs',

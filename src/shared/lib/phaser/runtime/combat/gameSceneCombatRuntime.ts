@@ -1,3 +1,5 @@
+import { TowerAttackKind } from '../../../../types/content-ids';
+import { getTowerAttackKind } from '../../../../../entities/tower';
 import Phaser from 'phaser';
 import { addGold, type PlayerResources } from '../../../../../entities/player-resources';
 import {
@@ -271,7 +273,7 @@ export function updateTowerCombat(
       continue;
     }
 
-    const isSplashTower = tower.entity.type === 'splash';
+    const isSplashTower = getTowerAttackKind(tower.entity.type) === TowerAttackKind.SPLASH;
     const splashRadius = tower.entity.combatStats.splashRadius ?? 0;
 
     if (isSplashTower && splashRadius > 0) {

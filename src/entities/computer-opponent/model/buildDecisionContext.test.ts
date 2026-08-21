@@ -17,12 +17,12 @@ function createTestMatchState(overrides?: Partial<DuelMatchState>): DuelMatchSta
   };
 }
 
-function createTestTower(overrides?: { id?: string; x?: number; y?: number; type?: 'archer' | 'splash'; level?: number }) {
+function createTestTower(overrides?: { id?: string; x?: number; y?: number; type?: 'single' | 'splash'; level?: number }) {
   return {
     id: overrides?.id ?? 'tower_1',
     position: { x: overrides?.x ?? 2, y: overrides?.y ?? 3 },
     cost: 50,
-    type: (overrides?.type ?? 'archer') as 'archer' | 'splash',
+    type: (overrides?.type ?? 'single') as 'single' | 'splash',
     level: overrides?.level ?? 1,
     combatStats: {
       range: 3,
@@ -229,7 +229,7 @@ describe('entities/computer-opponent/buildDecisionContext', () => {
       });
 
       expect(context.affordableTowers.length).toBeGreaterThan(0);
-      expect(context.affordableTowers).toContain('archer');
+      expect(context.affordableTowers).toContain('single');
     });
   });
 

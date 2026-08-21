@@ -2,8 +2,9 @@
   "schemaVersion": 1,
   "archetypes": [
     {
-      "id": "archer",
-      "name": "Archer",
+      "id": "single",
+      "name": "Single Target",
+      "attackKind": "single-target",
       "damage": 20,
       "range": 3,
       "attackCooldownMs": 800,
@@ -12,6 +13,7 @@
     {
       "id": "splash",
       "name": "Splash",
+      "attackKind": "splash",
       "damage": 18,
       "range": 2.5,
       "attackCooldownMs": 1200,

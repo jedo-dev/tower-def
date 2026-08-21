@@ -1,3 +1,5 @@
+import { TowerAttackKind, TowerTypeId } from '../../../../types/content-ids';
+import { getTowerAttackKind } from '../../../../../entities/tower';
 import type Phaser from 'phaser';
 import type { DuelMatchState } from '../../../../../entities/duel-match';
 import { buildableTowers, createInitialTowerCombatRuntime } from '../../../../../entities/tower';
@@ -82,7 +84,7 @@ export function getArcherTowerSpriteKey(scene: Phaser.Scene, factionId: RaceId):
 
 function resolveArcherTowerSprite(scene: Phaser.Scene, factionId: RaceId) {
   const factionTower = buildableTowers.find(
-    (tower) => tower.faction === factionId && tower.towerType === 'archer',
+    (tower) => tower.faction === factionId && tower.towerType === TowerTypeId.SINGLE,
   );
   const requestedKey = factionTower?.spriteKey ?? TOWER_SPRITE_KEYS.UNDEAD_BONE_ARCHER;
 
@@ -157,7 +159,7 @@ export function createPlacedPlagueSprite(
 }
 
 export function playArcherAttackAnimation(tower: TowerRenderState): void {
-  if (tower.entity.type !== 'archer') {
+  if (getTowerAttackKind(tower.entity.type) !== TowerAttackKind.SINGLE_TARGET) {
     return;
   }
 
@@ -192,7 +194,7 @@ export function playBoneArcherSellAnimation(tower: TowerRenderState): void {
 }
 
 export function playPlagueAttackAnimation(scene: Phaser.Scene, tower: TowerRenderState): void {
-  if (tower.entity.type !== 'splash') {
+  if (getTowerAttackKind(tower.entity.type) !== TowerAttackKind.SPLASH) {
     return;
   }
 
@@ -248,7 +250,7 @@ export function rebuildOpponentBattlefieldRenderState(
 
   battlefield.towers = opponent.battlefield.towers.map((tower) => {
     const sprite =
-      tower.type === 'splash'
+      getTowerAttackKind(tower.type) === TowerAttackKind.SPLASH
         ? createPlacedPlagueSprite(scene, tower.position)
         : createPlacedArcherSprite(scene, tower.position, opponent.raceId);
     sprite.setVisible(visible);

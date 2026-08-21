@@ -54,7 +54,7 @@ describe('mapHudSnapshotToViewModel', () => {
 
   it('maps selected archer to build mode and selected flag', () => {
     const vm = mapHudSnapshotToViewModel(
-      createSnapshot({ selectedTowerType: 'archer' }),
+      createSnapshot({ selectedTowerType: 'single' }),
     );
 
     expect(vm.selectedTowerLabel).toBe('Archer');

@@ -1,3 +1,5 @@
+import { TowerAttackKind } from '../../../../types/content-ids';
+import { getTowerAttackKind } from '../../../../../entities/tower';
 import type Phaser from 'phaser';
 import {
   canAffordUpgrade,
@@ -73,7 +75,7 @@ export function tryPlaceTowerAtHoveredCell(deps: TowerCommandDeps): void {
   }
 
   const towerSprite =
-    result.towerType === 'splash'
+    getTowerAttackKind(result.towerType) === TowerAttackKind.SPLASH
       ? createPlacedPlagueSprite(deps.scene, result.placedTower.position)
       : createPlacedArcherSprite(deps.scene, result.placedTower.position, deps.getBuilderFactionId());
   deps.playerField.towers.push({

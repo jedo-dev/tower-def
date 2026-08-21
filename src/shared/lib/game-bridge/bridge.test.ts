@@ -10,7 +10,14 @@ import {
   sendGameCommand,
   setGameSetupConfig,
 } from './bridge';
-import type { BattlefieldView, CreepSendQueueItem, GameHudSnapshot, SelectedTowerSnapshot } from './types';
+import type {
+  BattlefieldView,
+  CreepSendQueueItem,
+  GameHudSnapshot,
+  HudTowerType,
+  SelectedTowerSnapshot,
+} from './types';
+import { TOWER_TYPE_IDS, TowerTypeId } from '../../types/content-ids';
 import type { GameSetupConfig } from '../../config/game-setup';
 import { BuilderFaction } from '../../../entities/builder-faction';
 import { EnemyFaction } from '../../../entities/enemy-faction';
@@ -19,7 +26,7 @@ import { Difficulty } from '../../../entities/difficulty';
 function createTestTowerSnapshot(overrides?: Partial<SelectedTowerSnapshot>): SelectedTowerSnapshot {
   return {
     id: 'tower:5:3',
-    type: 'archer',
+    type: 'single',
     level: 1,
     position: { x: 5, y: 3 },
     cost: 50,
@@ -347,5 +354,30 @@ describe('game bridge event system', () => {
       .map(([filePath]) => filePath);
 
     expect(offenders).toEqual([]);
+  });
+});
+
+describe('game bridge tower selection commands', () => {
+  it('carries every declared archetype through the select-tower command', () => {
+    const received: (HudTowerType | null)[] = [];
+    const unsubscribe = onGameCommand('select-tower', (payload) => {
+      received.push(payload.towerType);
+    });
+
+    for (const archetypeId of TOWER_TYPE_IDS) {
+      sendGameCommand('select-tower', { towerType: archetypeId });
+    }
+    sendGameCommand('select-tower', { towerType: null });
+
+    unsubscribe();
+
+    expect(received).toEqual([...TOWER_TYPE_IDS, null]);
+  });
+
+  it('types the selection as the archetype vocabulary, not a loose string', () => {
+    const selection: HudTowerType = TowerTypeId.SPLASH;
+
+    expect(TOWER_TYPE_IDS).toContain(selection);
+    expect(TOWER_TYPE_IDS).not.toContain('archer');
   });
 });

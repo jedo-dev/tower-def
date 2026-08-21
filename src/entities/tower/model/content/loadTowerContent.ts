@@ -2,8 +2,10 @@ import {
   EFFECT_IDS,
   RACE_IDS,
   RaceId,
+  TOWER_ATTACK_KINDS,
   TOWER_TYPE_IDS,
   type EffectId,
+  type TowerAttackKind,
 } from '../../../../shared/types/content-ids';
 import {
   ContentValidationError,
@@ -43,6 +45,7 @@ export type TowerContentSource = {
 export type TowerArchetypeDefinition = TowerCombatStats & {
   id: TowerTypeId;
   name: string;
+  attackKind: TowerAttackKind;
   description: string;
   onHitEffects: TowerOnHitEffect[];
 };
@@ -189,6 +192,7 @@ function parseArchetypeEntry(
   return {
     id,
     name: readString(entry, 'name', location),
+    attackKind: readStringFrom(entry, 'attackKind', location, TOWER_ATTACK_KINDS),
     description: readString(entry, 'description', location),
     damage: readNumber(entry, 'damage', location, TOWER_STAT_BOUNDS.damage),
     range: readNumber(entry, 'range', location, TOWER_STAT_BOUNDS.range),

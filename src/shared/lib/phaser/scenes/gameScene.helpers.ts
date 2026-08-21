@@ -1,3 +1,4 @@
+import { TowerTypeId } from '../../../types/content-ids';
 import {
   builderFactions,
   type BuilderFactionConfig,
@@ -160,9 +161,9 @@ export function toTowerId(position: GridPosition): string {
   return `tower:${position.x}:${position.y}`;
 }
 
-export function resolveTowerRangeCells(selectedTowerType: 'archer' | 'splash' | null): number {
-  const towerType = selectedTowerType ?? 'archer';
-  if (towerType === 'splash') {
+export function resolveTowerRangeCells(selectedTowerType: TowerTypeId | null): number {
+  const towerType = selectedTowerType ?? TowerTypeId.SINGLE;
+  if (towerType === TowerTypeId.SPLASH) {
     return TowerCombatConfig.SPLASH_RANGE_CELLS;
   }
   return TowerCombatConfig.ARCHER_RANGE_CELLS;
@@ -180,7 +181,7 @@ export function resolveBuilderFaction(builderFactionId: RaceId): BuilderFactionC
 
 export function resolveBuildableTowerConfig(
   builderFactionId: RaceId,
-  towerType: 'archer' | 'splash',
+  towerType: TowerTypeId,
 ): BuildableTowerConfig | null {
   const factionTower = buildableTowers.find(
     (tower) => tower.faction === builderFactionId && tower.towerType === towerType,
@@ -189,5 +190,5 @@ export function resolveBuildableTowerConfig(
     return factionTower;
   }
 
-  return towerType === 'splash' ? PLAGUE_TOWER_CONFIG : BONE_ARCHER_TOWER_CONFIG;
+  return towerType === TowerTypeId.SPLASH ? PLAGUE_TOWER_CONFIG : BONE_ARCHER_TOWER_CONFIG;
 }

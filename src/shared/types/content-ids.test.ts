@@ -49,7 +49,7 @@ describe('shared/types/content-ids', () => {
 
   describe('TowerTypeId', () => {
     it('defines archer and splash with the original string values', () => {
-      expect(TowerTypeId.ARCHER).toBe('archer');
+      expect(TowerTypeId.SINGLE).toBe('single');
       expect(TowerTypeId.SPLASH).toBe('splash');
     });
 
@@ -60,7 +60,7 @@ describe('shared/types/content-ids', () => {
     });
 
     it('accepts known tower types and rejects unknown values', () => {
-      expect(isTowerTypeId('archer')).toBe(true);
+      expect(isTowerTypeId('single')).toBe(true);
       expect(isTowerTypeId('splash')).toBe(true);
       expect(isTowerTypeId('cannon')).toBe(false);
     });

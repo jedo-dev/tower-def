@@ -2,7 +2,11 @@ import towerArchetypeContent from '../../../content/towers/archetypes.json';
 import type { GridPosition } from '../../../shared/types/pathfinding';
 import type { EffectId, RaceId } from '../../../shared/types/content-ids';
 import { TOWER_TYPE_IDS, TowerTypeId } from '../../../shared/types/content-ids';
-import { loadTowerArchetypeContent } from './content/loadTowerContent';
+import type { TowerAttackKind } from '../../../shared/types/content-ids';
+import {
+  loadTowerArchetypeContent,
+  type TowerArchetypeDefinition,
+} from './content/loadTowerContent';
 import type { BuildableTowerId } from './towerIds';
 
 export type { TowerLevelStats, TowerUpgradeLevel, TowerTypeUpgradeConfig } from '../../../shared/constants/tower';
@@ -72,6 +76,18 @@ export const TOWER_COMBAT_STATS_BY_TYPE: Record<TowerTypeId, TowerCombatStats> =
     ];
   }),
 ) as Record<TowerTypeId, TowerCombatStats>;
+
+export function getTowerArchetype(towerType: TowerTypeId): TowerArchetypeDefinition {
+  return TOWER_ARCHETYPE_DEFINITIONS[towerType];
+}
+
+export function getTowerAttackKind(towerType: TowerTypeId): TowerAttackKind {
+  return TOWER_ARCHETYPE_DEFINITIONS[towerType].attackKind;
+}
+
+export function getTowerOnHitEffects(towerType: TowerTypeId): readonly TowerOnHitEffect[] {
+  return TOWER_ARCHETYPE_DEFINITIONS[towerType].onHitEffects;
+}
 
 export const TOWER_BASE_LEVEL = 1;
 

@@ -1,3 +1,4 @@
+import { TowerTypeId } from '../../../shared/types/content-ids';
 import { memo } from 'react';
 import styles from './TowerActionPanel.module.css';
 import { sendGameCommand } from '../../../shared/lib/game-bridge/bridge';
@@ -13,8 +14,8 @@ import type { HudTowerType } from '../../../shared/lib/game-bridge/types';
 import { PlaceholderIcon } from '../../../shared/ui/placeholder-icon';
 
 const TOWER_DISPLAY_NAMES: Record<HudTowerType, string> = {
-  archer: 'Archer Tower',
-  splash: 'Plague Tower',
+  [TowerTypeId.SINGLE]: 'Archer Tower',
+  [TowerTypeId.SPLASH]: 'Plague Tower',
 };
 
 function formatTowerType(type: HudTowerType): string {

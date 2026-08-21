@@ -1,4 +1,11 @@
-export { TOWER_ARCHETYPE_DEFINITIONS, TOWER_COMBAT_STATS_BY_TYPE } from './model/types';
+export {
+  getTowerArchetype,
+  getTowerAttackKind,
+  getTowerOnHitEffects,
+  TOWER_ARCHETYPE_DEFINITIONS,
+  TOWER_COMBAT_STATS_BY_TYPE,
+} from './model/types';
+export type { TowerArchetypeDefinition } from './model/content/loadTowerContent';
 export {
   buildableTowers,
   getBuildableTowersByFaction,

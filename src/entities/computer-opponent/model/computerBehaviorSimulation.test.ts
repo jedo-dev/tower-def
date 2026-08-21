@@ -44,15 +44,15 @@ const MATCHUP_PLAYER_RACE = RaceId.HUMAN;
 const MATCHUP_OPPONENT_RACE = RaceId.ORC;
 
 function createTower(id: string, position: GridPosition, level: number): TowerEntity {
-  const levelConfig = createTowerLevel(TowerTypeId.ARCHER, level);
+  const levelConfig = createTowerLevel(TowerTypeId.SINGLE, level);
 
   return {
     id,
     position,
     cost: 50,
-    type: TowerTypeId.ARCHER,
+    type: TowerTypeId.SINGLE,
     level,
-    combatStats: levelConfig?.combatStats ?? TOWER_COMBAT_STATS_BY_TYPE[TowerTypeId.ARCHER],
+    combatStats: levelConfig?.combatStats ?? TOWER_COMBAT_STATS_BY_TYPE[TowerTypeId.SINGLE],
   };
 }
 
@@ -91,7 +91,7 @@ function buildContext(profile: RoundProfile, state: SimulationState): DecisionCo
       threatLevel: profile.threatLevel,
     },
     leakHistory: profile.leakHistory,
-    affordableTowers: profile.gold >= 50 ? [TowerTypeId.ARCHER] : [],
+    affordableTowers: profile.gold >= 50 ? [TowerTypeId.SINGLE] : [],
     upgradeableTowerIds: state.towers.filter((tower) => tower.level < 3).map((tower) => tower.id),
     availableBuildPositions: profile.availableBuildPositions,
     intent: profile.intent,
@@ -299,7 +299,7 @@ describe('entities/computer-opponent/computerBehaviorSimulation', () => {
     const blockingScore = scoreTowerPlacement({
       grid: corridorGrid,
       position: blockingPosition,
-      towerType: TowerTypeId.ARCHER,
+      towerType: TowerTypeId.SINGLE,
       existingTowers: [],
       path,
     });

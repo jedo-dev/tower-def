@@ -21,7 +21,7 @@ function createTower(overrides: AuthoredEntry = {}): AuthoredEntry {
   return {
     id: 'undead_bone_archer_tower',
     name: 'Bone Archer Tower',
-    archetype: 'archer',
+    archetype: 'single',
     costGold: 50,
     damage: 22,
     range: 3.2,
@@ -48,7 +48,7 @@ describe('parseTowerContentFile', () => {
       id: 'undead_bone_archer_tower',
       name: 'Bone Archer Tower',
       faction: RaceId.UNDEAD,
-      towerType: TowerTypeId.ARCHER,
+      towerType: TowerTypeId.SINGLE,
       costGold: 50,
       damage: 22,
       range: 3.2,
@@ -85,6 +85,27 @@ describe('parseTowerContentFile', () => {
   it('rejects a tower authored under the wrong race', () => {
     expect(() => parse(createFile([createTower({ id: 'orc_spear_watchtower' })])))
       .toThrow(`${FILE} [orc_spear_watchtower]: id does not belong to race UNDEAD`);
+  });
+
+  it('rejects an archetype with no attack kind', () => {
+    expect(() =>
+      loadTowerArchetypeContent({
+        file: 'content/towers/archetypes.json',
+        data: {
+          schemaVersion: 1,
+          archetypes: [
+            {
+              id: 'single',
+              name: 'Archer',
+              damage: 20,
+              range: 3,
+              attackCooldownMs: 800,
+              description: 'Single target.',
+            },
+          ],
+        },
+      }),
+    ).toThrow(/"attackKind" must be a non-empty string/);
   });
 
   it('rejects an unknown archetype', () => {
@@ -134,8 +155,9 @@ describe('loadTowerArchetypeContent', () => {
           schemaVersion: 1,
           archetypes: [
             {
-              id: 'archer',
+              id: 'single',
               name: 'Archer',
+              attackKind: 'single-target',
               damage: 20,
               range: 3,
               attackCooldownMs: 800,
@@ -149,8 +171,9 @@ describe('loadTowerArchetypeContent', () => {
 
   it('rejects a duplicate archetype', () => {
     const archetype = {
-      id: 'archer',
+      id: 'single',
       name: 'Archer',
+      attackKind: 'single-target',
       damage: 20,
       range: 3,
       attackCooldownMs: 800,
@@ -178,7 +201,7 @@ describe('shipped tower content', () => {
   });
 
   it('keeps the placement stats the game shipped with', () => {
-    expect(TOWER_COMBAT_STATS_BY_TYPE.archer).toEqual({
+    expect(TOWER_COMBAT_STATS_BY_TYPE.single).toEqual({
       damage: 20,
       range: 3,
       attackCooldownMs: 800,

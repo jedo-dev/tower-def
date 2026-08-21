@@ -33,7 +33,7 @@ function createTestTower(overrides?: { x?: number; y?: number; id?: string }) {
     id: overrides?.id ?? 'tower_1',
     position: { x: overrides?.x ?? 2, y: overrides?.y ?? 3 },
     cost: 50,
-    type: 'archer' as const,
+    type: 'single' as const,
     level: 1,
     combatStats: {
       range: 3,

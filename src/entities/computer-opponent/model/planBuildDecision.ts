@@ -1,4 +1,4 @@
-import type { TowerTypeId } from '../../../shared/types/content-ids';
+import { TowerTypeId } from '../../../shared/types/content-ids';
 import type { GridModel } from '../../../shared/types/grid';
 import type { GridPosition } from '../../../shared/types/pathfinding';
 import type { TowerEntity } from '../../tower/model/types';
@@ -208,7 +208,7 @@ export function planBuildDecision(input: BuildPlannerInput): DecisionOutput {
     const upgrade = findBestUpgrade(context, existingTowers, remainingBudget);
     if (upgrade) {
       const cost = getUpgradeCost(
-        existingTowers.find((t) => t.id === upgrade.towerId)?.type ?? 'archer',
+        existingTowers.find((t) => t.id === upgrade.towerId)?.type ?? TowerTypeId.SINGLE,
         existingTowers.find((t) => t.id === upgrade.towerId)?.level ?? 1,
       );
       if (cost !== null) {

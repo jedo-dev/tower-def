@@ -13,15 +13,32 @@ export const RACE_IDS: readonly RaceId[] = [
 ] as const;
 
 export const TowerTypeId = {
-  ARCHER: 'archer',
+  SINGLE: 'single',
   SPLASH: 'splash',
 } as const;
 
 export type TowerTypeId = (typeof TowerTypeId)[keyof typeof TowerTypeId];
 
 export const TOWER_TYPE_IDS: readonly TowerTypeId[] = [
-  TowerTypeId.ARCHER,
+  TowerTypeId.SINGLE,
   TowerTypeId.SPLASH,
+] as const;
+
+/**
+ * How an archetype delivers its damage. Archetypes differ by stats and on-hit
+ * effects; the attack kind is what the combat runtime dispatches on, so adding
+ * a frost tower does not mean adding a branch.
+ */
+export const TowerAttackKind = {
+  SINGLE_TARGET: 'single-target',
+  SPLASH: 'splash',
+} as const;
+
+export type TowerAttackKind = (typeof TowerAttackKind)[keyof typeof TowerAttackKind];
+
+export const TOWER_ATTACK_KINDS: readonly TowerAttackKind[] = [
+  TowerAttackKind.SINGLE_TARGET,
+  TowerAttackKind.SPLASH,
 ] as const;
 
 export const CreepTypeId = {

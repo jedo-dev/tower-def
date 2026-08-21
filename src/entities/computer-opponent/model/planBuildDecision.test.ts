@@ -22,12 +22,12 @@ function createTestPath() {
   return findPathBfs(grid).path;
 }
 
-function createTestTower(overrides?: { id?: string; x?: number; y?: number; type?: 'archer' | 'splash'; level?: number }): TowerEntity {
+function createTestTower(overrides?: { id?: string; x?: number; y?: number; type?: 'single' | 'splash'; level?: number }): TowerEntity {
   return {
     id: overrides?.id ?? 'tower_1',
     position: { x: overrides?.x ?? 2, y: overrides?.y ?? 3 },
     cost: 50,
-    type: (overrides?.type ?? 'archer') as 'archer' | 'splash',
+    type: (overrides?.type ?? 'single') as 'single' | 'splash',
     level: overrides?.level ?? 1,
     combatStats: {
       range: 3,
@@ -57,7 +57,7 @@ function createTestContext(overrides?: Partial<DecisionContext>): DecisionContex
       threatLevel: 'low',
     },
     leakHistory: [],
-    affordableTowers: [TowerTypeId.ARCHER],
+    affordableTowers: [TowerTypeId.SINGLE],
     upgradeableTowerIds: [],
     availableBuildPositions: [{ x: 3, y: 5 }, { x: 4, y: 5 }, { x: 5, y: 5 }],
     ...overrides,
@@ -189,7 +189,7 @@ describe('entities/computer-opponent/planBuildDecision', () => {
     it('selects build when intent is EXTEND_MAZE and positions available', () => {
       const context = createTestContext({
         gold: 200,
-        affordableTowers: [TowerTypeId.ARCHER],
+        affordableTowers: [TowerTypeId.SINGLE],
         availableBuildPositions: [{ x: 3, y: 5 }, { x: 4, y: 5 }],
         mazeCoverage: {
           totalWalkableCells: 150,
@@ -210,7 +210,7 @@ describe('entities/computer-opponent/planBuildDecision', () => {
       const buildAction = result.actions.find((a) => a.kind === 'build');
       expect(buildAction).toBeDefined();
       if (buildAction && buildAction.kind === 'build') {
-        expect(buildAction.towerType).toBe(TowerTypeId.ARCHER);
+        expect(buildAction.towerType).toBe(TowerTypeId.SINGLE);
         expect(buildAction.position).toBeDefined();
       }
     });
@@ -238,7 +238,7 @@ describe('entities/computer-opponent/planBuildDecision', () => {
     it('returns save when no available positions', () => {
       const context = createTestContext({
         gold: 200,
-        affordableTowers: [TowerTypeId.ARCHER],
+        affordableTowers: [TowerTypeId.SINGLE],
         availableBuildPositions: [],
       });
       const grid = createTestGrid();
@@ -259,7 +259,7 @@ describe('entities/computer-opponent/planBuildDecision', () => {
       const context = createTestContext({
         gold: 600,
         difficulty: Difficulty.HARD,
-        affordableTowers: [TowerTypeId.ARCHER],
+        affordableTowers: [TowerTypeId.SINGLE],
         availableBuildPositions: [
           { x: 2, y: 4 },
           { x: 3, y: 4 },

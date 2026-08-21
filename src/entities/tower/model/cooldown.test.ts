@@ -10,11 +10,11 @@ import { TOWER_COMBAT_STATS_BY_TYPE, type TowerEntity } from './types';
 function createTower(overrides?: Partial<TowerEntity>): TowerEntity {
   return {
     id: 'tower:archer:0',
-    type: 'archer',
+    type: 'single',
     cost: 100,
     position: { x: 0, y: 0 },
     level: 1,
-    combatStats: TOWER_COMBAT_STATS_BY_TYPE.archer,
+    combatStats: TOWER_COMBAT_STATS_BY_TYPE.single,
     ...overrides,
   };
 }

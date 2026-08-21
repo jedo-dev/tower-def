@@ -50,7 +50,7 @@ function createDefenseTower() {
     id: 'computer:tower:4:6',
     position: { x: 4, y: 6 },
     cost: 50,
-    type: 'archer' as const,
+    type: 'single' as const,
     level: 1,
     combatStats: {
       range: 3,

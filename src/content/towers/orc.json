@@ -5,7 +5,7 @@
     {
       "id": "orc_spear_watchtower",
       "name": "Spear Watchtower",
-      "archetype": "archer",
+      "archetype": "single",
       "costGold": 50,
       "damage": 22,
       "range": 3.2,

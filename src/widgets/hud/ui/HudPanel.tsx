@@ -1,3 +1,4 @@
+import { TowerTypeId } from '../../../shared/types/content-ids';
 import { memo, useState } from 'react';
 import styles from './HudPanel.module.css';
 import { sendGameCommand } from '../../../shared/lib/game-bridge/bridge';
@@ -30,8 +31,8 @@ function mapFactionToDisplayName(faction: HudFactionType): string {
 }
 
 const TOWER_BUTTONS: { type: HudTowerType; label: string }[] = [
-  { type: 'archer', label: 'Archer' },
-  { type: 'splash', label: 'Plague' },
+  { type: TowerTypeId.SINGLE, label: 'Archer' },
+  { type: TowerTypeId.SPLASH, label: 'Plague' },
 ];
 
 const PRESSURE_LEVEL_CLASS: Record<HudPressureLevel, string> = {

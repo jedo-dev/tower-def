@@ -36,7 +36,9 @@ export enum TowerUpgradeBalance {
 }
 
 export const TOWER_UPGRADE_CONFIG: Record<string, TowerTypeUpgradeConfig> = {
-  archer: {
+  // Keyed by archetype id; the ARCHER_* balance constants describe the
+  // single-target archetype.
+  single: {
     maxLevel: TowerUpgradeBalance.MAX_LEVEL,
     levels: [
       {

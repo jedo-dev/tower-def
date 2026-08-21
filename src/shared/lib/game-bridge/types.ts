@@ -1,5 +1,8 @@
 export type GamePhase = 'build' | 'wave' | 'completed' | 'game-over';
-export type HudTowerType = 'archer' | 'splash';
+import type { TowerTypeId } from '../../types/content-ids';
+
+/** Archetype the player can select to build; derived from tower content. */
+export type HudTowerType = TowerTypeId;
 export type HudFactionType = 'undead' | 'orc' | 'human' | 'elf';
 export type HudCreepType = 'skeleton' | 'ghoul' | 'crypt_fiend' | 'gargoyle';
 export type BattlefieldView = 'player' | 'opponent';
