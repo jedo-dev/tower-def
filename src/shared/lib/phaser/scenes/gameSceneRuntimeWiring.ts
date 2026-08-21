@@ -28,6 +28,7 @@ import type {
   WaveRuntimeState,
 } from '../runtime/wave/gameSceneWaveRuntime';
 import { mapUnitToCreepType, toCellCenter } from './gameScene.helpers';
+import { resolveSpriteKey } from '../runtime/assets/spriteKeyResolver';
 
 /**
  * The narrow surface of GameScene that the runtime dependency wiring needs.
@@ -129,7 +130,10 @@ function createWaveRuntimeDeps(host: GameSceneWiringHost): WaveRuntimeDependenci
     },
     onBuildStateUpdated: () => host.refreshBuildState(),
     onHudChanged: () => host.publishHudSnapshot(),
-    createCreepSprite: (x, y, spriteKey) => host.scene.add.sprite(x, y, spriteKey, 0),
+    createCreepSprite: (x, y, spriteKey) => {
+      const resolved = resolveSpriteKey(host.scene.textures, 'unit', spriteKey);
+      return host.scene.add.sprite(x, y, resolved.spriteKey, 0);
+    },
     playSound: (soundId: SoundId) => host.getSoundManager()?.play(soundId),
   };
 }

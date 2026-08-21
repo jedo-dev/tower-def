@@ -8,7 +8,6 @@ import {
 } from '../../../../../entities/unit';
 import { GRID_DIMENSIONS } from '../../../../constants/grid';
 import {
-  TOWER_ANIMATION_KEYS,
   TOWER_SPRITE_KEYS,
   UNIT_FACTION_TINTS,
   UNIT_SPRITE_KEYS,
@@ -31,6 +30,7 @@ import {
   getTowerAnimationSet,
   getWalkAnimationKeyBySpriteKey,
 } from '../animation/gameSceneAnimationRuntime';
+import { resolveSpriteKey } from '../assets/spriteKeyResolver';
 import {
   destroyBattlefieldRenderState,
   type BattlefieldRenderState,
@@ -77,15 +77,19 @@ export function getAnimationKeyByUnit(unit: UnitConfig): string {
 }
 
 export function getArcherTowerSpriteKey(scene: Phaser.Scene, factionId: RaceId): string {
+  return resolveArcherTowerSprite(scene, factionId).spriteKey;
+}
+
+function resolveArcherTowerSprite(scene: Phaser.Scene, factionId: RaceId) {
   const factionTower = buildableTowers.find(
     (tower) => tower.faction === factionId && tower.towerType === 'archer',
   );
-  const spriteKey = factionTower?.spriteKey ?? TOWER_SPRITE_KEYS.UNDEAD_BONE_ARCHER;
-  if (scene.textures.exists(spriteKey)) {
-    return spriteKey;
-  }
+  const requestedKey = factionTower?.spriteKey ?? TOWER_SPRITE_KEYS.UNDEAD_BONE_ARCHER;
 
-  return TOWER_SPRITE_KEYS.UNDEAD_BONE_ARCHER;
+  return resolveSpriteKey(scene.textures, 'tower', requestedKey, {
+    raceId: factionId,
+    contentId: factionTower?.id,
+  });
 }
 
 function resolveTowerRenderDepth(position: GridPosition): number {
@@ -98,9 +102,12 @@ export function createPlacedArcherSprite(
   factionId: RaceId,
 ): Phaser.GameObjects.Sprite {
   const center = toCellCenter(position);
-  const spriteKey = getArcherTowerSpriteKey(scene, factionId);
-  const animationSet = getTowerAnimationSet(spriteKey);
-  const sprite = scene.add.sprite(center.x, center.y, spriteKey, 0);
+  const resolved = resolveArcherTowerSprite(scene, factionId);
+  const animationSet = getTowerAnimationSet(resolved.spriteKey);
+  const sprite = scene.add.sprite(center.x, center.y, resolved.spriteKey, 0);
+  if (resolved.isPlaceholder && resolved.placeholderTint !== undefined) {
+    sprite.setTint(resolved.placeholderTint);
+  }
   sprite.setDepth(resolveTowerRenderDepth(position));
   sprite.setDisplaySize(
     GRID_DIMENSIONS.cellSize * TOWER_VISUAL_SCALE_IN_CELLS,
@@ -123,8 +130,14 @@ export function createPlacedPlagueSprite(
   position: GridPosition,
 ): Phaser.GameObjects.Sprite {
   const center = toCellCenter(position);
-  const spriteKey = PLAGUE_TOWER_CONFIG?.spriteKey ?? TOWER_SPRITE_KEYS.UNDEAD_BONE_ARCHER;
-  const sprite = scene.add.sprite(center.x, center.y, spriteKey, 0);
+  const resolved = resolveSpriteKey(
+    scene.textures,
+    'tower',
+    PLAGUE_TOWER_CONFIG?.spriteKey ?? TOWER_SPRITE_KEYS.UNDEAD_BONE_ARCHER,
+    { contentId: PLAGUE_TOWER_CONFIG?.id },
+  );
+  const animationSet = getTowerAnimationSet(resolved.spriteKey);
+  const sprite = scene.add.sprite(center.x, center.y, resolved.spriteKey, 0);
   sprite.setDepth(resolveTowerRenderDepth(position));
   sprite.setDisplaySize(
     GRID_DIMENSIONS.cellSize * TOWER_VISUAL_SCALE_IN_CELLS * 1.1,
@@ -132,12 +145,12 @@ export function createPlacedPlagueSprite(
   );
   sprite.setOrigin(PLAGUE_TOWER_ORIGIN_X, PLAGUE_TOWER_ORIGIN_Y);
   sprite.setTint(0x44aa44);
-  sprite.play(TOWER_ANIMATION_KEYS.UNDEAD_BONE_ARCHER_BUILD);
-  sprite.once(`animationcomplete-${TOWER_ANIMATION_KEYS.UNDEAD_BONE_ARCHER_BUILD}`, () => {
+  sprite.play(animationSet.build);
+  sprite.once(`animationcomplete-${animationSet.build}`, () => {
     if (!sprite.scene) {
       return;
     }
-    sprite.play(TOWER_ANIMATION_KEYS.UNDEAD_BONE_ARCHER_IDLE);
+    sprite.play(animationSet.idle);
   });
 
   return sprite;

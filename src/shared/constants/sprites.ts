@@ -80,6 +80,15 @@ export const TOWER_BONE_ARCHER_EFFECT_FRAMES = {
   attackEffect: 13,
 } as const;
 
+export const PLACEHOLDER_ANIMATION_KEYS = {
+  UNIT_WALK: 'placeholder.unit.walk',
+  TOWER_BUILD: 'placeholder.tower.build',
+  TOWER_IDLE: 'placeholder.tower.idle',
+  TOWER_ATTACK: 'placeholder.tower.attack',
+  TOWER_HIT_REACTION: 'placeholder.tower.hitReaction',
+  TOWER_SELL: 'placeholder.tower.sell',
+} as const;
+
 export const TOWER_ANIMATION_SETS = {
   [TOWER_SPRITE_KEYS.UNDEAD_BONE_ARCHER]: {
     build: TOWER_ANIMATION_KEYS.UNDEAD_BONE_ARCHER_BUILD,
