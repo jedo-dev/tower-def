@@ -6,6 +6,11 @@ This document lists all expected sound assets for the Tower Defense game, groupe
 
 **Note**: No actual sound files are provided. This is a specification document for asset creation/import.
 
+Rows marked **(pending)** are registered in code but skipped by the preloader
+(`PENDING_SOUND_ASSETS` in `shared/lib/phaser/sound/audio.constants.ts`). They
+stay silent until the file lands; drop the file in and remove the id from that
+list to switch the sound on.
+
 ---
 
 ## UI Sounds
@@ -63,6 +68,9 @@ This document lists all expected sound assets for the Tower Defense game, groupe
 | Sound ID | Usage | Emotion | Duration | Filename |
 |----------|-------|---------|----------|----------|
 | `combat.creep_hit` | Creep takes damage | Impact feedback | 0.1-0.2s | `combat_creep_hit_01.wav` |
+| `combat.effect_applied.chill` | Chill (slow) lands on a creep | Icy shimmer | 0.2-0.3s | `combat_effect_chill_01.wav` **(pending)** |
+| `combat.effect_applied.poison` | Poison or burn lands on a creep | Wet corrosive hiss | 0.2-0.3s | `combat_effect_poison_01.wav` **(pending)** |
+| `combat.effect_applied.stun` | Stun lands on a creep | Dull concussive thud | 0.15-0.25s | `combat_effect_stun_01.wav` **(pending)** |
 | `combat.creep_death.basic` | Basic creep dies | Death thud | 0.2-0.35s | `combat_creep_death_basic_01.wav` |
 | `combat.creep_death.elite` | Elite creep dies | Heavier death | 0.3-0.5s | `combat_creep_death_elite_01.wav` |
 | `combat.creep_escape` | Creep reaches exit | Failure warning | 0.25-0.4s | `combat_creep_escape_01.wav` |

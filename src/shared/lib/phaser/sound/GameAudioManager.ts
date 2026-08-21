@@ -1,6 +1,11 @@
 import Phaser from 'phaser';
 import { FactionAudioId, SoundCategory, type SoundId } from './audio.types';
-import { AUDIO_CONSTANTS, SOUND_ASSET_PATHS, SOUND_REGISTRY } from './audio.constants';
+import {
+  AUDIO_CONSTANTS,
+  PENDING_SOUND_ASSETS,
+  SOUND_ASSET_PATHS,
+  SOUND_REGISTRY,
+} from './audio.constants';
 import {
   getAmbientUserScale,
   getSfxUserScale,
@@ -308,7 +313,7 @@ export class GameAudioManager {
     const loadedPathToKey = new Map<string, string>();
     (Object.keys(SOUND_REGISTRY) as SoundId[]).forEach((soundId) => {
       const assetPath = SOUND_ASSET_PATHS[soundId];
-      if (!assetPath) {
+      if (!assetPath || PENDING_SOUND_ASSETS.includes(soundId)) {
         return;
       }
 

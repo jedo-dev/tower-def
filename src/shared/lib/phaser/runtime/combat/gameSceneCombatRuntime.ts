@@ -1,10 +1,17 @@
 import Phaser from 'phaser';
 import { addGold, type PlayerResources } from '../../../../../entities/player-resources';
-import { applyDamageToCreep, isCreepDead, tickCreepEffects } from '../../../../../entities/creep';
+import {
+  applyDamageToCreep,
+  applyEffectToCreep,
+  isCreepDead,
+  tickCreepEffects,
+  type ApplyEffectInput,
+} from '../../../../../entities/creep';
 import { canTowerAttack, consumeTowerAttack, selectTowerTarget, tickTowerCooldown } from '../../../../../entities/tower';
 import { ECONOMY_BALANCE } from '../../../../constants/economy';
 import { GRID_DIMENSIONS } from '../../../../constants/grid';
 import { TOWER_BONE_ARCHER_EFFECT_FRAMES, TOWER_SPRITE_KEYS } from '../../../../constants/sprites';
+import { EffectId } from '../../../../types/content-ids';
 import type { GridPosition } from '../../../../types/pathfinding';
 import type { SoundId } from '../../sound/audio.types';
 import type {
@@ -282,6 +289,43 @@ export function updateTowerCombat(
     spawnProjectileFeedback(battlefield, deps, config, tower, targetRenderState.entity.position, isSplashTower);
     deps.playSound(isSplashTower ? 'combat.tower_attack.splash' : 'combat.tower_attack.archer');
   }
+}
+
+const EFFECT_APPLIED_SOUND_BY_EFFECT: Partial<Record<EffectId, SoundId>> = {
+  [EffectId.CHILL]: 'combat.effect_applied.chill',
+  [EffectId.POISON]: 'combat.effect_applied.poison',
+  [EffectId.BURN]: 'combat.effect_applied.poison',
+  [EffectId.STUN]: 'combat.effect_applied.stun',
+};
+
+/**
+ * Single entry point for putting a tower effect on a creep: applies it, repaints
+ * the creep and plays its stinger. The sound registry cooldown throttles the
+ * stinger, so a splash hit on a dozen creeps stays one audible cue.
+ */
+export function applyTowerEffectToCreep(
+  deps: CombatRuntimeDependencies,
+  config: CombatRuntimeConfig,
+  creep: CreepRenderState,
+  input: ApplyEffectInput,
+): boolean {
+  const previousEntity = creep.entity;
+  creep.entity = applyEffectToCreep(creep.entity, input);
+
+  // A weaker application of a strongest-wins effect changes nothing.
+  if (creep.entity === previousEntity) {
+    return false;
+  }
+
+  refreshCreepEffectVisuals(deps.scene, creep, config.creepBaseColor);
+
+  const soundId = EFFECT_APPLIED_SOUND_BY_EFFECT[input.effectId];
+
+  if (soundId) {
+    deps.playSound(soundId);
+  }
+
+  return true;
 }
 
 /**

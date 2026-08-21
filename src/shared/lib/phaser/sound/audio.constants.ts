@@ -8,6 +8,12 @@ import { FactionAudioId, SoundCategory } from './audio.types';
 const V = (volume: number) => volume;
 const C = (cooldownMs: number) => cooldownMs;
 
+/**
+ * Throttle for status effect stingers. A splash tower can chill a dozen creeps
+ * in one shot; without this the applications pile into a single loud smear.
+ */
+export const EFFECT_APPLY_SOUND_COOLDOWN_MS = 220;
+
 export const SOUND_REGISTRY: Record<SoundId, SoundPlaybackConfig> = {
   'ui.click': {
     ...DEFAULT_SOUND_CONFIG,
@@ -240,6 +246,31 @@ export const SOUND_REGISTRY: Record<SoundId, SoundPlaybackConfig> = {
     pitchMax: 1.0,
     factionTags: [FactionAudioId.ELF],
   },
+  'combat.effect_applied.chill': {
+    ...DEFAULT_SOUND_CONFIG,
+    volume: V(0.22),
+    category: SoundCategory.COMBAT,
+    cooldownMs: C(EFFECT_APPLY_SOUND_COOLDOWN_MS),
+    pitchMin: 1.15,
+    pitchMax: 1.3,
+    maxDurationSec: 0.3,
+  },
+  'combat.effect_applied.poison': {
+    ...DEFAULT_SOUND_CONFIG,
+    volume: V(0.22),
+    category: SoundCategory.COMBAT,
+    cooldownMs: C(EFFECT_APPLY_SOUND_COOLDOWN_MS),
+    pitchMin: 0.85,
+    pitchMax: 0.95,
+    maxDurationSec: 0.3,
+  },
+  'combat.effect_applied.stun': {
+    ...DEFAULT_SOUND_CONFIG,
+    volume: V(0.28),
+    category: SoundCategory.COMBAT,
+    cooldownMs: C(EFFECT_APPLY_SOUND_COOLDOWN_MS),
+    maxDurationSec: 0.25,
+  },
   'combat.creep_hit': {
     ...DEFAULT_SOUND_CONFIG,
     volume: V(0.22),
@@ -371,6 +402,9 @@ export const SOUND_ASSET_PATHS: Record<SoundId, string> = {
   'combat.tower_attack.splash.human': 'assets/audio/sfx/combat/combat_splash_attack_01.wav',
   'combat.tower_attack.splash.elf': 'assets/audio/sfx/combat/combat_splash_attack_01.wav',
   'combat.creep_hit': 'assets/audio/sfx/combat/combat_archer_attack_01.wav',
+  'combat.effect_applied.chill': 'assets/audio/sfx/combat/combat_effect_chill_01.wav',
+  'combat.effect_applied.poison': 'assets/audio/sfx/combat/combat_effect_poison_01.wav',
+  'combat.effect_applied.stun': 'assets/audio/sfx/combat/combat_effect_stun_01.wav',
   'combat.creep_death.basic': 'assets/audio/sfx/combat/combat_splash_attack_01.wav',
   'combat.creep_death.elite': 'assets/audio/sfx/combat/combat_splash_attack_01.wav',
   'combat.creep_escape': 'assets/audio/sfx/ui/ui_error_01.wav',
@@ -384,6 +418,17 @@ export const SOUND_ASSET_PATHS: Record<SoundId, string> = {
   'ambient.faction.human': 'assets/audio/sfx/ambient/ambient_map_01.wav',
   'ambient.faction.elf': 'assets/audio/sfx/ambient/ambient_map_01.wav',
 };
+
+/**
+ * Sounds whose wav files are not authored yet. The preloader skips them, so a
+ * pending asset stays silent instead of failing a request every session.
+ * Remove an id from this list the moment its file lands.
+ */
+export const PENDING_SOUND_ASSETS: readonly SoundId[] = [
+  'combat.effect_applied.chill',
+  'combat.effect_applied.poison',
+  'combat.effect_applied.stun',
+];
 
 export const AUDIO_CONSTANTS = {
   MAX_SIMULTANEOUS_SOUNDS: 12,

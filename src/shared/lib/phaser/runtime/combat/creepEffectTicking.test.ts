@@ -9,7 +9,7 @@ import type { CreepRenderState } from '../../scenes/gameScene.types';
 // suite in the node environment.
 vi.mock('phaser', () => ({ default: { Display: { Color: {} } } }));
 
-const { updateCreepEffects } = await import('./gameSceneCombatRuntime');
+const { applyTowerEffectToCreep, updateCreepEffects } = await import('./gameSceneCombatRuntime');
 
 type CombatConfig = Parameters<typeof updateCreepEffects>[2];
 type CombatDeps = Parameters<typeof updateCreepEffects>[1];
@@ -147,5 +147,42 @@ describe('updateCreepEffects', () => {
     updateCreepEffects(battlefield, createDeps(), CONFIG, 16);
 
     expect(creep.entity).toBe(before);
+  });
+});
+
+describe('applyTowerEffectToCreep', () => {
+  it('puts the effect on the creep and plays its stinger', () => {
+    const creep = createCreepRenderState();
+    const deps = createDeps();
+
+    const applied = applyTowerEffectToCreep(deps, CONFIG, creep, { effectId: EffectId.CHILL });
+
+    expect(applied).toBe(true);
+    expect(creep.entity.activeEffects).toHaveLength(1);
+    expect(deps.sounds).toContain('combat.effect_applied.chill');
+  });
+
+  it('reports nothing applied when a weaker slow is dropped', () => {
+    const creep = createCreepRenderState();
+    const deps = createDeps();
+
+    applyTowerEffectToCreep(deps, CONFIG, creep, { effectId: EffectId.CHILL, magnitude: 0.5 });
+    const secondApplication = applyTowerEffectToCreep(deps, CONFIG, creep, {
+      effectId: EffectId.CHILL,
+      magnitude: 0.2,
+    });
+
+    expect(secondApplication).toBe(false);
+    expect(deps.sounds.filter((sound) => sound === 'combat.effect_applied.chill')).toHaveLength(1);
+  });
+
+  it('has no stinger for armor break yet', () => {
+    const creep = createCreepRenderState();
+    const deps = createDeps();
+
+    applyTowerEffectToCreep(deps, CONFIG, creep, { effectId: EffectId.ARMOR_BREAK });
+
+    expect(creep.entity.activeEffects).toHaveLength(1);
+    expect(deps.sounds).toHaveLength(0);
   });
 });
