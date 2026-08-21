@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest';
+import { DEFAULT_CREEP_COMBAT_TRAITS } from './types';
 import { isCreepAlive, isCreepDead, setCreepLifeState } from './lifeState';
 import type { CreepEntity } from './types';
 
 function createCreep(overrides?: Partial<CreepEntity>): CreepEntity {
   return {
+    ...DEFAULT_CREEP_COMBAT_TRAITS,
     id: 'creep:test',
     type: 'basic',
     hp: 100,

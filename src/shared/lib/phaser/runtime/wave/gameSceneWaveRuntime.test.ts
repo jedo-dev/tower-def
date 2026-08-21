@@ -3,9 +3,10 @@ import { createInitialDuelMatchState } from '../../../../../entities/duel-match'
 import { applyComputerSendStrategy } from '../../../../../entities/computer-opponent';
 import { Difficulty } from '../../../../../entities/difficulty';
 import { resolveUnitConfigById, undeadUnits } from '../../../../../entities/unit';
-import { RaceId } from '../../../../types/content-ids';
+import { RaceId, UnitMoveType } from '../../../../types/content-ids';
 import { createInitialWavePhaseState } from '../../../../../features/wave-phase';
 import {
+  processPendingWaveSpawns,
   spawnWaveCreeps,
   type WaveRuntimeDependencies,
   type WaveRuntimeState,
@@ -102,5 +103,49 @@ describe('shared/lib/phaser/runtime/wave computer send wiring', () => {
     expect(sendResult.state.opponent.gold).toBeLessThan(initialDuelState.opponent.gold);
     expect(sendResult.state.opponent.income).toBeGreaterThan(initialDuelState.opponent.income);
     expect(spawnedUnitIds).toEqual(expect.arrayContaining(sendResult.state.opponent.sendQueue));
+  });
+});
+
+describe('shared/lib/phaser/runtime/wave creature traits', () => {
+  it('copies authored armor and traits onto the spawned creep', () => {
+    const gargoyle = resolveUnitConfigById('undead_gargoyle');
+    const state: WaveRuntimeState = {
+      activeCreepPath: [{ x: 0, y: 0 }],
+      activeCreeps: [],
+      pendingWaveSpawns: [{ unit: gargoyle, sequenceIndex: 0, spawnAtMs: 0 }],
+      wavePhaseState: createInitialWavePhaseState(),
+      isWaveCompletionRewardGranted: false,
+      nextWaveStartsAtMs: null,
+      restartScheduledAtMs: null,
+      playerGold: 100,
+      playerLives: 20,
+      isGameOver: false,
+      currentWaveNumber: 1,
+      lastPublishedAutoStartSecondsLeft: null,
+    };
+    const deps: WaveRuntimeDependencies = {
+      nowMs: () => 1_000,
+      getSelectedFactionUnits: () => [gargoyle],
+      getAdditionalWaveUnits: () => [],
+      getSpriteKeyByUnit: () => 'unit:sprite',
+      getAnimationKeyByUnit: () => 'unit:walk',
+      getCreepTypeFromUnit: () => 'basic',
+      toCellCenter: (position) => position,
+      onGoldUpdated: vi.fn(),
+      onWavePhaseChanged: vi.fn(),
+      onBuildStateUpdated: vi.fn(),
+      onHudChanged: vi.fn(),
+      createCreepSprite: () => createSpriteStub(),
+      playSound: vi.fn(),
+    };
+
+    processPendingWaveSpawns(state, deps, 1_000);
+
+    const spawned = state.activeCreeps[0]?.entity;
+
+    expect(spawned).toBeDefined();
+    expect(spawned.armor).toBe(gargoyle.armor);
+    expect(spawned.armorType).toBe(gargoyle.armorType);
+    expect(spawned.moveType).toBe(UnitMoveType.AIR);
   });
 });

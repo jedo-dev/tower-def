@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { DEFAULT_CREEP_COMBAT_TRAITS } from '../../../../../entities/creep';
 import type { CreepEntity } from '../../../../../entities/creep';
 import {
   canAffordUpgrade,
@@ -27,6 +28,7 @@ function createTestTower(overrides?: Partial<TowerEntity>): TowerEntity {
 
 function createTestCreep(overrides?: Partial<CreepEntity>): CreepEntity {
   return {
+    ...DEFAULT_CREEP_COMBAT_TRAITS,
     id: 'creep:0',
     type: 'basic',
     hp: 100,

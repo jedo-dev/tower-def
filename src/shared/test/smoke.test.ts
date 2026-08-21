@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { DEFAULT_CREEP_COMBAT_TRAITS } from '../../entities/creep';
 import { RaceId } from '../types/content-ids';
 import {
   getActiveBattlefieldView,
@@ -86,6 +87,7 @@ describe('test setup', () => {
     );
     const opponentWithIncomingSend = addCreeps(opponentWithDefense, [
       {
+        ...DEFAULT_CREEP_COMBAT_TRAITS,
         id: 'player_send_1',
         typeId: 'basic',
         hp: 100,
@@ -95,6 +97,7 @@ describe('test setup', () => {
     ]);
     const playerWithComputerSend = addCreeps(sendResult.state.player.battlefield, [
       {
+        ...DEFAULT_CREEP_COMBAT_TRAITS,
         id: 'computer_send_1',
         typeId: 'basic',
         hp: 100,

@@ -8,6 +8,8 @@
  * `RaceId` and `UnitTier` is the content validator's job.
  */
 
+import { UnitArmorType, UnitMoveType, UnitSizeClass } from '../../../../shared/types/content-ids';
+
 /** Bumped whenever the authored creature format changes shape. */
 export const UNIT_CONTENT_SCHEMA_VERSION = 1;
 
@@ -22,6 +24,25 @@ export type UnitContentEntry = {
   rewardGold: number;
   spriteKey: string;
   description?: string;
+  moveType?: string;
+  sizeClass?: string;
+  armorType?: string;
+};
+
+export type UnitTraits = {
+  moveType: UnitMoveType;
+  sizeClass: UnitSizeClass;
+  armorType: UnitArmorType;
+};
+
+/**
+ * Traits are optional in content: a creature only declares what makes it
+ * different. Everything else is a plain ground footsoldier.
+ */
+export const UNIT_TRAIT_DEFAULTS: UnitTraits = {
+  moveType: UnitMoveType.GROUND,
+  sizeClass: UnitSizeClass.MEDIUM,
+  armorType: UnitArmorType.LIGHT,
 };
 
 export type UnitContentFile = {
@@ -62,7 +83,12 @@ export const UNIT_CONTENT_REQUIRED_KEYS: readonly (keyof UnitContentEntry)[] = [
   'spriteKey',
 ];
 
-export const UNIT_CONTENT_OPTIONAL_KEYS: readonly (keyof UnitContentEntry)[] = ['description'];
+export const UNIT_CONTENT_OPTIONAL_KEYS: readonly (keyof UnitContentEntry)[] = [
+  'description',
+  'moveType',
+  'sizeClass',
+  'armorType',
+];
 
 export const UNIT_CONTENT_FILE_KEYS: readonly (keyof UnitContentFile)[] = [
   'schemaVersion',

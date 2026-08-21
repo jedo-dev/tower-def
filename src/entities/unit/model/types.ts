@@ -1,3 +1,8 @@
+import type {
+  UnitArmorType,
+  UnitMoveType,
+  UnitSizeClass,
+} from '../../../shared/types/content-ids';
 import { RaceId } from '../../../shared/types/content-ids';
 
 export { RaceId as Faction };
@@ -62,5 +67,9 @@ export type UnitConfig = {
   rewardGold: number;
   spriteKey: string;
   description?: string;
+  /** Resolved traits: content may omit them, the loader fills the defaults. */
+  moveType: UnitMoveType;
+  sizeClass: UnitSizeClass;
+  armorType: UnitArmorType;
 };
 

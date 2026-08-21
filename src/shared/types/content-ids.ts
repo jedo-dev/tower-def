@@ -32,6 +32,49 @@ export type CreepTypeId = (typeof CreepTypeId)[keyof typeof CreepTypeId];
 
 export const CREEP_TYPE_IDS: readonly CreepTypeId[] = [CreepTypeId.BASIC] as const;
 
+/** How a creature travels the path. Ground creatures can be blocked by terrain rules, air ones read differently to towers. */
+export const UnitMoveType = {
+  GROUND: 'ground',
+  AIR: 'air',
+} as const;
+
+export type UnitMoveType = (typeof UnitMoveType)[keyof typeof UnitMoveType];
+
+export const UNIT_MOVE_TYPES: readonly UnitMoveType[] = [
+  UnitMoveType.GROUND,
+  UnitMoveType.AIR,
+] as const;
+
+/** Silhouette of a creature, used for hit feedback scale and future splash rules. */
+export const UnitSizeClass = {
+  SMALL: 'small',
+  MEDIUM: 'medium',
+  LARGE: 'large',
+} as const;
+
+export type UnitSizeClass = (typeof UnitSizeClass)[keyof typeof UnitSizeClass];
+
+export const UNIT_SIZE_CLASSES: readonly UnitSizeClass[] = [
+  UnitSizeClass.SMALL,
+  UnitSizeClass.MEDIUM,
+  UnitSizeClass.LARGE,
+] as const;
+
+/** Defense class a creature carries on top of its flat armor value. */
+export const UnitArmorType = {
+  UNARMORED: 'unarmored',
+  LIGHT: 'light',
+  HEAVY: 'heavy',
+} as const;
+
+export type UnitArmorType = (typeof UnitArmorType)[keyof typeof UnitArmorType];
+
+export const UNIT_ARMOR_TYPES: readonly UnitArmorType[] = [
+  UnitArmorType.UNARMORED,
+  UnitArmorType.LIGHT,
+  UnitArmorType.HEAVY,
+] as const;
+
 declare const modifierIdBrand: unique symbol;
 
 export type ModifierId = string & { readonly [modifierIdBrand]: 'ModifierId' };

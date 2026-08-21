@@ -37,6 +37,9 @@ function createSendCreepEntries(
       typeId: CreepTypeId.BASIC,
       hp: unit.health,
       speed: unit.speed,
+      armor: unit.armor,
+      armorType: unit.armorType,
+      moveType: unit.moveType,
       entrance,
     };
   });
@@ -120,6 +123,9 @@ export function addCreeps(
     hp: entry.hp,
     lifeState: 'alive' as const,
     speed: entry.speed,
+    armor: entry.armor,
+    armorType: entry.armorType,
+    moveType: entry.moveType,
     status: 'alive' as const,
     position: { x: entry.entrance.x, y: entry.entrance.y },
     pathIndex: 0,

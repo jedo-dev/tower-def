@@ -1,4 +1,10 @@
-import { RACE_IDS, RaceId } from '../../../../shared/types/content-ids';
+import {
+  RACE_IDS,
+  RaceId,
+  UNIT_ARMOR_TYPES,
+  UNIT_MOVE_TYPES,
+  UNIT_SIZE_CLASSES,
+} from '../../../../shared/types/content-ids';
 import {
   ContentValidationError,
   assertKnownKeys,
@@ -19,6 +25,8 @@ import {
   UNIT_CONTENT_REQUIRED_KEYS,
   UNIT_CONTENT_SCHEMA_VERSION,
   UNIT_STAT_BOUNDS,
+  UNIT_TRAIT_DEFAULTS,
+  type UnitTraits,
 } from './unitContent.types';
 
 export type UnitContentSource = {
@@ -31,6 +39,20 @@ const ENTRY_KEYS: readonly string[] = [
   ...UNIT_CONTENT_REQUIRED_KEYS,
   ...UNIT_CONTENT_OPTIONAL_KEYS,
 ];
+
+function parseTraits(entry: Record<string, unknown>, location: ContentLocation): UnitTraits {
+  return {
+    moveType: entry.moveType === undefined
+      ? UNIT_TRAIT_DEFAULTS.moveType
+      : readStringFrom(entry, 'moveType', location, UNIT_MOVE_TYPES),
+    sizeClass: entry.sizeClass === undefined
+      ? UNIT_TRAIT_DEFAULTS.sizeClass
+      : readStringFrom(entry, 'sizeClass', location, UNIT_SIZE_CLASSES),
+    armorType: entry.armorType === undefined
+      ? UNIT_TRAIT_DEFAULTS.armorType
+      : readStringFrom(entry, 'armorType', location, UNIT_ARMOR_TYPES),
+  };
+}
 
 function parseUnitEntry(
   rawEntry: unknown,
@@ -59,6 +81,7 @@ function parseUnitEntry(
     rewardGold: readNumber(entry, 'rewardGold', location, UNIT_STAT_BOUNDS.rewardGold),
     spriteKey: readString(entry, 'spriteKey', location),
     description: readOptionalString(entry, 'description', location),
+    ...parseTraits(entry, location),
   };
 }
 

@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import sampleRaceContent from './fixtures/sampleRaceContent.json';
 import { loadUnitContent, parseUnitContentFile } from './loadUnitContent';
-import { RaceId } from '../../../../shared/types/content-ids';
+import {
+  RaceId,
+  UnitArmorType,
+  UnitMoveType,
+  UnitSizeClass,
+} from '../../../../shared/types/content-ids';
+import { UNIT_TRAIT_DEFAULTS } from './unitContent.types';
 import { UnitTier } from '../types';
 
 const FILE = 'content/units/undead.json';
@@ -53,8 +59,43 @@ describe('parseUnitContentFile', () => {
       rewardGold: 6,
       spriteKey: 'unit.undead.skeleton',
       description: 'Restless bones marching from forgotten crypts.',
+      moveType: UnitMoveType.GROUND,
+      sizeClass: UnitSizeClass.MEDIUM,
+      armorType: UnitArmorType.LIGHT,
     });
     expect(units[1].description).toBeUndefined();
+  });
+
+  it('falls back to the default traits when content omits them', () => {
+    const [unit] = parse(createFile([createEntry()]));
+
+    expect(unit.moveType).toBe(UNIT_TRAIT_DEFAULTS.moveType);
+    expect(unit.sizeClass).toBe(UNIT_TRAIT_DEFAULTS.sizeClass);
+    expect(unit.armorType).toBe(UNIT_TRAIT_DEFAULTS.armorType);
+  });
+
+  it('reads the traits a creature declares', () => {
+    const [unit] = parse(
+      createFile([
+        createEntry({
+          id: 'undead_gargoyle',
+          moveType: 'air',
+          sizeClass: 'large',
+          armorType: 'heavy',
+        }),
+      ]),
+    );
+
+    expect(unit.moveType).toBe(UnitMoveType.AIR);
+    expect(unit.sizeClass).toBe(UnitSizeClass.LARGE);
+    expect(unit.armorType).toBe(UnitArmorType.HEAVY);
+  });
+
+  it('rejects a trait outside its vocabulary', () => {
+    expect(() => parse(createFile([createEntry({ moveType: 'burrowing' })])))
+      .toThrow(`${FILE} [undead_skeleton]: "moveType" is not a known value: burrowing`);
+    expect(() => parse(createFile([createEntry({ armorType: 'plated' })])))
+      .toThrow(`${FILE} [undead_skeleton]: "armorType" is not a known value: plated`);
   });
 
   it('rejects a file that is not an object', () => {

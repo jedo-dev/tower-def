@@ -1,6 +1,6 @@
 import type { GridModel } from '../../../shared/types/grid';
 import type { GridPosition } from '../../../shared/types/pathfinding';
-import type { CreepEntity } from '../../creep/model/types';
+import type { CreepCombatTraits, CreepEntity } from '../../creep/model/types';
 import type { TowerEntity } from '../../tower/model/types';
 
 export type BattlefieldState = {
@@ -11,7 +11,7 @@ export type BattlefieldState = {
   leakedCount: number;
 };
 
-export type AddCreepEntry = {
+export type AddCreepEntry = CreepCombatTraits & {
   id: string;
   typeId: CreepEntity['type'];
   hp: number;

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { DEFAULT_CREEP_COMBAT_TRAITS } from '../../../entities/creep';
 import {
   canPerformBuildActions,
   completeWaveIfResolved,
@@ -19,6 +20,7 @@ import type { CreepEntity } from '../../../entities/creep';
 
 function createCreep(status: CreepEntity['status']): CreepEntity {
   return {
+    ...DEFAULT_CREEP_COMBAT_TRAITS,
     id: `creep:${status}`,
     type: 'basic',
     hp: 100,

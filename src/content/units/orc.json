@@ -35,6 +35,8 @@
       "armor": 3,
       "damage": 34,
       "rewardGold": 17,
+      "sizeClass": "large",
+      "armorType": "heavy",
       "spriteKey": "unit.orc.troll",
       "description": "Lumbering berserker that soaks a whole volley."
     },

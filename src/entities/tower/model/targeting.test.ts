@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { DEFAULT_CREEP_COMBAT_TRAITS } from '../../creep';
 import type { CreepEntity } from '../../creep';
 import { getCreepsInTowerRange, selectTowerTarget } from './targeting';
 import { TOWER_COMBAT_STATS_BY_TYPE, type TowerEntity } from './types';
@@ -17,6 +18,7 @@ function createTower(overrides?: Partial<TowerEntity>): TowerEntity {
 
 function createCreep(overrides?: Partial<CreepEntity>): CreepEntity {
   return {
+    ...DEFAULT_CREEP_COMBAT_TRAITS,
     id: 'creep:0',
     type: 'basic',
     hp: 100,

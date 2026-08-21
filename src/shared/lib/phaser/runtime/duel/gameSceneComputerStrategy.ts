@@ -95,6 +95,9 @@ export function addBaselineWaveToOpponentBattlefield(
     typeId: CreepTypeId.BASIC,
     hp: unit.health,
     speed: unit.speed,
+    armor: unit.armor,
+    armorType: unit.armorType,
+    moveType: unit.moveType,
     entrance,
   }));
 

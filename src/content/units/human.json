@@ -11,6 +11,8 @@
       "armor": 1,
       "damage": 10,
       "rewardGold": 6,
+      "sizeClass": "small",
+      "armorType": "unarmored",
       "spriteKey": "unit.human.militia",
       "description": "Common folk pressed into service with pitchforks and hope."
     },
@@ -23,6 +25,7 @@
       "armor": 3,
       "damage": 16,
       "rewardGold": 11,
+      "armorType": "heavy",
       "spriteKey": "unit.human.footman",
       "description": "Shielded soldier that blunts light towers on its own."
     },
@@ -35,6 +38,7 @@
       "armor": 1,
       "damage": 30,
       "rewardGold": 15,
+      "armorType": "unarmored",
       "spriteKey": "unit.human.rifleman",
       "description": "Sharpshooter with a dwarven rifle and little protection."
     },
@@ -47,6 +51,8 @@
       "armor": 5,
       "damage": 40,
       "rewardGold": 20,
+      "sizeClass": "large",
+      "armorType": "heavy",
       "spriteKey": "unit.human.siege_engine",
       "description": "Plated war machine that crawls forward and refuses to die."
     }

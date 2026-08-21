@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import { DEFAULT_CREEP_COMBAT_TRAITS } from '../../../../../entities/creep';
 import type { CreepRenderState } from '../../scenes/gameScene.types';
 import { moveCreepsAlongPath, type MovementRuntimeDeps } from './gameSceneMovementRuntime';
 
@@ -19,6 +20,7 @@ describe('shared/lib/phaser/runtime/movement duel game-over boundary', () => {
   it('does not end the match immediately when legacy lives hit zero in duel mode', () => {
     const creep: CreepRenderState = {
       entity: {
+        ...DEFAULT_CREEP_COMBAT_TRAITS,
         id: 'wave:creep:1:0',
         type: 'basic',
         hp: 100,

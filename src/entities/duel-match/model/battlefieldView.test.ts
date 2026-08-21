@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { DEFAULT_CREEP_COMBAT_TRAITS } from '../../creep';
 import { RaceId } from '../../../shared/types/content-ids';
 import { addCreeps, addTower, markLeakedCreeps } from './battlefieldOps';
 import { createInitialDuelMatchState, DEFAULT_ENTRANCE, DEFAULT_EXIT } from './state';
@@ -29,6 +30,7 @@ function createStateWithOpponentRuntime(): DuelMatchState {
   const withTower = addTower(state.opponent.battlefield, createTestTower());
   const withCreep = addCreeps(withTower, [
     {
+      ...DEFAULT_CREEP_COMBAT_TRAITS,
       id: 'player_send_1',
       typeId: 'basic',
       hp: 100,
@@ -36,6 +38,7 @@ function createStateWithOpponentRuntime(): DuelMatchState {
       entrance: DEFAULT_ENTRANCE,
     },
     {
+      ...DEFAULT_CREEP_COMBAT_TRAITS,
       id: 'player_send_leak_1',
       typeId: 'basic',
       hp: 100,

@@ -11,6 +11,8 @@
       "armor": 0,
       "damage": 12,
       "rewardGold": 6,
+      "sizeClass": "small",
+      "armorType": "unarmored",
       "spriteKey": "unit.elf.archer",
       "description": "Swift sentinel striking from the shadows of the forest."
     },
@@ -35,6 +37,8 @@
       "armor": 0,
       "damage": 26,
       "rewardGold": 14,
+      "sizeClass": "small",
+      "armorType": "unarmored",
       "spriteKey": "unit.elf.dryad",
       "description": "Half-spirit creature that slips through unarmored and quick."
     },
@@ -47,6 +51,9 @@
       "armor": 1,
       "damage": 38,
       "rewardGold": 19,
+      "moveType": "air",
+      "sizeClass": "large",
+      "armorType": "heavy",
       "spriteKey": "unit.elf.chimera",
       "description": "Twin-headed beast too heavy to keep up with its own kin."
     }

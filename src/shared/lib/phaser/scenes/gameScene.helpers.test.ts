@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { DEFAULT_CREEP_COMBAT_TRAITS } from '../../../../entities/creep';
 import type { CreepEntity } from '../../../../entities/creep';
 import { resolveUnitConfigById } from '../../../../entities/unit';
 import { CreepTypeId } from '../../../types/content-ids';
@@ -11,6 +12,7 @@ function createCreepRenderState(
 ): CreepRenderState {
   return {
     entity: {
+      ...DEFAULT_CREEP_COMBAT_TRAITS,
       id,
       type: CreepTypeId.BASIC,
       hp: status === 'alive' ? 10 : 0,

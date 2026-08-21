@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import { DEFAULT_CREEP_COMBAT_TRAITS } from '../../../../../entities/creep';
 import { CreepTypeId } from '../../../../types/content-ids';
 import type { CreepRenderState } from '../../scenes/gameScene.types';
 
@@ -46,6 +47,7 @@ function createCreep(baseTint?: number): CreepRenderState & { tints: number[] } 
   const tints: number[] = [];
   return {
     entity: {
+      ...DEFAULT_CREEP_COMBAT_TRAITS,
       id: 'creep:1',
       type: CreepTypeId.BASIC,
       hp: 10,

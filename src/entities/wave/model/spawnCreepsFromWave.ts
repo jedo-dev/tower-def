@@ -1,4 +1,4 @@
-import type { CreepEntity } from '../../creep';
+import { DEFAULT_CREEP_COMBAT_TRAITS, type CreepEntity } from '../../creep';
 import type { GridPosition } from '../../../shared/types/pathfinding';
 import type { WaveConfig } from './types';
 
@@ -19,6 +19,7 @@ export function spawnCreepsFromWave(
   for (const spawn of wave.spawns) {
     for (let countIndex = 0; countIndex < spawn.count; countIndex += 1) {
       creeps.push({
+        ...DEFAULT_CREEP_COMBAT_TRAITS,
         id: createCreepId(wave.id, spawn.creepTypeId, spawnIndex),
         type: spawn.creepTypeId,
         hp: DEFAULT_CREEP_HP,

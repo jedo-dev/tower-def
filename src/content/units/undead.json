@@ -11,6 +11,8 @@
       "armor": 0,
       "damage": 11,
       "rewardGold": 6,
+      "sizeClass": "small",
+      "armorType": "unarmored",
       "spriteKey": "unit.undead.skeleton",
       "description": "Restless bones marching from forgotten crypts."
     },
@@ -23,6 +25,8 @@
       "armor": 0,
       "damage": 14,
       "rewardGold": 7,
+      "sizeClass": "small",
+      "armorType": "unarmored",
       "spriteKey": "unit.undead.ghoul",
       "description": "Feral clawed scavenger that outruns slow defenses."
     },
@@ -35,6 +39,7 @@
       "armor": 3,
       "damage": 18,
       "rewardGold": 11,
+      "armorType": "heavy",
       "spriteKey": "unit.undead.crypt_fiend",
       "description": "A spider-like horror wrapped in deathly chitin."
     },
@@ -47,6 +52,8 @@
       "armor": 1,
       "damage": 24,
       "rewardGold": 17,
+      "moveType": "air",
+      "armorType": "heavy",
       "spriteKey": "unit.undead.gargoyle",
       "description": "Winged stone predator that dives past the front line."
     },
@@ -59,6 +66,8 @@
       "armor": 4,
       "damage": 45,
       "rewardGold": 22,
+      "sizeClass": "large",
+      "armorType": "heavy",
       "spriteKey": "unit.undead.abomination",
       "description": "Patchworked brute that soaks damage instead of dodging it."
     },
@@ -71,6 +80,7 @@
       "armor": 2,
       "damage": 30,
       "rewardGold": 28,
+      "armorType": "unarmored",
       "spriteKey": "unit.undead.necromancer",
       "description": "Dark acolyte worth killing early and worth gold when you do."
     },
@@ -83,6 +93,9 @@
       "armor": 1,
       "damage": 34,
       "rewardGold": 28,
+      "moveType": "air",
+      "sizeClass": "small",
+      "armorType": "unarmored",
       "spriteKey": "unit.undead.banshee",
       "description": "Wailing spirit drifting between life and oblivion."
     },
@@ -95,6 +108,9 @@
       "armor": 5,
       "damage": 60,
       "rewardGold": 34,
+      "moveType": "air",
+      "sizeClass": "large",
+      "armorType": "heavy",
       "spriteKey": "unit.undead.frost_wyrm",
       "description": "Ancient dragon bound to ice and undeath."
     }

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { DEFAULT_CREEP_COMBAT_TRAITS } from '../../creep';
 import { RaceId } from '../../../shared/types/content-ids';
 import { createGridModel } from '../../../shared/lib/grid/createGridModel';
 import { calculateWaveStartPath } from '../../wave/model/calculateWavePath';
@@ -44,6 +45,7 @@ function createTestTower(overrides?: { x?: number; y?: number; id?: string }) {
 
 function createTestCreepEntry(overrides?: Partial<AddCreepEntry>): AddCreepEntry {
   return {
+    ...DEFAULT_CREEP_COMBAT_TRAITS,
     id: overrides?.id ?? 'creep_1',
     typeId: overrides?.typeId ?? 'basic',
     hp: overrides?.hp ?? 100,
