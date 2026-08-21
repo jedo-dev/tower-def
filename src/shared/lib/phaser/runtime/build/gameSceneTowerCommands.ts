@@ -57,7 +57,12 @@ function toSelectedTowerSnapshot(tower: BattlefieldRenderState['towers'][number]
     level: tower.entity.level,
     position: { x: tower.entity.position.x, y: tower.entity.position.y },
     cost: tower.entity.cost,
-    combatStats: { ...tower.entity.combatStats },
+    combatStats: {
+      ...tower.entity.combatStats,
+      ...(tower.entity.combatStats.onHitEffects
+        ? { onHitEffects: tower.entity.combatStats.onHitEffects.map((effect) => ({ ...effect })) }
+        : {}),
+    },
   };
 }
 

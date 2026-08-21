@@ -1,5 +1,5 @@
 export type GamePhase = 'build' | 'wave' | 'completed' | 'game-over';
-import type { TowerTypeId } from '../../types/content-ids';
+import type { EffectId, TowerTypeId } from '../../types/content-ids';
 
 /** Archetype the player can select to build; derived from tower content. */
 export type HudTowerType = TowerTypeId;
@@ -24,6 +24,13 @@ export type CreepSendQueueItem = {
   index: number;
 };
 
+export type SelectedTowerOnHitEffect = {
+  effectId: EffectId;
+  magnitude?: number;
+  durationMs?: number;
+  maxStacks?: number;
+};
+
 export type SelectedTowerSnapshot = {
   id: string;
   type: HudTowerType;
@@ -35,6 +42,8 @@ export type SelectedTowerSnapshot = {
     range: number;
     attackCooldownMs: number;
     splashRadius?: number;
+    /** Effects the tower applies at its current level, aura included. */
+    onHitEffects?: SelectedTowerOnHitEffect[];
   };
 };
 

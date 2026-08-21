@@ -155,3 +155,31 @@
     transition: none;
   }
 }
+
+.effects {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.effectRow {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-sm);
+}
+
+.effectLabel {
+  color: var(--color-text-label);
+  font-family: var(--font-family-ui);
+  font-size: var(--font-size-2xs);
+  letter-spacing: 0.08em;
+}
+
+.effectValue {
+  color: var(--color-text-secondary);
+  font-family: var(--font-family-ui);
+  font-size: var(--font-size-xs);
+}

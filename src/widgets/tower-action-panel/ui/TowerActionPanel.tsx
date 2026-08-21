@@ -7,9 +7,14 @@ import { useGameHudSnapshot } from '../../../shared/lib/game-bridge/useGameHudSn
 import {
   canAffordUpgrade,
   getSellValue,
+  getTowerStatsForLevel,
   getUpgradeCost,
   isMaxLevel,
 } from '../../../entities/tower';
+import {
+  mapTowerEffectsToLines,
+  mapTowerEffectUpgradeDeltas,
+} from '../model/mapTowerEffectsToLines';
 import type { HudTowerType } from '../../../shared/lib/game-bridge/types';
 import { PlaceholderIcon } from '../../../shared/ui/placeholder-icon';
 
@@ -41,6 +46,11 @@ function TowerActionPanelComponent() {
   const sellValue = getSellValue(type, level, cost);
 
   const canUpgrade = upgradeCheck.allowed;
+  const effectLines = mapTowerEffectsToLines(type, combatStats);
+  const nextLevelStats = maxed ? null : getTowerStatsForLevel(type, level + 1);
+  const upgradeDeltas = nextLevelStats
+    ? mapTowerEffectUpgradeDeltas(type, combatStats, nextLevelStats)
+    : [];
 
   function handleUpgrade(): void {
     sendGameCommand('upgrade-tower', { towerId: id });
@@ -84,6 +94,28 @@ function TowerActionPanelComponent() {
           </>
         )}
       </div>
+
+      {effectLines.length > 0 && (
+        <ul className={styles.effects} aria-label="Tower effects">
+          {effectLines.map((line) => (
+            <li key={line.key} className={styles.effectRow}>
+              <span className={styles.effectLabel}>{line.label}</span>
+              <span className={styles.effectValue}>{line.value}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {upgradeDeltas.length > 0 && (
+        <ul className={styles.effects} aria-label="Next level effects">
+          {upgradeDeltas.map((line) => (
+            <li key={`next-${line.key}`} className={styles.effectRow}>
+              <span className={styles.effectLabel}>NEXT</span>
+              <span className={styles.effectValue}>{`${line.label} ${line.value}`}</span>
+            </li>
+          ))}
+        </ul>
+      )}
 
       <div className={styles.buttons}>
         {maxed ? (
