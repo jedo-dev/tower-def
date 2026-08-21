@@ -4,7 +4,7 @@
   gap: var(--space-sm);
   padding: var(--space-md);
   border: 24px solid transparent;
-  border-image: url('../../../assets/ui-presets/hud_bar.png') 85 fill / 24px / 0 stretch;
+  border-image: url('../../../assets/ui-presets/hud_bar.png') 21 fill / 24px / 0 stretch;
 }
 
 .header {
@@ -49,7 +49,7 @@
   min-height: 28px;
   padding: 0 var(--space-md);
   border: 14px solid transparent;
-  border-image: url('../../../assets/ui-presets/thin_border.png') 90 fill / 10px / 0 stretch;
+  border-image: url('../../../assets/ui-presets/thin_border.png') 23 fill / 10px / 0 stretch;
 }
 
 .statLabel {
@@ -94,8 +94,10 @@
   background: url('../../../assets/ui-presets/btn_green_normal.png') center / 100% 100% no-repeat;
 }
 
+/* No green hover asset ships in ui-presets; brighten the normal skin instead
+   of pointing at a missing file (which dropped the background on hover). */
 .upgradeBtn:hover:not(:disabled) {
-  background-image: url('../../../assets/ui-presets/btn_green_hover.png');
+  filter: brightness(1.15);
 }
 
 .sellBtn {

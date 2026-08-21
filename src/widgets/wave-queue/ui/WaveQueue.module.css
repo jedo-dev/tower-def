@@ -9,7 +9,7 @@
   gap: var(--space-sm);
   padding: 10px;
   border: 34px solid transparent;
-  border-image: url('../../../assets/ui-presets/hud_bar.png') 85 fill / 22px / 0 stretch;
+  border-image: url('../../../assets/ui-presets/hud_bar.png') 21 fill / 22px / 0 stretch;
 }
 
 .header,

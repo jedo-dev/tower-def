@@ -37,7 +37,7 @@
   gap: 10px;
   padding: 18px 14px 14px;
   border: 24px solid transparent;
-  border-image: url('../../../assets/ui-presets/thin_border.png') 90 fill / 18px / 0 stretch;
+  border-image: url('../../../assets/ui-presets/thin_border.png') 23 fill / 18px / 0 stretch;
   overflow: hidden;
 }
 

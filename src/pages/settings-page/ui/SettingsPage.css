@@ -43,7 +43,7 @@
 .settings-section {
   padding: 16px;
   border: 34px solid transparent;
-  border-image: url('../../../assets/ui-presets/panel_frame.png') 90 fill / 22px / 0 stretch;
+  border-image: url('../../../assets/ui-presets/panel_frame.png') 23 fill / 22px / 0 stretch;
 }
 
 .settings-label, .settings-value {
