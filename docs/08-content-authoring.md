@@ -139,3 +139,77 @@ the Beads task, not an accident.
 | Creature loader | `src/entities/unit/model/content/loadUnitContent.ts` |
 | Registered content files | `src/entities/unit/model/content/unitContentSources.ts` |
 | Roster lookups | `src/entities/unit/model/registry.ts` |
+
+---
+
+# Art Drop-In
+
+Content can name artwork that does not exist yet. Until the file lands, the
+game draws an obvious question-mark placeholder - in the scene (a dashed plate
+tinted with the race colour) and in the HUD (a `?` chip). Nothing crashes and
+nothing renders invisible.
+
+## Where files go
+
+| Kind | Location | Referenced as |
+| --- | --- | --- |
+| Creep sheet | `src/shared/sprite/<name>.svg` or `.png` | imported in `shared/constants/sprites.ts` |
+| Tower sheet | `public/assets/towers/<name>.png` | path string in `TOWER_SPRITE_ASSETS` |
+
+## Naming
+
+- Sprite key: `unit.<race>.<name>` / `tower.<race>.<name>` - the same string the
+  content file uses (`spriteKey`).
+- Filename: `<race>_<name>.png`, lowercase with underscores.
+
+## Frame layout
+
+Sheets are horizontal strips of equal frames.
+
+**Creeps** - `32x32` per frame, at least 4 frames:
+
+| Frames | Meaning |
+| --- | --- |
+| 0-3 | walk cycle (loops) |
+
+**Towers** - `60x60` per frame, 14 frames:
+
+| Frames | Meaning |
+| --- | --- |
+| 0-2 | build |
+| 3-4 | idle (loops) |
+| 5-7 | attack |
+| 9 | hit reaction |
+| 10-11 | sell |
+| 12 | projectile |
+| 13 | attack impact effect |
+
+Frame counts live in `PLACEHOLDER_UNIT_FRAME_COUNT` and
+`PLACEHOLDER_TOWER_FRAME_COUNT`; the placeholder is generated with exactly
+these frames so animation code needs no special case.
+
+## Switching a placeholder off
+
+1. Drop the file in the location above.
+2. Register it in `src/shared/constants/sprites.ts`: add the key to
+   `UNIT_SPRITE_KEYS` / `TOWER_SPRITE_KEYS` and the file to
+   `UNIT_SPRITE_ASSETS` / `TOWER_SPRITE_ASSETS`.
+3. Make sure the content `spriteKey` matches the registered key exactly.
+
+That is all: the sprite resolver
+(`shared/lib/phaser/runtime/assets/spriteKeyResolver.ts`) prefers real art
+whenever the texture is registered, so the placeholder disappears with no other
+code change.
+
+## Finding what is still missing
+
+In development, every fallback is logged once as
+`[assets] tower art missing, drawing placeholder: <key>` and collected in the
+missing-art report (`getMissingArtReport()`), which also names the content ids
+that referenced the key. Production installs no listener and collects nothing.
+
+## Pending audio
+
+Sound follows the same idea: ids listed in `PENDING_SOUND_ASSETS`
+(`shared/lib/phaser/sound/audio.constants.ts`) are skipped by the preloader and
+stay silent until their wav lands. See `docs/SOUND_ASSET_LIST.md`.
