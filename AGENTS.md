@@ -155,6 +155,14 @@ Reason:
 - Smoke: start wave, place tower, lose condition.
 - Do not mark task done if required tests are missing or failing.
 
+Test environments:
+
+- `*.test.ts` run in the `node` environment (pure domain logic, runtime modules).
+- `*.test.tsx` render React components and must start with the docblock
+  `// @vitest-environment jsdom`; use `@testing-library/react` and assert that
+  `console.error` was not called so React warnings (duplicate keys, invalid
+  props) fail the suite.
+
 ---
 
 ## Accessibility Baseline
