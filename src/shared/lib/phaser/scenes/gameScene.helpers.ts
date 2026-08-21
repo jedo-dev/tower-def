@@ -4,10 +4,9 @@ import {
   type BuilderFactionConfig,
 } from '../../../../entities/builder-faction';
 import type { CreepEntity } from '../../../../entities/creep';
-import { buildableTowers, type BuildableTowerConfig } from '../../../../entities/tower';
+import { buildableTowers, getTowerArchetype, type BuildableTowerConfig } from '../../../../entities/tower';
 import { getUnitsByFaction, undeadUnits, type UnitConfig } from '../../../../entities/unit';
 import { GRID_DIMENSIONS } from '../../../constants/grid';
-import { TowerCombatConfig } from '../../../constants/tower';
 import { RaceId } from '../../../types/content-ids';
 import type { GridPosition } from '../../../types/pathfinding';
 import type { HudFactionType, MatchOutcomeStatus } from '../../game-bridge/types';
@@ -161,12 +160,14 @@ export function toTowerId(position: GridPosition): string {
   return `tower:${position.x}:${position.y}`;
 }
 
+/**
+ * Radius the build preview draws: a tower shows its firing range, a support
+ * tower shows the area its aura would cover.
+ */
 export function resolveTowerRangeCells(selectedTowerType: TowerTypeId | null): number {
-  const towerType = selectedTowerType ?? TowerTypeId.SINGLE;
-  if (towerType === TowerTypeId.SPLASH) {
-    return TowerCombatConfig.SPLASH_RANGE_CELLS;
-  }
-  return TowerCombatConfig.ARCHER_RANGE_CELLS;
+  const archetype = getTowerArchetype(selectedTowerType ?? TowerTypeId.SINGLE);
+
+  return archetype.aura?.radiusCells ?? archetype.range;
 }
 
 export function resolveFactionUnits(raceId: RaceId): UnitConfig[] {

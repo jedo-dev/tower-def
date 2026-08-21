@@ -42,6 +42,15 @@ export type TowerChainContentEntry = {
   damageFalloff: number;
 };
 
+export type TowerAuraContentEntry = {
+  radiusCells: number;
+  /** Share of attack speed added to towers in radius, 0.2 meaning 20% faster. */
+  attackSpeedBonus: number;
+  rangeBonus: number;
+  /** How two overlapping auras combine. */
+  stacking: string;
+};
+
 export type TowerArchetypeContentEntry = {
   id: string;
   name: string;
@@ -52,6 +61,7 @@ export type TowerArchetypeContentEntry = {
   splashRadius?: number;
   onHitEffects?: TowerOnHitEffectEntry[];
   chain?: TowerChainContentEntry;
+  aura?: TowerAuraContentEntry;
   description: string;
 };
 
@@ -120,6 +130,7 @@ export const TOWER_ARCHETYPE_OPTIONAL_KEYS: readonly (keyof TowerArchetypeConten
   'splashRadius',
   'onHitEffects',
   'chain',
+  'aura',
 ];
 
 export const TOWER_CHAIN_KEYS: readonly (keyof TowerChainContentEntry)[] = [
@@ -127,6 +138,19 @@ export const TOWER_CHAIN_KEYS: readonly (keyof TowerChainContentEntry)[] = [
   'bounceRangeCells',
   'damageFalloff',
 ];
+
+export const TOWER_AURA_KEYS: readonly (keyof TowerAuraContentEntry)[] = [
+  'radiusCells',
+  'attackSpeedBonus',
+  'rangeBonus',
+  'stacking',
+];
+
+export const TOWER_AURA_BOUNDS = {
+  radiusCells: { min: 0.5, max: 6 },
+  attackSpeedBonus: { min: 0, max: 1 },
+  rangeBonus: { min: 0, max: 4 },
+} as const;
 
 export const TOWER_CHAIN_BOUNDS = {
   bounces: { min: 1, max: 6 },

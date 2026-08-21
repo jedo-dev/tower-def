@@ -4,8 +4,10 @@ import {
   RaceId,
   TOWER_ATTACK_KINDS,
   TOWER_TYPE_IDS,
+  TOWER_AURA_STACKING_RULES,
   type EffectId,
   type TowerAttackKind,
+  type TowerAuraStacking,
 } from '../../../../shared/types/content-ids';
 import {
   ContentValidationError,
@@ -32,6 +34,8 @@ import {
   TOWER_CONTENT_FILE_KEYS,
   TOWER_CONTENT_OPTIONAL_KEYS,
   TOWER_CONTENT_REQUIRED_KEYS,
+  TOWER_AURA_BOUNDS,
+  TOWER_AURA_KEYS,
   TOWER_CHAIN_BOUNDS,
   TOWER_CHAIN_KEYS,
   TOWER_CONTENT_SCHEMA_VERSION,
@@ -50,6 +54,13 @@ export type TowerChainDefinition = {
   damageFalloff: number;
 };
 
+export type TowerAuraDefinition = {
+  radiusCells: number;
+  attackSpeedBonus: number;
+  rangeBonus: number;
+  stacking: TowerAuraStacking;
+};
+
 export type TowerArchetypeDefinition = TowerCombatStats & {
   id: TowerTypeId;
   name: string;
@@ -57,6 +68,7 @@ export type TowerArchetypeDefinition = TowerCombatStats & {
   description: string;
   onHitEffects: TowerOnHitEffect[];
   chain?: TowerChainDefinition;
+  aura?: TowerAuraDefinition;
 };
 
 const TOWER_ENTRY_KEYS: readonly string[] = [
@@ -126,6 +138,30 @@ function parseChain(
       TOWER_CHAIN_BOUNDS.bounceRangeCells,
     ),
     damageFalloff: readNumber(chain, 'damageFalloff', location, TOWER_CHAIN_BOUNDS.damageFalloff),
+  };
+}
+
+function parseAura(
+  entry: Record<string, unknown>,
+  location: ContentLocation,
+): TowerAuraDefinition | undefined {
+  if (entry.aura === undefined) {
+    return undefined;
+  }
+
+  const aura = readRecord(entry.aura, location);
+  assertKnownKeys(aura, TOWER_AURA_KEYS, location);
+
+  return {
+    radiusCells: readNumber(aura, 'radiusCells', location, TOWER_AURA_BOUNDS.radiusCells),
+    attackSpeedBonus: readNumber(
+      aura,
+      'attackSpeedBonus',
+      location,
+      TOWER_AURA_BOUNDS.attackSpeedBonus,
+    ),
+    rangeBonus: readNumber(aura, 'rangeBonus', location, TOWER_AURA_BOUNDS.rangeBonus),
+    stacking: readStringFrom(aura, 'stacking', location, TOWER_AURA_STACKING_RULES),
   };
 }
 
@@ -223,9 +259,14 @@ function parseArchetypeEntry(
   const splashRadius = parseOptionalStat(entry, 'splashRadius', location);
   const attackKind = readStringFrom(entry, 'attackKind', location, TOWER_ATTACK_KINDS);
   const chain = parseChain(entry, location);
+  const aura = parseAura(entry, location);
 
   if (attackKind === 'chain' && !chain) {
     throw new ContentValidationError(location, 'a chain archetype must declare its "chain" shape');
+  }
+
+  if (attackKind === 'aura' && !aura) {
+    throw new ContentValidationError(location, 'an aura archetype must declare its "aura" shape');
   }
 
   return {
@@ -243,6 +284,7 @@ function parseArchetypeEntry(
     ),
     ...(splashRadius === undefined ? {} : { splashRadius }),
     ...(chain === undefined ? {} : { chain }),
+    ...(aura === undefined ? {} : { aura }),
     onHitEffects: parseOnHitEffects(entry, location),
   };
 }

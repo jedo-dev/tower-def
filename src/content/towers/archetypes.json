@@ -66,6 +66,21 @@
         "damageFalloff": 0.35
       },
       "description": "Strikes a target then jumps to nearby creeps with weaker arcs."
+    },
+    {
+      "id": "support",
+      "name": "Support",
+      "attackKind": "aura",
+      "damage": 0,
+      "range": 0.5,
+      "attackCooldownMs": 1000,
+      "aura": {
+        "radiusCells": 2.5,
+        "attackSpeedBonus": 0.2,
+        "rangeBonus": 0.4,
+        "stacking": "strongest"
+      },
+      "description": "Fires nothing of its own; sharpens every tower standing near it."
     }
   ]
 }

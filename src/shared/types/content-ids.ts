@@ -18,6 +18,7 @@ export const TowerTypeId = {
   FROST: 'frost',
   POISON: 'poison',
   CHAIN: 'chain',
+  SUPPORT: 'support',
 } as const;
 
 export type TowerTypeId = (typeof TowerTypeId)[keyof typeof TowerTypeId];
@@ -28,6 +29,7 @@ export const TOWER_TYPE_IDS: readonly TowerTypeId[] = [
   TowerTypeId.FROST,
   TowerTypeId.POISON,
   TowerTypeId.CHAIN,
+  TowerTypeId.SUPPORT,
 ] as const;
 
 /**
@@ -39,6 +41,8 @@ export const TowerAttackKind = {
   SINGLE_TARGET: 'single-target',
   SPLASH: 'splash',
   CHAIN: 'chain',
+  /** Deals no damage; buffs nearby towers instead. */
+  AURA: 'aura',
 } as const;
 
 export type TowerAttackKind = (typeof TowerAttackKind)[keyof typeof TowerAttackKind];
@@ -47,6 +51,22 @@ export const TOWER_ATTACK_KINDS: readonly TowerAttackKind[] = [
   TowerAttackKind.SINGLE_TARGET,
   TowerAttackKind.SPLASH,
   TowerAttackKind.CHAIN,
+  TowerAttackKind.AURA,
+] as const;
+
+/** How overlapping support auras combine on one tower. */
+export const TowerAuraStacking = {
+  /** Only the strongest aura applies. */
+  STRONGEST: 'strongest',
+  /** Every aura in radius adds up. */
+  STACK: 'stack',
+} as const;
+
+export type TowerAuraStacking = (typeof TowerAuraStacking)[keyof typeof TowerAuraStacking];
+
+export const TOWER_AURA_STACKING_RULES: readonly TowerAuraStacking[] = [
+  TowerAuraStacking.STRONGEST,
+  TowerAuraStacking.STACK,
 ] as const;
 
 export const CreepTypeId = {

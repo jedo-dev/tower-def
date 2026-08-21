@@ -388,6 +388,11 @@ export function updateTowerCombat(
   const creepsForTargeting = battlefield.creeps.map((creep) => creep.entity);
 
   for (const tower of battlefield.towers) {
+    // Support towers have no attack of their own; their aura does the work.
+    if (getTowerAttackKind(tower.entity.type) === TowerAttackKind.AURA) {
+      continue;
+    }
+
     tower.runtime = tickTowerCooldown(tower.runtime, deltaMs);
 
     if (!canTowerAttack(tower.entity, tower.runtime)) {

@@ -102,5 +102,9 @@ export type TowerEntity = {
   cost: number;
   type: TowerType;
   level: number;
+  /** Stats the tower actually fights with, support auras included. */
   combatStats: TowerCombatStats;
+  /** Stats of its own level, before any aura; set when auras are recalculated. */
+  baseCombatStats?: TowerCombatStats;
+  auraBonus?: { attackSpeedBonus: number; rangeBonus: number };
 };

@@ -1,3 +1,4 @@
+import { recalculateTowerAuras } from '../../../../../entities/tower';
 import { TowerAttackKind } from '../../../../types/content-ids';
 import { getTowerAttackKind } from '../../../../../entities/tower';
 import type Phaser from 'phaser';
@@ -83,6 +84,7 @@ export function tryPlaceTowerAtHoveredCell(deps: TowerCommandDeps): void {
     runtime: createInitialTowerCombatRuntime(),
     sprite: towerSprite,
   });
+  refreshFieldAuras(deps.playerField);
   deps.onGoldUpdated(result.playerGold);
   deps.playSound('combat.successful_build');
   deps.playSound('economy.gold_spent');
@@ -91,6 +93,11 @@ export function tryPlaceTowerAtHoveredCell(deps: TowerCommandDeps): void {
 
   deps.drawGridCell(result.changedCell);
   deps.updateBuildPreview();
+}
+
+/** Auras are derived state: recompute the whole field whenever it changes. */
+function refreshFieldAuras(field: TowerCommandDeps['playerField']): void {
+  recalculateTowerAuras(field.towers.map((tower) => tower.entity));
 }
 
 export function trySellTowerAtHoveredCell(deps: TowerCommandDeps): void {
@@ -113,6 +120,7 @@ export function trySellTowerAtHoveredCell(deps: TowerCommandDeps): void {
     }
     return shouldKeep;
   });
+  refreshFieldAuras(deps.playerField);
   deps.onRefundRecorded(result.refundAmount);
   deps.playSound('combat.sell_tower');
   deps.playSound('economy.refund');
@@ -183,6 +191,8 @@ export function handleUpgradeTowerCommand(deps: TowerCommandDeps, towerId: strin
 
   entity.level = nextLevel;
   entity.combatStats = { ...nextStats };
+  entity.baseCombatStats = { ...nextStats };
+  refreshFieldAuras(deps.playerField);
   deps.onGoldUpdated(spendResult.resources.gold);
   deps.playSound('ui.success');
   deps.playSound('economy.gold_spent');
@@ -202,6 +212,7 @@ export function handleSellTowerCommand(deps: TowerCommandDeps, towerId: string):
   }
 
   deps.playerField.towers = deps.playerField.towers.filter((t) => t.entity.id !== towerId);
+  refreshFieldAuras(deps.playerField);
   playBoneArcherSellAnimation(tower);
 
   const refundAmount = Math.floor(tower.entity.cost * SELL_REFUND_RATIO);
