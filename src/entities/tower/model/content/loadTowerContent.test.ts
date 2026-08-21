@@ -89,6 +89,24 @@ describe('parseTowerContentFile', () => {
       .toThrow(`${FILE} [orc_spear_watchtower]: id does not belong to race UNDEAD`);
   });
 
+  it('rejects a level list that skips or reorders levels', () => {
+    expect(() =>
+      loadTowerArchetypeContent({
+        file: 'content/towers/archetypes.json',
+        data: {
+          schemaVersion: 1,
+          archetypes: [
+            createArchetype({
+              levels: [
+                { level: 2, upgradeCostGold: 0, damage: 20, range: 3, attackCooldownMs: 800 },
+              ],
+            }),
+          ],
+        },
+      }),
+    ).toThrow(/levels must be listed in order from 1/);
+  });
+
   it('rejects an archetype with no attack kind', () => {
     expect(() =>
       loadTowerArchetypeContent({
@@ -96,14 +114,7 @@ describe('parseTowerContentFile', () => {
         data: {
           schemaVersion: 1,
           archetypes: [
-            {
-              id: 'single',
-              name: 'Archer',
-              damage: 20,
-              range: 3,
-              attackCooldownMs: 800,
-              description: 'Single target.',
-            },
+            createArchetype({ attackKind: undefined }),
           ],
         },
       }),
@@ -148,6 +159,31 @@ describe('loadTowerContent', () => {
   });
 });
 
+function createArchetype(overrides: AuthoredEntry = {}): AuthoredEntry {
+  const entry: AuthoredEntry = {
+    id: 'single',
+    name: 'Archer',
+    attackKind: 'single-target',
+    damage: 20,
+    range: 3,
+    attackCooldownMs: 800,
+    levels: [
+      { level: 1, upgradeCostGold: 0, damage: 20, range: 3, attackCooldownMs: 800 },
+      { level: 2, upgradeCostGold: 40, damage: 30, range: 3.2, attackCooldownMs: 750 },
+    ],
+    description: 'Single target.',
+    ...overrides,
+  };
+
+  for (const [key, value] of Object.entries(entry)) {
+    if (value === undefined) {
+      delete entry[key];
+    }
+  }
+
+  return entry;
+}
+
 describe('loadTowerArchetypeContent', () => {
   it('requires stats for every declared archetype', () => {
     expect(() =>
@@ -156,15 +192,7 @@ describe('loadTowerArchetypeContent', () => {
         data: {
           schemaVersion: 1,
           archetypes: [
-            {
-              id: 'single',
-              name: 'Archer',
-              attackKind: 'single-target',
-              damage: 20,
-              range: 3,
-              attackCooldownMs: 800,
-              description: 'Single target.',
-            },
+            createArchetype(),
           ],
         },
       }),
@@ -172,15 +200,7 @@ describe('loadTowerArchetypeContent', () => {
   });
 
   it('rejects a duplicate archetype', () => {
-    const archetype = {
-      id: 'single',
-      name: 'Archer',
-      attackKind: 'single-target',
-      damage: 20,
-      range: 3,
-      attackCooldownMs: 800,
-      description: 'Single target.',
-    };
+    const archetype = createArchetype();
 
     expect(() =>
       loadTowerArchetypeContent({

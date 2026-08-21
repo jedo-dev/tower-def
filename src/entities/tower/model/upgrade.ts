@@ -1,8 +1,7 @@
 import { ECONOMY_BALANCE } from '../../../shared/constants/economy';
 import type { TowerLevelStats } from '../../../shared/constants/tower';
-import { TOWER_UPGRADE_CONFIG } from '../../../shared/constants/tower';
 import type { TowerType } from './types';
-import { TOWER_BASE_LEVEL } from './types';
+import { TOWER_BASE_LEVEL, TOWER_UPGRADE_CONFIG } from './types';
 
 export type UpgradeCheckResult = {
   allowed: boolean;
@@ -24,7 +23,7 @@ export function getUpgradeCost(towerType: TowerType, currentLevel: number): numb
   }
 
   const nextLevel = currentLevel + 1;
-  const nextLevelConfig = config.levels.find((l) => l.level === nextLevel);
+  const nextLevelConfig = config.levels.find((candidate) => candidate.level === nextLevel);
   if (!nextLevelConfig) {
     return null;
   }
@@ -62,7 +61,7 @@ export function getTowerStatsForLevel(
     return null;
   }
 
-  const levelConfig = config.levels.find((l) => l.level === level);
+  const levelConfig = config.levels.find((candidate) => candidate.level === level);
   if (!levelConfig) {
     return null;
   }

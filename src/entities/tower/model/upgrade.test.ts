@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest';
-import { TowerUpgradeBalance, TOWER_UPGRADE_CONFIG } from '../../../shared/constants/tower';
 import {
   canAffordUpgrade,
   getSellValue,
@@ -8,192 +7,146 @@ import {
   getUpgradeCost,
   isMaxLevel,
 } from './upgrade';
+import { TOWER_UPGRADE_CONFIG } from './types';
+import { ECONOMY_BALANCE } from '../../../shared/constants/economy';
+import { TOWER_TYPE_IDS, TowerTypeId } from '../../../shared/types/content-ids';
+
+/** Upgrade curves are authored content, so the tests read the same source. */
+const SINGLE_LEVELS = TOWER_UPGRADE_CONFIG[TowerTypeId.SINGLE].levels;
+const LEVEL_2_COST = SINGLE_LEVELS[1].upgradeCostGold;
+const LEVEL_3_COST = SINGLE_LEVELS[2].upgradeCostGold;
+const MAX_LEVEL = TOWER_UPGRADE_CONFIG[TowerTypeId.SINGLE].maxLevel;
 
 describe('tower upgrade level boundaries', () => {
-  it('archer tower max level matches config', () => {
-    expect(isMaxLevel('single', TowerUpgradeBalance.MAX_LEVEL)).toBe(true);
-  });
+  it('reports max level per archetype', () => {
+    for (const towerType of TOWER_TYPE_IDS) {
+      const config = TOWER_UPGRADE_CONFIG[towerType];
 
-  it('splash tower max level matches config', () => {
-    expect(isMaxLevel('splash', TowerUpgradeBalance.MAX_LEVEL)).toBe(true);
-  });
-
-  it('level below max is not max level', () => {
-    expect(isMaxLevel('single', 1)).toBe(false);
-    expect(isMaxLevel('single', 2)).toBe(false);
-  });
-
-  it('level above max is still treated as max level', () => {
-    expect(isMaxLevel('single', TowerUpgradeBalance.MAX_LEVEL + 1)).toBe(true);
+      expect(isMaxLevel(towerType, config.maxLevel), towerType).toBe(true);
+      expect(isMaxLevel(towerType, config.maxLevel - 1), towerType).toBe(false);
+      expect(isMaxLevel(towerType, config.maxLevel + 1), towerType).toBe(true);
+    }
   });
 });
 
 describe('tower upgrade cost resolution', () => {
-  it('level 1 has no upgrade cost (initial build)', () => {
-    expect(getUpgradeCost('single', 1)).toBe(TowerUpgradeBalance.LEVEL_2_COST_GOLD);
+  it('points at the cost of the next level', () => {
+    expect(getUpgradeCost(TowerTypeId.SINGLE, 1)).toBe(LEVEL_2_COST);
+    expect(getUpgradeCost(TowerTypeId.SINGLE, 2)).toBe(LEVEL_3_COST);
   });
 
-  it('level 2 upgrade cost points to level 3 cost', () => {
-    expect(getUpgradeCost('single', 2)).toBe(TowerUpgradeBalance.LEVEL_3_COST_GOLD);
+  it('returns null at max level', () => {
+    expect(getUpgradeCost(TowerTypeId.SINGLE, MAX_LEVEL)).toBeNull();
   });
 
-  it('max level returns null upgrade cost', () => {
-    expect(getUpgradeCost('single', TowerUpgradeBalance.MAX_LEVEL)).toBeNull();
-  });
+  it('prices every archetype independently', () => {
+    const costs = TOWER_TYPE_IDS.map((towerType) => getUpgradeCost(towerType, 1));
 
-  it('splash tower upgrade costs are defined', () => {
-    expect(getUpgradeCost('splash', 1)).toBe(TowerUpgradeBalance.LEVEL_2_COST_GOLD);
-    expect(getUpgradeCost('splash', 2)).toBe(TowerUpgradeBalance.LEVEL_3_COST_GOLD);
-    expect(getUpgradeCost('splash', TowerUpgradeBalance.MAX_LEVEL)).toBeNull();
+    expect(costs.every((cost) => cost !== null && cost > 0)).toBe(true);
+    expect(new Set(costs).size).toBeGreaterThan(1);
   });
 });
 
 describe('tower upgrade affordability', () => {
-  it('allows upgrade when gold is sufficient', () => {
-    const result = canAffordUpgrade('single', 1, TowerUpgradeBalance.LEVEL_2_COST_GOLD);
-    expect(result.allowed).toBe(true);
+  it('allows an upgrade the player can pay for', () => {
+    expect(canAffordUpgrade(TowerTypeId.SINGLE, 1, LEVEL_2_COST).allowed).toBe(true);
   });
 
-  it('rejects upgrade when gold is insufficient', () => {
-    const result = canAffordUpgrade('single', 1, TowerUpgradeBalance.LEVEL_2_COST_GOLD - 1);
+  it('rejects an upgrade one gold short', () => {
+    const result = canAffordUpgrade(TowerTypeId.SINGLE, 1, LEVEL_2_COST - 1);
+
     expect(result.allowed).toBe(false);
     expect(result.reason).toBe('insufficient_gold');
   });
 
-  it('rejects upgrade at max level regardless of gold', () => {
-    const result = canAffordUpgrade('single', TowerUpgradeBalance.MAX_LEVEL, 9999);
+  it('rejects an upgrade at max level regardless of gold', () => {
+    const result = canAffordUpgrade(TowerTypeId.SINGLE, MAX_LEVEL, 9_999);
+
     expect(result.allowed).toBe(false);
     expect(result.reason).toBe('max_level');
-  });
-
-  it('exact gold amount allows upgrade', () => {
-    const result = canAffordUpgrade('single', 2, TowerUpgradeBalance.LEVEL_3_COST_GOLD);
-    expect(result.allowed).toBe(true);
-  });
-
-  it('one gold short rejects upgrade', () => {
-    const result = canAffordUpgrade('single', 2, TowerUpgradeBalance.LEVEL_3_COST_GOLD - 1);
-    expect(result.allowed).toBe(false);
-    expect(result.reason).toBe('insufficient_gold');
   });
 });
 
 describe('tower stats per level', () => {
-  it('returns level 1 stats matching base combat config', () => {
-    const stats = getTowerStatsForLevel('single', 1);
-    expect(stats).not.toBeNull();
-    expect(stats!.damage).toBe(20);
-    expect(stats!.range).toBe(3);
-    expect(stats!.attackCooldownMs).toBe(800);
+  it('returns the authored level 1 stats', () => {
+    expect(getTowerStatsForLevel(TowerTypeId.SINGLE, 1)).toEqual(SINGLE_LEVELS[0].stats);
   });
 
-  it('returns improved stats at level 2', () => {
-    const stats = getTowerStatsForLevel('single', 2);
-    expect(stats).not.toBeNull();
-    expect(stats!.damage).toBe(20 + TowerUpgradeBalance.DAMAGE_INCREASE_PER_LEVEL);
-    expect(stats!.range).toBeCloseTo(3 + TowerUpgradeBalance.RANGE_INCREASE_PER_LEVEL);
-    expect(stats!.attackCooldownMs).toBe(800 - TowerUpgradeBalance.COOLDOWN_REDUCTION_PER_LEVEL);
-  });
+  it('improves damage, range and cooldown with every level', () => {
+    for (const towerType of TOWER_TYPE_IDS) {
+      const levels = TOWER_UPGRADE_CONFIG[towerType].levels;
 
-  it('returns max improved stats at level 3', () => {
-    const stats = getTowerStatsForLevel('single', 3);
-    expect(stats).not.toBeNull();
-    expect(stats!.damage).toBe(20 + TowerUpgradeBalance.DAMAGE_INCREASE_PER_LEVEL * 2);
-    expect(stats!.range).toBeCloseTo(3 + TowerUpgradeBalance.RANGE_INCREASE_PER_LEVEL * 2);
-    expect(stats!.attackCooldownMs).toBe(800 - TowerUpgradeBalance.COOLDOWN_REDUCTION_PER_LEVEL * 2);
-  });
+      levels.slice(1).forEach((entry, index) => {
+        const previous = levels[index].stats;
 
-  it('returns null for non-existent level', () => {
-    expect(getTowerStatsForLevel('single', 0)).toBeNull();
-    expect(getTowerStatsForLevel('single', TowerUpgradeBalance.MAX_LEVEL + 1)).toBeNull();
-  });
-
-  it('splash tower level 1 includes splash radius', () => {
-    const stats = getTowerStatsForLevel('splash', 1);
-    expect(stats).not.toBeNull();
-    expect(stats!.splashRadius).toBe(1.5);
-  });
-
-  it('splash tower level 3 preserves splash radius', () => {
-    const stats = getTowerStatsForLevel('splash', 3);
-    expect(stats).not.toBeNull();
-    expect(stats!.splashRadius).toBe(1.5);
-  });
-});
-
-describe('tower total invested gold', () => {
-  it('level 1 has zero upgrade investment', () => {
-    expect(getTotalInvestedGold('single', 1)).toBe(0);
-  });
-
-  it('level 2 includes level 2 upgrade cost', () => {
-    expect(getTotalInvestedGold('single', 2)).toBe(TowerUpgradeBalance.LEVEL_2_COST_GOLD);
-  });
-
-  it('level 3 includes both upgrade costs', () => {
-    expect(getTotalInvestedGold('single', 3)).toBe(
-      TowerUpgradeBalance.LEVEL_2_COST_GOLD + TowerUpgradeBalance.LEVEL_3_COST_GOLD,
-    );
-  });
-});
-
-describe('tower sell value', () => {
-  it('level 1 sell value is 50% of build cost', () => {
-    const buildCost = 50;
-    expect(getSellValue('single', 1, buildCost)).toBe(Math.floor(buildCost * 0.5));
-  });
-
-  it('level 2 sell value includes upgrade cost', () => {
-    const buildCost = 50;
-    const totalInvested = buildCost + TowerUpgradeBalance.LEVEL_2_COST_GOLD;
-    expect(getSellValue('single', 2, buildCost)).toBe(Math.floor(totalInvested * 0.5));
-  });
-
-  it('level 3 sell value includes all costs', () => {
-    const buildCost = 50;
-    const totalInvested =
-      buildCost + TowerUpgradeBalance.LEVEL_2_COST_GOLD + TowerUpgradeBalance.LEVEL_3_COST_GOLD;
-    expect(getSellValue('single', 3, buildCost)).toBe(Math.floor(totalInvested * 0.5));
-  });
-});
-
-describe('tower upgrade config completeness', () => {
-  it('single target has exactly MAX_LEVEL entries', () => {
-    expect(TOWER_UPGRADE_CONFIG.single.levels).toHaveLength(TowerUpgradeBalance.MAX_LEVEL);
-  });
-
-  it('splash has exactly MAX_LEVEL entries', () => {
-    expect(TOWER_UPGRADE_CONFIG.splash.levels).toHaveLength(TowerUpgradeBalance.MAX_LEVEL);
-  });
-
-  it('all level entries have sequential levels starting at 1', () => {
-    for (const towerType of ['single', 'splash'] as const) {
-      const config = TOWER_UPGRADE_CONFIG[towerType];
-      config.levels.forEach((entry, index) => {
-        expect(entry.level).toBe(index + 1);
+        expect(entry.stats.damage, towerType).toBeGreaterThanOrEqual(previous.damage);
+        expect(entry.stats.range, towerType).toBeGreaterThanOrEqual(previous.range);
+        expect(entry.stats.attackCooldownMs, towerType).toBeLessThanOrEqual(previous.attackCooldownMs);
       });
     }
   });
 
-  it('level 1 upgrade cost is zero for all tower types', () => {
-    for (const towerType of ['single', 'splash'] as const) {
-      const config = TOWER_UPGRADE_CONFIG[towerType];
-      expect(config.levels[0].upgradeCostGold).toBe(0);
-    }
+  it('keeps the splash radius across levels', () => {
+    expect(getTowerStatsForLevel(TowerTypeId.SPLASH, 1)?.splashRadius).toBeDefined();
+    expect(getTowerStatsForLevel(TowerTypeId.SPLASH, 3)?.splashRadius).toBeDefined();
   });
 
-  it('upgrade costs are positive for levels above 1', () => {
-    for (const towerType of ['single', 'splash'] as const) {
-      const config = TOWER_UPGRADE_CONFIG[towerType];
-      for (const entry of config.levels.slice(1)) {
-        expect(entry.upgradeCostGold).toBeGreaterThan(0);
-      }
-    }
+  it('deepens the effect an archetype applies', () => {
+    const firstChill = getTowerStatsForLevel(TowerTypeId.FROST, 1)!.onHitEffects![0];
+    const lastChill = getTowerStatsForLevel(TowerTypeId.FROST, 3)!.onHitEffects![0];
+
+    expect(lastChill.magnitude!).toBeGreaterThan(firstChill.magnitude!);
   });
 
-  it('max level in config matches max level constant', () => {
-    for (const towerType of ['single', 'splash'] as const) {
-      expect(TOWER_UPGRADE_CONFIG[towerType].maxLevel).toBe(TowerUpgradeBalance.MAX_LEVEL);
+  it('widens the aura a support tower projects', () => {
+    const firstAura = getTowerStatsForLevel(TowerTypeId.SUPPORT, 1)!.aura!;
+    const lastAura = getTowerStatsForLevel(TowerTypeId.SUPPORT, 3)!.aura!;
+
+    expect(lastAura.radiusCells).toBeGreaterThan(firstAura.radiusCells);
+    expect(lastAura.attackSpeedBonus).toBeGreaterThan(firstAura.attackSpeedBonus);
+  });
+
+  it('returns null outside the curve', () => {
+    expect(getTowerStatsForLevel(TowerTypeId.SINGLE, 0)).toBeNull();
+    expect(getTowerStatsForLevel(TowerTypeId.SINGLE, MAX_LEVEL + 1)).toBeNull();
+  });
+});
+
+describe('tower investment and sell value', () => {
+  it('adds up what the player paid to reach a level', () => {
+    expect(getTotalInvestedGold(TowerTypeId.SINGLE, 1)).toBe(0);
+    expect(getTotalInvestedGold(TowerTypeId.SINGLE, 2)).toBe(LEVEL_2_COST);
+    expect(getTotalInvestedGold(TowerTypeId.SINGLE, 3)).toBe(LEVEL_2_COST + LEVEL_3_COST);
+  });
+
+  it('refunds the sell ratio of everything invested', () => {
+    const buildCost = 50;
+    const ratio = ECONOMY_BALANCE.towerSellRatio;
+
+    expect(getSellValue(TowerTypeId.SINGLE, 1, buildCost)).toBe(Math.floor(buildCost * ratio));
+    expect(getSellValue(TowerTypeId.SINGLE, 3, buildCost)).toBe(
+      Math.floor((buildCost + LEVEL_2_COST + LEVEL_3_COST) * ratio),
+    );
+  });
+});
+
+describe('tower upgrade content completeness', () => {
+  it('gives every archetype a curve that starts free and rises', () => {
+    for (const towerType of TOWER_TYPE_IDS) {
+      const config = TOWER_UPGRADE_CONFIG[towerType];
+
+      expect(config.levels.length, towerType).toBeGreaterThan(1);
+      expect(config.maxLevel, towerType).toBe(config.levels.length);
+      expect(config.levels[0].upgradeCostGold, towerType).toBe(0);
+
+      config.levels.forEach((entry, index) => {
+        expect(entry.level, towerType).toBe(index + 1);
+        if (index > 0) {
+          expect(entry.upgradeCostGold, towerType).toBeGreaterThan(
+            config.levels[index - 1].upgradeCostGold,
+          );
+        }
+      });
     }
   });
 });

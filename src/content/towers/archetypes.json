@@ -8,6 +8,29 @@
       "damage": 20,
       "range": 3,
       "attackCooldownMs": 800,
+      "levels": [
+        {
+          "level": 1,
+          "upgradeCostGold": 0,
+          "damage": 20,
+          "range": 3,
+          "attackCooldownMs": 800
+        },
+        {
+          "level": 2,
+          "upgradeCostGold": 40,
+          "damage": 30,
+          "range": 3.2,
+          "attackCooldownMs": 750
+        },
+        {
+          "level": 3,
+          "upgradeCostGold": 80,
+          "damage": 40,
+          "range": 3.4,
+          "attackCooldownMs": 700
+        }
+      ],
       "description": "Single target fire, the reliable baseline."
     },
     {
@@ -18,6 +41,32 @@
       "range": 2.5,
       "attackCooldownMs": 1200,
       "splashRadius": 1.5,
+      "levels": [
+        {
+          "level": 1,
+          "upgradeCostGold": 0,
+          "damage": 18,
+          "range": 2.5,
+          "attackCooldownMs": 1200,
+          "splashRadius": 1.5
+        },
+        {
+          "level": 2,
+          "upgradeCostGold": 40,
+          "damage": 28,
+          "range": 2.7,
+          "attackCooldownMs": 1150,
+          "splashRadius": 1.5
+        },
+        {
+          "level": 3,
+          "upgradeCostGold": 80,
+          "damage": 38,
+          "range": 2.9,
+          "attackCooldownMs": 1100,
+          "splashRadius": 1.7
+        }
+      ],
       "description": "Area damage around the target, the answer to clustered waves."
     },
     {
@@ -32,6 +81,50 @@
           "effectId": "chill",
           "magnitude": 0.35,
           "durationMs": 2000
+        }
+      ],
+      "levels": [
+        {
+          "level": 1,
+          "upgradeCostGold": 0,
+          "damage": 13,
+          "range": 3,
+          "attackCooldownMs": 900,
+          "onHitEffects": [
+            {
+              "effectId": "chill",
+              "magnitude": 0.35,
+              "durationMs": 2000
+            }
+          ]
+        },
+        {
+          "level": 2,
+          "upgradeCostGold": 45,
+          "damage": 17,
+          "range": 3.2,
+          "attackCooldownMs": 850,
+          "onHitEffects": [
+            {
+              "effectId": "chill",
+              "magnitude": 0.45,
+              "durationMs": 2000
+            }
+          ]
+        },
+        {
+          "level": 3,
+          "upgradeCostGold": 90,
+          "damage": 21,
+          "range": 3.4,
+          "attackCooldownMs": 800,
+          "onHitEffects": [
+            {
+              "effectId": "chill",
+              "magnitude": 0.55,
+              "durationMs": 2000
+            }
+          ]
         }
       ],
       "description": "Trades damage for control: every hit chills its target."
@@ -51,6 +144,53 @@
           "maxStacks": 3
         }
       ],
+      "levels": [
+        {
+          "level": 1,
+          "upgradeCostGold": 0,
+          "damage": 8,
+          "range": 3,
+          "attackCooldownMs": 1000,
+          "onHitEffects": [
+            {
+              "effectId": "poison",
+              "magnitude": 6,
+              "durationMs": 4000,
+              "maxStacks": 3
+            }
+          ]
+        },
+        {
+          "level": 2,
+          "upgradeCostGold": 50,
+          "damage": 10,
+          "range": 3.2,
+          "attackCooldownMs": 950,
+          "onHitEffects": [
+            {
+              "effectId": "poison",
+              "magnitude": 8,
+              "durationMs": 4000,
+              "maxStacks": 4
+            }
+          ]
+        },
+        {
+          "level": 3,
+          "upgradeCostGold": 95,
+          "damage": 12,
+          "range": 3.4,
+          "attackCooldownMs": 900,
+          "onHitEffects": [
+            {
+              "effectId": "poison",
+              "magnitude": 11,
+              "durationMs": 4000,
+              "maxStacks": 5
+            }
+          ]
+        }
+      ],
       "description": "Little damage up front, punishing over a long wave. Poison ignores armor."
     },
     {
@@ -65,6 +205,29 @@
         "bounceRangeCells": 2,
         "damageFalloff": 0.35
       },
+      "levels": [
+        {
+          "level": 1,
+          "upgradeCostGold": 0,
+          "damage": 16,
+          "range": 3,
+          "attackCooldownMs": 1100
+        },
+        {
+          "level": 2,
+          "upgradeCostGold": 55,
+          "damage": 26,
+          "range": 3.2,
+          "attackCooldownMs": 1050
+        },
+        {
+          "level": 3,
+          "upgradeCostGold": 105,
+          "damage": 36,
+          "range": 3.4,
+          "attackCooldownMs": 1000
+        }
+      ],
       "description": "Strikes a target then jumps to nearby creeps with weaker arcs."
     },
     {
@@ -80,6 +243,47 @@
         "rangeBonus": 0.4,
         "stacking": "strongest"
       },
+      "levels": [
+        {
+          "level": 1,
+          "upgradeCostGold": 0,
+          "damage": 0,
+          "range": 0.5,
+          "attackCooldownMs": 1000,
+          "aura": {
+            "radiusCells": 2.5,
+            "attackSpeedBonus": 0.2,
+            "rangeBonus": 0.4,
+            "stacking": "strongest"
+          }
+        },
+        {
+          "level": 2,
+          "upgradeCostGold": 55,
+          "damage": 0,
+          "range": 0.5,
+          "attackCooldownMs": 1000,
+          "aura": {
+            "radiusCells": 3.0,
+            "attackSpeedBonus": 0.28,
+            "rangeBonus": 0.55,
+            "stacking": "strongest"
+          }
+        },
+        {
+          "level": 3,
+          "upgradeCostGold": 100,
+          "damage": 0,
+          "range": 0.5,
+          "attackCooldownMs": 1000,
+          "aura": {
+            "radiusCells": 3.5,
+            "attackSpeedBonus": 0.36,
+            "rangeBonus": 0.7,
+            "stacking": "strongest"
+          }
+        }
+      ],
       "description": "Fires nothing of its own; sharpens every tower standing near it."
     }
   ]

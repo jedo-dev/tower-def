@@ -38,6 +38,8 @@ import {
   TOWER_AURA_KEYS,
   TOWER_CHAIN_BOUNDS,
   TOWER_CHAIN_KEYS,
+  TOWER_LEVEL_BOUNDS,
+  TOWER_LEVEL_KEYS,
   TOWER_CONTENT_SCHEMA_VERSION,
   TOWER_ON_HIT_EFFECT_KEYS,
   TOWER_STAT_BOUNDS,
@@ -61,6 +63,12 @@ export type TowerAuraDefinition = {
   stacking: TowerAuraStacking;
 };
 
+export type TowerLevelDefinition = {
+  level: number;
+  upgradeCostGold: number;
+  stats: TowerCombatStats;
+};
+
 export type TowerArchetypeDefinition = TowerCombatStats & {
   id: TowerTypeId;
   name: string;
@@ -69,6 +77,7 @@ export type TowerArchetypeDefinition = TowerCombatStats & {
   onHitEffects: TowerOnHitEffect[];
   chain?: TowerChainDefinition;
   aura?: TowerAuraDefinition;
+  levels: TowerLevelDefinition[];
 };
 
 const TOWER_ENTRY_KEYS: readonly string[] = [
@@ -246,6 +255,58 @@ export function loadTowerContent(
   return towers;
 }
 
+function parseLevels(
+  entry: Record<string, unknown>,
+  location: ContentLocation,
+): TowerLevelDefinition[] {
+  const rawLevels = readArray(entry, 'levels', location);
+
+  if (rawLevels.length === 0) {
+    throw new ContentValidationError(location, 'an archetype must declare at least one level');
+  }
+
+  return rawLevels.map((rawLevel, index) => {
+    const level = readRecord(rawLevel, location);
+    assertKnownKeys(level, TOWER_LEVEL_KEYS, location);
+
+    const declaredLevel = readNumber(level, 'level', location);
+
+    if (declaredLevel !== index + 1) {
+      throw new ContentValidationError(
+        location,
+        `levels must be listed in order from 1; found ${declaredLevel} at position ${index + 1}`,
+      );
+    }
+
+    const splashRadius = parseOptionalStat(level, 'splashRadius', location);
+    const aura = parseAura(level, location);
+    const onHitEffects = parseOnHitEffects(level, location);
+
+    return {
+      level: declaredLevel,
+      upgradeCostGold: readNumber(
+        level,
+        'upgradeCostGold',
+        location,
+        TOWER_LEVEL_BOUNDS.upgradeCostGold,
+      ),
+      stats: {
+        damage: readNumber(level, 'damage', location, TOWER_STAT_BOUNDS.damage),
+        range: readNumber(level, 'range', location, TOWER_STAT_BOUNDS.range),
+        attackCooldownMs: readNumber(
+          level,
+          'attackCooldownMs',
+          location,
+          TOWER_STAT_BOUNDS.attackCooldownMs,
+        ),
+        ...(splashRadius === undefined ? {} : { splashRadius }),
+        ...(onHitEffects.length === 0 ? {} : { onHitEffects }),
+        ...(aura === undefined ? {} : { aura }),
+      },
+    };
+  });
+}
+
 function parseArchetypeEntry(
   rawEntry: unknown,
   fileLocation: ContentLocation,
@@ -286,6 +347,7 @@ function parseArchetypeEntry(
     ...(chain === undefined ? {} : { chain }),
     ...(aura === undefined ? {} : { aura }),
     onHitEffects: parseOnHitEffects(entry, location),
+    levels: parseLevels(entry, location),
   };
 }
 

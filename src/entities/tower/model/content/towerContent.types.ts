@@ -51,6 +51,17 @@ export type TowerAuraContentEntry = {
   stacking: string;
 };
 
+export type TowerLevelContentEntry = {
+  level: number;
+  upgradeCostGold: number;
+  damage: number;
+  range: number;
+  attackCooldownMs: number;
+  splashRadius?: number;
+  onHitEffects?: TowerOnHitEffectEntry[];
+  aura?: TowerAuraContentEntry;
+};
+
 export type TowerArchetypeContentEntry = {
   id: string;
   name: string;
@@ -62,6 +73,8 @@ export type TowerArchetypeContentEntry = {
   onHitEffects?: TowerOnHitEffectEntry[];
   chain?: TowerChainContentEntry;
   aura?: TowerAuraContentEntry;
+  /** Upgrade curve: level 1 is what the tower is built with. */
+  levels: TowerLevelContentEntry[];
   description: string;
 };
 
@@ -116,10 +129,26 @@ export const TOWER_CONTENT_FILE_KEYS: readonly (keyof TowerContentFile)[] = [
   'towers',
 ];
 
+export const TOWER_LEVEL_KEYS: readonly (keyof TowerLevelContentEntry)[] = [
+  'level',
+  'upgradeCostGold',
+  'damage',
+  'range',
+  'attackCooldownMs',
+  'splashRadius',
+  'onHitEffects',
+  'aura',
+];
+
+export const TOWER_LEVEL_BOUNDS = {
+  upgradeCostGold: { min: 0, max: 1000 },
+} as const;
+
 export const TOWER_ARCHETYPE_REQUIRED_KEYS: readonly (keyof TowerArchetypeContentEntry)[] = [
   'id',
   'name',
   'attackKind',
+  'levels',
   'damage',
   'range',
   'attackCooldownMs',
