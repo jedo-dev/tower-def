@@ -1,15 +1,11 @@
-import elfContent from '../../../../content/units/elf.json';
-import { parseUnitContentFile } from '../content/loadUnitContent';
-import type { UnitTier, UnitConfig } from '../types';
+import { selectFactionRoster } from '../registry';
+import { Faction, type UnitConfig, type UnitTier } from '../types';
 
 /**
- * Elf roster. Authored in `src/content/units/elf.json`: the fastest and
- * frailest race, cheap to kill and punishing to ignore.
+ * Elf roster, authored in `src/content/units/elf.json`: the fastest and
+ * frailest race, with the chimera as its one heavy straggler.
  */
-export const elfUnits: UnitConfig[] = parseUnitContentFile({
-  file: 'content/units/elf.json',
-  data: elfContent,
-});
+export const elfUnits: UnitConfig[] = selectFactionRoster(Faction.ELF);
 
 export function getElfUnitsByTier(tier: UnitTier): UnitConfig[] {
   return elfUnits.filter((unit) => unit.tier === tier);

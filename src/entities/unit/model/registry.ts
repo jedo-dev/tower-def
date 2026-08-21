@@ -1,15 +1,12 @@
 import type { UnitConfig, UnitId } from './types';
-import { undeadUnits } from './config/undead';
-import { orcUnits } from './config/orc';
-import { humanUnits } from './config/human';
-import { elfUnits } from './config/elf';
+import { loadUnitContent } from './content/loadUnitContent';
+import { UNIT_CONTENT_SOURCES } from './content/unitContentSources';
 
-const ALL_UNITS: readonly UnitConfig[] = [
-  ...undeadUnits,
-  ...orcUnits,
-  ...humanUnits,
-  ...elfUnits,
-];
+/**
+ * The roster is validated once, here, at module init: a malformed content file
+ * throws before the first scene is created rather than mid-wave.
+ */
+const ALL_UNITS: readonly UnitConfig[] = loadUnitContent(UNIT_CONTENT_SOURCES);
 
 const UNIT_BY_ID = new Map<UnitId, UnitConfig>(
   ALL_UNITS.map((unit) => [unit.id, unit]),
@@ -32,5 +29,10 @@ export function getAllUnitConfigs(): readonly UnitConfig[] {
 }
 
 export function getUnitsByFaction(faction: UnitConfig['faction']): readonly UnitConfig[] {
+  return ALL_UNITS.filter((unit) => unit.faction === faction);
+}
+
+/** Mutable roster copy for callers that own and reorder their own list. */
+export function selectFactionRoster(faction: UnitConfig['faction']): UnitConfig[] {
   return ALL_UNITS.filter((unit) => unit.faction === faction);
 }
