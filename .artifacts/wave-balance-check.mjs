@@ -1,15 +1,14 @@
-// Compares total wave health before and after the undead content migration.
-// Old stats come from the deleted tier formula, new ones from authored JSON.
+// Compares total wave health and average speed before and after the creature
+// content migration. "Before" replays the deleted per-race tier formulas,
+// "after" reads the authored JSON in src/content/units.
 import { readFileSync } from 'node:fs';
 
-const authored = JSON.parse(readFileSync('src/content/units/undead.json', 'utf8')).units;
-
-const OLD = authored.map((unit) => ({
-  id: unit.id,
-  tier: unit.tier,
-  health: 110 + (unit.tier - 1) * 85,
-  speed: Number((1.34 - (unit.tier - 1) * 0.09).toFixed(2)),
-}));
+const OLD_CURVES = {
+  undead: { healthBase: 110, healthStep: 85, speedBase: 1.34, speedStep: 0.09 },
+  orc: { healthBase: 120, healthStep: 90, speedBase: 1.28, speedStep: 0.08 },
+  human: { healthBase: 100, healthStep: 80, speedBase: 1.4, speedStep: 0.1 },
+  elf: { healthBase: 90, healthStep: 70, speedBase: 1.5, speedStep: 0.1 },
+};
 
 const TIER_VALUE = { 1: 1, 2: 2, 3: 3, 4: 5, 5: 7, 6: 10 };
 const MIN_UNITS = 5;
@@ -56,26 +55,30 @@ function generate(units, waveNumber, random) {
 function average(units, waveNumber, samples = 400) {
   let health = 0;
   let speed = 0;
-  let count = 0;
   for (let sample = 0; sample < samples; sample += 1) {
     const wave = generate(units, waveNumber, mulberry32(sample * 7919 + waveNumber));
     health += wave.reduce((sum, unit) => sum + unit.health, 0);
     speed += wave.reduce((sum, unit) => sum + unit.speed, 0) / wave.length;
-    count += wave.length;
   }
-  return {
-    health: Math.round(health / samples),
-    speed: Number((speed / samples).toFixed(2)),
-    units: Number((count / samples).toFixed(1)),
-  };
+  return { health: Math.round(health / samples), speed: Number((speed / samples).toFixed(2)) };
 }
 
-console.log('wave | old hp | new hp | delta % | old spd | new spd | units');
-for (const wave of [1, 3, 5, 10, 15, 20]) {
-  const before = average(OLD, wave);
-  const after = average(authored, wave);
-  const delta = (((after.health - before.health) / before.health) * 100).toFixed(1);
-  console.log(
-    `${String(wave).padStart(4)} | ${String(before.health).padStart(6)} | ${String(after.health).padStart(6)} | ${String(delta).padStart(7)} | ${String(before.speed).padStart(7)} | ${String(after.speed).padStart(7)} | ${after.units}`,
-  );
+for (const race of Object.keys(OLD_CURVES)) {
+  const authored = JSON.parse(readFileSync(`src/content/units/${race}.json`, 'utf8')).units;
+  const curve = OLD_CURVES[race];
+  const previous = authored.map((unit) => ({
+    tier: unit.tier,
+    health: curve.healthBase + (unit.tier - 1) * curve.healthStep,
+    speed: Number((curve.speedBase - (unit.tier - 1) * curve.speedStep).toFixed(2)),
+  }));
+
+  console.log(`\n${race.toUpperCase()}  wave | old hp | new hp | delta % | old spd | new spd`);
+  for (const wave of [1, 5, 10, 20]) {
+    const before = average(previous, wave);
+    const after = average(authored, wave);
+    const delta = (((after.health - before.health) / before.health) * 100).toFixed(1);
+    console.log(
+      `${String(wave).padStart(11)} | ${String(before.health).padStart(6)} | ${String(after.health).padStart(6)} | ${String(delta).padStart(7)} | ${String(before.speed).padStart(7)} | ${String(after.speed).padStart(7)}`,
+    );
+  }
 }

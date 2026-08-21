@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "race": "HUMAN",
+  "units": [
+    {
+      "id": "human_militia",
+      "name": "Militia",
+      "tier": 1,
+      "health": 110,
+      "speed": 1.25,
+      "armor": 1,
+      "damage": 10,
+      "rewardGold": 6,
+      "spriteKey": "unit.human.militia",
+      "description": "Common folk pressed into service with pitchforks and hope."
+    },
+    {
+      "id": "human_footman",
+      "name": "Footman",
+      "tier": 2,
+      "health": 200,
+      "speed": 1.15,
+      "armor": 3,
+      "damage": 16,
+      "rewardGold": 11,
+      "spriteKey": "unit.human.footman",
+      "description": "Shielded soldier that blunts light towers on its own."
+    },
+    {
+      "id": "human_rifleman",
+      "name": "Rifleman",
+      "tier": 3,
+      "health": 215,
+      "speed": 1.3,
+      "armor": 1,
+      "damage": 30,
+      "rewardGold": 15,
+      "spriteKey": "unit.human.rifleman",
+      "description": "Sharpshooter with a dwarven rifle and little protection."
+    },
+    {
+      "id": "human_siege_engine",
+      "name": "Siege Engine",
+      "tier": 4,
+      "health": 430,
+      "speed": 0.75,
+      "armor": 5,
+      "damage": 40,
+      "rewardGold": 20,
+      "spriteKey": "unit.human.siege_engine",
+      "description": "Plated war machine that crawls forward and refuses to die."
+    }
+  ]
+}

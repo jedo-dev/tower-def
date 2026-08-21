@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "race": "ORC",
+  "units": [
+    {
+      "id": "orc_grunt",
+      "name": "Grunt",
+      "tier": 1,
+      "health": 145,
+      "speed": 1.1,
+      "armor": 1,
+      "damage": 16,
+      "rewardGold": 7,
+      "spriteKey": "unit.orc.grunt",
+      "description": "Brutish warrior that trades footwork for raw bulk."
+    },
+    {
+      "id": "orc_wolf_rider",
+      "name": "Wolf Rider",
+      "tier": 2,
+      "health": 175,
+      "speed": 1.85,
+      "armor": 1,
+      "damage": 20,
+      "rewardGold": 13,
+      "spriteKey": "unit.orc.wolf_rider",
+      "description": "Swift mounted raider that punishes gaps in the line."
+    },
+    {
+      "id": "orc_troll",
+      "name": "Troll",
+      "tier": 3,
+      "health": 360,
+      "speed": 0.95,
+      "armor": 3,
+      "damage": 34,
+      "rewardGold": 17,
+      "spriteKey": "unit.orc.troll",
+      "description": "Lumbering berserker that soaks a whole volley."
+    },
+    {
+      "id": "orc_headhunter",
+      "name": "Headhunter",
+      "tier": 4,
+      "health": 330,
+      "speed": 1.35,
+      "armor": 2,
+      "damage": 46,
+      "rewardGold": 23,
+      "spriteKey": "unit.orc.headhunter",
+      "description": "Elite skirmisher hitting far harder than its bulk suggests."
+    }
+  ]
+}
