@@ -142,7 +142,10 @@
 .forceStartBtn,
 .towerBtn,
 .battlefieldViewBtn {
-  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+  min-height: 44px;
   padding: var(--space-sm) var(--space-lg);
   border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: var(--radius-md);

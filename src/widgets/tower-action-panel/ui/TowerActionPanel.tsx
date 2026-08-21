@@ -10,6 +10,7 @@ import {
   isMaxLevel,
 } from '../../../entities/tower';
 import type { HudTowerType } from '../../../shared/lib/game-bridge/types';
+import { PlaceholderIcon } from '../../../shared/ui/placeholder-icon';
 
 const TOWER_DISPLAY_NAMES: Record<HudTowerType, string> = {
   archer: 'Archer Tower',
@@ -51,6 +52,7 @@ function TowerActionPanelComponent() {
   return (
     <section className={styles.panel} aria-label="Tower actions">
       <div className={styles.header}>
+        <PlaceholderIcon label={formatTowerType(type)} faction={snapshot.selectedFaction} />
         <span className={styles.title}>{formatTowerType(type)}</span>
         <span className={styles.level}>Lv {level}</span>
         <button

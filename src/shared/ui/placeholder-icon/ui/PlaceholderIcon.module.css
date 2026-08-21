@@ -1,0 +1,30 @@
+.icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-width: var(--placeholder-icon-size, 28px);
+  min-height: var(--placeholder-icon-size, 28px);
+  width: var(--placeholder-icon-size, 28px);
+  height: var(--placeholder-icon-size, 28px);
+  border: 1px dashed var(--glass-border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--glass-bg-soft);
+  color: var(--color-text-primary);
+  font-family: var(--font-family-ui);
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  line-height: 1;
+  user-select: none;
+}
+
+/* Touch targets: the chip is decorative, so it only claims 44x44 when it is the
+   whole content of an interactive control. */
+.iconInteractive {
+  --placeholder-icon-size: 44px;
+}
+
+.tinted {
+  border-color: var(--placeholder-icon-accent, var(--glass-border-strong));
+  color: var(--placeholder-icon-accent, var(--color-text-primary));
+}

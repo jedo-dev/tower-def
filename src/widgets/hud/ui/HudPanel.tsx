@@ -7,6 +7,7 @@ import { mapBattlefieldViewToggleToViewModel, mapHudSnapshotToViewModel } from '
 import type { HudPressureLevel } from '../model/mapHudSnapshotToViewModel';
 import type { HudFactionType, HudTowerType } from '../../../shared/lib/game-bridge/types';
 import type { GameSetupConfig } from '../../../shared/config/game-setup';
+import { PlaceholderIcon } from '../../../shared/ui/placeholder-icon';
 
 export type HudPanelProps = {
   setup: GameSetupConfig | null;
@@ -139,6 +140,7 @@ function HudPanelComponent({ setup }: HudPanelProps) {
                 )}
                 onClick={() => sendGameCommand('select-tower', { towerType: snapshot.selectedTowerType === btn.type ? null : btn.type })}
               >
+                <PlaceholderIcon label={btn.label} faction={snapshot.selectedFaction} />
                 {btn.label}
               </button>
             ))}
