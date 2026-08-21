@@ -7,11 +7,60 @@
       "name": "Moon Archer Tower",
       "archetype": "single",
       "costGold": 50,
-      "damage": 22,
-      "range": 3.2,
+      "damage": 20,
+      "range": 3,
       "attackCooldownMs": 800,
       "spriteKey": "tower.elf.moon_archer",
       "description": "Moonlit archers strike swiftly from sacred boughs."
+    },
+    {
+      "id": "elf_wisp_bloom",
+      "name": "Wisp Bloom",
+      "archetype": "splash",
+      "costGold": 75,
+      "damage": 18,
+      "range": 2.5,
+      "attackCooldownMs": 1200,
+      "splashRadius": 1.5,
+      "spriteKey": "tower.elf.wisp_bloom",
+      "description": "A bloom of wisps that bursts over anything close."
+    },
+    {
+      "id": "elf_moonwell",
+      "name": "Moonwell",
+      "archetype": "frost",
+      "costGold": 70,
+      "damage": 13,
+      "range": 3,
+      "attackCooldownMs": 900,
+      "onHitEffects": [
+        {
+          "effectId": "chill",
+          "magnitude": 0.35,
+          "durationMs": 2000
+        }
+      ],
+      "spriteKey": "tower.elf.moonwell",
+      "description": "Cold moonlight pools over the path and slows it."
+    },
+    {
+      "id": "elf_thorn_spire",
+      "name": "Thorn Spire",
+      "archetype": "poison",
+      "costGold": 65,
+      "damage": 8,
+      "range": 3,
+      "attackCooldownMs": 1000,
+      "onHitEffects": [
+        {
+          "effectId": "poison",
+          "magnitude": 6,
+          "durationMs": 4000,
+          "maxStacks": 3
+        }
+      ],
+      "spriteKey": "tower.elf.thorn_spire",
+      "description": "Barbed thorns that keep working long after the hit."
     }
   ]
 }

@@ -7,11 +7,52 @@
       "name": "Spear Watchtower",
       "archetype": "single",
       "costGold": 50,
-      "damage": 22,
-      "range": 3.2,
+      "damage": 20,
+      "range": 3,
       "attackCooldownMs": 800,
       "spriteKey": "tower.orc.spear_watchtower",
-      "description": "A rugged orc platform hurling heavy spears."
+      "description": "A rugged platform hurling heavy spears."
+    },
+    {
+      "id": "orc_burning_pit",
+      "name": "Burning Pit",
+      "archetype": "splash",
+      "costGold": 75,
+      "damage": 18,
+      "range": 2.5,
+      "attackCooldownMs": 1200,
+      "splashRadius": 1.5,
+      "spriteKey": "tower.orc.burning_pit",
+      "description": "Flings burning pitch that splashes across the pack."
+    },
+    {
+      "id": "orc_lightning_totem",
+      "name": "Lightning Totem",
+      "archetype": "chain",
+      "costGold": 85,
+      "damage": 16,
+      "range": 3,
+      "attackCooldownMs": 1100,
+      "spriteKey": "tower.orc.lightning_totem",
+      "description": "Shaman totem whose bolt leaps from creep to creep."
+    },
+    {
+      "id": "orc_tar_pit",
+      "name": "Tar Pit",
+      "archetype": "frost",
+      "costGold": 70,
+      "damage": 13,
+      "range": 3,
+      "attackCooldownMs": 900,
+      "onHitEffects": [
+        {
+          "effectId": "chill",
+          "magnitude": 0.35,
+          "durationMs": 2000
+        }
+      ],
+      "spriteKey": "tower.orc.tar_pit",
+      "description": "Boiling tar that leaves the pack crawling."
     }
   ]
 }

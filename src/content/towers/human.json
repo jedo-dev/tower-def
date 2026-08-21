@@ -7,11 +7,53 @@
       "name": "Guard Archer Tower",
       "archetype": "single",
       "costGold": 50,
-      "damage": 22,
-      "range": 3.2,
+      "damage": 20,
+      "range": 3,
       "attackCooldownMs": 800,
       "spriteKey": "tower.human.guard_archer",
       "description": "Disciplined marksmen watch over fortified walls."
+    },
+    {
+      "id": "human_cannon_bastion",
+      "name": "Cannon Bastion",
+      "archetype": "splash",
+      "costGold": 75,
+      "damage": 18,
+      "range": 2.5,
+      "attackCooldownMs": 1200,
+      "splashRadius": 1.5,
+      "spriteKey": "tower.human.cannon_bastion",
+      "description": "Dwarven powder and iron shot, loud and wide."
+    },
+    {
+      "id": "human_alchemist_tower",
+      "name": "Alchemist Tower",
+      "archetype": "poison",
+      "costGold": 65,
+      "damage": 8,
+      "range": 3,
+      "attackCooldownMs": 1000,
+      "onHitEffects": [
+        {
+          "effectId": "poison",
+          "magnitude": 6,
+          "durationMs": 4000,
+          "maxStacks": 3
+        }
+      ],
+      "spriteKey": "tower.human.alchemist_tower",
+      "description": "Flasks of slow-working blight that ignore armor."
+    },
+    {
+      "id": "human_guard_post",
+      "name": "Guard Post",
+      "archetype": "support",
+      "costGold": 60,
+      "damage": 0,
+      "range": 0.5,
+      "attackCooldownMs": 1000,
+      "spriteKey": "tower.human.guard_post",
+      "description": "A captain barking orders sharpens the whole wall."
     }
   ]
 }

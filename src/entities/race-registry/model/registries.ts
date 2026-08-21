@@ -7,7 +7,12 @@ const undeadRegistry: RaceRegistryEntry = {
   description: 'Dark necromantic builders focused on relentless pressure.',
   themeColor: '#5c8cff',
   starterTowerId: 'undead_bone_archer_tower',
-  buildableTowerIds: ['undead_bone_archer_tower', 'undead_plague_tower'],
+  buildableTowerIds: [
+    'undead_bone_archer_tower',
+    'undead_plague_tower',
+    'undead_frost_wyrm_nest',
+    'undead_bone_obelisk',
+  ],
   sendableCreepIds: ['undead_skeleton', 'undead_ghoul', 'undead_crypt_fiend', 'undead_gargoyle'],
 };
 
@@ -17,7 +22,12 @@ const orcRegistry: RaceRegistryEntry = {
   description: 'Brutal war camps with aggressive frontline defenses.',
   themeColor: '#d97b39',
   starterTowerId: 'orc_spear_watchtower',
-  buildableTowerIds: ['orc_spear_watchtower'],
+  buildableTowerIds: [
+    'orc_spear_watchtower',
+    'orc_burning_pit',
+    'orc_lightning_totem',
+    'orc_tar_pit',
+  ],
   sendableCreepIds: ['orc_grunt', 'orc_wolf_rider', 'orc_troll', 'orc_headhunter'],
 };
 
@@ -27,7 +37,12 @@ const humanRegistry: RaceRegistryEntry = {
   description: 'Disciplined defenders relying on consistent ranged fire.',
   themeColor: '#5e94d6',
   starterTowerId: 'human_guard_archer_tower',
-  buildableTowerIds: ['human_guard_archer_tower'],
+  buildableTowerIds: [
+    'human_guard_archer_tower',
+    'human_cannon_bastion',
+    'human_alchemist_tower',
+    'human_guard_post',
+  ],
   sendableCreepIds: ['human_militia', 'human_footman', 'human_rifleman', 'human_siege_engine'],
 };
 
@@ -37,7 +52,12 @@ const elfRegistry: RaceRegistryEntry = {
   description: 'Graceful sentinels with precise moonlit archery.',
   themeColor: '#6bbf89',
   starterTowerId: 'elf_moon_archer_tower',
-  buildableTowerIds: ['elf_moon_archer_tower'],
+  buildableTowerIds: [
+    'elf_moon_archer_tower',
+    'elf_wisp_bloom',
+    'elf_moonwell',
+    'elf_thorn_spire',
+  ],
   sendableCreepIds: ['elf_archer', 'elf_huntress', 'elf_dryad', 'elf_chimera'],
 };
 

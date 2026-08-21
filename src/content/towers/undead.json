@@ -7,8 +7,8 @@
       "name": "Bone Archer Tower",
       "archetype": "single",
       "costGold": 50,
-      "damage": 22,
-      "range": 3.2,
+      "damage": 20,
+      "range": 3,
       "attackCooldownMs": 800,
       "spriteKey": "tower.undead.bone_archer",
       "description": "Necromantic archer nest built from cursed remains."
@@ -23,7 +23,36 @@
       "attackCooldownMs": 1200,
       "splashRadius": 1.5,
       "spriteKey": "tower.undead.plague",
-      "description": "Launches toxic projectiles that damage all nearby foes."
+      "description": "Launches toxic clouds that burst over everything nearby."
+    },
+    {
+      "id": "undead_frost_wyrm_nest",
+      "name": "Frost Wyrm Nest",
+      "archetype": "frost",
+      "costGold": 70,
+      "damage": 13,
+      "range": 3,
+      "attackCooldownMs": 900,
+      "onHitEffects": [
+        {
+          "effectId": "chill",
+          "magnitude": 0.35,
+          "durationMs": 2000
+        }
+      ],
+      "spriteKey": "tower.undead.frost_wyrm_nest",
+      "description": "A wyrm hatchling breathes killing cold over the path."
+    },
+    {
+      "id": "undead_bone_obelisk",
+      "name": "Bone Obelisk",
+      "archetype": "support",
+      "costGold": 60,
+      "damage": 0,
+      "range": 0.5,
+      "attackCooldownMs": 1000,
+      "spriteKey": "tower.undead.bone_obelisk",
+      "description": "Grave-magic pillar that quickens every tower around it."
     }
   ]
 }

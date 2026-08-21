@@ -8,10 +8,12 @@ import { buildableTowers } from '../config/buildableTowers';
 import { TOWER_ARCHETYPE_DEFINITIONS, TOWER_COMBAT_STATS_BY_TYPE } from '../types';
 import {
   EffectId,
+  RACE_IDS,
   RaceId,
   TOWER_TYPE_IDS,
   TowerTypeId,
 } from '../../../../shared/types/content-ids';
+import { BUILDABLE_TOWER_IDS } from '../towerIds';
 
 const FILE = 'content/towers/undead.json';
 
@@ -190,14 +192,43 @@ describe('loadTowerArchetypeContent', () => {
 });
 
 describe('shipped tower content', () => {
-  it('loads every race roster', () => {
-    expect(buildableTowers.map((tower) => tower.id)).toEqual([
-      'undead_bone_archer_tower',
-      'undead_plague_tower',
-      'orc_spear_watchtower',
-      'human_guard_archer_tower',
-      'elf_moon_archer_tower',
-    ]);
+  it('loads a full roster for every race', () => {
+    expect(buildableTowers.map((tower) => tower.id)).toEqual([...BUILDABLE_TOWER_IDS]);
+  });
+
+  it('gives every race a damage, an area and a crowd control tower', () => {
+    const AREA_ARCHETYPES: TowerTypeId[] = [TowerTypeId.SPLASH, TowerTypeId.CHAIN];
+    const CONTROL_ARCHETYPES: TowerTypeId[] = [
+      TowerTypeId.FROST,
+      TowerTypeId.POISON,
+      TowerTypeId.CHAIN,
+    ];
+
+    for (const race of RACE_IDS) {
+      const roster = buildableTowers.filter((tower) => tower.faction === race);
+      const archetypes = roster.map((tower) => tower.towerType);
+
+      expect(roster.length, race).toBe(4);
+      expect(archetypes, race).toContain(TowerTypeId.SINGLE);
+      expect(archetypes.some((archetype) => AREA_ARCHETYPES.includes(archetype)), race).toBe(true);
+      expect(archetypes.some((archetype) => CONTROL_ARCHETYPES.includes(archetype)), race).toBe(true);
+      expect(new Set(archetypes).size, `${race} avoids duplicate archetypes`).toBe(roster.length);
+    }
+  });
+
+  it('prices the same archetype the same way for every race', () => {
+    const costByArchetype = new Map<TowerTypeId, number>();
+
+    for (const tower of buildableTowers) {
+      const knownCost = costByArchetype.get(tower.towerType);
+
+      if (knownCost === undefined) {
+        costByArchetype.set(tower.towerType, tower.costGold);
+        continue;
+      }
+
+      expect(tower.costGold, tower.id).toBe(knownCost);
+    }
   });
 
   it('keeps the placement stats the game shipped with', () => {

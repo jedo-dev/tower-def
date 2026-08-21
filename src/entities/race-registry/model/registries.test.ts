@@ -185,10 +185,10 @@ describe('entities/race-registry', () => {
       }));
 
       expect(snapshot).toEqual([
-        { raceId: 'UNDEAD', name: 'Undead', starterTower: 'undead_bone_archer_tower', towerCount: 2, creepCount: 4 },
-        { raceId: 'ORC', name: 'Orc', starterTower: 'orc_spear_watchtower', towerCount: 1, creepCount: 4 },
-        { raceId: 'HUMAN', name: 'Human', starterTower: 'human_guard_archer_tower', towerCount: 1, creepCount: 4 },
-        { raceId: 'ELF', name: 'Elf', starterTower: 'elf_moon_archer_tower', towerCount: 1, creepCount: 4 },
+        { raceId: 'UNDEAD', name: 'Undead', starterTower: 'undead_bone_archer_tower', towerCount: 4, creepCount: 4 },
+        { raceId: 'ORC', name: 'Orc', starterTower: 'orc_spear_watchtower', towerCount: 4, creepCount: 4 },
+        { raceId: 'HUMAN', name: 'Human', starterTower: 'human_guard_archer_tower', towerCount: 4, creepCount: 4 },
+        { raceId: 'ELF', name: 'Elf', starterTower: 'elf_moon_archer_tower', towerCount: 4, creepCount: 4 },
       ]);
     });
   });
