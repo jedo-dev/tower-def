@@ -23,3 +23,7 @@ dist-ssr
 *.sln
 *.sw?
 .aider*
+
+# Test artifacts
+test-results
+output
