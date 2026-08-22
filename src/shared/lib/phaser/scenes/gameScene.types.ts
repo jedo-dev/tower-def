@@ -15,6 +15,13 @@ export type CreepRenderState = {
   effectPips?: Phaser.GameObjects.Text;
   /** Effect set the sprite currently reflects, so repaints stay change-driven. */
   effectVisualSignature?: string;
+  /** Sheet carries walk rows per direction and a death row. */
+  isDirectional?: boolean;
+  /** Row currently playing, so a direction change does not restart the walk every frame. */
+  facing?: 'down' | 'side' | 'up';
+  facingFlipped?: boolean;
+  /** Set once the death row started, so it is not restarted while it plays out. */
+  isDeathAnimationPlaying?: boolean;
 };
 
 export type TowerRenderState = {

@@ -44,6 +44,79 @@ def key_out_background(cell: Image.Image, tolerance: int, background: tuple[int,
     return cell
 
 
+def purge_key_hue(cell: Image.Image, background: tuple[int, int, int], window: int = 14) -> Image.Image:
+    """Removes shaded variants of the key colour.
+
+    Models like to paint a darker version of the background as a fake shadow under the subject.
+    That shade keeps the key hue, so it is caught by hue instead of by distance to the key.
+    """
+    key_hue = rgb_to_hue(*background)
+    pixels = cell.load()
+    width, height = cell.size
+
+    for y in range(height):
+        for x in range(width):
+            red, green, blue, alpha = pixels[x, y]
+            if alpha == 0:
+                continue
+            highest, lowest = max(red, green, blue), min(red, green, blue)
+            if highest == 0:
+                continue
+            saturation = (highest - lowest) / highest
+            if saturation < 0.45:
+                continue
+            hue_distance = abs(rgb_to_hue(red, green, blue) - key_hue)
+            hue_distance = min(hue_distance, 360 - hue_distance)
+            if hue_distance <= window:
+                pixels[x, y] = (0, 0, 0, 0)
+
+    return cell
+
+
+def strip_ground_line(cell: Image.Image, coverage: float = 0.55, max_thickness: int = 3) -> Image.Image:
+    """Erases the thin wide streak a model draws as ground under the subject."""
+    pixels = cell.load()
+    width, height = cell.size
+    rows = []
+
+    for y in range(height):
+        filled = sum(1 for x in range(width) if pixels[x, y][3] > 0)
+        rows.append(filled)
+
+    lowest_filled = max((y for y, filled in enumerate(rows) if filled), default=None)
+    if lowest_filled is None:
+        return cell
+
+    streak = []
+    for y in range(lowest_filled, max(-1, lowest_filled - max_thickness), -1):
+        if rows[y] >= width * coverage:
+            streak.append(y)
+        else:
+            break
+
+    # A body lying on the ground is wide too, so only a thin band counts as a drawn line.
+    if streak and len(streak) <= max_thickness:
+        for y in streak:
+            for x in range(width):
+                pixels[x, y] = (0, 0, 0, 0)
+
+    return cell
+
+
+def rgb_to_hue(red: int, green: int, blue: int) -> float:
+    highest, lowest = max(red, green, blue), min(red, green, blue)
+    delta = highest - lowest
+    if delta == 0:
+        return 0.0
+    if highest == red:
+        hue = ((green - blue) / delta) % 6
+    elif highest == green:
+        hue = ((blue - red) / delta) + 2
+    else:
+        hue = ((red - green) / delta) + 4
+    return hue * 60
+
+
 def drop_stray_pixels(cell: Image.Image, min_neighbours: int = 2) -> Image.Image:
     """Kills lone opaque pixels left by the border lines and by keying noise."""
     pixels = cell.load()
@@ -84,6 +157,12 @@ def main() -> None:
                         help='share of the frame height the tallest subject fills (default 0.88)')
     parser.add_argument('--margin-bottom', type=int, default=1, help='empty pixels under the baseline (default 1)')
     parser.add_argument('--key', default='ff00ff', help='background colour to remove, hex (default ff00ff)')
+    parser.add_argument('--keep-key-hue', action='store_true',
+                        help='keep shaded variants of the key colour instead of purging them by hue; '
+                             'use it when the sprite itself is close to the key hue')
+    parser.add_argument('--strip-ground', action='store_true',
+                        help='erase a thin wide horizontal streak at the bottom of a cell, the ground line '
+                             'models like to draw under the subject')
     parser.add_argument('--normalize-rows', default='',
                         help='rows that get their own scale, e.g. "0,1,2" for the three walk rows; '
                              'a row that is not listed inherits the scale of the nearest listed row above it. '
@@ -110,7 +189,12 @@ def main() -> None:
                 int((column + 1) * cell_width - inset_x),
                 int((row + 1) * cell_height - inset_y),
             )
-            cell = drop_stray_pixels(key_out_background(source.crop(box), args.tolerance, background))
+            cell = key_out_background(source.crop(box), args.tolerance, background)
+            if not args.keep_key_hue:
+                cell = purge_key_hue(cell, background)
+            if args.strip_ground:
+                cell = strip_ground_line(cell)
+            cell = drop_stray_pixels(cell)
             bbox = cell.getbbox()
             row_cells.append({'image': cell, 'bbox': bbox})
         cells.append(row_cells)

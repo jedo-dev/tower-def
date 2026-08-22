@@ -22,6 +22,7 @@ import type { GridPosition } from '../../../../types/pathfinding';
 import type { SoundId } from '../../sound/audio.types';
 import type { CreepRenderState, PendingWaveSpawn } from '../../scenes/gameScene.types';
 import { destroyCreepRenderState } from '../combat/creepEffectVisuals';
+import { isDirectionalCreepSprite } from '../animation/creepFacing';
 
 export type WaveRuntimeState = {
   activeCreepPath: GridPosition[];
@@ -270,12 +271,19 @@ export function processPendingWaveSpawns(
     sprite.setTint(baseTint);
     sprite.play(animationKey);
 
+    // The sheet decides what the creep can do: four rows mean it can turn and die
+    // on screen, a legacy strip keeps the rotate-and-fade behaviour.
+    const isDirectional = isDirectionalCreepSprite(sprite);
+
     state.activeCreeps.push({
       entity: waveCreep,
       sprite,
       hitFlashRemainingMs: 0,
       deathFadeRemainingMs: 0,
       baseTint,
+      isDirectional,
+      facing: isDirectional ? 'side' : undefined,
+      facingFlipped: false,
     });
   }
 }

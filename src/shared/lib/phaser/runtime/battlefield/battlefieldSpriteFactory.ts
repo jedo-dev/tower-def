@@ -38,21 +38,20 @@ import {
   type BattlefieldRenderState,
 } from './battlefieldRenderState';
 
-export function getSpriteKeyByUnit(unit: UnitConfig): string {
-  if (unit.id === 'undead_skeleton') {
-    return UNIT_SPRITE_KEYS.UNDEAD_SKELETON;
-  }
-  if (unit.id === 'undead_crypt_fiend') {
-    return UNIT_SPRITE_KEYS.UNDEAD_CRYPT_FIEND;
-  }
-  if (unit.id === 'undead_gargoyle') {
-    return UNIT_SPRITE_KEYS.UNDEAD_GARGOYLE;
-  }
-  if (unit.id === 'undead_ghoul') {
-    return UNIT_SPRITE_KEYS.UNDEAD_GHOUL;
-  }
+/** Creeps whose own sheet is registered; everything else falls back by tier. */
+const SPRITE_KEY_BY_UNIT_ID: Partial<Record<UnitId, string>> = {
+  undead_skeleton: UNIT_SPRITE_KEYS.UNDEAD_SKELETON,
+  undead_ghoul: UNIT_SPRITE_KEYS.UNDEAD_GHOUL,
+  undead_crypt_fiend: UNIT_SPRITE_KEYS.UNDEAD_CRYPT_FIEND,
+  undead_gargoyle: UNIT_SPRITE_KEYS.UNDEAD_GARGOYLE,
+  orc_grunt: UNIT_SPRITE_KEYS.ORC_GRUNT,
+  orc_wolf_rider: UNIT_SPRITE_KEYS.ORC_WOLF_RIDER,
+  orc_troll: UNIT_SPRITE_KEYS.ORC_TROLL,
+  orc_headhunter: UNIT_SPRITE_KEYS.ORC_HEADHUNTER,
+};
 
-  return getFallbackSpriteKeyByTier(unit.tier);
+export function getSpriteKeyByUnit(unit: UnitConfig): string {
+  return SPRITE_KEY_BY_UNIT_ID[unit.id] ?? getFallbackSpriteKeyByTier(unit.tier);
 }
 
 // Only undead spritesheets exist; non-undead units reuse them by tier and
@@ -71,6 +70,12 @@ function getFallbackSpriteKeyByTier(tier: number): string {
 }
 
 export function getCreepTintByUnit(unit: UnitConfig): number {
+  // A creep with its own sheet is already the right colour; the faction tint is
+  // only there to tell borrowed undead art apart.
+  if (SPRITE_KEY_BY_UNIT_ID[unit.id]) {
+    return 0xffffff;
+  }
+
   return UNIT_FACTION_TINTS[unit.faction] ?? 0xffffff;
 }
 

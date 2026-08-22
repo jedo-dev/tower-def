@@ -5,8 +5,12 @@ import {
   TOWER_ANIMATION_SETS,
   TOWER_BONE_ARCHER_ANIMATION_FRAMES,
   TOWER_SPRITE_KEYS,
-  UNIT_ANIMATION_KEYS,
+  UNIT_DIRECTIONAL_FRAME_COUNT,
+  UNIT_SHEET_FRAMES_PER_ROW,
+  UNIT_SHEET_ROWS,
   UNIT_SPRITE_KEYS,
+  UnitAnimationKind,
+  toUnitAnimationKey,
 } from '../../../../constants/sprites';
 
 /** Animation keys a tower sheet must provide, real art or placeholder alike. */
@@ -18,12 +22,30 @@ export type TowerAnimationSet = {
   sell: string;
 };
 
-const UNIT_WALK_ANIMATIONS: ReadonlyArray<{ animationKey: string; spriteKey: string }> = [
-  { animationKey: UNIT_ANIMATION_KEYS.UNDEAD_SKELETON_WALK, spriteKey: UNIT_SPRITE_KEYS.UNDEAD_SKELETON },
-  { animationKey: UNIT_ANIMATION_KEYS.UNDEAD_GHOUL_WALK, spriteKey: UNIT_SPRITE_KEYS.UNDEAD_GHOUL },
-  { animationKey: UNIT_ANIMATION_KEYS.UNDEAD_CRYPT_FIEND_WALK, spriteKey: UNIT_SPRITE_KEYS.UNDEAD_CRYPT_FIEND },
-  { animationKey: UNIT_ANIMATION_KEYS.UNDEAD_GARGOYLE_WALK, spriteKey: UNIT_SPRITE_KEYS.UNDEAD_GARGOYLE },
+const UNIT_WALK_FRAME_RATE = 8;
+const UNIT_DEATH_FRAME_RATE = 7;
+
+/** Row of the sheet each animation reads, in the frame order Phaser assigns. */
+const DIRECTIONAL_ANIMATIONS: ReadonlyArray<{ kind: UnitAnimationKind; row: number; loops: boolean }> = [
+  { kind: UnitAnimationKind.WALK_DOWN, row: UNIT_SHEET_ROWS.WALK_DOWN, loops: true },
+  { kind: UnitAnimationKind.WALK_SIDE, row: UNIT_SHEET_ROWS.WALK_SIDE, loops: true },
+  { kind: UnitAnimationKind.WALK_UP, row: UNIT_SHEET_ROWS.WALK_UP, loops: true },
+  { kind: UnitAnimationKind.DEATH, row: UNIT_SHEET_ROWS.DEATH, loops: false },
 ];
+
+function countSheetFrames(scene: Phaser.Scene, spriteKey: string): number {
+  if (!scene.textures.exists(spriteKey)) {
+    return 0;
+  }
+
+  // getFrameNames lists the numbered frames only, without Phaser's __BASE entry.
+  return scene.textures.get(spriteKey).getFrameNames().length;
+}
+
+/** A creep sheet is directional when it carries all four rows of the 128x128 contract. */
+export function hasDirectionalUnitSheet(scene: Phaser.Scene, spriteKey: string): boolean {
+  return countSheetFrames(scene, spriteKey) >= UNIT_DIRECTIONAL_FRAME_COUNT;
+}
 
 const PLACEHOLDER_TOWER_ANIMATION_SET = {
   build: PLACEHOLDER_ANIMATION_KEYS.TOWER_BUILD,
@@ -33,27 +55,53 @@ const PLACEHOLDER_TOWER_ANIMATION_SET = {
   sell: PLACEHOLDER_ANIMATION_KEYS.TOWER_SELL,
 } as const;
 
+function createRowAnimation(
+  scene: Phaser.Scene,
+  spriteKey: string,
+  kind: UnitAnimationKind,
+  row: number,
+  loops: boolean,
+): void {
+  const animationKey = toUnitAnimationKey(spriteKey, kind);
+
+  if (scene.anims.exists(animationKey)) {
+    return;
+  }
+
+  const start = row * UNIT_SHEET_FRAMES_PER_ROW;
+
+  scene.anims.create({
+    key: animationKey,
+    frames: scene.anims.generateFrameNumbers(spriteKey, {
+      start,
+      end: start + UNIT_SHEET_FRAMES_PER_ROW - 1,
+    }),
+    frameRate: loops ? UNIT_WALK_FRAME_RATE : UNIT_DEATH_FRAME_RATE,
+    repeat: loops ? -1 : 0,
+  });
+}
+
+/**
+ * Builds the animations a creep sheet can support: a 16-frame sheet gets three
+ * walk directions plus a death row, a legacy 4-frame strip gets the side walk
+ * only, which is what the movement runtime falls back to.
+ */
 export function createUnitWalkAnimations(scene: Phaser.Scene): void {
-  [
-    ...UNIT_WALK_ANIMATIONS,
-    {
-      animationKey: PLACEHOLDER_ANIMATION_KEYS.UNIT_WALK,
-      spriteKey: PLACEHOLDER_TEXTURE_KEYS.UNIT,
-    },
-  ].forEach(({ animationKey, spriteKey }) => {
-    if (scene.anims.exists(animationKey)) {
+  const spriteKeys: string[] = [...Object.values(UNIT_SPRITE_KEYS), PLACEHOLDER_TEXTURE_KEYS.UNIT];
+
+  spriteKeys.forEach((spriteKey) => {
+    if (!scene.textures.exists(spriteKey)) {
       return;
     }
 
-    scene.anims.create({
-      key: animationKey,
-      frames: scene.anims.generateFrameNumbers(spriteKey, {
-        start: 0,
-        end: 3,
-      }),
-      frameRate: 8,
-      repeat: -1,
-    });
+    if (hasDirectionalUnitSheet(scene, spriteKey)) {
+      DIRECTIONAL_ANIMATIONS.forEach(({ kind, row, loops }) => {
+        createRowAnimation(scene, spriteKey, kind, row, loops);
+      });
+      return;
+    }
+
+    createRowAnimation(scene, spriteKey, UnitAnimationKind.WALK_SIDE, 0, true);
   });
 }
 
@@ -109,17 +157,7 @@ export function getTowerAnimationSet(spriteKey: string): TowerAnimationSet {
   );
 }
 
+/** The animation a creep starts on: the side walk, which every sheet provides. */
 export function getWalkAnimationKeyBySpriteKey(spriteKey: string): string {
-  switch (spriteKey) {
-    case PLACEHOLDER_TEXTURE_KEYS.UNIT:
-      return PLACEHOLDER_ANIMATION_KEYS.UNIT_WALK;
-    case UNIT_SPRITE_KEYS.UNDEAD_SKELETON:
-      return UNIT_ANIMATION_KEYS.UNDEAD_SKELETON_WALK;
-    case UNIT_SPRITE_KEYS.UNDEAD_CRYPT_FIEND:
-      return UNIT_ANIMATION_KEYS.UNDEAD_CRYPT_FIEND_WALK;
-    case UNIT_SPRITE_KEYS.UNDEAD_GARGOYLE:
-      return UNIT_ANIMATION_KEYS.UNDEAD_GARGOYLE_WALK;
-    default:
-      return UNIT_ANIMATION_KEYS.UNDEAD_GHOUL_WALK;
-  }
+  return toUnitAnimationKey(spriteKey, UnitAnimationKind.WALK_SIDE);
 }

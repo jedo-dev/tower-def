@@ -1,5 +1,9 @@
 import { RaceId } from '../types/content-ids';
 import skeletonSprite from '../sprite/skeleton.svg';
+import orcGruntSprite from '../sprite/orc_grunt.png';
+import orcWolfRiderSprite from '../sprite/orc_wolf_rider.png';
+import orcTrollSprite from '../sprite/orc_troll.png';
+import orcHeadhunterSprite from '../sprite/orc_headhunter.png';
 import ghoulSprite from '../sprite/ghoul.svg';
 import cryptFiendSprite from '../sprite/undead_crypt_fiend.svg';
 import gargoyleSprite from '../sprite/undead_gargoyle.svg';
@@ -9,6 +13,10 @@ export const UNIT_SPRITE_KEYS = {
   UNDEAD_GHOUL: 'unit.undead.ghoul',
   UNDEAD_CRYPT_FIEND: 'unit.undead.crypt_fiend',
   UNDEAD_GARGOYLE: 'unit.undead.gargoyle',
+  ORC_GRUNT: 'unit.orc.grunt',
+  ORC_WOLF_RIDER: 'unit.orc.wolf_rider',
+  ORC_TROLL: 'unit.orc.troll',
+  ORC_HEADHUNTER: 'unit.orc.headhunter',
 } as const;
 
 export const UNIT_SPRITE_ASSETS: Record<(typeof UNIT_SPRITE_KEYS)[keyof typeof UNIT_SPRITE_KEYS], string> = {
@@ -16,6 +24,10 @@ export const UNIT_SPRITE_ASSETS: Record<(typeof UNIT_SPRITE_KEYS)[keyof typeof U
   [UNIT_SPRITE_KEYS.UNDEAD_GHOUL]: ghoulSprite,
   [UNIT_SPRITE_KEYS.UNDEAD_CRYPT_FIEND]: cryptFiendSprite,
   [UNIT_SPRITE_KEYS.UNDEAD_GARGOYLE]: gargoyleSprite,
+  [UNIT_SPRITE_KEYS.ORC_GRUNT]: orcGruntSprite,
+  [UNIT_SPRITE_KEYS.ORC_WOLF_RIDER]: orcWolfRiderSprite,
+  [UNIT_SPRITE_KEYS.ORC_TROLL]: orcTrollSprite,
+  [UNIT_SPRITE_KEYS.ORC_HEADHUNTER]: orcHeadhunterSprite,
 };
 
 // Dedicated art exists only for undead units; other factions reuse the undead
@@ -32,12 +44,34 @@ export const UNIT_SPRITE_SHEET_FRAME = {
   height: 32,
 } as const;
 
-export const UNIT_ANIMATION_KEYS = {
-  UNDEAD_SKELETON_WALK: 'unit.undead.skeleton.walk',
-  UNDEAD_GHOUL_WALK: 'unit.undead.ghoul.walk',
-  UNDEAD_CRYPT_FIEND_WALK: 'unit.undead.crypt_fiend.walk',
-  UNDEAD_GARGOYLE_WALK: 'unit.undead.gargoyle.walk',
+/**
+ * Rows of the 128x128 creep sheet, in the order Phaser numbers frames
+ * (left to right, top row first). A sheet with fewer frames is the legacy
+ * 128x32 strip: one side-view walk, no directions and no death.
+ */
+export const UNIT_SHEET_ROWS = {
+  WALK_DOWN: 0,
+  WALK_SIDE: 1,
+  WALK_UP: 2,
+  DEATH: 3,
 } as const;
+
+export const UNIT_SHEET_FRAMES_PER_ROW = 4;
+export const UNIT_DIRECTIONAL_FRAME_COUNT = UNIT_SHEET_FRAMES_PER_ROW * 4;
+
+export const UnitAnimationKind = {
+  WALK_DOWN: 'walk.down',
+  WALK_SIDE: 'walk.side',
+  WALK_UP: 'walk.up',
+  DEATH: 'death',
+} as const;
+
+export type UnitAnimationKind = (typeof UnitAnimationKind)[keyof typeof UnitAnimationKind];
+
+/** Animation keys are derived from the sprite key, so a new creep needs no new constant. */
+export function toUnitAnimationKey(spriteKey: string, kind: UnitAnimationKind): string {
+  return `${spriteKey}.${kind}`;
+}
 
 export const TOWER_SPRITE_KEYS = {
   UNDEAD_BONE_ARCHER: 'tower.undead.bone_archer',
@@ -81,7 +115,6 @@ export const TOWER_BONE_ARCHER_EFFECT_FRAMES = {
 } as const;
 
 export const PLACEHOLDER_ANIMATION_KEYS = {
-  UNIT_WALK: 'placeholder.unit.walk',
   TOWER_BUILD: 'placeholder.tower.build',
   TOWER_IDLE: 'placeholder.tower.idle',
   TOWER_ATTACK: 'placeholder.tower.attack',

@@ -31,6 +31,8 @@ export const CREEP_BASE_COLOR = 0xffffff;
 export const CREEP_HIT_FLASH_COLOR = 0xffffff;
 export const CREEP_HIT_FLASH_DURATION_MS = 90;
 export const CREEP_DEATH_FADE_DURATION_MS = 180;
+/** Four death frames at seven frames per second, plus a beat to read the pose. */
+export const CREEP_DEATH_ANIMATION_DURATION_MS = 620;
 export const PROJECTILE_MIN_LIFETIME_MS = 200;
 export const PROJECTILE_MAX_LIFETIME_MS = 350;
 export const PROJECTILE_DISPLAY_SIZE_PX = 24;

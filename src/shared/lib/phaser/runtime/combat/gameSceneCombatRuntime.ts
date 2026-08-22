@@ -38,6 +38,7 @@ import {
   refreshCreepEffectVisuals,
   resolveCreepRestingTint,
 } from './creepEffectVisuals';
+import { getCreepDeathAnimationKey } from '../animation/creepFacing';
 
 export type CombatRuntimeConfig = {
   archerProjectileVisualMode: 'projectile' | 'attackEffect';
@@ -45,6 +46,8 @@ export type CombatRuntimeConfig = {
   creepHitFlashColor: number;
   creepHitFlashDurationMs: number;
   creepDeathFadeDurationMs: number;
+  /** How long the death row is given before the sprite is destroyed. */
+  creepDeathAnimationDurationMs: number;
   projectileMinLifetimeMs: number;
   projectileMaxLifetimeMs: number;
   projectileDisplaySizePx: number;
@@ -541,12 +544,33 @@ export function removeDeadCreepsFromActiveWave(
   activeCreeps: CreepRenderState[],
   deltaMs: number,
   deathFadeDurationMs: number,
+  deathAnimationDurationMs = deathFadeDurationMs,
 ): CreepRenderState[] {
   const aliveCreeps: CreepRenderState[] = [];
 
   for (const creep of activeCreeps) {
     if (!isCreepDead(creep.entity)) {
       aliveCreeps.push(creep);
+      continue;
+    }
+
+    // A sheet with a death row plays it out; a legacy strip has nothing to play,
+    // so it keeps fading instead.
+    if (creep.isDirectional) {
+      if (!creep.isDeathAnimationPlaying) {
+        creep.isDeathAnimationPlaying = true;
+        creep.deathFadeRemainingMs = deathAnimationDurationMs;
+        creep.sprite.play(getCreepDeathAnimationKey(creep.sprite), true);
+      }
+
+      creep.deathFadeRemainingMs = Math.max(0, creep.deathFadeRemainingMs - deltaMs);
+
+      if (creep.deathFadeRemainingMs > 0) {
+        aliveCreeps.push(creep);
+        continue;
+      }
+
+      destroyCreepRenderState(creep);
       continue;
     }
 

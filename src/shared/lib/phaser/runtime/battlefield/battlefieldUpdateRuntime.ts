@@ -86,6 +86,7 @@ export function removeDeadBattlefieldCreeps(
     context.field.creeps,
     deltaMs,
     config.creepDeathFadeDurationMs,
+    config.creepDeathAnimationDurationMs,
   );
   context.afterFieldMutated();
 }

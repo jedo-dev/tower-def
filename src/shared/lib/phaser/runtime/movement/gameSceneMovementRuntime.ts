@@ -1,5 +1,6 @@
 import { getEffectiveSpeedMultiplier } from '../../../../../entities/creep';
 import { syncCreepEffectPipPosition } from '../combat/creepEffectVisuals';
+import { applyCreepFacing } from '../animation/creepFacing';
 import { isGameOverByLives, subtractLives } from '../../../../../entities/player-resources';
 import { transitionToGameOver, type WavePhaseState } from '../../../../../features/wave-phase';
 import type { GridPosition } from '../../../../types/pathfinding';
@@ -112,6 +113,7 @@ export function moveCreepsAlongPath(
     if (distanceToNext <= normalizedStepDistance) {
       creep.sprite.setPosition(nextCenter.x, nextCenter.y);
       syncCreepEffectPipPosition(creep);
+      applyCreepFacing(creep, dx, dy);
       creep.entity.pathIndex = nextPathIndex;
       creep.entity.position = { x: nextPoint.x, y: nextPoint.y };
 
@@ -126,6 +128,6 @@ export function moveCreepsAlongPath(
     const nextY = creep.sprite.y + dy * ratio;
     creep.sprite.setPosition(nextX, nextY);
     syncCreepEffectPipPosition(creep);
-    creep.sprite.rotation = Math.atan2(dy, dx);
+    applyCreepFacing(creep, dx, dy);
   }
 }
