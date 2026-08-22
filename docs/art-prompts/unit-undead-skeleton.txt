@@ -1,0 +1,236 @@
+Skeleton — тир 1, наземный — unit.undead.skeleton
+Контракт листа: 128x128 = 4 ряда по 4 кадра 32x32.
+Ряды: 0 движение вниз (на зрителя), 1 движение вбок (вправо), 2 движение вверх, 3 смерть.
+Статус: есть старый лист 128x32, перерисовка опциональна
+
+Один запрос, «Изображения для обработки» оставить пустым.
+Сборка: python tools/build-sprite-sheet.py raw.png src/shared/sprite/undead_skeleton.png --grid 4x4 --cell 32 --normalize-rows 0,1,2
+
+============================================================
+
+A complete 16-frame character sprite sheet of "Крипы (лист 128×32, 4 кадра по 32×32)
+
+| Раса | Существо | Ключ спрайта | Статус |
+| --- | --- | --- | --- |
+| Нежить | Skeleton | `unit.undead.skeleton` | есть |
+| Нежить | Ghoul | `unit.undead.ghoul` | есть |
+| Нежить | Crypt Fiend | `unit.undead.crypt_fiend` | есть |
+| Нежить | Gargoyle | `unit.undead.gargoyle` | есть |
+| Нежить | Abomination | `unit.undead.abomination` | **нужен** |
+| Нежить | Necromancer | `unit.undead.necromancer` | **нужен** |
+| Нежить | Banshee | `unit.undead.banshee` | **нужен** |
+| Нежить | Frost Wyrm | `unit.undead.frost_wyrm` | **нужен** |
+| Орки | Grunt | `unit.orc.grunt` | **нужен** |
+| Орки | Wolf Rider | `unit.orc.wolf_rider` | **нужен** |
+| Орки | Troll | `unit.orc.troll` | **нужен** |
+| Орки | Headhunter | `unit.orc.headhunter` | **нужен** |
+| Люди | Militia | `unit.human.militia` | **нужен** |
+| Люди | Footman | `unit.human.footman` | **нужен** |
+| Люди | Rifleman | `unit.human.rifleman` | **нужен** |
+| Люди | Siege Engine | `unit.human.siege_engine` | **нужен** |
+| Эльфы | Archer | `unit.elf.archer` | **нужен** |
+| Эльфы | Huntress | `unit.elf.huntress` | **нужен** |
+| Эльфы | Dryad | `unit.elf.dryad` | **нужен** |
+| Эльфы | Chimera | `unit.elf.chimera` | **нужен** |
+
+### Башни (лист 300×180, 15 слотов по 60×60)
+
+| Раса | Башня | Архетип | Ключ спрайта | Статус |
+| --- | --- | --- | --- | --- |
+| Нежить | Bone Archer Tower | single | `tower.undead.bone_archer` | есть (эталон стиля) |
+| Нежить | Plague Tower | splash | `tower.undead.plague` | **нужен** |
+| Нежить | Frost Wyrm Nest | frost | `tower.undead.frost_wyrm_nest` | **нужен** |
+| Нежить | Bone Obelisk | support | `tower.undead.bone_obelisk` | **нужен** |
+| Орки | Spear Watchtower | single | `tower.orc.spear_watchtower` | **нужен** |
+| Орки | Burning Pit | splash | `tower.orc.burning_pit` | **нужен** |
+| Орки | Lightning Totem | chain | `tower.orc.lightning_totem` | **нужен** |
+| Орки | Tar Pit | frost | `tower.orc.tar_pit` | **нужен** |
+| Люди | Guard Archer Tower | single | `tower.human.guard_archer` | **нужен** |
+| Люди | Cannon Bastion | splash | `tower.human.cannon_bastion` | **нужен** |
+| Люди | Alchemist Tower | poison | `tower.human.alchemist_tower` | **нужен** |
+| Люди | Guard Post | support | `tower.human.guard_post` | **нужен** |
+| Эльфы | Moon Archer Tower | single | `tower.elf.moon_archer` | есть |
+| Эльфы | Wisp Bloom | splash | `tower.elf.wisp_bloom` | **нужен** |
+| Эльфы | Moonwell | frost | `tower.elf.moonwell` | **нужен** |
+| Эльфы | Thorn Spire | poison | `tower.elf.thorn_spire` | **нужен** |
+
+Тайлсеты земли, дорожек и пропсов нарисованы для всех четырёх рас — промты для них
+не нужны.
+
+---
+
+## Технический контракт листов
+
+Phaser режет лист построчно: слева направо, потом следующий ряд. Геометрия
+обязательна, иначе анимации разъедутся.
+
+### Лист крипа — 128×32
+
+Одна строка, 4 кадра по 32×32, персонаж **смотрит вправо**:
+
+```txt
+┌────────┬────────┬────────┬────────┐
+│ WALK 1 │ WALK 2 │ WALK 3 │ WALK 4 │   ← цикл ходьбы (у летающих — взмахи)
+└────────┴────────┴────────┴────────┘
+   0        1        2        3
+```
+
+- Персонаж занимает 75–85% высоты кадра, ноги на общей базовой линии во всех кадрах
+  (у летающих — одинаковая высота зависания).
+- Фон прозрачный, тени на фон не запекаются: в игре крип рисуется размером 28×28 px.
+
+### Лист башни — 300×180
+
+Сетка 5 столбцов × 3 ряда, 15 слотов по 60×60:
+
+```txt
+┌─────────┬─────────┬─────────┬─────────┬─────────┐
+│ 0 BUILD1│ 1 BUILD2│ 2 BUILD3│ 3 IDLE A│ 4 IDLE B│
+├─────────┼─────────┼─────────┼─────────┼─────────┤
+│ 5 ATK 1 │ 6 ATK 2 │ 7 ATK 3 │ 8 ПУСТО │ 9 HIT   │
+├─────────┼─────────┼─────────┼─────────┼─────────┤
+│10 SELL1 │11 SELL2 │12 SHOT  │13 IMPACT│14 ПУСТО │
+└─────────┴─────────┴─────────┴─────────┴─────────┘
+```
+
+- `0–2` стройка: фундамент → половина → готовая башня.
+- `3–4` покой: двухкадровый цикл (пульс свечения, качание флага).
+- `5–7` атака: замах → выстрел → возврат.
+- `8` пустой служебный слот, полностью прозрачный.
+- `9` реакция на удар: готовая башня, залитая красным.
+- `10–11` продажа: обрушение → куча обломков.
+- `12` снаряд: летит вправо, ~20×20 px содержимого по центру.
+- `13` эффект попадания: радиальная вспышка по центру, без башни в кадре.
+- `14` не используется, полностью прозрачный.
+
+**Основание башни — у нижнего края кадра.** В игре спрайт ставится с якорем
+`(0.5, 0.82)` и размером ~42×42 px: если фундамент нарисован по центру, башня
+«взлетит» над клеткой.
+
+---
+
+## Общие правила стиля (уже вшиты в каждый промт)
+
+- HD pixel art уровня 16-бит JRPG / Warcraft III: чёткие пиксельные кластеры, один
+  тёмный контур в 1 px, ограниченная палитра, мягкий дизеринг, холодная подсветка
+  сверху-слева. Не вектор, не гладкая цифровая живопись, не 3D-рендер, не чиби.
+- Тёмное фэнтези, приглушённая насыщенность, сильный контраст по светлоте: земля под
+  спрайтами тёмная и десатурированная, читаемость держится на силуэте.
+- Крипы — вид сбоку, башни — три четверти сверху.
+- Фон только прозрачный: ни подложки, ни градиента, ни тени на фоне.
+- Текст, подписи и водяные знаки — только снаружи ячеек, никогда поверх арта.
+
+### Универсальный хвост промта
+
+Если понадобится сгенерировать что-то, чего нет в списке, дописать это в конец:
+
+```text
+STYLE: HD pixel art, 16-bit era JRPG / Warcraft III style - crisp pixel clusters, one clean 1px dark outline around the whole silhouette, a strictly limited palette, soft dithered shading and a subtle cool rim light from the upper left. Dark fantasy, muted saturation, strong value contrast. NOT vector, NOT smooth digital painting, NOT a 3D render, NOT chibi-cute, NOT anime lineart.
+BACKGROUND: fully transparent. No background colour, no gradient, no ground plane, no drop shadow, no glow spilling onto the background.
+DO NOT: no text, numbers, labels or watermarks inside the artwork cells; only one subject per cell; identical camera angle, lighting direction and scale in every cell; nothing cropped - leave a small empty margin inside every cell.
+```
+
+---
+
+## Сборка листа из выдачи модели
+
+Нарезать, выбить мадженту, выровнять кадры по базовой линии и привести их к одному масштабу
+умеет скрипт:
+
+```bash
+# крип: 4x4 сетка -> лист 128x128, ряды нормализуются по ходьбе, смерть берёт масштаб ряда «вверх»
+python tools/build-sprite-sheet.py raw.png src/shared/sprite/orc_grunt.png --grid 4x4 --cell 32 --normalize-rows 0,1,2
+
+# башня: 5x3 сетка -> лист 300x180
+python tools/build-sprite-sheet.py raw.png public/assets/towers/orc_tar_pit.png --grid 5x3 --cell 60
+```
+
+Что он делает: режет сетку, срезает нарисованные моделью рамки (`--inset`), выбивает фоновый
+цвет в альфу (`--key`, по умолчанию `ff00ff`), обрезает каждый кадр по содержимому, масштабирует
+все кадры одним коэффициентом и ставит их низом на общую базовую линию. Кадр, который не влезает
+в ячейку, ужимается, а не обрезается, и печатается в отчёте.
+
+## Как подключить готовый арт
+
+### Крип
+
+1. Положить лист `128×32` в `src/shared/sprite/<race>_<name>.png`.
+2. В `src/shared/constants/sprites.ts`: импорт файла, ключ в `UNIT_SPRITE_KEYS`,
+   пара в `UNIT_SPRITE_ASSETS`, ключ анимации в `UNIT_ANIMATION_KEYS`.
+3. В `src/shared/lib/phaser/runtime/animation/gameSceneAnimationRuntime.ts`:
+   добавить пару в `UNIT_WALK_ANIMATIONS` и `case` в `getWalkAnimationKeyBySpriteKey`.
+4. В `src/shared/lib/phaser/runtime/battlefield/battlefieldSpriteFactory.ts`:
+   дописать id существа в `getSpriteKeyByUnit`. Без этого крип продолжит брать
+   тир-фоллбек нежити с тинтом расы, даже если файл лежит на месте.
+5. Ключ в контенте (`src/content/units/<race>.json`) менять не нужно — он уже
+   совпадает с тем, что в таблице выше.
+
+### Башня
+
+1. Положить лист `300×180` в `public/assets/towers/<race>_<name>.png`.
+2. В `src/shared/constants/sprites.ts`: ключ в `TOWER_SPRITE_KEYS`, путь в
+   `TOWER_SPRITE_ASSETS`, пять ключей анимации в `TOWER_ANIMATION_KEYS`, набор в
+   `TOWER_ANIMATION_SETS`.
+3. Контент (`src/content/towers/<race>.json`) уже ссылается на этот ключ — править
+   нечего.
+
+### Проверка
+
+```bash
+npx vitest run && npm run build
+```
+
+В dev-режиме консоль печатает `[assets] tower art missing, drawing placeholder: <ключ>`
+для каждого недостающего листа — строка исчезает, когда арт подключён.
+Полный список недостающего доступен через `getMissingArtReport()`.
+
+---
+
+## Оглавление промтов
+
+- **Нежить (Undead) — крипы**
+  - Skeleton" for a tower defense game, HD pixel art.
+
+STYLE (identical for the whole roster): HD pixel art in the 16-bit era JRPG / Warcraft III style - crisp pixel clusters, one clean 1px dark outline around the whole silhouette, a strictly limited palette, soft dithered shading and a subtle cool rim light from the upper left. NOT vector, NOT smooth digital painting, NOT a 3D render, NOT chibi-cute, NOT anime lineart. Dark fantasy, muted saturation, strong value contrast so the sprite stays readable on a dark grey bone-coloured ground.
+
+SUBJECT: a small restless skeleton warrior risen from a forgotten crypt. Bare bone-ivory skeleton, no flesh, a visible ribcage with real transparent gaps between the ribs, a bare skull with two tiny cold blue-violet #5c8cff pinpoints in the eye sockets and a slightly open jaw. A dark blood-red tattered loincloth at the hips, a worn leather strap running diagonally across the ribs with tarnished bronze buckles. He carries a short pitted sword in his leading (right) hand, held low, and a small round wooden shield with a tarnished bronze boss strapped to his rear arm across the chest. Thin brittle limbs, narrow frame - he must look cheap and expendable, not heroic.
+
+PALETTE (Undead faction, use these and nothing else): bone ivory, cold blue-violet #5c8cff, necrotic purple, blood red accents, tarnished bronze - plus, for this creature only, dark worn leather brown used ONLY for the chest strap, the loincloth rags and the wooden boards of the shield. No other colour anywhere.
+
+CONSISTENCY - THE MOST IMPORTANT RULE: the SAME creature appears in all 16 cells. Identical proportions, identical colours, identical gear and markings, identical scale and identical eye level in every cell. Only the pose and the camera direction change between cells.
+
+SHEET LAYOUT: one square image, a grid of 4 columns x 4 rows = 16 equal square cells, read left to right, top row first. Each cell is one pixel-art frame rendered for a final size of 32x32 px, so keep the detail budget low enough to survive that downscale.
+
+ROW 1 (cells 1-4) - MOVING TOWARD THE VIEWER, front view: face, chest and the front of the body visible, the weapon held across the body.
+  cell 1 CONTACT - the same phase seen from the front: front leg fully extended forward with the heel planted, rear leg fully extended back on the toe, a wide clear gap between the legs, arms swung to their extremes.
+  cell 2 PASSING DOWN - the same phase seen from the front: legs close together under the hips, the free leg passing forward with a bent knee, body at its LOWEST point, shoulders dipped.
+  cell 3 CONTACT MIRRORED - the same phase seen from the front: the opposite leg forward and planted, the other extended back, wide stride, arms swung the other way.
+  cell 4 PASSING UP - the same phase seen from the front: legs close together, the free leg passing back, body at its HIGHEST point of the stride, shoulders lifted.
+
+ROW 2 (cells 5-8) - MOVING SIDEWAYS, strict profile, facing RIGHT.
+  cell 5 CONTACT - front leg fully extended forward with the heel planted, rear leg fully extended back on the toe, a wide clear gap between the legs, arms swung to their extremes.
+  cell 6 PASSING DOWN - legs close together under the hips, the free leg passing forward with a bent knee, body at its LOWEST point, shoulders dipped.
+  cell 7 CONTACT MIRRORED - the opposite leg forward and planted, the other extended back, wide stride, arms swung the other way.
+  cell 8 PASSING UP - legs close together, the free leg passing back, body at its HIGHEST point of the stride, shoulders lifted.
+
+ROW 3 (cells 9-12) - MOVING AWAY FROM THE VIEWER, back view: the back of the head and shoulders visible, no face, the weapon crossing the back.
+  cell 9 CONTACT - the same phase seen from the back: front leg fully extended forward with the heel planted, rear leg fully extended back on the toe, a wide clear gap between the legs, arms swung to their extremes.
+  cell 10 PASSING DOWN - the same phase seen from the back: legs close together under the hips, the free leg passing forward with a bent knee, body at its LOWEST point, shoulders dipped.
+  cell 11 CONTACT MIRRORED - the same phase seen from the back: the opposite leg forward and planted, the other extended back, wide stride, arms swung the other way.
+  cell 12 PASSING UP - the same phase seen from the back: legs close together, the free leg passing back, body at its HIGHEST point of the stride, shoulders lifted.
+
+ROW 4 (cells 13-16) - DEATH, side view facing RIGHT, same camera as row 2.
+  cell 13 IMPACT - struck: head snapped back, torso arched backwards, arms flung wide, the weapon leaving its grip, feet still on the ground.
+  cell 14 FALLING - knees buckling, the body collapsing sideways and downward, the weapon already falling separately.
+  cell 15 DOWN - lying on the ground, limbs sprawled, the weapon on the ground beside it, silhouette low and flat.
+  cell 16 FADING - the body mostly gone, only a faint flattened dark shape, a few scattered pixels of dust and the weapon left behind.
+
+WITHIN EACH ROW the four poses must be visibly DIFFERENT from each other - never draw the same pose twice, exaggerate the motion if needed.
+
+SILHOUETTE at 28x28 px: a narrow upright biped - bare skull on a thin neck, a gappy ribcage, and the round disc of the shield breaking the chest line. It must never read as a fleshed humanoid.
+
+BACKGROUND: one flat solid magenta #FF00FF across the whole image, behind and between the cells. No transparency, no gradient, no texture, no ground line, no horizontal stroke, no shadow under the subject, no glow bleeding onto the magenta.
+
+FRAMING: each subject centred in its own cell with about 10% empty margin on every side, feet on a consistent baseline inside each row, nothing cropped. No borders, frames or grid lines drawn between cells.
+
+FORBIDDEN: no text, numbers, labels or watermarks anywhere in the image; no extra props, scenery or effects; never two subjects in one cell; do not change the camera angle inside a row.

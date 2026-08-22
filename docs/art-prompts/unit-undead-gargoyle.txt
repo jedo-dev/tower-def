@@ -1,0 +1,55 @@
+Gargoyle — тир 3, летающий — unit.undead.gargoyle
+Контракт листа: 128x128 = 4 ряда по 4 кадра 32x32.
+Ряды: 0 движение вниз (на зрителя), 1 движение вбок (вправо), 2 движение вверх, 3 смерть.
+Статус: есть старый лист 128x32, перерисовка опциональна
+
+Один запрос, «Изображения для обработки» оставить пустым.
+Сборка: python tools/build-sprite-sheet.py raw.png src/shared/sprite/undead_gargoyle.png --grid 4x4 --cell 32 --normalize-rows 0,1,2
+
+============================================================
+
+A complete 16-frame character sprite sheet of "Gargoyle" for a tower defense game, HD pixel art.
+
+STYLE (identical for the whole roster): HD pixel art in the 16-bit era JRPG / Warcraft III style - crisp pixel clusters, one clean 1px dark outline around the whole silhouette, a strictly limited palette, soft dithered shading and a subtle cool rim light from the upper left. NOT vector, NOT smooth digital painting, NOT a 3D render, NOT chibi-cute, NOT anime lineart. Dark fantasy, muted saturation, strong value contrast so the sprite stays readable on a dark grey bone-coloured ground.
+
+SUBJECT: a winged stone predator cut from graveyard granite and animated by necromancy. A compact muscular body of cracked grey stone, the cracks lit from inside with cold blue-violet #5c8cff necrotic light, bone-ivory horns, fangs and claws, a tarnished bronze ring in the collar, dried blood red in the claw grooves. A snarling gargoyle head with a flat brutal muzzle and glowing #5c8cff eyes, large bat-like stone wings with visibly chipped membranes, legs tucked up under the belly in flight, a short spaded tail trailing behind. Stone material, but an agile diving posture - a hunter, not a statue.
+
+PALETTE (Undead faction, use these and nothing else): bone ivory, cold blue-violet #5c8cff, necrotic purple, blood red accents, tarnished bronze - plus, for this creature only, cracked grey granite used ONLY for the stone body and the stone wing membranes. The granite must stay clearly greyer and darker than the bone-ivory horns and claws so the two materials never merge. No other colour anywhere.
+
+CONSISTENCY - THE MOST IMPORTANT RULE: the SAME creature appears in all 16 cells. Identical proportions, identical colours, identical gear and markings, identical scale and identical eye level in every cell. Only the pose and the camera direction change between cells.
+
+SHEET LAYOUT: one square image, a grid of 4 columns x 4 rows = 16 equal square cells, read left to right, top row first. Each cell is one pixel-art frame rendered for a final size of 32x32 px, so keep the detail budget low enough to survive that downscale.
+
+ROW 1 (cells 1-4) - MOVING TOWARD THE VIEWER, front view: seen head-on, both wings spread symmetrically to the left and right, the head toward the viewer.
+  cell 1 WINGS FULL UP - the same phase seen from the front: wings raised high above the back, membranes stretched, body at its lowest point of the hover.
+  cell 2 WINGS MID DOWN - the same phase seen from the front: wings sweeping downward past the body, membranes catching the air.
+  cell 3 WINGS FULL DOWN - the same phase seen from the front: wings spread low beneath the body, tips near the bottom of the cell, body at its highest point.
+  cell 4 WINGS MID UP - the same phase seen from the front: wings rising back toward the start, leading cleanly into the first frame.
+
+ROW 2 (cells 5-8) - MOVING SIDEWAYS, strict profile, facing RIGHT.
+  cell 5 WINGS FULL UP - wings raised high above the back, membranes stretched, body at its lowest point of the hover.
+  cell 6 WINGS MID DOWN - wings sweeping downward past the body, membranes catching the air.
+  cell 7 WINGS FULL DOWN - wings spread low beneath the body, tips near the bottom of the cell, body at its highest point.
+  cell 8 WINGS MID UP - wings rising back toward the start, leading cleanly into the first frame.
+
+ROW 3 (cells 9-12) - MOVING AWAY FROM THE VIEWER, back view: seen from behind, both wings spread symmetrically, the back of the head and the tail toward the viewer.
+  cell 9 WINGS FULL UP - the same phase seen from the back: wings raised high above the back, membranes stretched, body at its lowest point of the hover.
+  cell 10 WINGS MID DOWN - the same phase seen from the back: wings sweeping downward past the body, membranes catching the air.
+  cell 11 WINGS FULL DOWN - the same phase seen from the back: wings spread low beneath the body, tips near the bottom of the cell, body at its highest point.
+  cell 12 WINGS MID UP - the same phase seen from the back: wings rising back toward the start, leading cleanly into the first frame.
+
+ROW 4 (cells 13-16) - DEATH, side view facing RIGHT, same camera as row 2.
+  cell 13 STRUCK - hit in mid-air: wings crumpling inward, head thrown back, the body starting to drop.
+  cell 14 TUMBLING - falling out of the sky, wings folded and useless, the body rotated nose-down.
+  cell 15 CRASHED - hit the ground: the body flattened on its side, one wing bent under it, the other splayed out.
+  cell 16 FADING - the body mostly gone, only a faint flattened dark shape and a few scattered pixels of dust.
+
+WITHIN EACH ROW the four poses must be visibly DIFFERENT from each other - never draw the same pose twice, exaggerate the motion if needed.
+
+SILHOUETTE at 28x28 px: a broad winged X hanging in the air - a compact dense body at the centre, big wing shapes above or below it depending on the frame, horns breaking the head outline, and clearly nothing that touches a ground line.
+
+BACKGROUND: one flat solid magenta #FF00FF across the whole image, behind and between the cells. No transparency, no gradient, no texture, no ground line, no horizontal stroke, no shadow under the subject, no glow bleeding onto the magenta.
+
+FRAMING: each subject centred in its own cell with about 10% empty margin on every side, the body at a constant hover height inside each row, nothing cropped. No borders, frames or grid lines drawn between cells.
+
+FORBIDDEN: no text, numbers, labels or watermarks anywhere in the image; no extra props, scenery or effects; never two subjects in one cell; do not change the camera angle inside a row.

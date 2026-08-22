@@ -1,0 +1,55 @@
+Crypt Fiend — тир 2, наземный — unit.undead.crypt_fiend
+Контракт листа: 128x128 = 4 ряда по 4 кадра 32x32.
+Ряды: 0 движение вниз (на зрителя), 1 движение вбок (вправо), 2 движение вверх, 3 смерть.
+Статус: есть старый лист 128x32, перерисовка опциональна
+
+Один запрос, «Изображения для обработки» оставить пустым.
+Сборка: python tools/build-sprite-sheet.py raw.png src/shared/sprite/undead_crypt_fiend.png --grid 4x4 --cell 32 --normalize-rows 0,1,2
+
+============================================================
+
+A complete 16-frame character sprite sheet of "Crypt Fiend" for a tower defense game, HD pixel art.
+
+STYLE (identical for the whole roster): HD pixel art in the 16-bit era JRPG / Warcraft III style - crisp pixel clusters, one clean 1px dark outline around the whole silhouette, a strictly limited palette, soft dithered shading and a subtle cool rim light from the upper left. NOT vector, NOT smooth digital painting, NOT a 3D render, NOT chibi-cute, NOT anime lineart. Dark fantasy, muted saturation, strong value contrast so the sprite stays readable on a dark grey bone-coloured ground.
+
+SUBJECT: a spider-like crypt horror wrapped in deathly chitin. Six legs - three on the near side drawn in full value, three on the far side one shade darker and behind the body - a low armoured carapace slung close to the ground, a segmented abdomen trailing behind and a raised armoured head-thorax in front carrying a cluster of small cold blue-violet #5c8cff eyes and a pair of curved mandibles. Overlapping plates of bone-ivory chitin edged with tarnished bronze, necrotic purple in the plate seams, dried blood red staining the mandible tips, a few strands of old web and grave dust caught on the carapace. Heavy, plated and deliberate - he must look armoured and slow, never nimble or insect-quick.
+
+PALETTE (Undead faction, use these and nothing else): bone ivory, cold blue-violet #5c8cff, necrotic purple, blood red accents, tarnished bronze. This creature needs no palette extension - the chitin, the web strands and the grave dust are all painted in bone-ivory values. No other colour anywhere.
+
+CONSISTENCY - THE MOST IMPORTANT RULE: the SAME creature appears in all 16 cells. Identical proportions, identical colours, identical gear and markings, identical scale and identical eye level in every cell. Only the pose and the camera direction change between cells.
+
+SHEET LAYOUT: one square image, a grid of 4 columns x 4 rows = 16 equal square cells, read left to right, top row first. Each cell is one pixel-art frame rendered for a final size of 32x32 px, so keep the detail budget low enough to survive that downscale.
+
+ROW 1 (cells 1-4) - MOVING TOWARD THE VIEWER, front view: the head and forward legs facing the viewer, the legs splayed symmetrically on both sides of the body.
+  cell 1 GAIT A - the same phase seen from the front: the left front and right middle legs reaching forward while the others push back, body carried level and low.
+  cell 2 GAIT B - the same phase seen from the front: legs crossing under the body, the abdomen dipping slightly, all legs bunched.
+  cell 3 GAIT A MIRRORED - the same phase seen from the front: the opposite legs reaching forward, the first set now pushing back.
+  cell 4 GAIT B MIRRORED - the same phase seen from the front: legs crossing again, the abdomen rising slightly, the head lowered.
+
+ROW 2 (cells 5-8) - MOVING SIDEWAYS, strict profile, facing RIGHT.
+  cell 5 GAIT A - the left front and right middle legs reaching forward while the others push back, body carried level and low.
+  cell 6 GAIT B - legs crossing under the body, the abdomen dipping slightly, all legs bunched.
+  cell 7 GAIT A MIRRORED - the opposite legs reaching forward, the first set now pushing back.
+  cell 8 GAIT B MIRRORED - legs crossing again, the abdomen rising slightly, the head lowered.
+
+ROW 3 (cells 9-12) - MOVING AWAY FROM THE VIEWER, back view: the abdomen and rear legs toward the viewer, no face.
+  cell 9 GAIT A - the same phase seen from the back: the left front and right middle legs reaching forward while the others push back, body carried level and low.
+  cell 10 GAIT B - the same phase seen from the back: legs crossing under the body, the abdomen dipping slightly, all legs bunched.
+  cell 11 GAIT A MIRRORED - the same phase seen from the back: the opposite legs reaching forward, the first set now pushing back.
+  cell 12 GAIT B MIRRORED - the same phase seen from the back: legs crossing again, the abdomen rising slightly, the head lowered.
+
+ROW 4 (cells 13-16) - DEATH, side view facing RIGHT, same camera as row 2.
+  cell 13 IMPACT - struck: the body slammed sideways, legs splayed out stiff, head recoiling.
+  cell 14 CURLING - the legs folding in over the underside, the body rolling onto its side.
+  cell 15 DOWN - lying on its side with all legs curled tight over the belly, motionless.
+  cell 16 FADING - the husk mostly gone, only a faint flattened dark shape and a few scattered pixels of dust.
+
+WITHIN EACH ROW the four poses must be visibly DIFFERENT from each other - never draw the same pose twice, exaggerate the motion if needed.
+
+SILHOUETTE at 28x28 px: a long, low, many-legged mass, wider than it is tall, with sharp angular leg joints rising above the body line and a heavy abdomen behind. It must read as an armoured six-legged spider, never as a biped.
+
+BACKGROUND: one flat solid magenta #FF00FF across the whole image, behind and between the cells. No transparency, no gradient, no texture, no ground line, no horizontal stroke, no shadow under the subject, no glow bleeding onto the magenta.
+
+FRAMING: each subject centred in its own cell with about 10% empty margin on every side, feet on a consistent baseline inside each row, nothing cropped. No borders, frames or grid lines drawn between cells.
+
+FORBIDDEN: no text, numbers, labels or watermarks anywhere in the image; no extra props, scenery or effects; never two subjects in one cell; do not change the camera angle inside a row.

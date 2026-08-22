@@ -1,0 +1,64 @@
+Siege Engine — тир 4, наземный — unit.human.siege_engine
+Контракт листа: 128x128 = 4 ряда по 4 кадра 32x32.
+Ряды: 0 движение вниз (на зрителя), 1 движение вбок (вправо), 2 движение вверх, 3 смерть.
+Статус: нужен арт
+
+Один запрос, «Изображения для обработки» оставить пустым.
+Сборка: python tools/build-sprite-sheet.py raw.png src/shared/sprite/human_siege_engine.png --grid 4x4 --cell 32 --normalize-rows 0,1,2
+
+============================================================
+
+A complete 16-frame character sprite sheet of "Siege Engine" for a tower defense game, HD pixel art.
+
+STYLE: 16-bit era JRPG / Warcraft III style pixel art. Crisp pixel clusters, one 1px dark outline around the whole
+silhouette, a limited palette of about 12-16 colours, soft dithered shading and a subtle cool rim light from the upper
+left. Dark fantasy mood, muted saturation, strong value contrast so the machine stays readable against pale grey stone
+terrain. NOT vector art, NOT smooth digital painting, NOT a 3D render, NOT chibi-cute.
+
+SUBJECT: a plated war machine that crawls forward and refuses to die. A low armoured wagon body of riveted iron plates
+over a heavy timber frame, two large iron-shod spoked wheels, a reinforced sloped ram plate at the front, a small
+bolted crew hatch with a narrow viewing slit on the upper hull. NO visible legs, NO visible draught animal, NO rider on
+top — it moves by itself on its wheels.
+
+PALETTE (human faction): steel blue #5e94d6, polished steel, gold trim, grey stone, deep red cloth. Mostly grey riveted
+steel plating and dark oiled iron, with a steel blue painted panel on the flank, a thin gold trim line along the top
+edge and a small deep red pennant or cloth strip on the hull.
+
+CONSISTENCY - THE MOST IMPORTANT RULE: the SAME creature appears in all 16 cells. Identical proportions, identical colours, identical gear and markings, identical scale and identical eye level in every cell. Only the pose and the camera direction change between cells.
+
+SHEET LAYOUT: one square image, a grid of 4 columns x 4 rows = 16 equal square cells, read left to right, top row first. Each cell is one pixel-art frame rendered for a final size of 32x32 px, so keep the detail budget low enough to survive that downscale.
+
+ROW 1 (cells 1-4) - MOVING TOWARD THE VIEWER, front view: the front plating and both front wheels toward the viewer, symmetrical.
+  cell 1 ROLL 1 - the same phase seen from the front: the wheel spokes upright, the hull level.
+  cell 2 ROLL 2 - the same phase seen from the front: the spokes rotated a quarter turn, the hull bobbing one pixel down as the wheel crosses a rut.
+  cell 3 ROLL 3 - the same phase seen from the front: the spokes rotated half a turn, the hull level again.
+  cell 4 ROLL 4 - the same phase seen from the front: the spokes rotated three quarters, the hull bobbing one pixel up.
+
+ROW 2 (cells 5-8) - MOVING SIDEWAYS, strict profile, facing RIGHT.
+  cell 5 ROLL 1 - the wheel spokes upright, the hull level.
+  cell 6 ROLL 2 - the spokes rotated a quarter turn, the hull bobbing one pixel down as the wheel crosses a rut.
+  cell 7 ROLL 3 - the spokes rotated half a turn, the hull level again.
+  cell 8 ROLL 4 - the spokes rotated three quarters, the hull bobbing one pixel up.
+
+ROW 3 (cells 9-12) - MOVING AWAY FROM THE VIEWER, back view: the rear plating and both rear wheels toward the viewer, symmetrical.
+  cell 9 ROLL 1 - the same phase seen from the back: the wheel spokes upright, the hull level.
+  cell 10 ROLL 2 - the same phase seen from the back: the spokes rotated a quarter turn, the hull bobbing one pixel down as the wheel crosses a rut.
+  cell 11 ROLL 3 - the same phase seen from the back: the spokes rotated half a turn, the hull level again.
+  cell 12 ROLL 4 - the same phase seen from the back: the spokes rotated three quarters, the hull bobbing one pixel up.
+
+ROW 4 (cells 13-16) - DEATH, side view facing RIGHT, same camera as row 2.
+  cell 13 HIT - struck: plating buckling, a jet of smoke bursting from a seam, the hull rocking back.
+  cell 14 BREAKING - a wheel shattering, the hull tilting hard to one side, planks and rivets flying.
+  cell 15 WRECKED - collapsed on the ground: a broken heap of plating and a snapped wheel, flames guttering.
+  cell 16 FADING - the wreck mostly gone, only a faint dark scorch shape, scattered pixels of ash and one bent wheel rim.
+
+WITHIN EACH ROW the four poses must be visibly DIFFERENT from each other - never draw the same pose twice, exaggerate the motion if needed.
+
+SILHOUETTE READ AT 28x28 PX: a low, wide, heavy rectangle sitting on two big circles — a squat brick on wheels, clearly
+the bulkiest and least human-shaped silhouette in the roster, with no head and no arms.
+
+BACKGROUND: one flat solid magenta #FF00FF across the whole image, behind and between the cells. No transparency, no gradient, no texture, no ground line, no horizontal stroke, no shadow under the subject, no glow bleeding onto the magenta.
+
+FRAMING: each subject centred in its own cell with about 10% empty margin on every side, feet on a consistent baseline inside each row, nothing cropped. No borders, frames or grid lines drawn between cells.
+
+FORBIDDEN: no text, numbers, labels or watermarks anywhere in the image; no extra props, scenery or effects; never two subjects in one cell; do not change the camera angle inside a row.

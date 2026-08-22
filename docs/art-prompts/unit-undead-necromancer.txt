@@ -1,0 +1,55 @@
+Necromancer — тир 5, наземный — unit.undead.necromancer
+Контракт листа: 128x128 = 4 ряда по 4 кадра 32x32.
+Ряды: 0 движение вниз (на зрителя), 1 движение вбок (вправо), 2 движение вверх, 3 смерть.
+Статус: нужен арт
+
+Один запрос, «Изображения для обработки» оставить пустым.
+Сборка: python tools/build-sprite-sheet.py raw.png src/shared/sprite/undead_necromancer.png --grid 4x4 --cell 32 --normalize-rows 0,1,2
+
+============================================================
+
+A complete 16-frame character sprite sheet of "Necromancer" for a tower defense game, HD pixel art.
+
+STYLE (identical for the whole roster): HD pixel art in the 16-bit era JRPG / Warcraft III style - crisp pixel clusters, one clean 1px dark outline around the whole silhouette, a strictly limited palette, soft dithered shading and a subtle cool rim light from the upper left. NOT vector, NOT smooth digital painting, NOT a 3D render, NOT chibi-cute, NOT anime lineart. Dark fantasy, muted saturation, strong value contrast so the sprite stays readable on a dark grey bone-coloured ground.
+
+SUBJECT: a dark acolyte channelling grave magic. Heavy floor-length hooded robes in necrotic purple with bone-ivory trim and tarnished bronze clasps at the shoulder, a deep hood with NO visible face at all - only blackness inside and two tiny cold blue-violet #5c8cff pinpoints. Slightly stooped posture, the rear hand raised and open in a channelling gesture, the leading hand gripping a tall staff topped with a horned skull whose eye sockets glow #5c8cff, a blood red rune stitched on the chest. Two or three small floating blue-violet wisps orbiting the raised hand and the skull of the staff. The robe hem sweeps the ground and completely hides the feet - the walk must be read from the swaying hem, not from visible legs. Soft cloth, no plate, no mail: he must look like a valuable unarmoured target, not a warrior.
+
+PALETTE (Undead faction, use these and nothing else): bone ivory, cold blue-violet #5c8cff, necrotic purple, blood red accents, tarnished bronze - plus, for this creature only, dark stained wood brown used ONLY for the shaft of the staff. No other colour anywhere.
+
+CONSISTENCY - THE MOST IMPORTANT RULE: the SAME creature appears in all 16 cells. Identical proportions, identical colours, identical gear and markings, identical scale and identical eye level in every cell. Only the pose and the camera direction change between cells.
+
+SHEET LAYOUT: one square image, a grid of 4 columns x 4 rows = 16 equal square cells, read left to right, top row first. Each cell is one pixel-art frame rendered for a final size of 32x32 px, so keep the detail budget low enough to survive that downscale.
+
+ROW 1 (cells 1-4) - MOVING TOWARD THE VIEWER, front view: face, chest and the front of the body visible, the weapon held across the body.
+  cell 1 CONTACT - the same phase seen from the front: front leg fully extended forward with the heel planted, rear leg fully extended back on the toe, a wide clear gap between the legs, arms swung to their extremes.
+  cell 2 PASSING DOWN - the same phase seen from the front: legs close together under the hips, the free leg passing forward with a bent knee, body at its LOWEST point, shoulders dipped.
+  cell 3 CONTACT MIRRORED - the same phase seen from the front: the opposite leg forward and planted, the other extended back, wide stride, arms swung the other way.
+  cell 4 PASSING UP - the same phase seen from the front: legs close together, the free leg passing back, body at its HIGHEST point of the stride, shoulders lifted.
+
+ROW 2 (cells 5-8) - MOVING SIDEWAYS, strict profile, facing RIGHT.
+  cell 5 CONTACT - front leg fully extended forward with the heel planted, rear leg fully extended back on the toe, a wide clear gap between the legs, arms swung to their extremes.
+  cell 6 PASSING DOWN - legs close together under the hips, the free leg passing forward with a bent knee, body at its LOWEST point, shoulders dipped.
+  cell 7 CONTACT MIRRORED - the opposite leg forward and planted, the other extended back, wide stride, arms swung the other way.
+  cell 8 PASSING UP - legs close together, the free leg passing back, body at its HIGHEST point of the stride, shoulders lifted.
+
+ROW 3 (cells 9-12) - MOVING AWAY FROM THE VIEWER, back view: the back of the head and shoulders visible, no face, the weapon crossing the back.
+  cell 9 CONTACT - the same phase seen from the back: front leg fully extended forward with the heel planted, rear leg fully extended back on the toe, a wide clear gap between the legs, arms swung to their extremes.
+  cell 10 PASSING DOWN - the same phase seen from the back: legs close together under the hips, the free leg passing forward with a bent knee, body at its LOWEST point, shoulders dipped.
+  cell 11 CONTACT MIRRORED - the same phase seen from the back: the opposite leg forward and planted, the other extended back, wide stride, arms swung the other way.
+  cell 12 PASSING UP - the same phase seen from the back: legs close together, the free leg passing back, body at its HIGHEST point of the stride, shoulders lifted.
+
+ROW 4 (cells 13-16) - DEATH, side view facing RIGHT, same camera as row 2.
+  cell 13 IMPACT - struck: head snapped back, torso arched backwards, arms flung wide, the weapon leaving its grip, feet still on the ground.
+  cell 14 FALLING - knees buckling, the body collapsing sideways and downward, the weapon already falling separately.
+  cell 15 DOWN - lying on the ground, limbs sprawled, the weapon on the ground beside it, silhouette low and flat.
+  cell 16 FADING - the body mostly gone, only a faint flattened dark shape, a few scattered pixels of dust and the weapon left behind.
+
+WITHIN EACH ROW the four poses must be visibly DIFFERENT from each other - never draw the same pose twice, exaggerate the motion if needed.
+
+SILHOUETTE at 28x28 px: a tall narrow bell or cone - wide at the sweeping hem, narrowing to a pointed hood - with the straight vertical line of the staff and its skull knob breaking the outline on the leading side. No legs, no feet, no armour edges.
+
+BACKGROUND: one flat solid magenta #FF00FF across the whole image, behind and between the cells. No transparency, no gradient, no texture, no ground line, no horizontal stroke, no shadow under the subject, no glow bleeding onto the magenta.
+
+FRAMING: each subject centred in its own cell with about 10% empty margin on every side, feet on a consistent baseline inside each row, nothing cropped. No borders, frames or grid lines drawn between cells.
+
+FORBIDDEN: no text, numbers, labels or watermarks anywhere in the image; no extra props, scenery or effects; never two subjects in one cell; do not change the camera angle inside a row.

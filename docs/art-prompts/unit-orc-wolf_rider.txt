@@ -1,0 +1,55 @@
+Wolf Rider — тир 2, наземный — unit.orc.wolf_rider
+Контракт листа: 128x128 = 4 ряда по 4 кадра 32x32.
+Ряды: 0 движение вниз (на зрителя), 1 движение вбок (вправо), 2 движение вверх, 3 смерть.
+Статус: нужен арт
+
+Один запрос, «Изображения для обработки» оставить пустым.
+Сборка: python tools/build-sprite-sheet.py raw.png src/shared/sprite/orc_wolf_rider.png --grid 4x4 --cell 32 --normalize-rows 0,1,2
+
+============================================================
+
+A complete 16-frame character sprite sheet of "Wolf Rider" for a tower defense game, HD pixel art.
+
+STYLE: HD pixel art in the 16-bit era JRPG / Warcraft III style - crisp pixel clusters, one clean 1px dark outline around the whole silhouette (around the whole structure for buildings), a strictly limited palette of about 12-16 colours, soft dithered shading and a subtle cool rim light from the upper left. NOT vector, NOT smooth digital painting, NOT a 3D render, NOT chibi-cute, NOT anime lineart. Dark fantasy mood, muted saturation, strong value contrast so the shape stays readable against dark brown dirt terrain.
+
+SUBJECT: a swift orc raider mounted on a lean grey war wolf. A GROUND WALKER on four legs (no wings, no flight) — the wolf runs, the rider never leaves the saddle. The wolf is long, wiry and hungry-looking: narrow chest, visible ribs, long muzzle with bared teeth, pointed ears laid back, grey and ash-brown fur, a leather harness with blackened-iron buckles and a rust-orange saddle blanket. The rider is small and crouched low over the wolf's neck, olive-green skin, dark leather armour with rust-orange wraps, red warpaint on the face, holding a short spear angled forward. The whole unit must LOOK light and fast: lean limbs, low body, forward-leaning momentum, no bulky armour plates.
+
+PALETTE (orc faction, use these and nothing else, plus the per-subject additions listed below): rust orange #d97b39, dark leather brown, blackened iron grey, worn steel grey, red warpaint, bone white, olive-green orc skin, near-black outline. Per-subject additions: ash-grey and cool brown wolf fur.
+
+CONSISTENCY - THE MOST IMPORTANT RULE: the SAME creature appears in all 16 cells. Identical proportions, identical colours, identical gear and markings, identical scale and identical eye level in every cell. Only the pose and the camera direction change between cells.
+
+SHEET LAYOUT: one square image, a grid of 4 columns x 4 rows = 16 equal square cells, read left to right, top row first. Each cell is one pixel-art frame rendered for a final size of 32x32 px, so keep the detail budget low enough to survive that downscale.
+
+ROW 1 (cells 1-4) - MOVING TOWARD THE VIEWER, front view: the mount head-on with its chest and forelegs toward the viewer, the rider seen from the front above it.
+  cell 1 REACH - the same phase seen from the front: front legs extended forward, hind legs stretched far back, body at full extension, all four feet off the ground.
+  cell 2 LANDING - the same phase seen from the front: front feet planted, hind legs swinging under the belly, body compressed, back arched.
+  cell 3 PUSH - the same phase seen from the front: hind legs driving off the ground, front legs lifting, body stretching forward.
+  cell 4 SUSPENSION - the same phase seen from the front: all four legs gathered under the body, back rounded, the whole animal airborne between strides.
+
+ROW 2 (cells 5-8) - MOVING SIDEWAYS, strict profile, facing RIGHT.
+  cell 5 REACH - front legs extended forward, hind legs stretched far back, body at full extension, all four feet off the ground.
+  cell 6 LANDING - front feet planted, hind legs swinging under the belly, body compressed, back arched.
+  cell 7 PUSH - hind legs driving off the ground, front legs lifting, body stretching forward.
+  cell 8 SUSPENSION - all four legs gathered under the body, back rounded, the whole animal airborne between strides.
+
+ROW 3 (cells 9-12) - MOVING AWAY FROM THE VIEWER, back view: the hindquarters and tail of the mount toward the viewer, the rider seen from behind above it.
+  cell 9 REACH - the same phase seen from the back: front legs extended forward, hind legs stretched far back, body at full extension, all four feet off the ground.
+  cell 10 LANDING - the same phase seen from the back: front feet planted, hind legs swinging under the belly, body compressed, back arched.
+  cell 11 PUSH - the same phase seen from the back: hind legs driving off the ground, front legs lifting, body stretching forward.
+  cell 12 SUSPENSION - the same phase seen from the back: all four legs gathered under the body, back rounded, the whole animal airborne between strides.
+
+ROW 4 (cells 13-16) - DEATH, side view facing RIGHT, same camera as row 2.
+  cell 13 IMPACT - the mount struck in mid-stride: front legs buckling, head thrown down, the rider pitching forward over its neck, the weapon flying loose.
+  cell 14 FALLING - the beast collapsing onto its chest, the rider sliding off sideways, both bodies going down together.
+  cell 15 DOWN - the mount lying on its side with its legs folded, the rider sprawled beside it, the weapon on the ground.
+  cell 16 FADING - both bodies mostly gone, only a faint flattened dark shape, a few scattered pixels of dust and the weapon left behind.
+
+WITHIN EACH ROW the four poses must be visibly DIFFERENT from each other - never draw the same pose twice, exaggerate the motion if needed.
+
+SILHOUETTE at 28x28 px: a long, low, HORIZONTAL four-legged shape with a small hump of rider on its back and a spear tip poking forward — the only wide-and-low silhouette in the orc set. At tiny size it must instantly read as "beast with a rider", never as a lone standing orc.
+
+BACKGROUND: one flat solid magenta #FF00FF across the whole image, behind and between the cells. No transparency, no gradient, no texture, no ground line, no horizontal stroke, no shadow under the subject, no glow bleeding onto the magenta.
+
+FRAMING: each subject centred in its own cell with about 10% empty margin on every side, feet on a consistent baseline inside each row, nothing cropped. No borders, frames or grid lines drawn between cells.
+
+FORBIDDEN: no text, numbers, labels or watermarks anywhere in the image; no extra props, scenery or effects; never two subjects in one cell; do not change the camera angle inside a row.

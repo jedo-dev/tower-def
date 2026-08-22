@@ -1,0 +1,55 @@
+Ghoul — тир 1, наземный — unit.undead.ghoul
+Контракт листа: 128x128 = 4 ряда по 4 кадра 32x32.
+Ряды: 0 движение вниз (на зрителя), 1 движение вбок (вправо), 2 движение вверх, 3 смерть.
+Статус: есть старый лист 128x32, перерисовка опциональна
+
+Один запрос, «Изображения для обработки» оставить пустым.
+Сборка: python tools/build-sprite-sheet.py raw.png src/shared/sprite/undead_ghoul.png --grid 4x4 --cell 32 --normalize-rows 0,1,2
+
+============================================================
+
+A complete 16-frame character sprite sheet of "Ghoul" for a tower defense game, HD pixel art.
+
+STYLE (identical for the whole roster): HD pixel art in the 16-bit era JRPG / Warcraft III style - crisp pixel clusters, one clean 1px dark outline around the whole silhouette, a strictly limited palette, soft dithered shading and a subtle cool rim light from the upper left. NOT vector, NOT smooth digital painting, NOT a 3D render, NOT chibi-cute, NOT anime lineart. Dark fantasy, muted saturation, strong value contrast so the sprite stays readable on a dark grey bone-coloured ground.
+
+SUBJECT: a feral clawed ghoul, a grave scavenger that runs down slow defenders. Hunched almost horizontal, the head thrust forward and held LOWER than the shoulders, spine arched, disproportionately long arms ending in long dirty claws that nearly touch the ground, short bent legs built for loping. Pale rotten flesh in washed bone-ivory tones over visible bone, necrotic purple bruising along the ribs and spine, blood red around the wide lipless mouth and the torn raw patches of skin, a cold blue-violet #5c8cff glint in the sunken eyes. A tattered strip of dark cloth around the hips and one tarnished bronze shackle on a wrist with a broken chain link. Wiry, starved, light - nothing about him may look armoured or heavy.
+
+PALETTE (Undead faction, use these and nothing else): bone ivory, cold blue-violet #5c8cff, necrotic purple, blood red accents, tarnished bronze - plus, for this creature only, dark worn leather brown used ONLY for the tattered hip rag and the leather of the wrist shackle. No other colour anywhere.
+
+CONSISTENCY - THE MOST IMPORTANT RULE: the SAME creature appears in all 16 cells. Identical proportions, identical colours, identical gear and markings, identical scale and identical eye level in every cell. Only the pose and the camera direction change between cells.
+
+SHEET LAYOUT: one square image, a grid of 4 columns x 4 rows = 16 equal square cells, read left to right, top row first. Each cell is one pixel-art frame rendered for a final size of 32x32 px, so keep the detail budget low enough to survive that downscale.
+
+ROW 1 (cells 1-4) - MOVING TOWARD THE VIEWER, front view: the head low and thrust toward the viewer, both arms reaching forward on either side of the body.
+  cell 1 REACH - the same phase seen from the front: both arms thrown forward and low, front paws about to touch down, hind legs stretched far back, the body at full extension.
+  cell 2 GATHER - the same phase seen from the front: arms planted, hind legs swinging in under the belly, back arched high, head lowest.
+  cell 3 PUSH - the same phase seen from the front: hind legs driving off the ground, body stretching forward again, arms lifting.
+  cell 4 SUSPENSION - the same phase seen from the front: all four points off the ground, limbs tucked, body stretched flat and low.
+
+ROW 2 (cells 5-8) - MOVING SIDEWAYS, strict profile, facing RIGHT.
+  cell 5 REACH - both arms thrown forward and low, front paws about to touch down, hind legs stretched far back, the body at full extension.
+  cell 6 GATHER - arms planted, hind legs swinging in under the belly, back arched high, head lowest.
+  cell 7 PUSH - hind legs driving off the ground, body stretching forward again, arms lifting.
+  cell 8 SUSPENSION - all four points off the ground, limbs tucked, body stretched flat and low.
+
+ROW 3 (cells 9-12) - MOVING AWAY FROM THE VIEWER, back view: the hunched spine and the back of the skull visible, no face, hind legs toward the viewer.
+  cell 9 REACH - the same phase seen from the back: both arms thrown forward and low, front paws about to touch down, hind legs stretched far back, the body at full extension.
+  cell 10 GATHER - the same phase seen from the back: arms planted, hind legs swinging in under the belly, back arched high, head lowest.
+  cell 11 PUSH - the same phase seen from the back: hind legs driving off the ground, body stretching forward again, arms lifting.
+  cell 12 SUSPENSION - the same phase seen from the back: all four points off the ground, limbs tucked, body stretched flat and low.
+
+ROW 4 (cells 13-16) - DEATH, side view facing RIGHT, same camera as row 2.
+  cell 13 IMPACT - struck: head snapped back, torso arched backwards, arms flung wide, the weapon leaving its grip, feet still on the ground.
+  cell 14 FALLING - knees buckling, the body collapsing sideways and downward, the weapon already falling separately.
+  cell 15 DOWN - lying on the ground, limbs sprawled, the weapon on the ground beside it, silhouette low and flat.
+  cell 16 FADING - the body mostly gone, only a faint flattened dark shape, a few scattered pixels of dust and the weapon left behind.
+
+WITHIN EACH ROW the four poses must be visibly DIFFERENT from each other - never draw the same pose twice, exaggerate the motion if needed.
+
+SILHOUETTE at 28x28 px: a low forward-leaning wedge - head below shoulder height, long arms reaching down to the baseline, back arched high. It must never read as an upright biped like the Skeleton.
+
+BACKGROUND: one flat solid magenta #FF00FF across the whole image, behind and between the cells. No transparency, no gradient, no texture, no ground line, no horizontal stroke, no shadow under the subject, no glow bleeding onto the magenta.
+
+FRAMING: each subject centred in its own cell with about 10% empty margin on every side, feet on a consistent baseline inside each row, nothing cropped. No borders, frames or grid lines drawn between cells.
+
+FORBIDDEN: no text, numbers, labels or watermarks anywhere in the image; no extra props, scenery or effects; never two subjects in one cell; do not change the camera angle inside a row.

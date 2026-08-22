@@ -166,11 +166,17 @@ nothing renders invisible.
 
 Sheets are horizontal strips of equal frames.
 
-**Creeps** - `32x32` per frame, at least 4 frames:
+**Creeps** - `32x32` per frame, 16 frames in a 4x4 grid (`128x128`):
 
 | Frames | Meaning |
 | --- | --- |
-| 0-3 | walk cycle (loops) |
+| 0-3 | walk toward the viewer |
+| 4-7 | walk sideways, facing right (left is mirrored in code) |
+| 8-11 | walk away from the viewer |
+| 12-15 | death |
+
+Sheets with only 4 frames are the old contract: they still animate, but the creep rotates on
+vertical path segments instead of turning, and death falls back to an alpha fade.
 
 **Towers** - `60x60` per frame, 14 frames:
 
