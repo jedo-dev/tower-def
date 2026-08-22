@@ -5,6 +5,7 @@ import { useGameHudSnapshot } from '../../../shared/lib/game-bridge/useGameHudSn
 import type { GameSetupConfig } from '../../../shared/config/game-setup';
 import { mapCreepSendPanelToViewModel } from '../model/mapCreepSendPanelToViewModel';
 import type { UnitId } from '../../../entities/unit';
+import { UnitIcon } from '../../../shared/ui/unit-icon';
 
 export type CreepSendPanelProps = {
   setup: GameSetupConfig | null;
@@ -45,6 +46,12 @@ function CreepSendPanelComponent({ setup }: CreepSendPanelProps) {
             aria-label={button.ariaLabel}
             onClick={() => handleSend(button.creepTypeId)}
           >
+            <UnitIcon
+              unitId={button.creepTypeId}
+              label={button.name}
+              faction={viewModel.faction}
+              className={styles.buttonIcon}
+            />
             <span className={styles.buttonName}>{button.name}</span>
             <span className={styles.buttonStats} aria-hidden="true">
               <span>T{button.tier}</span>

@@ -5,6 +5,7 @@ import { getRaceRegistry } from '../../../entities/race-registry';
 import { getIncomeBonusByTier, getSendCostByTier } from '../../../entities/duel-match';
 import { resolveUnitConfigById } from '../../../entities/unit';
 import type { UnitId } from '../../../entities/unit';
+import type { FactionThemeName } from '../../../shared/constants/theme';
 
 export type CreepSendButtonViewModel = {
   creepTypeId: UnitId;
@@ -20,6 +21,7 @@ export type CreepSendButtonViewModel = {
 
 export type CreepSendPanelViewModel = {
   raceName: string;
+  faction: FactionThemeName;
   gold: number;
   income: number;
   isBattleActive: boolean;
@@ -44,7 +46,8 @@ export function mapCreepSendPanelToViewModel(
   snapshot: GameHudSnapshot,
   setup: GameSetupConfig | null,
 ): CreepSendPanelViewModel {
-  const race = getRaceRegistry(resolveBuilderRace(setup));
+  const raceId = resolveBuilderRace(setup);
+  const race = getRaceRegistry(raceId);
   const isBattleActive = snapshot.phase === 'wave';
   const buttons = race.sendableCreepIds.map((creepTypeId) => {
     const unit = resolveUnitConfigById(creepTypeId);
@@ -75,6 +78,7 @@ export function mapCreepSendPanelToViewModel(
 
   return {
     raceName: race.name,
+    faction: raceId.toLowerCase() as FactionThemeName,
     gold: snapshot.gold,
     income: snapshot.income,
     isBattleActive,

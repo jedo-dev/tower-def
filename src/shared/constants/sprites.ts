@@ -30,6 +30,67 @@ export const UNIT_SPRITE_ASSETS: Record<(typeof UNIT_SPRITE_KEYS)[keyof typeof U
   [UNIT_SPRITE_KEYS.ORC_HEADHUNTER]: orcHeadhunterSprite,
 };
 
+/**
+ * Creeps whose own sheet is registered, keyed by unit id. Lives in shared so
+ * both the Phaser battlefield and the HUD resolve art the same way; the ids are
+ * plain strings because `shared` sits below `entities`.
+ */
+export const UNIT_SPRITE_KEY_BY_UNIT_ID: Record<string, string> = {
+  undead_skeleton: UNIT_SPRITE_KEYS.UNDEAD_SKELETON,
+  undead_ghoul: UNIT_SPRITE_KEYS.UNDEAD_GHOUL,
+  undead_crypt_fiend: UNIT_SPRITE_KEYS.UNDEAD_CRYPT_FIEND,
+  undead_gargoyle: UNIT_SPRITE_KEYS.UNDEAD_GARGOYLE,
+  orc_grunt: UNIT_SPRITE_KEYS.ORC_GRUNT,
+  orc_wolf_rider: UNIT_SPRITE_KEYS.ORC_WOLF_RIDER,
+  orc_troll: UNIT_SPRITE_KEYS.ORC_TROLL,
+  orc_headhunter: UNIT_SPRITE_KEYS.ORC_HEADHUNTER,
+};
+
+/**
+ * Sheet shape in frames. Phaser reads it from the frame size, but CSS cannot:
+ * an HTML icon needs the grid up front to place a single frame.
+ */
+export type UnitSpriteSheetLayout = {
+  columns: number;
+  rows: number;
+};
+
+const LEGACY_STRIP_LAYOUT: UnitSpriteSheetLayout = { columns: 4, rows: 1 };
+const DIRECTIONAL_SHEET_LAYOUT: UnitSpriteSheetLayout = { columns: 4, rows: 4 };
+
+export const UNIT_SPRITE_SHEET_LAYOUTS: Record<string, UnitSpriteSheetLayout> = {
+  [UNIT_SPRITE_KEYS.UNDEAD_SKELETON]: LEGACY_STRIP_LAYOUT,
+  [UNIT_SPRITE_KEYS.UNDEAD_GHOUL]: LEGACY_STRIP_LAYOUT,
+  [UNIT_SPRITE_KEYS.UNDEAD_CRYPT_FIEND]: LEGACY_STRIP_LAYOUT,
+  [UNIT_SPRITE_KEYS.UNDEAD_GARGOYLE]: LEGACY_STRIP_LAYOUT,
+  [UNIT_SPRITE_KEYS.ORC_GRUNT]: DIRECTIONAL_SHEET_LAYOUT,
+  [UNIT_SPRITE_KEYS.ORC_WOLF_RIDER]: DIRECTIONAL_SHEET_LAYOUT,
+  [UNIT_SPRITE_KEYS.ORC_TROLL]: DIRECTIONAL_SHEET_LAYOUT,
+  [UNIT_SPRITE_KEYS.ORC_HEADHUNTER]: DIRECTIONAL_SHEET_LAYOUT,
+};
+
+export type UnitSpriteSheet = {
+  spriteKey: string;
+  url: string;
+  layout: UnitSpriteSheetLayout;
+};
+
+/** The portrait frame: first step of the walk that faces the camera. */
+export function tryResolveUnitSpriteSheet(unitId: string): UnitSpriteSheet | null {
+  const spriteKey = UNIT_SPRITE_KEY_BY_UNIT_ID[unitId];
+  if (!spriteKey) {
+    return null;
+  }
+
+  const url = UNIT_SPRITE_ASSETS[spriteKey as keyof typeof UNIT_SPRITE_ASSETS];
+  const layout = UNIT_SPRITE_SHEET_LAYOUTS[spriteKey];
+  if (!url || !layout) {
+    return null;
+  }
+
+  return { spriteKey, url, layout };
+}
+
 // Dedicated art exists only for undead units; other factions reuse the undead
 // sheets with a faction tint until per-race sprites land.
 export const UNIT_FACTION_TINTS: Record<RaceId, number> = {

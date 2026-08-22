@@ -43,8 +43,12 @@
   gap: var(--space-sm);
 }
 
-/* Send chip: tier name over cost/income, procedural fill. */
+/* Send chip: portrait over tier name over cost/income. */
 .button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
   min-height: var(--touch-target-min);
   padding: var(--space-xs) var(--space-sm);
   border: 1px solid var(--glass-border);
@@ -75,6 +79,12 @@
 .button:disabled {
   cursor: not-allowed;
   opacity: 0.45;
+}
+
+/* Small enough that the chip keeps its 44px target without growing the panel. */
+.buttonIcon {
+  --unit-icon-size: 24px;
+  --placeholder-icon-size: 24px;
 }
 
 .buttonName {

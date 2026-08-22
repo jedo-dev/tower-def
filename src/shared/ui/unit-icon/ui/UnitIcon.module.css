@@ -1,0 +1,25 @@
+/* One frame of a creep sheet, scaled up. The sheet is pixel art, so it is
+   nearest-neighbour scaled instead of smoothed. */
+.icon {
+  display: inline-block;
+  box-sizing: border-box;
+  min-width: var(--unit-icon-size, 28px);
+  min-height: var(--unit-icon-size, 28px);
+  width: var(--unit-icon-size, 28px);
+  height: var(--unit-icon-size, 28px);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  background-color: var(--glass-bg-soft);
+  background-repeat: no-repeat;
+  /* Frame 0 of row 0 sits in the top-left corner of every sheet. */
+  background-position: 0 0;
+  background-size:
+    calc(var(--unit-icon-size, 28px) * var(--unit-icon-columns))
+    calc(var(--unit-icon-size, 28px) * var(--unit-icon-rows));
+  image-rendering: pixelated;
+}
+
+/* Matches the placeholder chip: a lone icon inside a control claims 44x44. */
+.iconInteractive {
+  --unit-icon-size: 44px;
+}

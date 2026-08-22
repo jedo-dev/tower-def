@@ -12,6 +12,7 @@ import { GRID_DIMENSIONS } from '../../../../constants/grid';
 import {
   TOWER_SPRITE_KEYS,
   UNIT_FACTION_TINTS,
+  UNIT_SPRITE_KEY_BY_UNIT_ID,
   UNIT_SPRITE_KEYS,
 } from '../../../../constants/sprites';
 import type { RaceId } from '../../../../types/content-ids';
@@ -39,16 +40,7 @@ import {
 } from './battlefieldRenderState';
 
 /** Creeps whose own sheet is registered; everything else falls back by tier. */
-const SPRITE_KEY_BY_UNIT_ID: Partial<Record<UnitId, string>> = {
-  undead_skeleton: UNIT_SPRITE_KEYS.UNDEAD_SKELETON,
-  undead_ghoul: UNIT_SPRITE_KEYS.UNDEAD_GHOUL,
-  undead_crypt_fiend: UNIT_SPRITE_KEYS.UNDEAD_CRYPT_FIEND,
-  undead_gargoyle: UNIT_SPRITE_KEYS.UNDEAD_GARGOYLE,
-  orc_grunt: UNIT_SPRITE_KEYS.ORC_GRUNT,
-  orc_wolf_rider: UNIT_SPRITE_KEYS.ORC_WOLF_RIDER,
-  orc_troll: UNIT_SPRITE_KEYS.ORC_TROLL,
-  orc_headhunter: UNIT_SPRITE_KEYS.ORC_HEADHUNTER,
-};
+const SPRITE_KEY_BY_UNIT_ID: Partial<Record<UnitId, string>> = UNIT_SPRITE_KEY_BY_UNIT_ID;
 
 export function getSpriteKeyByUnit(unit: UnitConfig): string {
   return SPRITE_KEY_BY_UNIT_ID[unit.id] ?? getFallbackSpriteKeyByTier(unit.tier);
