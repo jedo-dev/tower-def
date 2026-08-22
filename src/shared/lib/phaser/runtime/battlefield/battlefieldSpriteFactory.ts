@@ -33,6 +33,7 @@ import {
   getTowerAnimationSet,
   getWalkAnimationKeyBySpriteKey,
 } from '../animation/gameSceneAnimationRuntime';
+import { isDirectionalCreepSprite } from '../animation/creepFacing';
 import { resolveSpriteKey } from '../assets/spriteKeyResolver';
 import {
   destroyBattlefieldRenderState,
@@ -265,12 +266,18 @@ export function rebuildOpponentBattlefieldRenderState(
       const sprite = createOpponentCreepSprite(scene, position.x, position.y, creep.id);
       sprite.setVisible(visible);
       const unit = resolveUnitConfigFromBattlefieldCreepId(creep.id);
+      // Same rule as a freshly spawned creep: a four-row sheet turns and dies on
+      // screen, a legacy strip rotates and fades.
+      const isDirectional = isDirectionalCreepSprite(sprite);
       return {
         entity: { ...creep },
         sprite,
         hitFlashRemainingMs: 0,
         deathFadeRemainingMs: 0,
         baseTint: unit ? getCreepTintByUnit(unit) : 0xffffff,
+        isDirectional,
+        facing: isDirectional ? ('side' as const) : undefined,
+        facingFlipped: false,
       };
     });
 }
