@@ -144,8 +144,9 @@ describe('entities/computer-opponent/planBuildDecision', () => {
         gold: 200,
         upgradeableTowerIds: ['t1'],
         mazeCoverage: {
+          // Past the difficulty's maze target, so mazing gives way to upgrading.
           totalWalkableCells: 150,
-          occupiedCells: 20,
+          occupiedCells: 60,
           towerCount: 5,
         },
       });
@@ -331,8 +332,9 @@ describe('entities/computer-opponent/planBuildDecision', () => {
       const context = createTestContext({
         upgradeableTowerIds: ['t1'],
         mazeCoverage: {
+          // Past the difficulty's maze target, so mazing gives way to upgrading.
           totalWalkableCells: 150,
-          occupiedCells: 20,
+          occupiedCells: 60,
           towerCount: 5,
         },
       });

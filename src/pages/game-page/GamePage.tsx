@@ -21,10 +21,10 @@ export function GamePage({ setup, onExit }: GamePageProps) {
           <WaveQueue />
           <DuelEventFeed />
           <GameCanvas setup={setup} />
+          <TowerActionPanel />
           <MatchOutcomeOverlay onExit={onExit} />
         </div>
         <div className="game-panels">
-          <TowerActionPanel />
           <CreepSendPanel setup={setup} />
           <HudPanel setup={setup} />
         </div>

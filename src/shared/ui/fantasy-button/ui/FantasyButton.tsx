@@ -1,7 +1,7 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react';
 import './FantasyButton.css';
 
-export type FantasyButtonTone = 'emerald' | 'ember' | 'steel' | 'ghost';
+export type FantasyButtonTone = 'emerald' | 'ember' | 'steel' | 'ghost' | 'danger';
 
 type NativeButtonProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'children'>;
 

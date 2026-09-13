@@ -1,58 +1,38 @@
+/*
+ * Warcraft-style buttons drawn from the generated UI kit (public/assets/ui/kit).
+ * Each state is a 9-slice: the source image is the button body plus a 12px glow
+ * margin, so the slice = 12 (glow) + 24 (corner ornament) = 36px on every state.
+ * On screen the ornament renders at ~24px and the glow bleeds 10px outside the box.
+ */
 .fantasy-button {
-  --button-gradient: var(--gradient-emerald);
-  --button-glow: var(--glow-emerald);
+  --btn-normal: url('/assets/ui/kit/btn-primary-normal.png');
+  --btn-hover: url('/assets/ui/kit/btn-primary-hover.png');
+  --btn-pressed: url('/assets/ui/kit/btn-primary-pressed.png');
+  --btn-label-color: #efcf7a;
+  --btn-glow: rgba(240, 160, 60, 0.45);
 
   position: relative;
   display: inline-flex;
   width: 100%;
-  min-height: 56px;
+  min-height: 58px;
   align-items: center;
   justify-content: center;
-  padding: 14px 26px;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: var(--radius-lg);
-  background: var(--button-gradient);
-  box-shadow: var(--shadow-md), var(--shadow-inset-top);
-  color: #fff;
+  padding: 10px 34px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  border-image-source: var(--btn-normal);
+  border-image-slice: 36 fill;
+  border-image-width: 34px;
+  border-image-outset: 10px;
+  border-image-repeat: stretch;
+  color: var(--btn-label-color);
   cursor: pointer;
-  isolation: isolate;
-  overflow: hidden;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
   transition:
     transform var(--duration-fast) var(--ease-out),
-    box-shadow var(--duration-med) var(--ease-out),
     filter var(--duration-fast) var(--ease-out);
-}
-
-/* Top gloss: the highlight that used to be painted into the button PNG. */
-.fantasy-button::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: var(--glass-gloss);
-  pointer-events: none;
-}
-
-/* Sheen that sweeps across on hover. */
-.fantasy-button::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: -60%;
-  width: 45%;
-  background: linear-gradient(
-    100deg,
-    rgba(255, 255, 255, 0) 0%,
-    rgba(255, 255, 255, 0.28) 50%,
-    rgba(255, 255, 255, 0) 100%
-  );
-  transform: skewX(-18deg);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity var(--duration-fast) linear;
 }
 
 .fantasy-button__label {
@@ -62,90 +42,74 @@
   font-size: 20px;
   font-weight: 700;
   line-height: 1;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: inherit;
-  text-shadow: 0 1px 2px rgba(8, 12, 20, 0.55);
+  text-shadow:
+    0 1px 0 rgba(0, 0, 0, 0.9),
+    0 0 8px rgba(0, 0, 0, 0.7);
 }
 
 .fantasy-button:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-lg), var(--shadow-inset-top), 0 0 28px var(--button-glow);
-}
-
-.fantasy-button:hover:not(:disabled)::after {
-  opacity: 1;
-  animation: fantasy-button-sheen 620ms var(--ease-out);
+  border-image-source: var(--btn-hover);
+  color: #fff3c4;
 }
 
 .fantasy-button:active:not(:disabled) {
+  border-image-source: var(--btn-pressed);
   transform: translateY(1px);
-  filter: brightness(0.94);
-  box-shadow: var(--shadow-sm), inset 0 2px 6px rgba(6, 10, 18, 0.45);
+  color: color-mix(in srgb, var(--btn-label-color) 70%, #000);
 }
 
 .fantasy-button:focus-visible {
   outline: none;
-  box-shadow: var(--focus-ring), var(--shadow-md);
+  box-shadow: var(--focus-ring);
 }
 
 .fantasy-button:disabled {
   cursor: not-allowed;
-  filter: grayscale(0.65) brightness(0.7);
-  box-shadow: var(--shadow-sm);
-  opacity: 0.65;
+  filter: grayscale(0.6) brightness(0.65);
 }
 
+/* Tones map onto the kit rows: primary (red), confirm (green), secondary (steel), danger (dark red). */
 .fantasy-button--ember {
-  --button-gradient: var(--gradient-ember);
-  --button-glow: var(--glow-ember);
+  --btn-normal: url('/assets/ui/kit/btn-primary-normal.png');
+  --btn-hover: url('/assets/ui/kit/btn-primary-hover.png');
+  --btn-pressed: url('/assets/ui/kit/btn-primary-pressed.png');
 }
 
 .fantasy-button--emerald {
-  --button-gradient: var(--gradient-emerald);
-  --button-glow: var(--glow-emerald);
+  --btn-normal: url('/assets/ui/kit/btn-confirm-normal.png');
+  --btn-hover: url('/assets/ui/kit/btn-confirm-hover.png');
+  --btn-pressed: url('/assets/ui/kit/btn-confirm-pressed.png');
 }
 
-.fantasy-button--steel {
-  --button-gradient: var(--gradient-steel);
-  --button-glow: var(--glow-steel);
-}
-
-/* Quiet variant: glass instead of a solid accent fill. */
+.fantasy-button--steel,
 .fantasy-button--ghost {
-  --button-glow: var(--glow-steel);
-  background: var(--glass-bg-soft);
-  border-color: var(--glass-border);
-  backdrop-filter: blur(var(--glass-blur));
-  color: var(--color-text-secondary);
+  --btn-normal: url('/assets/ui/kit/btn-secondary-normal.png');
+  --btn-hover: url('/assets/ui/kit/btn-secondary-hover.png');
+  --btn-pressed: url('/assets/ui/kit/btn-secondary-pressed.png');
+  --btn-label-color: #e6e9ef;
 }
 
+.fantasy-button--steel:hover:not(:disabled),
 .fantasy-button--ghost:hover:not(:disabled) {
-  border-color: var(--glass-border-strong);
-  color: var(--color-text-primary);
+  color: #ffffff;
 }
 
-@keyframes fantasy-button-sheen {
-  from {
-    left: -60%;
-  }
-  to {
-    left: 120%;
-  }
+.fantasy-button--danger {
+  --btn-normal: url('/assets/ui/kit/btn-danger-normal.png');
+  --btn-hover: url('/assets/ui/kit/btn-danger-hover.png');
+  --btn-pressed: url('/assets/ui/kit/btn-danger-pressed.png');
+  --btn-label-color: #e9b86a;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .fantasy-button,
-  .fantasy-button::after {
+  .fantasy-button {
     transition: none;
   }
 
-  .fantasy-button:hover:not(:disabled) {
+  .fantasy-button:active:not(:disabled) {
     transform: none;
-  }
-
-  .fantasy-button:hover:not(:disabled)::after {
-    animation: none;
-    opacity: 0;
   }
 }

@@ -20,19 +20,19 @@ function CreepSendPanelComponent({ setup }: CreepSendPanelProps) {
   }
 
   return (
-    <section className={styles.panel} data-creep-send-panel="true" aria-label="Creep sending panel">
+    <section className={`ui-panel ${styles.panel}`} data-creep-send-panel="true" aria-label="Creep sending panel">
       <div className={styles.header}>
-        <span className={styles.title}>Send {viewModel.raceName}</span>
+        <span className={`ui-heading ${styles.title}`}>Send {viewModel.raceName}</span>
         <span className={styles.queue} aria-live="polite">
           {viewModel.isBattleActive ? (
-            <span className={styles.phaseNote}>Locked in battle</span>
+            <span className={`ui-chip ${styles.phaseNote}`}>Locked in battle</span>
           ) : (
-            <span>{viewModel.queueSummary}</span>
+            <span className="ui-chip">{viewModel.queueSummary}</span>
           )}
         </span>
         <span className={styles.meta} aria-label={`Gold ${viewModel.gold}, income ${viewModel.income}`}>
-          <span>${viewModel.gold}</span>
-          <span>INC {viewModel.income}</span>
+          <span className={styles.metaGold}>$ {viewModel.gold}</span>
+          <span className={styles.metaIncome}><span className={styles.metaLabel}>INC</span> {viewModel.income}</span>
         </span>
       </div>
 
@@ -41,7 +41,7 @@ function CreepSendPanelComponent({ setup }: CreepSendPanelProps) {
           <button
             key={button.creepTypeId}
             type="button"
-            className={styles.button}
+            className={`ui-slot ${styles.button}`}
             disabled={button.isDisabled}
             aria-label={button.ariaLabel}
             onClick={() => handleSend(button.creepTypeId)}
@@ -55,8 +55,8 @@ function CreepSendPanelComponent({ setup }: CreepSendPanelProps) {
             <span className={styles.buttonName}>{button.name}</span>
             <span className={styles.buttonStats} aria-hidden="true">
               <span>T{button.tier}</span>
-              <span>${button.cost}</span>
-              <span>+{button.incomeGain}</span>
+              <span className={styles.buttonCost}>${button.cost}</span>
+              <span className={styles.buttonIncome}>+{button.incomeGain}</span>
             </span>
             {button.disabledReason && (
               <span className={styles.buttonReason} aria-hidden="true">

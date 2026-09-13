@@ -38,12 +38,43 @@
   flex-direction: column;
   gap: var(--space-lg);
   padding: var(--space-2xl) var(--space-xl) var(--space-xl);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-xl);
-  background: var(--glass-bg);
-  backdrop-filter: blur(var(--glass-blur));
-  box-shadow: var(--shadow-lg), var(--shadow-inset-top);
-  overflow: hidden;
+  /* Kit panel frame as a 9-slice: 20px corner ornaments, stone fill stretched in the middle. */
+  border: 0;
+  border-image-source: url('/assets/ui/kit/panel-tall.png');
+  border-image-slice: 22;
+  border-image-width: 22px;
+  border-image-repeat: stretch;
+  background: transparent;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.6);
+}
+
+/* Fade the stone fill so the video still shows through the panel. */
+.start-page-content::before {
+  content: '';
+  position: absolute;
+  inset: 8px;
+  z-index: 0;
+  background: linear-gradient(180deg, rgba(10, 14, 22, 0.1) 0%, rgba(10, 14, 22, 0.5) 100%);
+  pointer-events: none;
+}
+
+.start-page-content > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Red gem ornament centered on the top edge of the frame. */
+.start-page-content::after {
+  content: '';
+  position: absolute;
+  top: -13px;
+  left: 50%;
+  z-index: 2;
+  width: 47px;
+  height: 31px;
+  transform: translateX(-50%);
+  background: url('/assets/ui/kit/gem.png') center / contain no-repeat;
+  pointer-events: none;
 }
 
 .start-title-block {
@@ -53,6 +84,7 @@
 
 /* Procedural crest: a diamond with a gradient rim, no bitmap. */
 .start-title-crest {
+  display: none;
   position: relative;
   width: 42px;
   height: 42px;
@@ -130,11 +162,12 @@
   margin-top: auto;
   display: flex;
   flex-direction: column;
-  gap: var(--space-lg);
+  gap: 18px;
+  padding: 0 6px;
 }
 
 .start-button-primary.fantasy-button {
-  min-height: 62px;
+  min-height: 64px;
 }
 
 .start-button-primary .fantasy-button__label {
@@ -142,7 +175,7 @@
 }
 
 .start-button-secondary.fantasy-button {
-  min-height: 52px;
+  min-height: 56px;
 }
 
 .start-button-secondary .fantasy-button__label {
@@ -158,30 +191,33 @@
 }
 
 .start-action-icon {
-  width: var(--touch-target-min);
-  height: var(--touch-target-min);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-pill);
-  background: var(--glass-bg-soft);
-  backdrop-filter: blur(var(--glass-blur));
-  box-shadow: var(--shadow-sm), var(--shadow-inset-top);
-  color: var(--color-accent-gold);
-  font-size: 19px;
-  line-height: 1;
+  width: 52px;
+  height: 52px;
+  padding: 0;
+  border: 0;
+  background: center / contain no-repeat;
   cursor: pointer;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.6));
   transition:
     transform var(--duration-fast) var(--ease-out),
-    border-color var(--duration-med) var(--ease-out),
-    box-shadow var(--duration-med) var(--ease-out);
+    filter var(--duration-med) var(--ease-out);
+}
+
+.start-action-icon--trophy {
+  background-image: url('/assets/ui/kit/icon-trophy.png');
+}
+
+.start-action-icon--star {
+  background-image: url('/assets/ui/kit/icon-star.png');
+}
+
+.start-action-icon--gear {
+  background-image: url('/assets/ui/kit/icon-gear.png');
 }
 
 .start-action-icon:hover {
   transform: translateY(-1px);
-  border-color: var(--glass-border-strong);
-  box-shadow: var(--shadow-md), 0 0 18px rgba(240, 209, 136, 0.22);
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.6)) drop-shadow(0 0 10px rgba(240, 200, 120, 0.45)) brightness(1.15);
 }
 
 .start-action-icon:active {

@@ -227,7 +227,7 @@ describe('entities/computer-opponent/computerBehaviorSimulation', () => {
       incomingCreepCount: 3,
       estimatedLeakCount: 0,
       leakHistory: [],
-      occupiedCells: 24,
+      occupiedCells: 70,
       availableBuildPositions: [{ x: 1, y: 5 }, { x: 8, y: 8 }],
     };
 

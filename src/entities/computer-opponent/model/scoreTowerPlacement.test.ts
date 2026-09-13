@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { createGridModel } from '../../../shared/lib/grid/createGridModel';
+import { createPathProbe } from '../../../shared/lib/pathfinding/createPathProbe';
 import { findPathBfs } from '../../../shared/lib/pathfinding/hasPathBfs';
+import { createMazeSkeleton } from './createMazeSkeleton';
 import { TowerTypeId } from '../../../shared/types/content-ids';
 import type { TowerEntity } from '../../tower/model/types';
 import { scoreTowerPlacement, scoreAllPlacements } from './scoreTowerPlacement';
@@ -186,6 +188,146 @@ describe('entities/computer-opponent/scoreTowerPlacement', () => {
         });
 
         expect(archerScore.pathCoverageScore).toBeGreaterThanOrEqual(splashScore.pathCoverageScore);
+      });
+    });
+
+    describe('maze scoring', () => {
+      it('rewards a wall that makes creeps walk further', () => {
+        const grid = createTestGrid();
+        const path = getTestPath();
+        const pathProbe = createPathProbe(grid);
+
+        const onRoute = scoreTowerPlacement({
+          grid,
+          position: { x: 4, y: 7 },
+          towerType: TowerTypeId.SINGLE,
+          existingTowers: [],
+          path,
+          pathProbe,
+        });
+
+        const offRoute = scoreTowerPlacement({
+          grid,
+          position: { x: 4, y: 0 },
+          towerType: TowerTypeId.SINGLE,
+          existingTowers: [],
+          path,
+          pathProbe,
+        });
+
+        expect(onRoute.mazeGainCells).toBeGreaterThan(0);
+        expect(offRoute.mazeGainCells).toBe(0);
+        expect(onRoute.mazeGainScore).toBeGreaterThan(offRoute.mazeGainScore);
+      });
+
+      it('leaves maze terms neutral when no probe is supplied', () => {
+        const grid = createTestGrid();
+        const path = getTestPath();
+
+        const result = scoreTowerPlacement({
+          grid,
+          position: { x: 4, y: 7 },
+          towerType: TowerTypeId.SINGLE,
+          existingTowers: [],
+          path,
+        });
+
+        expect(result.mazeGainCells).toBe(0);
+        expect(result.mazeGainScore).toBe(0);
+        expect(result.isValid).toBe(true);
+      });
+
+      it('ranks cells of the planned comb above cells outside it', () => {
+        const grid = createTestGrid();
+        const path = getTestPath();
+        const pathProbe = createPathProbe(grid);
+        const mazeSkeleton = createMazeSkeleton(grid);
+        const firstPlanned = mazeSkeleton.cells[0];
+
+        const planned = scoreTowerPlacement({
+          grid,
+          position: firstPlanned,
+          towerType: TowerTypeId.SINGLE,
+          existingTowers: [],
+          path,
+          pathProbe,
+          mazeSkeleton,
+        });
+
+        const unplanned = scoreTowerPlacement({
+          grid,
+          position: { x: 0, y: 0 },
+          towerType: TowerTypeId.SINGLE,
+          existingTowers: [],
+          path,
+          pathProbe,
+          mazeSkeleton,
+        });
+
+        expect(planned.skeletonScore).toBeGreaterThan(0);
+        expect(unplanned.skeletonScore).toBe(0);
+        expect(planned.totalScore).toBeGreaterThan(unplanned.totalScore);
+      });
+
+      it('rejects a wall that would seal the field', () => {
+        const gapColumn = 4;
+        const gapRow = 7;
+        const grid = createTestGrid();
+        const walled = {
+          ...grid,
+          cells: grid.cells.map((cell) =>
+            cell.x === gapColumn && cell.y !== gapRow
+              ? { ...cell, isOccupied: true, isWalkable: false }
+              : cell,
+          ),
+        };
+        const pathProbe = createPathProbe(walled);
+
+        const result = scoreTowerPlacement({
+          grid: walled,
+          position: { x: gapColumn, y: gapRow },
+          towerType: TowerTypeId.SINGLE,
+          existingTowers: [],
+          path: findPathBfs(walled).path,
+          pathProbe,
+        });
+
+        expect(result.isValid).toBe(false);
+        expect(result.invalidReason).toBe('blocks_path');
+      });
+
+      it('prefers extending a wall over dropping an isolated tower', () => {
+        const grid = createTestGrid();
+        const withWall = {
+          ...grid,
+          cells: grid.cells.map((cell) =>
+            cell.x === 4 && cell.y === 0
+              ? { ...cell, isOccupied: true, isWalkable: false }
+              : cell,
+          ),
+        };
+        const pathProbe = createPathProbe(withWall);
+        const path = findPathBfs(withWall).path;
+
+        const extending = scoreTowerPlacement({
+          grid: withWall,
+          position: { x: 4, y: 1 },
+          towerType: TowerTypeId.SINGLE,
+          existingTowers: [],
+          path,
+          pathProbe,
+        });
+
+        const isolated = scoreTowerPlacement({
+          grid: withWall,
+          position: { x: 7, y: 1 },
+          towerType: TowerTypeId.SINGLE,
+          existingTowers: [],
+          path,
+          pathProbe,
+        });
+
+        expect(extending.wallSynergyScore).toBeGreaterThan(isolated.wallSynergyScore);
       });
     });
 

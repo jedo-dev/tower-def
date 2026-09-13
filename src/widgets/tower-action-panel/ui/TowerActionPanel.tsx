@@ -66,14 +66,14 @@ function TowerActionPanelComponent() {
   }
 
   return (
-    <section className={styles.panel} aria-label="Tower actions">
+    <section className={`ui-panel ${styles.panel}`} aria-label="Tower actions">
       <div className={styles.header}>
         <PlaceholderIcon label={towerName} faction={snapshot.selectedFaction} />
         <span className={styles.title}>{towerName}</span>
         <span className={styles.level}>Lv {level}</span>
         <button
           type="button"
-          className={styles.close}
+          className={`ui-btn-small ui-btn-small--close ${styles.close}`}
           aria-label="Close tower panel"
           onClick={handleClose}
         >
@@ -124,7 +124,7 @@ function TowerActionPanelComponent() {
         ) : (
           <button
             type="button"
-            className={`${styles.actionBtn} ${styles.upgradeBtn}`}
+            className={`fantasy-button fantasy-button--emerald fantasy-button--compact ${styles.actionBtn}`}
             disabled={!canUpgrade}
             aria-label={`Upgrade tower to level ${level + 1}`}
             onClick={handleUpgrade}
@@ -138,7 +138,7 @@ function TowerActionPanelComponent() {
 
         <button
           type="button"
-          className={`${styles.actionBtn} ${styles.sellBtn}`}
+          className={`fantasy-button fantasy-button--ember fantasy-button--compact ${styles.actionBtn}`}
           aria-label={`Sell tower for ${sellValue} gold`}
           onClick={handleSell}
         >

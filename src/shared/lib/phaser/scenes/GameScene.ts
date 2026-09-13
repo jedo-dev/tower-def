@@ -129,6 +129,7 @@ import {
   handlePointerDown as handlePointerDownRuntime,
   handlePointerMove as handlePointerMoveRuntime,
   handlePointerUp as handlePointerUpRuntime,
+  syncHoveredCellFromPointer,
   markUserActionProcessed as markUserActionProcessedRuntime,
   type InputControllerDependencies,
   type InputControllerState,
@@ -840,6 +841,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   private handlePointerDown(pointer: Phaser.Input.Pointer): void {
+    syncHoveredCellFromPointer(this.inputControllerDeps, pointer);
     if (trySelectTowerAtHoveredCell(this.towerCommandDeps)) {
       return;
     }
@@ -852,6 +854,9 @@ export class GameScene extends Phaser.Scene {
   }
 
   private handlePointerUp(pointer: Phaser.Input.Pointer): void {
+    if (pointer.wasTouch) {
+      syncHoveredCellFromPointer(this.inputControllerDeps, pointer);
+    }
     if (pointer.wasTouch && trySelectTowerAtHoveredCell(this.towerCommandDeps)) {
       this.inputControllerState.activeTouchGesture = null;
       return;

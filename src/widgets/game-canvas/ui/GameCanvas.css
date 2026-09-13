@@ -9,9 +9,8 @@
 .game-canvas-container {
   width: 100%;
   height: 100%;
-  border: 2px solid var(--color-border-strong);
-  border-radius: var(--radius-md);
+  border: 0;
+  border-radius: 6px;
   overflow: hidden;
   background: var(--color-surface-canvas);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
 }

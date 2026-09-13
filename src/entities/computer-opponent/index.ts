@@ -4,7 +4,13 @@ export {
 } from './model/types';
 
 export { buildDecisionContext } from './model/buildDecisionContext';
-export { scoreTowerPlacement, scoreAllPlacements } from './model/scoreTowerPlacement';
+export {
+  scoreTowerPlacement,
+  scoreAllPlacements,
+  DEFENSE_PLACEMENT_WEIGHTS,
+  MAZE_PLACEMENT_WEIGHTS,
+} from './model/scoreTowerPlacement';
+export { createMazeSkeleton } from './model/createMazeSkeleton';
 export { planBuildDecision } from './model/planBuildDecision';
 export { planSendCreeps } from './model/planSendCreeps';
 export { applyComputerBuildStrategy } from './model/applyComputerBuildStrategy';
@@ -28,6 +34,7 @@ export type {
   ComputerOpponentStrategy,
   DecisionContext,
   DecisionOutput,
+  EnemySnapshot,
   LeakHistoryEntry,
   MazeCoverageMetrics,
   SaveAction,
@@ -38,7 +45,8 @@ export type {
 
 export type { ComputerDecisionDebugRecorder } from './model/decisionDebugSnapshots';
 
-export type { PlacementScore } from './model/scoreTowerPlacement';
+export type { PlacementScore, PlacementWeights } from './model/scoreTowerPlacement';
+export type { MazeSkeleton } from './model/createMazeSkeleton';
 export type { BuildPlannerInput } from './model/planBuildDecision';
 export type {
   ApplyComputerBuildStrategyInput,

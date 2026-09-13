@@ -1,15 +1,15 @@
-/* Only rendered while a tower is selected, so it stays compact and sits
- * directly above the HUD rather than reserving permanent space. */
+/* Only rendered while a tower is selected. Floats over the bottom of the
+ * battlefield so opening it never resizes the canvas and shifts the grid. */
 .panel {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 8px;
+  z-index: 20;
   display: flex;
   flex-direction: column;
   gap: var(--space-sm);
-  padding: var(--space-md) var(--space-lg);
-  border: 1px solid var(--glass-border-strong);
-  border-radius: var(--radius-lg);
-  background: var(--glass-bg-raised);
-  backdrop-filter: blur(var(--glass-blur));
-  box-shadow: var(--shadow-md);
+  padding: 12px 16px 14px;
 }
 
 .header {
@@ -25,7 +25,8 @@
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--color-text-primary);
+  color: #e8c25f;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.9);
 }
 
 .level {
@@ -35,23 +36,9 @@
 }
 
 .close {
-  width: 28px;
-  height: 28px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-sm);
-  background: rgba(255, 255, 255, 0.05);
-  color: var(--color-text-muted);
-  font-size: var(--font-size-sm);
-  line-height: 1;
-  cursor: pointer;
-}
-
-.close:hover {
-  color: var(--color-text-primary);
-  border-color: var(--glass-border-strong);
+  width: 32px;
+  height: 32px;
+  flex: 0 0 auto;
 }
 
 .close:focus-visible {
@@ -87,57 +74,15 @@
 }
 
 .actionBtn {
-  min-height: 38px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  width: 100%;
   gap: var(--space-sm);
-  padding: var(--space-sm) var(--space-md);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-sm), var(--shadow-inset-top);
-  color: #fff;
-  font-family: var(--font-family-display);
-  font-size: var(--font-size-sm);
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  cursor: pointer;
-  touch-action: manipulation;
-  transition: filter var(--duration-fast) var(--ease-out), box-shadow var(--duration-med) var(--ease-out);
-}
-
-.actionBtn:disabled {
-  cursor: not-allowed;
-  filter: grayscale(0.6) brightness(0.72);
-}
-
-.actionBtn:focus-visible {
-  outline: none;
-  box-shadow: var(--focus-ring);
-}
-
-.upgradeBtn {
-  background: var(--gradient-emerald);
-}
-
-.upgradeBtn:hover:not(:disabled) {
-  box-shadow: var(--shadow-md), 0 0 16px var(--glow-emerald);
-}
-
-.sellBtn {
-  background: var(--gradient-ember);
-}
-
-.sellBtn:hover:not(:disabled) {
-  box-shadow: var(--shadow-md), 0 0 16px var(--glow-ember);
 }
 
 .btnCost {
   font-family: var(--font-family-stats);
-  font-size: var(--font-size-2xs);
+  font-size: 12px;
   font-variant-numeric: tabular-nums;
-  color: rgba(255, 255, 255, 0.82);
+  color: #fff4d6;
 }
 
 .maxLabel {
@@ -148,12 +93,6 @@
   font-family: var(--font-family-stats);
   font-size: var(--font-size-2xs);
   color: var(--color-text-label);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .actionBtn {
-    transition: none;
-  }
 }
 
 .effects {

@@ -14,14 +14,16 @@
   font-family: var(--font-family-ui);
   font-size: var(--font-size-xs);
   line-height: 1.3;
-  color: var(--color-text-secondary);
-  background: var(--color-surface-overlay);
-  border-radius: var(--radius-sm);
-  padding: var(--space-2xs) var(--space-md);
+  color: rgba(230, 233, 239, 0.7);
+  background: transparent;
+  padding: 0 2px;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.95), 0 0 6px rgba(0, 0, 0, 0.9);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+.entry:last-child { color: #e6e9ef; }
 
 .entryDamage {
   color: var(--color-text-danger);

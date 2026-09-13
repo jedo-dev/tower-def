@@ -8,6 +8,8 @@ import {
   TOWER_COMBAT_STATS_BY_TYPE,
 } from '../../tower/model/types';
 import { validateTowerPlacementPath } from '../../../shared/lib/pathfinding/validateTowerPlacementPath';
+import type { PathProbe } from '../../../shared/lib/pathfinding/createPathProbe';
+import type { MazeSkeleton } from './createMazeSkeleton';
 
 export type PlacementScore = {
   position: GridPosition;
@@ -16,10 +18,62 @@ export type PlacementScore = {
   defenseProximityScore: number;
   /** How much this archetype is worth given what the field already has. */
   archetypeValueScore: number;
+  /** Cells this placement adds to the shortest route through the field. */
+  mazeGainCells: number;
+  /** Saturated form of `mazeGainCells`, comparable with the other scores. */
+  mazeGainScore: number;
+  /** Rewards extending an existing wall over dropping an isolated tower. */
+  wallSynergyScore: number;
+  /** How early this cell appears in the planned maze comb; 0 when off-plan. */
+  skeletonScore: number;
   totalScore: number;
   isValid: boolean;
   invalidReason?: 'blocks_path' | 'entrance_or_exit' | 'occupied';
 };
+
+/**
+ * Relative pull of each placement term. The opponent plays a maze game: making
+ * creeps walk further is worth as much as shooting them, because a longer route
+ * multiplies the damage every existing tower deals.
+ */
+export type PlacementWeights = {
+  pathCoverage: number;
+  mazeGain: number;
+  wallSynergy: number;
+  defenseProximity: number;
+  skeleton: number;
+};
+
+/** Default stance: follow the maze plan, cover the route it creates. */
+export const MAZE_PLACEMENT_WEIGHTS: PlacementWeights = {
+  skeleton: 0.5,
+  mazeGain: 0.2,
+  pathCoverage: 0.2,
+  wallSynergy: 0.06,
+  defenseProximity: 0.04,
+};
+
+/** Under pressure, firepower on the current route matters more than length. */
+export const DEFENSE_PLACEMENT_WEIGHTS: PlacementWeights = {
+  skeleton: 0.28,
+  mazeGain: 0.14,
+  pathCoverage: 0.44,
+  wallSynergy: 0.06,
+  defenseProximity: 0.08,
+};
+
+/**
+ * Cells of detour that count as "half a great placement". Saturating instead of
+ * clamping keeps a 20-cell detour ranked above a 10-cell one.
+ */
+const MAZE_GAIN_HALF_VALUE_CELLS = 6;
+
+/**
+ * A wall grows one cell at a time. Exactly one blocked orthogonal neighbour
+ * means this cell extends a wall; three or more means it is plugging a pocket,
+ * which costs a tower and lengthens nothing.
+ */
+const WALL_SYNERGY_BY_BLOCKED_NEIGHBORS: readonly number[] = [0.2, 1, 0.7, 0.15, 0];
 
 type ScorePlacementInput = {
   grid: GridModel;
@@ -27,6 +81,11 @@ type ScorePlacementInput = {
   towerType: TowerTypeId;
   existingTowers: readonly TowerEntity[];
   path: readonly GridPosition[];
+  /** Supplies maze metrics and the rerouted path. Without it both stay neutral. */
+  pathProbe?: PathProbe;
+  /** The comb the opponent is filling in. Without it the term stays neutral. */
+  mazeSkeleton?: MazeSkeleton;
+  weights?: PlacementWeights;
 };
 
 function euclideanDistance(a: GridPosition, b: GridPosition): number {
@@ -45,6 +104,23 @@ function isEntranceOrExit(grid: GridModel, position: GridPosition): boolean {
 function isOccupied(grid: GridModel, position: GridPosition): boolean {
   const cell = grid.cells.find((c) => c.x === position.x && c.y === position.y);
   return cell?.isOccupied ?? true;
+}
+
+function isCellBlocked(
+  grid: GridModel,
+  position: GridPosition,
+  pathProbe: PathProbe | undefined,
+): boolean {
+  if (pathProbe) {
+    return pathProbe.isBlocked(position);
+  }
+
+  if (position.x < 0 || position.x >= grid.cols || position.y < 0 || position.y >= grid.rows) {
+    return true;
+  }
+
+  const cell = grid.cells.find((c) => c.x === position.x && c.y === position.y);
+  return !cell || !cell.isWalkable || cell.isOccupied;
 }
 
 function countPathCellsInRange(
@@ -195,54 +271,104 @@ function computeDefenseProximityScore(
   return Math.max(0, 1 - avgDistance / maxReasonableDistance);
 }
 
+function computeMazeGainScore(gainCells: number): number {
+  if (gainCells <= 0) {
+    return 0;
+  }
+
+  return gainCells / (gainCells + MAZE_GAIN_HALF_VALUE_CELLS);
+}
+
+function computeWallSynergyScore(
+  grid: GridModel,
+  position: GridPosition,
+  pathProbe: PathProbe | undefined,
+): number {
+  const neighbors: readonly GridPosition[] = [
+    { x: position.x + 1, y: position.y },
+    { x: position.x - 1, y: position.y },
+    { x: position.x, y: position.y + 1 },
+    { x: position.x, y: position.y - 1 },
+  ];
+
+  let blockedNeighbors = 0;
+  for (const neighbor of neighbors) {
+    if (isCellBlocked(grid, neighbor, pathProbe)) {
+      blockedNeighbors += 1;
+    }
+  }
+
+  return WALL_SYNERGY_BY_BLOCKED_NEIGHBORS[blockedNeighbors] ?? 0;
+}
+
+function createInvalidScore(
+  position: GridPosition,
+  towerType: TowerTypeId,
+  invalidReason: NonNullable<PlacementScore['invalidReason']>,
+): PlacementScore {
+  return {
+    position,
+    towerType,
+    pathCoverageScore: 0,
+    defenseProximityScore: 0,
+    archetypeValueScore: 0,
+    mazeGainCells: 0,
+    mazeGainScore: 0,
+    wallSynergyScore: 0,
+    skeletonScore: 0,
+    totalScore: 0,
+    isValid: false,
+    invalidReason,
+  };
+}
+
 export function scoreTowerPlacement(input: ScorePlacementInput): PlacementScore {
-  const { grid, position, towerType, existingTowers, path } = input;
+  const { grid, position, towerType, existingTowers, path, pathProbe, mazeSkeleton } = input;
+  const weights = input.weights ?? MAZE_PLACEMENT_WEIGHTS;
 
   if (isEntranceOrExit(grid, position)) {
-    return {
-      position,
-      towerType,
-      pathCoverageScore: 0,
-      defenseProximityScore: 0,
-      archetypeValueScore: 0,
-      totalScore: 0,
-      isValid: false,
-      invalidReason: 'entrance_or_exit',
-    };
+    return createInvalidScore(position, towerType, 'entrance_or_exit');
   }
 
   if (isOccupied(grid, position)) {
-    return {
-      position,
-      towerType,
-      pathCoverageScore: 0,
-      defenseProximityScore: 0,
-      archetypeValueScore: 0,
-      totalScore: 0,
-      isValid: false,
-      invalidReason: 'occupied',
-    };
+    return createInvalidScore(position, towerType, 'occupied');
   }
 
-  const pathPreserved = validateTowerPlacementPath(grid, position);
+  const probeResult = pathProbe?.probe(position);
+  const pathPreserved = probeResult
+    ? probeResult.path !== null
+    : validateTowerPlacementPath(grid, position);
   if (!pathPreserved) {
-    return {
-      position,
-      towerType,
-      pathCoverageScore: 0,
-      defenseProximityScore: 0,
-      archetypeValueScore: 0,
-      totalScore: 0,
-      isValid: false,
-      invalidReason: 'blocks_path',
-    };
+    return createInvalidScore(position, towerType, 'blocks_path');
   }
 
-  const pathCoverageScore = computePathCoverageScore(position, towerType, path, existingTowers);
+  // Score the route the creeps would actually walk once this tower stands, not
+  // the one they walk today: a wall that reroutes them elsewhere is worthless
+  // if the tower cannot reach the new route.
+  const effectivePath = probeResult?.path ?? path;
+  const mazeGainCells = probeResult && pathProbe
+    ? Math.max(0, probeResult.length - pathProbe.baseLength)
+    : 0;
+
+  const pathCoverageScore = computePathCoverageScore(
+    position,
+    towerType,
+    effectivePath,
+    existingTowers,
+  );
   const defenseProximityScore = computeDefenseProximityScore(position, existingTowers);
   const archetypeValueScore = computeArchetypeValueScore(towerType, existingTowers);
+  const mazeGainScore = computeMazeGainScore(mazeGainCells);
+  const wallSynergyScore = computeWallSynergyScore(grid, position, pathProbe);
+  const skeletonScore = mazeSkeleton?.priorityOf(position) ?? 0;
 
-  const totalScore = (pathCoverageScore * 0.7 + defenseProximityScore * 0.3) * archetypeValueScore;
+  const totalScore =
+    (pathCoverageScore * weights.pathCoverage +
+      mazeGainScore * weights.mazeGain +
+      wallSynergyScore * weights.wallSynergy +
+      defenseProximityScore * weights.defenseProximity +
+      skeletonScore * weights.skeleton) *
+    archetypeValueScore;
 
   return {
     position,
@@ -250,6 +376,10 @@ export function scoreTowerPlacement(input: ScorePlacementInput): PlacementScore 
     pathCoverageScore,
     defenseProximityScore,
     archetypeValueScore,
+    mazeGainCells,
+    mazeGainScore,
+    wallSynergyScore,
+    skeletonScore,
     totalScore,
     isValid: true,
   };
@@ -261,14 +391,28 @@ type ScoreAllPositionsInput = {
   positions: readonly GridPosition[];
   existingTowers: readonly TowerEntity[];
   path: readonly GridPosition[];
+  pathProbe?: PathProbe;
+  mazeSkeleton?: MazeSkeleton;
+  weights?: PlacementWeights;
 };
 
 export function scoreAllPlacements(input: ScoreAllPositionsInput): PlacementScore[] {
-  const { grid, towerType, positions, existingTowers, path } = input;
+  const { grid, towerType, positions, existingTowers, path, pathProbe, mazeSkeleton, weights } = input;
 
   const scores: PlacementScore[] = [];
   for (const position of positions) {
-    scores.push(scoreTowerPlacement({ grid, position, towerType, existingTowers, path }));
+    scores.push(
+      scoreTowerPlacement({
+        grid,
+        position,
+        towerType,
+        existingTowers,
+        path,
+        pathProbe,
+        mazeSkeleton,
+        weights,
+      }),
+    );
   }
 
   return scores.sort((a, b) => b.totalScore - a.totalScore);

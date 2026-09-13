@@ -133,7 +133,7 @@ describe('HudPanel build bar', () => {
     expect(consoleError).not.toHaveBeenCalled();
   });
 
-  it('shows cost and effect on every button', () => {
+  it('shows the cost on every button and keeps the effect hint as a tooltip', () => {
     publishGameHudSnapshot(createSnapshot({ gold: 1000 }));
 
     render(<HudPanel setup={createSetup(RaceId.UNDEAD)} />);
@@ -141,8 +141,10 @@ describe('HudPanel build bar', () => {
 
     const buildBar = screen.getByRole('group', { name: 'Buildable towers' });
 
-    expect(within(buildBar).getByText(/70g - Slows/)).toBeDefined();
-    expect(within(buildBar).getByText(/Boosts towers/)).toBeDefined();
+    // The card shows only the price (as in the mockup); the effect lives in the title.
+    expect(within(buildBar).getByText('70')).toBeDefined();
+    expect(within(buildBar).getByTitle(/Slows/)).toBeDefined();
+    expect(within(buildBar).getByTitle(/Boosts towers/)).toBeDefined();
     expect(consoleError).not.toHaveBeenCalled();
   });
 });

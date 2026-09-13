@@ -13,6 +13,7 @@ import { TOWER_BASE_LEVEL, TOWER_COMBAT_STATS_BY_TYPE } from '../../tower/model/
 import { getUpgradeCost } from '../../tower/model/upgrade';
 import type { DecisionContext } from './types';
 import { StrategyIntent } from './types';
+import { buildDecisionContext } from './buildDecisionContext';
 import { applyComputerBuildStrategy } from './applyComputerBuildStrategy';
 
 const PLAYER_RACE = RaceId.HUMAN;
@@ -147,8 +148,9 @@ describe('entities/computer-opponent/applyComputerBuildStrategy', () => {
     const context = createContext({
       gold: state.opponent.gold,
       mazeCoverage: {
+        // Past the difficulty's maze target, so mazing gives way to upgrading.
         totalWalkableCells: 150,
-        occupiedCells: 30,
+        occupiedCells: 70,
         towerCount: towers.length,
       },
       upgradeableTowerIds: towers.map((tower) => tower.id),
@@ -215,5 +217,60 @@ describe('entities/computer-opponent/applyComputerBuildStrategy', () => {
     const secondResult = applyComputerBuildStrategy({ state, context });
 
     expect(firstResult).toEqual(secondResult);
+  });
+
+  describe('mazing over a full match', () => {
+    /** Plays build rounds through the real entry point, paying income each round. */
+    function playRounds(rounds: number, difficulty: Difficulty): DuelMatchState {
+      let state = createState();
+
+      for (let round = 1; round <= rounds; round += 1) {
+        state = { ...state, round };
+        const context = buildDecisionContext({ matchState: state, difficulty, leakHistory: [] });
+        state = applyComputerBuildStrategy({ state, context }).state;
+        state = {
+          ...state,
+          opponent: { ...state.opponent, gold: state.opponent.gold + state.opponent.income },
+        };
+      }
+
+      return state;
+    }
+
+    it('makes creeps walk several times further than on an open field', () => {
+      const openFieldLength = findPathBfs(createState().opponent.battlefield.grid).path.length;
+
+      const state = playRounds(25, Difficulty.HARD);
+      const mazedLength = findPathBfs(state.opponent.battlefield.grid).path.length;
+
+      // Measured at 30 towers and a 10 -> 38 cell route on this seed; the
+      // thresholds leave room for balance tweaks without going quiet if mazing
+      // regresses to the old scattered placement.
+      expect(state.opponent.battlefield.towers.length).toBeGreaterThan(20);
+      expect(mazedLength).toBeGreaterThan(openFieldLength * 2.5);
+    });
+
+    it('keeps the battlefield path in sync with the walls it built', () => {
+      const state = playRounds(25, Difficulty.HARD);
+
+      expect(state.opponent.battlefield.path).toEqual(
+        findPathBfs(state.opponent.battlefield.grid).path,
+      );
+    });
+
+    it('never spends gold it does not have', () => {
+      const state = playRounds(25, Difficulty.HARD);
+
+      expect(state.opponent.gold).toBeGreaterThanOrEqual(0);
+    });
+
+    it('leaves the player battlefield untouched', () => {
+      const state = playRounds(25, Difficulty.HARD);
+
+      expect(state.player.battlefield.towers).toHaveLength(0);
+      expect(findPathBfs(state.player.battlefield.grid).path.length).toBe(
+        findPathBfs(createState().player.battlefield.grid).path.length,
+      );
+    });
   });
 });

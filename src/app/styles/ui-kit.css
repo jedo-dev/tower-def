@@ -1,0 +1,115 @@
+/*
+ * Global helpers built on the generated Warcraft-style kit (public/assets/ui/kit).
+ * CSS modules combine these with their own classes; nothing here is component-specific.
+ */
+
+/* Framed panel: iron border with gold corners, stone fill, 22px corner slices. */
+.ui-panel {
+  position: relative;
+  border: 0;
+  border-image-source: url('/assets/ui/kit/panel-wide.png');
+  border-image-slice: 22 fill;
+  border-image-width: 22px;
+  border-image-repeat: stretch;
+  background: transparent;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.55);
+}
+
+/* Square slot: dark plate with a thin iron rim, used for tower/creep cards and icons. */
+.ui-slot {
+  border: 0;
+  border-image-source: url('/assets/ui/kit/slot-empty.png');
+  border-image-slice: 14 fill;
+  border-image-width: 12px;
+  border-image-repeat: stretch;
+  background: transparent;
+}
+
+.ui-slot--selected {
+  filter: brightness(1.12) saturate(1.1);
+  box-shadow:
+    0 0 0 2px rgba(232, 190, 90, 0.95),
+    0 0 14px rgba(232, 170, 60, 0.6);
+}
+
+/* Small square control (close, chevrons) drawn from the kit's small buttons. */
+.ui-btn-small {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  background: center / contain no-repeat;
+  color: transparent;
+  font-size: 0;
+  cursor: pointer;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.6));
+}
+
+.ui-btn-small:hover { filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.6)) brightness(1.2); }
+.ui-btn-small:active { transform: translateY(1px); filter: brightness(0.85); }
+.ui-btn-small:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+
+.ui-btn-small--close { background-image: url('/assets/ui/kit/small-close.png'); }
+.ui-btn-small--prev { background-image: url('/assets/ui/kit/small-prev.png'); }
+.ui-btn-small--next { background-image: url('/assets/ui/kit/small-next.png'); }
+.ui-btn-small--gear { background-image: url('/assets/ui/kit/small-gear.png'); }
+.ui-btn-small--check { background-image: url('/assets/ui/kit/small-check.png'); }
+
+/* Compact FantasyButton for in-game panels: same 9-slice, smaller box. */
+.fantasy-button--compact {
+  width: auto;
+  min-height: 40px;
+  padding: 6px 20px;
+  border-image-width: 24px;
+  border-image-outset: 7px;
+}
+
+.fantasy-button--compact .fantasy-button__label,
+.fantasy-button--compact > span {
+  font-family: var(--font-family-display);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.9), 0 0 6px rgba(0, 0, 0, 0.7);
+}
+
+/* Resource icons pulled out of the kit's framed squares. */
+.ui-icon-coin,
+.ui-icon-heart {
+  display: inline-block;
+  width: 26px;
+  height: 26px;
+  background: center / contain no-repeat;
+  vertical-align: middle;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.7));
+}
+
+.ui-icon-coin { background-image: url('/assets/ui/kit/icon-coin-bare.png'); }
+.ui-icon-heart { background-image: url('/assets/ui/kit/icon-heart-bare.png'); }
+
+/* Gold serif heading used inside panels ("SEND ORC", "BUILD"). */
+.ui-heading {
+  font-family: var(--font-family-display);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #e8c25f;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.9), 0 0 8px rgba(0, 0, 0, 0.6);
+}
+
+/* Dark pill chip with a thin rim ("Queue: 2"). */
+.ui-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border: 1px solid rgba(120, 130, 150, 0.45);
+  border-radius: 6px;
+  background: rgba(8, 11, 18, 0.7);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  color: #c9cfdb;
+  font-family: var(--font-family-ui);
+  font-size: var(--font-size-xs);
+  white-space: nowrap;
+}

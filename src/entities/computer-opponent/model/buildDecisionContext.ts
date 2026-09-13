@@ -9,6 +9,7 @@ import { getRaceRegistry } from '../../race-registry/model/registries';
 import { buildableTowers } from '../../tower/model/config/buildableTowers';
 import type {
   DecisionContext,
+  EnemySnapshot,
   LeakHistoryEntry,
   MazeCoverageMetrics,
   ThreatAssessment,
@@ -98,6 +99,14 @@ function computeAvailableBuildPositions(
   return positions;
 }
 
+function computeEnemySnapshot(duelist: DuelistState): EnemySnapshot {
+  return {
+    hp: duelist.hp,
+    income: duelist.income,
+    towerCount: duelist.battlefield.towers.length,
+  };
+}
+
 export function buildDecisionContext(input: OpponentSnapshotInput): DecisionContext {
   const { matchState, difficulty, leakHistory } = input;
   const opponent = matchState.opponent;
@@ -119,5 +128,6 @@ export function buildDecisionContext(input: OpponentSnapshotInput): DecisionCont
       opponent.gold,
     ),
     availableBuildPositions: computeAvailableBuildPositions(opponent, opponent.raceId),
+    enemy: computeEnemySnapshot(matchState.player),
   };
 }

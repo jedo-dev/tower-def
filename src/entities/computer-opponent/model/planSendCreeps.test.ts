@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { RaceId } from '../../../shared/types/content-ids';
+import { getRaceRegistry } from '../../race-registry/model/registries';
 import { Difficulty } from '../../difficulty/model/types';
 import { getSendCostByTier, getIncomeBonusByTier } from '../../duel-match/model/sendEconomy';
 import { resolveUnitConfigById } from '../../unit/model/registry';
@@ -197,6 +198,110 @@ describe('entities/computer-opponent/planSendCreeps', () => {
       }
 
       expect(result.totalIncomeBonus).toBe(expectedBonus);
+    });
+  });
+
+  describe('economy and pressure balance', () => {
+    function tiersOf(result: ReturnType<typeof planSendCreeps>): number[] {
+      return result.actions.map((action) => resolveUnitConfigById(action.creepTypeId as never).tier);
+    }
+
+    /**
+     * Tier 1 is the income buy: cheapest payback per gold, weakest body. How
+     * many of them a plan contains is the readable signal of where the round's
+     * budget went, which the raw income total is not: a tougher creep still
+     * grants income, so a pressure-heavy plan can out-earn an economy one.
+     */
+    function economyBuyCount(result: ReturnType<typeof planSendCreeps>): number {
+      return tiersOf(result).filter((tier) => tier === 1).length;
+    }
+
+    it('spends the opening rounds on the best income per gold', () => {
+      const result = planSendCreeps({ context: createTestContext({ gold: 1000, round: 1 }) });
+
+      // Tier 1 pays back fastest, so an opening buy is nothing but tier 1.
+      expect(tiersOf(result)).toEqual(tiersOf(result).map(() => 1));
+      expect(result.totalIncomeBonus).toBeGreaterThan(0);
+    });
+
+    it('shifts towards tougher creeps once the opening is over', () => {
+      const opening = planSendCreeps({ context: createTestContext({ gold: 1000, round: 1 }) });
+      const late = planSendCreeps({ context: createTestContext({ gold: 1000, round: 15 }) });
+
+      expect(Math.max(...tiersOf(late))).toBeGreaterThan(Math.max(...tiersOf(opening)));
+    });
+
+    it('buys more income per gold than a naive most-expensive-first plan would', () => {
+      const result = planSendCreeps({ context: createTestContext({ gold: 1000, round: 1 }) });
+
+      const incomePerGold = result.totalIncomeBonus / result.totalCost;
+      const worstTier = Math.max(
+        ...getRaceRegistry(RaceId.UNDEAD).sendableCreepIds.map(
+          (id) => resolveUnitConfigById(id).tier,
+        ),
+      );
+      const naiveIncomePerGold =
+        getIncomeBonusByTier(worstTier as never) / getSendCostByTier(worstTier as never);
+
+      expect(incomePerGold).toBeGreaterThan(naiveIncomePerGold);
+    });
+
+    it('goes all in on pressure when its own life total is nearly gone', () => {
+      const healthy = planSendCreeps({ context: createTestContext({ gold: 1000, round: 8, hp: 20 }) });
+      const desperate = planSendCreeps({ context: createTestContext({ gold: 1000, round: 8, hp: 2 }) });
+
+      expect(economyBuyCount(desperate)).toBeLessThan(economyBuyCount(healthy));
+    });
+
+    it('leans harder on pressure while ahead on income than while behind', () => {
+      const ahead = planSendCreeps({
+        context: createTestContext({ gold: 1000, round: 10, income: 120, enemy: { hp: 20, income: 50, towerCount: 5 } }),
+      });
+      const behind = planSendCreeps({
+        context: createTestContext({ gold: 1000, round: 10, income: 50, enemy: { hp: 20, income: 120, towerCount: 5 } }),
+      });
+
+      expect(economyBuyCount(ahead)).toBeLessThan(economyBuyCount(behind));
+    });
+
+    it('caps how many creeps one round can send', () => {
+      const result = planSendCreeps({
+        context: createTestContext({ gold: 100000, difficulty: Difficulty.NORMAL, round: 1 }),
+      });
+
+      expect(result.actions.length).toBeLessThanOrEqual(5);
+    });
+
+    it('sends more on a harder difficulty than on an easier one', () => {
+      const easy = planSendCreeps({
+        context: createTestContext({ gold: 1000, difficulty: Difficulty.EASY, round: 8 }),
+      });
+      const nightmare = planSendCreeps({
+        context: createTestContext({ gold: 1000, difficulty: Difficulty.NIGHTMARE, round: 8 }),
+      });
+
+      expect(nightmare.actions.length).toBeGreaterThan(easy.actions.length);
+      expect(nightmare.totalCost).toBeGreaterThan(easy.totalCost);
+    });
+
+    it('never spends more than the round budget', () => {
+      for (const difficulty of [Difficulty.EASY, Difficulty.NORMAL, Difficulty.HARD, Difficulty.NIGHTMARE]) {
+        for (const round of [1, 6, 14]) {
+          const gold = 900;
+          const result = planSendCreeps({ context: createTestContext({ gold, difficulty, round }) });
+
+          expect(result.totalCost).toBeLessThanOrEqual(gold);
+        }
+      }
+    });
+
+    it('works without knowing anything about the enemy', () => {
+      const context = createTestContext({ gold: 1000, round: 10 });
+      delete (context as { enemy?: unknown }).enemy;
+
+      const result = planSendCreeps({ context });
+
+      expect(result.actions.length).toBeGreaterThan(0);
     });
   });
 

@@ -11,6 +11,7 @@ import type { HudPressureLevel } from '../model/mapHudSnapshotToViewModel';
 import type { HudFactionType } from '../../../shared/lib/game-bridge/types';
 import type { GameSetupConfig } from '../../../shared/config/game-setup';
 import { PlaceholderIcon } from '../../../shared/ui/placeholder-icon';
+import { FantasyButton } from '../../../shared/ui/fantasy-button';
 
 export type HudPanelProps = {
   setup: GameSetupConfig | null;
@@ -59,19 +60,19 @@ function HudPanelComponent({ setup }: HudPanelProps) {
   });
 
   return (
-    <section className={styles.panel} aria-label="Game HUD">
+    <section className={`ui-panel ${styles.panel}`} aria-label="Game HUD">
       <button
         type="button"
         className={styles.toggle}
         aria-label={isExpanded ? 'Collapse HUD' : 'Expand HUD'}
         onClick={() => setIsExpanded(!isExpanded)}
       >
-        <span className={joinClassNames(styles.toggleIcon, isExpanded && styles.toggleIconUp)}>^</span>
+        <span className={joinClassNames(styles.toggleIcon, isExpanded && styles.toggleIconUp)} />
       </button>
 
       <div className={styles.topRow}>
         <div className={styles.resource}>
-          <span className={styles.resourceIcon}>$</span>
+          <span className={`ui-icon-coin ${styles.resourceIcon}`} aria-hidden="true" />
           <span className={styles.resourceValue}>{snapshot.gold}</span>
         </div>
 
@@ -92,29 +93,29 @@ function HudPanelComponent({ setup }: HudPanelProps) {
           ) : snapshot.autoStartSecondsLeft !== null ? (
             <div className={styles.timerActions}>
               <span className={styles.timer}>Auto: {formatCountdown(snapshot.autoStartSecondsLeft)}</span>
-              <button
-                type="button"
-                className={styles.forceStartBtn}
+              <FantasyButton
+                tone="ember"
+                className={`fantasy-button--compact ${styles.forceStartBtn}`}
                 disabled={viewModel.isStartWaveDisabled}
                 onClick={() => sendGameCommand('start-wave', undefined)}
               >
-                Force Start
-              </button>
+                Start Wave
+              </FantasyButton>
             </div>
           ) : (
-            <button
-              type="button"
-              className={styles.startBtn}
+            <FantasyButton
+              tone="ember"
+              className={`fantasy-button--compact ${styles.startBtn}`}
               disabled={viewModel.isStartWaveDisabled}
               onClick={() => sendGameCommand('start-wave', undefined)}
             >
               Start Wave
-            </button>
+            </FantasyButton>
           )}
         </div>
 
-        <div className={styles.resource}>
-          <span className={styles.resourceIcon}>HP</span>
+        <div className={joinClassNames(styles.resource, styles.resourceRight)}>
+          <span className={`ui-icon-heart ${styles.resourceIcon}`} aria-hidden="true" />
           <span className={styles.resourceValue}>{snapshot.lives}</span>
         </div>
       </div>
@@ -135,13 +136,16 @@ function HudPanelComponent({ setup }: HudPanelProps) {
 
       {isExpanded && (
         <div className={styles.expandedContent}>
+          <div className={`ui-heading ${styles.buildHeading}`}>Build</div>
           <div className={styles.towerButtons} role="group" aria-label="Buildable towers">
             {buildOptions.map((option) => (
               <button
                 key={option.towerId}
                 type="button"
                 className={joinClassNames(
+                  'ui-slot',
                   styles.towerBtn,
+                  option.isSelected && 'ui-slot--selected',
                   option.isSelected && styles.towerBtnSelected,
                 )}
                 disabled={!option.isAffordable && !option.isSelected}
@@ -150,11 +154,14 @@ function HudPanelComponent({ setup }: HudPanelProps) {
                   towerType: option.isSelected ? null : option.towerType,
                 })}
               >
-                <PlaceholderIcon label={option.name} faction={builderFactionTheme} />
+                <span className={styles.towerBtnPortrait}>
+                  <PlaceholderIcon label={option.name} faction={builderFactionTheme} />
+                </span>
                 <span className={styles.towerBtnBody}>
                   <span className={styles.towerBtnName}>{option.name}</span>
-                  <span className={styles.towerBtnMeta}>
-                    {option.costGold}g - {option.effectHint}
+                  <span className={styles.towerBtnMeta} title={option.effectHint}>
+                    <span className="ui-icon-coin" aria-hidden="true" />
+                    {option.costGold}
                   </span>
                 </span>
               </button>
@@ -181,7 +188,7 @@ function HudPanelComponent({ setup }: HudPanelProps) {
             <span className={styles.infoValue}>{viewModel.phaseLabel}</span>
           </div>
 
-          <div className={styles.infoRow}>
+          <div className={joinClassNames(styles.infoRow, styles.infoRowEnemy)}>
             <span className={styles.infoLabel}>Enemy gold:</span>
             <span className={styles.infoValue}>{snapshot.opponentGold}</span>
             <span className={styles.infoLabel}>Enemy income:</span>

@@ -71,11 +71,25 @@ export function handlePointerMove(
   }
 }
 
+/**
+ * A plain touch tap emits no pointermove, so the hovered cell would stay stale
+ * (or null) and the tap would land on the previous cell. Resync it from the
+ * pointer before any down/up action.
+ */
+export function syncHoveredCellFromPointer(
+  deps: InputControllerDependencies,
+  pointer: Phaser.Input.Pointer,
+): void {
+  deps.setHoveredCell(deps.toGridCell(pointer.worldX, pointer.worldY));
+  deps.updateHoveredCellDebugRegistry();
+}
+
 export function handlePointerDown(
   state: InputControllerState,
   deps: InputControllerDependencies,
   pointer: Phaser.Input.Pointer,
 ): void {
+  syncHoveredCellFromPointer(deps, pointer);
   if (pointer.wasTouch) {
     state.activeTouchGesture = {
       startedAtMs: deps.nowMs(),
@@ -106,6 +120,7 @@ export function handlePointerUp(
     return;
   }
 
+  syncHoveredCellFromPointer(deps, pointer);
   const durationMs = deps.nowMs() - state.activeTouchGesture.startedAtMs;
   const moveDistance = Math.hypot(
     pointer.worldX - state.activeTouchGesture.startX,

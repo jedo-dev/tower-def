@@ -48,7 +48,7 @@ export function StartPage({ onNavigate }: StartPageProps) {
           </FantasyButton>
           <FantasyButton
             className="start-button-secondary start-button-danger"
-            tone="ghost"
+            tone="danger"
             onClick={() => onNavigate('start')}
           >
             Exit
@@ -56,15 +56,9 @@ export function StartPage({ onNavigate }: StartPageProps) {
         </nav>
 
         <div className="start-actions" aria-hidden>
-          <button type="button" className="start-action-icon">
-            <span>🏆</span>
-          </button>
-          <button type="button" className="start-action-icon">
-            <span>★</span>
-          </button>
-          <button type="button" className="start-action-icon">
-            <span>⚙</span>
-          </button>
+          <button type="button" className="start-action-icon start-action-icon--trophy" aria-label="Achievements" />
+          <button type="button" className="start-action-icon start-action-icon--star" aria-label="Favorites" />
+          <button type="button" className="start-action-icon start-action-icon--gear" aria-label="Settings" />
         </div>
 
         <footer className="start-footer">

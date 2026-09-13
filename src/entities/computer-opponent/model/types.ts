@@ -39,6 +39,17 @@ export type LeakHistoryEntry = {
   leakedCount: number;
 };
 
+/**
+ * What the opponent can see of the other duelist. Optional because a decision
+ * is still well defined without it: the send planner then compares its economy
+ * against its own instead of against the enemy's.
+ */
+export type EnemySnapshot = {
+  hp: number;
+  income: number;
+  towerCount: number;
+};
+
 export type DecisionContext = {
   gold: number;
   income: number;
@@ -53,6 +64,7 @@ export type DecisionContext = {
   affordableTowers: readonly TowerTypeId[];
   upgradeableTowerIds: readonly string[];
   availableBuildPositions: readonly GridPosition[];
+  enemy?: EnemySnapshot;
   intent?: StrategyIntent;
 };
 
