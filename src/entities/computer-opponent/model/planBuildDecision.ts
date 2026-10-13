@@ -40,6 +40,11 @@ export type BuildDecisionOutput = DecisionOutput & {
   mazePlan: MazePlan | null;
   /** Route-search cells this decision expanded, planning included. Counts work, not time. */
   mazeSearchExpandedNodes: number;
+  /**
+   * The part of `mazeSearchExpandedNodes` spent scoring single towers: every
+   * build of a defending opponent, and the fallback when the plan is short.
+   */
+  scoredBuildExpandedNodes: number;
 };
 
 function selectIntent(context: DecisionContext, unbuiltPlanBlocks: number): StrategyIntent {
@@ -123,9 +128,15 @@ export function planBuildDecision(input: BuildPlannerInput): BuildDecisionOutput
     output: DecisionOutput,
     mazePlan: MazePlan | null,
     expandedNodeCount: number,
+    scoredBuildExpandedNodes = 0,
   ): BuildDecisionOutput {
     debugRecorder?.recordBuildDecision(context, output);
-    return { ...output, mazePlan, mazeSearchExpandedNodes: expandedNodeCount };
+    return {
+      ...output,
+      mazePlan,
+      mazeSearchExpandedNodes: expandedNodeCount,
+      scoredBuildExpandedNodes,
+    };
   }
 
   if (context.phase !== 'build') {
@@ -167,6 +178,7 @@ export function planBuildDecision(input: BuildPlannerInput): BuildDecisionOutput
   // Defending wants firepower on the current route; an unfinished plan with
   // too little buildable right now should not stall the opponent either. A
   // finished plan does not fall back: the maze is done, gold goes to upgrades.
+  const expandedBeforeScoring = round.expandedNodeCount;
   if (intent === StrategyIntent.DEFEND || (isPlanShort && !plan.isComplete)) {
     buildByScore(round, context, intent, unbuilt, maxBuilds);
   }
@@ -182,5 +194,6 @@ export function planBuildDecision(input: BuildPlannerInput): BuildDecisionOutput
     reasoning: round.reasoning.join('; '),
     confidenceScore: 0.8,
   };
-  return finish(output, plan, round.expandedNodeCount);
+  const scoredBuildExpandedNodes = round.expandedNodeCount - expandedBeforeScoring;
+  return finish(output, plan, round.expandedNodeCount, scoredBuildExpandedNodes);
 }
