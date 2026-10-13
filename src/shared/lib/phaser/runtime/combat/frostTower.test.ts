@@ -74,8 +74,7 @@ function createDeps(): CombatDeps & { sounds: string[] } {
     playArcherAttackAnimation: vi.fn(),
     playSplashAttackAnimation: vi.fn(),
     playSound: (soundId: string) => sounds.push(soundId),
-    getResources: () => ({ gold: 0, lives: 20 }),
-    onGoldUpdated: vi.fn(),
+    awardKillBounty: vi.fn(),
     onHudChanged: vi.fn(),
   } as unknown as CombatDeps & { sounds: string[] };
 }

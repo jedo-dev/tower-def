@@ -77,4 +77,8 @@ export type DuelMatchConfig = {
   sendCapPerWave: number;
   /** Shared by both sides: creeps of one type one side may queue for one wave. */
   sendUnitTypeCapByTier: TierEconomyTable;
+  /** Shared by both sides: gold a kill on a side's own battlefield pays that side. */
+  killBountyGold: number;
 };
+
+export type DuelSide = 'player' | 'opponent';

@@ -48,6 +48,7 @@ export {
   getUnitTypeSendCapByTier,
 } from './model/sendLimits';
 export type { SendLimitCheck } from './model/sendLimits';
+export { addKillBounty, awardKillBounty, getKillBountyGold } from './model/killBounty';
 export {
   accrueStolenLives,
   countLeakedSentCreeps,
@@ -68,6 +69,7 @@ export type {
   DuelSendCreepResult,
   DuelSendLimitRejectionReason,
   DuelSendRejectionReason,
+  DuelSide,
   DuelistState,
   TierEconomyTable,
 } from './model/types';
