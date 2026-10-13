@@ -1,5 +1,5 @@
 import type Phaser from 'phaser';
-import type { GridPosition } from '../../../../types/pathfinding';
+import type { PointerGridTarget } from '../grid/gameSceneGridPreviewRuntime';
 
 export type InputTouchGesture = {
   startedAtMs: number;
@@ -23,8 +23,8 @@ export type InputControllerConfig = {
 
 export type InputControllerDependencies = {
   nowMs: () => number;
-  toGridCell: (worldX: number, worldY: number) => GridPosition | null;
-  setHoveredCell: (cell: GridPosition | null) => void;
+  toPointerTarget: (worldX: number, worldY: number) => PointerGridTarget | null;
+  setHoveredTarget: (target: PointerGridTarget | null) => void;
   clearHoveredCell: () => void;
   updateHoveredCellDebugRegistry: () => void;
   updateBuildPreview: () => void;
@@ -50,7 +50,7 @@ export function handlePointerMove(
   config: InputControllerConfig,
   pointer: Phaser.Input.Pointer,
 ): void {
-  deps.setHoveredCell(deps.toGridCell(pointer.worldX, pointer.worldY));
+  deps.setHoveredTarget(deps.toPointerTarget(pointer.worldX, pointer.worldY));
   deps.updateHoveredCellDebugRegistry();
   deps.updateBuildPreview();
 
@@ -84,7 +84,7 @@ export function syncHoveredCellFromPointer(
   deps: InputControllerDependencies,
   pointer: Phaser.Input.Pointer,
 ): void {
-  deps.setHoveredCell(deps.toGridCell(pointer.worldX, pointer.worldY));
+  deps.setHoveredTarget(deps.toPointerTarget(pointer.worldX, pointer.worldY));
   deps.updateHoveredCellDebugRegistry();
 }
 

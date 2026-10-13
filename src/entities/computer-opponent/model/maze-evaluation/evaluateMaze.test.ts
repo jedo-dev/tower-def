@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { TOWER_FOOTPRINT } from '../../../../shared/constants/footprint';
+import { SINGLE_CELL_FOOTPRINT, TOWER_FOOTPRINT } from '../../../../shared/constants/footprint';
 import { canOccupyFootprint } from '../../../../shared/lib/grid/footprint';
 import { findRoutesBySizeClass } from '../../../../shared/lib/pathfinding/findRouteForSizeClass';
 import type { GridCell, GridModel, GridPoint } from '../../../../shared/types/grid';
@@ -23,7 +23,14 @@ function parseBoard(rowsText: readonly string[]): GridModel {
     });
   });
 
-  return { cols: rowsText[0].length, rows: rowsText.length, cells, entrance, exit };
+  return {
+    cols: rowsText[0].length,
+    rows: rowsText.length,
+    cells,
+    entrance,
+    exit,
+    endpointZoneFootprint: SINGLE_CELL_FOOTPRINT,
+  };
 }
 
 function routeCost(route: readonly GridPoint[] | null): number | null {

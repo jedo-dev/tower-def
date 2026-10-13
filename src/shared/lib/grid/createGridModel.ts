@@ -1,9 +1,13 @@
-import type { GridCell, GridModel, GridPoint } from '../../types/grid';
+import type { Footprint, GridCell, GridModel, GridPoint } from '../../types/grid';
 import { GRID_DIMENSIONS } from '../../constants/grid';
+import { ENDPOINT_ZONE_FOOTPRINT } from '../../constants/footprint';
+import { getFootprintCells } from './footprint';
 import { getCellAt } from './getCellAt';
 
 type CreateGridModelParams = {
+  /** Top-left anchor of the entrance zone; creep routes start here. */
   entrance: GridPoint;
+  /** Top-left anchor of the exit zone; creep routes end here. */
   exit: GridPoint;
 };
 
@@ -15,6 +19,20 @@ function createGridCell(x: number, y: number): GridCell {
     isWalkable: true,
     isOccupied: false,
   };
+}
+
+function markZone(
+  grid: GridModel,
+  anchor: GridPoint,
+  footprint: Readonly<Footprint>,
+  role: GridCell['role'],
+): void {
+  for (const point of getFootprintCells(anchor, footprint)) {
+    const cell = getCellAt(grid, point.x, point.y);
+    if (cell) {
+      cell.role = role;
+    }
+  }
 }
 
 export function createGridModel({ entrance, exit }: CreateGridModelParams): GridModel {
@@ -32,17 +50,11 @@ export function createGridModel({ entrance, exit }: CreateGridModelParams): Grid
     cells,
     entrance,
     exit,
+    endpointZoneFootprint: ENDPOINT_ZONE_FOOTPRINT,
   };
 
-  const entranceCell = getCellAt(grid, entrance.x, entrance.y);
-  if (entranceCell) {
-    entranceCell.role = 'entrance';
-  }
-
-  const exitCell = getCellAt(grid, exit.x, exit.y);
-  if (exitCell) {
-    exitCell.role = 'exit';
-  }
+  markZone(grid, entrance, ENDPOINT_ZONE_FOOTPRINT, 'entrance');
+  markZone(grid, exit, ENDPOINT_ZONE_FOOTPRINT, 'exit');
 
   return grid;
 }

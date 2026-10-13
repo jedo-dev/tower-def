@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { UnitSizeClass } from '../../types/content-ids';
+import { SINGLE_CELL_FOOTPRINT } from '../../constants/footprint';
 import type { GridCell, GridModel } from '../../types/grid';
 import type { GridPosition } from '../../types/pathfinding';
 import {
@@ -27,6 +28,7 @@ function parseGrid(rowsText: readonly string[]): GridModel {
     cells,
     entrance: { x: 0, y: 0 },
     exit: { x: rowsText[0].length - 1, y: rowsText.length - 1 },
+    endpointZoneFootprint: SINGLE_CELL_FOOTPRINT,
   };
 }
 

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { GridCell, GridModel } from '../../types/grid';
+import { SINGLE_CELL_FOOTPRINT } from '../../constants/footprint';
 import type { GridPosition } from '../../types/pathfinding';
 import { computeOctileDistanceField } from './computeOctileDistanceField';
 import { findOctilePath, hasOctilePath, searchOctilePath } from './findOctilePath';
@@ -20,7 +21,14 @@ function createOpenGrid(
     }
   }
 
-  return { cols, rows, cells, entrance: { x: 0, y: 0 }, exit: { x: cols - 1, y: rows - 1 } };
+  return {
+    cols,
+    rows,
+    cells,
+    entrance: { x: 0, y: 0 },
+    exit: { x: cols - 1, y: rows - 1 },
+    endpointZoneFootprint: SINGLE_CELL_FOOTPRINT,
+  };
 }
 
 function occupy(grid: GridModel, positions: readonly GridPosition[]): GridModel {

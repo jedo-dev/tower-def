@@ -1,5 +1,5 @@
 import { TowerAttackKind, TowerTypeId } from '../../../../types/content-ids';
-import { getTowerAttackKind } from '../../../../../entities/tower';
+import { getTowerAttackKind, getTowerCenter } from '../../../../../entities/tower';
 import type Phaser from 'phaser';
 import type { DuelMatchState } from '../../../../../entities/duel-match';
 import { buildableTowers, createInitialTowerCombatRuntime } from '../../../../../entities/tower';
@@ -96,12 +96,17 @@ function resolveTowerRenderDepth(position: GridPosition): number {
   return TOWER_RENDER_DEPTH + position.y * 10 + position.x * 0.01;
 }
 
+/** Sprites stand on the centre of the tower's footprint, not on its anchor cell. */
+function toTowerSpriteCenter(anchor: GridPosition): { x: number; y: number } {
+  return toCellCenter(getTowerCenter({ position: anchor }));
+}
+
 export function createPlacedArcherSprite(
   scene: Phaser.Scene,
   position: GridPosition,
   factionId: RaceId,
 ): Phaser.GameObjects.Sprite {
-  const center = toCellCenter(position);
+  const center = toTowerSpriteCenter(position);
   const resolved = resolveArcherTowerSprite(scene, factionId);
   const animationSet = getTowerAnimationSet(resolved.spriteKey);
   const sprite = scene.add.sprite(center.x, center.y, resolved.spriteKey, 0);
@@ -129,7 +134,7 @@ export function createPlacedPlagueSprite(
   scene: Phaser.Scene,
   position: GridPosition,
 ): Phaser.GameObjects.Sprite {
-  const center = toCellCenter(position);
+  const center = toTowerSpriteCenter(position);
   const resolved = resolveSpriteKey(
     scene.textures,
     'tower',

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   CREEP_FOOTPRINT_BY_SIZE_CLASS,
+  ENDPOINT_ZONE_FOOTPRINT,
   SINGLE_CELL_FOOTPRINT,
   TOWER_FOOTPRINT,
   TowerFootprint,
@@ -139,7 +140,11 @@ describe('canOccupyFootprint', () => {
 
   it('lets a block sit right next to the entrance', () => {
     expect(
-      canOccupyFootprint(createGrid(), { x: ENTRANCE.x + 1, y: ENTRANCE.y }, TOWER_FOOTPRINT),
+      canOccupyFootprint(
+        createGrid(),
+        { x: ENTRANCE.x + ENDPOINT_ZONE_FOOTPRINT.width, y: ENTRANCE.y },
+        TOWER_FOOTPRINT,
+      ),
     ).toBe(true);
   });
 });

@@ -2,13 +2,16 @@ import type { RaceId } from '../../../shared/types/content-ids';
 import type { GridPoint, GridModel } from '../../../shared/types/grid';
 import type { GridPosition } from '../../../shared/types/pathfinding';
 import { createGridModel } from '../../../shared/lib/grid/createGridModel';
+import { createDefaultEdgeEndpoints } from '../../../shared/lib/grid/generateEdgeEndpoints';
 import { calculateWaveStartPath } from '../../wave/model/calculateWavePath';
 import { DUEL_MATCH_BALANCE } from './balance';
 import { createBattlefieldState } from './battlefieldOps';
 import type { DuelMatchState, DuelistState } from './types';
 
-export const DEFAULT_ENTRANCE: GridPoint = { x: 0, y: 7 };
-export const DEFAULT_EXIT: GridPoint = { x: 9, y: 7 };
+const DEFAULT_ENDPOINTS = createDefaultEdgeEndpoints();
+
+export const DEFAULT_ENTRANCE: GridPoint = DEFAULT_ENDPOINTS.entrance;
+export const DEFAULT_EXIT: GridPoint = DEFAULT_ENDPOINTS.exit;
 
 export type BattlefieldInitParams = {
   entrance?: GridPoint;

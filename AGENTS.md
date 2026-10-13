@@ -95,8 +95,9 @@ All config values must be centralized.
 
 ```ts
 export enum GridConfig {
-  COLS = 10,
-  ROWS = 15,
+  COLS = 20,
+  ROWS = 30,
+  CELL_SIZE = 16,
 }
 
 export enum GameBalance {

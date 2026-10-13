@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { GridCell, GridModel } from '../../types/grid';
+import { SINGLE_CELL_FOOTPRINT } from '../../constants/footprint';
 import { computeClearanceMap } from './computeClearanceMap';
 
 /** '.' free, '#' not walkable, 'T' occupied, 'E'/'X' walkable entrance/exit. */
@@ -24,6 +25,7 @@ function parseGrid(rowsText: readonly string[]): GridModel {
     cells,
     entrance: { x: 0, y: 0 },
     exit: { x: rowsText[0].length - 1, y: rowsText.length - 1 },
+    endpointZoneFootprint: SINGLE_CELL_FOOTPRINT,
   };
 }
 
@@ -53,6 +55,7 @@ describe('shared/pathfinding/computeClearanceMap', () => {
       cells: [],
       entrance: { x: 0, y: 0 },
       exit: { x: 0, y: 0 },
+      endpointZoneFootprint: SINGLE_CELL_FOOTPRINT,
     };
 
     expect(computeClearanceMap(grid)).toHaveLength(0);

@@ -8,6 +8,8 @@ import { getRaceRegistry } from '../../race-registry/model/registries';
 import { buildableTowers } from '../../tower/model/config/buildableTowers';
 import { Difficulty } from '../../difficulty/model/types';
 import { createPathProbe, type PathProbe } from '../../../shared/lib/pathfinding/createPathProbe';
+import { TOWER_FOOTPRINT } from '../../../shared/constants/footprint';
+import { withFootprintOccupancy } from '../../../shared/lib/grid/footprint';
 import { createMazeSkeleton, type MazeSkeleton } from './createMazeSkeleton';
 import type {
   BuildAction,
@@ -206,7 +208,7 @@ function findBestBuild(input: FindBestBuildInput): BuildAction | null {
   };
 }
 
-function selectIntent(context: DecisionContext, unbuiltSkeletonCells: number): StrategyIntent {
+function selectIntent(context: DecisionContext, unbuiltSkeletonBlocks: number): StrategyIntent {
   if (context.threat.threatLevel === 'high') {
     return StrategyIntent.DEFEND;
   }
@@ -226,7 +228,7 @@ function selectIntent(context: DecisionContext, unbuiltSkeletonCells: number): S
       : context.mazeCoverage.occupiedCells / context.mazeCoverage.totalWalkableCells;
   const isUnderCoverageCap =
     coverageRatio < SPEND_BUDGET_BY_DIFFICULTY[context.difficulty].mazeCoverageTarget;
-  if (isUnderCoverageCap && unbuiltSkeletonCells > 0) {
+  if (isUnderCoverageCap && unbuiltSkeletonBlocks > 0) {
     return StrategyIntent.EXTEND_MAZE;
   }
 
@@ -237,38 +239,13 @@ function selectIntent(context: DecisionContext, unbuiltSkeletonCells: number): S
   return StrategyIntent.SAVE_GOLD;
 }
 
-function countUnbuiltSkeletonCells(grid: GridModel, mazeSkeleton: MazeSkeleton): number {
-  const freeKeys = new Set<string>();
-  for (const cell of grid.cells) {
-    if (cell.isWalkable && !cell.isOccupied) {
-      freeKeys.add(`${cell.x}:${cell.y}`);
-    }
-  }
-
-  let unbuilt = 0;
-  for (const cell of mazeSkeleton.cells) {
-    if (freeKeys.has(`${cell.x}:${cell.y}`)) {
-      unbuilt += 1;
-    }
-  }
-
-  return unbuilt;
-}
-
 function selectPlacementWeights(intent: StrategyIntent): PlacementWeights {
   return intent === StrategyIntent.DEFEND ? DEFENSE_PLACEMENT_WEIGHTS : MAZE_PLACEMENT_WEIGHTS;
 }
 
-/** Grid with one more cell walled off, so the next placement sees the new wall. */
-function withCellBlocked(grid: GridModel, position: GridPosition): GridModel {
-  return {
-    ...grid,
-    cells: grid.cells.map((cell) =>
-      cell.x === position.x && cell.y === position.y
-        ? { ...cell, isOccupied: true, isWalkable: false }
-        : cell,
-    ),
-  };
+/** Grid with one more tower block walled off, so the next placement sees the new wall. */
+function withTowerBlocked(grid: GridModel, anchor: GridPosition): GridModel {
+  return withFootprintOccupancy(grid, anchor, TOWER_FOOTPRINT, true);
 }
 
 function createPlannedTower(
@@ -307,7 +284,8 @@ export function planBuildDecision(input: BuildPlannerInput): DecisionOutput {
   // planned once and kept stable across rounds: the opponent keeps filling the
   // same maze instead of re-planning a different one every time it earns gold.
   const mazeSkeleton = createMazeSkeleton(grid);
-  const intent = selectIntent(context, countUnbuiltSkeletonCells(grid, mazeSkeleton));
+  // Built blocks drop out of the skeleton, so what is left is still to build.
+  const intent = selectIntent(context, mazeSkeleton.anchors.length);
   const spendConfig = SPEND_BUDGET_BY_DIFFICULTY[context.difficulty];
   const budget = computeSpendBudget(context.gold, context.difficulty);
 
@@ -375,7 +353,7 @@ export function planBuildDecision(input: BuildPlannerInput): DecisionOutput {
 
     const mazeGainCells = Math.max(
       0,
-      pathProbe.probe(build.position).length - pathProbe.baseLength,
+      pathProbe.probeFootprint(build.position, TOWER_FOOTPRINT).length - pathProbe.baseLength,
     );
 
     actions.push(build);
@@ -384,7 +362,7 @@ export function planBuildDecision(input: BuildPlannerInput): DecisionOutput {
       ...plannedTowerStates,
       createPlannedTower(build.towerType, build.position, cost),
     ];
-    simulatedGrid = withCellBlocked(simulatedGrid, build.position);
+    simulatedGrid = withTowerBlocked(simulatedGrid, build.position);
     remainingBudget -= cost;
     buildActionsCount += 1;
     reasoningParts.push(

@@ -1,9 +1,9 @@
-import type { GridModel } from '../../types/grid';
+import type { Footprint, GridModel, GridPoint } from '../../types/grid';
 import type { GridPosition } from '../../types/pathfinding';
 
 /**
- * Shortest path after blocking one extra cell.
- * `path` is null when that cell would seal the field off.
+ * Shortest path after blocking some extra cells.
+ * `path` is null when those cells would seal the field off.
  */
 export type PathProbeResult = {
   path: readonly GridPosition[] | null;
@@ -17,6 +17,11 @@ export type PathProbe = {
   readonly baseLength: number;
   /** Result of blocking one extra cell. Memoized per position. */
   probe(position: GridPosition): PathProbeResult;
+  /**
+   * Result of blocking every cell of a footprint anchored at its top-left
+   * cell. Sealed when any covered cell lies off the grid. Memoized per anchor.
+   */
+  probeFootprint(anchor: GridPoint, footprint: Readonly<Footprint>): PathProbeResult;
   /** True for towers, non-walkable cells and anything outside the grid. */
   isBlocked(position: GridPosition): boolean;
 };
@@ -27,11 +32,11 @@ const NEIGHBOR_DY = [0, 0, 1, -1] as const;
 const SEALED: PathProbeResult = { path: null, length: 0 };
 
 /**
- * Repeated "how long would the path be if I walled this cell off" queries over
- * one grid. The opponent asks this for every candidate cell on every build
- * round, so the grid is flattened into typed arrays once and each BFS reuses
- * them; `findPathBfs` allocates string keys and maps per run, which is far too
- * slow to run a few hundred times per round.
+ * Repeated "how long would the path be if I walled these cells off" queries
+ * over one grid. The opponent asks this for every candidate tower on every
+ * build round, so the grid is flattened into typed arrays once and each BFS
+ * reuses them; `findPathBfs` allocates string keys and maps per run, which is
+ * far too slow to run a few hundred times per round.
  */
 export function createPathProbe(grid: GridModel): PathProbe {
   const { cols, rows } = grid;
@@ -50,6 +55,7 @@ export function createPathProbe(grid: GridModel): PathProbe {
   const parent = new Int32Array(size);
   const queue = new Int32Array(size);
   const visitStamp = new Int32Array(size);
+  const extraBlockedStamp = new Int32Array(size);
   let stamp = 0;
 
   function isInside(position: GridPosition): boolean {
@@ -73,7 +79,8 @@ export function createPathProbe(grid: GridModel): PathProbe {
     return path.reverse();
   }
 
-  function runBfs(extraBlockedIndex: number): PathProbeResult {
+  /** BFS with the cells stamped `stamp` in `extraBlockedStamp` walled off. */
+  function runBfs(): PathProbeResult {
     if (size === 0 || !isInside(grid.entrance) || !isInside(grid.exit)) {
       return SEALED;
     }
@@ -87,11 +94,10 @@ export function createPathProbe(grid: GridModel): PathProbe {
     }
 
     // Walling the entrance or the exit itself is never a legal placement.
-    if (extraBlockedIndex === entranceIndex || extraBlockedIndex === exitIndex) {
+    if (extraBlockedStamp[entranceIndex] === stamp || extraBlockedStamp[exitIndex] === stamp) {
       return SEALED;
     }
 
-    stamp += 1;
     let head = 0;
     let tail = 0;
     queue[tail] = entranceIndex;
@@ -115,7 +121,11 @@ export function createPathProbe(grid: GridModel): PathProbe {
 
         const next = nextY * cols + nextX;
 
-        if (visitStamp[next] === stamp || blocked[next] === 1 || next === extraBlockedIndex) {
+        if (
+          visitStamp[next] === stamp ||
+          blocked[next] === 1 ||
+          extraBlockedStamp[next] === stamp
+        ) {
           continue;
         }
 
@@ -135,28 +145,54 @@ export function createPathProbe(grid: GridModel): PathProbe {
     return SEALED;
   }
 
-  const base = runBfs(-1);
-  const cache = new Map<number, PathProbeResult>();
+  stamp += 1;
+  const base = runBfs();
+  const isOnBasePath = new Uint8Array(size);
+  for (const position of base.path ?? []) {
+    isOnBasePath[toIndex(position)] = 1;
+  }
+  const cache = new Map<string, PathProbeResult>();
+
+  function probeBlock(anchor: GridPoint, width: number, height: number): PathProbeResult {
+    const corner = { x: anchor.x + width - 1, y: anchor.y + height - 1 };
+    if (width <= 0 || height <= 0 || !isInside(anchor) || !isInside(corner)) {
+      return SEALED;
+    }
+
+    const cacheKey = `${toIndex(anchor)}:${width}x${height}`;
+    const cached = cache.get(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
+    stamp += 1;
+    let addsNewWall = false;
+    let touchesBasePath = false;
+    for (let offsetY = 0; offsetY < height; offsetY += 1) {
+      for (let offsetX = 0; offsetX < width; offsetX += 1) {
+        const index = (anchor.y + offsetY) * cols + anchor.x + offsetX;
+        extraBlockedStamp[index] = stamp;
+        addsNewWall ||= blocked[index] === 0;
+        touchesBasePath ||= isOnBasePath[index] === 1;
+      }
+    }
+
+    // Re-blocking already blocked cells changes nothing (callers reject those
+    // placements on their own occupancy check), and walls off the shortest
+    // route leave it intact and still shortest.
+    const result = addsNewWall && touchesBasePath ? runBfs() : base;
+    cache.set(cacheKey, result);
+    return result;
+  }
 
   return {
     basePath: base.path ?? [],
     baseLength: base.length,
     probe(position: GridPosition): PathProbeResult {
-      if (!isInside(position)) {
-        return SEALED;
-      }
-
-      const index = toIndex(position);
-      const cached = cache.get(index);
-      if (cached) {
-        return cached;
-      }
-
-      // Re-blocking an already blocked cell changes nothing; callers reject
-      // those placements on their own occupancy check.
-      const result = blocked[index] === 1 ? base : runBfs(index);
-      cache.set(index, result);
-      return result;
+      return probeBlock(position, 1, 1);
+    },
+    probeFootprint(anchor: GridPoint, footprint: Readonly<Footprint>): PathProbeResult {
+      return probeBlock(anchor, footprint.width, footprint.height);
     },
     isBlocked(position: GridPosition): boolean {
       return !isInside(position) || blocked[toIndex(position)] === 1;

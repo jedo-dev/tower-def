@@ -6,15 +6,25 @@ import type {
   TowerEntity,
 } from '../../../../../entities/tower';
 import { TOWER_BASE_LEVEL, TOWER_COMBAT_STATS_BY_TYPE } from '../../../../../entities/tower';
-import type { GridCell, GridModel } from '../../../../types/grid';
+import { TOWER_FOOTPRINT } from '../../../../constants/footprint';
+import type { Footprint, GridCell, GridModel } from '../../../../types/grid';
 import type { GridPosition } from '../../../../types/pathfinding';
+import {
+  canOccupyFootprint,
+  findFootprintAnchorCovering,
+  getFootprintCells,
+} from '../../../grid/footprint';
 import { getCellAt } from '../../../grid/getCellAt';
 
 export type BuildRuntimeState = {
   gridModel: GridModel | null;
+  /** Cell under the pointer: picks the tower to sell, whichever cell of it is hit. */
   hoveredCell: GridPosition | null;
+  /** Top-left anchor of the tower block the pointer would build. */
+  hoveredBuildAnchor: GridPosition | null;
   playerGold: number;
   playerLives: number;
+  /** What each placed tower cost, keyed by its anchor cell. */
   placedTowerCostsByCellKey: Map<string, number>;
 };
 
@@ -27,21 +37,27 @@ export type BuildRuntimeDeps = {
   resolveBuildableTower?: (towerType: TowerTypeId) => BuildableTowerConfig | null;
   toGridCellKey: (position: GridPosition) => string;
   toTowerId: (position: GridPosition) => string;
-  validateTowerPlacementPath: (grid: GridModel, position: GridPosition) => boolean;
+  validateFootprintPlacementPath: (
+    grid: GridModel,
+    anchor: GridPosition,
+    footprint: Readonly<Footprint>,
+  ) => boolean;
   sellRefundRatio: number;
 };
 
 export type BuildPlacementResult = {
   success: boolean;
   playerGold: number;
-  changedCell: GridCell | null;
+  /** Every cell the new tower now stands on. Empty on failure. */
+  changedCells: GridCell[];
   placedTower: TowerEntity | null;
   towerType: TowerTypeId | null;
 };
 
 export type BuildSellResult = {
   success: boolean;
-  changedCell: GridCell | null;
+  /** Every cell the sold tower freed. Empty on failure. */
+  changedCells: GridCell[];
   removedTowerId: string | null;
   refundAmount: number;
 };
@@ -86,66 +102,53 @@ export function resolveSelectedTowerCost(deps: BuildRuntimeDeps): number {
   return deps.resolveTowerCost(resolveSelectedTowerType(deps));
 }
 
-export function isBuildCellValid(
+function failedPlacement(playerGold: number): BuildPlacementResult {
+  return { success: false, playerGold, changedCells: [], placedTower: null, towerType: null };
+}
+
+const FAILED_SELL: BuildSellResult = {
+  success: false,
+  changedCells: [],
+  removedTowerId: null,
+  refundAmount: 0,
+};
+
+/** Cells of the tower block at `anchor` that exist on the grid. */
+function getTowerCells(grid: GridModel, anchor: GridPosition): GridCell[] {
+  const cells: GridCell[] = [];
+  for (const point of getFootprintCells(anchor, TOWER_FOOTPRINT)) {
+    const cell = getCellAt(grid, point.x, point.y);
+    if (cell) {
+      cells.push(cell);
+    }
+  }
+  return cells;
+}
+
+/** Build rule for a tower block anchored at `anchor`: free cells, gold, open route. */
+export function isBuildAnchorValid(
   state: BuildRuntimeState,
   deps: BuildRuntimeDeps,
-  cellPosition: GridPosition,
+  anchor: GridPosition,
   grid: GridModel,
 ): boolean {
-  const cell = getCellAt(grid, cellPosition.x, cellPosition.y);
-
-  if (!cell) return false;
-  if (cell.role !== 'empty') return false;
-  if (!cell.isWalkable || cell.isOccupied) return false;
+  if (!canOccupyFootprint(grid, anchor, TOWER_FOOTPRINT)) return false;
   if (!canSpendGold({ gold: state.playerGold }, resolveSelectedTowerCost(deps))) return false;
 
-  return deps.validateTowerPlacementPath(grid, cellPosition);
+  return deps.validateFootprintPlacementPath(grid, anchor, TOWER_FOOTPRINT);
 }
 
 export function tryPlaceTowerAtHoveredCell(
   state: BuildRuntimeState,
   deps: BuildRuntimeDeps,
 ): BuildPlacementResult {
-  if (!deps.canPerformPlace()) {
-    return {
-      success: false,
-      playerGold: state.playerGold,
-      changedCell: null,
-      placedTower: null,
-      towerType: null,
-    };
+  const anchor = state.hoveredBuildAnchor;
+  if (!deps.canPerformPlace() || !anchor || !state.gridModel) {
+    return failedPlacement(state.playerGold);
   }
 
-  if (!state.hoveredCell || !state.gridModel) {
-    return {
-      success: false,
-      playerGold: state.playerGold,
-      changedCell: null,
-      placedTower: null,
-      towerType: null,
-    };
-  }
-
-  const hoveredCell = state.hoveredCell;
-  if (!isBuildCellValid(state, deps, hoveredCell, state.gridModel)) {
-    return {
-      success: false,
-      playerGold: state.playerGold,
-      changedCell: null,
-      placedTower: null,
-      towerType: null,
-    };
-  }
-
-  const targetCell = getCellAt(state.gridModel, hoveredCell.x, hoveredCell.y);
-  if (!targetCell) {
-    return {
-      success: false,
-      playerGold: state.playerGold,
-      changedCell: null,
-      placedTower: null,
-      towerType: null,
-    };
+  if (!isBuildAnchorValid(state, deps, anchor, state.gridModel)) {
+    return failedPlacement(state.playerGold);
   }
 
   const towerType = resolveSelectedTowerType(deps);
@@ -155,25 +158,22 @@ export function tryPlaceTowerAtHoveredCell(
     towerCost,
   );
   if (!spendGoldResult.spent) {
-    return {
-      success: false,
-      playerGold: state.playerGold,
-      changedCell: null,
-      placedTower: null,
-      towerType: null,
-    };
+    return failedPlacement(state.playerGold);
   }
 
-  targetCell.isOccupied = true;
-  targetCell.isWalkable = false;
+  const changedCells = getTowerCells(state.gridModel, anchor);
+  for (const cell of changedCells) {
+    cell.isOccupied = true;
+    cell.isWalkable = false;
+  }
 
-  state.placedTowerCostsByCellKey.set(deps.toGridCellKey(hoveredCell), towerCost);
+  state.placedTowerCostsByCellKey.set(deps.toGridCellKey(anchor), towerCost);
 
   const authoredTower = deps.resolveBuildableTower?.(towerType) ?? null;
 
   const towerEntity: TowerEntity = {
-    id: deps.toTowerId(hoveredCell),
-    position: { x: hoveredCell.x, y: hoveredCell.y },
+    id: deps.toTowerId(anchor),
+    position: { x: anchor.x, y: anchor.y },
     cost: towerCost,
     type: towerType,
     ...(authoredTower ? { buildableTowerId: authoredTower.id } : {}),
@@ -186,45 +186,64 @@ export function tryPlaceTowerAtHoveredCell(
   return {
     success: true,
     playerGold: state.playerGold,
-    changedCell: targetCell,
+    changedCells,
     placedTower: towerEntity,
     towerType,
   };
+}
+
+/** Anchor of the placed tower standing on `cell`, or null. */
+export function findPlacedTowerAnchorAt(
+  state: BuildRuntimeState,
+  deps: Pick<BuildRuntimeDeps, 'toGridCellKey'>,
+  cell: GridPosition,
+): GridPosition | null {
+  const grid = state.gridModel;
+  if (!grid) {
+    return null;
+  }
+
+  return findFootprintAnchorCovering(
+    cell,
+    TOWER_FOOTPRINT,
+    (anchor) =>
+      state.placedTowerCostsByCellKey.has(deps.toGridCellKey(anchor)) &&
+      getTowerCells(grid, anchor).every(
+        (towerCell) => towerCell.role === 'empty' && towerCell.isOccupied,
+      ),
+  );
 }
 
 export function trySellTowerAtHoveredCell(
   state: BuildRuntimeState,
   deps: BuildRuntimeDeps,
 ): BuildSellResult {
-  if (!deps.canPerformSell()) {
-    return { success: false, changedCell: null, removedTowerId: null, refundAmount: 0 };
+  if (!deps.canPerformSell() || !state.hoveredCell || !state.gridModel) {
+    return FAILED_SELL;
   }
 
-  if (!state.hoveredCell || !state.gridModel) {
-    return { success: false, changedCell: null, removedTowerId: null, refundAmount: 0 };
+  const anchor = findPlacedTowerAnchorAt(state, deps, state.hoveredCell);
+  if (!anchor) {
+    return FAILED_SELL;
   }
 
-  const hoveredCell = state.hoveredCell;
-  const hoveredCellKey = deps.toGridCellKey(hoveredCell);
-  const towerCost = state.placedTowerCostsByCellKey.get(hoveredCellKey);
-
+  const anchorKey = deps.toGridCellKey(anchor);
+  const towerCost = state.placedTowerCostsByCellKey.get(anchorKey);
   if (towerCost === undefined) {
-    return { success: false, changedCell: null, removedTowerId: null, refundAmount: 0 };
+    return FAILED_SELL;
   }
 
-  const targetCell = getCellAt(state.gridModel, hoveredCell.x, hoveredCell.y);
-  if (!targetCell || targetCell.role !== 'empty' || !targetCell.isOccupied) {
-    return { success: false, changedCell: null, removedTowerId: null, refundAmount: 0 };
+  const changedCells = getTowerCells(state.gridModel, anchor);
+  for (const cell of changedCells) {
+    cell.isOccupied = false;
+    cell.isWalkable = true;
   }
-
-  targetCell.isOccupied = false;
-  targetCell.isWalkable = true;
-  state.placedTowerCostsByCellKey.delete(hoveredCellKey);
+  state.placedTowerCostsByCellKey.delete(anchorKey);
 
   return {
     success: true,
-    changedCell: targetCell,
-    removedTowerId: deps.toTowerId(hoveredCell),
+    changedCells,
+    removedTowerId: deps.toTowerId(anchor),
     refundAmount: Math.floor(towerCost * deps.sellRefundRatio),
   };
 }

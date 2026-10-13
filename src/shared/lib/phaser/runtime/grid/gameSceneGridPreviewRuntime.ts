@@ -1,7 +1,9 @@
 import type Phaser from 'phaser';
+import { TOWER_FOOTPRINT } from '../../../../constants/footprint';
 import { GRID_DIMENSIONS } from '../../../../constants/grid';
 import type { GridModel } from '../../../../types/grid';
 import type { GridPosition } from '../../../../types/pathfinding';
+import { getFootprintCenter, getNearestFootprintAnchor } from '../../../grid/footprint';
 
 export type GridPreviewConfig = {
   previewValidFill: number;
@@ -12,14 +14,20 @@ export type GridPreviewConfig = {
   gridIdleAlpha: number;
 };
 
+/** What the pointer is over: the cell itself, and the tower block it would build. */
+export type PointerGridTarget = {
+  cell: GridPosition;
+  buildAnchor: GridPosition;
+};
+
 export type BuildPreviewContext = {
   overlay: Phaser.GameObjects.Graphics | null;
   gridGraphics: Phaser.GameObjects.Graphics | null;
   gridModel: GridModel | null;
-  hoveredCell: GridPosition | null;
+  hoveredBuildAnchor: GridPosition | null;
   canPerformBuildActions: boolean;
   selectedTowerRangeCells: number;
-  isBuildCellValid: (cell: GridPosition, grid: GridModel) => boolean;
+  isBuildAnchorValid: (anchor: GridPosition, grid: GridModel) => boolean;
 };
 
 export function toGridCell(worldX: number, worldY: number): GridPosition | null {
@@ -35,6 +43,26 @@ export function toGridCell(worldX: number, worldY: number): GridPosition | null 
   return { x, y };
 }
 
+/**
+ * Maps a world position to the cell under it and to the anchor of the tower
+ * block centred nearest to it, so the block follows the finger smoothly
+ * instead of snapping to the cell's top-left corner.
+ */
+export function toPointerGridTarget(worldX: number, worldY: number): PointerGridTarget | null {
+  const cell = toGridCell(worldX, worldY);
+  const buildAnchor = getNearestFootprintAnchor(
+    GRID_DIMENSIONS,
+    { x: worldX / GRID_DIMENSIONS.cellSize, y: worldY / GRID_DIMENSIONS.cellSize },
+    TOWER_FOOTPRINT,
+  );
+
+  if (!cell || !buildAnchor) {
+    return null;
+  }
+
+  return { cell, buildAnchor };
+}
+
 export function updateGridOverlayVisualState(
   gridGraphics: Phaser.GameObjects.Graphics | null,
   canPerformBuildActions: boolean,
@@ -48,6 +76,33 @@ export function updateGridOverlayVisualState(
   gridGraphics.setAlpha(targetAlpha);
 }
 
+function drawValidityMarker(
+  overlay: Phaser.GameObjects.Graphics,
+  centerX: number,
+  centerY: number,
+  isValid: boolean,
+  strokeColor: number,
+): void {
+  const markerSize = GRID_DIMENSIONS.cellSize * 0.4;
+
+  overlay.lineStyle(2, strokeColor, 0.95);
+  overlay.beginPath();
+  overlay.moveTo(centerX - markerSize, centerY);
+  overlay.lineTo(centerX + markerSize, centerY);
+
+  if (isValid) {
+    overlay.moveTo(centerX, centerY - markerSize);
+    overlay.lineTo(centerX, centerY + markerSize);
+  } else {
+    overlay.moveTo(centerX - markerSize, centerY - markerSize);
+    overlay.lineTo(centerX + markerSize, centerY + markerSize);
+    overlay.moveTo(centerX - markerSize, centerY + markerSize);
+    overlay.lineTo(centerX + markerSize, centerY - markerSize);
+  }
+
+  overlay.strokePath();
+}
+
 export function updateBuildPreview(context: BuildPreviewContext, config: GridPreviewConfig): void {
   if (!context.overlay) {
     return;
@@ -55,27 +110,26 @@ export function updateBuildPreview(context: BuildPreviewContext, config: GridPre
 
   context.overlay.clear();
 
-  if (!context.canPerformBuildActions) {
+  if (!context.canPerformBuildActions || !context.hoveredBuildAnchor || !context.gridModel) {
     updateGridOverlayVisualState(context.gridGraphics, context.canPerformBuildActions, config);
     return;
   }
 
-  if (!context.hoveredCell || !context.gridModel) {
-    updateGridOverlayVisualState(context.gridGraphics, context.canPerformBuildActions, config);
-    return;
-  }
-
-  const isValid = context.isBuildCellValid(context.hoveredCell, context.gridModel);
-  const x = context.hoveredCell.x * GRID_DIMENSIONS.cellSize;
-  const y = context.hoveredCell.y * GRID_DIMENSIONS.cellSize;
+  const anchor = context.hoveredBuildAnchor;
+  const isValid = context.isBuildAnchorValid(anchor, context.gridModel);
+  const { cellSize } = GRID_DIMENSIONS;
+  const x = anchor.x * cellSize;
+  const y = anchor.y * cellSize;
+  const width = TOWER_FOOTPRINT.width * cellSize;
+  const height = TOWER_FOOTPRINT.height * cellSize;
+  const center = getFootprintCenter(anchor, TOWER_FOOTPRINT);
+  const centerX = center.x * cellSize + cellSize / 2;
+  const centerY = center.y * cellSize + cellSize / 2;
   const fillColor = isValid ? config.previewValidFill : config.previewInvalidFill;
   const strokeColor = isValid ? config.previewValidStroke : config.previewInvalidStroke;
-  const markerSize = GRID_DIMENSIONS.cellSize * 0.2;
-  const centerX = x + GRID_DIMENSIONS.cellSize / 2;
-  const centerY = y + GRID_DIMENSIONS.cellSize / 2;
 
-  const rangeRadiusPx = context.selectedTowerRangeCells * GRID_DIMENSIONS.cellSize;
-  const rangeColor = isValid ? 0x3ecf78 : 0xe55a4f;
+  const rangeRadiusPx = context.selectedTowerRangeCells * cellSize;
+  const rangeColor = isValid ? config.previewValidFill : config.previewInvalidFill;
 
   context.overlay.fillStyle(rangeColor, 0.12);
   context.overlay.lineStyle(1, rangeColor, 0.35);
@@ -83,30 +137,10 @@ export function updateBuildPreview(context: BuildPreviewContext, config: GridPre
   context.overlay.strokeCircle(centerX, centerY, rangeRadiusPx);
 
   context.overlay.fillStyle(fillColor, 0.42);
-  context.overlay.fillRect(x, y, GRID_DIMENSIONS.cellSize, GRID_DIMENSIONS.cellSize);
+  context.overlay.fillRect(x, y, width, height);
   context.overlay.lineStyle(2, strokeColor, 1);
-  context.overlay.strokeRect(
-    x + 1,
-    y + 1,
-    GRID_DIMENSIONS.cellSize - 2,
-    GRID_DIMENSIONS.cellSize - 2,
-  );
+  context.overlay.strokeRect(x + 1, y + 1, width - 2, height - 2);
 
-  context.overlay.lineStyle(2, strokeColor, 0.95);
-  context.overlay.beginPath();
-  context.overlay.moveTo(centerX - markerSize, centerY);
-  context.overlay.lineTo(centerX + markerSize, centerY);
-
-  if (isValid) {
-    context.overlay.moveTo(centerX, centerY - markerSize);
-    context.overlay.lineTo(centerX, centerY + markerSize);
-  } else {
-    context.overlay.moveTo(centerX - markerSize, centerY - markerSize);
-    context.overlay.lineTo(centerX + markerSize, centerY + markerSize);
-    context.overlay.moveTo(centerX - markerSize, centerY + markerSize);
-    context.overlay.lineTo(centerX + markerSize, centerY - markerSize);
-  }
-
-  context.overlay.strokePath();
+  drawValidityMarker(context.overlay, centerX, centerY, isValid, strokeColor);
   updateGridOverlayVisualState(context.gridGraphics, context.canPerformBuildActions, config);
 }

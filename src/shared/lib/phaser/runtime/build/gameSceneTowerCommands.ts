@@ -1,6 +1,8 @@
 import { recalculateTowerAuras } from '../../../../../entities/tower';
 import { TowerAttackKind } from '../../../../types/content-ids';
-import { getTowerAttackKind } from '../../../../../entities/tower';
+import { getTowerAttackKind, isTowerCoveringCell } from '../../../../../entities/tower';
+import { TOWER_FOOTPRINT } from '../../../../constants/footprint';
+import { getFootprintCells } from '../../../grid/footprint';
 import type Phaser from 'phaser';
 import {
   canAffordUpgrade,
@@ -84,7 +86,7 @@ export function tryPlaceTowerAtHoveredCell(deps: TowerCommandDeps): void {
     deps.getBuildRuntimeState(),
     deps.getBuildRuntimeDeps(),
   );
-  if (!result.success || !result.changedCell || !result.placedTower || !result.towerType) {
+  if (!result.success || !result.placedTower || !result.towerType) {
     deps.playSound('combat.invalid_build');
     return;
   }
@@ -109,7 +111,7 @@ export function tryPlaceTowerAtHoveredCell(deps: TowerCommandDeps): void {
   deps.markUserActionProcessed();
   deps.onHudChanged();
 
-  deps.drawGridCell(result.changedCell);
+  result.changedCells.forEach((cell) => deps.drawGridCell(cell));
   deps.updateBuildPreview();
 }
 
@@ -127,7 +129,7 @@ export function trySellTowerAtHoveredCell(deps: TowerCommandDeps): void {
     deps.getBuildRuntimeState(),
     deps.getBuildRuntimeDeps(),
   );
-  if (!result.success || !result.changedCell || !result.removedTowerId) {
+  if (!result.success || !result.removedTowerId) {
     return;
   }
 
@@ -146,20 +148,19 @@ export function trySellTowerAtHoveredCell(deps: TowerCommandDeps): void {
   deps.onHudChanged();
   publishGameEvent('selected-tower', { tower: null });
 
-  deps.drawGridCell(result.changedCell);
+  result.changedCells.forEach((cell) => deps.drawGridCell(cell));
   deps.updateBuildPreview();
 }
 
+/** Selects the player tower standing on the hovered cell, whichever of its cells it is. */
 export function trySelectTowerAtHoveredCell(deps: TowerCommandDeps): boolean {
   const hoveredCell = deps.getHoveredCell();
   if (!hoveredCell || !deps.getGridModel()) {
     return false;
   }
 
-  const tower = deps.playerField.towers.find(
-    (candidate) =>
-      candidate.entity.position.x === hoveredCell.x &&
-      candidate.entity.position.y === hoveredCell.y,
+  const tower = deps.playerField.towers.find((candidate) =>
+    isTowerCoveringCell(candidate.entity, hoveredCell),
   );
   if (!tower) {
     return false;
@@ -219,6 +220,26 @@ export function handleUpgradeTowerCommand(deps: TowerCommandDeps, towerId: strin
   publishGameEvent('selected-tower', { tower: toSelectedTowerSnapshot(tower) });
 }
 
+/** Frees every cell of the sold tower block and forgets what it cost. */
+function freeTowerCells(deps: TowerCommandDeps, anchor: GridPosition): void {
+  const buildState = deps.getBuildRuntimeState();
+  buildState.placedTowerCostsByCellKey.delete(deps.getBuildRuntimeDeps().toGridCellKey(anchor));
+
+  const gridModel = deps.getGridModel();
+  if (!gridModel) {
+    return;
+  }
+
+  for (const point of getFootprintCells(anchor, TOWER_FOOTPRINT)) {
+    const cell = getCellAt(gridModel, point.x, point.y);
+    if (cell) {
+      cell.isOccupied = false;
+      cell.isWalkable = true;
+      deps.drawGridCell(cell);
+    }
+  }
+}
+
 export function handleSellTowerCommand(deps: TowerCommandDeps, towerId: string): void {
   if (!deps.canManageTowers()) {
     return;
@@ -237,15 +258,7 @@ export function handleSellTowerCommand(deps: TowerCommandDeps, towerId: string):
   deps.onGoldUpdated(deps.getPlayerGold() + refundAmount);
   deps.onRefundRecorded(refundAmount);
 
-  const gridModel = deps.getGridModel();
-  const cell = gridModel
-    ? getCellAt(gridModel, tower.entity.position.x, tower.entity.position.y)
-    : undefined;
-  if (cell) {
-    cell.isOccupied = false;
-    cell.isWalkable = true;
-    deps.drawGridCell(cell);
-  }
+  freeTowerCells(deps, tower.entity.position);
 
   deps.playSound('combat.sell_tower');
   deps.playSound('economy.refund');

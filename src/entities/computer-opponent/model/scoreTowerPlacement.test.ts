@@ -76,6 +76,55 @@ describe('entities/computer-opponent/scoreTowerPlacement', () => {
         expect(result.totalScore).toBe(0);
       });
 
+      it('rejects a block that only partly covers the entrance zone', () => {
+        const result = scoreTowerPlacement({
+          grid: createTestGrid(),
+          position: { x: ENTRANCE.x + 1, y: ENTRANCE.y - 1 },
+          towerType: TowerTypeId.SINGLE,
+          existingTowers: [],
+          path: getTestPath(),
+        });
+
+        expect(result.isValid).toBe(false);
+        expect(result.invalidReason).toBe('entrance_or_exit');
+      });
+
+      it('rejects a block hanging off the grid', () => {
+        const grid = createTestGrid();
+
+        const result = scoreTowerPlacement({
+          grid,
+          position: { x: grid.cols - 1, y: 3 },
+          towerType: TowerTypeId.SINGLE,
+          existingTowers: [],
+          path: getTestPath(),
+        });
+
+        expect(result.isValid).toBe(false);
+        expect(result.invalidReason).toBe('out_of_bounds');
+      });
+
+      it('rejects a block overlapping a tower in any of its cells', () => {
+        const grid = createTestGrid();
+        const occupiedGrid = {
+          ...grid,
+          cells: grid.cells.map((cell) =>
+            cell.x === 4 && cell.y === 4 ? { ...cell, isOccupied: true, isWalkable: false } : cell,
+          ),
+        };
+
+        const result = scoreTowerPlacement({
+          grid: occupiedGrid,
+          position: { x: 3, y: 3 },
+          towerType: TowerTypeId.SINGLE,
+          existingTowers: [],
+          path: getTestPath(),
+        });
+
+        expect(result.isValid).toBe(false);
+        expect(result.invalidReason).toBe('occupied');
+      });
+
       it('rejects occupied position', () => {
         const grid = createTestGrid();
         const path = getTestPath();
@@ -107,7 +156,8 @@ describe('entities/computer-opponent/scoreTowerPlacement', () => {
         const corridorGrid = {
           ...baseGrid,
           cells: baseGrid.cells.map((cell) => {
-            if (cell.y === ENTRANCE.y) {
+            // A two-row corridor: exactly as wide as one tower block.
+            if (cell.y === ENTRANCE.y || cell.y === ENTRANCE.y + 1) {
               return { ...cell };
             }
             return { ...cell, isWalkable: false, isOccupied: true };
@@ -151,7 +201,7 @@ describe('entities/computer-opponent/scoreTowerPlacement', () => {
 
         const nearPath = scoreTowerPlacement({
           grid,
-          position: { x: 1, y: 7 },
+          position: { x: 3, y: 5 },
           towerType: TowerTypeId.SINGLE,
           existingTowers: [],
           path,
@@ -244,7 +294,7 @@ describe('entities/computer-opponent/scoreTowerPlacement', () => {
         const path = getTestPath();
         const pathProbe = createPathProbe(grid);
         const mazeSkeleton = createMazeSkeleton(grid);
-        const firstPlanned = mazeSkeleton.cells[0];
+        const firstPlanned = mazeSkeleton.anchors[0];
 
         const planned = scoreTowerPlacement({
           grid,
@@ -275,10 +325,13 @@ describe('entities/computer-opponent/scoreTowerPlacement', () => {
         const gapColumn = 4;
         const gapRow = 7;
         const grid = createTestGrid();
+        // A two-cell wall with a two-cell gap that one tower block would plug.
         const walled = {
           ...grid,
           cells: grid.cells.map((cell) =>
-            cell.x === gapColumn && cell.y !== gapRow
+            (cell.x === gapColumn || cell.x === gapColumn + 1) &&
+            cell.y !== gapRow &&
+            cell.y !== gapRow + 1
               ? { ...cell, isOccupied: true, isWalkable: false }
               : cell,
           ),

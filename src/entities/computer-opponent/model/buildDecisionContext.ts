@@ -1,4 +1,6 @@
 import type { TowerTypeId } from '../../../shared/types/content-ids';
+import { TOWER_FOOTPRINT } from '../../../shared/constants/footprint';
+import { canOccupyFootprint } from '../../../shared/lib/grid/footprint';
 import type { RaceId } from '../../../shared/types/content-ids';
 import type { GridPosition } from '../../../shared/types/pathfinding';
 import type { Difficulty } from '../../difficulty/model/types';
@@ -85,10 +87,11 @@ function computeAvailableBuildPositions(duelist: DuelistState, raceId: RaceId): 
     return [];
   }
 
+  // Every anchor whose whole 2x2 block is free; the route check comes later.
   const positions: GridPosition[] = [];
 
   for (const cell of grid.cells) {
-    if (cell.isWalkable && !cell.isOccupied && cell.role === 'empty') {
+    if (canOccupyFootprint(grid, cell, TOWER_FOOTPRINT)) {
       positions.push({ x: cell.x, y: cell.y });
     }
   }

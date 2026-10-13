@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { DEFAULT_CREEP_COMBAT_TRAITS } from '../../creep';
 import { RaceId } from '../../../shared/types/content-ids';
 import { createGridModel } from '../../../shared/lib/grid/createGridModel';
+import { GridConfig } from '../../../shared/constants/grid';
 import { calculateWaveStartPath } from '../../wave/model/calculateWavePath';
 import type { BattlefieldState, AddCreepEntry } from './battlefield';
 import {
@@ -67,8 +68,8 @@ describe('entities/duel-match/battlefield', () => {
 
     it('grid has correct dimensions', () => {
       const battlefield = createTestBattlefield();
-      expect(battlefield.grid.cols).toBe(10);
-      expect(battlefield.grid.rows).toBe(15);
+      expect(battlefield.grid.cols).toBe(GridConfig.COLS);
+      expect(battlefield.grid.rows).toBe(GridConfig.ROWS);
     });
   });
 
@@ -82,13 +83,14 @@ describe('entities/duel-match/battlefield', () => {
       expect(result.towers[0].id).toBe('tower_1');
     });
 
-    it('marks cell as occupied', () => {
+    it('occupies all four cells of the 2x2 block', () => {
       const battlefield = createTestBattlefield();
       const tower = createTestTower({ x: 3, y: 5 });
       const result = addTower(battlefield, tower);
 
-      const cell = result.grid.cells.find((c) => c.x === 3 && c.y === 5);
-      expect(cell?.isOccupied).toBe(true);
+      const occupied = result.grid.cells.filter((c) => c.isOccupied);
+      expect(occupied.map((c) => `${c.x}:${c.y}`).sort()).toEqual(['3:5', '3:6', '4:5', '4:6']);
+      expect(occupied.every((c) => !c.isWalkable)).toBe(true);
     });
 
     it('does not modify original battlefield', () => {
@@ -119,13 +121,12 @@ describe('entities/duel-match/battlefield', () => {
       expect(battlefield.towers[0].id).toBe('t2');
     });
 
-    it('unmarks cell as occupied', () => {
+    it('frees all four cells of the 2x2 block', () => {
       let battlefield = createTestBattlefield();
       battlefield = addTower(battlefield, createTestTower({ x: 3, y: 5 }));
       battlefield = removeTower(battlefield, 'tower_1');
 
-      const cell = battlefield.grid.cells.find((c) => c.x === 3 && c.y === 5);
-      expect(cell?.isOccupied).toBe(false);
+      expect(battlefield.grid.cells.some((c) => c.isOccupied || !c.isWalkable)).toBe(false);
     });
 
     it('returns same state if tower not found', () => {

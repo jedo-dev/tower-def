@@ -19,6 +19,7 @@ export {
   tickTowerCooldown,
 } from './model/cooldown';
 export { getCreepsInTowerRange, selectTowerTarget } from './model/targeting';
+export { getTowerCenter, isTowerCoveringCell } from './model/footprint';
 export { applyAuraBonusToStats, recalculateTowerAuras, resolveTowerAuraBonus } from './model/auras';
 export type { TowerAuraBonus } from './model/auras';
 export {

@@ -1,6 +1,7 @@
 import type { BattlefieldState } from '../../../entities/duel-match';
 import { renderBoardSnapshot } from '../../../shared/lib/board-snapshot';
 import { RouteSizeClass } from '../../../shared/constants/board-snapshot';
+import { TOWER_FOOTPRINT } from '../../../shared/constants/footprint';
 import type { MazeRoundReport, MazeSimulationResult } from './simulateMazeBuildRounds';
 
 const ROUTE_LABEL = 'route';
@@ -8,7 +9,11 @@ const ROUTE_LABEL = 'route';
 function renderBattlefield(battlefield: BattlefieldState): string {
   return renderBoardSnapshot({
     grid: battlefield.grid,
-    towers: battlefield.towers.map((tower) => ({ anchor: tower.position })),
+    towers: battlefield.towers.map((tower) => ({
+      anchor: tower.position,
+      width: TOWER_FOOTPRINT.width,
+      height: TOWER_FOOTPRINT.height,
+    })),
     routes: [{ label: ROUTE_LABEL, sizeClass: RouteSizeClass.SMALL, cells: battlefield.path }],
   });
 }
