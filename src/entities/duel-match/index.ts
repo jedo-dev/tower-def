@@ -24,7 +24,6 @@ export {
   refreshBattlefieldRoutes,
   refreshOpponentRoutesForWaveStart,
   removeTower,
-  routeQueuedSendsToBattlefields,
 } from './model/battlefieldOps';
 export {
   canAffordSendCreep,
