@@ -1,6 +1,9 @@
 import type Phaser from 'phaser';
+import type { GridModel } from '../../../../types/grid';
+import type { WaveRoutes } from '../../../pathfinding/waveRoutes';
 import {
   createBuildRoutePreviewCache,
+  getCurrentPreviewRoutes,
   HIDDEN_ROUTE_PREVIEW,
   invalidateBuildRoutePreview,
   resolveRoutePreviewFrame,
@@ -37,6 +40,17 @@ export function attachRoutePreviewGraphics(
 /** Call after a tower was placed or sold: the grid is mutated in place. */
 export function markRoutePreviewLayoutChanged(runtime: BuildRoutePreviewRuntime): void {
   invalidateBuildRoutePreview(runtime.cache);
+}
+
+/**
+ * Routes on the board as it stands, shared with the overlay's memo: after a
+ * build or sell the first caller searches once and everyone else reuses it.
+ */
+export function getBuildRoutePreviewCurrentRoutes(
+  runtime: BuildRoutePreviewRuntime,
+  grid: GridModel,
+): WaveRoutes {
+  return getCurrentPreviewRoutes(runtime.cache, grid);
 }
 
 /** Cheap when nothing changed: routes are memoised and the overlay redraws only on change. */
