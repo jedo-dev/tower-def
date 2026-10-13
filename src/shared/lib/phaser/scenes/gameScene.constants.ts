@@ -3,7 +3,7 @@ import { buildableTowers } from '../../../../entities/tower';
 import { ECONOMY_BALANCE } from '../../../constants/economy';
 import { GRID_DEFAULT_ROW_CENTER, GRID_DIMENSIONS } from '../../../constants/grid';
 import { ENDPOINT_ZONE_FOOTPRINT, TowerFootprint } from '../../../constants/footprint';
-import { EffectId } from '../../../types/content-ids';
+import { EffectId, UnitSizeClass } from '../../../types/content-ids';
 
 export const ENTRANCE_CELL = { x: 0, y: GRID_DEFAULT_ROW_CENTER };
 export const EXIT_CELL = {
@@ -39,7 +39,8 @@ export const CREEP_DEATH_FADE_DURATION_MS = 180;
 export const CREEP_DEATH_ANIMATION_DURATION_MS = 620;
 export const PROJECTILE_MIN_LIFETIME_MS = 200;
 export const PROJECTILE_MAX_LIFETIME_MS = 350;
-export const PROJECTILE_DISPLAY_SIZE_PX = 24;
+/** Shots read at just over one cell, smaller than the 2x2 towers firing them. */
+export const PROJECTILE_DISPLAY_SIZE_PX = 18;
 export const PROJECTILE_RENDER_DEPTH = 70;
 export const IMPACT_EFFECT_LIFETIME_MS = 120;
 export const IMPACT_EFFECT_RENDER_DEPTH = 72;
@@ -76,7 +77,6 @@ export const CREEP_EFFECT_TINT_PRIORITY: readonly EffectId[] = [
 
 /** Below this, the tint alone tells the story and no pips are drawn. */
 export const CREEP_EFFECT_PIP_MIN_EFFECTS = 2;
-export const CREEP_EFFECT_PIP_OFFSET_Y_PX = -14;
 export const CREEP_EFFECT_PIP_FONT_SIZE_PX = 9;
 export const CREEP_EFFECT_PIP_RENDER_DEPTH = 75;
 
@@ -118,6 +118,10 @@ export const GRID_LINE_COLOR = 0x5f6f8f;
 export const GRID_IDLE_ALPHA = 0.08;
 export const GRID_BUILD_ALPHA = 0.42;
 export const GRID_LINE_WIDTH = 1;
+/** Every cell line stays faint; the 2x2 tower lattice reads through brighter major lines. */
+export const GRID_MINOR_LINE_ALPHA = 0.35;
+export const GRID_MAJOR_LINE_ALPHA = 0.85;
+export const GRID_MAJOR_LINE_EVERY_CELLS = TowerFootprint.SIZE;
 export const ENTRANCE_EXIT_LABEL_FONT_FAMILY = 'Arial';
 export const ENTRANCE_EXIT_LABEL_FONT_SIZE_PX = '10px';
 export const ENTRANCE_EXIT_LABEL_COLOR = '#ffffff';
@@ -130,7 +134,20 @@ export const ENDPOINT_MARKER_FILL_ALPHA = 0.22;
 export const ENDPOINT_MARKER_LINE_WIDTH = 2;
 export const TOWER_RENDER_DEPTH = 40;
 export const CREEP_RENDER_DEPTH = 45;
-export const CREEP_VISUAL_SIZE_PX = 28;
+/**
+ * Creep sprites overhang their footprint so the art stays readable on 16px
+ * cells: single-cell creatures read at a bit over one cell, large ones fill and
+ * slightly exceed their 2x2 footprint.
+ */
+export const CREEP_VISUAL_SIZE_IN_CELLS_BY_SIZE_CLASS: Readonly<Record<UnitSizeClass, number>> = {
+  [UnitSizeClass.SMALL]: 1.4,
+  [UnitSizeClass.MEDIUM]: 1.6,
+  [UnitSizeClass.LARGE]: 2.4,
+};
+/** Size used when a creep's unit cannot be resolved (opponent snapshots). */
+export const CREEP_FALLBACK_SIZE_CLASS: UnitSizeClass = UnitSizeClass.SMALL;
+/** Status pips float this far above the top edge of the creep sprite. */
+export const CREEP_EFFECT_PIP_GAP_PX = 2;
 export const TERRAIN_BASE_TILE_ALPHA = 0.72;
 export const TERRAIN_DECORATION_TILE_ALPHA = 0.62;
 export const TERRAIN_BASE_TILE_TINT = 0xc3cbbf;

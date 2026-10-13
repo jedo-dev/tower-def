@@ -112,7 +112,12 @@ export function moveCreepsAlongPath(
     }
 
     const nextPoint = route[nextPathIndex];
-    const nextCenter = deps.toCellCenter(nextPoint);
+    const nextCellCenter = deps.toCellCenter(nextPoint);
+    const footprintCenterOffsetPx = creep.footprintCenterOffsetPx ?? 0;
+    const nextCenter = {
+      x: nextCellCenter.x + footprintCenterOffsetPx,
+      y: nextCellCenter.y + footprintCenterOffsetPx,
+    };
     const dx = nextCenter.x - creep.sprite.x;
     const dy = nextCenter.y - creep.sprite.y;
     const distanceToNext = Math.hypot(dx, dy);

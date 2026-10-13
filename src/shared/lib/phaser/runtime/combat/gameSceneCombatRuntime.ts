@@ -353,11 +353,16 @@ function spawnProjectileFeedback(
   deps: CombatRuntimeDependencies,
   config: CombatRuntimeConfig,
   tower: TowerRenderState,
-  to: GridPosition,
+  target: CreepRenderState,
   isSplash: boolean,
 ): void {
   const fromCenter = deps.toCellCenter(getTowerCenter(tower.entity));
-  const toCenter = deps.toCellCenter(to);
+  const targetCellCenter = deps.toCellCenter(target.entity.position);
+  const targetOffsetPx = target.footprintCenterOffsetPx ?? 0;
+  const toCenter = {
+    x: targetCellCenter.x + targetOffsetPx,
+    y: targetCellCenter.y + targetOffsetPx,
+  };
   const lifetimeMs = Math.max(
     config.projectileMinLifetimeMs,
     Math.min(
@@ -457,14 +462,7 @@ export function updateTowerCombat(
     } else {
       deps.playArcherAttackAnimation(tower);
     }
-    spawnProjectileFeedback(
-      battlefield,
-      deps,
-      config,
-      tower,
-      targetRenderState.entity.position,
-      isSplashTower,
-    );
+    spawnProjectileFeedback(battlefield, deps, config, tower, targetRenderState, isSplashTower);
     deps.playSound(isSplashTower ? 'combat.tower_attack.splash' : 'combat.tower_attack.archer');
   }
 }

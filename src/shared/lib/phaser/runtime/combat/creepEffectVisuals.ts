@@ -4,7 +4,7 @@ import type { EffectId } from '../../../../types/content-ids';
 import {
   CREEP_EFFECT_PIP_FONT_SIZE_PX,
   CREEP_EFFECT_PIP_MIN_EFFECTS,
-  CREEP_EFFECT_PIP_OFFSET_Y_PX,
+  CREEP_EFFECT_PIP_GAP_PX,
   CREEP_EFFECT_PIP_RENDER_DEPTH,
   CREEP_EFFECT_TINT_PRIORITY,
   CREEP_EFFECT_TINTS,
@@ -52,7 +52,12 @@ export function syncCreepEffectPipPosition(creep: CreepRenderState): void {
     return;
   }
 
-  creep.effectPips.setPosition(creep.sprite.x, creep.sprite.y + CREEP_EFFECT_PIP_OFFSET_Y_PX);
+  // Pips sit just above the sprite, so they clear a large creep's art as well.
+  const spriteHalfHeightPx = (creep.sprite.displayHeight || 0) / 2;
+  creep.effectPips.setPosition(
+    creep.sprite.x,
+    creep.sprite.y - spriteHalfHeightPx - CREEP_EFFECT_PIP_GAP_PX,
+  );
 }
 
 /**
@@ -94,7 +99,7 @@ export function refreshCreepEffectVisuals(
       fontSize: `${CREEP_EFFECT_PIP_FONT_SIZE_PX}px`,
       color: toCssColor(restingTint),
     });
-    creep.effectPips.setOrigin(0.5);
+    creep.effectPips.setOrigin(0.5, 1);
     creep.effectPips.setDepth(CREEP_EFFECT_PIP_RENDER_DEPTH);
   } else {
     creep.effectPips.setText(label);

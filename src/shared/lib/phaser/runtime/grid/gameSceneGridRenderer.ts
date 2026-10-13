@@ -16,7 +16,10 @@ export type GridRendererConfig = {
   terrainDecorationTileTint: number;
   gridLineWidth: number;
   gridLineColor: number;
-  gridBuildAlpha: number;
+  gridMinorLineAlpha: number;
+  gridMajorLineAlpha: number;
+  /** Lines on multiples of this many cells are drawn brighter (the tower lattice). */
+  gridMajorLineEveryCells: number;
   entranceExitLabelFontFamily: string;
   entranceExitLabelFontSizePx: string;
   entranceExitLabelColor: string;
@@ -138,6 +141,43 @@ export function drawGridCell(
   }
 }
 
+/** Board-edge-to-edge line offsets in cells, split into minor and major lines. */
+export function partitionGridLineIndices(
+  lineCount: number,
+  majorEveryCells: number,
+): { minor: number[]; major: number[] } {
+  const minor: number[] = [];
+  const major: number[] = [];
+
+  for (let index = 0; index <= lineCount; index += 1) {
+    (index % majorEveryCells === 0 ? major : minor).push(index);
+  }
+
+  return { minor, major };
+}
+
+function strokeGridLinePass(
+  graphics: Phaser.GameObjects.Graphics,
+  grid: GridModel,
+  columnIndices: readonly number[],
+  rowIndices: readonly number[],
+): void {
+  const { cellSize } = GRID_DIMENSIONS;
+  const boardWidth = grid.cols * cellSize;
+  const boardHeight = grid.rows * cellSize;
+
+  graphics.beginPath();
+  for (const column of columnIndices) {
+    graphics.moveTo(column * cellSize, 0);
+    graphics.lineTo(column * cellSize, boardHeight);
+  }
+  for (const row of rowIndices) {
+    graphics.moveTo(0, row * cellSize);
+    graphics.lineTo(boardWidth, row * cellSize);
+  }
+  graphics.strokePath();
+}
+
 function drawGridLines(
   state: GridRendererState,
   config: GridRendererConfig,
@@ -147,12 +187,21 @@ function drawGridLines(
     return;
   }
 
-  state.gridGraphics.lineStyle(config.gridLineWidth, config.gridLineColor, config.gridBuildAlpha);
-  for (const cell of grid.cells) {
-    const x = cell.x * GRID_DIMENSIONS.cellSize;
-    const y = cell.y * GRID_DIMENSIONS.cellSize;
-    state.gridGraphics.strokeRect(x, y, GRID_DIMENSIONS.cellSize, GRID_DIMENSIONS.cellSize);
-  }
+  const columns = partitionGridLineIndices(grid.cols, config.gridMajorLineEveryCells);
+  const rows = partitionGridLineIndices(grid.rows, config.gridMajorLineEveryCells);
+
+  state.gridGraphics.lineStyle(
+    config.gridLineWidth,
+    config.gridLineColor,
+    config.gridMinorLineAlpha,
+  );
+  strokeGridLinePass(state.gridGraphics, grid, columns.minor, rows.minor);
+  state.gridGraphics.lineStyle(
+    config.gridLineWidth,
+    config.gridLineColor,
+    config.gridMajorLineAlpha,
+  );
+  strokeGridLinePass(state.gridGraphics, grid, columns.major, rows.major);
 }
 
 function drawEndpointZone(
