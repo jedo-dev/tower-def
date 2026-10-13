@@ -243,11 +243,11 @@ describe('entities/computer-opponent/applyComputerBuildStrategy', () => {
       const state = playRounds(25, Difficulty.HARD);
       const mazedLength = findPathBfs(state.opponent.battlefield.grid).path.length;
 
-      // Measured at 30 towers and a 10 -> 38 cell route on this seed; the
-      // thresholds leave room for balance tweaks without going quiet if mazing
-      // regresses to the old scattered placement.
-      expect(state.opponent.battlefield.towers.length).toBeGreaterThan(20);
-      expect(mazedLength).toBeGreaterThan(openFieldLength * 2.5);
+      // Measured at 38 towers and a 10 -> 44 cell route; the thresholds leave
+      // room for balance tweaks without going quiet if mazing regresses to the
+      // old scattered placement.
+      expect(state.opponent.battlefield.towers.length).toBeGreaterThan(25);
+      expect(mazedLength).toBeGreaterThan(openFieldLength * 3);
     });
 
     it('keeps the battlefield path in sync with the walls it built', () => {

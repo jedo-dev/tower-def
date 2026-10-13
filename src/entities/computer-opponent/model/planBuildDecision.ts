@@ -36,6 +36,11 @@ export type BuildPlannerInput = {
 
 type SpendBudgetConfig = {
   maxSpendRatioPerRound: number;
+  /**
+   * Towers per round. The player has no such cap, so this is purely the
+   * difficulty dial; set too low it starves the maze once income takes off,
+   * because gold piles up faster than the opponent is allowed to spend it.
+   */
   maxBuildActionsPerRound: number;
   minGoldReserveRatio: number;
   /**
@@ -48,25 +53,25 @@ type SpendBudgetConfig = {
 const SPEND_BUDGET_BY_DIFFICULTY: Record<Difficulty, SpendBudgetConfig> = {
   [Difficulty.EASY]: {
     maxSpendRatioPerRound: 0.4,
-    maxBuildActionsPerRound: 1,
+    maxBuildActionsPerRound: 2,
     minGoldReserveRatio: 0.35,
     mazeCoverageTarget: 0.25,
   },
   [Difficulty.NORMAL]: {
     maxSpendRatioPerRound: 0.6,
-    maxBuildActionsPerRound: 2,
+    maxBuildActionsPerRound: 4,
     minGoldReserveRatio: 0.25,
     mazeCoverageTarget: 0.34,
   },
   [Difficulty.HARD]: {
     maxSpendRatioPerRound: 0.85,
-    maxBuildActionsPerRound: 3,
+    maxBuildActionsPerRound: 6,
     minGoldReserveRatio: 0.15,
     mazeCoverageTarget: 0.42,
   },
   [Difficulty.NIGHTMARE]: {
     maxSpendRatioPerRound: 0.95,
-    maxBuildActionsPerRound: 3,
+    maxBuildActionsPerRound: 8,
     minGoldReserveRatio: 0.1,
     mazeCoverageTarget: 0.46,
   },
@@ -157,10 +162,11 @@ function findBestBuild(input: FindBestBuildInput): BuildAction | null {
   }
 
   let bestScore: PlacementScore | null = null;
+  let bestValuePerGold = 0;
 
   for (const towerType of context.affordableTowers) {
     const cost = getTowerCostForType(towerType, context.raceId);
-    if (cost === null || cost > budget) {
+    if (cost === null || cost <= 0 || cost > budget) {
       continue;
     }
 
@@ -180,7 +186,13 @@ function findBestBuild(input: FindBestBuildInput): BuildAction | null {
       continue;
     }
 
-    if (bestValid.totalScore > (bestScore?.totalScore ?? 0)) {
+    // Value per gold, not raw value: most cells of a maze are plain wall, and
+    // a cheap tower walls one just as well as a pricey one. Comparing raw
+    // scores made the opponent pay a premium archetype price for every brick
+    // and run out of budget halfway down a tooth.
+    const valuePerGold = bestValid.totalScore / cost;
+    if (valuePerGold > bestValuePerGold) {
+      bestValuePerGold = valuePerGold;
       bestScore = bestValid;
     }
   }

@@ -54,7 +54,9 @@ export type TierEconomyTable = Readonly<Record<UnitTier, number>>;
 
 export type DuelMatchConfig = {
   startingHp: number;
+  /** What the player opens with; the opponent has its own purse. */
   startingGold: number;
+  opponentStartingGold: number;
   startingIncome: number;
   sendCreepCostByTier: TierEconomyTable;
   sendCreepIncomeBonusByTier: TierEconomyTable;

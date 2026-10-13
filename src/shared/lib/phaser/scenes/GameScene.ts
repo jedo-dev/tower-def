@@ -1005,12 +1005,27 @@ export class GameScene extends Phaser.Scene {
     publishGameHudSnapshot(snapshot);
   }
 
+  /**
+   * Cells of the field currently on screen. The two grids share their size and
+   * endpoints, so the same tile positions describe either one; what differs is
+   * which cells are walled off. Drawing the player's occupancy under the
+   * opponent's towers made the enemy field unreadable: its towers sat on bare
+   * ground while the player's own tower bases showed through.
+   */
+  private getVisibleGridCells(): readonly GridCell[] {
+    if (this.activeBattlefieldView === 'opponent') {
+      return this.duelMatchState.opponent.battlefield.grid.cells;
+    }
+
+    return this.gridModel?.cells ?? [];
+  }
+
   private redrawTerrainTiles(): void {
     if (!this.gridModel) {
       return;
     }
 
-    for (const cell of this.gridModel.cells) {
+    for (const cell of this.getVisibleGridCells()) {
       drawGridCellRuntime(this.gridRendererState, this.getGridRendererDeps(), GRID_RENDERER_CONFIG, cell);
     }
   }

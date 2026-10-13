@@ -19,10 +19,11 @@ function createDuelistState(
   raceId: RaceId,
   grid: GridModel,
   path: GridPosition[],
+  startingGold: number,
 ): DuelistState {
   return {
     hp: DUEL_MATCH_BALANCE.startingHp,
-    gold: DUEL_MATCH_BALANCE.startingGold,
+    gold: startingGold,
     income: DUEL_MATCH_BALANCE.startingIncome,
     raceId,
     sendQueue: [],
@@ -47,8 +48,18 @@ export function createInitialDuelMatchState(
   return {
     round: 0,
     phase: 'build',
-    player: createDuelistState(playerRaceId, playerGrid, playerPath),
-    opponent: createDuelistState(opponentRaceId, opponentGrid, opponentPath),
+    player: createDuelistState(
+      playerRaceId,
+      playerGrid,
+      playerPath,
+      DUEL_MATCH_BALANCE.startingGold,
+    ),
+    opponent: createDuelistState(
+      opponentRaceId,
+      opponentGrid,
+      opponentPath,
+      DUEL_MATCH_BALANCE.opponentStartingGold,
+    ),
     baselineWaveId: '',
   };
 }
