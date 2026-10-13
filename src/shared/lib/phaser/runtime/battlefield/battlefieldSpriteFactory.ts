@@ -20,7 +20,7 @@ import type { GridPosition } from '../../../../types/pathfinding';
 import {
   BONE_ARCHER_ORIGIN_X,
   BONE_ARCHER_ORIGIN_Y,
-  CREEP_VISUAL_SIZE_PX,
+  CREEP_FALLBACK_SIZE_CLASS,
   PLAGUE_TOWER_CONFIG,
   PLAGUE_TOWER_ORIGIN_X,
   PLAGUE_TOWER_ORIGIN_Y,
@@ -34,6 +34,7 @@ import {
   getWalkAnimationKeyBySpriteKey,
 } from '../animation/gameSceneAnimationRuntime';
 import { isDirectionalCreepSprite } from '../animation/creepFacing';
+import { getCreepVisualMetrics } from '../creep/creepVisualMetrics';
 import { resolveSpriteKey } from '../assets/spriteKeyResolver';
 import {
   destroyBattlefieldRenderState,
@@ -231,8 +232,14 @@ export function createOpponentCreepSprite(
 ): Phaser.GameObjects.Sprite {
   const unit = resolveUnitConfigFromBattlefieldCreepId(creepId);
   const spriteKey = unit ? getSpriteKeyByUnit(unit) : UNIT_SPRITE_KEYS.UNDEAD_SKELETON;
-  const sprite = scene.add.sprite(x, y, spriteKey, 0);
-  sprite.setDisplaySize(CREEP_VISUAL_SIZE_PX, CREEP_VISUAL_SIZE_PX);
+  const visualMetrics = getCreepVisualMetrics(unit?.sizeClass ?? CREEP_FALLBACK_SIZE_CLASS);
+  const sprite = scene.add.sprite(
+    x + visualMetrics.footprintCenterOffsetPx,
+    y + visualMetrics.footprintCenterOffsetPx,
+    spriteKey,
+    0,
+  );
+  sprite.setDisplaySize(visualMetrics.displaySizePx, visualMetrics.displaySizePx);
   sprite.setDepth(TOWER_RENDER_DEPTH - 1);
   sprite.setTint(unit ? getCreepTintByUnit(unit) : 0xffffff);
   sprite.play(getWalkAnimationKeyBySpriteKey(spriteKey));
@@ -279,6 +286,8 @@ export function rebuildOpponentBattlefieldRenderState(
         sprite,
         hitFlashRemainingMs: 0,
         deathFadeRemainingMs: 0,
+        footprintCenterOffsetPx: getCreepVisualMetrics(unit?.sizeClass ?? CREEP_FALLBACK_SIZE_CLASS)
+          .footprintCenterOffsetPx,
         baseTint: unit ? getCreepTintByUnit(unit) : 0xffffff,
         isDirectional,
         facing: isDirectional ? ('side' as const) : undefined,

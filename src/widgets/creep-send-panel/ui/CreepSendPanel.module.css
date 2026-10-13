@@ -1,5 +1,6 @@
 /* Creep sending panel in the kit frame: gold heading, queue chip, gold/income, one row of creep cards. */
 .panel {
+  container: send-panel / inline-size;
   display: flex;
   flex-direction: column;
   gap: var(--space-sm);
@@ -8,19 +9,39 @@
   font-family: var(--font-family-ui);
 }
 
+/*
+ * Mobile first: heading and gold/income share the first row and the queue
+ * chips get a row of their own, so nothing clips on a 360px phone.
+ */
 .header {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    'title meta'
+    'queue queue';
   align-items: center;
-  justify-content: space-between;
-  gap: var(--space-sm);
+  gap: var(--space-xs) var(--space-sm);
+}
+
+/* Wide enough for heading, both chips and gold/income on one line. */
+@container send-panel (min-width: 520px) {
+  .header {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas: 'title queue meta';
+  }
 }
 
 .title {
+  grid-area: title;
+  min-width: 0;
+  overflow: hidden;
   font-size: 18px;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .meta {
+  grid-area: meta;
   display: flex;
   align-items: baseline;
   gap: var(--space-md);
@@ -142,11 +163,12 @@
 }
 
 .queue {
-  flex: 1 1 auto;
+  grid-area: queue;
   min-width: 0;
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
-  overflow: hidden;
+  gap: var(--space-xs);
 }
 
 .buttonRemaining {
@@ -154,7 +176,6 @@
 }
 
 .capacity {
-  margin-left: var(--space-xs);
   font-variant-numeric: tabular-nums;
 }
 
