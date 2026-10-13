@@ -1,5 +1,6 @@
 import type { GridCell, GridModel, GridPoint } from '../../types/grid';
 import { GRID_DIMENSIONS } from '../../constants/grid';
+import { getCellAt } from './getCellAt';
 
 type CreateGridModelParams = {
   entrance: GridPoint;
@@ -25,21 +26,23 @@ export function createGridModel({ entrance, exit }: CreateGridModelParams): Grid
     }
   }
 
-  for (const cell of cells) {
-    if (cell.x === entrance.x && cell.y === entrance.y) {
-      cell.role = 'entrance';
-    }
-
-    if (cell.x === exit.x && cell.y === exit.y) {
-      cell.role = 'exit';
-    }
-  }
-
-  return {
+  const grid: GridModel = {
     cols: GRID_DIMENSIONS.cols,
     rows: GRID_DIMENSIONS.rows,
     cells,
     entrance,
     exit,
   };
+
+  const entranceCell = getCellAt(grid, entrance.x, entrance.y);
+  if (entranceCell) {
+    entranceCell.role = 'entrance';
+  }
+
+  const exitCell = getCellAt(grid, exit.x, exit.y);
+  if (exitCell) {
+    exitCell.role = 'exit';
+  }
+
+  return grid;
 }

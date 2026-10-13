@@ -1,13 +1,10 @@
-import type { GridCell, GridModel } from '../../types/grid';
+import type { GridModel } from '../../types/grid';
 import type { GridPosition } from '../../types/pathfinding';
+import { getCellIndex } from '../grid/getCellAt';
 import { hasPathBfs } from './hasPathBfs';
 
 function isSamePosition(left: GridPosition, right: GridPosition): boolean {
   return left.x === right.x && left.y === right.y;
-}
-
-function cloneCell(cell: GridCell): GridCell {
-  return { ...cell };
 }
 
 export function validateTowerPlacementPath(grid: GridModel, placement: GridPosition): boolean {
@@ -15,23 +12,19 @@ export function validateTowerPlacementPath(grid: GridModel, placement: GridPosit
     return false;
   }
 
-  const hasTargetCell = grid.cells.some((cell) => cell.x === placement.x && cell.y === placement.y);
+  const targetIndex = getCellIndex(grid, placement.x, placement.y);
 
-  if (!hasTargetCell) {
+  if (targetIndex === -1) {
     return false;
   }
 
-  const cellsWithPlacement = grid.cells.map((cell) => {
-    if (cell.x !== placement.x || cell.y !== placement.y) {
-      return cloneCell(cell);
-    }
-
-    return {
-      ...cloneCell(cell),
-      isOccupied: true,
-      isWalkable: false,
-    };
-  });
+  // Only the placed cell changes; the rest are shared read-only with the source grid.
+  const cellsWithPlacement = grid.cells.slice();
+  cellsWithPlacement[targetIndex] = {
+    ...grid.cells[targetIndex],
+    isOccupied: true,
+    isWalkable: false,
+  };
 
   const simulatedGrid: GridModel = {
     ...grid,

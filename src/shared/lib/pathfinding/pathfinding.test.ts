@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import type { GridCell, GridModel } from '../../types/grid';
 import { createGridModel } from '../grid/createGridModel';
 import { findPathBfs } from './hasPathBfs';
 import { validateTowerPlacementPath } from './validateTowerPlacementPath';
@@ -78,5 +79,39 @@ describe('pathfinding', () => {
 
     const isBlockingPlacementValid = validateTowerPlacementPath(corridorGrid, { x: 5, y: 7 });
     expect(isBlockingPlacementValid).toBe(false);
+  });
+
+  it('reads each cell a bounded number of times, so BFS stays linear in grid size', () => {
+    const countCellReadsOnOpenGrid = (size: number): number => {
+      const cells: GridCell[] = [];
+      for (let y = 0; y < size; y += 1) {
+        for (let x = 0; x < size; x += 1) {
+          cells.push({ x, y, role: 'empty', isWalkable: true, isOccupied: false });
+        }
+      }
+      let reads = 0;
+      const countedCells = new Proxy(cells, {
+        get(target, property, receiver) {
+          if (typeof property === 'string' && /^\d+$/.test(property)) {
+            reads += 1;
+          }
+          return Reflect.get(target, property, receiver);
+        },
+      });
+      const grid: GridModel = {
+        cols: size,
+        rows: size,
+        cells: countedCells,
+        entrance: { x: 0, y: 0 },
+        exit: { x: size - 1, y: size - 1 },
+      };
+
+      expect(findPathBfs(grid).found).toBe(true);
+      return reads;
+    };
+
+    const size = 80;
+    // Four neighbour checks per visited cell, one array read per check.
+    expect(countCellReadsOnOpenGrid(size)).toBeLessThanOrEqual(4 * size * size);
   });
 });

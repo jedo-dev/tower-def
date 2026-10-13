@@ -30,8 +30,8 @@ const SEALED: PathProbeResult = { path: null, length: 0 };
  * Repeated "how long would the path be if I walled this cell off" queries over
  * one grid. The opponent asks this for every candidate cell on every build
  * round, so the grid is flattened into typed arrays once and each BFS reuses
- * them; `findPathBfs` rescans `grid.cells` per neighbour, which is far too slow
- * to run a few hundred times per round.
+ * them; `findPathBfs` allocates string keys and maps per run, which is far too
+ * slow to run a few hundred times per round.
  */
 export function createPathProbe(grid: GridModel): PathProbe {
   const { cols, rows } = grid;

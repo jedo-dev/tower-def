@@ -8,6 +8,7 @@ import type {
 import { TOWER_BASE_LEVEL, TOWER_COMBAT_STATS_BY_TYPE } from '../../../../../entities/tower';
 import type { GridCell, GridModel } from '../../../../types/grid';
 import type { GridPosition } from '../../../../types/pathfinding';
+import { getCellAt } from '../../../grid/getCellAt';
 
 export type BuildRuntimeState = {
   gridModel: GridModel | null;
@@ -83,9 +84,7 @@ export function isBuildCellValid(
   cellPosition: GridPosition,
   grid: GridModel,
 ): boolean {
-  const cell = grid.cells.find(
-    (candidate) => candidate.x === cellPosition.x && candidate.y === cellPosition.y,
-  );
+  const cell = getCellAt(grid, cellPosition.x, cellPosition.y);
 
   if (!cell) return false;
   if (cell.role !== 'empty') return false;
@@ -130,9 +129,7 @@ export function tryPlaceTowerAtHoveredCell(
     };
   }
 
-  const targetCell = state.gridModel.cells.find(
-    (cell) => cell.x === hoveredCell.x && cell.y === hoveredCell.y,
-  );
+  const targetCell = getCellAt(state.gridModel, hoveredCell.x, hoveredCell.y);
   if (!targetCell) {
     return {
       success: false,
@@ -207,9 +204,7 @@ export function trySellTowerAtHoveredCell(
     return { success: false, changedCell: null, removedTowerId: null, refundAmount: 0 };
   }
 
-  const targetCell = state.gridModel.cells.find(
-    (cell) => cell.x === hoveredCell.x && cell.y === hoveredCell.y,
-  );
+  const targetCell = getCellAt(state.gridModel, hoveredCell.x, hoveredCell.y);
   if (!targetCell || targetCell.role !== 'empty' || !targetCell.isOccupied) {
     return { success: false, changedCell: null, removedTowerId: null, refundAmount: 0 };
   }

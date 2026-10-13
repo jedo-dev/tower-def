@@ -12,6 +12,7 @@ import {
 import { spendGold } from '../../../../../entities/player-resources';
 import type { GridCell, GridModel } from '../../../../types/grid';
 import type { GridPosition } from '../../../../types/pathfinding';
+import { getCellAt } from '../../../grid/getCellAt';
 import type { RaceId } from '../../../../types/content-ids';
 import { publishGameEvent } from '../../../game-bridge/bridge';
 import type { SelectedTowerSnapshot } from '../../../game-bridge/types';
@@ -236,9 +237,10 @@ export function handleSellTowerCommand(deps: TowerCommandDeps, towerId: string):
   deps.onGoldUpdated(deps.getPlayerGold() + refundAmount);
   deps.onRefundRecorded(refundAmount);
 
-  const cell = deps
-    .getGridModel()
-    ?.cells.find((c) => c.x === tower.entity.position.x && c.y === tower.entity.position.y);
+  const gridModel = deps.getGridModel();
+  const cell = gridModel
+    ? getCellAt(gridModel, tower.entity.position.x, tower.entity.position.y)
+    : undefined;
   if (cell) {
     cell.isOccupied = false;
     cell.isWalkable = true;

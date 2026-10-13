@@ -12,6 +12,7 @@ export type GridCell = GridPoint & {
 export type GridModel = {
   cols: number;
   rows: number;
+  /** Row-major: the cell at (x, y) lives at `y * cols + x`. Look up via `getCellAt`. */
   cells: GridCell[];
   entrance: GridPoint;
   exit: GridPoint;
