@@ -8,7 +8,9 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "test": "vitest",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "format": "oxfmt",
+    "format:check": "oxfmt --check"
   },
   "dependencies": {
     "phaser": "^4.1.0",
@@ -23,6 +25,7 @@
     "@vitejs/plugin-react": "^6.0.1",
     "@vitest/coverage-v8": "^4.1.5",
     "jsdom": "^28.1.0",
+    "oxfmt": "^0.73.0",
     "oxlint": "^1.88.0",
     "typescript": "~6.0.2",
     "vite": "^8.0.10",

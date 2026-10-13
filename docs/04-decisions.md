@@ -73,3 +73,17 @@ Reason:
 oxlint is part of the Oxc toolchain, is much faster than ESLint, and ships the
 TypeScript and React rules natively, so the project needs a single lint
 dependency instead of six.
+
+## Decision 009: Format with oxfmt
+
+Code is formatted with oxfmt (`npm run format`, checked by `npm run format:check`),
+configured in `.oxfmtrc.json`: single quotes, semicolons, trailing commas,
+print width 100, LF line endings. Markdown, docs, public assets and tool output
+are not formatted. `.gitattributes` forces LF in the working tree so the format
+check gives the same result on Windows and Unix.
+
+Reason:
+
+oxfmt is the Oxc formatter (Prettier-compatible output, much faster) and pairs
+with oxlint. The options were chosen to match the dominant existing style so
+the one-time reformat stays small.

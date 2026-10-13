@@ -1,0 +1,20 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "singleQuote": true,
+  "printWidth": 100,
+  "endOfLine": "lf",
+  "ignorePatterns": [
+    ".beads/**",
+    ".artifacts/**",
+    ".claude/**",
+    ".playwright-cli/**",
+    "coverage/**",
+    "dist/**",
+    "docs/**",
+    "public/**",
+    "tools/**",
+    "package-lock.json",
+    "*.md",
+    "*.pen"
+  ]
+}
