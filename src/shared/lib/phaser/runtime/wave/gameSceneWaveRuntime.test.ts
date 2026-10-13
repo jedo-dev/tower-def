@@ -72,7 +72,6 @@ describe('shared/lib/phaser/runtime/wave computer send wiring', () => {
     };
     const deps: WaveRuntimeDependencies = {
       nowMs: () => 1_000,
-      getSelectedFactionUnits: () => baselineUnits,
       getAdditionalWaveUnits: () =>
         sendResult.state.opponent.sendQueue.map((unitId) => resolveUnitConfigById(unitId)),
       getSpriteKeyByUnit: () => 'unit:sprite',
@@ -96,6 +95,7 @@ describe('shared/lib/phaser/runtime/wave computer send wiring', () => {
         earlyWaveStartBonusPlaceholderEligible: false,
       },
       deps,
+      baselineUnits,
     );
 
     const spawnedUnitIds = state.pendingWaveSpawns.map((spawn) => spawn.unit.id);
@@ -128,7 +128,6 @@ describe('shared/lib/phaser/runtime/wave creature traits', () => {
     };
     const deps: WaveRuntimeDependencies = {
       nowMs: () => 1_000,
-      getSelectedFactionUnits: () => [gargoyle],
       getAdditionalWaveUnits: () => [],
       getSpriteKeyByUnit: () => 'unit:sprite',
       getAnimationKeyByUnit: () => 'unit:walk',
@@ -177,7 +176,6 @@ describe('shared/lib/phaser/runtime/wave creep visual scale', () => {
       };
       const deps: WaveRuntimeDependencies = {
         nowMs: () => 1_000,
-        getSelectedFactionUnits: () => [unit],
         getAdditionalWaveUnits: () => [],
         getSpriteKeyByUnit: () => 'unit:sprite',
         getAnimationKeyByUnit: () => 'unit:walk',

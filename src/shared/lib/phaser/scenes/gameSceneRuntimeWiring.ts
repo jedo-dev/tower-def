@@ -40,7 +40,6 @@ export type GameSceneWiringHost = {
   getSoundManager: () => GameAudioManager | null;
   getDuelMatchState: () => DuelMatchState;
   setDuelMatchState: (state: DuelMatchState) => void;
-  getSelectedFactionUnits: () => UnitConfig[];
   getComputerSendWaveUnits: () => UnitConfig[];
   refreshBuildState: () => void;
   publishHudSnapshot: () => void;
@@ -96,7 +95,6 @@ function createOpponentCombatDeps(host: GameSceneWiringHost): CombatRuntimeDepen
 function createWaveRuntimeDeps(host: GameSceneWiringHost): WaveRuntimeDependencies {
   return {
     nowMs: () => host.scene.time.now,
-    getSelectedFactionUnits: () => host.getSelectedFactionUnits(),
     getAdditionalWaveUnits: () => host.getComputerSendWaveUnits(),
     getSpriteKeyByUnit: (unit) => getSpriteKeyByUnit(unit),
     getAnimationKeyByUnit: (unit) => getAnimationKeyByUnit(unit),

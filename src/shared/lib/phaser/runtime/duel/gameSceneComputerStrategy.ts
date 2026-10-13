@@ -10,7 +10,6 @@ import {
   type DuelMatchState,
 } from '../../../../../entities/duel-match';
 import type { UnitConfig } from '../../../../../entities/unit';
-import { generateWaveUnits } from '../../../../../entities/wave';
 import { CreepTypeId } from '../../../../types/content-ids';
 import { runComputerBuildPhase } from './computerBuildPhase';
 
@@ -61,18 +60,13 @@ export function applyComputerBuildPhaseStrategies(
 }
 
 /**
- * Adds the shared baseline wave for the upcoming round to the opponent
- * battlefield so both duelists face the same neutral pressure.
+ * Adds the round's shared baseline wave (the same units the player's field
+ * gets) to the opponent battlefield.
  */
 export function addBaselineWaveToOpponentBattlefield(
   state: DuelMatchState,
-  waveNumber: number,
-  factionUnits: UnitConfig[],
+  baselineUnits: readonly UnitConfig[],
 ): DuelMatchState {
-  const baselineUnits = generateWaveUnits({
-    waveNumber,
-    factionUnits,
-  });
   if (baselineUnits.length === 0) {
     return state;
   }

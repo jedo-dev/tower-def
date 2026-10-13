@@ -15,7 +15,6 @@ import type { BattlefieldRenderState } from '../battlefield/battlefieldRenderSta
 import {
   calculateWaveRoutes,
   EMPTY_WAVE_ROUTES,
-  generateWaveUnits,
   hasWaveRoute,
   selectWaveRoute,
   type WaveRoutes,
@@ -56,7 +55,6 @@ export type WaveRuntimeConfig = {
 
 export type WaveRuntimeDependencies = {
   nowMs: () => number;
-  getSelectedFactionUnits: () => UnitConfig[];
   getAdditionalWaveUnits: (waveNumber: number) => UnitConfig[];
   getSpriteKeyByUnit: (unit: UnitConfig) => string;
   getAnimationKeyByUnit: (unit: UnitConfig) => string;
@@ -221,23 +219,24 @@ export function resetRunToInitialState(state: WaveRuntimeState): void {
   state.lastPublishedAutoStartSecondsLeft = null;
 }
 
+/**
+ * Schedules the player's field for the wave: the round's shared baseline
+ * (rolled once for both fields) followed by the computer's sends.
+ */
 export function spawnWaveCreeps(
   state: WaveRuntimeState,
   config: WaveRuntimeConfig,
   deps: WaveRuntimeDependencies,
+  baselineUnits: readonly UnitConfig[],
 ): void {
   state.activeCreeps.forEach((creep) => destroyCreepRenderState(creep));
   state.activeCreeps = [];
   state.pendingWaveSpawns = [];
 
-  const units = generateWaveUnits({
-    waveNumber: state.currentWaveNumber,
-    factionUnits: deps.getSelectedFactionUnits(),
-  });
   // Extra units on the player's field are the computer's sends.
   const additionalUnits = deps.getAdditionalWaveUnits(state.currentWaveNumber);
 
-  state.pendingWaveSpawns = scheduleWaveSpawns(units, additionalUnits, 'opponent', {
+  state.pendingWaveSpawns = scheduleWaveSpawns(baselineUnits, additionalUnits, 'opponent', {
     firstSpawnAtMs: deps.nowMs() + config.waveFirstSpawnDelayMs,
     spawnIntervalMs: config.waveSpawnIntervalMs,
   });

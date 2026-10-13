@@ -157,6 +157,12 @@ import {
   tryStartNextWave as tryStartNextWaveRuntime,
   updateAutoWaveCountdown as updateAutoWaveCountdownRuntime,
 } from '../runtime/wave/gameSceneWaveRuntime';
+import {
+  createSharedBaselineWaveSource,
+  resolveBaselineWaveSeed,
+  type SharedBaselineWaveSource,
+} from '../runtime/wave/sharedBaselineWave';
+import type { GameSetupEndpoints } from '../../../config/game-setup';
 import { GameAudioManager } from '../sound/GameAudioManager';
 import {
   BUILD_PREVIEW_RENDER_DEPTH,
@@ -234,6 +240,9 @@ export class GameScene extends Phaser.Scene {
   private matchWinner: HudFactionType | null = null;
   private activeBattlefieldView: BattlefieldView = 'player';
   private mapSeed = DEFAULT_MAP_SEED;
+  private setupEndpoints: GameSetupEndpoints | undefined;
+  private baselineWaves: SharedBaselineWaveSource =
+    createSharedBaselineWaveSource(DEFAULT_MAP_SEED);
   private mapEndpoints: EdgeEndpoints = { entrance: ENTRANCE_CELL, exit: EXIT_CELL };
   private inputControllerState: InputControllerState = {
     activeTouchGesture: null,
@@ -302,7 +311,6 @@ export class GameScene extends Phaser.Scene {
     setDuelMatchState: (state) => {
       this.duelMatchState = state;
     },
-    getSelectedFactionUnits: () => this.getSelectedFactionUnits(),
     getComputerSendWaveUnits: () => this.getComputerSendWaveUnits(),
     refreshBuildState: () => this.refreshBuildState(),
     publishHudSnapshot: () => this.publishHudSnapshot(),
@@ -762,6 +770,8 @@ export class GameScene extends Phaser.Scene {
       this.registry.set('game.setup', setupConfig);
     }
 
+    this.setupEndpoints = setupConfig?.endpoints;
+    this.resetBaselineWaves();
     if (setupConfig?.endpoints?.mode === 'dynamic') {
       this.mapSeed = setupConfig.endpoints.seed;
       this.mapEndpoints = generateEdgeEndpoints(setupConfig.endpoints.seed);
@@ -784,6 +794,13 @@ export class GameScene extends Phaser.Scene {
     this.opponentLeakHistory = [];
     this.computerDecisionRecorder.clear();
     this.computerMazePlanMemory.plan = null;
+  }
+
+  /** Restarts the match's baseline stream; a fixed map rolls a fresh seed. */
+  private resetBaselineWaves(): void {
+    this.baselineWaves = createSharedBaselineWaveSource(
+      resolveBaselineWaveSeed(this.setupEndpoints, Math.random),
+    );
   }
 
   private updatePerformanceTelemetry(deltaMs: number): void {
@@ -919,6 +936,7 @@ export class GameScene extends Phaser.Scene {
     markRoutePreviewLayoutChanged(this.routePreview);
     this.pathCellKeys.clear();
     resetRunToInitialStateRuntime(this.runState);
+    this.resetBaselineWaves();
     this.duelMatchState = createInitialDuelMatchState(
       this.selectedBuilderFactionId,
       mapHudFactionToRaceId(this.selectedFaction),
@@ -1052,13 +1070,19 @@ export class GameScene extends Phaser.Scene {
     this.duelMatchState = refreshOpponentRoutesForWaveStart(this.duelMatchState);
     this.duelMatchState = routeQueuedSendsToBattlefields(this.duelMatchState);
     this.duelMatchState = reconcileBattlefieldsForNextRound(this.duelMatchState);
-    this.duelMatchState = addBaselineWaveToOpponentBattlefield(
-      this.duelMatchState,
+    // One baseline per round, played on both fields.
+    const baselineUnits = this.baselineWaves.rollNextWave(
       this.runState.currentWaveNumber,
       this.getSelectedFactionUnits(),
     );
+    this.duelMatchState = addBaselineWaveToOpponentBattlefield(this.duelMatchState, baselineUnits);
     this.syncOpponentBattlefieldRenderStateFromDuel();
-    spawnWaveCreepsRuntime(this.runState, WAVE_RUNTIME_CONFIG, this.wiring.waveRuntimeDeps);
+    spawnWaveCreepsRuntime(
+      this.runState,
+      WAVE_RUNTIME_CONFIG,
+      this.wiring.waveRuntimeDeps,
+      baselineUnits,
+    );
     // Queues have now been routed onto battlefields and spawned as creeps.
     this.duelMatchState = resetSendQueuesForWaveStart(
       this.duelMatchState,
