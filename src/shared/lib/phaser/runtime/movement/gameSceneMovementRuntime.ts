@@ -10,6 +10,7 @@ import {
   type WaveRoute,
   type WaveRoutes,
 } from '../../../pathfinding/waveRoutes';
+import { getRemainingRouteDistance } from '../../../pathfinding/routeProgress';
 import type { SoundId } from '../../sound/audio.types';
 import type { CreepRenderState } from '../../scenes/gameScene.types';
 
@@ -83,6 +84,35 @@ function markCreepEscaped(
 
 /** Scratch waypoint reused for every creep and frame, so movement never allocates per frame. */
 const waypointPx: MutablePoint = { x: 0, y: 0 };
+/** Scratch for the waypoint the creep last reached; same no-allocation rule. */
+const previousWaypointPx: MutablePoint = { x: 0, y: 0 };
+
+/**
+ * Records how far the creep still has to walk, in cells along its own route,
+ * so targeting can compare creeps on routes of different lengths.
+ * `pixelsToNextWaypoint` is what is left of the current segment on screen.
+ */
+function writeRemainingRouteDistance(
+  creep: CreepRenderState,
+  route: WaveRoute,
+  deps: MovementRuntimeDeps,
+  pixelsToNextWaypoint: number,
+): void {
+  const index = creep.entity.pathIndex;
+  if (index + 1 >= route.length) {
+    creep.entity.remainingRouteDistance = 0;
+    return;
+  }
+
+  deps.writeCellCenter(route[index], previousWaypointPx);
+  deps.writeCellCenter(route[index + 1], waypointPx);
+  const segmentPx = Math.hypot(
+    waypointPx.x - previousWaypointPx.x,
+    waypointPx.y - previousWaypointPx.y,
+  );
+  const fractionLeft = segmentPx > 0 ? Math.min(1, pixelsToNextWaypoint / segmentPx) : 0;
+  creep.entity.remainingRouteDistance = getRemainingRouteDistance(route, index, fractionLeft);
+}
 
 /**
  * Turns the creep to face the route segment it is on. The heading comes from
@@ -118,6 +148,9 @@ function advanceAlongRoute(
   let x = creep.sprite.x;
   let y = creep.sprite.y;
   let hasReachedExit = false;
+  // Stays infinite when the step ends exactly on a waypoint: the whole next
+  // segment is still ahead.
+  let pixelsToNextWaypoint = Number.POSITIVE_INFINITY;
 
   while (remainingPx > 0) {
     const nextPathIndex = creep.entity.pathIndex + 1;
@@ -131,6 +164,7 @@ function advanceAlongRoute(
       const ratio = remainingPx / distanceToNext;
       x += dx * ratio;
       y += dy * ratio;
+      pixelsToNextWaypoint = distanceToNext - remainingPx;
       break;
     }
 
@@ -147,6 +181,7 @@ function advanceAlongRoute(
   }
 
   creep.sprite.setPosition(x, y);
+  writeRemainingRouteDistance(creep, route, deps, pixelsToNextWaypoint);
   syncCreepEffectPipPosition(creep);
   faceCurrentSegment(creep, route);
   return hasReachedExit;

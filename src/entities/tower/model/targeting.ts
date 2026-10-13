@@ -12,6 +12,11 @@ function getDistanceInCells(tower: TowerEntity, creep: CreepEntity): number {
   return Math.hypot(dx, dy);
 }
 
+/** A creep not yet placed on a route counts as furthest from the exit. */
+function getRemainingDistanceToExit(creep: CreepEntity): number {
+  return creep.remainingRouteDistance ?? Number.POSITIVE_INFINITY;
+}
+
 export function getCreepsInTowerRange(tower: TowerEntity, creeps: CreepEntity[]): CreepEntity[] {
   return creeps.filter((creep) => {
     if (!isCreepAlive(creep)) {
@@ -22,6 +27,11 @@ export function getCreepsInTowerRange(tower: TowerEntity, creeps: CreepEntity[])
   });
 }
 
+/**
+ * Targets the creep in range closest to its exit, measured along each creep's
+ * own route (small and large creeps can walk routes of different lengths).
+ * Ties go to the creep nearest the tower.
+ */
 export function selectTowerTarget(tower: TowerEntity, creeps: CreepEntity[]): CreepEntity | null {
   const creepsInRange = getCreepsInTowerRange(tower, creeps);
 
@@ -30,11 +40,14 @@ export function selectTowerTarget(tower: TowerEntity, creeps: CreepEntity[]): Cr
   }
 
   return creepsInRange.reduce((best, candidate) => {
-    if (candidate.pathIndex > best.pathIndex) {
+    const candidateRemaining = getRemainingDistanceToExit(candidate);
+    const bestRemaining = getRemainingDistanceToExit(best);
+
+    if (candidateRemaining < bestRemaining) {
       return candidate;
     }
 
-    if (candidate.pathIndex < best.pathIndex) {
+    if (candidateRemaining > bestRemaining) {
       return best;
     }
 

@@ -5,28 +5,36 @@ import {
   isFootprintInBounds,
   withFootprintOccupancy,
 } from '../grid/footprint';
+import type { GridPosition } from '../../types/pathfinding';
 import { findRoutesBySizeClass } from './findRouteForSizeClass';
 
+/** Both size-class routes after a placement; both exist by construction. */
+export type ProjectedPlacementRoutes = {
+  readonly small: readonly GridPosition[];
+  readonly large: readonly GridPosition[];
+};
+
 /**
- * True when both creep size classes can still walk from the entrance anchor
- * to the exit anchor with every cell of the footprint walled off: the small
- * (1x1) route and the large (2x2) route, octile movement without corner
- * cutting. Footprints off the grid or over the route anchors never pass.
+ * Small and large routes as they would be with every cell of the footprint
+ * walled off, or null when the footprint cannot be placed path-wise: off the
+ * grid, over a route anchor, or cutting either size class off from the exit
+ * (octile movement without corner cutting). Callers that only need a yes/no
+ * use `validateFootprintPlacementPath`; the build preview draws the routes.
  */
-export function validateFootprintPlacementPath(
+export function projectFootprintPlacementRoutes(
   grid: GridModel,
   anchor: GridPoint,
   footprint: Readonly<Footprint>,
-): boolean {
+): ProjectedPlacementRoutes | null {
   if (!isFootprintInBounds(grid, anchor, footprint)) {
-    return false;
+    return null;
   }
 
   if (
     isCellInFootprint(grid.entrance, anchor, footprint) ||
     isCellInFootprint(grid.exit, anchor, footprint)
   ) {
-    return false;
+    return null;
   }
 
   const routes = findRoutesBySizeClass(
@@ -35,7 +43,20 @@ export function validateFootprintPlacementPath(
     grid.exit,
   );
 
-  return routes.small !== null && routes.large !== null;
+  if (routes.small === null || routes.large === null) {
+    return null;
+  }
+
+  return { small: routes.small, large: routes.large };
+}
+
+/** True when both creep size classes can still reach the exit with the footprint placed. */
+export function validateFootprintPlacementPath(
+  grid: GridModel,
+  anchor: GridPoint,
+  footprint: Readonly<Footprint>,
+): boolean {
+  return projectFootprintPlacementRoutes(grid, anchor, footprint) !== null;
 }
 
 /** Build rule: every covered cell is free and both size-class routes survive the new block. */

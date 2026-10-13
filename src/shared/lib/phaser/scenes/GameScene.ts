@@ -112,6 +112,13 @@ import {
   updateGridOverlayVisualState as updateGridOverlayVisualStateRuntime,
 } from '../runtime/grid/gameSceneGridPreviewRuntime';
 import {
+  attachRoutePreviewGraphics,
+  createBuildRoutePreviewRuntime,
+  destroyRoutePreviewGraphics,
+  markRoutePreviewLayoutChanged,
+  updateBuildRoutePreview,
+} from '../runtime/grid/buildRoutePreviewRuntime';
+import {
   clearGridLabels as clearGridLabelsRuntime,
   clearTerrainSprites as clearTerrainSpritesRuntime,
   drawGridCell as drawGridCellRuntime,
@@ -148,6 +155,7 @@ import {
 import { GameAudioManager } from '../sound/GameAudioManager';
 import {
   BUILD_PREVIEW_RENDER_DEPTH,
+  ROUTE_PREVIEW_RENDER_DEPTH,
   DEFAULT_TOWER_COST,
   DEV_FPS_REPORT_INTERVAL_MS,
   DEFAULT_MAP_SEED,
@@ -174,6 +182,7 @@ import { createGameSceneRuntimeWiring } from './gameSceneRuntimeWiring';
 import {
   COMBAT_RUNTIME_CONFIG,
   GRID_PREVIEW_CONFIG,
+  ROUTE_PREVIEW_CONFIG,
   GRID_RENDERER_CONFIG,
   INPUT_CONTROLLER_CONFIG,
   MOVEMENT_RUNTIME_CONFIG,
@@ -194,6 +203,7 @@ export class GameScene extends Phaser.Scene {
     endpointMarkers: [],
   };
   private buildPreviewOverlay: Phaser.GameObjects.Graphics | null = null;
+  private readonly routePreview = createBuildRoutePreviewRuntime();
   private pathCellKeys = new Set<string>();
   private placedTowerCostsByCellKey = new Map<string, number>();
   private readonly playerField: BattlefieldRenderState = createBattlefieldRenderState();
@@ -314,7 +324,11 @@ export class GameScene extends Phaser.Scene {
     playSound: (soundId: SoundId) => this.soundManager?.play(soundId),
     markUserActionProcessed: () => this.markUserActionProcessed(),
     onHudChanged: () => this.publishHudSnapshot(),
-    drawGridCell: (cell) => this.drawGridCell(cell),
+    drawGridCell: (cell) => {
+      // Tower commands redraw exactly the cells whose occupancy they changed.
+      markRoutePreviewLayoutChanged(this.routePreview);
+      this.drawGridCell(cell);
+    },
     updateBuildPreview: () => this.updateBuildPreview(),
   };
 
@@ -364,6 +378,7 @@ export class GameScene extends Phaser.Scene {
     );
     this.buildPreviewOverlay = this.add.graphics();
     this.buildPreviewOverlay.setDepth(BUILD_PREVIEW_RENDER_DEPTH);
+    attachRoutePreviewGraphics(this.routePreview, this.add.graphics(), ROUTE_PREVIEW_RENDER_DEPTH);
     this.input.mouse?.disableContextMenu();
     this.teardownCallbacks.push(
       registerSceneAudioUnlock(
@@ -382,6 +397,8 @@ export class GameScene extends Phaser.Scene {
     this.registry.set('phase.game.over', this.isGameOver);
     this.registry.set('economy.earlyWaveStartBonus.granted', false);
     this.updateGridOverlayVisualState();
+    // Draws the build-phase routes before the first pointer move.
+    this.updateBuildPreview();
     this.publishHudSnapshot();
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, this.handleSceneShutdown, this);
     this.events.once(Phaser.Scenes.Events.DESTROY, this.handleSceneShutdown, this);
@@ -630,7 +647,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   private updateBuildPreview(): void {
-    updateBuildPreviewRuntime(
+    const isHoveredAnchorValid = updateBuildPreviewRuntime(
       {
         overlay: this.buildPreviewOverlay,
         gridGraphics: this.gridRendererState.gridGraphics,
@@ -641,6 +658,16 @@ export class GameScene extends Phaser.Scene {
         isBuildAnchorValid: (anchor, grid) => this.isBuildAnchorValid(anchor, grid),
       },
       GRID_PREVIEW_CONFIG,
+    );
+    updateBuildRoutePreview(
+      this.routePreview,
+      {
+        grid: this.gridModel,
+        isBuildPhase: this.canPerformBuildActions(),
+        hoveredAnchor: this.hoveredBuildAnchor,
+        isHoveredAnchorValid,
+      },
+      ROUTE_PREVIEW_CONFIG,
     );
   }
 
@@ -855,6 +882,7 @@ export class GameScene extends Phaser.Scene {
     this.hoveredCell = null;
     this.hoveredBuildAnchor = null;
     this.buildPreviewOverlay?.clear();
+    markRoutePreviewLayoutChanged(this.routePreview);
     this.pathCellKeys.clear();
     resetRunToInitialStateRuntime(this.runState);
     this.duelMatchState = createInitialDuelMatchState(
@@ -1145,6 +1173,7 @@ export class GameScene extends Phaser.Scene {
     destroyBattlefieldRenderState(this.opponentField);
     this.buildPreviewOverlay?.destroy();
     this.buildPreviewOverlay = null;
+    destroyRoutePreviewGraphics(this.routePreview);
     this.pathCellKeys.clear();
     this.gridRendererState.gridGraphics?.destroy();
     this.gridRendererState.gridGraphics = null;

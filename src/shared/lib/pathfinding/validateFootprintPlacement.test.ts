@@ -3,7 +3,11 @@ import { TOWER_FOOTPRINT } from '../../constants/footprint';
 import type { GridModel } from '../../types/grid';
 import { createGridModel } from '../grid/createGridModel';
 import { createDefaultEdgeEndpoints } from '../grid/generateEdgeEndpoints';
-import { canPlaceFootprint, validateFootprintPlacementPath } from './validateFootprintPlacement';
+import {
+  canPlaceFootprint,
+  projectFootprintPlacementRoutes,
+  validateFootprintPlacementPath,
+} from './validateFootprintPlacement';
 
 const ENDPOINTS = createDefaultEdgeEndpoints();
 
@@ -71,5 +75,28 @@ describe('shared/pathfinding/validateFootprintPlacement', () => {
     expect(
       canPlaceFootprint(grid, { x: ENDPOINTS.exit.x - 1, y: ENDPOINTS.exit.y }, TOWER_FOOTPRINT),
     ).toBe(false);
+  });
+
+  it('projects both routes with the block placed, so they can diverge', () => {
+    // Wall at columns 8..9 with a three-row gap by the lane and a two-row gap far up.
+    const grid = blockWhere(
+      createGridModel(ENDPOINTS),
+      (x, y) => (x === 8 || x === 9) && !(y >= 13 && y <= 15) && !(y >= 2 && y <= 3),
+    );
+
+    // The block leaves a one-cell gap at row 15: small creeps squeeze through,
+    // large ones detour to the far gap.
+    const routes = projectFootprintPlacementRoutes(grid, { x: 8, y: 13 }, TOWER_FOOTPRINT);
+
+    expect(routes).not.toBeNull();
+    expect(routes?.small).toContainEqual({ x: 8, y: 15 });
+    expect(routes?.large).toContainEqual({ x: 8, y: 2 });
+    expect(routes?.large.length).toBeGreaterThan(routes?.small.length ?? 0);
+  });
+
+  it('projects nothing for a block that fails the path rule', () => {
+    expect(
+      projectFootprintPlacementRoutes(createWalledGrid(10), { x: 8, y: 10 }, TOWER_FOOTPRINT),
+    ).toBeNull();
   });
 });

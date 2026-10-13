@@ -103,16 +103,20 @@ function drawValidityMarker(
   overlay.strokePath();
 }
 
-export function updateBuildPreview(context: BuildPreviewContext, config: GridPreviewConfig): void {
+/** Draws the hovered tower block; returns whether that block is a valid build. */
+export function updateBuildPreview(
+  context: BuildPreviewContext,
+  config: GridPreviewConfig,
+): boolean {
   if (!context.overlay) {
-    return;
+    return false;
   }
 
   context.overlay.clear();
 
   if (!context.canPerformBuildActions || !context.hoveredBuildAnchor || !context.gridModel) {
     updateGridOverlayVisualState(context.gridGraphics, context.canPerformBuildActions, config);
-    return;
+    return false;
   }
 
   const anchor = context.hoveredBuildAnchor;
@@ -143,4 +147,5 @@ export function updateBuildPreview(context: BuildPreviewContext, config: GridPre
 
   drawValidityMarker(context.overlay, centerX, centerY, isValid, strokeColor);
   updateGridOverlayVisualState(context.gridGraphics, context.canPerformBuildActions, config);
+  return isValid;
 }

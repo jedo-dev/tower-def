@@ -38,12 +38,14 @@ describe('tower combat flow', () => {
       id: 'creep:low',
       position: { x: 6, y: 5 },
       pathIndex: 1,
+      remainingRouteDistance: 9,
       hp: 100,
     });
     const highProgress = createCreep({
       id: 'creep:high',
       position: { x: 7, y: 5 },
       pathIndex: 3,
+      remainingRouteDistance: 7,
       hp: 60,
     });
 

@@ -61,6 +61,13 @@ export type CreepEntity = CreepCombatTraits & {
   status: CreepStatus;
   position: GridPosition;
   pathIndex: number;
+  /**
+   * Octile cells left to the exit along the creep's own route, kept current by
+   * the movement runtime. Tower priority compares this rather than `pathIndex`,
+   * which means different things on routes of different lengths. Absent until
+   * the creep is placed on a route; treated as "not started".
+   */
+  remainingRouteDistance?: number;
   /** Absent means no effects; the effect helpers create the list on demand. */
   activeEffects?: ActiveEffect[];
   /** Set only on creeps a duel side sent; absent on baseline wave creeps. */

@@ -1,11 +1,21 @@
 import type { CombatRuntimeConfig } from '../runtime/combat/gameSceneCombatRuntime';
 import type { GridPreviewConfig } from '../runtime/grid/gameSceneGridPreviewRuntime';
 import type { GridRendererConfig } from '../runtime/grid/gameSceneGridRenderer';
+import type { RoutePreviewConfig } from '../runtime/grid/routePreviewRenderer';
 import type { InputControllerConfig } from '../runtime/input/gameSceneInputController';
 import type { MovementRuntimeConfig } from '../runtime/movement/gameSceneMovementRuntime';
 import type { WaveRuntimeConfig } from '../runtime/wave/gameSceneWaveRuntime';
 import {
   ACTION_COOLDOWN_MS,
+  ROUTE_PREVIEW_GHOST_ALPHA_FACTOR,
+  ROUTE_PREVIEW_LARGE_BAND_ALPHA,
+  ROUTE_PREVIEW_LARGE_COLOR,
+  ROUTE_PREVIEW_LARGE_SPINE_ALPHA,
+  ROUTE_PREVIEW_LARGE_SPINE_WIDTH_PX,
+  ROUTE_PREVIEW_SMALL_ALPHA,
+  ROUTE_PREVIEW_SMALL_COLOR,
+  ROUTE_PREVIEW_SMALL_DOT_RADIUS_PX,
+  ROUTE_PREVIEW_SMALL_DOTS_PER_STEP,
   ARCHER_PROJECTILE_VISUAL_MODE,
   AUTO_WAVE_START_DELAY_MS,
   CREEP_BASE_COLOR,
@@ -104,6 +114,18 @@ export const GRID_PREVIEW_CONFIG: GridPreviewConfig = {
   previewInvalidStroke: PREVIEW_INVALID_STROKE,
   gridBuildAlpha: GRID_BUILD_ALPHA,
   gridIdleAlpha: GRID_IDLE_ALPHA,
+};
+
+export const ROUTE_PREVIEW_CONFIG: RoutePreviewConfig = {
+  smallRouteColor: ROUTE_PREVIEW_SMALL_COLOR,
+  smallRouteAlpha: ROUTE_PREVIEW_SMALL_ALPHA,
+  smallRouteDotRadiusPx: ROUTE_PREVIEW_SMALL_DOT_RADIUS_PX,
+  smallRouteDotsPerStep: ROUTE_PREVIEW_SMALL_DOTS_PER_STEP,
+  largeRouteColor: ROUTE_PREVIEW_LARGE_COLOR,
+  largeRouteBandAlpha: ROUTE_PREVIEW_LARGE_BAND_ALPHA,
+  largeRouteSpineWidthPx: ROUTE_PREVIEW_LARGE_SPINE_WIDTH_PX,
+  largeRouteSpineAlpha: ROUTE_PREVIEW_LARGE_SPINE_ALPHA,
+  ghostAlphaFactor: ROUTE_PREVIEW_GHOST_ALPHA_FACTOR,
 };
 
 export const GRID_RENDERER_CONFIG: GridRendererConfig = {
