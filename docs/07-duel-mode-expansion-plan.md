@@ -222,6 +222,8 @@ Results after that, same batch: median 27 rounds (range 21-30), towers at round 
 
 Known gaps for follow-up: draws are above the 02k.7 rate; orc loses most race pairs; nightmare does not beat hard.
 
+Same-wave tie-break (tower-def-ago): when both sides lose their last lives on the same wave, the side that leaked fewer creeps that wave wins; on equal leaks the side with more lives before the wave wins; only when both are equal is it a draw. The rule lives in the shared settlement (`resolveDuelMatchOutcome`, used by `endRound`), so the game and `sim:duel` / `sim:duel-batch` agree, and the outcome overlay names the reason. Same batch: draws 16% to 3% (13 to 2 of 80), match lengths unchanged.
+
 ## Suggested Improvements
 
 - Add difficulty presets for the computer opponent: relaxed, normal, aggressive.

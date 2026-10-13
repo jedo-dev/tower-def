@@ -8,6 +8,7 @@ import {
   startRound,
   type BattlefieldState,
   type DuelMatchState,
+  type DuelMatchOutcome,
   type DuelSide,
 } from '../../../entities/duel-match';
 import { generateEdgeEndpoints } from '../../../shared/lib/grid/generateEdgeEndpoints';
@@ -100,17 +101,21 @@ function payKillBounties(state: DuelMatchState, side: DuelSide, kills: number): 
   return next;
 }
 
-/** Decided by lives: a side at 0 is out; both out, or both alive, is a draw. */
-function decideWinner(state: DuelMatchState): DuelWinner {
-  const isAOut = state.player.hp <= 0;
-  const isBOut = state.opponent.hp <= 0;
-  if (isAOut === isBOut) {
-    if (isAOut || state.player.hp === state.opponent.hp) {
-      return null;
-    }
-    return state.player.hp > state.opponent.hp ? 'A' : 'B';
+const WINNER_BY_SIDE: Readonly<Record<DuelSide, 'A' | 'B'>> = { player: 'A', opponent: 'B' };
+
+/**
+ * A match that ended on lives takes the shared settlement's verdict (with its
+ * same-wave tie-break). One that hit the round cap goes to the side with more
+ * lives, or is a draw on equal lives.
+ */
+function decideWinner(state: DuelMatchState, endOutcome: DuelMatchOutcome | null): DuelWinner {
+  if (endOutcome !== null) {
+    return endOutcome.winningSide === null ? null : WINNER_BY_SIDE[endOutcome.winningSide];
   }
-  return isAOut ? 'B' : 'A';
+  if (state.player.hp === state.opponent.hp) {
+    return null;
+  }
+  return state.player.hp > state.opponent.hp ? 'A' : 'B';
 }
 
 type SideRoundFacts = {
@@ -154,6 +159,7 @@ export function simulateDuel(config: DuelSimulationConfig): DuelSimulationResult
   const rounds: DuelRoundReport[] = [];
   let totalTicks = 0;
   let isMatchOver = false;
+  let endOutcome: DuelMatchOutcome | null = null;
 
   for (let round = 1; round <= config.maxRounds && !isMatchOver; round += 1) {
     const build = runDuelBuildPhase(state, { a: config.sideA, b: config.sideB }, memory);
@@ -174,6 +180,9 @@ export function simulateDuel(config: DuelSimulationConfig): DuelSimulationResult
     const settlement = settleRound(state, wave.fieldA.leaks, wave.fieldB.leaks, wave.sentLeaks);
     state = settlement.state;
     isMatchOver = settlement.isMatchOver;
+    if (isMatchOver) {
+      endOutcome = { winningSide: settlement.winningSide, reason: settlement.endReason };
+    }
 
     const limit = DuelSimulationDefaults.LEAK_HISTORY_LIMIT;
     recordLeaks(memory.a, round, wave.fieldA.leaks, limit);
@@ -207,7 +216,7 @@ export function simulateDuel(config: DuelSimulationConfig): DuelSimulationResult
     entrance,
     exit,
     rounds,
-    winner: decideWinner(state),
+    winner: decideWinner(state, endOutcome),
     endReason: isMatchOver ? 'lives' : 'max_rounds',
     totalTicks,
     finalState: state,

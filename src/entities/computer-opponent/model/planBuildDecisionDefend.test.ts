@@ -25,6 +25,8 @@ import { StrategyIntent } from './types';
  * and probing the best few brings that to ~15,000.
  */
 const DEFEND_SCORING_EXPANSION_BUDGET = 40_000;
+/** The exhaustive reference search is deliberately slow; it compares every candidate. */
+const EXHAUSTIVE_COMPARISON_TIMEOUT_MS = 30_000;
 
 const SEEDS: readonly (number | null)[] = [null, 1, 2, 3, 4, 5];
 const ROUNDS = 12;
@@ -182,29 +184,34 @@ describe('entities/computer-opponent/planBuildDecision defending', () => {
     expect(buildCount).toBeGreaterThan(SEEDS.length * 6);
   });
 
-  it('picks what probing every candidate picks', () => {
-    let comparedCount = 0;
-    for (const seed of SEEDS) {
-      // Rounds that bought nothing hand the next one the same board.
-      const seenBoards = new Set<string>();
-      for (const { state, context, plan } of playDefendingRounds(seed, Difficulty.HARD)) {
-        const towerAnchors = state.opponent.battlefield.towers.map(({ position }) => position);
-        const boardKey = JSON.stringify([towerAnchors, context.affordableTowers]);
-        if (context.affordableTowers.length === 0 || seenBoards.has(boardKey)) {
-          continue;
-        }
-        seenBoards.add(boardKey);
-        const mazePlan = createMazePlanPriority(plan?.anchors ?? []);
-        const reference = findBestBuildByFullProbe(context, state, mazePlan);
-        const label = `seed ${seed} round ${context.round}`;
+  it(
+    'picks what probing every candidate picks',
+    () => {
+      let comparedCount = 0;
+      for (const seed of SEEDS) {
+        // Rounds that bought nothing hand the next one the same board.
+        const seenBoards = new Set<string>();
+        for (const { state, context, plan } of playDefendingRounds(seed, Difficulty.HARD)) {
+          const towerAnchors = state.opponent.battlefield.towers.map(({ position }) => position);
+          const boardKey = JSON.stringify([towerAnchors, context.affordableTowers]);
+          if (context.affordableTowers.length === 0 || seenBoards.has(boardKey)) {
+            continue;
+          }
+          seenBoards.add(boardKey);
+          const mazePlan = createMazePlanPriority(plan?.anchors ?? []);
+          const reference = findBestBuildByFullProbe(context, state, mazePlan);
+          const label = `seed ${seed} round ${context.round}`;
 
-        expect(findBestBuild(context, state, mazePlan, Infinity), label).toEqual(reference);
-        expect(findBestBuild(context, state, mazePlan, DEFEND_REROUTE_PROBE_LIMIT), label).toEqual(
-          reference,
-        );
-        comparedCount += 1;
+          expect(findBestBuild(context, state, mazePlan, Infinity), label).toEqual(reference);
+          expect(
+            findBestBuild(context, state, mazePlan, DEFEND_REROUTE_PROBE_LIMIT),
+            label,
+          ).toEqual(reference);
+          comparedCount += 1;
+        }
       }
-    }
-    expect(comparedCount).toBeGreaterThan(SEEDS.length);
-  });
+      expect(comparedCount).toBeGreaterThan(SEEDS.length);
+    },
+    EXHAUSTIVE_COMPARISON_TIMEOUT_MS,
+  );
 });

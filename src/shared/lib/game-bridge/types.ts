@@ -7,6 +7,12 @@ export type HudFactionType = 'undead' | 'orc' | 'human' | 'elf';
 export type HudCreepType = 'skeleton' | 'ghoul' | 'crypt_fiend' | 'gargoyle';
 export type BattlefieldView = 'player' | 'opponent';
 export type MatchOutcomeStatus = 'active' | 'player-won' | 'player-lost' | 'draw';
+/**
+ * Why a finished match went the way it did: one side out (`knockout`), or both
+ * out on the same wave and settled by `fewer-leaks` that wave, then by
+ * `more-lives` before it, else `even` (a draw).
+ */
+export type MatchOutcomeReason = 'knockout' | 'fewer-leaks' | 'more-lives' | 'even';
 export type DuelistSide = 'player' | 'opponent';
 export type CreepSendRejectionReason =
   | 'insufficient_gold'
@@ -77,6 +83,8 @@ export type GameHudSnapshot = {
   matchOutcome: {
     status: MatchOutcomeStatus;
     winner: HudFactionType | null;
+    /** `null` while the match is active. */
+    reason: MatchOutcomeReason | null;
   };
   builderFactionName: string;
   waveNumber: number;

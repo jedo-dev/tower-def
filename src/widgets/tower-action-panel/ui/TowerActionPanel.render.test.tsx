@@ -15,7 +15,7 @@ function createHudSnapshot(): GameHudSnapshot {
     opponentGold: 400,
     opponentIncome: 40,
     opponentLives: 20,
-    matchOutcome: { status: 'active', winner: null },
+    matchOutcome: { status: 'active', winner: null, reason: null },
     builderFactionName: 'Undead',
     waveNumber: 3,
     phase: 'build',

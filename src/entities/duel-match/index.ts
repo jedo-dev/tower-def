@@ -36,6 +36,8 @@ export {
   startRound,
 } from './model/lifecycle';
 export type { DuelRoundSettlement } from './model/lifecycle';
+export { resolveDuelMatchOutcome } from './model/matchOutcome';
+export type { DuelWaveOutcomeFacts } from './model/matchOutcome';
 export {
   canAffordSend,
   getIncomeBonusByTier,
@@ -64,6 +66,8 @@ export type { BattlefieldInitParams } from './model/state';
 export type {
   DuelIncomePayoutResult,
   DuelMatchConfig,
+  DuelMatchEndReason,
+  DuelMatchOutcome,
   DuelMatchState,
   DuelPhase,
   DuelRoundEndResult,

@@ -32,6 +32,7 @@ function createHudSnapshot(overrides?: Partial<GameHudSnapshot>): GameHudSnapsho
     matchOutcome: {
       status: 'active',
       winner: null,
+      reason: null,
     },
     builderFactionName: 'Undead',
     waveNumber: 1,
