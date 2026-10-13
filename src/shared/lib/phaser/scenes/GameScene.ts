@@ -603,7 +603,6 @@ export class GameScene extends Phaser.Scene {
       toTowerId: (position) => toTowerId(position),
       validateTowerPlacementPath: (grid, position) => validateTowerPlacementPath(grid, position),
       sellRefundRatio: SELL_REFUND_RATIO,
-      defaultTowerCost: DEFAULT_TOWER_COST,
     };
   }
 

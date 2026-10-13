@@ -28,7 +28,6 @@ export type BuildRuntimeDeps = {
   toTowerId: (position: GridPosition) => string;
   validateTowerPlacementPath: (grid: GridModel, position: GridPosition) => boolean;
   sellRefundRatio: number;
-  defaultTowerCost: number;
 };
 
 export type BuildPlacementResult = {
@@ -77,6 +76,15 @@ function resolvePlacementStats(
   };
 }
 
+function resolveSelectedTowerType(deps: BuildRuntimeDeps): TowerTypeId {
+  return deps.selectedTowerType ?? TowerTypeId.SINGLE;
+}
+
+/** What the selected tower costs: its authored content price, never a shared default. */
+export function resolveSelectedTowerCost(deps: BuildRuntimeDeps): number {
+  return deps.resolveTowerCost(resolveSelectedTowerType(deps));
+}
+
 export function isBuildCellValid(
   state: BuildRuntimeState,
   deps: BuildRuntimeDeps,
@@ -90,7 +98,7 @@ export function isBuildCellValid(
   if (!cell) return false;
   if (cell.role !== 'empty') return false;
   if (!cell.isWalkable || cell.isOccupied) return false;
-  if (!canSpendGold({ gold: state.playerGold }, deps.defaultTowerCost)) return false;
+  if (!canSpendGold({ gold: state.playerGold }, resolveSelectedTowerCost(deps))) return false;
 
   return deps.validateTowerPlacementPath(grid, cellPosition);
 }
@@ -143,9 +151,11 @@ export function tryPlaceTowerAtHoveredCell(
     };
   }
 
+  const towerType = resolveSelectedTowerType(deps);
+  const towerCost = deps.resolveTowerCost(towerType);
   const spendGoldResult = spendGold(
     { gold: state.playerGold, lives: state.playerLives },
-    deps.defaultTowerCost,
+    towerCost,
   );
   if (!spendGoldResult.spent) {
     return {
@@ -160,8 +170,6 @@ export function tryPlaceTowerAtHoveredCell(
   targetCell.isOccupied = true;
   targetCell.isWalkable = false;
 
-  const towerType = deps.selectedTowerType ?? TowerTypeId.SINGLE;
-  const towerCost = deps.resolveTowerCost(towerType);
   state.placedTowerCostsByCellKey.set(deps.toGridCellKey(hoveredCell), towerCost);
 
   const authoredTower = deps.resolveBuildableTower?.(towerType) ?? null;
