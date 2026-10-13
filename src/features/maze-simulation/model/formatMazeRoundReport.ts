@@ -1,6 +1,9 @@
 import type { BattlefieldState } from '../../../entities/duel-match';
-import { renderBoardSnapshot } from '../../../shared/lib/board-snapshot';
-import { RouteSizeClass } from '../../../shared/constants/board-snapshot';
+import { renderBoardSnapshot, towerSnapshotLabel } from '../../../shared/lib/board-snapshot';
+import {
+  BOARD_SNAPSHOT_TOWER_LEGEND,
+  RouteSizeClass,
+} from '../../../shared/constants/board-snapshot';
 import { TOWER_FOOTPRINT } from '../../../shared/constants/footprint';
 import type {
   MazeRoundReport,
@@ -27,6 +30,7 @@ function renderBattlefield(battlefield: BattlefieldState): string {
       anchor: tower.position,
       width: TOWER_FOOTPRINT.width,
       height: TOWER_FOOTPRINT.height,
+      label: towerSnapshotLabel(tower.type, tower.level),
     })),
     routes: [{ label: ROUTE_LABEL, sizeClass: RouteSizeClass.SMALL, cells: battlefield.path }],
   });
@@ -56,6 +60,7 @@ export function formatMazeSimulation(result: MazeSimulationResult): string {
       `exit (${result.exit.x},${result.exit.y})`,
       formatRouteCost(result.initialRouteCost),
     ].join(' | '),
+    BOARD_SNAPSHOT_TOWER_LEGEND,
     renderBattlefield(result.initialBattlefield),
   ].join('\n');
 

@@ -15,7 +15,16 @@ export type TowerFootprint = {
   anchor: GridPoint;
   width?: number;
   height?: number;
+  /**
+   * Characters written over the footprint row by row from its top-left cell,
+   * one per cell (for example a tower kind and its level); cells past the end
+   * of the label keep the tower glyph. Omitted, the whole footprint is `#`.
+   */
+  label?: string;
 };
+
+/** One character per cell: a board glyph, or a character from a tower label. */
+type CellGlyph = BoardSnapshotGlyph | string;
 
 export type BoardSnapshotRoute = {
   /** Shown in the header next to the route length. */
@@ -35,7 +44,7 @@ function toCellIndex(grid: GridModel, point: GridPoint): number | null {
   return isInside ? point.y * grid.cols + point.x : null;
 }
 
-function markBlockedCells(grid: GridModel, glyphs: BoardSnapshotGlyph[]): void {
+function markBlockedCells(grid: GridModel, glyphs: CellGlyph[]): void {
   for (const cell of grid.cells) {
     const index = toCellIndex(grid, cell);
     if (index !== null && (cell.isOccupied || !cell.isWalkable)) {
@@ -47,11 +56,12 @@ function markBlockedCells(grid: GridModel, glyphs: BoardSnapshotGlyph[]): void {
 function markTowerFootprints(
   grid: GridModel,
   towers: readonly TowerFootprint[],
-  glyphs: BoardSnapshotGlyph[],
+  glyphs: CellGlyph[],
 ): void {
   for (const tower of towers) {
     const width = tower.width ?? DEFAULT_TOWER_FOOTPRINT_SIDE;
     const height = tower.height ?? DEFAULT_TOWER_FOOTPRINT_SIDE;
+    const label = [...(tower.label ?? '')];
     for (let offsetY = 0; offsetY < height; offsetY += 1) {
       for (let offsetX = 0; offsetX < width; offsetX += 1) {
         const index = toCellIndex(grid, {
@@ -59,17 +69,14 @@ function markTowerFootprints(
           y: tower.anchor.y + offsetY,
         });
         if (index !== null) {
-          glyphs[index] = BoardSnapshotGlyph.TOWER;
+          glyphs[index] = label[offsetY * width + offsetX] ?? BoardSnapshotGlyph.TOWER;
         }
       }
     }
   }
 }
 
-function mergeRouteGlyph(
-  current: BoardSnapshotGlyph,
-  route: BoardSnapshotGlyph,
-): BoardSnapshotGlyph {
+function mergeRouteGlyph(current: CellGlyph, route: BoardSnapshotGlyph): CellGlyph {
   if (current === BoardSnapshotGlyph.FREE || current === route) {
     return route;
   }
@@ -85,7 +92,7 @@ function mergeRouteGlyph(
 function markRoutes(
   grid: GridModel,
   routes: readonly BoardSnapshotRoute[],
-  glyphs: BoardSnapshotGlyph[],
+  glyphs: CellGlyph[],
 ): void {
   for (const route of routes) {
     const routeGlyph = BOARD_SNAPSHOT_ROUTE_GLYPH[route.sizeClass];
@@ -103,7 +110,7 @@ function markEndpointZone(
   grid: GridModel,
   anchor: GridPoint,
   glyph: BoardSnapshotGlyph,
-  glyphs: BoardSnapshotGlyph[],
+  glyphs: CellGlyph[],
 ): void {
   for (const point of getFootprintCells(anchor, grid.endpointZoneFootprint)) {
     const index = toCellIndex(grid, point);
@@ -130,7 +137,10 @@ export function renderBoardSnapshot(input: BoardSnapshotInput): string {
   const { grid } = input;
   const towers = input.towers ?? [];
   const routes = input.routes ?? [];
-  const glyphs = Array.from({ length: grid.cols * grid.rows }, () => BoardSnapshotGlyph.FREE);
+  const glyphs: CellGlyph[] = Array.from(
+    { length: grid.cols * grid.rows },
+    () => BoardSnapshotGlyph.FREE,
+  );
 
   markBlockedCells(grid, glyphs);
   markTowerFootprints(grid, towers, glyphs);

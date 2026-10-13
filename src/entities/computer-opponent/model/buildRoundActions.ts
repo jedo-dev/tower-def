@@ -1,17 +1,26 @@
 import { TOWER_FOOTPRINT } from '../../../shared/constants/footprint';
 import { withFootprintOccupancy } from '../../../shared/lib/grid/footprint';
-import { TowerTypeId } from '../../../shared/types/content-ids';
+import type { TowerTypeId } from '../../../shared/types/content-ids';
 import type { GridModel } from '../../../shared/types/grid';
 import type { GridPosition } from '../../../shared/types/pathfinding';
 import type { TowerEntity } from '../../tower/model/types';
 import { TOWER_BASE_LEVEL, TOWER_COMBAT_STATS_BY_TYPE } from '../../tower/model/types';
-import { getUpgradeCost } from '../../tower/model/upgrade';
-import { findCheapestAffordableTower, getTowerCostForType } from './buildSpendBudget';
+import { getTowerCostForType } from './buildSpendBudget';
 import { createPathProbe } from './createPathProbe';
+import {
+  collectInvestmentTypes,
+  collectUpgradeCandidates,
+  createPlannedRoute,
+  createRouteDamageLedger,
+  planRoundInvestments,
+  toLedgerTowers,
+  toRouteCells,
+  type PlannedUpgrade,
+} from './damage-placement';
 import { findBestScoredBuild } from './findBestScoredBuild';
 import { createMazePlanPriority, selectPlanBuilds } from './maze-planning';
 import { DEFENSE_PLACEMENT_WEIGHTS, MAZE_PLACEMENT_WEIGHTS } from './scoreTowerPlacement';
-import type { ComputerAction, DecisionContext, UpgradeAction } from './types';
+import type { ComputerAction, DecisionContext } from './types';
 import { StrategyIntent } from './types';
 
 /** Running state of one build phase while its actions are chosen. */
@@ -62,81 +71,81 @@ function recordBuild(
   );
 }
 
-function findBestUpgrade(
-  context: DecisionContext,
-  existingTowers: readonly TowerEntity[],
-  budget: number,
-): UpgradeAction | null {
-  let bestUpgrade: UpgradeAction | null = null;
-  let bestCost = Infinity;
-
-  for (const towerId of context.upgradeableTowerIds) {
-    const tower = existingTowers.find((t) => t.id === towerId);
-    if (!tower) {
-      continue;
-    }
-
-    const cost = getUpgradeCost(tower.type, tower.level);
-    if (cost === null || cost > budget) {
-      continue;
-    }
-
-    if (cost < bestCost) {
-      bestCost = cost;
-      bestUpgrade = { kind: 'upgrade', towerId };
-    }
-  }
-
-  return bestUpgrade;
+function recordUpgrade(round: BuildRoundState, upgrade: PlannedUpgrade): void {
+  round.actions.push({ kind: 'upgrade', towerId: upgrade.towerId });
+  round.remainingBudget -= upgrade.cost;
+  round.reasoning.push(
+    `Upgrading tower ${upgrade.towerId} for ${upgrade.cost} gold, +${upgrade.value.toFixed(0)} route damage`,
+  );
 }
 
-/** Adds the cheapest affordable upgrade, if any. */
-export function addBestUpgrade(
-  round: BuildRoundState,
-  context: DecisionContext,
-  existingTowers: readonly TowerEntity[],
-): void {
-  const upgrade = findBestUpgrade(context, existingTowers, round.remainingBudget);
-  const tower = upgrade && existingTowers.find((t) => t.id === upgrade.towerId);
-  const cost = getUpgradeCost(tower?.type ?? TowerTypeId.SINGLE, tower?.level ?? 1);
-  if (upgrade && cost !== null) {
-    round.actions.push(upgrade);
-    round.remainingBudget -= cost;
-    round.reasoning.push(`Upgrading tower ${upgrade.towerId} for ${cost} gold`);
-  }
-}
+export type PlanInvestmentOptions = {
+  /** Most new blocks this round. */
+  maxBuilds: number;
+  /** Most upgrades this round; unlimited when omitted. */
+  maxUpgrades?: number;
+};
 
 /**
- * Builds the next planned maze blocks with the cheapest affordable tower
- * type, best immediate gain first. True when the plan ran out of buildable
- * blocks before the round's allowance did.
+ * Spends the round on the maze plan and on upgrades by marginal value per
+ * gold (see `planRoundInvestments`): the next plan blocks are walled with the
+ * cheapest tower, the blocks that see the finished route most (turns, the gap
+ * between two lanes) get a damage tower instead when the extra gold pays, and
+ * upgrades go to the towers whose next level adds the most damage along that
+ * route. True when the plan ran out of buildable blocks before the round's
+ * allowance did.
  */
-export function buildFromPlan(
+export function investInPlan(
   round: BuildRoundState,
   context: DecisionContext,
   unbuilt: readonly GridPosition[],
-  maxBuilds: number,
+  options: PlanInvestmentOptions,
 ): boolean {
-  const wallTower = findCheapestAffordableTower(
-    context.affordableTowers,
-    context.raceId,
-    round.remainingBudget,
+  const types = collectInvestmentTypes(context.affordableTowers, context.raceId).filter(
+    (type) => type.cost <= round.remainingBudget,
   );
-  if (!wallTower) {
+  const wall = types[0] ?? null;
+  const upgrades = collectUpgradeCandidates(round.plannedTowers, context.upgradeableTowerIds);
+  if (!wall && upgrades.length === 0) {
     return false;
   }
 
   const available = new Set(context.availableBuildPositions.map((p) => `${p.x}:${p.y}`));
   const candidates = unbuilt.filter((anchor) => available.has(`${anchor.x}:${anchor.y}`));
-  const count = Math.min(maxBuilds, Math.floor(round.remainingBudget / wallTower.cost));
-  const selection = selectPlanBuilds({ grid: round.grid, candidates, maxBuilds: count });
-  round.expandedNodeCount += selection.expandedNodeCount;
+  const count = wall
+    ? Math.min(options.maxBuilds, Math.floor(round.remainingBudget / wall.cost))
+    : 0;
+  const selection =
+    count > 0 ? selectPlanBuilds({ grid: round.grid, candidates, maxBuilds: count }) : null;
+  const plannedRoute = createPlannedRoute(round.grid, unbuilt);
+  round.expandedNodeCount += (selection?.expandedNodeCount ?? 0) + plannedRoute.expandedNodeCount;
 
-  selection.anchors.forEach((anchor, index) => {
-    const note = `maze plan, +${selection.gains[index].toFixed(1)} route cost`;
-    recordBuild(round, wallTower.towerType, anchor, wallTower.cost, note);
+  // A block that lengthens nothing yet still carries its share of the plan.
+  const walls = (selection?.anchors ?? []).map((anchor, index) => ({
+    anchor,
+    routeGain: Math.max(
+      toRouteCells(selection?.gains[index] ?? 0),
+      plannedRoute.averageGainPerBlock,
+    ),
+  }));
+  const investment = planRoundInvestments({
+    ledger: createRouteDamageLedger(plannedRoute.geometry, toLedgerTowers(round.plannedTowers)),
+    wall,
+    damageTypes: types.slice(1),
+    walls,
+    upgrades,
+    budget: round.remainingBudget,
+    maxBuilds: count,
+    maxUpgrades: options.maxUpgrades,
   });
-  return selection.anchors.length < count;
+
+  for (const build of investment.builds) {
+    const kind = build.towerType === wall?.towerType ? 'maze wall' : 'damage tower';
+    const note = `${kind} of the plan, +${build.routeGain.toFixed(1)} route cells`;
+    recordBuild(round, build.towerType, build.anchor, build.cost, note);
+  }
+  investment.upgrades.forEach((upgrade) => recordUpgrade(round, upgrade));
+  return (selection?.anchors.length ?? 0) < count;
 }
 
 /** Single-tower builds by placement score, each placed against the previous ones. */

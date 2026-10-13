@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { RouteSizeClass } from '../../constants/board-snapshot';
+import { TowerTypeId } from '../../types/content-ids';
 import { SINGLE_CELL_FOOTPRINT } from '../../constants/footprint';
 import { createGridModel } from '../grid/createGridModel';
 import { findPathBfs } from '../pathfinding/hasPathBfs';
 import type { GridCell, GridModel, GridPoint } from '../../types/grid';
 import { renderBoardSnapshot } from './renderBoardSnapshot';
+import { towerSnapshotLabel } from './towerSnapshotLabel';
 
 function createSmallGrid(
   cols: number,
@@ -148,6 +150,45 @@ describe('shared/lib/board-snapshot/renderBoardSnapshot', () => {
       .....
       E*s*X
       .LLL."
+    `);
+  });
+
+  it('writes tower labels over their footprints and keeps routes off them', () => {
+    const grid = createSmallGrid(6, 3, { x: 0, y: 1 }, { x: 5, y: 1 });
+    const snapshot = renderBoardSnapshot({
+      grid,
+      towers: [
+        {
+          anchor: { x: 1, y: 0 },
+          width: 2,
+          height: 1,
+          label: towerSnapshotLabel(TowerTypeId.SPLASH, 2),
+        },
+        {
+          anchor: { x: 3, y: 0 },
+          width: 2,
+          height: 1,
+          label: towerSnapshotLabel(TowerTypeId.SINGLE, 1),
+        },
+      ],
+      routes: [
+        {
+          label: 'route',
+          sizeClass: RouteSizeClass.SMALL,
+          cells: [
+            { x: 0, y: 1 },
+            { x: 1, y: 0 },
+            { x: 2, y: 1 },
+          ],
+        },
+      ],
+    });
+
+    expect(snapshot).toMatchInlineSnapshot(`
+      "board 6x3 | route (small) 3
+      .S2##.
+      E.s..X
+      ......"
     `);
   });
 

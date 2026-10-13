@@ -172,10 +172,11 @@ describe('entities/computer-opponent/applyComputerBuildStrategy', () => {
 
     expect(result.decision.intent).toBe(StrategyIntent.UPGRADE);
     expect(result.builtCount).toBe(0);
-    expect(result.upgradedCount).toBe(1);
-    expect(result.spentGold).toBe(expectedUpgradeCost);
+    // Every upgrade that adds damage along the route fits the budget here.
+    expect(result.upgradedCount).toBeGreaterThan(0);
+    expect(result.spentGold).toBe(result.upgradedCount * (expectedUpgradeCost ?? 0));
     expect(result.state.player.battlefield).toBe(state.player.battlefield);
-    expect(result.state.opponent.gold).toBe(state.opponent.gold - (expectedUpgradeCost ?? 0));
+    expect(result.state.opponent.gold).toBe(state.opponent.gold - result.spentGold);
     expect(result.state.opponent.battlefield.towers.some((tower) => tower.level === 2)).toBe(true);
   });
 
