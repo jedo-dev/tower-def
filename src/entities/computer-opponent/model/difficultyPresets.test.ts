@@ -32,7 +32,6 @@ describe('entities/computer-opponent/difficultyPresets', () => {
         expect(preset.upgradePriority).toBeLessThanOrEqual(1);
         expect(preset.extendMazePriority).toBeGreaterThanOrEqual(0);
         expect(preset.extendMazePriority).toBeLessThanOrEqual(1);
-        expect(preset.handicapGoldBonus).toBeGreaterThanOrEqual(0);
       }
     });
   });
@@ -81,14 +80,15 @@ describe('entities/computer-opponent/difficultyPresets', () => {
     });
   });
 
-  describe('handicap', () => {
-    it('only nightmare has handicap gold bonus', () => {
-      expect(COMPUTER_DIFFICULTY_PRESETS[Difficulty.EASY].handicapGoldBonus).toBe(0);
-      expect(COMPUTER_DIFFICULTY_PRESETS[Difficulty.NORMAL].handicapGoldBonus).toBe(0);
-      expect(COMPUTER_DIFFICULTY_PRESETS[Difficulty.HARD].handicapGoldBonus).toBe(0);
-      expect(COMPUTER_DIFFICULTY_PRESETS[Difficulty.NIGHTMARE].handicapGoldBonus).toBeGreaterThan(
-        0,
-      );
+  describe('decisions only', () => {
+    it('carries no stat or economy handicap at any difficulty', () => {
+      for (const difficulty of Object.values(Difficulty)) {
+        const preset = COMPUTER_DIFFICULTY_PRESETS[difficulty];
+        expect(preset).not.toHaveProperty('handicapGoldBonus');
+        expect(preset).not.toHaveProperty('creepHealthModifier');
+        expect(preset).not.toHaveProperty('creepSpeedModifier');
+        expect(preset).not.toHaveProperty('rewardModifier');
+      }
     });
   });
 

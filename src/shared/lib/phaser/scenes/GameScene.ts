@@ -280,7 +280,6 @@ export class GameScene extends Phaser.Scene {
     },
     getSelectedFactionUnits: () => this.getSelectedFactionUnits(),
     getComputerSendWaveUnits: () => this.getComputerSendWaveUnits(),
-    getSelectedDifficulty: () => this.selectedDifficulty,
     refreshBuildState: () => this.refreshBuildState(),
     publishHudSnapshot: () => this.publishHudSnapshot(),
     handleGameOverUpdated: (isGameOver) => this.handleGameOverUpdated(isGameOver),

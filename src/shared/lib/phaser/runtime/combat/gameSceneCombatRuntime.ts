@@ -74,16 +74,12 @@ export type CombatRuntimeDependencies = {
   playSplashAttackAnimation: (tower: TowerRenderState) => void;
   playSound: (soundId: SoundId) => void;
   getResources: () => PlayerResources;
-  /** Applies the difficulty reward modifier; identity when not provided. */
-  scaleReward?: (baseReward: number) => number;
   onGoldUpdated: (nextGold: number) => void;
   onHudChanged: () => void;
 };
 
 function handleCreepKill(deps: CombatRuntimeDependencies): void {
-  const reward =
-    deps.scaleReward?.(ECONOMY_BALANCE.creepKillRewardGold) ?? ECONOMY_BALANCE.creepKillRewardGold;
-  const nextResources = addGold(deps.getResources(), reward);
+  const nextResources = addGold(deps.getResources(), ECONOMY_BALANCE.creepKillRewardGold);
   deps.onGoldUpdated(nextResources.gold);
   deps.playSound('combat.creep_death.basic');
   deps.playSound('economy.gold_gain');

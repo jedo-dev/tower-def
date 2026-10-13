@@ -1,5 +1,4 @@
 import type Phaser from 'phaser';
-import { scaleCreepStats, scaleReward, type Difficulty } from '../../../../entities/difficulty';
 import type { DuelMatchState } from '../../../../entities/duel-match';
 import type { UnitConfig } from '../../../../entities/unit';
 import type { SoundId } from '../sound/audio.types';
@@ -39,7 +38,6 @@ export type GameSceneWiringHost = {
   setDuelMatchState: (state: DuelMatchState) => void;
   getSelectedFactionUnits: () => UnitConfig[];
   getComputerSendWaveUnits: () => UnitConfig[];
-  getSelectedDifficulty: () => Difficulty;
   refreshBuildState: () => void;
   publishHudSnapshot: () => void;
   handleGameOverUpdated: (isGameOver: boolean) => void;
@@ -75,9 +73,6 @@ function createPlayerCombatDeps(host: GameSceneWiringHost): CombatRuntimeDepende
       gold: host.runState.playerGold,
       lives: host.runState.playerLives,
     }),
-    // Difficulty tilts the player's economy only; the opponent deps below
-    // deliberately keep the unscaled rewards.
-    scaleReward: (baseReward) => scaleReward(baseReward, host.getSelectedDifficulty()),
     onGoldUpdated: (nextGold) => updatePlayerGold(host, nextGold),
     onHudChanged: () => host.publishHudSnapshot(),
   };
@@ -117,8 +112,6 @@ function createWaveRuntimeDeps(host: GameSceneWiringHost): WaveRuntimeDependenci
     getAnimationKeyByUnit: (unit) => getAnimationKeyByUnit(unit),
     getCreepTypeFromUnit: (unit) => mapUnitToCreepType(unit),
     getCreepTintByUnit: (unit) => getCreepTintByUnit(unit),
-    scaleReward: (baseReward) => scaleReward(baseReward, host.getSelectedDifficulty()),
-    scaleCreepStats: (stats) => scaleCreepStats(stats, host.getSelectedDifficulty()),
     toCellCenter: (position) => toCellCenter(position),
     onGoldUpdated: (nextGold) => updatePlayerGold(host, nextGold),
     onWavePhaseChanged: (nextPhase) => {
