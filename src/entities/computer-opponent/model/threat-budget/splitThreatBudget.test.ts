@@ -65,9 +65,11 @@ describe('entities/computer-opponent/threat-budget splitThreatBudget', () => {
   });
 
   it('leaves the gold defence needs before sends take theirs', () => {
-    const split = splitThreatBudget(inputAtMargin(1.8));
+    // Short of comfortable, by less than the purse.
+    const split = splitThreatBudget(inputAtMargin(TUNING.comfortableMargin - 0.4));
 
     expect(split.defenceShortfallGold).toBeGreaterThan(0);
+    expect(split.defenceShortfallGold).toBeLessThan(GOLD);
     expect(split.sendBudget).toBeLessThanOrEqual(GOLD - split.defenceShortfallGold);
   });
 

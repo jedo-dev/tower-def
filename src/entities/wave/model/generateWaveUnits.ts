@@ -1,21 +1,10 @@
 import { UnitTier, type UnitConfig } from '../../unit';
-
-/** A wave always fields at least this many creeps and never more than the cap. */
-export const WAVE_UNIT_COUNT_BOUNDS = {
-  min: 5,
-  max: 14,
-} as const;
-
-const MIN_WAVE_UNITS = WAVE_UNIT_COUNT_BOUNDS.min;
-const MAX_WAVE_UNITS = WAVE_UNIT_COUNT_BOUNDS.max;
-const TIER_VALUE_BY_TIER: Record<UnitTier, number> = {
-  [UnitTier.TIER_1]: 1,
-  [UnitTier.TIER_2]: 2,
-  [UnitTier.TIER_3]: 3,
-  [UnitTier.TIER_4]: 5,
-  [UnitTier.TIER_5]: 7,
-  [UnitTier.TIER_6]: 10,
-};
+import {
+  WAVE_BUDGET_CURVE,
+  WAVE_TIER_UNLOCK_WAVE,
+  WAVE_TIER_VALUE_BY_TIER,
+  WAVE_UNIT_COUNT_BOUNDS,
+} from './waveBalance';
 
 export type GenerateWaveUnitsInput = {
   waveNumber: number;
@@ -23,12 +12,24 @@ export type GenerateWaveUnitsInput = {
   random?: () => number;
 };
 
-function getWaveValueByNumber(waveNumber: number): number {
-  return 8 + waveNumber * 3;
+/** Tier points the wave may spend. */
+export function getWaveBudget(waveNumber: number): number {
+  const { base, perWave, perWaveSquared } = WAVE_BUDGET_CURVE;
+  return Math.floor(base + perWave * waveNumber + perWaveSquared * waveNumber * waveNumber);
+}
+
+/** Most creatures the wave may field. */
+export function getWaveUnitCap(waveNumber: number): number {
+  const { capBase, capPerWave, max } = WAVE_UNIT_COUNT_BOUNDS;
+  return Math.min(max, Math.floor(capBase + capPerWave * waveNumber));
 }
 
 function getUnitValue(unit: UnitConfig): number {
-  return TIER_VALUE_BY_TIER[unit.tier];
+  return WAVE_TIER_VALUE_BY_TIER[unit.tier];
+}
+
+function isTierUnlocked(unit: UnitConfig, waveNumber: number): boolean {
+  return WAVE_TIER_UNLOCK_WAVE[unit.tier] <= waveNumber;
 }
 
 function pickUnitWithTierBias(candidates: UnitConfig[], random: () => number): UnitConfig {
@@ -57,12 +58,13 @@ export function generateWaveUnits(input: GenerateWaveUnitsInput): UnitConfig[] {
   }
 
   const random = input.random ?? Math.random;
-  const budget = getWaveValueByNumber(input.waveNumber);
-  let remainingBudget = budget;
+  const unitCap = getWaveUnitCap(input.waveNumber);
+  const unlocked = input.factionUnits.filter((unit) => isTierUnlocked(unit, input.waveNumber));
+  let remainingBudget = getWaveBudget(input.waveNumber);
   const units: UnitConfig[] = [];
 
-  while (remainingBudget > 0 && units.length < MAX_WAVE_UNITS) {
-    const affordable = input.factionUnits.filter((unit) => getUnitValue(unit) <= remainingBudget);
+  while (remainingBudget > 0 && units.length < unitCap) {
+    const affordable = unlocked.filter((unit) => getUnitValue(unit) <= remainingBudget);
     if (affordable.length === 0) {
       break;
     }
@@ -75,7 +77,7 @@ export function generateWaveUnits(input: GenerateWaveUnitsInput): UnitConfig[] {
   const fallbackPool = input.factionUnits.filter((unit) => unit.tier === UnitTier.TIER_1);
   const fallbackUnit = fallbackPool[0] ?? input.factionUnits[0];
 
-  while (units.length < MIN_WAVE_UNITS && units.length < MAX_WAVE_UNITS) {
+  while (units.length < WAVE_UNIT_COUNT_BOUNDS.min) {
     units.push(fallbackUnit);
   }
 

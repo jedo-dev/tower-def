@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { resolveUnitConfigById, type UnitConfig } from '../../../../../entities/unit';
 import { getUnitsByFaction } from '../../../../../entities/unit';
+import { scaleHealthForWave } from '../../../../../entities/wave';
 import { RaceId } from '../../../../types/content-ids';
 import { createWaveCreepEntity, scheduleWaveSpawns, takeReadyWaveSpawns } from './waveSpawnCore';
 
@@ -30,7 +31,7 @@ describe('shared/lib/phaser/runtime/wave/waveSpawnCore', () => {
     expect(pending.map((spawn) => spawn.sequenceIndex)).toEqual([2]);
   });
 
-  it('places the creep on the first route cell with the unit stats', () => {
+  it('places the creep on the first route cell with the unit stats, health grown to its wave', () => {
     const [spawn] = scheduleWaveSpawns([units[0]], [], 'opponent', {
       firstSpawnAtMs: 0,
       spawnIntervalMs: 0,
@@ -43,7 +44,9 @@ describe('shared/lib/phaser/runtime/wave/waveSpawnCore', () => {
 
     expect(creep.id).toBe('wave:creep:4:0');
     expect(creep.position).toEqual({ x: 2, y: 3 });
-    expect(creep.hp).toBe(units[0].health);
+    expect(creep.hp).toBe(scaleHealthForWave(units[0].health, 4));
+    expect(creep.hp).toBeGreaterThan(units[0].health);
+    expect(createWaveCreepEntity(spawn, 1, route, 'basic').hp).toBe(units[0].health);
     expect(creep.remainingRouteDistance).toBe(1);
     expect(creep.sender).toBeUndefined();
   });

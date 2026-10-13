@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { RaceId } from '../../../../shared/types/content-ids';
 import { getUnitsByFaction, resolveUnitConfigById } from '../../../unit/model/registry';
+import { getWaveHealthMultiplier } from '../../../wave/model/waveHealth';
 import {
   BETWEEN_LANES_ANCHOR,
   ledgerTower,
@@ -51,8 +52,19 @@ describe('entities/computer-opponent/threat-budget estimateIncomingThreat', () =
     const sent = estimateIncomingThreat(threatInput({ observedSends: [fiend, fiend] }));
 
     expect(computeEffectiveHealth(fiend)).toBeGreaterThan(fiend.health);
-    expect(sent.sendHealth).toBeCloseTo(2 * computeEffectiveHealth(fiend));
+    expect(sent.sendHealth).toBeCloseTo(
+      2 * computeEffectiveHealth(fiend) * getWaveHealthMultiplier(threatInput().waveNumber),
+    );
     expect(sent.totalHealth).toBeCloseTo(quiet.totalHealth + sent.sendHealth);
+  });
+
+  it('grows every creep with the wave it spawns in, as the battlefield does', () => {
+    const fiend = resolveUnitConfigById('undead_crypt_fiend');
+    const early = estimateIncomingThreat(threatInput({ waveNumber: 1, observedSends: [fiend] }));
+    const late = estimateIncomingThreat(threatInput({ waveNumber: 9, observedSends: [fiend] }));
+
+    expect(early.sendHealth).toBeCloseTo(computeEffectiveHealth(fiend));
+    expect(late.sendHealth).toBeCloseTo(early.sendHealth * getWaveHealthMultiplier(9));
   });
 
   it('expects sends from the other side income while its queue is empty', () => {
