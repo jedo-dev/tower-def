@@ -53,7 +53,7 @@ src/content/
 | `id` | yes | Must be listed in `UNIT_IDS` (`src/entities/unit/model/types.ts`). |
 | `name` | yes | Shown in the HUD and wave preview. |
 | `tier` | yes | 1 to 6. Drives wave budget and duel send cost, **not** the stats. |
-| `health` | yes | Hit points at spawn, before difficulty scaling. |
+| `health` | yes | Hit points at spawn in wave 1. Every creep, baseline or sent, grows by `WAVE_HEALTH_GROWTH` per wave after that (`entities/wave/model/waveBalance.ts`). |
 | `speed` | yes | Path speed multiplier. `1.0` is the baseline step rate. |
 | `armor` | yes | Armor points. Each point removes a share of a direct hit (see `shared/constants/damage.ts`); damage over time ignores armor. |
 | `damage` | yes | Damage the creature deals; reserved for duel pressure. |
@@ -75,8 +75,9 @@ Unknown fields are rejected: add the field to the schema first
 **Cosmetic:** `name`, `description`, `spriteKey`, `sizeClass`.
 
 `tier` is the one field that does double duty: it decides how much of the wave
-budget a creature consumes and what it costs to send in duel mode. A cheap
-tier with heavy stats makes waves that cannot be answered.
+budget a creature consumes, from which wave the baseline may field it
+(`WAVE_TIER_UNLOCK_WAVE`) and what it costs to send in duel mode. A cheap tier
+with heavy stats makes waves that cannot be answered.
 
 ## Stat guard rails
 
@@ -129,6 +130,10 @@ node .artifacts/wave-balance-check.mjs
 It prints total wave health and average speed per race for waves 1, 5, 10 and
 20. Treat a swing beyond roughly 10% as a balance decision that needs a note in
 the Beads task, not an accident.
+
+For duel pacing, run `npm run sim:duel-batch` before and after the edit and
+compare match length, towers at round 5 and the draw rate against the targets
+in `docs/07-duel-mode-expansion-plan.md` (Duel Balance).
 
 ## Where the code lives
 

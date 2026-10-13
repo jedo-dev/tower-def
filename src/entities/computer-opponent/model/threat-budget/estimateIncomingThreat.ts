@@ -1,6 +1,7 @@
 import { getSendCostByTier } from '../../../duel-match/model/sendEconomy';
 import type { UnitConfig } from '../../../unit/model/types';
 import { generateWaveUnits } from '../../../wave/model/generateWaveUnits';
+import { getWaveHealthMultiplier } from '../../../wave/model/waveHealth';
 import { REFERENCE_CREEP_SPEED } from '../damage-placement/constants';
 import { BASELINE_ESTIMATE_RANDOM_ROLL } from './constants';
 import { computeEffectiveHealth } from './effectiveHealth';
@@ -77,11 +78,15 @@ export function estimateIncomingThreat(input: IncomingThreatInput): IncomingThre
   const estimated = estimateSends(input.expectedSendGold, input.enemySendables);
   const sends = observed.health >= estimated.health ? observed : estimated;
   const creepCount = baseline.count + sends.count;
+  // Every creep of the wave spawns with its health grown to the wave number.
+  const healthMultiplier = getWaveHealthMultiplier(input.waveNumber);
+  const baselineHealth = baseline.health * healthMultiplier;
+  const sendHealth = sends.health * healthMultiplier;
 
   return {
-    baselineHealth: baseline.health,
-    sendHealth: sends.health,
-    totalHealth: baseline.health + sends.health,
+    baselineHealth,
+    sendHealth,
+    totalHealth: baselineHealth + sendHealth,
     creepCount,
     averageSpeed:
       creepCount > 0 ? (baseline.speedSum + sends.speedSum) / creepCount : REFERENCE_CREEP_SPEED,

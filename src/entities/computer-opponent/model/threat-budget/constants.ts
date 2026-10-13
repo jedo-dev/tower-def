@@ -58,26 +58,26 @@ export const THREAT_BUDGET_TUNING_BY_DIFFICULTY: Readonly<
   Record<Difficulty, Readonly<ThreatBudgetTuning>>
 > = {
   [Difficulty.EASY]: {
-    threatenedMargin: 1.2,
-    comfortableMargin: 2.5,
+    threatenedMargin: 1.8,
+    comfortableMargin: 3.2,
     comfortableBuildSpendScale: 0.8,
     threatenedSendScale: 0.5,
   },
   [Difficulty.NORMAL]: {
-    threatenedMargin: 1,
-    comfortableMargin: 2,
+    threatenedMargin: 1.6,
+    comfortableMargin: 2.8,
     comfortableBuildSpendScale: 0.7,
     threatenedSendScale: 0.6,
   },
   [Difficulty.HARD]: {
-    threatenedMargin: 0.9,
-    comfortableMargin: 1.7,
+    threatenedMargin: 1.5,
+    comfortableMargin: 2.5,
     comfortableBuildSpendScale: 0.6,
     threatenedSendScale: 0.7,
   },
   [Difficulty.NIGHTMARE]: {
-    threatenedMargin: 0.8,
-    comfortableMargin: 1.5,
+    threatenedMargin: 1.4,
+    comfortableMargin: 2.3,
     comfortableBuildSpendScale: 0.5,
     threatenedSendScale: 0.8,
   },

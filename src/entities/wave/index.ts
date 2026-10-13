@@ -14,5 +14,13 @@ export {
   type WaveRoute,
   type WaveRoutes,
 } from './model/calculateWavePath';
-export { generateWaveUnits, WAVE_UNIT_COUNT_BOUNDS } from './model/generateWaveUnits';
+export { generateWaveUnits, getWaveBudget, getWaveUnitCap } from './model/generateWaveUnits';
+export {
+  WAVE_BUDGET_CURVE,
+  WAVE_HEALTH_GROWTH,
+  WAVE_TIER_UNLOCK_WAVE,
+  WAVE_TIER_VALUE_BY_TIER,
+  WAVE_UNIT_COUNT_BOUNDS,
+} from './model/waveBalance';
 export { buildWavePreview, composeWave } from './model/composeWave';
+export { getWaveHealthMultiplier, scaleHealthForWave } from './model/waveHealth';

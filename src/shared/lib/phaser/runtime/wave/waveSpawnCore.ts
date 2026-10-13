@@ -1,5 +1,6 @@
 import type { CreepEntity, CreepSenderSide, CreepType } from '../../../../../entities/creep';
 import type { UnitConfig } from '../../../../../entities/unit';
+import { scaleHealthForWave } from '../../../../../entities/wave';
 import { getRemainingRouteDistance } from '../../../pathfinding/routeProgress';
 import type { WaveRoute } from '../../../pathfinding/waveRoutes';
 import type { PendingWaveSpawn } from '../../scenes/gameScene.types';
@@ -48,7 +49,10 @@ export function takeReadyWaveSpawns(
   };
 }
 
-/** The creep a spawn becomes, standing on the first cell of its route. */
+/**
+ * The creep a spawn becomes, standing on the first cell of its route, with its
+ * health grown to the wave it spawns in.
+ */
 export function createWaveCreepEntity(
   spawn: PendingWaveSpawn,
   waveNumber: number,
@@ -58,7 +62,7 @@ export function createWaveCreepEntity(
   return {
     id: `wave:creep:${waveNumber}:${spawn.sequenceIndex}`,
     type: creepType,
-    hp: spawn.unit.health,
+    hp: scaleHealthForWave(spawn.unit.health, waveNumber),
     lifeState: 'alive',
     speed: spawn.unit.speed,
     armor: spawn.unit.armor,

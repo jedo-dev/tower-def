@@ -22,27 +22,27 @@ export type SpendBudgetConfig = {
 export const SPEND_BUDGET_BY_DIFFICULTY: Readonly<Record<Difficulty, Readonly<SpendBudgetConfig>>> =
   {
     [Difficulty.EASY]: {
-      maxSpendRatioPerRound: 0.4,
-      maxBuildActionsPerRound: 2,
-      minGoldReserveRatio: 0.35,
+      maxSpendRatioPerRound: 0.5,
+      maxBuildActionsPerRound: 4,
+      minGoldReserveRatio: 0.25,
       mazeCoverageTarget: 0.25,
     },
     [Difficulty.NORMAL]: {
-      maxSpendRatioPerRound: 0.6,
-      maxBuildActionsPerRound: 4,
-      minGoldReserveRatio: 0.25,
+      maxSpendRatioPerRound: 0.8,
+      maxBuildActionsPerRound: 6,
+      minGoldReserveRatio: 0.1,
       mazeCoverageTarget: 0.34,
     },
     [Difficulty.HARD]: {
-      maxSpendRatioPerRound: 0.85,
-      maxBuildActionsPerRound: 6,
-      minGoldReserveRatio: 0.15,
+      maxSpendRatioPerRound: 0.95,
+      maxBuildActionsPerRound: 8,
+      minGoldReserveRatio: 0.05,
       mazeCoverageTarget: 0.42,
     },
     [Difficulty.NIGHTMARE]: {
-      maxSpendRatioPerRound: 0.95,
-      maxBuildActionsPerRound: 8,
-      minGoldReserveRatio: 0.1,
+      maxSpendRatioPerRound: 1,
+      maxBuildActionsPerRound: 10,
+      minGoldReserveRatio: 0,
       mazeCoverageTarget: 0.46,
     },
   };

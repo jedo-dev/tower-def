@@ -7,7 +7,7 @@ import {
   type UnitConfig,
 } from '../../entities/unit';
 import { UNIT_STAT_BOUNDS } from '../../entities/unit/model/content/unitContent.types';
-import { generateWaveUnits, WAVE_UNIT_COUNT_BOUNDS } from '../../entities/wave';
+import { generateWaveUnits, getWaveUnitCap, WAVE_UNIT_COUNT_BOUNDS } from '../../entities/wave';
 import { getAllRaceRegistries } from '../../entities/race-registry';
 import { RACE_IDS } from '../types/content-ids';
 
@@ -19,7 +19,7 @@ import { RACE_IDS } from '../types/content-ids';
  */
 
 const DESIGN_BOUNDS = {
-  health: { min: 50, max: 1200 },
+  health: { min: 30, max: 1200 },
   speed: { min: 0.5, max: 2.5 },
   damage: { min: 5, max: 120 },
   rewardGold: { min: 1, max: 60 },
@@ -104,7 +104,7 @@ describe('creature content guards', () => {
           WAVE_UNIT_COUNT_BOUNDS.min,
         );
         expect(units.length, `${race} wave ${waveNumber}`).toBeLessThanOrEqual(
-          WAVE_UNIT_COUNT_BOUNDS.max,
+          getWaveUnitCap(waveNumber),
         );
         expect(
           units.every((unit) => unit.faction === race),

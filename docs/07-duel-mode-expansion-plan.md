@@ -182,6 +182,38 @@ Both sides play by identical rules; difficulty presets change only how well the 
   - The computer's preset `maxSendsPerRound` may be stricter, but the shared limits are enforced on top of it.
 - **Leaks steal lives** (`entities/duel-match/model/lifeSteal.ts`): when a creep one side sent leaks on the other field, the defender loses HP as usual and the sender gains 1 life per 2 lives its sends took (`LEAKED_LIVES_PER_STOLEN_LIFE`). An odd leftover is banked per side and carried to later rounds. Baseline wave leaks steal nothing. Only lives actually lost count, and a side that hits 0 HP loses even if its own sends stole lives that round. HP has no cap.
 
+## Duel Balance
+
+Targets: equal-strength computer duels last 20-30 rounds, a sensibly playing side has 10-14 towers by round 5, draws are rare, and no match reaches the 40-round cap (waves must eventually outgrow any board).
+
+Measure with the batch simulator; it plays equal-difficulty duels across seeds and prints one row per matchup plus every match as `seed:rounds+winner`:
+
+```bash
+npm run sim:duel-batch                     # seeds 1-10, normal and hard, four race pairs
+npm run sim:duel-batch -- --seeds 1-20 --difficulties hard --pairs orc:elf --baseline-race human
+```
+
+Balance values (tower-def-02k.7):
+
+| Lever | Where | Value |
+| --- | --- | --- |
+| Starting gold / income / lives | `entities/duel-match/model/balance.ts` | 500 / 50 / 20 (unchanged) |
+| Send cost and income bonus per tier | same | unchanged (T1 50 gold for +10 income) |
+| Kill bounty | `shared/constants/economy.ts` | 10 (unchanged) |
+| Wave budget (tier points) | `entities/wave/model/waveBalance.ts` `WAVE_BUDGET_CURVE` | `4 + n + 0.15 n^2` (was `8 + 3n`) |
+| Tier unlock wave | `WAVE_TIER_UNLOCK_WAVE` | T1 1, T2 3, T3 5, T4 8, T5 12, T6 16 (was all tiers from wave 1) |
+| Creatures per wave | `WAVE_UNIT_COUNT_BOUNDS` | min 5, cap `10 + n/2` up to 30 (was 5-14) |
+| Creep health growth | `WAVE_HEALTH_GROWTH` | +10% per wave, compounding, baseline and sent creeps alike (new) |
+| Authored creep health | `src/content/units/*.json` | halved: the values are now wave-1 strength |
+| Computer build spend (ratio / builds / reserve) | `computer-opponent/model/buildSpendBudget.ts` | easy 0.5/4/0.25, normal 0.8/6/0.1, hard 0.95/8/0.05, nightmare 1/10/0 (was 0.4/2/0.35, 0.6/4/0.25, 0.85/6/0.15, 0.95/8/0.1) |
+| Computer defence margins (threatened / comfortable) | `computer-opponent/model/threat-budget/constants.ts` | easy 1.8/3.2, normal 1.6/2.8, hard 1.5/2.5, nightmare 1.4/2.3 (each +0.6/+0.8) |
+
+Why: before the pass the wave-1 baseline could already field two tier-4 creatures (1,355 health) against five towers on a 30-cell route, so most of every wave leaked and duels ended in a draw by round 4-5. The computer also kept a large reserve, which capped its opening at four to six towers. Now the opening waves are tier-1 fodder that an opening maze holds, the computer spends its purse, and compounding creep health ends matches once the board is full.
+
+Results, seeds 1-10, baseline undead, normal and hard over undead:orc, human:elf, orc:human and elf:undead: median 25 rounds (range 6-31), towers at round 5 median 12 per side (range 9-16), draws 6%, 40-round cap 0%. Other baselines: orc 22 rounds, human 30, elf 32.
+
+Known gaps for follow-up: on seeds 4 and 5 the computer's maze planner builds a useless edge wall and both sides die by round 6-9; orc loses most race pairs; nightmare does not beat hard.
+
 ## Suggested Improvements
 
 - Add difficulty presets for the computer opponent: relaxed, normal, aggressive.
