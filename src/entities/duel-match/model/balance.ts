@@ -10,6 +10,11 @@ export enum DuelBalanceConfig {
   STARTING_GOLD = 500,
   STARTING_INCOME = 50,
   HP_LOSS_PER_LEAKED_CREEP = 1,
+  /**
+   * Lives a side's sent creeps must take from the other side for the sender to
+   * gain one life. Baseline wave leaks never count.
+   */
+  LEAKED_LIVES_PER_STOLEN_LIFE = 2,
   /** Most creeps one side may queue for a single wave, across every type. */
   SEND_CAP_PER_WAVE = 12,
 }
@@ -53,6 +58,7 @@ export const DUEL_MATCH_BALANCE: DuelMatchConfig = {
   sendCreepCostByTier: SEND_CREEP_COST_BY_TIER,
   sendCreepIncomeBonusByTier: SEND_CREEP_INCOME_BONUS_BY_TIER,
   hpLossPerLeakedCreep: DuelBalanceConfig.HP_LOSS_PER_LEAKED_CREEP,
+  leakedLivesPerStolenLife: DuelBalanceConfig.LEAKED_LIVES_PER_STOLEN_LIFE,
   sendCapPerWave: DuelBalanceConfig.SEND_CAP_PER_WAVE,
   sendUnitTypeCapByTier: SEND_UNIT_TYPE_CAP_BY_TIER,
 } as const;

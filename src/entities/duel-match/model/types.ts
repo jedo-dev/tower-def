@@ -14,6 +14,8 @@ export type DuelistState = {
   raceId: RaceId;
   sendQueue: UnitId[];
   battlefield: BattlefieldState;
+  /** Lives this side's sends took that have not yet made a whole stolen life. */
+  lifeStealRemainder: number;
 };
 
 export type DuelMatchState = {
@@ -39,6 +41,9 @@ export type DuelRoundEndResult = {
   state: DuelMatchState;
   playerHpLost: number;
   opponentHpLost: number;
+  /** Lives each side gained from its own sends leaking on the other field. */
+  playerLivesStolen: number;
+  opponentLivesStolen: number;
   isMatchOver: boolean;
   winner: RaceId | null;
 };
@@ -66,6 +71,8 @@ export type DuelMatchConfig = {
   sendCreepCostByTier: TierEconomyTable;
   sendCreepIncomeBonusByTier: TierEconomyTable;
   hpLossPerLeakedCreep: number;
+  /** Lives a side's sends must take for the sender to gain one life. */
+  leakedLivesPerStolenLife: number;
   /** Shared by both sides: total creeps one side may queue for one wave. */
   sendCapPerWave: number;
   /** Shared by both sides: creeps of one type one side may queue for one wave. */

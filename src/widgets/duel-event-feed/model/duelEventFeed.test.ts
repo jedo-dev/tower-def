@@ -3,6 +3,7 @@ import {
   appendFeedEntry,
   DUEL_EVENT_FEED_LIMIT,
   formatIncomeUpdated,
+  formatLivesStolen,
   formatOpponentHpUpdated,
   formatSendQueueUpdated,
   formatSendRejected,
@@ -45,6 +46,15 @@ describe('duel event feed model', () => {
   it('formats opponent damage and ignores non-damage updates', () => {
     expect(formatOpponentHpUpdated({ hp: 18, previousHp: 20, delta: -2 })).toBe('Enemy -2 HP → 18');
     expect(formatOpponentHpUpdated({ hp: 20, previousHp: 20, delta: 0 })).toBeNull();
+  });
+
+  it('formats stolen lives per thief', () => {
+    expect(formatLivesStolen({ thief: 'player', lives: 2, hp: 18 })).toBe(
+      'Your sends stole +2 HP → 18',
+    );
+    expect(formatLivesStolen({ thief: 'opponent', lives: 1, hp: 9 })).toBe(
+      'Enemy sends stole +1 HP → 9',
+    );
   });
 
   it('formats rejection reasons', () => {

@@ -4,6 +4,7 @@ import { onGameEvent } from '../../../shared/lib/game-bridge/bridge';
 import {
   appendFeedEntry,
   formatIncomeUpdated,
+  formatLivesStolen,
   formatOpponentHpUpdated,
   formatSendQueueUpdated,
   formatSendRejected,
@@ -41,6 +42,9 @@ function DuelEventFeedComponent() {
     const unsubscribeHp = onGameEvent('opponent-hp-updated', (payload) => {
       push('damage', formatOpponentHpUpdated(payload));
     });
+    const unsubscribeLivesStolen = onGameEvent('lives-stolen', (payload) => {
+      push('damage', formatLivesStolen(payload));
+    });
     const unsubscribeRejected = onGameEvent('creep-send-rejected', (payload) => {
       push('rejected', formatSendRejected(payload));
     });
@@ -49,6 +53,7 @@ function DuelEventFeedComponent() {
       unsubscribeQueue();
       unsubscribeIncome();
       unsubscribeHp();
+      unsubscribeLivesStolen();
       unsubscribeRejected();
     };
   }, []);

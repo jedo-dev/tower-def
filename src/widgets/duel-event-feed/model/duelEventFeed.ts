@@ -47,6 +47,12 @@ export function formatOpponentHpUpdated(
   return `Enemy ${payload.delta} HP → ${payload.hp}`;
 }
 
+export function formatLivesStolen(payload: GameEventMap['lives-stolen']): string {
+  return payload.thief === 'player'
+    ? `Your sends stole +${payload.lives} HP → ${payload.hp}`
+    : `Enemy sends stole +${payload.lives} HP → ${payload.hp}`;
+}
+
 export function formatSendRejected(payload: GameEventMap['creep-send-rejected']): string {
   switch (payload.reason) {
     case 'insufficient_gold':

@@ -7,6 +7,7 @@ import {
 } from '../../../../entities/computer-opponent';
 import {
   clearSendQueue,
+  countLeakedSentCreeps,
   createInitialDuelMatchState,
   reconcileBattlefieldsForNextRound,
   routeQueuedSendsToBattlefields,
@@ -97,6 +98,7 @@ import {
 } from '../runtime/duel/gameSceneSendCommand';
 import {
   applyDuelRoundEnd as applyDuelRoundEndRuntime,
+  publishRoundLifeEvents,
   type DuelMatchRuntimeState,
 } from '../runtime/duel/gameSceneDuelRuntime';
 import {
@@ -770,6 +772,10 @@ export class GameScene extends Phaser.Scene {
       deps: this.wiring.duelMatchRuntimeDeps,
       playerLeakedCreeps,
       opponentLeakedCreeps,
+      sentLeaks: {
+        onPlayerField: countLeakedSentCreeps(this.playerField.creeps.map((c) => c.entity)),
+        onOpponentField: countLeakedSentCreeps(this.opponentField.creeps.map((c) => c.entity)),
+      },
     });
 
     const previousOpponentHp = this.duelMatchState.opponent.hp;
@@ -778,13 +784,7 @@ export class GameScene extends Phaser.Scene {
     this.isGameOver = duelRuntimeState.isGameOver;
     this.runState.nextWaveStartsAtMs = duelRuntimeState.nextWaveStartsAtMs;
     this.runState.restartScheduledAtMs = duelRuntimeState.restartScheduledAtMs;
-    if (result.opponentHpLost > 0) {
-      publishGameEvent('opponent-hp-updated', {
-        hp: this.duelMatchState.opponent.hp,
-        previousHp: previousOpponentHp,
-        delta: -result.opponentHpLost,
-      });
-    }
+    publishRoundLifeEvents(previousOpponentHp, result);
     if (result.playerIncomePaid > 0) {
       this.playerGold += result.playerIncomePaid;
       this.registry.set('economy.gold', this.playerGold);

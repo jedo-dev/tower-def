@@ -45,6 +45,9 @@ export type ActiveEffect = {
   nextTickInMs: number;
 };
 
+/** The duel side that bought and sent a creep; baseline wave creeps have none. */
+export type CreepSenderSide = 'player' | 'opponent';
+
 export type CreepEntity = CreepCombatTraits & {
   id: CreepId;
   type: CreepType;
@@ -56,4 +59,6 @@ export type CreepEntity = CreepCombatTraits & {
   pathIndex: number;
   /** Absent means no effects; the effect helpers create the list on demand. */
   activeEffects?: ActiveEffect[];
+  /** Set only on creeps a duel side sent; absent on baseline wave creeps. */
+  sender?: CreepSenderSide;
 };

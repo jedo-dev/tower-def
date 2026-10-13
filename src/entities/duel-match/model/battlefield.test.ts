@@ -355,6 +355,7 @@ describe('entities/duel-match/battlefield', () => {
 
       expect(routedState.opponent.battlefield.creeps).toHaveLength(1);
       expect(routedState.opponent.battlefield.creeps[0].id).toBe('player:send:1:0:undead_skeleton');
+      expect(routedState.opponent.battlefield.creeps[0].sender).toBe('player');
       expect(routedState.opponent.battlefield.creeps[0].position).toEqual(DEFAULT_ENTRANCE);
       expect(routedState.player.battlefield.creeps).toHaveLength(0);
       expect(state.opponent.battlefield.creeps).toHaveLength(0);
@@ -372,6 +373,7 @@ describe('entities/duel-match/battlefield', () => {
 
       expect(routedState.player.battlefield.creeps).toHaveLength(1);
       expect(routedState.player.battlefield.creeps[0].id).toBe('opponent:send:1:0:orc_grunt');
+      expect(routedState.player.battlefield.creeps[0].sender).toBe('opponent');
       expect(routedState.player.battlefield.creeps[0].position).toEqual(DEFAULT_ENTRANCE);
       expect(routedState.opponent.battlefield.creeps).toHaveLength(0);
       expect(state.player.battlefield.creeps).toHaveLength(0);

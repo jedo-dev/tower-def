@@ -48,6 +48,13 @@ export {
   getUnitTypeSendCapByTier,
 } from './model/sendLimits';
 export type { SendLimitCheck } from './model/sendLimits';
+export {
+  accrueStolenLives,
+  countLeakedSentCreeps,
+  countLivesTakenBySends,
+  NO_SENT_CREEP_LEAKS,
+} from './model/lifeSteal';
+export type { LifeStealAccrual, SentCreepLeaks } from './model/lifeSteal';
 export { createInitialDuelMatchState, DEFAULT_ENTRANCE, DEFAULT_EXIT } from './model/state';
 export type { BattlefieldInitParams } from './model/state';
 export type {

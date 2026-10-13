@@ -23,6 +23,7 @@ function createDuelistState(raceId: RaceId, grid: GridModel, path: GridPosition[
     raceId,
     sendQueue: [],
     battlefield: createBattlefieldState(grid, path),
+    lifeStealRemainder: 0,
   };
 }
 

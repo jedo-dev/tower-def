@@ -2,6 +2,12 @@ import type { UnitId, UnitTier } from '../../unit/model/types';
 import { DUEL_MATCH_BALANCE } from './balance';
 import { canAffordSend, getIncomeBonusByTier, getSendCostByTier } from './sendEconomy';
 import { checkSendLimits } from './sendLimits';
+import {
+  accrueStolenLives,
+  countLivesTakenBySends,
+  NO_SENT_CREEP_LEAKS,
+  type SentCreepLeaks,
+} from './lifeSteal';
 import type {
   DuelIncomePayoutResult,
   DuelMatchState,
@@ -50,10 +56,17 @@ export function payIncome(state: DuelMatchState): DuelIncomePayoutResult {
   };
 }
 
+/**
+ * Resolves a round's leaks. `playerLeakedCreeps` and `opponentLeakedCreeps` are
+ * every creep that leaked on that side's field; `sentLeaks` says how many of
+ * them were sent by the other side, which is what steals lives for the sender.
+ * A side that hits 0 HP is out even if its own sends stole lives this round.
+ */
 export function endRound(
   state: DuelMatchState,
   playerLeakedCreeps: number,
   opponentLeakedCreeps: number,
+  sentLeaks: SentCreepLeaks = NO_SENT_CREEP_LEAKS,
 ): DuelRoundEndResult {
   const playerHpLost = playerLeakedCreeps * DUEL_MATCH_BALANCE.hpLossPerLeakedCreep;
   const opponentHpLost = opponentLeakedCreeps * DUEL_MATCH_BALANCE.hpLossPerLeakedCreep;
@@ -63,6 +76,17 @@ export function endRound(
 
   const isPlayerDead = newPlayerHp <= 0;
   const isOpponentDead = newOpponentHp <= 0;
+
+  const playerSteal = accrueStolenLives(
+    state.player.lifeStealRemainder,
+    countLivesTakenBySends(state.opponent.hp, newOpponentHp, sentLeaks.onOpponentField),
+  );
+  const opponentSteal = accrueStolenLives(
+    state.opponent.lifeStealRemainder,
+    countLivesTakenBySends(state.player.hp, newPlayerHp, sentLeaks.onPlayerField),
+  );
+  const playerLivesStolen = isPlayerDead ? 0 : playerSteal.livesGained;
+  const opponentLivesStolen = isOpponentDead ? 0 : opponentSteal.livesGained;
   const isMatchOver = isPlayerDead || isOpponentDead;
 
   let winner: DuelRoundEndResult['winner'] = null;
@@ -82,15 +106,19 @@ export function endRound(
       phase: 'build',
       player: {
         ...state.player,
-        hp: newPlayerHp,
+        hp: newPlayerHp + playerLivesStolen,
+        lifeStealRemainder: playerSteal.remainder,
       },
       opponent: {
         ...state.opponent,
-        hp: newOpponentHp,
+        hp: newOpponentHp + opponentLivesStolen,
+        lifeStealRemainder: opponentSteal.remainder,
       },
     },
     playerHpLost,
     opponentHpLost,
+    playerLivesStolen,
+    opponentLivesStolen,
     isMatchOver,
     winner,
   };

@@ -180,6 +180,7 @@ Both sides play by identical rules; difficulty presets change only how well the 
   - per creep type, by tier (`SEND_UNIT_TYPE_CAP_BY_TIER`): T1 6, T2 5, T3 4, T4 3, T5 3, T6 2.
   - The send queue is cleared when the wave starts, so the limits reset every wave.
   - The computer's preset `maxSendsPerRound` may be stricter, but the shared limits are enforced on top of it.
+- **Leaks steal lives** (`entities/duel-match/model/lifeSteal.ts`): when a creep one side sent leaks on the other field, the defender loses HP as usual and the sender gains 1 life per 2 lives its sends took (`LEAKED_LIVES_PER_STOLEN_LIFE`). An odd leftover is banked per side and carried to later rounds. Baseline wave leaks steal nothing. Only lives actually lost count, and a side that hits 0 HP loses even if its own sends stole lives that round. HP has no cap.
 
 ## Suggested Improvements
 

@@ -2,7 +2,8 @@ import { describe, expect, it, vi } from 'vitest';
 import { createInitialDuelMatchState } from '../../../../../entities/duel-match';
 import { RaceId } from '../../../../types/content-ids';
 import type { DuelMatchRuntimeDeps, DuelMatchRuntimeState } from './gameSceneDuelRuntime';
-import { applyDuelRoundEnd } from './gameSceneDuelRuntime';
+import { applyDuelRoundEnd, publishRoundLifeEvents } from './gameSceneDuelRuntime';
+import { onGameEvent } from '../../../game-bridge/bridge';
 
 function createRuntimeState(overrides?: Partial<DuelMatchRuntimeState>): DuelMatchRuntimeState {
   return {
@@ -147,5 +148,31 @@ describe('shared/lib/phaser/runtime/duel/applyDuelRoundEnd', () => {
     expect(result.opponentIncomePaid).toBe(0);
     expect(state.duelMatchState.player.gold).toBe(100);
     expect(state.duelMatchState.opponent.gold).toBe(200);
+  });
+
+  it('steals lives for the sender and tells the HUD about both sides', () => {
+    const state = createRuntimeState();
+    const previousOpponentHp = state.duelMatchState.opponent.hp;
+    const stolenHandler = vi.fn();
+    const opponentHpHandler = vi.fn();
+    const unsubscribeStolen = onGameEvent('lives-stolen', stolenHandler);
+    const unsubscribeOpponentHp = onGameEvent('opponent-hp-updated', opponentHpHandler);
+
+    const result = applyDuelRoundEnd({
+      state,
+      deps: createDeps(),
+      playerLeakedCreeps: 2,
+      opponentLeakedCreeps: 4,
+      sentLeaks: { onPlayerField: 2, onOpponentField: 4 },
+    });
+    publishRoundLifeEvents(previousOpponentHp, result);
+    unsubscribeStolen();
+    unsubscribeOpponentHp();
+
+    expect(state.duelMatchState.player.hp).toBe(20 - 2 + 2);
+    expect(state.duelMatchState.opponent.hp).toBe(20 - 4 + 1);
+    expect(stolenHandler).toHaveBeenCalledWith({ thief: 'player', lives: 2, hp: 20 });
+    expect(stolenHandler).toHaveBeenCalledWith({ thief: 'opponent', lives: 1, hp: 17 });
+    expect(opponentHpHandler).toHaveBeenCalledWith({ hp: 17, previousHp: 20, delta: -3 });
   });
 });

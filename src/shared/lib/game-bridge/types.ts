@@ -116,4 +116,10 @@ export type GameEventMap = {
     previousHp: number;
     delta: number;
   };
+  /** A side's sent creeps leaked enough to steal lives for it this round. */
+  'lives-stolen': {
+    thief: DuelistSide;
+    lives: number;
+    hp: number;
+  };
 };
