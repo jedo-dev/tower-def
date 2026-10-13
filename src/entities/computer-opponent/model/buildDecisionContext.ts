@@ -123,5 +123,6 @@ export function buildDecisionContext(input: OpponentSnapshotInput): DecisionCont
     upgradeableTowerIds: computeUpgradeableTowers(opponent.battlefield.towers, opponent.gold),
     availableBuildPositions: computeAvailableBuildPositions(opponent, opponent.raceId),
     enemy: computeEnemySnapshot(matchState.player),
+    queuedSends: opponent.sendQueue,
   };
 }

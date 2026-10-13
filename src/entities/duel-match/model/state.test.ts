@@ -13,11 +13,11 @@ describe('entities/duel-match/createInitialDuelMatchState', () => {
     expect(state.player.gold).toBe(DUEL_MATCH_BALANCE.startingGold);
   });
 
-  it('opens the opponent on double the player purse', () => {
+  it('opens the opponent on the same purse as the player', () => {
     const state = createInitialDuelMatchState(PLAYER_RACE, OPPONENT_RACE);
 
-    expect(state.opponent.gold).toBe(DUEL_MATCH_BALANCE.opponentStartingGold);
-    expect(state.opponent.gold).toBe(state.player.gold * 2);
+    expect(state.opponent.gold).toBe(DUEL_MATCH_BALANCE.startingGold);
+    expect(state.opponent.gold).toBe(state.player.gold);
   });
 
   it('keeps every other opening value equal on both sides', () => {

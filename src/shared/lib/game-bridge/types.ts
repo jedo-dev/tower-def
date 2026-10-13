@@ -12,7 +12,9 @@ export type CreepSendRejectionReason =
   | 'insufficient_gold'
   | 'invalid_creep'
   | 'not_build_phase'
-  | 'match_over';
+  | 'match_over'
+  | 'wave_send_cap'
+  | 'unit_type_send_cap';
 
 export type WaveQueueItem = {
   type: HudCreepType;
@@ -97,6 +99,8 @@ export type GameEventMap = {
     reason: CreepSendRejectionReason;
     gold: number;
     requiredGold?: number;
+    /** The cap that was hit, for the send-limit reasons. */
+    sendLimit?: number;
   };
   'send-queue-updated': {
     owner: DuelistSide;
@@ -111,5 +115,11 @@ export type GameEventMap = {
     hp: number;
     previousHp: number;
     delta: number;
+  };
+  /** A side's sent creeps leaked enough to steal lives for it this round. */
+  'lives-stolen': {
+    thief: DuelistSide;
+    lives: number;
+    hp: number;
   };
 };

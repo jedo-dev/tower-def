@@ -7,17 +7,14 @@ import {
 } from '../../../../entities/computer-opponent';
 import {
   clearSendQueue,
+  countLeakedSentCreeps,
   createInitialDuelMatchState,
   reconcileBattlefieldsForNextRound,
   routeQueuedSendsToBattlefields,
   startRound,
   type DuelMatchState,
 } from '../../../../entities/duel-match';
-import {
-  DEFAULT_DIFFICULTY,
-  scaleStartingGold,
-  type Difficulty,
-} from '../../../../entities/difficulty';
+import { DEFAULT_DIFFICULTY, type Difficulty } from '../../../../entities/difficulty';
 import { resolveUnitConfigById, type UnitConfig } from '../../../../entities/unit';
 import { calculateWaveStartPath } from '../../../../entities/wave';
 import { RaceId } from '../../../types/content-ids';
@@ -101,6 +98,7 @@ import {
 } from '../runtime/duel/gameSceneSendCommand';
 import {
   applyDuelRoundEnd as applyDuelRoundEndRuntime,
+  publishRoundLifeEvents,
   type DuelMatchRuntimeState,
 } from '../runtime/duel/gameSceneDuelRuntime';
 import {
@@ -603,7 +601,6 @@ export class GameScene extends Phaser.Scene {
       toTowerId: (position) => toTowerId(position),
       validateTowerPlacementPath: (grid, position) => validateTowerPlacementPath(grid, position),
       sellRefundRatio: SELL_REFUND_RATIO,
-      defaultTowerCost: DEFAULT_TOWER_COST,
     };
   }
 
@@ -707,9 +704,8 @@ export class GameScene extends Phaser.Scene {
       this.mapEndpoints,
     );
     // The scene wallet is the source of truth: seed it from the duel balance
-    // table (so the AI starts level with the player) and let the difficulty
-    // preset tilt it.
-    this.playerGold = scaleStartingGold(this.duelMatchState.player.gold, this.selectedDifficulty);
+    // table so both sides start level. Difficulty never tilts the purse.
+    this.playerGold = this.duelMatchState.player.gold;
     this.playerLives = this.duelMatchState.player.hp;
     this.registry.set('economy.gold', this.playerGold);
     this.opponentLeakHistory = [];
@@ -776,6 +772,10 @@ export class GameScene extends Phaser.Scene {
       deps: this.wiring.duelMatchRuntimeDeps,
       playerLeakedCreeps,
       opponentLeakedCreeps,
+      sentLeaks: {
+        onPlayerField: countLeakedSentCreeps(this.playerField.creeps.map((c) => c.entity)),
+        onOpponentField: countLeakedSentCreeps(this.opponentField.creeps.map((c) => c.entity)),
+      },
     });
 
     const previousOpponentHp = this.duelMatchState.opponent.hp;
@@ -784,13 +784,7 @@ export class GameScene extends Phaser.Scene {
     this.isGameOver = duelRuntimeState.isGameOver;
     this.runState.nextWaveStartsAtMs = duelRuntimeState.nextWaveStartsAtMs;
     this.runState.restartScheduledAtMs = duelRuntimeState.restartScheduledAtMs;
-    if (result.opponentHpLost > 0) {
-      publishGameEvent('opponent-hp-updated', {
-        hp: this.duelMatchState.opponent.hp,
-        previousHp: previousOpponentHp,
-        delta: -result.opponentHpLost,
-      });
-    }
+    publishRoundLifeEvents(previousOpponentHp, result);
     if (result.playerIncomePaid > 0) {
       this.playerGold += result.playerIncomePaid;
       this.registry.set('economy.gold', this.playerGold);
@@ -855,7 +849,7 @@ export class GameScene extends Phaser.Scene {
       // would desync the grid from a generated dynamic layout.
       this.mapEndpoints,
     );
-    this.playerGold = scaleStartingGold(this.duelMatchState.player.gold, this.selectedDifficulty);
+    this.playerGold = this.duelMatchState.player.gold;
     this.playerLives = this.duelMatchState.player.hp;
     this.matchOutcomeStatus = 'active';
     this.matchWinner = null;

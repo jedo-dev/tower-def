@@ -231,6 +231,7 @@ export function spawnWaveCreeps(
     waveNumber: state.currentWaveNumber,
     factionUnits: deps.getSelectedFactionUnits(),
   });
+  // Extra units on the player's field are the computer's sends.
   const additionalUnits = deps.getAdditionalWaveUnits(state.currentWaveNumber);
   const waveUnits = [...units, ...additionalUnits];
 
@@ -239,6 +240,7 @@ export function spawnWaveCreeps(
     unit,
     sequenceIndex: index,
     spawnAtMs: firstSpawnAtMs + index * config.waveSpawnIntervalMs,
+    ...(index >= units.length ? { sender: 'opponent' as const } : {}),
   }));
 }
 
@@ -271,6 +273,7 @@ export function processPendingWaveSpawns(
       status: 'alive',
       position: { ...state.activeCreepPath[0] },
       pathIndex: 0,
+      ...(spawn.sender === undefined ? {} : { sender: spawn.sender }),
     };
 
     const spriteKey = deps.getSpriteKeyByUnit(spawn.unit);

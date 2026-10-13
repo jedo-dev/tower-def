@@ -1,6 +1,6 @@
 import type { TowerTypeId } from '../../../types/content-ids';
 import type Phaser from 'phaser';
-import type { CreepEntity } from '../../../../entities/creep';
+import type { CreepEntity, CreepSenderSide } from '../../../../entities/creep';
 import type { UnitConfig } from '../../../../entities/unit';
 import type { TowerCombatRuntime, TowerEntity } from '../../../../entities/tower';
 
@@ -60,6 +60,8 @@ export type PendingWaveSpawn = {
   unit: UnitConfig;
   spawnAtMs: number;
   sequenceIndex: number;
+  /** The side that sent this creep; omitted for baseline wave creeps. */
+  sender?: CreepSenderSide;
 };
 
 export type HudWaveQueueItem = {

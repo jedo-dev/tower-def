@@ -4,6 +4,5 @@ export {
   getDifficultyConfig,
   scaleCreepStats,
   scaleReward,
-  scaleStartingGold,
   type CreepStatInput,
 } from './model/modifiers';

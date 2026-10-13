@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { tryPlaceTowerAtHoveredCell } from './gameSceneBuildRuntime';
+import { tryPlaceTowerAtHoveredCell, trySellTowerAtHoveredCell } from './gameSceneBuildRuntime';
 import type { BuildRuntimeDeps, BuildRuntimeState } from './gameSceneBuildRuntime';
 import { createGridModel } from '../../../grid/createGridModel';
 import { validateTowerPlacementPath } from '../../../pathfinding/validateTowerPlacementPath';
@@ -39,7 +39,6 @@ function createDeps(authoredTower: BuildableTowerConfig | null): BuildRuntimeDep
     toTowerId: (position) => `tower:${position.x}:${position.y}`,
     validateTowerPlacementPath: (grid, position) => validateTowerPlacementPath(grid, position),
     sellRefundRatio: 0.5,
-    defaultTowerCost: 50,
   };
 }
 
@@ -77,6 +76,33 @@ describe('placing an authored tower', () => {
     const result = tryPlaceTowerAtHoveredCell(createState(), createDeps(authored));
 
     expect(result.placedTower?.cost).toBe(authored.costGold);
+  });
+});
+
+describe('charging the content tower cost', () => {
+  it('charges a 75g tower 75 gold and refunds half of that on sell', () => {
+    const authored = resolveBuildableTowerById('elf_wisp_bloom');
+    expect(authored.costGold).toBe(75);
+    const state = createState();
+    const deps = createDeps(authored);
+
+    const placed = tryPlaceTowerAtHoveredCell(state, deps);
+    expect(placed.success).toBe(true);
+    expect(placed.playerGold).toBe(500 - 75);
+
+    const sold = trySellTowerAtHoveredCell(state, deps);
+    expect(sold.success).toBe(true);
+    expect(sold.refundAmount).toBe(Math.floor(75 * 0.5));
+  });
+
+  it('rejects a build the content cost cannot be paid for', () => {
+    const authored = resolveBuildableTowerById('elf_wisp_bloom');
+    const state = { ...createState(), playerGold: 74 };
+
+    const placed = tryPlaceTowerAtHoveredCell(state, createDeps(authored));
+
+    expect(placed.success).toBe(false);
+    expect(placed.playerGold).toBe(74);
   });
 });
 

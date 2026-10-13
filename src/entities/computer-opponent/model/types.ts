@@ -66,6 +66,8 @@ export type DecisionContext = {
   availableBuildPositions: readonly GridPosition[];
   enemy?: EnemySnapshot;
   intent?: StrategyIntent;
+  /** Creeps this side already queued for the coming wave; none when omitted. */
+  queuedSends?: readonly UnitId[];
 };
 
 export type BuildAction = {

@@ -1,5 +1,7 @@
 import {
+  getSendCapPerWave,
   getSendCostByTier,
+  getUnitTypeSendCapByTier,
   sendCreep,
   type DuelMatchState,
 } from '../../../../../entities/duel-match';
@@ -55,10 +57,29 @@ export function handleSendCreepCommand(deps: SendCreepCommandDeps, creepTypeId: 
   const unit = resolveUnitConfigById(sendableCreepTypeId);
   const result = sendCreep(deps.getDuelMatchState(), true, unit.id, unit.tier);
   if (!result.sent) {
+    const gold = deps.getDuelMatchState().player.gold;
+    if (result.rejectionReason === 'wave_send_cap') {
+      publishGameEvent('creep-send-rejected', {
+        creepTypeId,
+        reason: 'wave_send_cap',
+        gold,
+        sendLimit: getSendCapPerWave(),
+      });
+      return;
+    }
+    if (result.rejectionReason === 'unit_type_send_cap') {
+      publishGameEvent('creep-send-rejected', {
+        creepTypeId,
+        reason: 'unit_type_send_cap',
+        gold,
+        sendLimit: getUnitTypeSendCapByTier(unit.tier),
+      });
+      return;
+    }
     publishGameEvent('creep-send-rejected', {
       creepTypeId,
       reason: 'insufficient_gold',
-      gold: deps.getDuelMatchState().player.gold,
+      gold,
       requiredGold: getSendCostByTier(unit.tier),
     });
     return;

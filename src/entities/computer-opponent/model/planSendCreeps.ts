@@ -2,6 +2,10 @@ import type { RaceId } from '../../../shared/types/content-ids';
 import { DAMAGE_MITIGATION } from '../../../shared/constants/damage';
 import type { UnitConfig, UnitId, UnitTier } from '../../unit/model/types';
 import { getSendCostByTier, getIncomeBonusByTier } from '../../duel-match/model/sendEconomy';
+import {
+  countRemainingSendsOfUnit,
+  countRemainingWaveSends,
+} from '../../duel-match/model/sendLimits';
 import { getRaceRegistry } from '../../race-registry/model/registries';
 import { resolveUnitConfigById } from '../../unit/model/registry';
 import { Difficulty } from '../../difficulty/model/types';
@@ -23,7 +27,11 @@ export type SendPlannerOutput = {
 
 type SendTuning = {
   maxSendRatioPerRound: number;
-  /** Cap on creeps per round, so a gold pile does not turn into a single flood. */
+  /**
+   * The preset's own cap on creeps per round, so a gold pile does not turn into
+   * a single flood. It may be stricter than the shared send limits every side
+   * plays by, never looser: those are enforced on top of it.
+   */
   maxSendsPerRound: number;
   /** Opening rounds spent entirely on income, before any pressure. */
   economyRounds: number;
@@ -189,6 +197,8 @@ function shouldSendCreeps(context: DecisionContext): boolean {
 type SelectionState = {
   selected: SendCandidate[];
   remainingSends: number;
+  /** Already queued plus selected so far, for the shared per-type limit. */
+  queued: UnitId[];
 };
 
 /** Buys the best-ranked affordable creep until the purse or the cap runs out. */
@@ -198,8 +208,13 @@ function spendOn(ranked: readonly SendCandidate[], budget: number, state: Select
   for (const candidate of ranked) {
     // Keep buying the top pick; a cheaper one only gets a turn once this one no
     // longer fits, which keeps the split honest about what it can afford.
-    while (candidate.cost <= remaining && state.remainingSends > 0) {
+    while (
+      candidate.cost <= remaining &&
+      state.remainingSends > 0 &&
+      countRemainingSendsOfUnit(state.queued, candidate.id, candidate.tier) > 0
+    ) {
       state.selected.push(candidate);
+      state.queued.push(candidate.id);
       state.remainingSends -= 1;
       remaining -= candidate.cost;
     }
@@ -226,7 +241,12 @@ function selectCreepsToSend(
   const pressureBudget = Math.floor(budget * pressureWeight);
   const economyBudget = budget - pressureBudget;
 
-  const state: SelectionState = { selected: [], remainingSends: tuning.maxSendsPerRound };
+  const queued = [...(context.queuedSends ?? [])];
+  const state: SelectionState = {
+    selected: [],
+    remainingSends: Math.min(tuning.maxSendsPerRound, countRemainingWaveSends(queued)),
+    queued,
+  };
 
   // Pressure first: the tanky creeps are the expensive ones, and leftovers from
   // that half still buy income creeps, while the reverse rarely fits.

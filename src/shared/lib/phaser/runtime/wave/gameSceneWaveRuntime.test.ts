@@ -103,6 +103,8 @@ describe('shared/lib/phaser/runtime/wave computer send wiring', () => {
     expect(sendResult.state.opponent.gold).toBeLessThan(initialDuelState.opponent.gold);
     expect(sendResult.state.opponent.income).toBeGreaterThan(initialDuelState.opponent.income);
     expect(spawnedUnitIds).toEqual(expect.arrayContaining(sendResult.state.opponent.sendQueue));
+    const sentSpawns = state.pendingWaveSpawns.filter((spawn) => spawn.sender === 'opponent');
+    expect(sentSpawns.map((spawn) => spawn.unit.id)).toEqual(sendResult.state.opponent.sendQueue);
   });
 });
 

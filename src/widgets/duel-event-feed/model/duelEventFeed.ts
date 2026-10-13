@@ -47,6 +47,12 @@ export function formatOpponentHpUpdated(
   return `Enemy ${payload.delta} HP → ${payload.hp}`;
 }
 
+export function formatLivesStolen(payload: GameEventMap['lives-stolen']): string {
+  return payload.thief === 'player'
+    ? `Your sends stole +${payload.lives} HP → ${payload.hp}`
+    : `Enemy sends stole +${payload.lives} HP → ${payload.hp}`;
+}
+
 export function formatSendRejected(payload: GameEventMap['creep-send-rejected']): string {
   switch (payload.reason) {
     case 'insufficient_gold':
@@ -55,6 +61,10 @@ export function formatSendRejected(payload: GameEventMap['creep-send-rejected'])
       return 'Send failed: wave in progress';
     case 'match_over':
       return 'Send failed: match is over';
+    case 'wave_send_cap':
+      return `Send failed: ${payload.sendLimit ?? '?'} sends per wave`;
+    case 'unit_type_send_cap':
+      return `Send failed: ${payload.sendLimit ?? '?'} of this creep per wave`;
     default:
       return 'Send failed';
   }

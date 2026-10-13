@@ -37,6 +37,7 @@ function createSendCreepEntries(
       armorType: unit.armorType,
       moveType: unit.moveType,
       entrance,
+      sender,
     };
   });
 }
@@ -119,6 +120,7 @@ export function addCreeps(
     status: 'alive' as const,
     position: { x: entry.entrance.x, y: entry.entrance.y },
     pathIndex: 0,
+    ...(entry.sender === undefined ? {} : { sender: entry.sender }),
   }));
 
   return {

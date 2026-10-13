@@ -14,6 +14,8 @@ export type DuelistState = {
   raceId: RaceId;
   sendQueue: UnitId[];
   battlefield: BattlefieldState;
+  /** Lives this side's sends took that have not yet made a whole stolen life. */
+  lifeStealRemainder: number;
 };
 
 export type DuelMatchState = {
@@ -39,26 +41,40 @@ export type DuelRoundEndResult = {
   state: DuelMatchState;
   playerHpLost: number;
   opponentHpLost: number;
+  /** Lives each side gained from its own sends leaking on the other field. */
+  playerLivesStolen: number;
+  opponentLivesStolen: number;
   isMatchOver: boolean;
   winner: RaceId | null;
 };
+
+export type DuelSendLimitRejectionReason = 'wave_send_cap' | 'unit_type_send_cap';
+
+export type DuelSendRejectionReason = 'insufficient_gold' | DuelSendLimitRejectionReason;
 
 export type DuelSendCreepResult = {
   state: DuelMatchState;
   sent: boolean;
   cost: number;
   incomeBonus: number;
+  /** Why the send was refused; `null` when it went through. */
+  rejectionReason: DuelSendRejectionReason | null;
 };
 
 export type TierEconomyTable = Readonly<Record<UnitTier, number>>;
 
 export type DuelMatchConfig = {
   startingHp: number;
-  /** What the player opens with; the opponent has its own purse. */
+  /** What each side opens with; the start is always equal. */
   startingGold: number;
-  opponentStartingGold: number;
   startingIncome: number;
   sendCreepCostByTier: TierEconomyTable;
   sendCreepIncomeBonusByTier: TierEconomyTable;
   hpLossPerLeakedCreep: number;
+  /** Lives a side's sends must take for the sender to gain one life. */
+  leakedLivesPerStolenLife: number;
+  /** Shared by both sides: total creeps one side may queue for one wave. */
+  sendCapPerWave: number;
+  /** Shared by both sides: creeps of one type one side may queue for one wave. */
+  sendUnitTypeCapByTier: TierEconomyTable;
 };

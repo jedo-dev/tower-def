@@ -4,6 +4,7 @@ export type {
   CreepEntity,
   CreepId,
   CreepLifeState,
+  CreepSenderSide,
   CreepStatus,
   CreepType,
 } from './model/types';

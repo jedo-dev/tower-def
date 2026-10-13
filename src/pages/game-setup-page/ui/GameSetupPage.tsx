@@ -302,9 +302,6 @@ export function GameSetupPage({ onStartGame, onNavigate }: GameSetupPageProps) {
                 <span className="setup-difficulty-desc">{diff.description}</span>
                 <span className="setup-difficulty-modifiers">
                   <span className="setup-difficulty-chip">
-                    Gold {formatModifier(diff.startingGoldModifier)}
-                  </span>
-                  <span className="setup-difficulty-chip">
                     Creep HP {formatModifier(diff.creepHealthModifier)}
                   </span>
                   <span className="setup-difficulty-chip">

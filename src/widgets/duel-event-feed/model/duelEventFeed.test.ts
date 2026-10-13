@@ -3,6 +3,7 @@ import {
   appendFeedEntry,
   DUEL_EVENT_FEED_LIMIT,
   formatIncomeUpdated,
+  formatLivesStolen,
   formatOpponentHpUpdated,
   formatSendQueueUpdated,
   formatSendRejected,
@@ -47,6 +48,15 @@ describe('duel event feed model', () => {
     expect(formatOpponentHpUpdated({ hp: 20, previousHp: 20, delta: 0 })).toBeNull();
   });
 
+  it('formats stolen lives per thief', () => {
+    expect(formatLivesStolen({ thief: 'player', lives: 2, hp: 18 })).toBe(
+      'Your sends stole +2 HP → 18',
+    );
+    expect(formatLivesStolen({ thief: 'opponent', lives: 1, hp: 9 })).toBe(
+      'Enemy sends stole +1 HP → 9',
+    );
+  });
+
   it('formats rejection reasons', () => {
     expect(
       formatSendRejected({
@@ -59,5 +69,16 @@ describe('duel event feed model', () => {
     expect(formatSendRejected({ creepTypeId: 'x', reason: 'match_over', gold: 10 })).toBe(
       'Send failed: match is over',
     );
+    expect(
+      formatSendRejected({ creepTypeId: 'x', reason: 'wave_send_cap', gold: 10, sendLimit: 12 }),
+    ).toBe('Send failed: 12 sends per wave');
+    expect(
+      formatSendRejected({
+        creepTypeId: 'x',
+        reason: 'unit_type_send_cap',
+        gold: 10,
+        sendLimit: 2,
+      }),
+    ).toBe('Send failed: 2 of this creep per wave');
   });
 });

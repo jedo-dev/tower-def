@@ -1,5 +1,10 @@
-import { endRound, payIncome } from '../../../../../entities/duel-match';
-import type { DuelMatchState, DuelRoundEndResult } from '../../../../../entities/duel-match';
+import { endRound, NO_SENT_CREEP_LEAKS, payIncome } from '../../../../../entities/duel-match';
+import type {
+  DuelMatchState,
+  DuelRoundEndResult,
+  SentCreepLeaks,
+} from '../../../../../entities/duel-match';
+import { publishGameEvent } from '../../../game-bridge/bridge';
 import { transitionToGameOver, type WavePhaseState } from '../../../../../features/wave-phase';
 
 export type DuelMatchRuntimeState = {
@@ -23,6 +28,8 @@ export type ApplyDuelRoundEndInput = {
   deps: DuelMatchRuntimeDeps;
   playerLeakedCreeps: number;
   opponentLeakedCreeps: number;
+  /** How many of those leaks were creeps the other side sent; none when omitted. */
+  sentLeaks?: SentCreepLeaks;
 };
 
 export type ApplyDuelRoundEndResult = DuelRoundEndResult & {
@@ -35,6 +42,7 @@ export function applyDuelRoundEnd(input: ApplyDuelRoundEndInput): ApplyDuelRound
     input.state.duelMatchState,
     input.playerLeakedCreeps,
     input.opponentLeakedCreeps,
+    input.sentLeaks ?? NO_SENT_CREEP_LEAKS,
   );
 
   let playerIncomePaid = 0;
@@ -67,4 +75,36 @@ export function applyDuelRoundEnd(input: ApplyDuelRoundEndInput): ApplyDuelRound
     playerIncomePaid,
     opponentIncomePaid,
   };
+}
+
+/**
+ * Tells the UI how the round moved both life totals: the opponent's net HP
+ * change and any lives either side stole with its sends.
+ */
+export function publishRoundLifeEvents(
+  previousOpponentHp: number,
+  result: ApplyDuelRoundEndResult,
+): void {
+  const opponentHp = result.state.opponent.hp;
+  if (opponentHp !== previousOpponentHp) {
+    publishGameEvent('opponent-hp-updated', {
+      hp: opponentHp,
+      previousHp: previousOpponentHp,
+      delta: opponentHp - previousOpponentHp,
+    });
+  }
+  if (result.playerLivesStolen > 0) {
+    publishGameEvent('lives-stolen', {
+      thief: 'player',
+      lives: result.playerLivesStolen,
+      hp: result.state.player.hp,
+    });
+  }
+  if (result.opponentLivesStolen > 0) {
+    publishGameEvent('lives-stolen', {
+      thief: 'opponent',
+      lives: result.opponentLivesStolen,
+      hp: opponentHp,
+    });
+  }
 }

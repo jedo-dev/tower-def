@@ -14,10 +14,6 @@ export function getDifficultyConfig(difficulty: Difficulty): DifficultyConfig {
   );
 }
 
-export function scaleStartingGold(baseGold: number, difficulty: Difficulty): number {
-  return Math.round(baseGold * getDifficultyConfig(difficulty).startingGoldModifier);
-}
-
 export function scaleReward(baseReward: number, difficulty: Difficulty): number {
   return Math.round(baseReward * getDifficultyConfig(difficulty).rewardModifier);
 }
