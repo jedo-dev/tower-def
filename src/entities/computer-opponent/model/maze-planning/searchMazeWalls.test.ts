@@ -17,7 +17,14 @@ function plan(grid: GridModel, towerBudget: number, effort = UNCAPPED_EFFORT) {
   const board = createMazePlanningBoard(grid);
   const result = searchMazeWalls({
     board,
-    candidates: createWallCandidates(grid.cols, grid.rows),
+    candidates: createWallCandidates(
+      grid.cols,
+      grid.rows,
+      [grid.entrance, grid.exit].map((anchor) => ({
+        anchor,
+        footprint: grid.endpointZoneFootprint,
+      })),
+    ),
     towerBudget,
     effort,
   });
@@ -88,14 +95,18 @@ describe('computer-opponent/maze-planning/searchMazeWalls', () => {
     }
   });
 
-  it('lengthens the routes far more than its tower count would by scattering', () => {
-    const grid = createGridModel(generateEdgeEndpoints(1));
-    const { anchors } = plan(grid, 20);
-    const gain = weightedCost(withBlocks(grid, anchors)) - weightedCost(grid);
+  it.each([1, 4, 5])(
+    'lengthens the routes far more than its tower count would by scattering on seed %i',
+    (seed) => {
+      const grid = createGridModel(generateEdgeEndpoints(seed));
+      const { anchors } = plan(grid, 20);
+      const gain = weightedCost(withBlocks(grid, anchors)) - weightedCost(grid);
 
-    // Every planned block pays its way: at least two cells of route per block.
-    expect(gain / anchors.length).toBeGreaterThan(2);
-  });
+      // Every planned block pays its way: at least two cells of route per block.
+      // Seeds 4 and 5 once drew a wall along the edge that barely did (tower-def-02k.8).
+      expect(gain / anchors.length).toBeGreaterThan(2);
+    },
+  );
 
   it('closes a wall where no single block lengthens the route much', () => {
     const grid = createTwoGapField();

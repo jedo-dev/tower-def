@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { TOWER_FOOTPRINT } from '../../../../shared/constants/footprint';
 import { GRID_DIMENSIONS } from '../../../../shared/constants/grid';
-import { MAZE_PLAN_LANE_WIDTH } from './constants';
-import { createWallCandidates, findNeighborWalls } from './wallCandidates';
+import { MAZE_PLAN_LANE_WIDTH, MAZE_PLAN_MAX_ENDPOINT_STRIP_WIDTH } from './constants';
+import { createWallCandidates, findNeighborWalls, type EndpointZone } from './wallCandidates';
 
 const { cols, rows } = GRID_DIMENSIONS;
 
@@ -32,6 +32,41 @@ describe('computer-opponent/maze-planning/wallCandidates', () => {
         expect(last).toBe(MAZE_PLAN_LANE_WIDTH);
       }
     }
+  });
+
+  it('leaves out walls that squeeze an endpoint into a strip along the edge', () => {
+    // Entrance on the bottom edge, exit on the left edge.
+    const zones: EndpointZone[] = [
+      { anchor: { x: 11, y: rows - 2 }, footprint: { width: 2, height: 2 } },
+      { anchor: { x: 0, y: 12 }, footprint: { width: 2, height: 2 } },
+    ];
+    const filtered = createWallCandidates(cols, rows, zones);
+    const lines = (axis: 'row' | 'column') =>
+      new Set(filtered.filter((wall) => wall.axis === axis).map((wall) => wall.line));
+    const stripRowLines = Array.from(
+      { length: MAZE_PLAN_MAX_ENDPOINT_STRIP_WIDTH - 1 },
+      (_, index) => rows - TOWER_FOOTPRINT.height - 2 - index,
+    );
+    const stripColumnLines = Array.from(
+      { length: MAZE_PLAN_MAX_ENDPOINT_STRIP_WIDTH - 1 },
+      (_, index) => 2 + index,
+    );
+
+    for (const line of stripRowLines) {
+      expect(lines('row').has(line), `row ${line}`).toBe(false);
+    }
+    for (const line of stripColumnLines) {
+      expect(lines('column').has(line), `column ${line}`).toBe(false);
+    }
+    // One line further out the strip is wide enough to be a room, not a lane.
+    expect(
+      lines('row').has(rows - TOWER_FOOTPRINT.height - MAZE_PLAN_MAX_ENDPOINT_STRIP_WIDTH - 1),
+    ).toBe(true);
+    expect(lines('column').has(MAZE_PLAN_MAX_ENDPOINT_STRIP_WIDTH + 1)).toBe(true);
+    // Walls along the other axis do not run along those edges and all stay.
+    expect(filtered.length).toBe(
+      candidates.length - 2 * (stripRowLines.length + stripColumnLines.length),
+    );
   });
 
   it('finds the walls one line either side on the same edge', () => {

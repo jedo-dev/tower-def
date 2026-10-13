@@ -9,6 +9,37 @@ import { Difficulty } from '../../../difficulty/model/types';
  */
 export const MAZE_PLAN_LANE_WIDTH = CREEP_FOOTPRINT_SIZE_BY_SIZE_CLASS[UnitSizeClass.LARGE];
 
+/**
+ * Cells from a block's centre within which a route cell counts as walking
+ * past that block (route exposure). Inside every damage tower's range (5 to
+ * 6 cells), so it rewards a route that hugs its walls over one that merely
+ * crosses a wide circle around them. Tuned on the duel batch: 3 and 5 both
+ * end more matches early than 4.
+ */
+export const MAZE_PLAN_EXPOSURE_RANGE = 4;
+
+/**
+ * Exposure one cell of weighted route cost is worth when walls are compared:
+ * a route cell no block reaches yet still counts as one future tower's reach.
+ */
+export const MAZE_PLAN_ROUTE_CELL_EXPOSURE = 1;
+
+/**
+ * Most route exposure a wall may claim per cell of weighted route cost it
+ * adds: about the blocks one corridor cell has in reach. A wall that adds
+ * exposure far beyond that is lining a route that already ran there.
+ */
+export const MAZE_PLAN_EXPOSURE_PER_ROUTE_CELL_CAP = 4;
+
+/**
+ * Widest strip between a wall and the board edge it runs along that may not
+ * hold the entrance or exit zone. Creeps walking such a strip pass one face
+ * of the wall only, and the blocks on the far side of the endpoint merely
+ * close the strip off: the useless edge wall of tower-def-02k.8. Tuned on
+ * the duel batch: 2 and 3 still let a strip wall through on some maps.
+ */
+export const MAZE_PLAN_MAX_ENDPOINT_STRIP_WIDTH = 4;
+
 /** Route-cost differences below this are rounding noise, not a longer maze. */
 export const MAZE_PLAN_COST_EPSILON = 1e-6;
 

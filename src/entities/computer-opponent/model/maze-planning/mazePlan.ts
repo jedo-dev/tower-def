@@ -83,9 +83,14 @@ function placeUnbuilt(board: MazePlanningBoard, unbuilt: readonly GridPoint[]): 
 }
 
 function search(board: MazePlanningBoard, input: MazePlanUpdateInput, budget: number) {
+  const { entrance, exit, endpointZoneFootprint } = input.grid;
+  const endpointZones = [entrance, exit].map((anchor) => ({
+    anchor,
+    footprint: endpointZoneFootprint,
+  }));
   return searchMazeWalls({
     board,
-    candidates: createWallCandidates(board.cols, board.rows),
+    candidates: createWallCandidates(board.cols, board.rows, endpointZones),
     towerBudget: budget,
     effort: input.effort,
   });

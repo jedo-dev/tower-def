@@ -6,6 +6,7 @@ import { generateEdgeEndpoints } from '../../../../shared/lib/grid/generateEdgeE
 import type { GridModel, GridPoint } from '../../../../shared/types/grid';
 import { createMazeEvaluator } from '../maze-evaluation';
 import { createMazePlanningBoard } from './mazePlanningBoard';
+import { countRouteExposure } from './routeExposure';
 
 const ENDPOINTS = generateEdgeEndpoints(7);
 
@@ -82,6 +83,25 @@ describe('computer-opponent/maze-planning/mazePlanningBoard', () => {
     expect(board.evaluate()).toEqual(before);
     expect(expandedAfterProbe).toBeGreaterThan(expandedBefore);
     expect(board.expandedNodeCount).toBe(expandedAfterProbe);
+  });
+
+  it('measures route exposure over standing towers and placed blocks', () => {
+    const standing = { x: 10, y: 20 };
+    const placed = { x: 4, y: 2 };
+    const grid = withBlocks(createGridModel(ENDPOINTS), [standing]);
+    const board = createMazePlanningBoard(grid);
+    board.place(placed);
+
+    const blocked = withBlocks(grid, [placed]);
+    const { smallRoute } = createMazeEvaluator(blocked, blocked.entrance, blocked.exit).routes;
+    const expected = countRouteExposure(smallRoute ?? [], [standing, placed], 4);
+
+    expect(expected).toBeGreaterThan(0);
+    expect(board.evaluateExposure(4)).toBe(expected);
+
+    board.remove(placed);
+    const { smallRoute: openRoute } = createMazeEvaluator(grid, grid.entrance, grid.exit).routes;
+    expect(board.evaluateExposure(4)).toBe(countRouteExposure(openRoute ?? [], [standing], 4));
   });
 
   it('skips the search for a block off both routes', () => {

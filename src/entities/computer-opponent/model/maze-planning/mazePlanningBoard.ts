@@ -19,6 +19,7 @@ import {
   searchMazeRouteCost,
   type MazeRouteSearchBuffers,
 } from '../maze-evaluation/mazeRouteSearch';
+import { collectStandingBlocks, countRouteExposure } from './routeExposure';
 
 /** Both creep routes on the planning board; only defined while both exist. */
 export type PlanningRouteCosts = {
@@ -44,6 +45,11 @@ export type MazePlanningBoard = {
   evaluate(): PlanningRouteCosts | null;
   /** Small route cost alone (half the work of `evaluate`); Infinity when sealed. */
   evaluateSmall(): number;
+  /**
+   * Small-route samples within `range` of every block on the board (standing
+   * towers and placed blocks), summed over the blocks; 0 when sealed.
+   */
+  evaluateExposure(range: number): number;
   /** Copy of the cached routes, to hand back to `restoreRoutes`. */
   saveRoutes(): PlanningRouteSnapshot;
   /**
@@ -63,24 +69,29 @@ type RouteCache = {
   agentSize: number;
   cost: number | undefined;
   sweep: Uint8Array;
+  /** The route behind `cost`; empty when sealed. Never mutated, only replaced. */
+  route: readonly GridPoint[];
 };
+
+type SavedRoute = Pick<RouteCache, 'cost' | 'sweep' | 'route'>;
 
 export type PlanningRouteSnapshot = {
-  readonly small: Readonly<Pick<RouteCache, 'cost' | 'sweep'>>;
-  readonly large: Readonly<Pick<RouteCache, 'cost' | 'sweep'>>;
+  readonly small: Readonly<SavedRoute>;
+  readonly large: Readonly<SavedRoute>;
 };
 
-function copyRouteCache(cache: RouteCache): Pick<RouteCache, 'cost' | 'sweep'> {
-  return { cost: cache.cost, sweep: cache.sweep.slice() };
+function copyRouteCache(cache: RouteCache): SavedRoute {
+  return { cost: cache.cost, sweep: cache.sweep.slice(), route: cache.route };
 }
 
-function restoreRouteCache(cache: RouteCache, saved: Pick<RouteCache, 'cost' | 'sweep'>): void {
+function restoreRouteCache(cache: RouteCache, saved: SavedRoute): void {
   cache.cost = saved.cost;
   cache.sweep.set(saved.sweep);
+  cache.route = saved.route;
 }
 
 function createRouteCache(agentSize: number, cellCount: number): RouteCache {
-  return { agentSize, cost: undefined, sweep: new Uint8Array(cellCount) };
+  return { agentSize, cost: undefined, sweep: new Uint8Array(cellCount), route: [] };
 }
 
 function markBuildableCells(grid: GridModel, free: Uint8Array, buildable: Uint8Array): void {
@@ -104,6 +115,7 @@ export function createMazePlanningBoard(grid: GridModel): MazePlanningBoard {
   const small = createRouteCache(SMALL_ROUTE_AGENT_SIZE, cols * rows);
   const large = createRouteCache(LARGE_ROUTE_AGENT_SIZE, cols * rows);
   const { width, height } = TOWER_FOOTPRINT;
+  const blocks = collectStandingBlocks(grid);
 
   fillFreeCells(grid, free);
   markBuildableCells(grid, free, buildable);
@@ -159,8 +171,9 @@ export function createMazePlanningBoard(grid: GridModel): MazePlanningBoard {
   function resolveCost(cache: RouteCache): number {
     if (cache.cost === undefined) {
       cache.cost = searchMazeRouteCost(buffers, clearance, cache.agentSize, start, goal);
+      cache.route = Number.isFinite(cache.cost) ? readMazeRoute(buffers, goal) : [];
       if (Number.isFinite(cache.cost)) {
-        markRouteSweep(readMazeRoute(buffers, goal), cache.agentSize, cols, rows, cache.sweep);
+        markRouteSweep(cache.route, cache.agentSize, cols, rows, cache.sweep);
       }
     }
     return cache.cost;
@@ -174,9 +187,14 @@ export function createMazePlanningBoard(grid: GridModel): MazePlanningBoard {
       invalidateOnPlace(small, anchor);
       invalidateOnPlace(large, anchor);
       setBlock(anchor, 0);
+      blocks.push(anchor);
     },
     remove(anchor: GridPoint): void {
       setBlock(anchor, 1);
+      const index = blocks.findLastIndex((block) => block.x === anchor.x && block.y === anchor.y);
+      if (index >= 0) {
+        blocks.splice(index, 1);
+      }
       small.cost = undefined;
       large.cost = undefined;
     },
@@ -195,6 +213,11 @@ export function createMazePlanningBoard(grid: GridModel): MazePlanningBoard {
     },
     evaluateSmall(): number {
       return resolveCost(small);
+    },
+    evaluateExposure(range: number): number {
+      return Number.isFinite(resolveCost(small))
+        ? countRouteExposure(small.route, blocks, range)
+        : 0;
     },
     saveRoutes(): PlanningRouteSnapshot {
       return { small: copyRouteCache(small), large: copyRouteCache(large) };

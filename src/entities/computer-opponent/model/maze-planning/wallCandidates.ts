@@ -1,6 +1,6 @@
 import { TOWER_FOOTPRINT } from '../../../../shared/constants/footprint';
-import type { GridPoint } from '../../../../shared/types/grid';
-import { MAZE_PLAN_LANE_WIDTH } from './constants';
+import type { Footprint, GridPoint } from '../../../../shared/types/grid';
+import { MAZE_PLAN_LANE_WIDTH, MAZE_PLAN_MAX_ENDPOINT_STRIP_WIDTH } from './constants';
 
 /** A wall either runs along a row (across the columns) or along a column. */
 export type WallAxis = 'row' | 'column';
@@ -21,6 +21,12 @@ export type WallCandidate = {
   readonly anchors: readonly GridPoint[];
 };
 
+/** The entrance or exit zone: its top-left anchor and its size. */
+export type EndpointZone = {
+  readonly anchor: GridPoint;
+  readonly footprint: Readonly<Footprint>;
+};
+
 /** Anchor offsets along one axis, from the low edge (or the high edge) towards the lane. */
 function collectOffsets(size: number, block: number, fromLowEdge: boolean): number[] {
   const offsets: number[] = [];
@@ -39,12 +45,41 @@ function collectOffsets(size: number, block: number, fromLowEdge: boolean): numb
 }
 
 /**
+ * True when `zone` lies in a narrow strip between `wall` and the board edge
+ * the wall runs along (at most `MAZE_PLAN_MAX_ENDPOINT_STRIP_WIDTH` wide).
+ */
+function isZoneInEdgeStrip(
+  wall: WallCandidate,
+  zone: EndpointZone,
+  cols: number,
+  rows: number,
+): boolean {
+  const isRow = wall.axis === 'row';
+  const size = isRow ? rows : cols;
+  const thickness = isRow ? TOWER_FOOTPRINT.height : TOWER_FOOTPRINT.width;
+  const zoneStart = isRow ? zone.anchor.y : zone.anchor.x;
+  const zoneEnd = zoneStart + (isRow ? zone.footprint.height : zone.footprint.width);
+  const wallEnd = wall.line + thickness;
+
+  const isInLowStrip = zoneEnd <= wall.line && wall.line <= MAZE_PLAN_MAX_ENDPOINT_STRIP_WIDTH;
+  const isInHighStrip =
+    zoneStart >= wallEnd && size - wallEnd <= MAZE_PLAN_MAX_ENDPOINT_STRIP_WIDTH;
+  return isInLowStrip || isInHighStrip;
+}
+
+/**
  * Every edge-attached wall the planner considers, in a fixed order: walls
  * along each tower row (from the left and from the right edge), then walls
  * along each tower column. Alternating walls from opposite edges is what
  * produces a serpentine; which ones, and in what order, is left to the search.
+ * Walls that would squeeze an endpoint zone into a strip along the board edge
+ * are left out (see `MAZE_PLAN_MAX_ENDPOINT_STRIP_WIDTH`).
  */
-export function createWallCandidates(cols: number, rows: number): WallCandidate[] {
+export function createWallCandidates(
+  cols: number,
+  rows: number,
+  endpointZones: readonly EndpointZone[] = [],
+): WallCandidate[] {
   const { width, height } = TOWER_FOOTPRINT;
   const candidates: WallCandidate[] = [];
 
@@ -66,7 +101,9 @@ export function createWallCandidates(cols: number, rows: number): WallCandidate[
     }
   }
 
-  return candidates;
+  return candidates.filter(
+    (wall) => !endpointZones.some((zone) => isZoneInEdgeStrip(wall, zone, cols, rows)),
+  );
 }
 
 /** Candidates one line either side of `wall`, attached to the same edge. */

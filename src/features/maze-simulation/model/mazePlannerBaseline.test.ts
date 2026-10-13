@@ -58,3 +58,39 @@ describe('features/maze-simulation search planner vs comb baseline', () => {
     },
   );
 });
+
+/** Seeds whose endpoints once drew a useless edge-strip wall (tower-def-02k.8). */
+const EDGE_STRIP_SEEDS = [4, 5] as const;
+const SEED_RANGE = Array.from({ length: 10 }, (_, index) => index + 1);
+const STRIP_CHECK_ROUND = 8;
+/** Share of the seed-range median route cost those seeds must reach. */
+const MIN_SHARE_OF_MEDIAN = 0.8;
+
+function median(values: readonly number[]): number {
+  const sorted = [...values].sort((left, right) => left - right);
+  const middle = Math.floor(sorted.length / 2);
+  return sorted.length % 2 === 0 ? (sorted[middle - 1] + sorted[middle]) / 2 : sorted[middle];
+}
+
+describe('features/maze-simulation search planner on edge-strip maps', () => {
+  it('keeps seeds 4 and 5 within 20% of the seed 1-10 median route cost at round 8', () => {
+    const costBySeed = new Map(
+      SEED_RANGE.map((seed) => {
+        const result = simulateMazeBuildRounds({
+          rounds: STRIP_CHECK_ROUND,
+          difficulty: Difficulty.HARD,
+          raceId: RACE,
+          seed,
+        });
+        return [seed, totalCost(result.rounds[STRIP_CHECK_ROUND - 1].routeCost)];
+      }),
+    );
+    const medianCost = median([...costBySeed.values()]);
+
+    for (const seed of EDGE_STRIP_SEEDS) {
+      expect(costBySeed.get(seed), `seed ${seed}`).toBeGreaterThanOrEqual(
+        medianCost * MIN_SHARE_OF_MEDIAN,
+      );
+    }
+  });
+});

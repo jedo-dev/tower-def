@@ -15,4 +15,4 @@ export type { MazePlanningBoard, PlanningRouteCosts } from './mazePlanningBoard'
 export type { MazePlan, MazePlanUpdate, MazePlanUpdateReason } from './mazePlan';
 export type { MazePlanPriority } from './mazePlanPriority';
 export type { PlanBuildSelection } from './selectPlanBuilds';
-export type { WallCandidate } from './wallCandidates';
+export type { EndpointZone, WallCandidate } from './wallCandidates';
