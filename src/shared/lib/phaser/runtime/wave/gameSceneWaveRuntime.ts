@@ -26,6 +26,7 @@ import { ECONOMY_BALANCE } from '../../../../constants/economy';
 import { CREEP_RENDER_DEPTH } from '../../scenes/gameScene.constants';
 import { getCreepVisualMetrics } from '../creep/creepVisualMetrics';
 import type { GridModel } from '../../../../types/grid';
+import { getRemainingRouteDistance } from '../../../pathfinding/routeProgress';
 import type { GridPosition } from '../../../../types/pathfinding';
 import type { SoundId } from '../../sound/audio.types';
 import type { CreepRenderState, PendingWaveSpawn } from '../../scenes/gameScene.types';
@@ -274,6 +275,7 @@ export function processPendingWaveSpawns(
       status: 'alive',
       position: { x: route[0].x, y: route[0].y },
       pathIndex: 0,
+      remainingRouteDistance: getRemainingRouteDistance(route, 0, 1),
       ...(spawn.sender === undefined ? {} : { sender: spawn.sender }),
     };
 

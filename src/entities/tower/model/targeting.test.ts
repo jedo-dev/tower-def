@@ -70,10 +70,18 @@ describe('tower targeting', () => {
     expect(result[0].id).toBe('creep:in');
   });
 
-  it('selects target with highest path index in range', () => {
+  it('selects the target with the least remaining route distance in range', () => {
     const tower = createTower();
-    const slowProgress = createCreep({ id: 'creep:a', position: { x: 6, y: 5 }, pathIndex: 2 });
-    const deepProgress = createCreep({ id: 'creep:b', position: { x: 8, y: 5 }, pathIndex: 5 });
+    const slowProgress = createCreep({
+      id: 'creep:a',
+      position: { x: 6, y: 5 },
+      remainingRouteDistance: 20,
+    });
+    const deepProgress = createCreep({
+      id: 'creep:b',
+      position: { x: 8, y: 5 },
+      remainingRouteDistance: 12,
+    });
 
     const target = selectTowerTarget(tower, [slowProgress, deepProgress]);
 
@@ -105,12 +113,12 @@ describe('tower targeting', () => {
     const farther = createCreep({
       id: 'creep:farther',
       position: { x: 8, y: 5 },
-      pathIndex: 4,
+      remainingRouteDistance: 9,
     });
     const nearer = createCreep({
       id: 'creep:nearer',
       position: { x: 6, y: 5 },
-      pathIndex: 4,
+      remainingRouteDistance: 9,
     });
 
     const target = selectTowerTarget(tower, [farther, nearer]);

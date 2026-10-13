@@ -170,7 +170,7 @@ describe('movement along octile routes', () => {
     expect(state.playerLives).toBe(19);
   });
 
-  it('reuses one scratch point for every waypoint lookup instead of allocating', () => {
+  it('reuses fixed scratch points for every waypoint lookup instead of allocating', () => {
     const outs = new Set<MutablePoint>();
     const deps = createDeps({
       writeCellCenter: (position, out) => {
@@ -185,7 +185,8 @@ describe('movement along octile routes', () => {
       moveCreepsAlongPath(state, deps, CONFIG, 16);
     }
 
-    expect(outs.size).toBe(1);
+    // One for the next waypoint, one for the last reached (route progress).
+    expect(outs.size).toBe(2);
   });
 
   it('does not replace the position object while a creep is between waypoints', () => {
