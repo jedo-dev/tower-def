@@ -102,3 +102,25 @@ Reason:
 
 Finer cells let mazes bend more tightly and let creep size matter for
 pathing, without changing the physical board on mobile screens.
+
+## Decision 011: Both duel battlefields play the same wave
+
+The game treats the computer's battlefield exactly like the player's, through the
+same runtime cores the headless duel simulation uses:
+
+- one baseline wave is rolled per round from a seeded stream
+  (`createSharedBaselineWaveSource`) and played on both fields; a generated map
+  seeds it with its own seed (the baselines `sim:duel --seed` rolls for that
+  seed and `--baseline-race`), the fixed map rolls a fresh seed per match;
+- the computer's creeps spawn one per interval on the player field's timing
+  instead of all at once;
+- support auras buff the computer's towers;
+- a wave ends only when both fields are resolved, so the computer's kills and
+  leaks are all counted before the round is settled.
+
+Reason:
+
+A duel is only fair if neither side gets a luckier wave, an easier spawn
+pattern or weaker towers. The cost is that the player may wait a few seconds
+after clearing their own field while the computer's field finishes; the
+enemy view shows what is left.
