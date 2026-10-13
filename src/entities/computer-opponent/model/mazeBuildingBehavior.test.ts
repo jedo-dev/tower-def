@@ -1,17 +1,24 @@
 import { describe, expect, it } from 'vitest';
+import { TOWER_FOOTPRINT } from '../../../shared/constants/footprint';
 import { createGridModel } from '../../../shared/lib/grid/createGridModel';
+import {
+  canOccupyFootprint,
+  doFootprintsOverlap,
+  withFootprintOccupancy,
+} from '../../../shared/lib/grid/footprint';
+import { createDefaultEdgeEndpoints } from '../../../shared/lib/grid/generateEdgeEndpoints';
 import { createPathProbe } from '../../../shared/lib/pathfinding/createPathProbe';
 import { RaceId, TowerTypeId } from '../../../shared/types/content-ids';
 import type { GridModel } from '../../../shared/types/grid';
 import type { GridPosition } from '../../../shared/types/pathfinding';
 import { Difficulty } from '../../difficulty/model/types';
+import { getTowerCenter } from '../../tower/model/footprint';
 import type { TowerEntity } from '../../tower/model/types';
 import { TOWER_BASE_LEVEL, TOWER_COMBAT_STATS_BY_TYPE } from '../../tower/model/types';
 import { planBuildDecision } from './planBuildDecision';
 import type { DecisionContext } from './types';
 
-const ENTRANCE = { x: 0, y: 7 };
-const EXIT = { x: 9, y: 7 };
+const { entrance: ENTRANCE, exit: EXIT } = createDefaultEdgeEndpoints();
 
 type FieldState = {
   grid: GridModel;
@@ -24,14 +31,7 @@ function createField(): FieldState {
 
 function withTower(field: FieldState, position: GridPosition, towerType: TowerTypeId): FieldState {
   return {
-    grid: {
-      ...field.grid,
-      cells: field.grid.cells.map((cell) =>
-        cell.x === position.x && cell.y === position.y
-          ? { ...cell, isOccupied: true, isWalkable: false }
-          : cell,
-      ),
-    },
+    grid: withFootprintOccupancy(field.grid, position, TOWER_FOOTPRINT, true),
     towers: [
       ...field.towers,
       {
@@ -65,7 +65,7 @@ function createContext(field: FieldState, round: number, difficulty: Difficulty)
     affordableTowers: [TowerTypeId.SINGLE],
     upgradeableTowerIds: [],
     availableBuildPositions: field.grid.cells
-      .filter((cell) => cell.isWalkable && !cell.isOccupied && cell.role === 'empty')
+      .filter((cell) => canOccupyFootprint(field.grid, cell, TOWER_FOOTPRINT))
       .map((cell) => ({ x: cell.x, y: cell.y })),
     enemy: { hp: 20, income: 50, towerCount: 0 },
   };
@@ -105,6 +105,21 @@ describe('entities/computer-opponent/mazeBuildingBehavior', () => {
     expect(mazedLength).toBeGreaterThan(openFieldLength * 3);
   });
 
+  it('places 2x2 blocks that never overlap', () => {
+    const field = playBuildRounds(20, Difficulty.HARD);
+
+    field.towers.forEach((tower, index) => {
+      field.towers.slice(index + 1).forEach((other) => {
+        expect(
+          doFootprintsOverlap(tower.position, TOWER_FOOTPRINT, other.position, TOWER_FOOTPRINT),
+        ).toBe(false);
+      });
+    });
+    expect(field.grid.cells.filter((cell) => cell.isOccupied)).toHaveLength(
+      field.towers.length * TOWER_FOOTPRINT.width * TOWER_FOOTPRINT.height,
+    );
+  });
+
   it('always leaves a route to the exit', () => {
     const field = playBuildRounds(20, Difficulty.HARD);
 
@@ -114,14 +129,22 @@ describe('entities/computer-opponent/mazeBuildingBehavior', () => {
   it('builds walls rather than scattered towers', () => {
     const field = playBuildRounds(12, Difficulty.HARD);
 
-    const towerKeys = new Set(field.towers.map((t) => `${t.position.x}:${t.position.y}`));
+    // Grown by one cell on every side, a block overlaps exactly the blocks it touches.
+    const grownFootprint = {
+      width: TOWER_FOOTPRINT.width + 2,
+      height: TOWER_FOOTPRINT.height + 2,
+    };
     const touchingAnother = field.towers.filter((tower) =>
-      [
-        { x: tower.position.x + 1, y: tower.position.y },
-        { x: tower.position.x - 1, y: tower.position.y },
-        { x: tower.position.x, y: tower.position.y + 1 },
-        { x: tower.position.x, y: tower.position.y - 1 },
-      ].some((neighbor) => towerKeys.has(`${neighbor.x}:${neighbor.y}`)),
+      field.towers.some(
+        (other) =>
+          other !== tower &&
+          doFootprintsOverlap(
+            { x: tower.position.x - 1, y: tower.position.y - 1 },
+            grownFootprint,
+            other.position,
+            TOWER_FOOTPRINT,
+          ),
+      ),
     );
 
     expect(touchingAnother.length / field.towers.length).toBeGreaterThan(0.8);
@@ -142,11 +165,10 @@ describe('entities/computer-opponent/mazeBuildingBehavior', () => {
     const path = createPathProbe(field.grid).basePath;
     const range = TOWER_COMBAT_STATS_BY_TYPE[TowerTypeId.SINGLE].range;
 
-    const covering = field.towers.filter((tower) =>
-      path.some(
-        (cell) => Math.hypot(cell.x - tower.position.x, cell.y - tower.position.y) <= range,
-      ),
-    );
+    const covering = field.towers.filter((tower) => {
+      const center = getTowerCenter(tower);
+      return path.some((cell) => Math.hypot(cell.x - center.x, cell.y - center.y) <= range);
+    });
 
     expect(covering.length).toBe(field.towers.length);
   });

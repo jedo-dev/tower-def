@@ -97,3 +97,14 @@ describe('tower targeting', () => {
     expect(target?.id).toBe('creep:nearer');
   });
 });
+
+describe('tower targeting from a 2x2 footprint', () => {
+  it('measures range from the centre of the block, not its anchor', () => {
+    const tower = createTower({ position: { x: 5, y: 5 } });
+    const range = tower.combatStats.range;
+    // Just inside range from the centre (5.5, 5.5), just outside from the anchor.
+    const creep = createCreep({ position: { x: 5.5 + range - 0.1, y: 5.5 } });
+
+    expect(getCreepsInTowerRange(tower, [creep])).toHaveLength(1);
+  });
+});

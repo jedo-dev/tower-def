@@ -45,7 +45,7 @@ import type {
 import { createGridModel } from '../../grid/createGridModel';
 import { generateEdgeEndpoints, type EdgeEndpoints } from '../../grid/generateEdgeEndpoints';
 import type { SoundId } from '../sound/audio.types';
-import { validateTowerPlacementPath } from '../../pathfinding/validateTowerPlacementPath';
+import { validateFootprintPlacementPath } from '../../pathfinding/validateFootprintPlacement';
 import {
   createUnitWalkAnimations,
   createTowerAnimations,
@@ -79,7 +79,7 @@ import {
 } from '../runtime/battlefield/battlefieldUpdateRuntime';
 import { registerResponsiveCamera } from '../runtime/camera/gameSceneCameraRuntime';
 import {
-  isBuildCellValid as isBuildCellValidRuntime,
+  isBuildAnchorValid as isBuildAnchorValidRuntime,
   type BuildRuntimeDeps,
   type BuildRuntimeState,
 } from '../runtime/build/gameSceneBuildRuntime';
@@ -104,7 +104,7 @@ import {
   type DuelMatchRuntimeState,
 } from '../runtime/duel/gameSceneDuelRuntime';
 import {
-  toGridCell as toGridCellRuntime,
+  toPointerGridTarget,
   updateBuildPreview as updateBuildPreviewRuntime,
   updateGridOverlayVisualState as updateGridOverlayVisualStateRuntime,
 } from '../runtime/grid/gameSceneGridPreviewRuntime';
@@ -182,6 +182,7 @@ export class GameScene extends Phaser.Scene {
   private static readonly OPPONENT_LEAK_HISTORY_LIMIT = 10;
   private isSceneCleanedUp = false;
   private hoveredCell: GridPosition | null = null;
+  private hoveredBuildAnchor: GridPosition | null = null;
   private gridModel: GridModel | null = null;
   private readonly gridRendererState: GridRendererState = {
     gridGraphics: null,
@@ -254,12 +255,14 @@ export class GameScene extends Phaser.Scene {
 
   private readonly inputControllerDeps: InputControllerDependencies = {
     nowMs: () => this.time.now,
-    toGridCell: (worldX, worldY) => toGridCellRuntime(worldX, worldY),
-    setHoveredCell: (cell) => {
-      this.hoveredCell = cell;
+    toPointerTarget: (worldX, worldY) => toPointerGridTarget(worldX, worldY),
+    setHoveredTarget: (target) => {
+      this.hoveredCell = target?.cell ?? null;
+      this.hoveredBuildAnchor = target?.buildAnchor ?? null;
     },
     clearHoveredCell: () => {
       this.hoveredCell = null;
+      this.hoveredBuildAnchor = null;
     },
     updateHoveredCellDebugRegistry: () => undefined,
     updateBuildPreview: () => this.updateBuildPreview(),
@@ -574,6 +577,7 @@ export class GameScene extends Phaser.Scene {
     return {
       gridModel: this.gridModel,
       hoveredCell: this.hoveredCell,
+      hoveredBuildAnchor: this.hoveredBuildAnchor,
       playerGold: this.playerGold,
       playerLives: this.playerLives,
       placedTowerCostsByCellKey: this.placedTowerCostsByCellKey,
@@ -601,7 +605,8 @@ export class GameScene extends Phaser.Scene {
         resolveBuildableTowerConfig(this.selectedBuilderFactionId, towerType),
       toGridCellKey: (position) => toGridCellKey(position),
       toTowerId: (position) => toTowerId(position),
-      validateTowerPlacementPath: (grid, position) => validateTowerPlacementPath(grid, position),
+      validateFootprintPlacementPath: (grid, anchor, footprint) =>
+        validateFootprintPlacementPath(grid, anchor, footprint),
       sellRefundRatio: SELL_REFUND_RATIO,
       defaultTowerCost: DEFAULT_TOWER_COST,
     };
@@ -627,20 +632,20 @@ export class GameScene extends Phaser.Scene {
         overlay: this.buildPreviewOverlay,
         gridGraphics: this.gridRendererState.gridGraphics,
         gridModel: this.gridModel,
-        hoveredCell: this.hoveredCell,
+        hoveredBuildAnchor: this.hoveredBuildAnchor,
         canPerformBuildActions: this.canPerformBuildActions(),
         selectedTowerRangeCells: resolveTowerRangeCells(this.selectedTowerType),
-        isBuildCellValid: (cellPosition, grid) => this.isBuildCellValid(cellPosition, grid),
+        isBuildAnchorValid: (anchor, grid) => this.isBuildAnchorValid(anchor, grid),
       },
       GRID_PREVIEW_CONFIG,
     );
   }
 
-  private isBuildCellValid(cellPosition: GridPosition, grid: GridModel): boolean {
-    return isBuildCellValidRuntime(
+  private isBuildAnchorValid(anchor: GridPosition, grid: GridModel): boolean {
+    return isBuildAnchorValidRuntime(
       this.getBuildRuntimeState(),
       this.getBuildRuntimeDeps(),
-      cellPosition,
+      anchor,
       grid,
     );
   }
@@ -845,6 +850,7 @@ export class GameScene extends Phaser.Scene {
     destroyBattlefieldTowers(this.playerField);
     this.placedTowerCostsByCellKey.clear();
     this.hoveredCell = null;
+    this.hoveredBuildAnchor = null;
     this.buildPreviewOverlay?.clear();
     this.pathCellKeys.clear();
     resetRunToInitialStateRuntime(this.runState);
@@ -1147,5 +1153,6 @@ export class GameScene extends Phaser.Scene {
     this.soundManager?.destroy();
     this.soundManager = null;
     this.hoveredCell = null;
+    this.hoveredBuildAnchor = null;
   }
 }

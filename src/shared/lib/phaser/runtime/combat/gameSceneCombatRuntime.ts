@@ -3,6 +3,7 @@ import {
   getTowerArchetype,
   getTowerAttackKind,
   getTowerOnHitEffects,
+  getTowerCenter,
 } from '../../../../../entities/tower';
 import Phaser from 'phaser';
 import { addGold, type PlayerResources } from '../../../../../entities/player-resources';
@@ -219,7 +220,7 @@ function applySplashDamage(
   targetRenderState: CreepRenderState,
 ): void {
   const splashRadius = tower.entity.combatStats.splashRadius ?? 1.5;
-  const towerCenter = tower.entity.position;
+  const towerCenter = getTowerCenter(tower.entity);
   const splashRadiusPx = splashRadius * GRID_DIMENSIONS.cellSize;
 
   const creepsInSplashRadius = battlefield.creeps.filter((creep) => {
@@ -356,7 +357,7 @@ function spawnProjectileFeedback(
   to: GridPosition,
   isSplash: boolean,
 ): void {
-  const fromCenter = deps.toCellCenter(tower.entity.position);
+  const fromCenter = deps.toCellCenter(getTowerCenter(tower.entity));
   const toCenter = deps.toCellCenter(to);
   const lifetimeMs = Math.max(
     config.projectileMinLifetimeMs,

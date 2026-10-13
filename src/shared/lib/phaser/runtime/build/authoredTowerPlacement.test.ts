@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { tryPlaceTowerAtHoveredCell } from './gameSceneBuildRuntime';
 import type { BuildRuntimeDeps, BuildRuntimeState } from './gameSceneBuildRuntime';
 import { createGridModel } from '../../../grid/createGridModel';
-import { validateTowerPlacementPath } from '../../../pathfinding/validateTowerPlacementPath';
+import { validateFootprintPlacementPath } from '../../../pathfinding/validateFootprintPlacement';
 import {
   getTowerStatsForTowerLevel,
   resolveBuildableTowerById,
@@ -12,16 +12,17 @@ import {
   type TowerEntity,
 } from '../../../../../entities/tower';
 import { RaceId, TowerTypeId } from '../../../../types/content-ids';
-import { GRID_DEFAULT_ROW_CENTER, GRID_DIMENSIONS } from '../../../../constants/grid';
+import { GRID_DEFAULT_ROW_CENTER } from '../../../../constants/grid';
+import { createDefaultEdgeEndpoints } from '../../../grid/generateEdgeEndpoints';
 
-const ENTRANCE = { x: 0, y: GRID_DEFAULT_ROW_CENTER };
-const EXIT = { x: GRID_DIMENSIONS.cols - 1, y: GRID_DEFAULT_ROW_CENTER };
+const { entrance: ENTRANCE, exit: EXIT } = createDefaultEdgeEndpoints();
 const HOVERED_CELL = { x: 3, y: GRID_DEFAULT_ROW_CENTER - 2 };
 
 function createState(): BuildRuntimeState {
   return {
     gridModel: createGridModel({ entrance: ENTRANCE, exit: EXIT }),
     hoveredCell: { ...HOVERED_CELL },
+    hoveredBuildAnchor: { ...HOVERED_CELL },
     playerGold: 500,
     playerLives: 20,
     placedTowerCostsByCellKey: new Map(),
@@ -37,7 +38,8 @@ function createDeps(authoredTower: BuildableTowerConfig | null): BuildRuntimeDep
     resolveBuildableTower: () => authoredTower,
     toGridCellKey: (position) => `${position.x}:${position.y}`,
     toTowerId: (position) => `tower:${position.x}:${position.y}`,
-    validateTowerPlacementPath: (grid, position) => validateTowerPlacementPath(grid, position),
+    validateFootprintPlacementPath: (grid, anchor, footprint) =>
+      validateFootprintPlacementPath(grid, anchor, footprint),
     sellRefundRatio: 0.5,
     defaultTowerCost: 50,
   };

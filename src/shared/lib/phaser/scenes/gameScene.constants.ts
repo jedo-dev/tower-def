@@ -2,7 +2,7 @@ import { createInitialPlayerResources } from '../../../../entities/player-resour
 import { buildableTowers } from '../../../../entities/tower';
 import { ECONOMY_BALANCE } from '../../../constants/economy';
 import { GRID_DEFAULT_ROW_CENTER, GRID_DIMENSIONS } from '../../../constants/grid';
-import { ENDPOINT_ZONE_FOOTPRINT } from '../../../constants/footprint';
+import { ENDPOINT_ZONE_FOOTPRINT, TowerFootprint } from '../../../constants/footprint';
 import { EffectId } from '../../../types/content-ids';
 
 export const ENTRANCE_CELL = { x: 0, y: GRID_DEFAULT_ROW_CENTER };
@@ -108,7 +108,8 @@ export const BONE_ARCHER_TOWER_CONFIG =
   buildableTowers.find((tower) => tower.id === BONE_ARCHER_TOWER_ID) ?? null;
 export const PLAGUE_TOWER_CONFIG =
   buildableTowers.find((tower) => tower.id === PLAGUE_TOWER_ID) ?? null;
-export const TOWER_VISUAL_SCALE_IN_CELLS = 1.3;
+/** Tower sprites span their 2x2 footprint. */
+export const TOWER_VISUAL_SCALE_IN_CELLS = TowerFootprint.SIZE;
 export const BONE_ARCHER_ORIGIN_X = 0.5;
 export const BONE_ARCHER_ORIGIN_Y = 0.82;
 export const PLAGUE_TOWER_ORIGIN_X = 0.5;

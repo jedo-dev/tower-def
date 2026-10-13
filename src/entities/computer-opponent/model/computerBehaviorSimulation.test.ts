@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
+import { TOWER_FOOTPRINT } from '../../../shared/constants/footprint';
 import { createGridModel } from '../../../shared/lib/grid/createGridModel';
+import { withFootprintOccupancy } from '../../../shared/lib/grid/footprint';
 import { findPathBfs } from '../../../shared/lib/pathfinding/hasPathBfs';
 import type { GridModel } from '../../../shared/types/grid';
 import type { GridPosition } from '../../../shared/types/pathfinding';
@@ -66,7 +68,8 @@ function createCorridorGrid(): GridModel {
   return {
     ...baseGrid,
     cells: baseGrid.cells.map((cell) => {
-      if (cell.y === DEFAULT_ENTRANCE.y) {
+      // Two rows: exactly as wide as one tower block.
+      if (cell.y === DEFAULT_ENTRANCE.y || cell.y === DEFAULT_ENTRANCE.y + 1) {
         return { ...cell };
       }
 
@@ -112,14 +115,7 @@ function applyBuildDecision(state: SimulationState, output: DecisionOutput): Sim
       const tower = createTower(`seeded_tower_${towers.length + 1}`, action.position, 1);
       towers = [...towers, tower];
       spentGold += tower.cost;
-      grid = {
-        ...grid,
-        cells: grid.cells.map((cell) =>
-          cell.x === action.position.x && cell.y === action.position.y
-            ? { ...cell, isOccupied: true }
-            : cell,
-        ),
-      };
+      grid = withFootprintOccupancy(grid, action.position, TOWER_FOOTPRINT, true);
     }
 
     if (action.kind === 'upgrade') {

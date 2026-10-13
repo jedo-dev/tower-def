@@ -104,3 +104,48 @@ describe('shared/pathfinding/createPathProbe', () => {
     expect(probe.basePath).toEqual(findPathBfs(grid).path);
   });
 });
+
+describe('shared/pathfinding/createPathProbe footprint probes', () => {
+  const BLOCK = { width: 2, height: 2 };
+
+  it('walls off every cell of the block', () => {
+    const grid = createTestGrid();
+    const probe = createPathProbe(grid);
+    const anchor = { x: 4, y: ENTRANCE.y };
+
+    const result = probe.probeFootprint(anchor, BLOCK);
+    const reference = findPathBfs(
+      block(grid, [anchor, { x: 5, y: 7 }, { x: 4, y: 8 }, { x: 5, y: 8 }]),
+    );
+
+    expect(result.length).toBe(reference.path.length);
+    expect(result.length).toBeGreaterThan(probe.baseLength);
+  });
+
+  it('seals the field when the block plugs a two-cell gap', () => {
+    const wall: GridPosition[] = [];
+    for (let y = 0; y < createTestGrid().rows; y += 1) {
+      if (y !== 7 && y !== 8) {
+        wall.push({ x: 4, y }, { x: 5, y });
+      }
+    }
+    const probe = createPathProbe(block(createTestGrid(), wall));
+
+    expect(probe.baseLength).toBeGreaterThan(0);
+    expect(probe.probeFootprint({ x: 4, y: 7 }, BLOCK)).toEqual({ path: null, length: 0 });
+    expect(probe.probeFootprint({ x: 4, y: 6 }, BLOCK).path).not.toBeNull();
+  });
+
+  it('treats blocks hanging off the grid as sealed', () => {
+    const grid = createTestGrid();
+    const probe = createPathProbe(grid);
+
+    expect(probe.probeFootprint({ x: grid.cols - 1, y: 0 }, BLOCK).path).toBeNull();
+  });
+
+  it('keeps the shortest route when the block stays off it', () => {
+    const probe = createPathProbe(createTestGrid());
+
+    expect(probe.probeFootprint({ x: 4, y: 0 }, BLOCK).length).toBe(probe.baseLength);
+  });
+});

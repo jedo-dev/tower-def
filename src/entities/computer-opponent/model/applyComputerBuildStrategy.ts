@@ -9,7 +9,8 @@ import { canAffordUpgrade, getTowerStatsForLevel, getUpgradeCost } from '../../t
 import type { TowerTypeId } from '../../../shared/types/content-ids';
 import type { GridPosition } from '../../../shared/types/pathfinding';
 import { findPathBfs } from '../../../shared/lib/pathfinding/hasPathBfs';
-import { validateTowerPlacementPath } from '../../../shared/lib/pathfinding/validateTowerPlacementPath';
+import { TOWER_FOOTPRINT } from '../../../shared/constants/footprint';
+import { canPlaceFootprint } from '../../../shared/lib/pathfinding/validateFootprintPlacement';
 import type { ComputerDecisionDebugRecorder } from './decisionDebugSnapshots';
 import { planBuildDecision } from './planBuildDecision';
 import type { DecisionContext, DecisionOutput } from './types';
@@ -54,24 +55,6 @@ function createComputerTower(
     type: towerType,
     level: TOWER_BASE_LEVEL,
     combatStats: { ...TOWER_COMBAT_STATS_BY_TYPE[towerType] },
-  };
-}
-
-function applyBuildToBattlefield(
-  battlefield: BattlefieldState,
-  tower: TowerEntity,
-): BattlefieldState {
-  const withTower = addTower(battlefield, tower);
-  return {
-    ...withTower,
-    grid: {
-      ...withTower.grid,
-      cells: withTower.grid.cells.map((cell) =>
-        cell.x === tower.position.x && cell.y === tower.position.y
-          ? { ...cell, isOccupied: true, isWalkable: false }
-          : cell,
-      ),
-    },
   };
 }
 
@@ -125,12 +108,14 @@ export function applyComputerBuildStrategy(
         continue;
       }
 
-      if (!validateTowerPlacementPath(battlefield.grid, action.position)) {
+      // The plan was scored against a simulated grid; re-check the real one so
+      // a block never overlaps another tower or seals the route.
+      if (!canPlaceFootprint(battlefield.grid, action.position, TOWER_FOOTPRINT)) {
         continue;
       }
 
       const tower = createComputerTower(action.towerType, action.position, cost);
-      battlefield = applyBuildToBattlefield(battlefield, tower);
+      battlefield = addTower(battlefield, tower);
       battlefield = recalculateBattlefieldPath(battlefield);
       gold -= cost;
       spentGold += cost;

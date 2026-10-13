@@ -1,5 +1,7 @@
 import type { GridPosition } from '../../../shared/types/pathfinding';
 import { CreepTypeId } from '../../../shared/types/content-ids';
+import { TOWER_FOOTPRINT } from '../../../shared/constants/footprint';
+import { withFootprintOccupancy } from '../../../shared/lib/grid/footprint';
 import { resolveUnitConfigById } from '../../unit/model/registry';
 import type { TowerEntity } from '../../tower/model/types';
 import type { DuelMatchState } from './types';
@@ -68,18 +70,12 @@ export function routeQueuedSendsToBattlefields(state: DuelMatchState): DuelMatch
   };
 }
 
+/** Adds the tower and walls off every cell of its footprint. */
 export function addTower(battlefield: BattlefieldState, tower: TowerEntity): BattlefieldState {
   return {
     ...battlefield,
     towers: [...battlefield.towers, tower],
-    grid: {
-      ...battlefield.grid,
-      cells: battlefield.grid.cells.map((cell) =>
-        cell.x === tower.position.x && cell.y === tower.position.y
-          ? { ...cell, isOccupied: true }
-          : cell,
-      ),
-    },
+    grid: withFootprintOccupancy(battlefield.grid, tower.position, TOWER_FOOTPRINT, true),
   };
 }
 
@@ -92,14 +88,7 @@ export function removeTower(battlefield: BattlefieldState, towerId: string): Bat
   return {
     ...battlefield,
     towers: battlefield.towers.filter((t) => t.id !== towerId),
-    grid: {
-      ...battlefield.grid,
-      cells: battlefield.grid.cells.map((cell) =>
-        cell.x === tower.position.x && cell.y === tower.position.y
-          ? { ...cell, isOccupied: false }
-          : cell,
-      ),
-    },
+    grid: withFootprintOccupancy(battlefield.grid, tower.position, TOWER_FOOTPRINT, false),
   };
 }
 

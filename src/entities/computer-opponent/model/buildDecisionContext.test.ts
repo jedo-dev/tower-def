@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { TOWER_FOOTPRINT } from '../../../shared/constants/footprint';
 import { RaceId } from '../../../shared/types/content-ids';
 import { Difficulty } from '../../difficulty/model/types';
 import { createInitialDuelMatchState } from '../../duel-match/model/state';
@@ -176,7 +177,10 @@ describe('entities/computer-opponent/buildDecisionContext', () => {
         leakHistory: [],
       });
 
-      expect(context.mazeCoverage.occupiedCells).toBe(1);
+      // A tower stands on all four cells of its 2x2 block.
+      expect(context.mazeCoverage.occupiedCells).toBe(
+        TOWER_FOOTPRINT.width * TOWER_FOOTPRINT.height,
+      );
     });
 
     it('totalWalkableCells is positive for initial grid', () => {

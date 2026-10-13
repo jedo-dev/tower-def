@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
+import { TOWER_FOOTPRINT } from '../../../shared/constants/footprint';
 import { createGridModel } from '../../../shared/lib/grid/createGridModel';
+import { doFootprintsOverlap, isFootprintInBounds } from '../../../shared/lib/grid/footprint';
 import { findPathBfs } from '../../../shared/lib/pathfinding/hasPathBfs';
 import type { GridModel } from '../../../shared/types/grid';
 import type { GridPosition } from '../../../shared/types/pathfinding';
@@ -76,7 +78,8 @@ function createCorridorGrid(): GridModel {
   return {
     ...baseGrid,
     cells: baseGrid.cells.map((cell) => {
-      if (cell.y === DEFAULT_ENTRANCE.y) {
+      // Two rows: exactly as wide as one tower block, which would seal it.
+      if (cell.y === DEFAULT_ENTRANCE.y || cell.y === DEFAULT_ENTRANCE.y + 1) {
         return { ...cell };
       }
 
@@ -255,6 +258,23 @@ describe('entities/computer-opponent/applyComputerBuildStrategy', () => {
       // regresses to the old scattered placement.
       expect(state.opponent.battlefield.towers.length).toBeGreaterThan(25);
       expect(mazedLength).toBeGreaterThan(openFieldLength * 2);
+    });
+
+    it('builds 2x2 blocks that cover four cells each and never overlap', () => {
+      const state = playRounds(25, Difficulty.HARD);
+      const { towers, grid } = state.opponent.battlefield;
+
+      towers.forEach((tower, index) => {
+        expect(isFootprintInBounds(grid, tower.position, TOWER_FOOTPRINT)).toBe(true);
+        for (const other of towers.slice(index + 1)) {
+          expect(
+            doFootprintsOverlap(tower.position, TOWER_FOOTPRINT, other.position, TOWER_FOOTPRINT),
+          ).toBe(false);
+        }
+      });
+      expect(grid.cells.filter((cell) => cell.isOccupied)).toHaveLength(
+        towers.length * TOWER_FOOTPRINT.width * TOWER_FOOTPRINT.height,
+      );
     });
 
     it('keeps the battlefield path in sync with the walls it built', () => {

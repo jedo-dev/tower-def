@@ -1,28 +1,36 @@
 import { describe, expect, it } from 'vitest';
+import { TOWER_FOOTPRINT } from '../../../shared/constants/footprint';
 import { createGridModel } from '../../../shared/lib/grid/createGridModel';
+import { doFootprintsOverlap, withFootprintOccupancy } from '../../../shared/lib/grid/footprint';
 import { createPathProbe } from '../../../shared/lib/pathfinding/createPathProbe';
 import type { GridModel } from '../../../shared/types/grid';
 import type { GridPosition } from '../../../shared/types/pathfinding';
 import { createMazeSkeleton } from './createMazeSkeleton';
 
-function blockAll(grid: GridModel, positions: readonly GridPosition[]): GridModel {
-  const blockedKeys = new Set(positions.map((p) => `${p.x}:${p.y}`));
-  return {
-    ...grid,
-    cells: grid.cells.map((cell) =>
-      blockedKeys.has(`${cell.x}:${cell.y}`)
-        ? { ...cell, isOccupied: true, isWalkable: false }
-        : cell,
-    ),
-  };
+function buildAll(grid: GridModel, anchors: readonly GridPosition[]): GridModel {
+  return anchors.reduce(
+    (current, anchor) => withFootprintOccupancy(current, anchor, TOWER_FOOTPRINT, true),
+    grid,
+  );
 }
 
-function uniqueColumns(cells: readonly GridPosition[]): number[] {
-  return [...new Set(cells.map((cell) => cell.x))].sort((a, b) => a - b);
+function uniqueColumns(anchors: readonly GridPosition[]): number[] {
+  return [...new Set(anchors.map((anchor) => anchor.x))].sort((a, b) => a - b);
 }
 
-function uniqueRows(cells: readonly GridPosition[]): number[] {
-  return [...new Set(cells.map((cell) => cell.y))].sort((a, b) => a - b);
+function uniqueRows(anchors: readonly GridPosition[]): number[] {
+  return [...new Set(anchors.map((anchor) => anchor.y))].sort((a, b) => a - b);
+}
+
+/** Rows of a horizontal-travel tooth left uncovered by its blocks. */
+function gapRows(grid: GridModel, anchors: readonly GridPosition[], column: number): number[] {
+  const covered = new Set<number>();
+  for (const anchor of anchors.filter((candidate) => candidate.x === column)) {
+    for (let offset = 0; offset < TOWER_FOOTPRINT.height; offset += 1) {
+      covered.add(anchor.y + offset);
+    }
+  }
+  return Array.from({ length: grid.rows }, (_, row) => row).filter((row) => !covered.has(row));
 }
 
 describe('entities/computer-opponent/createMazeSkeleton', () => {
@@ -30,65 +38,57 @@ describe('entities/computer-opponent/createMazeSkeleton', () => {
     const grid = createGridModel({ entrance: { x: 0, y: 14 }, exit: { x: 18, y: 14 } });
     const skeleton = createMazeSkeleton(grid);
 
-    it('lays the teeth across the travel axis with a free lane between them', () => {
-      expect(uniqueColumns(skeleton.cells)).toEqual([2, 4, 6, 8, 10, 12, 14, 16]);
+    it('lays 2-cell teeth across the travel axis with 2-cell lanes between them', () => {
+      expect(uniqueColumns(skeleton.anchors)).toEqual([2, 6, 10, 14]);
     });
 
-    it('keeps a lane next to the entrance and the exit', () => {
-      expect(skeleton.cells.some((cell) => cell.x <= 1)).toBe(false);
-      expect(skeleton.cells.some((cell) => cell.x >= 18)).toBe(false);
+    it('plans 2x2 blocks that never overlap', () => {
+      skeleton.anchors.forEach((first, firstIndex) => {
+        skeleton.anchors.slice(firstIndex + 1).forEach((second) => {
+          expect(doFootprintsOverlap(first, TOWER_FOOTPRINT, second, TOWER_FOOTPRINT)).toBe(false);
+        });
+      });
     });
 
-    it('leaves one gap per tooth, on alternating edges', () => {
-      const gapRowByColumn = new Map<number, number[]>();
-      for (const column of uniqueColumns(skeleton.cells)) {
-        const covered = new Set(
-          skeleton.cells.filter((cell) => cell.x === column).map((cell) => cell.y),
-        );
-        const gaps: number[] = [];
-        for (let y = 0; y < grid.rows; y += 1) {
-          if (!covered.has(y)) {
-            gaps.push(y);
-          }
-        }
-        gapRowByColumn.set(column, gaps);
-      }
+    it('keeps a lane next to the entrance and the exit zones', () => {
+      expect(skeleton.anchors.some((anchor) => anchor.x <= 1)).toBe(false);
+      expect(skeleton.anchors.some((anchor) => anchor.x + TOWER_FOOTPRINT.width > 18)).toBe(false);
+    });
 
-      expect(gapRowByColumn.get(2)).toEqual([0]);
-      expect(gapRowByColumn.get(4)).toEqual([grid.rows - 1]);
-      expect(gapRowByColumn.get(14)).toEqual([0]);
-      expect(gapRowByColumn.get(16)).toEqual([grid.rows - 1]);
+    it('leaves one 2-cell gap per tooth, on alternating edges', () => {
+      expect(gapRows(grid, skeleton.anchors, 2)).toEqual([0, 1]);
+      expect(gapRows(grid, skeleton.anchors, 6)).toEqual([grid.rows - 2, grid.rows - 1]);
+      expect(gapRows(grid, skeleton.anchors, 10)).toEqual([0, 1]);
+      expect(gapRows(grid, skeleton.anchors, 14)).toEqual([grid.rows - 2, grid.rows - 1]);
     });
 
     it('ranks each tooth from its anchored edge towards its gap', () => {
-      const firstTooth = skeleton.cells.filter((cell) => cell.x === 2);
+      const firstTooth = skeleton.anchors.filter((anchor) => anchor.x === 2);
 
-      expect(firstTooth[0]).toEqual({ x: 2, y: grid.rows - 1 });
-      expect(firstTooth[firstTooth.length - 1]).toEqual({ x: 2, y: 1 });
+      expect(firstTooth[0]).toEqual({ x: 2, y: grid.rows - 2 });
+      expect(firstTooth[firstTooth.length - 1]).toEqual({ x: 2, y: 2 });
     });
 
     it('finishes one tooth before starting the next', () => {
-      const firstToothRanks = skeleton.cells
-        .filter((cell) => cell.x === 2)
-        .map((cell) => skeleton.rankOf(cell) ?? -1);
-      const secondToothRanks = skeleton.cells
-        .filter((cell) => cell.x === 4)
-        .map((cell) => skeleton.rankOf(cell) ?? -1);
+      const ranksOf = (column: number): number[] =>
+        skeleton.anchors
+          .filter((anchor) => anchor.x === column)
+          .map((anchor) => skeleton.rankOf(anchor) ?? -1);
 
-      expect(Math.max(...firstToothRanks)).toBeLessThan(Math.min(...secondToothRanks));
+      expect(Math.max(...ranksOf(2))).toBeLessThan(Math.min(...ranksOf(6)));
     });
 
-    it('scores earlier cells above later ones and off-plan cells at zero', () => {
-      expect(skeleton.priorityOf({ x: 2, y: grid.rows - 1 })).toBeGreaterThan(
-        skeleton.priorityOf({ x: 16, y: 0 }),
+    it('scores earlier blocks above later ones and off-plan anchors at zero', () => {
+      expect(skeleton.priorityOf({ x: 2, y: grid.rows - 2 })).toBeGreaterThan(
+        skeleton.priorityOf({ x: 14, y: grid.rows - 2 }),
       );
-      expect(skeleton.priorityOf({ x: 0, y: 0 })).toBe(0);
-      expect(skeleton.rankOf({ x: 0, y: 0 })).toBeNull();
+      expect(skeleton.priorityOf({ x: 3, y: 0 })).toBe(0);
+      expect(skeleton.rankOf({ x: 3, y: 0 })).toBeNull();
     });
 
     it('multiplies the route once the whole comb is built', () => {
       const baseLength = createPathProbe(grid).baseLength;
-      const built = createPathProbe(blockAll(grid, skeleton.cells)).baseLength;
+      const built = createPathProbe(buildAll(grid, skeleton.anchors)).baseLength;
 
       expect(built).toBeGreaterThan(baseLength * 4);
     });
@@ -99,32 +99,32 @@ describe('entities/computer-opponent/createMazeSkeleton', () => {
     const skeleton = createMazeSkeleton(grid);
 
     it('turns the comb to span the other axis', () => {
-      expect(uniqueRows(skeleton.cells)).toEqual([2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26]);
-      expect(skeleton.cells.some((cell) => cell.y <= 1)).toBe(false);
-      expect(skeleton.cells.some((cell) => cell.y >= 28)).toBe(false);
+      expect(uniqueRows(skeleton.anchors)).toEqual([2, 6, 10, 14, 18, 22, 26]);
+      expect(skeleton.anchors.some((anchor) => anchor.y <= 1)).toBe(false);
+      expect(skeleton.anchors.some((anchor) => anchor.y + TOWER_FOOTPRINT.height > 28)).toBe(false);
     });
 
     it('multiplies the route once the whole comb is built', () => {
       const baseLength = createPathProbe(grid).baseLength;
-      const built = createPathProbe(blockAll(grid, skeleton.cells)).baseLength;
+      const built = createPathProbe(buildAll(grid, skeleton.anchors)).baseLength;
 
       expect(built).toBeGreaterThan(baseLength * 4);
     });
   });
 
-  it('skips cells that are already walled off', () => {
+  it('drops blocks that something already stands on', () => {
     const grid = createGridModel({ entrance: { x: 0, y: 14 }, exit: { x: 18, y: 14 } });
-    const withTower = blockAll(grid, [{ x: 2, y: 10 }]);
+    const withTower = withFootprintOccupancy(grid, { x: 3, y: 10 }, TOWER_FOOTPRINT, true);
 
     const skeleton = createMazeSkeleton(withTower);
 
-    expect(skeleton.cells.some((cell) => cell.x === 2 && cell.y === 10)).toBe(false);
-    expect(skeleton.cells.some((cell) => cell.x === 2 && cell.y === 9)).toBe(true);
+    expect(skeleton.anchors.some((anchor) => anchor.x === 2 && anchor.y === 10)).toBe(false);
+    expect(skeleton.anchors.some((anchor) => anchor.x === 2 && anchor.y === 8)).toBe(true);
   });
 
   it('plans nothing when the endpoints leave no room for a tooth', () => {
-    const grid = createGridModel({ entrance: { x: 0, y: 7 }, exit: { x: 2, y: 7 } });
+    const grid = createGridModel({ entrance: { x: 0, y: 7 }, exit: { x: 3, y: 7 } });
 
-    expect(createMazeSkeleton(grid).cells).toHaveLength(0);
+    expect(createMazeSkeleton(grid).anchors).toHaveLength(0);
   });
 });

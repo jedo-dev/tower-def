@@ -195,7 +195,8 @@ describe('upgrade gold deduction', () => {
 describe('upgraded stats affect combat', () => {
   it('upgraded tower reaches farther creeps', () => {
     const baseTower = createTestTower();
-    const farCreep = createTestCreep({ position: { x: 8.2, y: 5 } });
+    // Range is measured from the centre of the 2x2 block, (5.5, 5.5).
+    const farCreep = createTestCreep({ position: { x: 8.7, y: 5.5 } });
 
     const baseTarget = selectTowerTarget(baseTower, [farCreep]);
 
