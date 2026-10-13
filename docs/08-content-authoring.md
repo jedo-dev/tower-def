@@ -142,6 +142,48 @@ the Beads task, not an accident.
 
 ---
 
+# Tower Content
+
+Tower stats live in `src/content/towers/<race>.json` (the buildable roster of
+each race) and `src/content/towers/archetypes.json` (base stats and upgrade
+curves). Both files carry `schemaVersion` 2 (`TOWER_CONTENT_SCHEMA_VERSION` in
+`src/entities/tower/model/content/towerContent.types.ts`).
+
+## Units
+
+Every distance is measured in **cells of the fine grid** (20x30 at 16px per
+cell). A world-space distance is `value * GRID_DIMENSIONS.cellSize`. Distances
+are measured from the centre of the tower's 2x2 footprint.
+
+| Field | Unit |
+| --- | --- |
+| `range` (tower, archetype and each `levels[]` entry) | cells |
+| `splashRadius` | cells |
+| `chain.bounceRangeCells` | cells |
+| `aura.radiusCells` | cells |
+| `aura.rangeBonus` | cells, added to the buffed tower's `range` |
+| `attackCooldownMs`, `onHitEffects[].durationMs` | milliseconds |
+| `aura.attackSpeedBonus`, `chain.damageFalloff`, chill `magnitude` | share, `0.2` = 20% |
+
+Creature `speed` is not a cell value: it multiplies the base move speed in
+pixels per second, so the grid change did not touch creature files.
+
+## Schema versions
+
+| Version | Meaning |
+| --- | --- |
+| 1 | Retired. Distances in coarse 32px cells (10x15 grid). |
+| 2 | Current. Distances in fine 16px cells: every version 1 distance doubled. |
+
+A version 1 file fails on load with the file and its first entity id, e.g.
+`content/towers/human.json [human_guard_archer_tower]: schemaVersion 1 measures
+distances in coarse 32px cells; ...`. To migrate one, double every field in
+the cell column above and set `schemaVersion` to 2. Schema bounds
+(`TOWER_STAT_BOUNDS`, `TOWER_AURA_BOUNDS`, `TOWER_CHAIN_BOUNDS`) are expressed
+in fine-grid cells too.
+
+---
+
 # Art Drop-In
 
 Content can name artwork that does not exist yet. Until the file lands, the

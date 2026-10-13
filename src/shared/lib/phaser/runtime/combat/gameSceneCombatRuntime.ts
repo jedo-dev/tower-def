@@ -44,6 +44,9 @@ import {
 } from './creepEffectVisuals';
 import { getCreepDeathAnimationKey } from '../animation/creepFacing';
 
+/** Splash radius, in fine-grid cells, for a splash tower whose content omits one. */
+const DEFAULT_SPLASH_RADIUS_CELLS = 3;
+
 export type CombatRuntimeConfig = {
   archerProjectileVisualMode: 'projectile' | 'attackEffect';
   creepBaseColor: number;
@@ -215,7 +218,7 @@ function applySplashDamage(
   tower: TowerRenderState,
   targetRenderState: CreepRenderState,
 ): void {
-  const splashRadius = tower.entity.combatStats.splashRadius ?? 1.5;
+  const splashRadius = tower.entity.combatStats.splashRadius ?? DEFAULT_SPLASH_RADIUS_CELLS;
   const towerCenter = getTowerCenter(tower.entity);
   const splashRadiusPx = splashRadius * GRID_DIMENSIONS.cellSize;
 

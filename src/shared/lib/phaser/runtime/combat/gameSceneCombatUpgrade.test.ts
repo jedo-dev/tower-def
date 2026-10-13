@@ -82,7 +82,7 @@ describe('upgrade tower stats applied to entity', () => {
     const tower = createTestTower();
     expect(tower.level).toBe(1);
     expect(tower.combatStats.damage).toBe(20);
-    expect(tower.combatStats.range).toBe(3);
+    expect(tower.combatStats.range).toBe(6);
     expect(tower.combatStats.attackCooldownMs).toBe(800);
   });
 
@@ -104,7 +104,7 @@ describe('upgrade tower stats applied to entity', () => {
 
     expect(result.success).toBe(true);
     expect(result.tower.combatStats.range).toBeGreaterThan(tower.combatStats.range);
-    expect(result.tower.combatStats.range).toBeCloseTo(3.2);
+    expect(result.tower.combatStats.range).toBeCloseTo(6.4);
   });
 
   it('upgrade to level 2 reduces cooldown', () => {
@@ -132,7 +132,7 @@ describe('upgrade tower stats applied to entity', () => {
 
     expect(tower.level).toBe(3);
     expect(tower.combatStats.damage).toBe(40);
-    expect(tower.combatStats.range).toBeCloseTo(3.4);
+    expect(tower.combatStats.range).toBeCloseTo(6.8);
     expect(tower.combatStats.attackCooldownMs).toBe(700);
   });
 });
@@ -196,7 +196,7 @@ describe('upgraded stats affect combat', () => {
   it('upgraded tower reaches farther creeps', () => {
     const baseTower = createTestTower();
     // Range is measured from the centre of the 2x2 block, (5.5, 5.5).
-    const farCreep = createTestCreep({ position: { x: 8.7, y: 5.5 } });
+    const farCreep = createTestCreep({ position: { x: 11.7, y: 5.5 } });
 
     const baseTarget = selectTowerTarget(baseTower, [farCreep]);
 
@@ -267,7 +267,7 @@ describe('splash tower upgrade', () => {
     const result = simulateUpgrade(tower, resources);
 
     expect(result.success).toBe(true);
-    expect(result.tower.combatStats.splashRadius).toBe(1.5);
+    expect(result.tower.combatStats.splashRadius).toBe(3);
   });
 
   it('splash tower upgrade increases damage', () => {

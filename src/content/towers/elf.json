@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "race": "ELF",
   "towers": [
     {
@@ -8,7 +8,7 @@
       "archetype": "single",
       "costGold": 50,
       "damage": 20,
-      "range": 3,
+      "range": 6,
       "attackCooldownMs": 800,
       "spriteKey": "tower.elf.moon_archer",
       "description": "Moonlit archers strike swiftly from sacred boughs."
@@ -19,9 +19,9 @@
       "archetype": "splash",
       "costGold": 75,
       "damage": 18,
-      "range": 2.5,
+      "range": 5,
       "attackCooldownMs": 1200,
-      "splashRadius": 1.5,
+      "splashRadius": 3,
       "spriteKey": "tower.elf.wisp_bloom",
       "description": "A bloom of wisps that bursts over anything close."
     },
@@ -31,7 +31,7 @@
       "archetype": "frost",
       "costGold": 70,
       "damage": 13,
-      "range": 3,
+      "range": 6,
       "attackCooldownMs": 900,
       "onHitEffects": [
         {
@@ -49,7 +49,7 @@
       "archetype": "poison",
       "costGold": 65,
       "damage": 8,
-      "range": 3,
+      "range": 6,
       "attackCooldownMs": 1000,
       "onHitEffects": [
         {

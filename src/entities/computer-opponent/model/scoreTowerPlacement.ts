@@ -72,7 +72,7 @@ export const DEFENSE_PLACEMENT_WEIGHTS: PlacementWeights = {
  * Cells of detour that count as "half a great placement". Saturating instead of
  * clamping keeps a 20-cell detour ranked above a 10-cell one.
  */
-const MAZE_GAIN_HALF_VALUE_CELLS = 6;
+const MAZE_GAIN_HALF_VALUE_CELLS = 12;
 
 type ScorePlacementInput = {
   grid: GridModel;
@@ -182,7 +182,7 @@ function computeDefenseProximityScore(
   }
 
   const avgDistance = computeAverageDistanceToTowers(position, existingTowers);
-  const maxReasonableDistance = 10;
+  const maxReasonableDistance = 20;
 
   return Math.max(0, 1 - avgDistance / maxReasonableDistance);
 }

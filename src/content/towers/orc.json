@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "race": "ORC",
   "towers": [
     {
@@ -8,7 +8,7 @@
       "archetype": "single",
       "costGold": 50,
       "damage": 20,
-      "range": 3,
+      "range": 6,
       "attackCooldownMs": 800,
       "spriteKey": "tower.orc.spear_watchtower",
       "description": "A rugged platform hurling heavy spears."
@@ -19,9 +19,9 @@
       "archetype": "splash",
       "costGold": 75,
       "damage": 18,
-      "range": 2.5,
+      "range": 5,
       "attackCooldownMs": 1200,
-      "splashRadius": 1.5,
+      "splashRadius": 3,
       "spriteKey": "tower.orc.burning_pit",
       "description": "Flings burning pitch that splashes across the pack."
     },
@@ -31,7 +31,7 @@
       "archetype": "chain",
       "costGold": 85,
       "damage": 16,
-      "range": 3,
+      "range": 6,
       "attackCooldownMs": 1100,
       "spriteKey": "tower.orc.lightning_totem",
       "description": "Shaman totem whose bolt leaps from creep to creep."
@@ -42,7 +42,7 @@
       "archetype": "frost",
       "costGold": 70,
       "damage": 13,
-      "range": 3,
+      "range": 6,
       "attackCooldownMs": 900,
       "onHitEffects": [
         {

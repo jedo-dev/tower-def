@@ -14,6 +14,11 @@ import {
   TowerTypeId,
 } from '../../../../shared/types/content-ids';
 import { BUILDABLE_TOWER_IDS } from '../towerIds';
+import { GRID_DIMENSIONS } from '../../../../shared/constants/grid';
+
+/** Tower reach before the fine-grid migration, authored in 32px cells. */
+const COARSE_CELL_SIZE_PX = 32;
+const COARSE_GRID_RANGE = { guardArcher: 3, cannonSplash: 1.5 } as const;
 
 const FILE = 'content/towers/undead.json';
 
@@ -26,7 +31,7 @@ function createTower(overrides: AuthoredEntry = {}): AuthoredEntry {
     archetype: 'single',
     costGold: 50,
     damage: 22,
-    range: 3.2,
+    range: 6.4,
     attackCooldownMs: 800,
     spriteKey: 'tower.undead.bone_archer',
     description: 'Necromantic archer nest built from cursed remains.',
@@ -35,7 +40,7 @@ function createTower(overrides: AuthoredEntry = {}): AuthoredEntry {
 }
 
 function createFile(towers: unknown[], overrides: AuthoredEntry = {}): AuthoredEntry {
-  return { schemaVersion: 1, race: 'UNDEAD', towers, ...overrides };
+  return { schemaVersion: 2, race: 'UNDEAD', towers, ...overrides };
 }
 
 function parse(data: unknown, file = FILE) {
@@ -53,7 +58,7 @@ describe('parseTowerContentFile', () => {
       towerType: TowerTypeId.SINGLE,
       costGold: 50,
       damage: 22,
-      range: 3.2,
+      range: 6.4,
       attackCooldownMs: 800,
       onHitEffects: [],
       spriteKey: 'tower.undead.bone_archer',
@@ -67,13 +72,13 @@ describe('parseTowerContentFile', () => {
         createTower({
           id: 'undead_plague_tower',
           archetype: 'splash',
-          splashRadius: 1.5,
+          splashRadius: 3,
           onHitEffects: [{ effectId: 'poison', magnitude: 8, durationMs: 3000 }],
         }),
       ]),
     );
 
-    expect(tower.splashRadius).toBe(1.5);
+    expect(tower.splashRadius).toBe(3);
     expect(tower.onHitEffects).toEqual([
       { effectId: EffectId.POISON, magnitude: 8, durationMs: 3000 },
     ]);
@@ -96,11 +101,11 @@ describe('parseTowerContentFile', () => {
       loadTowerArchetypeContent({
         file: 'content/towers/archetypes.json',
         data: {
-          schemaVersion: 1,
+          schemaVersion: 2,
           archetypes: [
             createArchetype({
               levels: [
-                { level: 2, upgradeCostGold: 0, damage: 20, range: 3, attackCooldownMs: 800 },
+                { level: 2, upgradeCostGold: 0, damage: 20, range: 6, attackCooldownMs: 800 },
               ],
             }),
           ],
@@ -114,7 +119,7 @@ describe('parseTowerContentFile', () => {
       loadTowerArchetypeContent({
         file: 'content/towers/archetypes.json',
         data: {
-          schemaVersion: 1,
+          schemaVersion: 2,
           archetypes: [createArchetype({ attackKind: undefined })],
         },
       }),
@@ -135,7 +140,7 @@ describe('parseTowerContentFile', () => {
 
   it('rejects stats outside the authoring bounds', () => {
     expect(() => parse(createFile([createTower({ range: 99 })]))).toThrow(
-      `${FILE} [undead_bone_archer_tower]: "range" must be between 0.5 and 12, got 99`,
+      `${FILE} [undead_bone_archer_tower]: "range" must be between 1 and 24, got 99`,
     );
     expect(() => parse(createFile([createTower({ attackCooldownMs: 10 })]))).toThrow(
       /attackCooldownMs/,
@@ -170,11 +175,11 @@ function createArchetype(overrides: AuthoredEntry = {}): AuthoredEntry {
     name: 'Archer',
     attackKind: 'single-target',
     damage: 20,
-    range: 3,
+    range: 6,
     attackCooldownMs: 800,
     levels: [
-      { level: 1, upgradeCostGold: 0, damage: 20, range: 3, attackCooldownMs: 800 },
-      { level: 2, upgradeCostGold: 40, damage: 30, range: 3.2, attackCooldownMs: 750 },
+      { level: 1, upgradeCostGold: 0, damage: 20, range: 6, attackCooldownMs: 800 },
+      { level: 2, upgradeCostGold: 40, damage: 30, range: 6.4, attackCooldownMs: 750 },
     ],
     description: 'Single target.',
     ...overrides,
@@ -189,13 +194,36 @@ function createArchetype(overrides: AuthoredEntry = {}): AuthoredEntry {
   return entry;
 }
 
+describe('tower content schema version', () => {
+  it('rejects a coarse-grid race file and names the first tower to migrate', () => {
+    expect(() => parse(createFile([createTower()], { schemaVersion: 1 }))).toThrow(
+      `${FILE} [undead_bone_archer_tower]: schemaVersion 1 measures distances in coarse 32px cells`,
+    );
+  });
+
+  it('rejects a coarse-grid archetype file and names the first archetype', () => {
+    expect(() =>
+      loadTowerArchetypeContent({
+        file: 'content/towers/archetypes.json',
+        data: { schemaVersion: 1, archetypes: [createArchetype()] },
+      }),
+    ).toThrow('content/towers/archetypes.json [single]: schemaVersion 1 measures distances');
+  });
+
+  it('rejects any other unknown version at file level', () => {
+    expect(() => parse(createFile([createTower()], { schemaVersion: 3 }))).toThrow(
+      `${FILE}: unsupported schemaVersion 3, expected 2`,
+    );
+  });
+});
+
 describe('loadTowerArchetypeContent', () => {
   it('requires stats for every declared archetype', () => {
     expect(() =>
       loadTowerArchetypeContent({
         file: 'content/towers/archetypes.json',
         data: {
-          schemaVersion: 1,
+          schemaVersion: 2,
           archetypes: [createArchetype()],
         },
       }),
@@ -208,7 +236,7 @@ describe('loadTowerArchetypeContent', () => {
     expect(() =>
       loadTowerArchetypeContent({
         file: 'content/towers/archetypes.json',
-        data: { schemaVersion: 1, archetypes: [archetype, archetype] },
+        data: { schemaVersion: 2, archetypes: [archetype, archetype] },
       }),
     ).toThrow(/duplicate archetype id/);
   });
@@ -260,18 +288,32 @@ describe('shipped tower content', () => {
     }
   });
 
-  it('keeps the placement stats the game shipped with', () => {
+  it('keeps the placement stats the game shipped with, in fine-grid cells', () => {
     expect(TOWER_COMBAT_STATS_BY_TYPE.single).toEqual({
       damage: 20,
-      range: 3,
+      range: 6,
       attackCooldownMs: 800,
     });
     expect(TOWER_COMBAT_STATS_BY_TYPE.splash).toEqual({
       damage: 18,
-      range: 2.5,
+      range: 5,
       attackCooldownMs: 1200,
-      splashRadius: 1.5,
+      splashRadius: 3,
     });
+  });
+
+  it('keeps world-space reach unchanged by the fine-grid migration', () => {
+    const guardArcher = buildableTowers.find((tower) => tower.id === 'human_guard_archer_tower');
+    const cannon = buildableTowers.find((tower) => tower.id === 'human_cannon_bastion');
+
+    expect(guardArcher).toBeDefined();
+    expect(cannon).toBeDefined();
+    expect((guardArcher?.range ?? 0) * GRID_DIMENSIONS.cellSize).toBe(
+      COARSE_GRID_RANGE.guardArcher * COARSE_CELL_SIZE_PX,
+    );
+    expect((cannon?.splashRadius ?? 0) * GRID_DIMENSIONS.cellSize).toBe(
+      COARSE_GRID_RANGE.cannonSplash * COARSE_CELL_SIZE_PX,
+    );
   });
 
   it('defines every archetype the game declares', () => {

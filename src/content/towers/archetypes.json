@@ -1,33 +1,33 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "archetypes": [
     {
       "id": "single",
       "name": "Single Target",
       "attackKind": "single-target",
       "damage": 20,
-      "range": 3,
+      "range": 6,
       "attackCooldownMs": 800,
       "levels": [
         {
           "level": 1,
           "upgradeCostGold": 0,
           "damage": 20,
-          "range": 3,
+          "range": 6,
           "attackCooldownMs": 800
         },
         {
           "level": 2,
           "upgradeCostGold": 40,
           "damage": 30,
-          "range": 3.2,
+          "range": 6.4,
           "attackCooldownMs": 750
         },
         {
           "level": 3,
           "upgradeCostGold": 80,
           "damage": 40,
-          "range": 3.4,
+          "range": 6.8,
           "attackCooldownMs": 700
         }
       ],
@@ -38,33 +38,33 @@
       "name": "Splash",
       "attackKind": "splash",
       "damage": 18,
-      "range": 2.5,
+      "range": 5,
       "attackCooldownMs": 1200,
-      "splashRadius": 1.5,
+      "splashRadius": 3,
       "levels": [
         {
           "level": 1,
           "upgradeCostGold": 0,
           "damage": 18,
-          "range": 2.5,
+          "range": 5,
           "attackCooldownMs": 1200,
-          "splashRadius": 1.5
+          "splashRadius": 3
         },
         {
           "level": 2,
           "upgradeCostGold": 40,
           "damage": 28,
-          "range": 2.7,
+          "range": 5.4,
           "attackCooldownMs": 1150,
-          "splashRadius": 1.5
+          "splashRadius": 3
         },
         {
           "level": 3,
           "upgradeCostGold": 80,
           "damage": 38,
-          "range": 2.9,
+          "range": 5.8,
           "attackCooldownMs": 1100,
-          "splashRadius": 1.7
+          "splashRadius": 3.4
         }
       ],
       "description": "Area damage around the target, the answer to clustered waves."
@@ -74,7 +74,7 @@
       "name": "Frost",
       "attackKind": "single-target",
       "damage": 13,
-      "range": 3,
+      "range": 6,
       "attackCooldownMs": 900,
       "onHitEffects": [
         {
@@ -88,7 +88,7 @@
           "level": 1,
           "upgradeCostGold": 0,
           "damage": 13,
-          "range": 3,
+          "range": 6,
           "attackCooldownMs": 900,
           "onHitEffects": [
             {
@@ -102,7 +102,7 @@
           "level": 2,
           "upgradeCostGold": 45,
           "damage": 17,
-          "range": 3.2,
+          "range": 6.4,
           "attackCooldownMs": 850,
           "onHitEffects": [
             {
@@ -116,7 +116,7 @@
           "level": 3,
           "upgradeCostGold": 90,
           "damage": 21,
-          "range": 3.4,
+          "range": 6.8,
           "attackCooldownMs": 800,
           "onHitEffects": [
             {
@@ -134,7 +134,7 @@
       "name": "Poison",
       "attackKind": "single-target",
       "damage": 8,
-      "range": 3,
+      "range": 6,
       "attackCooldownMs": 1000,
       "onHitEffects": [
         {
@@ -149,7 +149,7 @@
           "level": 1,
           "upgradeCostGold": 0,
           "damage": 8,
-          "range": 3,
+          "range": 6,
           "attackCooldownMs": 1000,
           "onHitEffects": [
             {
@@ -164,7 +164,7 @@
           "level": 2,
           "upgradeCostGold": 50,
           "damage": 10,
-          "range": 3.2,
+          "range": 6.4,
           "attackCooldownMs": 950,
           "onHitEffects": [
             {
@@ -179,7 +179,7 @@
           "level": 3,
           "upgradeCostGold": 95,
           "damage": 12,
-          "range": 3.4,
+          "range": 6.8,
           "attackCooldownMs": 900,
           "onHitEffects": [
             {
@@ -198,11 +198,11 @@
       "name": "Chain Lightning",
       "attackKind": "chain",
       "damage": 16,
-      "range": 3,
+      "range": 6,
       "attackCooldownMs": 1100,
       "chain": {
         "bounces": 2,
-        "bounceRangeCells": 2,
+        "bounceRangeCells": 4,
         "damageFalloff": 0.35
       },
       "levels": [
@@ -210,21 +210,21 @@
           "level": 1,
           "upgradeCostGold": 0,
           "damage": 16,
-          "range": 3,
+          "range": 6,
           "attackCooldownMs": 1100
         },
         {
           "level": 2,
           "upgradeCostGold": 55,
           "damage": 26,
-          "range": 3.2,
+          "range": 6.4,
           "attackCooldownMs": 1050
         },
         {
           "level": 3,
           "upgradeCostGold": 105,
           "damage": 36,
-          "range": 3.4,
+          "range": 6.8,
           "attackCooldownMs": 1000
         }
       ],
@@ -235,12 +235,12 @@
       "name": "Support",
       "attackKind": "aura",
       "damage": 0,
-      "range": 0.5,
+      "range": 1,
       "attackCooldownMs": 1000,
       "aura": {
-        "radiusCells": 2.5,
+        "radiusCells": 5,
         "attackSpeedBonus": 0.2,
-        "rangeBonus": 0.4,
+        "rangeBonus": 0.8,
         "stacking": "strongest"
       },
       "levels": [
@@ -248,12 +248,12 @@
           "level": 1,
           "upgradeCostGold": 0,
           "damage": 0,
-          "range": 0.5,
+          "range": 1,
           "attackCooldownMs": 1000,
           "aura": {
-            "radiusCells": 2.5,
+            "radiusCells": 5,
             "attackSpeedBonus": 0.2,
-            "rangeBonus": 0.4,
+            "rangeBonus": 0.8,
             "stacking": "strongest"
           }
         },
@@ -261,12 +261,12 @@
           "level": 2,
           "upgradeCostGold": 55,
           "damage": 0,
-          "range": 0.5,
+          "range": 1,
           "attackCooldownMs": 1000,
           "aura": {
-            "radiusCells": 3.0,
+            "radiusCells": 6,
             "attackSpeedBonus": 0.28,
-            "rangeBonus": 0.55,
+            "rangeBonus": 1.1,
             "stacking": "strongest"
           }
         },
@@ -274,12 +274,12 @@
           "level": 3,
           "upgradeCostGold": 100,
           "damage": 0,
-          "range": 0.5,
+          "range": 1,
           "attackCooldownMs": 1000,
           "aura": {
-            "radiusCells": 3.5,
+            "radiusCells": 7,
             "attackSpeedBonus": 0.36,
-            "rangeBonus": 0.7,
+            "rangeBonus": 1.4,
             "stacking": "strongest"
           }
         }

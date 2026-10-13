@@ -6,7 +6,15 @@
  * archetype places with. Both are validated on load.
  */
 
-export const TOWER_CONTENT_SCHEMA_VERSION = 1;
+/**
+ * Version 2 measures every distance (range, splash, chain jump, aura radius and
+ * range bonus) in cells of the fine 16px grid. Version 1 used the coarse 32px
+ * cell and is rejected so a stale file cannot load with halved ranges.
+ */
+export const TOWER_CONTENT_SCHEMA_VERSION = 2;
+
+/** The retired coarse-grid format, recognised only to explain the rejection. */
+export const TOWER_CONTENT_COARSE_GRID_SCHEMA_VERSION = 1;
 
 export type TowerOnHitEffectEntry = {
   effectId: string;
@@ -48,6 +56,7 @@ export type TowerAuraContentEntry = {
   radiusCells: number;
   /** Share of attack speed added to towers in radius, 0.2 meaning 20% faster. */
   attackSpeedBonus: number;
+  /** Range added to towers in radius, in cells like `range`. */
   rangeBonus: number;
   /** How two overlapping auras combine. */
   stacking: string;
@@ -96,9 +105,9 @@ export type TowerStatBound = {
 export const TOWER_STAT_BOUNDS: Record<TowerStatKey, TowerStatBound> = {
   costGold: { min: 0, max: 1000 },
   damage: { min: 0, max: 500 },
-  range: { min: 0.5, max: 12 },
+  range: { min: 1, max: 24 },
   attackCooldownMs: { min: 100, max: 10_000 },
-  splashRadius: { min: 0.5, max: 6 },
+  splashRadius: { min: 1, max: 12 },
 };
 
 export const TOWER_ON_HIT_EFFECT_KEYS: readonly (keyof TowerOnHitEffectEntry)[] = [
@@ -179,14 +188,14 @@ export const TOWER_AURA_KEYS: readonly (keyof TowerAuraContentEntry)[] = [
 ];
 
 export const TOWER_AURA_BOUNDS = {
-  radiusCells: { min: 0.5, max: 6 },
+  radiusCells: { min: 1, max: 12 },
   attackSpeedBonus: { min: 0, max: 1 },
-  rangeBonus: { min: 0, max: 4 },
+  rangeBonus: { min: 0, max: 8 },
 } as const;
 
 export const TOWER_CHAIN_BOUNDS = {
   bounces: { min: 1, max: 6 },
-  bounceRangeCells: { min: 0.5, max: 6 },
+  bounceRangeCells: { min: 1, max: 12 },
   damageFalloff: { min: 0, max: 0.9 },
 } as const;
 

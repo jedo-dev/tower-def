@@ -35,7 +35,7 @@ describe('tower targeting', () => {
   it('returns only alive creeps in range', () => {
     const tower = createTower();
     const inRange = createCreep({ id: 'creep:in', position: { x: 7, y: 5 } });
-    const outOfRange = createCreep({ id: 'creep:out', position: { x: 9, y: 5 } });
+    const outOfRange = createCreep({ id: 'creep:out', position: { x: 12, y: 5 } });
     const deadInRange = createCreep({
       id: 'creep:dead',
       position: { x: 6, y: 5 },

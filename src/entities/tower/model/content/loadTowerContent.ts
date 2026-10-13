@@ -12,7 +12,6 @@ import {
 import {
   ContentValidationError,
   assertKnownKeys,
-  assertSchemaVersion,
   readArray,
   readNumber,
   readRecord,
@@ -36,10 +35,10 @@ import {
   TOWER_CHAIN_KEYS,
   TOWER_LEVEL_BOUNDS,
   TOWER_LEVEL_KEYS,
-  TOWER_CONTENT_SCHEMA_VERSION,
   TOWER_ON_HIT_EFFECT_KEYS,
   TOWER_STAT_BOUNDS,
 } from './towerContent.types';
+import { assertTowerSchemaVersion } from './assertTowerSchemaVersion';
 
 export type TowerContentSource = {
   file: string;
@@ -218,7 +217,7 @@ export function parseTowerContentFile(source: TowerContentSource): BuildableTowe
   const file = readRecord(source.data, location);
 
   assertKnownKeys(file, TOWER_CONTENT_FILE_KEYS, location);
-  assertSchemaVersion(file, TOWER_CONTENT_SCHEMA_VERSION, location);
+  assertTowerSchemaVersion(file, 'towers', location);
 
   const race = readStringFrom(file, 'race', location, RACE_IDS);
   const rawTowers = readArray(file, 'towers', location);
@@ -360,7 +359,7 @@ export function loadTowerArchetypeContent(
   const file = readRecord(source.data, location);
 
   assertKnownKeys(file, TOWER_ARCHETYPE_FILE_KEYS, location);
-  assertSchemaVersion(file, TOWER_CONTENT_SCHEMA_VERSION, location);
+  assertTowerSchemaVersion(file, 'archetypes', location);
 
   const rawArchetypes = readArray(file, 'archetypes', location);
   const byId = new Map<TowerTypeId, TowerArchetypeDefinition>();
