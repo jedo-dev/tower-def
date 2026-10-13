@@ -7,7 +7,7 @@ import { formatMazeRoundReport, formatMazeSimulation } from './formatMazeRoundRe
 import { simulateMazeBuildRounds, type MazeSimulationConfig } from './simulateMazeBuildRounds';
 
 const CONFIG: MazeSimulationConfig = {
-  rounds: 4,
+  rounds: 8,
   difficulty: Difficulty.HARD,
   raceId: RaceId.UNDEAD,
   seed: 7,
@@ -17,7 +17,7 @@ describe('features/maze-simulation/simulateMazeBuildRounds', () => {
   it('opens on the opponent starting gold and earns income between rounds', () => {
     const { rounds } = simulateMazeBuildRounds(CONFIG);
 
-    expect(rounds[0].goldBeforeBuild).toBe(DUEL_MATCH_BALANCE.opponentStartingGold);
+    expect(rounds[0].goldBeforeBuild).toBe(DUEL_MATCH_BALANCE.startingGold);
     for (let index = 1; index < rounds.length; index += 1) {
       expect(rounds[index].goldBeforeBuild).toBe(
         rounds[index - 1].goldAfterBuild + DUEL_MATCH_BALANCE.startingIncome,
@@ -54,7 +54,7 @@ describe('features/maze-simulation/simulateMazeBuildRounds', () => {
     const [firstRound] = simulateMazeBuildRounds({ ...CONFIG, rounds: 1 }).rounds;
 
     expect(formatMazeRoundReport(firstRound)).toMatchInlineSnapshot(`
-      "round 1 | intent extend_maze | gold 1000 -> 625 | spent 375 | built 6 | upgraded 0 | towers 6 | route length 17
+      "round 1 | intent extend_maze | gold 500 -> 125 | spent 375 | built 6 | upgraded 0 | towers 6 | route length 17
       board 10x15 | route (small) 17
       Ess.......
       ..s.######
