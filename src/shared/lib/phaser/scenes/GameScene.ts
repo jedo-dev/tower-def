@@ -6,7 +6,6 @@ import {
   type LeakHistoryEntry,
 } from '../../../../entities/computer-opponent';
 import {
-  clearSendQueue,
   countLeakedSentCreeps,
   createInitialDuelMatchState,
   reconcileBattlefieldsForNextRound,
@@ -96,6 +95,10 @@ import {
   handleSendCreepCommand,
   type SendCreepCommandDeps,
 } from '../runtime/duel/gameSceneSendCommand';
+import {
+  publishPlayerSendLimits,
+  resetSendQueuesForWaveStart,
+} from '../runtime/duel/gameSceneSendLimits';
 import {
   applyDuelRoundEnd as applyDuelRoundEndRuntime,
   publishRoundLifeEvents,
@@ -480,6 +483,7 @@ export class GameScene extends Phaser.Scene {
             mapHudFactionToRaceId(this.selectedFaction),
           );
           this.playerLives = this.duelMatchState.player.hp;
+          publishPlayerSendLimits(this.duelMatchState, this.selectedBuilderFactionId);
         }
         this.soundManager?.setFaction(this.selectedFaction);
         this.registry.set('wave.selectedFaction', this.selectedFaction);
@@ -703,6 +707,7 @@ export class GameScene extends Phaser.Scene {
       mapHudFactionToRaceId(this.selectedFaction),
       this.mapEndpoints,
     );
+    publishPlayerSendLimits(this.duelMatchState, this.selectedBuilderFactionId);
     // The scene wallet is the source of truth: seed it from the duel balance
     // table so both sides start level. Difficulty never tilts the purse.
     this.playerGold = this.duelMatchState.player.gold;
@@ -849,6 +854,7 @@ export class GameScene extends Phaser.Scene {
       // would desync the grid from a generated dynamic layout.
       this.mapEndpoints,
     );
+    publishPlayerSendLimits(this.duelMatchState, this.selectedBuilderFactionId);
     this.playerGold = this.duelMatchState.player.gold;
     this.playerLives = this.duelMatchState.player.hp;
     this.matchOutcomeStatus = 'active';
@@ -979,7 +985,10 @@ export class GameScene extends Phaser.Scene {
     this.syncOpponentBattlefieldRenderStateFromDuel();
     spawnWaveCreepsRuntime(this.runState, WAVE_RUNTIME_CONFIG, this.wiring.waveRuntimeDeps);
     // Queues have now been routed onto battlefields and spawned as creeps.
-    this.duelMatchState = clearSendQueue(this.duelMatchState);
+    this.duelMatchState = resetSendQueuesForWaveStart(
+      this.duelMatchState,
+      this.selectedBuilderFactionId,
+    );
     this.duelMatchState = startRound(this.duelMatchState).state;
     this.wavePhaseState = startNextWaveCycle(this.wavePhaseState);
     this.ensureBaseAmbientPlaying();

@@ -1,5 +1,10 @@
 import type { GameSetupConfig } from '../../../shared/config/game-setup';
-import type { GameHudSnapshot, WaveQueueItem } from '../../../shared/lib/game-bridge/types';
+import type {
+  CreepSendLimitsSnapshot,
+  CreepSendUnitLimit,
+  GameHudSnapshot,
+  WaveQueueItem,
+} from '../../../shared/lib/game-bridge/types';
 import { RaceId } from '../../../shared/types/content-ids';
 import { getRaceRegistry } from '../../../entities/race-registry';
 import { getIncomeBonusByTier, getSendCostByTier } from '../../../entities/duel-match';
@@ -14,6 +19,10 @@ export type CreepSendButtonViewModel = {
   cost: number;
   incomeGain: number;
   isAffordable: boolean;
+  /** Remaining sends of this type this wave; null until the scene publishes limits. */
+  remainingOfType: number | null;
+  typeCap: number | null;
+  isAtSendLimit: boolean;
   isDisabled: boolean;
   disabledReason: string | null;
   ariaLabel: string;
@@ -27,6 +36,9 @@ export type CreepSendPanelViewModel = {
   isBattleActive: boolean;
   queueCount: number;
   queueSummary: string;
+  /** "7/12 left" for the wave; null until the scene publishes limits. */
+  waveCapacitySummary: string | null;
+  waveCapacityAriaLabel: string | null;
   buttons: CreepSendButtonViewModel[];
 };
 
@@ -42,24 +54,59 @@ function summarizeQueue(queue: WaveQueueItem[]): string {
   return `${queue.length} queued`;
 }
 
+function findUnitLimit(
+  limits: CreepSendLimitsSnapshot | null,
+  creepTypeId: UnitId,
+): CreepSendUnitLimit | null {
+  return limits?.units.find((unitLimit) => unitLimit.creepTypeId === creepTypeId) ?? null;
+}
+
+function resolveDisabledReason(
+  isBattleActive: boolean,
+  isWaveCapReached: boolean,
+  isAtTypeCap: boolean,
+  isAffordable: boolean,
+  cost: number,
+): string | null {
+  if (isBattleActive) {
+    return 'sending is locked during battle';
+  }
+  if (isWaveCapReached) {
+    return 'wave send limit reached';
+  }
+  if (isAtTypeCap) {
+    return 'send limit reached';
+  }
+  if (!isAffordable) {
+    return `requires ${cost} gold`;
+  }
+  return null;
+}
+
 export function mapCreepSendPanelToViewModel(
   snapshot: GameHudSnapshot,
   setup: GameSetupConfig | null,
+  sendLimits: CreepSendLimitsSnapshot | null = null,
 ): CreepSendPanelViewModel {
   const raceId = resolveBuilderRace(setup);
   const race = getRaceRegistry(raceId);
   const isBattleActive = snapshot.phase === 'wave';
-  const buttons = race.sendableCreepIds.map((creepTypeId) => {
+  const isWaveCapReached = sendLimits !== null && sendLimits.waveSendsRemaining <= 0;
+  const buttons = race.sendableCreepIds.map((creepTypeId): CreepSendButtonViewModel => {
     const unit = resolveUnitConfigById(creepTypeId);
     const cost = getSendCostByTier(unit.tier);
     const incomeGain = getIncomeBonusByTier(unit.tier);
     const isAffordable = snapshot.gold >= cost;
-    const isDisabled = isBattleActive || !isAffordable;
-    const disabledReason = isBattleActive
-      ? 'sending is locked during battle'
-      : !isAffordable
-        ? `requires ${cost} gold`
-        : null;
+    const unitLimit = findUnitLimit(sendLimits, creepTypeId);
+    const isAtTypeCap = unitLimit !== null && unitLimit.remaining <= 0;
+    const disabledReason = resolveDisabledReason(
+      isBattleActive,
+      isWaveCapReached,
+      isAtTypeCap,
+      isAffordable,
+      cost,
+    );
+    const remainingSuffix = unitLimit ? `, ${unitLimit.remaining} of ${unitLimit.cap} left` : '';
 
     return {
       creepTypeId,
@@ -68,11 +115,14 @@ export function mapCreepSendPanelToViewModel(
       cost,
       incomeGain,
       isAffordable,
-      isDisabled,
+      remainingOfType: unitLimit?.remaining ?? null,
+      typeCap: unitLimit?.cap ?? null,
+      isAtSendLimit: isWaveCapReached || isAtTypeCap,
+      isDisabled: disabledReason !== null,
       disabledReason,
       ariaLabel: disabledReason
         ? `Cannot send ${unit.name}: ${disabledReason}`
-        : `Send ${unit.name} for ${cost} gold and gain ${incomeGain} income`,
+        : `Send ${unit.name} for ${cost} gold and gain ${incomeGain} income${remainingSuffix}`,
     };
   });
 
@@ -84,6 +134,12 @@ export function mapCreepSendPanelToViewModel(
     isBattleActive,
     queueCount: snapshot.playerSendQueue.length,
     queueSummary: summarizeQueue(snapshot.playerSendQueue),
+    waveCapacitySummary: sendLimits
+      ? `${sendLimits.waveSendsRemaining}/${sendLimits.waveSendCap} left`
+      : null,
+    waveCapacityAriaLabel: sendLimits
+      ? `${sendLimits.waveSendsRemaining} of ${sendLimits.waveSendCap} sends left this wave`
+      : null,
     buttons,
   };
 }

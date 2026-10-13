@@ -26,6 +26,22 @@ export type CreepSendQueueItem = {
   index: number;
 };
 
+export type CreepSendUnitLimit = {
+  creepTypeId: string;
+  /** Per-type cap for this unit this wave (by tier). */
+  cap: number;
+  /** How many more of this unit fit this wave under both the type and the wave cap. */
+  remaining: number;
+};
+
+/** A side's send capacity for the current wave; published on change, never per frame. */
+export type CreepSendLimitsSnapshot = {
+  owner: DuelistSide;
+  waveSendCap: number;
+  waveSendsRemaining: number;
+  units: CreepSendUnitLimit[];
+};
+
 export type SelectedTowerOnHitEffect = {
   effectId: EffectId;
   magnitude?: number;
@@ -106,6 +122,8 @@ export type GameEventMap = {
     owner: DuelistSide;
     queue: CreepSendQueueItem[];
   };
+  /** Emitted after a send, on the wave-start reset and when a match (re)starts. */
+  'send-limits-updated': CreepSendLimitsSnapshot;
   'income-updated': {
     owner: DuelistSide;
     income: number;

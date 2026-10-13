@@ -104,6 +104,36 @@ describe('mapCreepSendPanelToViewModel', () => {
     expect(viewModel.queueSummary).toBe('2 queued');
   });
 
+  it('shows send limits and prefers the cap reason over the gold reason', () => {
+    const viewModel = mapCreepSendPanelToViewModel(
+      createSnapshot({ gold: 0 }),
+      createSetup(RaceId.UNDEAD),
+      {
+        owner: 'player',
+        waveSendCap: 12,
+        waveSendsRemaining: 4,
+        units: [{ creepTypeId: 'undead_skeleton', cap: 6, remaining: 0 }],
+      },
+    );
+
+    expect(viewModel.waveCapacitySummary).toBe('4/12 left');
+    expect(viewModel.buttons[0]).toMatchObject({
+      remainingOfType: 0,
+      typeCap: 6,
+      isAtSendLimit: true,
+      isDisabled: true,
+      disabledReason: 'send limit reached',
+    });
+    expect(viewModel.buttons[1].disabledReason).toMatch(/^requires \d+ gold$/);
+  });
+
+  it('leaves counters empty before the scene publishes limits', () => {
+    const viewModel = mapCreepSendPanelToViewModel(createSnapshot(), createSetup(RaceId.UNDEAD));
+
+    expect(viewModel.waveCapacitySummary).toBeNull();
+    expect(viewModel.buttons[0].remainingOfType).toBeNull();
+  });
+
   it('uses undead registry as a safe fallback before setup is available', () => {
     const viewModel = mapCreepSendPanelToViewModel(createSnapshot(), null);
 
