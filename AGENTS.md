@@ -319,6 +319,17 @@ git commit -m "tower-def-xxx: short description"
 
 ---
 
+## Quality Gate
+
+Run `npm run check` before marking a task done. It runs, in order:
+
+- `npm run typecheck` (`tsc -b`, strict mode)
+- `npm run lint` (oxlint, config in `.oxlintrc.json`)
+- `npm run format:check` (oxfmt, config in `.oxfmtrc.json`; fix with `npm run format`)
+- `vitest run`
+
+---
+
 ## Definition of Done (Frontend)
 
 - FSD import rules are respected
@@ -326,6 +337,7 @@ git commit -m "tower-def-xxx: short description"
 - No frame-driven React updates
 - Bridge contract remains typed and covered by tests
 - Required tests are updated and passing
+- `npm run check` exits 0
 - Mobile viewport checks completed (`360x800`, `390x844`)
 
 ---
