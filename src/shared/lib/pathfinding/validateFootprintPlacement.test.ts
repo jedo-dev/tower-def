@@ -7,17 +7,21 @@ import { canPlaceFootprint, validateFootprintPlacementPath } from './validateFoo
 
 const ENDPOINTS = createDefaultEdgeEndpoints();
 
-/** Walls off columns 8..9 except the two rows starting at `gapRow`. */
-function createWalledGrid(gapRow: number): GridModel {
-  const grid = createGridModel(ENDPOINTS);
+function blockWhere(grid: GridModel, isBlocked: (x: number, y: number) => boolean): GridModel {
   return {
     ...grid,
     cells: grid.cells.map((cell) =>
-      (cell.x === 8 || cell.x === 9) && cell.y !== gapRow && cell.y !== gapRow + 1
-        ? { ...cell, isOccupied: true, isWalkable: false }
-        : cell,
+      isBlocked(cell.x, cell.y) ? { ...cell, isOccupied: true, isWalkable: false } : cell,
     ),
   };
+}
+
+/** Walls off columns 8..9 except the `gapRows` rows starting at `gapRow`. */
+function createWalledGrid(gapRow: number, gapRows = 2): GridModel {
+  return blockWhere(
+    createGridModel(ENDPOINTS),
+    (x, y) => (x === 8 || x === 9) && (y < gapRow || y >= gapRow + gapRows),
+  );
 }
 
 describe('shared/pathfinding/validateFootprintPlacement', () => {
@@ -32,8 +36,31 @@ describe('shared/pathfinding/validateFootprintPlacement', () => {
     const grid = createWalledGrid(10);
 
     expect(validateFootprintPlacementPath(grid, { x: 8, y: 10 }, TOWER_FOOTPRINT)).toBe(false);
-    // Covering only half of the gap leaves a one-cell lane.
-    expect(validateFootprintPlacementPath(grid, { x: 7, y: 9 }, TOWER_FOOTPRINT)).toBe(true);
+  });
+
+  it('rejects a block that leaves only a one-cell gap, since large creeps need two', () => {
+    const grid = createWalledGrid(10, 3);
+
+    expect(validateFootprintPlacementPath(grid, { x: 8, y: 10 }, TOWER_FOOTPRINT)).toBe(false);
+    expect(validateFootprintPlacementPath(grid, { x: 7, y: 11 }, TOWER_FOOTPRINT)).toBe(false);
+    expect(canPlaceFootprint(grid, { x: 8, y: 11 }, TOWER_FOOTPRINT)).toBe(false);
+  });
+
+  it('accepts a block that keeps a two-cell gap open', () => {
+    const grid = createWalledGrid(10, 4);
+
+    expect(validateFootprintPlacementPath(grid, { x: 8, y: 10 }, TOWER_FOOTPRINT)).toBe(true);
+    expect(canPlaceFootprint(grid, { x: 8, y: 12 }, TOWER_FOOTPRINT)).toBe(true);
+  });
+
+  it('rejects a block that seals the route by touching another wall at a corner', () => {
+    const grid = blockWhere(
+      createGridModel(ENDPOINTS),
+      (x, y) => ((x === 8 || x === 9) && y <= 11) || ((x === 10 || x === 11) && y >= 14),
+    );
+
+    expect(validateFootprintPlacementPath(grid, { x: 3, y: 3 }, TOWER_FOOTPRINT)).toBe(true);
+    expect(canPlaceFootprint(grid, { x: 8, y: 12 }, TOWER_FOOTPRINT)).toBe(false);
   });
 
   it('rejects blocks off the grid or over the route anchors', () => {

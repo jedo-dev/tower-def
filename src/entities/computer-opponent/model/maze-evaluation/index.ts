@@ -17,5 +17,6 @@ export type {
   MazeSizeClassWeights,
   MazeTower,
   PlacementRouteGain,
+  PlacementRouteProbe,
   TowerRouteCoverage,
 } from './types';

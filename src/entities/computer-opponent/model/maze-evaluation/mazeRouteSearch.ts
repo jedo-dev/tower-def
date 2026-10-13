@@ -14,6 +14,8 @@ export type MazeRouteSearchBuffers = {
   costFromStart: Float64Array;
   parent: Int32Array;
   closed: Uint8Array;
+  /** Cells expanded by every search on these buffers so far; a stable measure of search work. */
+  expandedNodeCount: number;
 };
 
 export function createMazeRouteSearchBuffers(cols: number, rows: number): MazeRouteSearchBuffers {
@@ -25,6 +27,7 @@ export function createMazeRouteSearchBuffers(cols: number, rows: number): MazeRo
     costFromStart: new Float64Array(size),
     parent: new Int32Array(size),
     closed: new Uint8Array(size),
+    expandedNodeCount: 0,
   };
 }
 
@@ -87,6 +90,7 @@ export function searchMazeRouteCost(
     }
 
     closed[current] = 1;
+    buffers.expandedNodeCount += 1;
 
     if (current === goalIndex) {
       return costFromStart[goalIndex];

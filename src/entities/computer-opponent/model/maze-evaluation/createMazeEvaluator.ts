@@ -19,7 +19,7 @@ import {
   searchMazeRouteCost,
   type MazeRouteSearchBuffers,
 } from './mazeRouteSearch';
-import type { MazeRoute, MazeRoutes, PlacementRouteGain } from './types';
+import type { MazeRoute, MazeRoutes, PlacementRouteGain, PlacementRouteProbe } from './types';
 
 /**
  * Board snapshot for scoring many candidate placements against one baseline.
@@ -31,6 +31,10 @@ export type MazeEvaluator = {
   readonly routes: MazeRoutes;
   /** Route gain from placing `footprint` at `anchor`, relative to `routes`. */
   routeGainForPlacement(anchor: GridPoint, footprint?: Readonly<Footprint>): PlacementRouteGain;
+  /** Same as `routeGainForPlacement`, plus the small route the creeps would walk afterwards. */
+  probePlacement(anchor: GridPoint, footprint?: Readonly<Footprint>): PlacementRouteProbe;
+  /** Cells expanded by every route search so far, baseline included. Counts work, not time. */
+  readonly expandedNodeCount: number;
 };
 
 const INVALID_PLACEMENT: Readonly<PlacementRouteGain> = Object.freeze({
@@ -39,10 +43,9 @@ const INVALID_PLACEMENT: Readonly<PlacementRouteGain> = Object.freeze({
   largeGain: 0,
 });
 
-const UNCHANGED_PLACEMENT: Readonly<PlacementRouteGain> = Object.freeze({
-  valid: true,
-  smallGain: 0,
-  largeGain: 0,
+const INVALID_PROBE: Readonly<PlacementRouteProbe> = Object.freeze({
+  ...INVALID_PLACEMENT,
+  smallRoute: null,
 });
 
 function snapGain(gain: number): number {
@@ -117,19 +120,21 @@ export function createMazeEvaluator(
     );
   }
 
-  function routeGainForPlacement(
+  /** Shared core; reads the rerouted small route only when `withSmallRoute` asks for it. */
+  function evaluatePlacement(
     anchor: GridPoint,
-    footprint: Readonly<Footprint> = TOWER_FOOTPRINT,
-  ): PlacementRouteGain {
+    footprint: Readonly<Footprint>,
+    withSmallRoute: boolean,
+  ): PlacementRouteProbe {
     const baseSmallCost = routes.smallRouteCost;
     const baseLargeCost = routes.largeRouteCost;
 
     if (baseSmallCost === null || baseLargeCost === null) {
-      return INVALID_PLACEMENT;
+      return INVALID_PROBE;
     }
 
     if (!canOccupyFootprint(grid, anchor, footprint)) {
-      return INVALID_PLACEMENT;
+      return INVALID_PROBE;
     }
 
     const { width, height } = footprint;
@@ -153,13 +158,18 @@ export function createMazeEvaluator(
     );
 
     if (!touchesSmall && !touchesLarge) {
-      return UNCHANGED_PLACEMENT;
+      return { valid: true, smallGain: 0, largeGain: 0, smallRoute: routes.smallRoute };
     }
 
     setFootprintFree(anchor, footprint, 0);
     const smallCost = touchesSmall
       ? searchMazeRouteCost(buffers, clearance, SMALL_ROUTE_AGENT_SIZE, start, goal)
       : baseSmallCost;
+    // The large search reuses the parent buffer, so read the small route first.
+    const smallRoute =
+      touchesSmall && withSmallRoute && Number.isFinite(smallCost)
+        ? readMazeRoute(buffers, goal)
+        : routes.smallRoute;
     const largeCost =
       touchesLarge && Number.isFinite(smallCost)
         ? searchMazeRouteCost(buffers, clearance, LARGE_ROUTE_AGENT_SIZE, start, goal)
@@ -167,15 +177,38 @@ export function createMazeEvaluator(
     setFootprintFree(anchor, footprint, 1);
 
     if (!Number.isFinite(smallCost) || !Number.isFinite(largeCost)) {
-      return INVALID_PLACEMENT;
+      return INVALID_PROBE;
     }
 
     return {
       valid: true,
       smallGain: snapGain(smallCost - baseSmallCost),
       largeGain: snapGain(largeCost - baseLargeCost),
+      smallRoute,
     };
   }
 
-  return { routes, routeGainForPlacement };
+  function routeGainForPlacement(
+    anchor: GridPoint,
+    footprint: Readonly<Footprint> = TOWER_FOOTPRINT,
+  ): PlacementRouteGain {
+    const { valid, smallGain, largeGain } = evaluatePlacement(anchor, footprint, false);
+    return valid ? { valid, smallGain, largeGain } : INVALID_PLACEMENT;
+  }
+
+  function probePlacement(
+    anchor: GridPoint,
+    footprint: Readonly<Footprint> = TOWER_FOOTPRINT,
+  ): PlacementRouteProbe {
+    return evaluatePlacement(anchor, footprint, true);
+  }
+
+  return {
+    routes,
+    routeGainForPlacement,
+    probePlacement,
+    get expandedNodeCount() {
+      return buffers.expandedNodeCount;
+    },
+  };
 }

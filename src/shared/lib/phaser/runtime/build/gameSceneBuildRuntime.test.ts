@@ -115,6 +115,36 @@ describe('player 2x2 tower building', () => {
     expect(place(state, { x: 8, y: 10 }).success).toBe(false);
   });
 
+  it('rejects a block that leaves large creeps only a one-cell gap', () => {
+    const grid = createGridModel(createDefaultEdgeEndpoints());
+    // Columns 8..9 walled except rows 10..12; a block at (8, 10) leaves row 12 alone.
+    for (const cell of grid.cells) {
+      if ((cell.x === 8 || cell.x === 9) && (cell.y < 10 || cell.y > 12)) {
+        cell.isOccupied = true;
+        cell.isWalkable = false;
+      }
+    }
+    const state = createState(grid);
+
+    expect(place(state, { x: 8, y: 10 }).success).toBe(false);
+    expect(place(state, { x: 4, y: 4 }).success).toBe(true);
+  });
+
+  it('rejects a block that seals the route by touching another wall at a corner', () => {
+    const grid = createGridModel(createDefaultEdgeEndpoints());
+    for (const cell of grid.cells) {
+      const isUpperWall = (cell.x === 8 || cell.x === 9) && cell.y <= 11;
+      const isLowerWall = (cell.x === 10 || cell.x === 11) && cell.y >= 14;
+      if (isUpperWall || isLowerWall) {
+        cell.isOccupied = true;
+        cell.isWalkable = false;
+      }
+    }
+    const state = createState(grid);
+
+    expect(place(state, { x: 8, y: 12 }).success).toBe(false);
+  });
+
   it('sells the tower from any of its four cells and frees all of them', () => {
     for (const tapped of getFootprintCells({ x: 6, y: 4 }, TOWER_FOOTPRINT)) {
       const state = createState();

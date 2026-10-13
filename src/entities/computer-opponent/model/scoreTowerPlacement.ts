@@ -7,7 +7,7 @@ import { getTowerCenter } from '../../tower/model/footprint';
 import { TOWER_FOOTPRINT } from '../../../shared/constants/footprint';
 import { getFootprintCenter } from '../../../shared/lib/grid/footprint';
 import { validateFootprintPlacementPath } from '../../../shared/lib/pathfinding/validateFootprintPlacement';
-import type { PathProbe } from '../../../shared/lib/pathfinding/createPathProbe';
+import type { PathProbe } from './createPathProbe';
 import type { MazeSkeleton } from './createMazeSkeleton';
 import { computeArchetypeValueScore, isSupportArchetype } from './archetypeValueScore';
 import {
@@ -24,7 +24,7 @@ export type PlacementScore = {
   defenseProximityScore: number;
   /** How much this archetype is worth given what the field already has. */
   archetypeValueScore: number;
-  /** Cells this placement adds to the shortest route through the field. */
+  /** Octile cost this placement adds to the small creep route through the field. */
   mazeGainCells: number;
   /** Saturated form of `mazeGainCells`, comparable with the other scores. */
   mazeGainScore: number;
@@ -237,8 +237,7 @@ export function scoreTowerPlacement(input: ScorePlacementInput): PlacementScore 
   // the one they walk today: a wall that reroutes them elsewhere is worthless
   // if the tower cannot reach the new route.
   const effectivePath = probeResult?.path ?? path;
-  const mazeGainCells =
-    probeResult && pathProbe ? Math.max(0, probeResult.length - pathProbe.baseLength) : 0;
+  const mazeGainCells = probeResult ? Math.max(0, probeResult.gain) : 0;
 
   // Range, coverage and spacing are measured from the middle of the block.
   const center = getFootprintCenter(position, TOWER_FOOTPRINT);

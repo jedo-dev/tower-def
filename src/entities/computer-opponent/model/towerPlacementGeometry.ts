@@ -1,7 +1,7 @@
 import { TOWER_FOOTPRINT } from '../../../shared/constants/footprint';
 import { getFootprintCells, isFootprintInBounds } from '../../../shared/lib/grid/footprint';
 import { getCellAt } from '../../../shared/lib/grid/getCellAt';
-import type { PathProbe } from '../../../shared/lib/pathfinding/createPathProbe';
+import type { PathProbe } from './createPathProbe';
 import type { GridModel } from '../../../shared/types/grid';
 import type { GridPosition } from '../../../shared/types/pathfinding';
 

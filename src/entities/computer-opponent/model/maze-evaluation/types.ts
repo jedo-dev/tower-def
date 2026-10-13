@@ -52,3 +52,8 @@ export type PlacementRouteGain = {
   /** Extra large-route cost the placement forces; 0 when invalid. */
   largeGain: number;
 };
+
+export type PlacementRouteProbe = PlacementRouteGain & {
+  /** Small route once the placement stands; null when the placement is invalid. */
+  smallRoute: MazeRoute;
+};
