@@ -155,6 +155,7 @@ import {
 import {
   clearFieldWaveSchedule,
   createOpponentFieldWaveState,
+  isFieldWaveResolved,
   processPendingWaveSpawns,
   resolveWaveSpawnTiming,
   scheduleOpponentFieldWave,
@@ -826,6 +827,7 @@ export class GameScene extends Phaser.Scene {
       this.runState,
       WAVE_RUNTIME_CONFIG,
       this.wiring.waveRuntimeDeps,
+      isFieldWaveResolved(this.opponentWave),
     );
     if (!wasWaveCompletionRewardGranted && this.runState.isWaveCompletionRewardGranted) {
       this.applyDuelRoundEndFromResolvedWave();

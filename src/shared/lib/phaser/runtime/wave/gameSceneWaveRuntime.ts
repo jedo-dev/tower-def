@@ -7,6 +7,7 @@ import {
 import {
   completeWaveIfResolved,
   createInitialWavePhaseState,
+  isWavePhase,
   resetWavePhaseState,
   transitionCompletedToBuild,
   type WavePhaseState,
@@ -26,7 +27,7 @@ import type { SoundId } from '../../sound/audio.types';
 import type { CreepRenderState, PendingWaveSpawn } from '../../scenes/gameScene.types';
 import { destroyCreepRenderState } from '../combat/creepEffectVisuals';
 import { scheduleWaveSpawns } from './waveSpawnCore';
-import { resolveWaveSpawnTiming } from './fieldWaveSpawns';
+import { isFieldWaveResolved, resolveWaveSpawnTiming } from './fieldWaveSpawns';
 
 export type WaveRuntimeState = {
   activeCreepRoutes: WaveRoutes;
@@ -133,17 +134,21 @@ export function initializeWaveRuntime(
   deps.onHudChanged();
 }
 
+/**
+ * Ends the wave once both fields are resolved, so the computer's kills and
+ * leaks are all in before the round is settled. The wave phase, not the creep
+ * list, says a wave is running: the player's corpses may be cleared away
+ * while the computer's field is still busy.
+ */
 export function applyWaveCompletionRewardIfResolved(
   state: WaveRuntimeState,
   config: WaveRuntimeConfig,
   deps: WaveRuntimeDependencies,
+  isOpponentFieldResolved: boolean,
 ): void {
   if (state.isWaveCompletionRewardGranted) return;
-  if (state.pendingWaveSpawns.length > 0) return;
-  if (state.activeCreeps.length === 0) return;
-
-  const hasAliveCreep = state.activeCreeps.some((creep) => creep.entity.status === 'alive');
-  if (hasAliveCreep) return;
+  if (!isWavePhase(state.wavePhaseState)) return;
+  if (!isFieldWaveResolved(state) || !isOpponentFieldResolved) return;
 
   const nextPhase = completeWaveIfResolved(
     state.wavePhaseState,

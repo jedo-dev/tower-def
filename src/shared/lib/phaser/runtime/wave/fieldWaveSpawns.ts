@@ -92,7 +92,9 @@ export type OpponentFieldWaveInput = {
 
 /**
  * Schedules the computer's field for the wave: the shared baseline, then the
- * player's sends, released on the same timing as the player's field.
+ * player's sends, released on the same timing as the player's field. A field
+ * with no route gets nothing scheduled: creeps that can never spawn would
+ * keep the wave, which waits for both fields, from ever ending.
  */
 export function scheduleOpponentFieldWave(
   state: FieldSpawnState,
@@ -102,6 +104,10 @@ export function scheduleOpponentFieldWave(
   state.activeCreeps = [];
   state.activeCreepRoutes = input.routes;
   state.currentWaveNumber = input.waveNumber;
+  if (!hasWaveRoute(input.routes)) {
+    state.pendingWaveSpawns = [];
+    return;
+  }
   state.pendingWaveSpawns = scheduleWaveSpawns(
     input.baselineUnits,
     input.sentUnits,

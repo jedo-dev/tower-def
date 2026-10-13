@@ -148,6 +148,22 @@ describe('computer field wave schedule', () => {
     expect(field.creeps).toHaveLength(0);
     expect(oldSprite?.destroy).toHaveBeenCalled();
   });
+
+  it('schedules nothing on a sealed field, so the wave cannot hang on it', () => {
+    const field = createBattlefieldRenderState();
+    const state = createOpponentFieldWaveState(field);
+
+    scheduleOpponentFieldWave(state, {
+      routes: { small: [], large: [] },
+      waveNumber: 1,
+      baselineUnits: BASELINE,
+      sentUnits: PLAYER_SENDS,
+      timing: resolveWaveSpawnTiming(WAVE_START_MS, CONFIG),
+    });
+
+    expect(state.pendingWaveSpawns).toHaveLength(0);
+    expect(isFieldWaveResolved(state)).toBe(true);
+  });
 });
 
 describe('isFieldWaveResolved', () => {
