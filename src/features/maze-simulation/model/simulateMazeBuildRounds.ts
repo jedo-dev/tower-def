@@ -1,6 +1,8 @@
 import {
   applyComputerBuildStrategy,
   buildDecisionContext,
+  createMazeEvaluator,
+  type MazePlan,
   type StrategyIntent,
 } from '../../../entities/computer-opponent';
 import type { Difficulty } from '../../../entities/difficulty';
@@ -34,14 +36,29 @@ export type MazeRoundReport = {
   goldAfterBuild: number;
   /** Opponent battlefield after this round's builds. */
   battlefield: BattlefieldState;
+  /** Octile route costs on that battlefield, the planner's own yardstick. */
+  routeCost: MazeRouteCost;
+};
+
+/** Octile cost of each size-class route; null when it is sealed. */
+export type MazeRouteCost = {
+  small: number | null;
+  large: number | null;
 };
 
 export type MazeSimulationResult = {
   entrance: GridPoint;
   exit: GridPoint;
   initialBattlefield: BattlefieldState;
+  initialRouteCost: MazeRouteCost;
   rounds: MazeRoundReport[];
 };
+
+function measureRouteCost(battlefield: BattlefieldState): MazeRouteCost {
+  const { grid } = battlefield;
+  const { routes } = createMazeEvaluator(grid, grid.entrance, grid.exit);
+  return { small: routes.smallRouteCost, large: routes.largeRouteCost };
+}
 
 function resolveEndpoints(seed: number | null): { entrance: GridPoint; exit: GridPoint } {
   return seed === null
@@ -70,6 +87,7 @@ export function simulateMazeBuildRounds(config: MazeSimulationConfig): MazeSimul
   let state = createInitialDuelMatchState(config.raceId, config.raceId, { entrance, exit });
   const initialBattlefield = state.opponent.battlefield;
   const rounds: MazeRoundReport[] = [];
+  let mazePlan: MazePlan | null = null;
 
   for (let round = 1; round <= config.rounds; round += 1) {
     if (round > 1) {
@@ -82,7 +100,8 @@ export function simulateMazeBuildRounds(config: MazeSimulationConfig): MazeSimul
       difficulty: config.difficulty,
       leakHistory: [],
     });
-    const result = applyComputerBuildStrategy({ state, context });
+    const result = applyComputerBuildStrategy({ state, context, mazePlan });
+    mazePlan = result.mazePlan;
     state = result.state;
 
     rounds.push({
@@ -94,8 +113,15 @@ export function simulateMazeBuildRounds(config: MazeSimulationConfig): MazeSimul
       upgradedCount: result.upgradedCount,
       goldAfterBuild: state.opponent.gold,
       battlefield: state.opponent.battlefield,
+      routeCost: measureRouteCost(state.opponent.battlefield),
     });
   }
 
-  return { entrance, exit, initialBattlefield, rounds };
+  return {
+    entrance,
+    exit,
+    initialBattlefield,
+    initialRouteCost: measureRouteCost(initialBattlefield),
+    rounds,
+  };
 }

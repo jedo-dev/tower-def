@@ -13,17 +13,22 @@ import { TOWER_FOOTPRINT } from '../../../shared/constants/footprint';
 import { canPlaceFootprint } from '../../../shared/lib/pathfinding/validateFootprintPlacement';
 import type { ComputerDecisionDebugRecorder } from './decisionDebugSnapshots';
 import { planBuildDecision } from './planBuildDecision';
+import type { MazePlan } from './maze-planning';
 import type { DecisionContext, DecisionOutput } from './types';
 
 export type ApplyComputerBuildStrategyInput = {
   state: DuelMatchState;
   context: DecisionContext;
   debugRecorder?: ComputerDecisionDebugRecorder;
+  /** Maze plan kept from the previous build phase; omitted or null makes a fresh one. */
+  mazePlan?: MazePlan | null;
 };
 
 export type ApplyComputerBuildStrategyResult = {
   state: DuelMatchState;
   decision: DecisionOutput;
+  /** Maze plan to hand back on the next build phase. */
+  mazePlan: MazePlan | null;
   builtCount: number;
   upgradedCount: number;
   spentGold: number;
@@ -94,6 +99,7 @@ export function applyComputerBuildStrategy(
     existingTowers: opponent.battlefield.towers,
     path: opponent.battlefield.path,
     debugRecorder: input.debugRecorder,
+    mazePlan: input.mazePlan,
   });
   let battlefield = opponent.battlefield;
   let gold = opponent.gold;
@@ -167,5 +173,6 @@ export function applyComputerBuildStrategy(
     builtCount,
     upgradedCount,
     spentGold,
+    mazePlan: decision.mazePlan,
   };
 }

@@ -1,32 +1,27 @@
-import { TowerTypeId } from '../../../shared/types/content-ids';
 import type { GridModel } from '../../../shared/types/grid';
 import type { GridPosition } from '../../../shared/types/pathfinding';
 import type { TowerEntity } from '../../tower/model/types';
-import { TOWER_BASE_LEVEL, TOWER_COMBAT_STATS_BY_TYPE } from '../../tower/model/types';
-import { getUpgradeCost } from '../../tower/model/upgrade';
-import { getRaceRegistry } from '../../race-registry/model/registries';
-import { buildableTowers } from '../../tower/model/config/buildableTowers';
-import { Difficulty } from '../../difficulty/model/types';
-import { createPathProbe, type PathProbe } from './createPathProbe';
-import { TOWER_FOOTPRINT } from '../../../shared/constants/footprint';
-import { withFootprintOccupancy } from '../../../shared/lib/grid/footprint';
-import { createMazeSkeleton, type MazeSkeleton } from './createMazeSkeleton';
-import type {
-  BuildAction,
-  ComputerAction,
-  DecisionContext,
-  DecisionOutput,
-  UpgradeAction,
-} from './types';
+import {
+  computeSpendBudget,
+  getCheapestTowerCost,
+  SPEND_BUDGET_BY_DIFFICULTY,
+} from './buildSpendBudget';
+import {
+  addBestUpgrade,
+  buildByScore,
+  buildFromPlan,
+  type BuildRoundState,
+} from './buildRoundActions';
+import {
+  MAZE_PLAN_HORIZON_ROUNDS,
+  MAZE_PLAN_SEARCH_EFFORT_BY_DIFFICULTY,
+  updateMazePlan,
+  type MazePlan,
+  type MazePlanUpdate,
+} from './maze-planning';
+import type { DecisionContext, DecisionOutput } from './types';
 import { StrategyIntent } from './types';
 import type { ComputerDecisionDebugRecorder } from './decisionDebugSnapshots';
-import {
-  scoreAllPlacements,
-  DEFENSE_PLACEMENT_WEIGHTS,
-  MAZE_PLACEMENT_WEIGHTS,
-  type PlacementScore,
-  type PlacementWeights,
-} from './scoreTowerPlacement';
 
 export type BuildPlannerInput = {
   context: DecisionContext;
@@ -34,181 +29,21 @@ export type BuildPlannerInput = {
   existingTowers: readonly TowerEntity[];
   path: readonly GridPosition[];
   debugRecorder?: ComputerDecisionDebugRecorder;
-};
-
-type SpendBudgetConfig = {
-  maxSpendRatioPerRound: number;
   /**
-   * Towers per round. The player has no such cap, so this is purely the
-   * difficulty dial; set too low it starves the maze once income takes off,
-   * because gold piles up faster than the opponent is allowed to spend it.
+   * The maze plan the opponent kept from its previous build phase. Omitted or
+   * null, a fresh plan is made for this board.
    */
-  maxBuildActionsPerRound: number;
-  minGoldReserveRatio: number;
-  /**
-   * Share of the field the opponent keeps walling before it switches from
-   * growing the maze to upgrading what it already has.
-   */
-  mazeCoverageTarget: number;
+  mazePlan?: MazePlan | null;
 };
 
-const SPEND_BUDGET_BY_DIFFICULTY: Record<Difficulty, SpendBudgetConfig> = {
-  [Difficulty.EASY]: {
-    maxSpendRatioPerRound: 0.4,
-    maxBuildActionsPerRound: 2,
-    minGoldReserveRatio: 0.35,
-    mazeCoverageTarget: 0.25,
-  },
-  [Difficulty.NORMAL]: {
-    maxSpendRatioPerRound: 0.6,
-    maxBuildActionsPerRound: 4,
-    minGoldReserveRatio: 0.25,
-    mazeCoverageTarget: 0.34,
-  },
-  [Difficulty.HARD]: {
-    maxSpendRatioPerRound: 0.85,
-    maxBuildActionsPerRound: 6,
-    minGoldReserveRatio: 0.15,
-    mazeCoverageTarget: 0.42,
-  },
-  [Difficulty.NIGHTMARE]: {
-    maxSpendRatioPerRound: 0.95,
-    maxBuildActionsPerRound: 8,
-    minGoldReserveRatio: 0.1,
-    mazeCoverageTarget: 0.46,
-  },
+/** A build decision plus the maze plan to keep for the next build phase. */
+export type BuildDecisionOutput = DecisionOutput & {
+  mazePlan: MazePlan | null;
+  /** Route-search cells this decision expanded, planning included. Counts work, not time. */
+  mazeSearchExpandedNodes: number;
 };
 
-function computeSpendBudget(gold: number, difficulty: Difficulty): number {
-  const config = SPEND_BUDGET_BY_DIFFICULTY[difficulty];
-  const reserveGold = Math.floor(gold * config.minGoldReserveRatio);
-  const ratioBudget = Math.floor(gold * config.maxSpendRatioPerRound);
-  const reserveBudget = Math.max(0, gold - reserveGold);
-  return Math.min(ratioBudget, reserveBudget);
-}
-
-function getTowerCostForType(towerType: TowerTypeId, raceId: string): number | null {
-  const registry = getRaceRegistry(raceId as never);
-  for (const buildableId of registry.buildableTowerIds) {
-    const config = buildableTowers.find((t) => t.id === buildableId);
-    if (config && config.towerType === towerType) {
-      return config.costGold;
-    }
-  }
-  return null;
-}
-
-function findBestUpgrade(
-  context: DecisionContext,
-  existingTowers: readonly TowerEntity[],
-  budget: number,
-): UpgradeAction | null {
-  let bestUpgrade: UpgradeAction | null = null;
-  let bestCost = Infinity;
-
-  for (const towerId of context.upgradeableTowerIds) {
-    const tower = existingTowers.find((t) => t.id === towerId);
-    if (!tower) {
-      continue;
-    }
-
-    const cost = getUpgradeCost(tower.type, tower.level);
-    if (cost === null || cost > budget) {
-      continue;
-    }
-
-    if (cost < bestCost) {
-      bestCost = cost;
-      bestUpgrade = { kind: 'upgrade', towerId };
-    }
-  }
-
-  return bestUpgrade;
-}
-
-type FindBestBuildInput = {
-  context: DecisionContext;
-  grid: GridModel;
-  pathProbe: PathProbe;
-  mazeSkeleton: MazeSkeleton;
-  weights: PlacementWeights;
-  existingTowers: readonly TowerEntity[];
-  budget: number;
-  excludedPositions: readonly GridPosition[];
-};
-
-function findBestBuild(input: FindBestBuildInput): BuildAction | null {
-  const {
-    context,
-    grid,
-    pathProbe,
-    mazeSkeleton,
-    weights,
-    existingTowers,
-    budget,
-    excludedPositions,
-  } = input;
-
-  if (context.affordableTowers.length === 0 || context.availableBuildPositions.length === 0) {
-    return null;
-  }
-
-  const candidatePositions = context.availableBuildPositions.filter(
-    (position) =>
-      !excludedPositions.some((excluded) => excluded.x === position.x && excluded.y === position.y),
-  );
-  if (candidatePositions.length === 0) {
-    return null;
-  }
-
-  let bestScore: PlacementScore | null = null;
-  let bestValuePerGold = 0;
-
-  for (const towerType of context.affordableTowers) {
-    const cost = getTowerCostForType(towerType, context.raceId);
-    if (cost === null || cost <= 0 || cost > budget) {
-      continue;
-    }
-
-    const scores = scoreAllPlacements({
-      grid,
-      towerType,
-      positions: candidatePositions,
-      existingTowers,
-      path: pathProbe.basePath,
-      pathProbe,
-      mazeSkeleton,
-      weights,
-    });
-
-    const bestValid = scores.find((s) => s.isValid);
-    if (!bestValid) {
-      continue;
-    }
-
-    // Value per gold, not raw value: most cells of a maze are plain wall, and
-    // a cheap tower walls one just as well as a pricey one. Comparing raw
-    // scores made the opponent pay a premium archetype price for every brick
-    // and run out of budget halfway down a tooth.
-    const valuePerGold = bestValid.totalScore / cost;
-    if (valuePerGold > bestValuePerGold) {
-      bestValuePerGold = valuePerGold;
-      bestScore = bestValid;
-    }
-  }
-
-  if (!bestScore) {
-    return null;
-  }
-
-  return {
-    kind: 'build',
-    towerType: bestScore.towerType,
-    position: bestScore.position,
-  };
-}
-
-function selectIntent(context: DecisionContext, unbuiltSkeletonBlocks: number): StrategyIntent {
+function selectIntent(context: DecisionContext, unbuiltPlanBlocks: number): StrategyIntent {
   if (context.threat.threatLevel === 'high') {
     return StrategyIntent.DEFEND;
   }
@@ -228,7 +63,7 @@ function selectIntent(context: DecisionContext, unbuiltSkeletonBlocks: number): 
       : context.mazeCoverage.occupiedCells / context.mazeCoverage.totalWalkableCells;
   const isUnderCoverageCap =
     coverageRatio < SPEND_BUDGET_BY_DIFFICULTY[context.difficulty].mazeCoverageTarget;
-  if (isUnderCoverageCap && unbuiltSkeletonBlocks > 0) {
+  if (isUnderCoverageCap && unbuiltPlanBlocks > 0) {
     return StrategyIntent.EXTEND_MAZE;
   }
 
@@ -239,143 +74,103 @@ function selectIntent(context: DecisionContext, unbuiltSkeletonBlocks: number): 
   return StrategyIntent.SAVE_GOLD;
 }
 
-function selectPlacementWeights(intent: StrategyIntent): PlacementWeights {
-  return intent === StrategyIntent.DEFEND ? DEFENSE_PLACEMENT_WEIGHTS : MAZE_PLACEMENT_WEIGHTS;
+/** Blocks the opponent expects to afford over the planning horizon. */
+function estimatePlanTowerBudget(context: DecisionContext): number {
+  const cheapest = getCheapestTowerCost(context.raceId);
+  if (cheapest === null) {
+    return 0;
+  }
+  const expectedGold = context.gold + context.income * MAZE_PLAN_HORIZON_ROUNDS;
+  return Math.max(0, Math.floor(expectedGold / cheapest));
 }
 
-/** Grid with one more tower block walled off, so the next placement sees the new wall. */
-function withTowerBlocked(grid: GridModel, anchor: GridPosition): GridModel {
-  return withFootprintOccupancy(grid, anchor, TOWER_FOOTPRINT, true);
+function refreshMazePlan(input: BuildPlannerInput): MazePlanUpdate {
+  return updateMazePlan({
+    grid: input.grid,
+    plan: input.mazePlan,
+    towerBudget: estimatePlanTowerBudget(input.context),
+    effort: MAZE_PLAN_SEARCH_EFFORT_BY_DIFFICULTY[input.context.difficulty],
+  });
 }
 
-function createPlannedTower(
-  towerType: TowerTypeId,
-  position: GridPosition,
-  cost: number,
-): TowerEntity {
+function createSaveDecision(reasoning: string): DecisionOutput {
   return {
-    id: `planned:tower:${position.x}:${position.y}`,
-    position,
-    cost,
-    type: towerType,
-    level: TOWER_BASE_LEVEL,
-    combatStats: { ...TOWER_COMBAT_STATS_BY_TYPE[towerType] },
+    intent: StrategyIntent.SAVE_GOLD,
+    actions: [{ kind: 'save' }],
+    reasoning,
+    confidenceScore: 1,
   };
 }
 
-export function planBuildDecision(input: BuildPlannerInput): DecisionOutput {
-  const { context, grid, existingTowers, debugRecorder } = input;
+/**
+ * One build phase of the computer opponent. Maze growth follows a persistent
+ * search-based maze plan (kept, extended or remade every phase); defending
+ * scores single towers by route coverage instead.
+ */
+export function planBuildDecision(input: BuildPlannerInput): BuildDecisionOutput {
+  const { context, existingTowers, debugRecorder } = input;
 
-  function finish(output: DecisionOutput): DecisionOutput {
+  function finish(
+    output: DecisionOutput,
+    mazePlan: MazePlan | null,
+    expandedNodeCount: number,
+  ): BuildDecisionOutput {
     debugRecorder?.recordBuildDecision(context, output);
-    return output;
+    return { ...output, mazePlan, mazeSearchExpandedNodes: expandedNodeCount };
   }
 
   if (context.phase !== 'build') {
-    return finish({
-      intent: StrategyIntent.SAVE_GOLD,
-      actions: [{ kind: 'save' }],
-      reasoning: 'Not in build phase, cannot take build actions',
-      confidenceScore: 1,
-    });
+    const output = createSaveDecision('Not in build phase, cannot take build actions');
+    return finish(output, input.mazePlan ?? null, 0);
   }
 
-  // The comb is a property of the field, not of the towers on it, so it is
-  // planned once and kept stable across rounds: the opponent keeps filling the
-  // same maze instead of re-planning a different one every time it earns gold.
-  const mazeSkeleton = createMazeSkeleton(grid);
-  // Built blocks drop out of the skeleton, so what is left is still to build.
-  const intent = selectIntent(context, mazeSkeleton.anchors.length);
-  const spendConfig = SPEND_BUDGET_BY_DIFFICULTY[context.difficulty];
+  // The plan is kept across rounds, so the opponent keeps filling in the same
+  // maze instead of starting a new one every time it earns gold.
+  const planUpdate = refreshMazePlan(input);
+  const { plan, unbuilt } = planUpdate;
+  const intent = selectIntent(context, unbuilt.length);
   const budget = computeSpendBudget(context.gold, context.difficulty);
 
   if (budget <= 0) {
-    return finish({
-      intent: StrategyIntent.SAVE_GOLD,
-      actions: [{ kind: 'save' }],
-      reasoning: 'No budget available for spending',
-      confidenceScore: 1,
-    });
+    const output = createSaveDecision('No budget available for spending');
+    return finish(output, plan, planUpdate.expandedNodeCount);
   }
 
-  const actions: ComputerAction[] = [];
-  let remainingBudget = budget;
-  let plannedTowerStates = [...existingTowers];
-  const plannedBuildPositions: GridPosition[] = [];
-  let buildActionsCount = 0;
-  const reasoningParts: string[] = [];
+  const round: BuildRoundState = {
+    actions: [],
+    reasoning: [`Maze plan ${planUpdate.reason}: ${unbuilt.length} blocks to build`],
+    remainingBudget: budget,
+    buildCount: 0,
+    plannedTowers: [...existingTowers],
+    plannedPositions: [],
+    grid: input.grid,
+    expandedNodeCount: planUpdate.expandedNodeCount,
+  };
 
   if (intent === StrategyIntent.UPGRADE || intent === StrategyIntent.DEFEND) {
-    const upgrade = findBestUpgrade(context, existingTowers, remainingBudget);
-    if (upgrade) {
-      const upgradedTower = existingTowers.find((t) => t.id === upgrade.towerId);
-      const cost = getUpgradeCost(
-        upgradedTower?.type ?? TowerTypeId.SINGLE,
-        upgradedTower?.level ?? 1,
-      );
-      if (cost !== null) {
-        actions.push(upgrade);
-        remainingBudget -= cost;
-        reasoningParts.push(`Upgrading tower ${upgrade.towerId} for ${cost} gold`);
-      }
-    }
+    addBestUpgrade(round, context, existingTowers);
   }
 
-  const shouldBuild =
-    intent === StrategyIntent.DEFEND ||
-    intent === StrategyIntent.EXTEND_MAZE ||
-    intent === StrategyIntent.UPGRADE;
-  const weights = selectPlacementWeights(intent);
-  // Simulated so that each extra tower this round is placed against the wall the
-  // previous one just created; otherwise the opponent scatters isolated towers.
-  let simulatedGrid = grid;
-
-  while (shouldBuild && buildActionsCount < spendConfig.maxBuildActionsPerRound) {
-    const pathProbe = createPathProbe(simulatedGrid);
-    const build = findBestBuild({
-      context,
-      grid: simulatedGrid,
-      pathProbe,
-      mazeSkeleton,
-      weights,
-      existingTowers: plannedTowerStates,
-      budget: remainingBudget,
-      excludedPositions: plannedBuildPositions,
-    });
-    if (!build) {
-      break;
-    }
-
-    const cost = getTowerCostForType(build.towerType, context.raceId);
-    if (cost === null || cost > remainingBudget) {
-      break;
-    }
-
-    const mazeGain = Math.max(0, pathProbe.probeFootprint(build.position, TOWER_FOOTPRINT).gain);
-
-    actions.push(build);
-    plannedBuildPositions.push(build.position);
-    plannedTowerStates = [
-      ...plannedTowerStates,
-      createPlannedTower(build.towerType, build.position, cost),
-    ];
-    simulatedGrid = withTowerBlocked(simulatedGrid, build.position);
-    remainingBudget -= cost;
-    buildActionsCount += 1;
-    reasoningParts.push(
-      `Building ${build.towerType} at (${build.position.x},${build.position.y}) for ${cost} gold, +${mazeGain.toFixed(1)} route cost`,
-    );
+  const maxBuilds = SPEND_BUDGET_BY_DIFFICULTY[context.difficulty].maxBuildActionsPerRound;
+  const followsPlan = intent === StrategyIntent.EXTEND_MAZE || intent === StrategyIntent.UPGRADE;
+  const isPlanShort = followsPlan && buildFromPlan(round, context, unbuilt, maxBuilds);
+  // Defending wants firepower on the current route; an unfinished plan with
+  // too little buildable right now should not stall the opponent either. A
+  // finished plan does not fall back: the maze is done, gold goes to upgrades.
+  if (intent === StrategyIntent.DEFEND || (isPlanShort && !plan.isComplete)) {
+    buildByScore(round, context, intent, unbuilt, maxBuilds);
   }
 
-  if (actions.length === 0) {
-    actions.push({ kind: 'save' });
-    reasoningParts.push('No beneficial actions within budget, saving gold');
+  if (round.actions.length === 0) {
+    round.actions.push({ kind: 'save' });
+    round.reasoning.push('No beneficial actions within budget, saving gold');
   }
 
-  return finish({
+  const output: DecisionOutput = {
     intent,
-    actions,
-    reasoning: reasoningParts.join('; '),
+    actions: round.actions,
+    reasoning: round.reasoning.join('; '),
     confidenceScore: 0.8,
-  });
+  };
+  return finish(output, plan, round.expandedNodeCount);
 }

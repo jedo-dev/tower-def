@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { createGridModel } from '../../../shared/lib/grid/createGridModel';
 import { createPathProbe } from './createPathProbe';
 import { findPathBfs } from '../../../shared/lib/pathfinding/hasPathBfs';
-import { createMazeSkeleton } from './createMazeSkeleton';
+import { createMazePlanPriority } from './maze-planning';
 import { TowerTypeId } from '../../../shared/types/content-ids';
 import type { TowerEntity } from '../../tower/model/types';
 import { scoreTowerPlacement, scoreAllPlacements } from './scoreTowerPlacement';
@@ -289,12 +289,12 @@ describe('entities/computer-opponent/scoreTowerPlacement', () => {
         expect(result.isValid).toBe(true);
       });
 
-      it('ranks cells of the planned comb above cells outside it', () => {
+      it('ranks blocks of the maze plan above blocks outside it', () => {
         const grid = createTestGrid();
         const path = getTestPath();
         const pathProbe = createPathProbe(grid);
-        const mazeSkeleton = createMazeSkeleton(grid);
-        const firstPlanned = mazeSkeleton.anchors[0];
+        const firstPlanned = { x: 6, y: 5 };
+        const mazePlan = createMazePlanPriority([firstPlanned, { x: 6, y: 9 }]);
 
         const planned = scoreTowerPlacement({
           grid,
@@ -303,7 +303,7 @@ describe('entities/computer-opponent/scoreTowerPlacement', () => {
           existingTowers: [],
           path,
           pathProbe,
-          mazeSkeleton,
+          mazePlan,
         });
 
         const unplanned = scoreTowerPlacement({
@@ -313,11 +313,11 @@ describe('entities/computer-opponent/scoreTowerPlacement', () => {
           existingTowers: [],
           path,
           pathProbe,
-          mazeSkeleton,
+          mazePlan,
         });
 
-        expect(planned.skeletonScore).toBeGreaterThan(0);
-        expect(unplanned.skeletonScore).toBe(0);
+        expect(planned.planScore).toBeGreaterThan(0);
+        expect(unplanned.planScore).toBe(0);
         expect(planned.totalScore).toBeGreaterThan(unplanned.totalScore);
       });
 

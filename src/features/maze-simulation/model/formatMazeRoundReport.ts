@@ -2,9 +2,23 @@ import type { BattlefieldState } from '../../../entities/duel-match';
 import { renderBoardSnapshot } from '../../../shared/lib/board-snapshot';
 import { RouteSizeClass } from '../../../shared/constants/board-snapshot';
 import { TOWER_FOOTPRINT } from '../../../shared/constants/footprint';
-import type { MazeRoundReport, MazeSimulationResult } from './simulateMazeBuildRounds';
+import type {
+  MazeRoundReport,
+  MazeRouteCost,
+  MazeSimulationResult,
+} from './simulateMazeBuildRounds';
 
 const ROUTE_LABEL = 'route';
+const ROUTE_COST_DECIMALS = 1;
+
+function formatCost(cost: number | null): string {
+  return cost === null ? 'sealed' : cost.toFixed(ROUTE_COST_DECIMALS);
+}
+
+/** Octile costs of both size-class routes, the number the maze planner maximizes. */
+function formatRouteCost(routeCost: MazeRouteCost): string {
+  return `route cost small ${formatCost(routeCost.small)} large ${formatCost(routeCost.large)}`;
+}
 
 function renderBattlefield(battlefield: BattlefieldState): string {
   return renderBoardSnapshot({
@@ -28,6 +42,7 @@ export function formatMazeRoundReport(report: MazeRoundReport): string {
     `upgraded ${report.upgradedCount}`,
     `towers ${report.battlefield.towers.length}`,
     `route length ${report.battlefield.path.length}`,
+    formatRouteCost(report.routeCost),
   ].join(' | ');
 
   return [summary, renderBattlefield(report.battlefield)].join('\n');
@@ -36,7 +51,11 @@ export function formatMazeRoundReport(report: MazeRoundReport): string {
 /** Whole simulation as text: the empty board first, then one block per round. */
 export function formatMazeSimulation(result: MazeSimulationResult): string {
   const opening = [
-    `entrance (${result.entrance.x},${result.entrance.y}) | exit (${result.exit.x},${result.exit.y})`,
+    [
+      `entrance (${result.entrance.x},${result.entrance.y})`,
+      `exit (${result.exit.x},${result.exit.y})`,
+      formatRouteCost(result.initialRouteCost),
+    ].join(' | '),
     renderBattlefield(result.initialBattlefield),
   ].join('\n');
 

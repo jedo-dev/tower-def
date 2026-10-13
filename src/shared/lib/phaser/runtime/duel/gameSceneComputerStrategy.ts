@@ -3,6 +3,7 @@ import {
   applyComputerSendStrategy,
   buildDecisionContext,
   type ComputerDecisionDebugRecorder,
+  type ComputerMazePlanMemory,
   type LeakHistoryEntry,
 } from '../../../../../entities/computer-opponent';
 import type { Difficulty } from '../../../../../entities/difficulty';
@@ -18,6 +19,8 @@ import { CreepTypeId } from '../../../../types/content-ids';
 export type ComputerBuildPhaseDeps = {
   difficulty: Difficulty;
   leakHistory: LeakHistoryEntry[];
+  /** The opponent's maze plan, carried from one build phase to the next. */
+  mazePlanMemory: ComputerMazePlanMemory;
   debugRecorder: ComputerDecisionDebugRecorder;
   setRegistryValue: (key: string, value: number | readonly unknown[]) => void;
 };
@@ -62,7 +65,9 @@ export function applyComputerBuildPhaseStrategies(
     state: nextState,
     context: buildContext,
     debugRecorder: deps.debugRecorder,
+    mazePlan: deps.mazePlanMemory.plan,
   });
+  deps.mazePlanMemory.plan = buildResult.mazePlan;
   nextState = buildResult.state;
   deps.setRegistryValue('duel.opponent.builtCount', buildResult.builtCount);
   deps.setRegistryValue('duel.opponent.upgradedCount', buildResult.upgradedCount);

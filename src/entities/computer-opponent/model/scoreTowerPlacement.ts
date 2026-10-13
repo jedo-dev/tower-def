@@ -8,7 +8,7 @@ import { TOWER_FOOTPRINT } from '../../../shared/constants/footprint';
 import { getFootprintCenter } from '../../../shared/lib/grid/footprint';
 import { validateFootprintPlacementPath } from '../../../shared/lib/pathfinding/validateFootprintPlacement';
 import type { PathProbe } from './createPathProbe';
-import type { MazeSkeleton } from './createMazeSkeleton';
+import type { MazePlanPriority } from './maze-planning';
 import { computeArchetypeValueScore, isSupportArchetype } from './archetypeValueScore';
 import {
   classifyTowerFootprint,
@@ -30,8 +30,8 @@ export type PlacementScore = {
   mazeGainScore: number;
   /** Rewards extending an existing wall over dropping an isolated tower. */
   wallSynergyScore: number;
-  /** How early this cell appears in the planned maze comb; 0 when off-plan. */
-  skeletonScore: number;
+  /** How early this block comes in the maze plan; 0 when off-plan. */
+  planScore: number;
   totalScore: number;
   isValid: boolean;
   invalidReason?: 'blocks_path' | FootprintBlockReason;
@@ -47,12 +47,12 @@ export type PlacementWeights = {
   mazeGain: number;
   wallSynergy: number;
   defenseProximity: number;
-  skeleton: number;
+  plan: number;
 };
 
 /** Default stance: follow the maze plan, cover the route it creates. */
 export const MAZE_PLACEMENT_WEIGHTS: PlacementWeights = {
-  skeleton: 0.5,
+  plan: 0.5,
   mazeGain: 0.2,
   pathCoverage: 0.2,
   wallSynergy: 0.06,
@@ -61,7 +61,7 @@ export const MAZE_PLACEMENT_WEIGHTS: PlacementWeights = {
 
 /** Under pressure, firepower on the current route matters more than length. */
 export const DEFENSE_PLACEMENT_WEIGHTS: PlacementWeights = {
-  skeleton: 0.28,
+  plan: 0.28,
   mazeGain: 0.14,
   pathCoverage: 0.44,
   wallSynergy: 0.06,
@@ -82,8 +82,8 @@ type ScorePlacementInput = {
   path: readonly GridPosition[];
   /** Supplies maze metrics and the rerouted path. Without it both stay neutral. */
   pathProbe?: PathProbe;
-  /** The comb the opponent is filling in. Without it the term stays neutral. */
-  mazeSkeleton?: MazeSkeleton;
+  /** The maze plan the opponent is filling in. Without it the term stays neutral. */
+  mazePlan?: MazePlanPriority;
   weights?: PlacementWeights;
 };
 
@@ -209,7 +209,7 @@ function createInvalidScore(
     mazeGainCells: 0,
     mazeGainScore: 0,
     wallSynergyScore: 0,
-    skeletonScore: 0,
+    planScore: 0,
     totalScore: 0,
     isValid: false,
     invalidReason,
@@ -217,7 +217,7 @@ function createInvalidScore(
 }
 
 export function scoreTowerPlacement(input: ScorePlacementInput): PlacementScore {
-  const { grid, position, towerType, existingTowers, path, pathProbe, mazeSkeleton } = input;
+  const { grid, position, towerType, existingTowers, path, pathProbe, mazePlan } = input;
   const weights = input.weights ?? MAZE_PLACEMENT_WEIGHTS;
 
   const footprintBlockReason = classifyTowerFootprint(grid, position);
@@ -251,14 +251,14 @@ export function scoreTowerPlacement(input: ScorePlacementInput): PlacementScore 
   const archetypeValueScore = computeArchetypeValueScore(towerType, existingTowers);
   const mazeGainScore = computeMazeGainScore(mazeGainCells);
   const wallSynergyScore = computeWallSynergyScore(grid, position, pathProbe);
-  const skeletonScore = mazeSkeleton?.priorityOf(position) ?? 0;
+  const planScore = mazePlan?.priorityOf(position) ?? 0;
 
   const totalScore =
     (pathCoverageScore * weights.pathCoverage +
       mazeGainScore * weights.mazeGain +
       wallSynergyScore * weights.wallSynergy +
       defenseProximityScore * weights.defenseProximity +
-      skeletonScore * weights.skeleton) *
+      planScore * weights.plan) *
     archetypeValueScore;
 
   return {
@@ -270,7 +270,7 @@ export function scoreTowerPlacement(input: ScorePlacementInput): PlacementScore 
     mazeGainCells,
     mazeGainScore,
     wallSynergyScore,
-    skeletonScore,
+    planScore,
     totalScore,
     isValid: true,
   };
@@ -283,13 +283,12 @@ type ScoreAllPositionsInput = {
   existingTowers: readonly TowerEntity[];
   path: readonly GridPosition[];
   pathProbe?: PathProbe;
-  mazeSkeleton?: MazeSkeleton;
+  mazePlan?: MazePlanPriority;
   weights?: PlacementWeights;
 };
 
 export function scoreAllPlacements(input: ScoreAllPositionsInput): PlacementScore[] {
-  const { grid, towerType, positions, existingTowers, path, pathProbe, mazeSkeleton, weights } =
-    input;
+  const { grid, towerType, positions, existingTowers, path, pathProbe, mazePlan, weights } = input;
 
   const scores: PlacementScore[] = [];
   for (const position of positions) {
@@ -301,7 +300,7 @@ export function scoreAllPlacements(input: ScoreAllPositionsInput): PlacementScor
         existingTowers,
         path,
         pathProbe,
-        mazeSkeleton,
+        mazePlan,
         weights,
       }),
     );

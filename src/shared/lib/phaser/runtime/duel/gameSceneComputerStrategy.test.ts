@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   createComputerDecisionDebugRecorder,
+  createComputerMazePlanMemory,
   type LeakHistoryEntry,
 } from '../../../../../entities/computer-opponent';
 import { Difficulty } from '../../../../../entities/difficulty';
@@ -16,6 +17,7 @@ function createDeps(difficulty: Difficulty, leakHistory: LeakHistoryEntry[] = []
     deps: {
       difficulty,
       leakHistory,
+      mazePlanMemory: createComputerMazePlanMemory(),
       debugRecorder: createComputerDecisionDebugRecorder(),
       setRegistryValue: (key: string, value: number | readonly unknown[]) => {
         registry.set(key, value);
@@ -28,10 +30,12 @@ function createDeps(difficulty: Difficulty, leakHistory: LeakHistoryEntry[] = []
 /** Plays whole build phases: strategies, then the income payout. */
 function playRounds(rounds: number, difficulty: Difficulty): DuelMatchState {
   let state = createInitialDuelMatchState(RaceId.HUMAN, RaceId.ORC);
+  // One match, one opponent memory: the maze plan carries across rounds.
+  const { deps } = createDeps(difficulty);
 
   for (let round = 1; round <= rounds; round += 1) {
     state = { ...state, round, phase: 'build' };
-    state = applyComputerBuildPhaseStrategies(state, createDeps(difficulty).deps);
+    state = applyComputerBuildPhaseStrategies(state, deps);
     state = payIncome(state).state;
   }
 
