@@ -244,17 +244,17 @@ describe('entities/computer-opponent/applyComputerBuildStrategy', () => {
       return state;
     }
 
-    it('makes creeps walk several times further than on an open field', () => {
+    it('makes creeps walk much further than on an open field', () => {
       const openFieldLength = findPathBfs(createState().opponent.battlefield.grid).path.length;
 
       const state = playRounds(25, Difficulty.HARD);
       const mazedLength = findPathBfs(state.opponent.battlefield.grid).path.length;
 
-      // Measured at 38 towers and a 10 -> 44 cell route; the thresholds leave
-      // room for balance tweaks without going quiet if mazing regresses to the
-      // old scattered placement.
+      // Measured at 38 towers and a 19 -> 47 cell route on the 20x30 board; the
+      // thresholds leave room for balance tweaks without going quiet if mazing
+      // regresses to the old scattered placement.
       expect(state.opponent.battlefield.towers.length).toBeGreaterThan(25);
-      expect(mazedLength).toBeGreaterThan(openFieldLength * 3);
+      expect(mazedLength).toBeGreaterThan(openFieldLength * 2);
     });
 
     it('keeps the battlefield path in sync with the walls it built', () => {

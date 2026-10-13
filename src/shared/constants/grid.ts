@@ -1,7 +1,9 @@
+import { EndpointZoneFootprint } from './footprint';
+
 export enum GridConfig {
-  COLS = 10,
-  ROWS = 15,
-  CELL_SIZE = 32,
+  COLS = 20,
+  ROWS = 30,
+  CELL_SIZE = 16,
 }
 
 export const GRID_DIMENSIONS = {
@@ -10,4 +12,7 @@ export const GRID_DIMENSIONS = {
   cellSize: GridConfig.CELL_SIZE,
 } as const;
 
-export const GRID_DEFAULT_ROW_CENTER = Math.floor((GridConfig.ROWS - 1) / 2);
+/** Top row of an entrance or exit zone centred vertically on a side edge. */
+export const GRID_DEFAULT_ROW_CENTER = Math.floor(
+  (GridConfig.ROWS - EndpointZoneFootprint.SIZE) / 2,
+);

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { SINGLE_CELL_FOOTPRINT } from '../../constants/footprint';
 import type { GridCell, GridModel } from '../../types/grid';
 import { createGridModel } from '../grid/createGridModel';
 import { findPathBfs } from './hasPathBfs';
@@ -104,6 +105,7 @@ describe('pathfinding', () => {
         cells: countedCells,
         entrance: { x: 0, y: 0 },
         exit: { x: size - 1, y: size - 1 },
+        endpointZoneFootprint: SINGLE_CELL_FOOTPRINT,
       };
 
       expect(findPathBfs(grid).found).toBe(true);

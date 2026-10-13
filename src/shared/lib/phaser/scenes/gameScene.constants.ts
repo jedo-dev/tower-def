@@ -2,10 +2,14 @@ import { createInitialPlayerResources } from '../../../../entities/player-resour
 import { buildableTowers } from '../../../../entities/tower';
 import { ECONOMY_BALANCE } from '../../../constants/economy';
 import { GRID_DEFAULT_ROW_CENTER, GRID_DIMENSIONS } from '../../../constants/grid';
+import { ENDPOINT_ZONE_FOOTPRINT } from '../../../constants/footprint';
 import { EffectId } from '../../../types/content-ids';
 
 export const ENTRANCE_CELL = { x: 0, y: GRID_DEFAULT_ROW_CENTER };
-export const EXIT_CELL = { x: GRID_DIMENSIONS.cols - 1, y: GRID_DEFAULT_ROW_CENTER };
+export const EXIT_CELL = {
+  x: GRID_DIMENSIONS.cols - ENDPOINT_ZONE_FOOTPRINT.width,
+  y: GRID_DEFAULT_ROW_CENTER,
+};
 export const DEFAULT_MAP_SEED = 1337;
 export const DEFAULT_TOWER_COST = 50;
 export const SELL_REFUND_RATIO = ECONOMY_BALANCE.towerSellRatio;

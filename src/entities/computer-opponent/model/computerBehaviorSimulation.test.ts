@@ -238,7 +238,8 @@ describe('entities/computer-opponent/computerBehaviorSimulation', () => {
       incomingCreepCount: 3,
       estimatedLeakCount: 0,
       leakHistory: [],
-      occupiedCells: 70,
+      // Past the hard coverage cap on the 20x30 board, so upgrades win.
+      occupiedCells: 280,
       availableBuildPositions: [
         { x: 1, y: 5 },
         { x: 8, y: 8 },

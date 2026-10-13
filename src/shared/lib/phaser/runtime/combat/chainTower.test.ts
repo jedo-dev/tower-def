@@ -8,6 +8,7 @@ import {
   type TowerEntity,
 } from '../../../../../entities/tower';
 import { CreepTypeId, TowerTypeId } from '../../../../types/content-ids';
+import { GRID_DIMENSIONS } from '../../../../constants/grid';
 import type { BattlefieldRenderState } from '../battlefield/battlefieldRenderState';
 import type { CreepRenderState, TowerRenderState } from '../../scenes/gameScene.types';
 
@@ -63,8 +64,8 @@ function createDeps(): CombatDeps & { sounds: string[] } {
       add: { text: vi.fn(() => createSpriteStub()), sprite: vi.fn(() => createSpriteStub()) },
     },
     toCellCenter: (position: { x: number; y: number }) => ({
-      x: position.x * 40,
-      y: position.y * 40,
+      x: position.x * GRID_DIMENSIONS.cellSize,
+      y: position.y * GRID_DIMENSIONS.cellSize,
     }),
     playArcherAttackAnimation: vi.fn(),
     playSplashAttackAnimation: vi.fn(),

@@ -87,3 +87,18 @@ Reason:
 oxfmt is the Oxc formatter (Prettier-compatible output, much faster) and pairs
 with oxlint. The options were chosen to match the dominant existing style so
 the one-time reformat stays small.
+
+## Decision 010: Grid is 20 x 30 cells of 16 px
+
+Supersedes Decision 004. The board keeps its 320 x 480 px size but uses
+20 x 30 cells of 16 px (`GridConfig` in `shared/constants/grid.ts`).
+Towers always occupy 2 x 2 cells; creeps occupy 1 x 1 (small, medium) or
+2 x 2 (large). The entrance and the exit are 2 x 2 zones on the map edges,
+anchored at their top-left cell (`GridModel.entrance` / `GridModel.exit`,
+sized by `GridModel.endpointZoneFootprint`); creep routes start and end at
+those anchor cells.
+
+Reason:
+
+Finer cells let mazes bend more tightly and let creep size matter for
+pathing, without changing the physical board on mobile screens.

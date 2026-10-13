@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { SINGLE_CELL_FOOTPRINT } from '../../constants/footprint';
 import type { GridCell, GridModel } from '../../types/grid';
 import { createGridModel } from './createGridModel';
 import { getCellAt, getCellIndex, isInsideGridBounds } from './getCellAt';
@@ -10,7 +11,14 @@ function createOpenGrid(cols: number, rows: number): GridModel {
       cells.push({ x, y, role: 'empty', isWalkable: true, isOccupied: false });
     }
   }
-  return { cols, rows, cells, entrance: { x: 0, y: 0 }, exit: { x: cols - 1, y: rows - 1 } };
+  return {
+    cols,
+    rows,
+    cells,
+    entrance: { x: 0, y: 0 },
+    exit: { x: cols - 1, y: rows - 1 },
+    endpointZoneFootprint: SINGLE_CELL_FOOTPRINT,
+  };
 }
 
 /** Wraps the cells array so every element read is counted. */

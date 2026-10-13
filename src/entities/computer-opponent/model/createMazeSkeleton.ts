@@ -53,7 +53,15 @@ export function createMazeSkeleton(grid: GridModel): MazeSkeleton {
   const entranceAlong = travelsHorizontally ? entrance.x : entrance.y;
   const exitAlong = travelsHorizontally ? exit.x : exit.y;
 
-  const firstTooth = Math.min(entranceAlong, exitAlong) + ENDPOINT_MARGIN;
+  // Zones are anchored at their top-left cell, so the zone nearer the origin
+  // extends further along the axis than its anchor.
+  const zoneAlongSize = travelsHorizontally
+    ? grid.endpointZoneFootprint.width
+    : grid.endpointZoneFootprint.height;
+  const zoneAcrossSize = travelsHorizontally
+    ? grid.endpointZoneFootprint.height
+    : grid.endpointZoneFootprint.width;
+  const firstTooth = Math.min(entranceAlong, exitAlong) + zoneAlongSize - 1 + ENDPOINT_MARGIN;
   const lastTooth = Math.max(entranceAlong, exitAlong) - ENDPOINT_MARGIN;
   if (acrossSize < 3 || firstTooth > lastTooth || alongSize < 5) {
     return EMPTY_SKELETON;
@@ -66,6 +74,13 @@ export function createMazeSkeleton(grid: GridModel): MazeSkeleton {
     }
   }
 
+  // The first tooth is closed on the side the creeps arrive from, so even a
+  // half-built tooth sits across their straight line.
+  const firstEndpoint = entranceAlong <= exitAlong ? entrance : exit;
+  const firstEndpointAcrossCenter =
+    (travelsHorizontally ? firstEndpoint.y : firstEndpoint.x) + zoneAcrossSize / 2;
+  const firstToothClosedAtStart = firstEndpointAcrossCenter < acrossSize / 2;
+
   const cells: GridPosition[] = [];
   let toothIndex = 0;
 
@@ -73,7 +88,7 @@ export function createMazeSkeleton(grid: GridModel): MazeSkeleton {
     // Teeth alternate which edge they leave open, which is what forces the
     // weave; anchoring starts at the closed edge so a half-built tooth already
     // makes creeps walk around it.
-    const gapAtEnd = toothIndex % 2 === 1;
+    const gapAtEnd = (toothIndex % 2 === 0) === firstToothClosedAtStart;
     const anchor = gapAtEnd ? 0 : acrossSize - 1;
     const step = gapAtEnd ? 1 : -1;
 

@@ -5,6 +5,7 @@ import {
   RouteSizeClass,
 } from '../../constants/board-snapshot';
 import type { GridModel, GridPoint } from '../../types/grid';
+import { getFootprintCells } from '../grid/footprint';
 
 /**
  * Cells a tower covers: `anchor` is the top-left cell, the footprint extends
@@ -97,15 +98,18 @@ function markRoutes(
   }
 }
 
-function markEndpoint(
+/** Marks every cell of the zone anchored at `anchor`. */
+function markEndpointZone(
   grid: GridModel,
-  point: GridPoint,
+  anchor: GridPoint,
   glyph: BoardSnapshotGlyph,
   glyphs: BoardSnapshotGlyph[],
 ): void {
-  const index = toCellIndex(grid, point);
-  if (index !== null) {
-    glyphs[index] = glyph;
+  for (const point of getFootprintCells(anchor, grid.endpointZoneFootprint)) {
+    const index = toCellIndex(grid, point);
+    if (index !== null) {
+      glyphs[index] = glyph;
+    }
   }
 }
 
@@ -131,8 +135,8 @@ export function renderBoardSnapshot(input: BoardSnapshotInput): string {
   markBlockedCells(grid, glyphs);
   markTowerFootprints(grid, towers, glyphs);
   markRoutes(grid, routes, glyphs);
-  markEndpoint(grid, grid.entrance, BoardSnapshotGlyph.ENTRANCE, glyphs);
-  markEndpoint(grid, grid.exit, BoardSnapshotGlyph.EXIT, glyphs);
+  markEndpointZone(grid, grid.entrance, BoardSnapshotGlyph.ENTRANCE, glyphs);
+  markEndpointZone(grid, grid.exit, BoardSnapshotGlyph.EXIT, glyphs);
 
   const rows: string[] = [];
   for (let y = 0; y < grid.rows; y += 1) {

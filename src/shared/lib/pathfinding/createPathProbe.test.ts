@@ -56,7 +56,7 @@ describe('shared/pathfinding/createPathProbe', () => {
   it('reports a sealed field when the blocked cell is the last way through', () => {
     // Wall across the whole grid at x=4 except a single gap at y=7.
     const wall: GridPosition[] = [];
-    for (let y = 0; y < 15; y += 1) {
+    for (let y = 0; y < createTestGrid().rows; y += 1) {
       if (y !== 7) {
         wall.push({ x: 4, y });
       }

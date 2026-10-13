@@ -155,6 +155,43 @@ function drawGridLines(
   }
 }
 
+function drawEndpointZone(
+  state: GridRendererState,
+  deps: GridRendererDeps,
+  config: GridRendererConfig,
+  grid: GridModel,
+  role: 'entrance' | 'exit',
+): void {
+  const anchor = role === 'entrance' ? grid.entrance : grid.exit;
+  const { cellSize } = GRID_DIMENSIONS;
+  const x = anchor.x * cellSize;
+  const y = anchor.y * cellSize;
+  const width = grid.endpointZoneFootprint.width * cellSize;
+  const height = grid.endpointZoneFootprint.height * cellSize;
+
+  // Markers live on their own layer: the shared grid overlay is dimmed to
+  // gridIdleAlpha during waves, which would fade them out exactly when the
+  // player needs to read the lane.
+  const markerColor = role === 'entrance' ? config.entranceMarkerColor : config.exitMarkerColor;
+  const marker = deps.scene.add.graphics();
+  marker.setDepth(config.entranceExitLabelRenderDepth - 1);
+  marker.fillStyle(markerColor, config.endpointMarkerFillAlpha);
+  marker.fillRect(x + 1, y + 1, width - 2, height - 2);
+  marker.lineStyle(config.endpointMarkerLineWidth, markerColor, 1);
+  marker.strokeRect(x + 1, y + 1, width - 2, height - 2);
+  state.endpointMarkers.push(marker);
+
+  const label = deps.scene.add
+    .text(x + width / 2, y + height / 2, role === 'entrance' ? 'IN' : 'OUT', {
+      fontFamily: config.entranceExitLabelFontFamily,
+      fontSize: config.entranceExitLabelFontSizePx,
+      color: config.entranceExitLabelColor,
+    })
+    .setOrigin(0.5);
+  label.setDepth(config.entranceExitLabelRenderDepth);
+  state.gridLabels.push(label);
+}
+
 export function drawGrid(
   state: GridRendererState,
   deps: GridRendererDeps,
@@ -171,40 +208,10 @@ export function drawGrid(
 
   for (const cell of grid.cells) {
     drawGridCell(state, deps, config, cell);
-
-    if (cell.role === 'entrance' || cell.role === 'exit') {
-      const x = cell.x * GRID_DIMENSIONS.cellSize;
-      const y = cell.y * GRID_DIMENSIONS.cellSize;
-
-      // Markers live on their own layer: the shared grid overlay is dimmed to
-      // gridIdleAlpha during waves, which would fade them out exactly when the
-      // player needs to read the lane.
-      const markerColor =
-        cell.role === 'entrance' ? config.entranceMarkerColor : config.exitMarkerColor;
-      const marker = deps.scene.add.graphics();
-      marker.setDepth(config.entranceExitLabelRenderDepth - 1);
-      marker.fillStyle(markerColor, config.endpointMarkerFillAlpha);
-      marker.fillRect(x + 1, y + 1, GRID_DIMENSIONS.cellSize - 2, GRID_DIMENSIONS.cellSize - 2);
-      marker.lineStyle(config.endpointMarkerLineWidth, markerColor, 1);
-      marker.strokeRect(x + 1, y + 1, GRID_DIMENSIONS.cellSize - 2, GRID_DIMENSIONS.cellSize - 2);
-      state.endpointMarkers.push(marker);
-
-      const label = deps.scene.add
-        .text(
-          x + GRID_DIMENSIONS.cellSize / 2,
-          y + GRID_DIMENSIONS.cellSize / 2,
-          cell.role === 'entrance' ? 'IN' : 'OUT',
-          {
-            fontFamily: config.entranceExitLabelFontFamily,
-            fontSize: config.entranceExitLabelFontSizePx,
-            color: config.entranceExitLabelColor,
-          },
-        )
-        .setOrigin(0.5);
-      label.setDepth(config.entranceExitLabelRenderDepth);
-      state.gridLabels.push(label);
-    }
   }
+
+  drawEndpointZone(state, deps, config, grid, 'entrance');
+  drawEndpointZone(state, deps, config, grid, 'exit');
 
   drawGridLines(state, config, grid);
   return grid;

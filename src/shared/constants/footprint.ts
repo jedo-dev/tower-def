@@ -6,6 +6,11 @@ export enum TowerFootprint {
   SIZE = 2,
 }
 
+/** Edge length, in cells, of the entrance and exit zones, so large creeps fit. */
+export enum EndpointZoneFootprint {
+  SIZE = 2,
+}
+
 /**
  * Edge length, in cells, of the square footprint a creep needs to pass, by its
  * authored size class. Medium creatures share the single-cell footprint.
@@ -24,6 +29,11 @@ export const SINGLE_CELL_FOOTPRINT: Readonly<Footprint> = squareFootprint(1);
 
 /** Every tower covers this many cells, anchored at its top-left cell. */
 export const TOWER_FOOTPRINT: Readonly<Footprint> = squareFootprint(TowerFootprint.SIZE);
+
+/** Every entrance and exit zone covers this many cells, anchored at its top-left cell. */
+export const ENDPOINT_ZONE_FOOTPRINT: Readonly<Footprint> = squareFootprint(
+  EndpointZoneFootprint.SIZE,
+);
 
 export const CREEP_FOOTPRINT_BY_SIZE_CLASS: Readonly<Record<UnitSizeClass, Readonly<Footprint>>> = {
   [UnitSizeClass.SMALL]: squareFootprint(CREEP_FOOTPRINT_SIZE_BY_SIZE_CLASS[UnitSizeClass.SMALL]),

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { DEFAULT_CREEP_COMBAT_TRAITS } from '../../creep';
 import { RaceId } from '../../../shared/types/content-ids';
 import { createGridModel } from '../../../shared/lib/grid/createGridModel';
+import { GridConfig } from '../../../shared/constants/grid';
 import { calculateWaveStartPath } from '../../wave/model/calculateWavePath';
 import type { BattlefieldState, AddCreepEntry } from './battlefield';
 import {
@@ -67,8 +68,8 @@ describe('entities/duel-match/battlefield', () => {
 
     it('grid has correct dimensions', () => {
       const battlefield = createTestBattlefield();
-      expect(battlefield.grid.cols).toBe(10);
-      expect(battlefield.grid.rows).toBe(15);
+      expect(battlefield.grid.cols).toBe(GridConfig.COLS);
+      expect(battlefield.grid.rows).toBe(GridConfig.ROWS);
     });
   });
 
