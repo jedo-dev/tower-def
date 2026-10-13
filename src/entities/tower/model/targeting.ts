@@ -1,13 +1,14 @@
-import { isCreepAlive } from '../../creep';
+import { getCreepFootprintCenterOffsetInCells, isCreepAlive } from '../../creep';
 import type { CreepEntity } from '../../creep';
 import { getTowerCenter } from './footprint';
 import type { TowerEntity } from './types';
 
-/** Measured from the centre of the tower's footprint to the creep's cell. */
+/** Measured between the centres of the tower's and the creep's footprints. */
 function getDistanceInCells(tower: TowerEntity, creep: CreepEntity): number {
   const center = getTowerCenter(tower);
-  const dx = creep.position.x - center.x;
-  const dy = creep.position.y - center.y;
+  const creepCenterOffset = getCreepFootprintCenterOffsetInCells(creep.sizeClass);
+  const dx = creep.position.x + creepCenterOffset - center.x;
+  const dy = creep.position.y + creepCenterOffset - center.y;
   return Math.hypot(dx, dy);
 }
 

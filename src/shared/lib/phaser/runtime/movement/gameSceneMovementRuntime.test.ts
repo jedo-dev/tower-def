@@ -44,7 +44,10 @@ describe('shared/lib/phaser/runtime/movement duel game-over boundary', () => {
     };
     const deps: MovementRuntimeDeps = {
       nowMs: () => 1_000,
-      toCellCenter: (position) => position,
+      writeCellCenter: (position, out) => {
+        out.x = position.x;
+        out.y = position.y;
+      },
       onLivesUpdated: vi.fn(),
       onGameOverUpdated: vi.fn(),
       shouldEndRunOnLivesDepleted: () => false,
@@ -99,7 +102,10 @@ describe('shared/lib/phaser/runtime/movement status effects', () => {
   function createDeps(): MovementRuntimeDeps {
     return {
       nowMs: () => 1_000,
-      toCellCenter: (position) => ({ x: position.x * 100, y: position.y * 100 }),
+      writeCellCenter: (position, out) => {
+        out.x = position.x * 100;
+        out.y = position.y * 100;
+      },
       onLivesUpdated: vi.fn(),
       onGameOverUpdated: vi.fn(),
       shouldEndRunOnLivesDepleted: () => false,

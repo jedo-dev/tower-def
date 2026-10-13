@@ -22,3 +22,7 @@ export { applyDamageToCreep, calculateMitigatedDamage, getEffectiveArmor } from 
 export { filterActiveWaveCreeps } from './model/runtime';
 export { isCreepAlive, isCreepDead, setCreepLifeState } from './model/lifeState';
 export type { ApplyCreepDamageOptions, ApplyCreepDamageResult } from './model/damage';
+export {
+  getCreepFootprintCenter,
+  getCreepFootprintCenterOffsetInCells,
+} from './model/footprintCenter';

@@ -26,7 +26,7 @@ import type {
   WaveRuntimeDependencies,
   WaveRuntimeState,
 } from '../runtime/wave/gameSceneWaveRuntime';
-import { mapUnitToCreepType, toCellCenter } from './gameScene.helpers';
+import { mapUnitToCreepType, toCellCenter, writeCellCenter } from './gameScene.helpers';
 import { resolveSpriteKey } from '../runtime/assets/spriteKeyResolver';
 
 /**
@@ -120,7 +120,7 @@ function createWaveRuntimeDeps(host: GameSceneWiringHost): WaveRuntimeDependenci
 function createPlayerMovementDeps(host: GameSceneWiringHost): MovementRuntimeDeps {
   return {
     nowMs: () => host.scene.time.now,
-    toCellCenter: (position) => toCellCenter(position),
+    writeCellCenter,
     onLivesUpdated: (lives) => {
       host.runState.playerLives = lives;
       host.scene.registry.set('economy.lives', host.getDuelMatchState().player.hp);
@@ -142,7 +142,7 @@ function createPlayerMovementDeps(host: GameSceneWiringHost): MovementRuntimeDep
 function createOpponentMovementDeps(host: GameSceneWiringHost): MovementRuntimeDeps {
   return {
     nowMs: () => host.scene.time.now,
-    toCellCenter: (position) => toCellCenter(position),
+    writeCellCenter,
     onLivesUpdated: () => undefined,
     onGameOverUpdated: () => undefined,
     shouldEndRunOnLivesDepleted: () => false,

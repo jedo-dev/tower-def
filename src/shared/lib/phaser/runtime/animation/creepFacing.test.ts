@@ -118,6 +118,26 @@ describe('applyCreepFacing', () => {
   });
 });
 
+describe('applyCreepFacing on octile routes', () => {
+  it('maps every diagonal step to the side row, mirrored when it heads left', () => {
+    const headings: ReadonlyArray<[number, number, boolean]> = [
+      [1, 1, false],
+      [1, -1, false],
+      [-1, 1, true],
+      [-1, -1, true],
+    ];
+
+    for (const [deltaX, deltaY, isFlipped] of headings) {
+      const creep = createCreep(UNIT_DIRECTIONAL_FRAME_COUNT);
+
+      applyCreepFacing(creep, deltaX, deltaY);
+
+      expect(creep.played.at(-1)).toBe(`${UNIT_SPRITE_KEYS.ORC_GRUNT}.walk.side`);
+      expect(creep.flips.at(-1)).toBe(isFlipped);
+    }
+  });
+});
+
 describe('getCreepDeathAnimationKey', () => {
   it('derives the death key from the sheet the creep uses', () => {
     expect(getCreepDeathAnimationKey(createSprite(16) as never)).toBe(

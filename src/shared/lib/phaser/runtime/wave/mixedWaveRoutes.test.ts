@@ -11,13 +11,13 @@ import {
   moveCreepsAlongPath,
   type MovementRuntimeDeps,
 } from '../movement/gameSceneMovementRuntime';
+import { toCellCenter, writeCellCenter } from '../../scenes/gameScene.helpers';
 import {
   processPendingWaveSpawns,
   type WaveRuntimeDependencies,
   type WaveRuntimeState,
 } from './gameSceneWaveRuntime';
 
-const CELL_SIZE_PX = 16;
 const ENTRANCE = { x: 0, y: 6 };
 const EXIT = { x: 18, y: 6 };
 const WALL_X = 8;
@@ -42,13 +42,6 @@ function createGridWithOneCellGap(): GridModel {
     { width: 1, height: WALL_END_Y - GAP_Y - 1 },
     true,
   );
-}
-
-function toCellCenter(position: GridPosition): { x: number; y: number } {
-  return {
-    x: position.x * CELL_SIZE_PX + CELL_SIZE_PX / 2,
-    y: position.y * CELL_SIZE_PX + CELL_SIZE_PX / 2,
-  };
 }
 
 function createSpriteStub(x: number, y: number): Phaser.GameObjects.Sprite {
@@ -108,7 +101,7 @@ describe('mixed wave on a board with a 1-cell gap', () => {
     } as unknown as WaveRuntimeDependencies;
     const movementDeps: MovementRuntimeDeps = {
       nowMs: () => 0,
-      toCellCenter,
+      writeCellCenter,
       onLivesUpdated: vi.fn(),
       onGameOverUpdated: vi.fn(),
       shouldEndRunOnLivesDepleted: () => false,

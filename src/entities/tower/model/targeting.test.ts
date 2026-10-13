@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_CREEP_COMBAT_TRAITS } from '../../creep';
+import { UnitSizeClass } from '../../../shared/types/content-ids';
 import type { CreepEntity } from '../../creep';
 import { getCreepsInTowerRange, selectTowerTarget } from './targeting';
 import { TOWER_COMBAT_STATS_BY_TYPE, type TowerEntity } from './types';
@@ -30,6 +31,25 @@ function createCreep(overrides?: Partial<CreepEntity>): CreepEntity {
     ...overrides,
   };
 }
+
+describe('tower targeting by footprint centre', () => {
+  it('measures a large creep from its 2x2 centre, not its anchor cell', () => {
+    const tower = createTower();
+    const range = tower.combatStats.range;
+    // Tower centre is (5.5, 5.5); the large creep's centre lands exactly at range.
+    const anchor = { x: 5 - range, y: 5 };
+    const medium = createCreep({ id: 'creep:medium', position: anchor });
+    const large = createCreep({
+      id: 'creep:large',
+      position: anchor,
+      sizeClass: UnitSizeClass.LARGE,
+    });
+
+    const result = getCreepsInTowerRange(tower, [medium, large]);
+
+    expect(result.map((creep) => creep.id)).toEqual(['creep:large']);
+  });
+});
 
 describe('tower targeting', () => {
   it('returns only alive creeps in range', () => {

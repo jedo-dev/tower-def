@@ -153,6 +153,12 @@ export function toCellCenter(position: GridPosition): { x: number; y: number } {
   };
 }
 
+/** Allocation-free `toCellCenter` for per-frame callers: writes into `out`. */
+export function writeCellCenter(position: GridPosition, out: { x: number; y: number }): void {
+  out.x = position.x * GRID_DIMENSIONS.cellSize + GRID_DIMENSIONS.cellSize / 2;
+  out.y = position.y * GRID_DIMENSIONS.cellSize + GRID_DIMENSIONS.cellSize / 2;
+}
+
 export function toGridCellKey(position: GridPosition): string {
   return `${position.x}:${position.y}`;
 }

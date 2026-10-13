@@ -10,6 +10,7 @@ import {
   applyDamageToCreep,
   applyEffectToCreep,
   isCreepDead,
+  getCreepFootprintCenter,
   tickCreepEffects,
   type ApplyEffectInput,
 } from '../../../../../entities/creep';
@@ -226,7 +227,7 @@ function applySplashDamage(
     if (creep.entity.status !== 'alive') {
       return false;
     }
-    const creepCenter = deps.toCellCenter(creep.entity.position);
+    const creepCenter = deps.toCellCenter(getCreepFootprintCenter(creep.entity));
     const towerCenterPx = deps.toCellCenter(towerCenter);
     const distance = Math.hypot(creepCenter.x - towerCenterPx.x, creepCenter.y - towerCenterPx.y);
     return distance <= splashRadiusPx;
@@ -271,13 +272,13 @@ function selectChainTargets(
   let current = from;
 
   for (let bounce = 0; bounce < bounces; bounce += 1) {
-    const currentCenter = deps.toCellCenter(current.entity.position);
+    const currentCenter = deps.toCellCenter(getCreepFootprintCenter(current.entity));
     const rangePx = bounceRangeCells * GRID_DIMENSIONS.cellSize;
 
     const next = battlefield.creeps
       .filter((creep) => creep.entity.status === 'alive' && !visited.has(creep.entity.id))
       .map((creep) => {
-        const center = deps.toCellCenter(creep.entity.position);
+        const center = deps.toCellCenter(getCreepFootprintCenter(creep.entity));
         return {
           creep,
           distance: Math.hypot(center.x - currentCenter.x, center.y - currentCenter.y),
