@@ -7,7 +7,7 @@ import { getUpgradeCost } from '../../tower/model/upgrade';
 import { getRaceRegistry } from '../../race-registry/model/registries';
 import { buildableTowers } from '../../tower/model/config/buildableTowers';
 import { Difficulty } from '../../difficulty/model/types';
-import { createPathProbe, type PathProbe } from '../../../shared/lib/pathfinding/createPathProbe';
+import { createPathProbe, type PathProbe } from './createPathProbe';
 import { TOWER_FOOTPRINT } from '../../../shared/constants/footprint';
 import { withFootprintOccupancy } from '../../../shared/lib/grid/footprint';
 import { createMazeSkeleton, type MazeSkeleton } from './createMazeSkeleton';
@@ -351,10 +351,7 @@ export function planBuildDecision(input: BuildPlannerInput): DecisionOutput {
       break;
     }
 
-    const mazeGainCells = Math.max(
-      0,
-      pathProbe.probeFootprint(build.position, TOWER_FOOTPRINT).length - pathProbe.baseLength,
-    );
+    const mazeGain = Math.max(0, pathProbe.probeFootprint(build.position, TOWER_FOOTPRINT).gain);
 
     actions.push(build);
     plannedBuildPositions.push(build.position);
@@ -366,7 +363,7 @@ export function planBuildDecision(input: BuildPlannerInput): DecisionOutput {
     remainingBudget -= cost;
     buildActionsCount += 1;
     reasoningParts.push(
-      `Building ${build.towerType} at (${build.position.x},${build.position.y}) for ${cost} gold, +${mazeGainCells} path cells`,
+      `Building ${build.towerType} at (${build.position.x},${build.position.y}) for ${cost} gold, +${mazeGain.toFixed(1)} route cost`,
     );
   }
 

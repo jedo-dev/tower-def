@@ -3,7 +3,6 @@ import { SINGLE_CELL_FOOTPRINT } from '../../constants/footprint';
 import type { GridCell, GridModel } from '../../types/grid';
 import { createGridModel } from '../grid/createGridModel';
 import { findPathBfs } from './hasPathBfs';
-import { validateTowerPlacementPath } from './validateTowerPlacementPath';
 
 const ENTRANCE = { x: 0, y: 7 };
 const EXIT = { x: 9, y: 7 };
@@ -48,38 +47,6 @@ describe('pathfinding', () => {
 
     expect(result.found).toBe(false);
     expect(result.path).toHaveLength(0);
-  });
-
-  it('validates tower placement by path availability', () => {
-    const openGrid = createGridModel({
-      entrance: ENTRANCE,
-      exit: EXIT,
-    });
-
-    const isOpenPlacementValid = validateTowerPlacementPath(openGrid, { x: 1, y: 1 });
-    expect(isOpenPlacementValid).toBe(true);
-
-    const corridorGrid = {
-      ...openGrid,
-      cells: openGrid.cells.map((cell) => {
-        if (cell.y === ENTRANCE.y) {
-          return {
-            ...cell,
-            isWalkable: true,
-            isOccupied: false,
-          };
-        }
-
-        return {
-          ...cell,
-          isWalkable: false,
-          isOccupied: true,
-        };
-      }),
-    };
-
-    const isBlockingPlacementValid = validateTowerPlacementPath(corridorGrid, { x: 5, y: 7 });
-    expect(isBlockingPlacementValid).toBe(false);
   });
 
   it('reads each cell a bounded number of times, so BFS stays linear in grid size', () => {

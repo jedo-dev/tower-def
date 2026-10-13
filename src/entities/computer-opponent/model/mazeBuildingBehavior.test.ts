@@ -7,7 +7,7 @@ import {
   withFootprintOccupancy,
 } from '../../../shared/lib/grid/footprint';
 import { createDefaultEdgeEndpoints } from '../../../shared/lib/grid/generateEdgeEndpoints';
-import { createPathProbe } from '../../../shared/lib/pathfinding/createPathProbe';
+import { createPathProbe } from './createPathProbe';
 import { RaceId, TowerTypeId } from '../../../shared/types/content-ids';
 import type { GridModel } from '../../../shared/types/grid';
 import type { GridPosition } from '../../../shared/types/pathfinding';
@@ -96,10 +96,10 @@ function playBuildRounds(rounds: number, difficulty: Difficulty): FieldState {
 
 describe('entities/computer-opponent/mazeBuildingBehavior', () => {
   it('turns a straight corridor into a long detour', () => {
-    const openFieldLength = createPathProbe(createField().grid).baseLength;
+    const openFieldLength = createPathProbe(createField().grid).baseCost;
 
     const field = playBuildRounds(20, Difficulty.HARD);
-    const mazedLength = createPathProbe(field.grid).baseLength;
+    const mazedLength = createPathProbe(field.grid).baseCost;
 
     expect(field.towers.length).toBeGreaterThan(20);
     expect(mazedLength).toBeGreaterThan(openFieldLength * 3);
@@ -155,8 +155,8 @@ describe('entities/computer-opponent/mazeBuildingBehavior', () => {
     const nightmare = playBuildRounds(20, Difficulty.NIGHTMARE);
 
     expect(nightmare.towers.length).toBeGreaterThan(easy.towers.length);
-    expect(createPathProbe(nightmare.grid).baseLength).toBeGreaterThan(
-      createPathProbe(easy.grid).baseLength,
+    expect(createPathProbe(nightmare.grid).baseCost).toBeGreaterThan(
+      createPathProbe(easy.grid).baseCost,
     );
   });
 

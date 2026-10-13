@@ -5,12 +5,13 @@ import {
   isFootprintInBounds,
   withFootprintOccupancy,
 } from '../grid/footprint';
-import { hasPathBfs } from './hasPathBfs';
+import { findRoutesBySizeClass } from './findRouteForSizeClass';
 
 /**
- * True when creeps can still walk from the entrance to the exit with every
- * cell of the footprint walled off. Footprints off the grid or over the route
- * anchors never pass.
+ * True when both creep size classes can still walk from the entrance anchor
+ * to the exit anchor with every cell of the footprint walled off: the small
+ * (1x1) route and the large (2x2) route, octile movement without corner
+ * cutting. Footprints off the grid or over the route anchors never pass.
  */
 export function validateFootprintPlacementPath(
   grid: GridModel,
@@ -28,10 +29,16 @@ export function validateFootprintPlacementPath(
     return false;
   }
 
-  return hasPathBfs(withFootprintOccupancy(grid, anchor, footprint, true));
+  const routes = findRoutesBySizeClass(
+    withFootprintOccupancy(grid, anchor, footprint, true),
+    grid.entrance,
+    grid.exit,
+  );
+
+  return routes.small !== null && routes.large !== null;
 }
 
-/** Build rule: every covered cell is free and the route survives the new block. */
+/** Build rule: every covered cell is free and both size-class routes survive the new block. */
 export function canPlaceFootprint(
   grid: GridModel,
   anchor: GridPoint,

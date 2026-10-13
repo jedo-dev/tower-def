@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createGridModel } from '../../../shared/lib/grid/createGridModel';
-import { createPathProbe } from '../../../shared/lib/pathfinding/createPathProbe';
+import { createPathProbe } from './createPathProbe';
 import { findPathBfs } from '../../../shared/lib/pathfinding/hasPathBfs';
 import { createMazeSkeleton } from './createMazeSkeleton';
 import { TowerTypeId } from '../../../shared/types/content-ids';
@@ -348,6 +348,56 @@ describe('entities/computer-opponent/scoreTowerPlacement', () => {
         });
 
         expect(result.isValid).toBe(false);
+        expect(result.invalidReason).toBe('blocks_path');
+      });
+
+      it('rejects a wall that leaves only a one-cell gap, with or without a probe', () => {
+        const grid = createTestGrid();
+        // Columns 4..5 walled except rows 6..8; a block at (4, 6) leaves row 8 alone.
+        const walled = {
+          ...grid,
+          cells: grid.cells.map((cell) =>
+            (cell.x === 4 || cell.x === 5) && (cell.y < 6 || cell.y > 8)
+              ? { ...cell, isOccupied: true, isWalkable: false }
+              : cell,
+          ),
+        };
+        const input = {
+          grid: walled,
+          position: { x: 4, y: 6 },
+          towerType: TowerTypeId.SINGLE,
+          existingTowers: [],
+          path: findPathBfs(walled).path,
+        };
+
+        const probed = scoreTowerPlacement({ ...input, pathProbe: createPathProbe(walled) });
+        const unprobed = scoreTowerPlacement(input);
+
+        expect(probed.invalidReason).toBe('blocks_path');
+        expect(unprobed.invalidReason).toBe('blocks_path');
+      });
+
+      it('rejects a wall that seals the field by touching another wall at a corner', () => {
+        const grid = createTestGrid();
+        const walled = {
+          ...grid,
+          cells: grid.cells.map((cell) =>
+            ((cell.x === 4 || cell.x === 5) && cell.y <= 4) ||
+            ((cell.x === 6 || cell.x === 7) && cell.y >= 7)
+              ? { ...cell, isOccupied: true, isWalkable: false }
+              : cell,
+          ),
+        };
+
+        const result = scoreTowerPlacement({
+          grid: walled,
+          position: { x: 4, y: 5 },
+          towerType: TowerTypeId.SINGLE,
+          existingTowers: [],
+          path: findPathBfs(walled).path,
+          pathProbe: createPathProbe(walled),
+        });
+
         expect(result.invalidReason).toBe('blocks_path');
       });
 

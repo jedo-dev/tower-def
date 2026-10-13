@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { TOWER_FOOTPRINT } from '../../../shared/constants/footprint';
 import { createGridModel } from '../../../shared/lib/grid/createGridModel';
 import { doFootprintsOverlap, withFootprintOccupancy } from '../../../shared/lib/grid/footprint';
-import { createPathProbe } from '../../../shared/lib/pathfinding/createPathProbe';
+import { createPathProbe } from './createPathProbe';
 import type { GridModel } from '../../../shared/types/grid';
 import type { GridPosition } from '../../../shared/types/pathfinding';
 import { createMazeSkeleton } from './createMazeSkeleton';
@@ -87,8 +87,8 @@ describe('entities/computer-opponent/createMazeSkeleton', () => {
     });
 
     it('multiplies the route once the whole comb is built', () => {
-      const baseLength = createPathProbe(grid).baseLength;
-      const built = createPathProbe(buildAll(grid, skeleton.anchors)).baseLength;
+      const baseLength = createPathProbe(grid).baseCost;
+      const built = createPathProbe(buildAll(grid, skeleton.anchors)).baseCost;
 
       expect(built).toBeGreaterThan(baseLength * 4);
     });
@@ -105,8 +105,8 @@ describe('entities/computer-opponent/createMazeSkeleton', () => {
     });
 
     it('multiplies the route once the whole comb is built', () => {
-      const baseLength = createPathProbe(grid).baseLength;
-      const built = createPathProbe(buildAll(grid, skeleton.anchors)).baseLength;
+      const baseLength = createPathProbe(grid).baseCost;
+      const built = createPathProbe(buildAll(grid, skeleton.anchors)).baseCost;
 
       expect(built).toBeGreaterThan(baseLength * 4);
     });
