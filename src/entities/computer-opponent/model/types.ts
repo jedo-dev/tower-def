@@ -3,6 +3,7 @@ import type { TowerTypeId } from '../../../shared/types/content-ids';
 import type { GridPosition } from '../../../shared/types/pathfinding';
 import type { Difficulty } from '../../difficulty/model/types';
 import type { UnitId } from '../../unit/model/types';
+import type { DefenceAssessment } from './threat-budget/splitThreatBudget';
 
 export const StrategyIntent = {
   DEFEND: 'defend',
@@ -68,6 +69,12 @@ export type DecisionContext = {
   intent?: StrategyIntent;
   /** Creeps this side already queued for the coming wave; none when omitted. */
   queuedSends?: readonly UnitId[];
+  /**
+   * The expected next wave against this side's defence. When present, gold is
+   * split between defence and sends by threat; omitted, the planners fall
+   * back to the difficulty's fixed spend ratios.
+   */
+  defence?: DefenceAssessment;
 };
 
 export type BuildAction = {

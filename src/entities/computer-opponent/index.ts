@@ -56,6 +56,7 @@ export type {
   ApplyComputerSendStrategyResult,
 } from './model/applyComputerSendStrategy';
 export type { ComputerDifficultyPreset } from './model/difficultyPresets';
+export type { DefenceAssessment } from './model/threat-budget';
 
 export {
   computeTowerRouteCoverage,

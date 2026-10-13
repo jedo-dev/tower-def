@@ -67,6 +67,18 @@ export function getTowerCostForType(towerType: TowerTypeId, raceId: RaceId): num
   return null;
 }
 
+/** Every tower type the race can build, in registry order, without repeats. */
+export function getRaceTowerTypes(raceId: RaceId): TowerTypeId[] {
+  const types: TowerTypeId[] = [];
+  for (const buildableId of getRaceRegistry(raceId).buildableTowerIds) {
+    const config = buildableTowers.find((tower) => tower.id === buildableId);
+    if (config && !types.includes(config.towerType)) {
+      types.push(config.towerType);
+    }
+  }
+  return types;
+}
+
 /** Price of the cheapest tower the race can build at all; null when it builds none. */
 export function getCheapestTowerCost(raceId: RaceId): number | null {
   const registry = getRaceRegistry(raceId);

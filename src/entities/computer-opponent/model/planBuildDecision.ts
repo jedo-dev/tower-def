@@ -6,6 +6,7 @@ import {
   getCheapestTowerCost,
   SPEND_BUDGET_BY_DIFFICULTY,
 } from './buildSpendBudget';
+import { computeContextThreatSplit } from './contextThreatSplit';
 import { buildByScore, investInPlan, type BuildRoundState } from './buildRoundActions';
 import {
   MAZE_PLAN_HORIZON_ROUNDS,
@@ -91,6 +92,16 @@ function refreshMazePlan(input: BuildPlannerInput): MazePlanUpdate {
   });
 }
 
+/**
+ * What this build phase may spend: by threat when the context carries a
+ * defence assessment (all it needs when threatened, easing off once the
+ * margin is comfortable), the difficulty's fixed spend ratio otherwise.
+ */
+function computeBuildBudget(context: DecisionContext): number {
+  const split = computeContextThreatSplit(context);
+  return split ? split.buildBudget : computeSpendBudget(context.gold, context.difficulty);
+}
+
 function createSaveDecision(reasoning: string): DecisionOutput {
   return {
     intent: StrategyIntent.SAVE_GOLD,
@@ -127,7 +138,7 @@ export function planBuildDecision(input: BuildPlannerInput): BuildDecisionOutput
   const planUpdate = refreshMazePlan(input);
   const { plan, unbuilt } = planUpdate;
   const intent = selectIntent(context, unbuilt.length);
-  const budget = computeSpendBudget(context.gold, context.difficulty);
+  const budget = computeBuildBudget(context);
 
   if (budget <= 0) {
     const output = createSaveDecision('No budget available for spending');

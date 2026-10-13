@@ -1,6 +1,5 @@
 import type { RaceId } from '../../../shared/types/content-ids';
-import { DAMAGE_MITIGATION } from '../../../shared/constants/damage';
-import type { UnitConfig, UnitId, UnitTier } from '../../unit/model/types';
+import type { UnitId, UnitTier } from '../../unit/model/types';
 import { getSendCostByTier, getIncomeBonusByTier } from '../../duel-match/model/sendEconomy';
 import {
   countRemainingSendsOfUnit,
@@ -8,9 +7,12 @@ import {
 } from '../../duel-match/model/sendLimits';
 import { getRaceRegistry } from '../../race-registry/model/registries';
 import { resolveUnitConfigById } from '../../unit/model/registry';
-import { Difficulty } from '../../difficulty/model/types';
 import type { DecisionContext, SendCreepAction } from './types';
 import { createSendDecisionOutput } from './decisionDebugSnapshots';
+import { SEND_TUNING_BY_DIFFICULTY, type SendTuning } from './sendTuning';
+import { computeContextThreatSplit } from './contextThreatSplit';
+import { computeEffectiveHealth } from './threat-budget/effectiveHealth';
+import type { ThreatBudgetSplit } from './threat-budget/splitThreatBudget';
 import type { ComputerDecisionDebugRecorder } from './decisionDebugSnapshots';
 
 export type SendPlannerInput = {
@@ -23,47 +25,6 @@ export type SendPlannerOutput = {
   totalCost: number;
   totalIncomeBonus: number;
   reasoning: string;
-};
-
-type SendTuning = {
-  maxSendRatioPerRound: number;
-  /**
-   * The preset's own cap on creeps per round, so a gold pile does not turn into
-   * a single flood. It may be stricter than the shared send limits every side
-   * plays by, never looser: those are enforced on top of it.
-   */
-  maxSendsPerRound: number;
-  /** Opening rounds spent entirely on income, before any pressure. */
-  economyRounds: number;
-  /** Share of the budget that goes to pressure once the opening is over. */
-  basePressureWeight: number;
-};
-
-const SEND_TUNING_BY_DIFFICULTY: Record<Difficulty, SendTuning> = {
-  [Difficulty.EASY]: {
-    maxSendRatioPerRound: 0.2,
-    maxSendsPerRound: 3,
-    economyRounds: 5,
-    basePressureWeight: 0.2,
-  },
-  [Difficulty.NORMAL]: {
-    maxSendRatioPerRound: 0.35,
-    maxSendsPerRound: 5,
-    economyRounds: 4,
-    basePressureWeight: 0.4,
-  },
-  [Difficulty.HARD]: {
-    maxSendRatioPerRound: 0.5,
-    maxSendsPerRound: 7,
-    economyRounds: 3,
-    basePressureWeight: 0.6,
-  },
-  [Difficulty.NIGHTMARE]: {
-    maxSendRatioPerRound: 0.7,
-    maxSendsPerRound: 9,
-    economyRounds: 2,
-    basePressureWeight: 0.8,
-  },
 };
 
 /** Extra pressure share per round once the economy opening is over. */
@@ -88,16 +49,6 @@ type SendCandidate = {
 
 function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
-}
-
-/**
- * Health scaled by what armor is worth against the mitigation curve the combat
- * model actually uses, so the opponent values a tanky creep the same way the
- * battlefield will.
- */
-function computeEffectiveHealth(unit: UnitConfig): number {
-  const armorFactor = Math.max(0, unit.armor) * DAMAGE_MITIGATION.armorDamageReductionPerPoint;
-  return unit.health * (1 + armorFactor);
 }
 
 function createSendCandidates(raceId: RaceId): SendCandidate[] {
@@ -178,8 +129,21 @@ function computePressureWeight(context: DecisionContext, tuning: SendTuning): nu
   return clamp(tuning.basePressureWeight + ramp + incomeLeadBias + desperationBoost, 0, 1);
 }
 
-function computeSendBudget(gold: number, difficulty: Difficulty): number {
-  return Math.floor(gold * SEND_TUNING_BY_DIFFICULTY[difficulty].maxSendRatioPerRound);
+function computeSendBudget(context: DecisionContext, split: ThreatBudgetSplit | null): number {
+  if (split) {
+    return split.sendBudget;
+  }
+  return Math.floor(
+    context.gold * SEND_TUNING_BY_DIFFICULTY[context.difficulty].maxSendRatioPerRound,
+  );
+}
+
+function describeMargin(split: ThreatBudgetSplit | null): string {
+  if (!split) {
+    return '';
+  }
+  const margin = Number.isFinite(split.margin) ? split.margin.toFixed(2) : 'unthreatened';
+  return `, defence margin ${margin}`;
 }
 
 function shouldSendCreeps(context: DecisionContext): boolean {
@@ -293,14 +257,17 @@ export function planSendCreeps(input: SendPlannerInput): SendPlannerOutput {
   }
 
   const tuning = SEND_TUNING_BY_DIFFICULTY[context.difficulty];
-  const budget = computeSendBudget(context.gold, context.difficulty);
+  const split = computeContextThreatSplit(context);
+  const budget = computeSendBudget(context, split);
 
   if (budget <= 0) {
     return finish({
       actions: [],
       totalCost: 0,
       totalIncomeBonus: 0,
-      reasoning: 'No budget available for sending creeps',
+      reasoning: split
+        ? `Defence needs ${split.defenceShortfallGold} gold${describeMargin(split)}, no gold for sends`
+        : 'No budget available for sending creeps',
     });
   }
 
@@ -331,6 +298,6 @@ export function planSendCreeps(input: SendPlannerInput): SendPlannerOutput {
     actions,
     totalCost,
     totalIncomeBonus,
-    reasoning: `Sending ${actions.length} creeps at ${pressurePercent}% pressure split (${totalCost} gold, +${totalIncomeBonus} income)`,
+    reasoning: `Sending ${actions.length} creeps at ${pressurePercent}% pressure split (${totalCost} gold, +${totalIncomeBonus} income${describeMargin(split)})`,
   });
 }
