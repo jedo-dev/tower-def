@@ -1,5 +1,6 @@
 export { simulateMazeBuildRounds } from './model/simulateMazeBuildRounds';
 export type {
+  MazeRouteCost,
   MazeRoundReport,
   MazeSimulationConfig,
   MazeSimulationResult,

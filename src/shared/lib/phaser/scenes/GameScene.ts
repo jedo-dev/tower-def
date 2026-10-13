@@ -3,6 +3,7 @@ import Phaser from 'phaser';
 import { DEFAULT_BUILDER_FACTION } from '../../../../entities/builder-faction';
 import {
   createComputerDecisionDebugRecorder,
+  createComputerMazePlanMemory,
   type LeakHistoryEntry,
 } from '../../../../entities/computer-opponent';
 import {
@@ -211,6 +212,7 @@ export class GameScene extends Phaser.Scene {
   );
   private opponentLeakHistory: LeakHistoryEntry[] = [];
   private readonly computerDecisionRecorder = createComputerDecisionDebugRecorder();
+  private readonly computerMazePlanMemory = createComputerMazePlanMemory();
   private matchOutcomeStatus: MatchOutcomeStatus = 'active';
   private matchWinner: HudFactionType | null = null;
   private activeBattlefieldView: BattlefieldView = 'player';
@@ -720,6 +722,7 @@ export class GameScene extends Phaser.Scene {
     this.registry.set('economy.gold', this.playerGold);
     this.opponentLeakHistory = [];
     this.computerDecisionRecorder.clear();
+    this.computerMazePlanMemory.plan = null;
   }
 
   private updatePerformanceTelemetry(deltaMs: number): void {
@@ -842,6 +845,7 @@ export class GameScene extends Phaser.Scene {
   private resetRunToInitialState(): void {
     this.opponentLeakHistory = [];
     this.computerDecisionRecorder.clear();
+    this.computerMazePlanMemory.plan = null;
     destroyBattlefieldCreeps(this.playerField);
     destroyBattlefieldRenderState(this.opponentField);
     destroyBattlefieldProjectiles(this.playerField);
@@ -979,6 +983,7 @@ export class GameScene extends Phaser.Scene {
     this.duelMatchState = applyComputerBuildPhaseStrategies(this.duelMatchState, {
       difficulty: this.selectedDifficulty,
       leakHistory: this.opponentLeakHistory,
+      mazePlanMemory: this.computerMazePlanMemory,
       debugRecorder: this.computerDecisionRecorder,
       setRegistryValue: (key, value) => this.registry.set(key, value),
     });

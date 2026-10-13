@@ -7,8 +7,8 @@ export {
   DEFENSE_PLACEMENT_WEIGHTS,
   MAZE_PLACEMENT_WEIGHTS,
 } from './model/scoreTowerPlacement';
-export { createMazeSkeleton } from './model/createMazeSkeleton';
 export { planBuildDecision } from './model/planBuildDecision';
+export { createComputerMazePlanMemory } from './model/computerMazePlanMemory';
 export { planSendCreeps } from './model/planSendCreeps';
 export { applyComputerBuildStrategy } from './model/applyComputerBuildStrategy';
 export { applyComputerSendStrategy } from './model/applyComputerSendStrategy';
@@ -43,8 +43,9 @@ export type {
 export type { ComputerDecisionDebugRecorder } from './model/decisionDebugSnapshots';
 
 export type { PlacementScore, PlacementWeights } from './model/scoreTowerPlacement';
-export type { MazeSkeleton } from './model/createMazeSkeleton';
-export type { BuildPlannerInput } from './model/planBuildDecision';
+export type { MazePlan, MazePlanPriority } from './model/maze-planning';
+export type { ComputerMazePlanMemory } from './model/computerMazePlanMemory';
+export type { BuildDecisionOutput, BuildPlannerInput } from './model/planBuildDecision';
 export type {
   ApplyComputerBuildStrategyInput,
   ApplyComputerBuildStrategyResult,
