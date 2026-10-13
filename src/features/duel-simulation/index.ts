@@ -15,3 +15,25 @@ export type { DuelSimulationConfig, DuelSimulationSide } from './model/duelSimul
 export { formatDuelRoundLine, formatDuelSimulation } from './model/formatDuelSimulation';
 export { DUEL_SIMULATION_USAGE, parseDuelSimulationArgs } from './model/parseDuelSimulationArgs';
 export type { DuelSimulationArgsResult } from './model/parseDuelSimulationArgs';
+export {
+  createEqualMatchups,
+  createSeedRange,
+  DEFAULT_DUEL_BATCH_CONFIG,
+  DuelBatchDefaults,
+  median,
+  runDuelBatch,
+  summarizeBatch,
+  summarizeDuel,
+} from './model/duelBatch';
+export type {
+  CheckpointTowerStats,
+  DuelBatchConfig,
+  DuelBatchMatchup,
+  DuelBatchMatchupResult,
+  DuelBatchResult,
+  DuelBatchStats,
+  DuelMatchSummary,
+} from './model/duelBatch';
+export { formatDuelBatch } from './model/formatDuelBatch';
+export { DUEL_BATCH_USAGE, parseDuelBatchArgs } from './model/parseDuelBatchArgs';
+export type { DuelBatchArgsResult } from './model/parseDuelBatchArgs';
