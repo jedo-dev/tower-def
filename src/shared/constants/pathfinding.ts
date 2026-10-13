@@ -17,3 +17,6 @@ export const OCTILE_NEIGHBOR_DY: readonly number[] = [0, 0, 1, -1, 1, 1, -1, -1]
  * noise from summed diagonal costs cannot break ties between equal paths.
  */
 export const OCTILE_PRIORITY_KEY_SCALE = 1e6;
+
+/** Clearance values are stored in a Uint8Array, so larger squares are capped. */
+export const MAX_CLEARANCE = 255;
