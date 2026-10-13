@@ -154,8 +154,6 @@ export const CREEP_VISUAL_SIZE_IN_CELLS_BY_SIZE_CLASS: Readonly<Record<UnitSizeC
   [UnitSizeClass.MEDIUM]: 1.6,
   [UnitSizeClass.LARGE]: 2.4,
 };
-/** Size used when a creep's unit cannot be resolved (opponent snapshots). */
-export const CREEP_FALLBACK_SIZE_CLASS: UnitSizeClass = UnitSizeClass.SMALL;
 /** Status pips float this far above the top edge of the creep sprite. */
 export const CREEP_EFFECT_PIP_GAP_PX = 2;
 export const TERRAIN_BASE_TILE_ALPHA = 0.72;

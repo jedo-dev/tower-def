@@ -11,7 +11,6 @@ import {
   createInitialDuelMatchState,
   reconcileBattlefieldsForNextRound,
   refreshOpponentRoutesForWaveStart,
-  routeQueuedSendsToBattlefields,
   startRound,
   type DuelMatchState,
 } from '../../../../entities/duel-match';
@@ -92,10 +91,7 @@ import {
   trySellTowerAtHoveredCell,
   type TowerCommandDeps,
 } from '../runtime/build/gameSceneTowerCommands';
-import {
-  addBaselineWaveToOpponentBattlefield,
-  applyComputerBuildPhaseStrategies,
-} from '../runtime/duel/gameSceneComputerStrategy';
+import { applyComputerBuildPhaseStrategies } from '../runtime/duel/gameSceneComputerStrategy';
 import {
   handleSendCreepCommand,
   type SendCreepCommandDeps,
@@ -150,13 +146,19 @@ import {
   applyWaveCompletionRewardIfResolved as applyWaveCompletionRewardIfResolvedRuntime,
   createPlayerWaveRuntimeState,
   initializeWaveRuntime as initializeWaveRuntimeModule,
-  processPendingWaveSpawns as processPendingWaveSpawnsRuntime,
   resetRunToInitialState as resetRunToInitialStateRuntime,
   spawnWaveCreeps as spawnWaveCreepsRuntime,
   tryRestartRun as tryRestartRunRuntime,
   tryStartNextWave as tryStartNextWaveRuntime,
   updateAutoWaveCountdown as updateAutoWaveCountdownRuntime,
 } from '../runtime/wave/gameSceneWaveRuntime';
+import {
+  clearFieldWaveSchedule,
+  createOpponentFieldWaveState,
+  processPendingWaveSpawns,
+  resolveWaveSpawnTiming,
+  scheduleOpponentFieldWave,
+} from '../runtime/wave/fieldWaveSpawns';
 import {
   createSharedBaselineWaveSource,
   resolveBaselineWaveSeed,
@@ -224,6 +226,8 @@ export class GameScene extends Phaser.Scene {
   // Long-lived state owned by the wave/movement runtime modules; the player
   // creep list is shared with playerField (see createPlayerWaveRuntimeState).
   private readonly runState = createPlayerWaveRuntimeState(this.playerField);
+  // The computer field's spawn schedule; its creep list is opponentField's.
+  private readonly opponentWave = createOpponentFieldWaveState(this.opponentField);
   private readonly teardownCallbacks: Array<() => void> = [];
   private selectedTowerType: TowerTypeId | null = null;
   private selectedBuilderFactionId = DEFAULT_BUILDER_FACTION;
@@ -433,7 +437,8 @@ export class GameScene extends Phaser.Scene {
       return;
     }
 
-    processPendingWaveSpawnsRuntime(this.runState, this.wiring.waveRuntimeDeps, _time);
+    processPendingWaveSpawns(this.runState, this.wiring.waveRuntimeDeps, _time);
+    processPendingWaveSpawns(this.opponentWave, this.wiring.waveRuntimeDeps, _time);
     moveBattlefieldCreeps(this.wiring.playerBattlefieldContext, MOVEMENT_RUNTIME_CONFIG, delta);
     moveBattlefieldCreeps(this.wiring.opponentBattlefieldContext, MOVEMENT_RUNTIME_CONFIG, delta);
     updateBattlefieldTowerCombat(
@@ -577,6 +582,7 @@ export class GameScene extends Phaser.Scene {
     );
     destroyBattlefieldTowers(this.playerField);
     destroyBattlefieldRenderState(this.opponentField);
+    clearFieldWaveSchedule(this.opponentWave);
   }
 
   private ensureBaseAmbientPlaying(): void {
@@ -926,6 +932,7 @@ export class GameScene extends Phaser.Scene {
     this.computerMazePlanMemory.plan = null;
     destroyBattlefieldCreeps(this.playerField);
     destroyBattlefieldRenderState(this.opponentField);
+    clearFieldWaveSchedule(this.opponentWave);
     destroyBattlefieldProjectiles(this.playerField);
     destroyBattlefieldImpactEffects(this.playerField);
     destroyBattlefieldTowers(this.playerField);
@@ -1068,21 +1075,9 @@ export class GameScene extends Phaser.Scene {
       setRegistryValue: (key, value) => this.registry.set(key, value),
     });
     this.duelMatchState = refreshOpponentRoutesForWaveStart(this.duelMatchState);
-    this.duelMatchState = routeQueuedSendsToBattlefields(this.duelMatchState);
     this.duelMatchState = reconcileBattlefieldsForNextRound(this.duelMatchState);
-    // One baseline per round, played on both fields.
-    const baselineUnits = this.baselineWaves.rollNextWave(
-      this.runState.currentWaveNumber,
-      this.getSelectedFactionUnits(),
-    );
-    this.duelMatchState = addBaselineWaveToOpponentBattlefield(this.duelMatchState, baselineUnits);
     this.syncOpponentBattlefieldRenderStateFromDuel();
-    spawnWaveCreepsRuntime(
-      this.runState,
-      WAVE_RUNTIME_CONFIG,
-      this.wiring.waveRuntimeDeps,
-      baselineUnits,
-    );
+    this.scheduleWaveOnBothFields();
     // Queues have now been routed onto battlefields and spawned as creeps.
     this.duelMatchState = resetSendQueuesForWaveStart(
       this.duelMatchState,
@@ -1103,6 +1098,35 @@ export class GameScene extends Phaser.Scene {
     this.registry.set('wave.number', this.runState.currentWaveNumber);
     this.renderVisibleBattlefield();
     this.publishHudSnapshot();
+  }
+
+  /**
+   * Both fields get the round's one shared baseline plus the other side's
+   * sends, released on the same timing from this frame.
+   */
+  private scheduleWaveOnBothFields(): void {
+    const waveNumber = this.runState.currentWaveNumber;
+    const baselineUnits = this.baselineWaves.rollNextWave(
+      waveNumber,
+      this.getSelectedFactionUnits(),
+    );
+    spawnWaveCreepsRuntime(
+      this.runState,
+      WAVE_RUNTIME_CONFIG,
+      this.wiring.waveRuntimeDeps,
+      baselineUnits,
+    );
+    scheduleOpponentFieldWave(this.opponentWave, {
+      routes: this.duelMatchState.opponent.battlefield.routes,
+      waveNumber,
+      baselineUnits,
+      sentUnits: this.duelMatchState.player.sendQueue.map((unitId) =>
+        resolveUnitConfigById(unitId),
+      ),
+      timing: resolveWaveSpawnTiming(this.time.now, WAVE_RUNTIME_CONFIG),
+    });
+    // The duel state mirrors the field; the old wave's creeps are gone.
+    this.syncOpponentDuelCreepsFromField();
   }
 
   private renderVisibleBattlefield(): void {
@@ -1239,6 +1263,7 @@ export class GameScene extends Phaser.Scene {
     clearGridLabelsRuntime(this.gridRendererState);
     this.runState.activeCreepRoutes = EMPTY_WAVE_ROUTES;
     this.runState.pendingWaveSpawns = [];
+    clearFieldWaveSchedule(this.opponentWave);
     this.gridModel = null;
     this.runState.nextWaveStartsAtMs = null;
     this.runState.restartScheduledAtMs = null;

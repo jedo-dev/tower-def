@@ -7,11 +7,11 @@ import { RaceId, UnitMoveType, UnitSizeClass } from '../../../../types/content-i
 import { getCreepVisualMetrics } from '../creep/creepVisualMetrics';
 import { createInitialWavePhaseState } from '../../../../../features/wave-phase';
 import {
-  processPendingWaveSpawns,
   spawnWaveCreeps,
   type WaveRuntimeDependencies,
   type WaveRuntimeState,
 } from './gameSceneWaveRuntime';
+import { processPendingWaveSpawns } from './fieldWaveSpawns';
 
 function createSpriteStub(): Phaser.GameObjects.Sprite {
   return {

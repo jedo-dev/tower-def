@@ -16,20 +16,17 @@ import {
   calculateWaveRoutes,
   EMPTY_WAVE_ROUTES,
   hasWaveRoute,
-  selectWaveRoute,
   type WaveRoutes,
 } from '../../../../../entities/wave';
 import type { UnitConfig } from '../../../../../entities/unit';
 import { ECONOMY_BALANCE } from '../../../../constants/economy';
-import { CREEP_RENDER_DEPTH } from '../../scenes/gameScene.constants';
-import { getCreepVisualMetrics } from '../creep/creepVisualMetrics';
 import type { GridModel } from '../../../../types/grid';
 import type { GridPosition } from '../../../../types/pathfinding';
 import type { SoundId } from '../../sound/audio.types';
 import type { CreepRenderState, PendingWaveSpawn } from '../../scenes/gameScene.types';
 import { destroyCreepRenderState } from '../combat/creepEffectVisuals';
-import { isDirectionalCreepSprite } from '../animation/creepFacing';
-import { createWaveCreepEntity, scheduleWaveSpawns, takeReadyWaveSpawns } from './waveSpawnCore';
+import { scheduleWaveSpawns } from './waveSpawnCore';
+import { resolveWaveSpawnTiming } from './fieldWaveSpawns';
 
 export type WaveRuntimeState = {
   activeCreepRoutes: WaveRoutes;
@@ -236,62 +233,10 @@ export function spawnWaveCreeps(
   // Extra units on the player's field are the computer's sends.
   const additionalUnits = deps.getAdditionalWaveUnits(state.currentWaveNumber);
 
-  state.pendingWaveSpawns = scheduleWaveSpawns(baselineUnits, additionalUnits, 'opponent', {
-    firstSpawnAtMs: deps.nowMs() + config.waveFirstSpawnDelayMs,
-    spawnIntervalMs: config.waveSpawnIntervalMs,
-  });
-}
-
-export function processPendingWaveSpawns(
-  state: WaveRuntimeState,
-  deps: WaveRuntimeDependencies,
-  nowMs: number,
-): void {
-  if (state.pendingWaveSpawns.length === 0 || !hasWaveRoute(state.activeCreepRoutes)) return;
-
-  const { ready, pending } = takeReadyWaveSpawns(state.pendingWaveSpawns, nowMs);
-  state.pendingWaveSpawns = pending;
-
-  for (const spawn of ready) {
-    const route = selectWaveRoute(state.activeCreepRoutes, spawn.unit.sizeClass);
-    const startPoint = deps.toCellCenter(route[0]);
-    const waveCreep = createWaveCreepEntity(
-      spawn,
-      state.currentWaveNumber,
-      route,
-      deps.getCreepTypeFromUnit(spawn.unit),
-    );
-
-    const spriteKey = deps.getSpriteKeyByUnit(spawn.unit);
-    const animationKey = deps.getAnimationKeyByUnit(spawn.unit);
-    const visualMetrics = getCreepVisualMetrics(spawn.unit.sizeClass);
-    const footprintCenterOffsetPx = visualMetrics.footprintCenterOffsetPx;
-    const sprite = deps.createCreepSprite(
-      startPoint.x + footprintCenterOffsetPx,
-      startPoint.y + footprintCenterOffsetPx,
-      spriteKey,
-      animationKey,
-    );
-    sprite.setDisplaySize(visualMetrics.displaySizePx, visualMetrics.displaySizePx);
-    sprite.setDepth(CREEP_RENDER_DEPTH);
-    const baseTint = deps.getCreepTintByUnit?.(spawn.unit) ?? 0xffffff;
-    sprite.setTint(baseTint);
-    sprite.play(animationKey);
-
-    // The sheet decides what the creep can do: four rows mean it can turn and die
-    // on screen, a legacy strip keeps the rotate-and-fade behaviour.
-    const isDirectional = isDirectionalCreepSprite(sprite);
-
-    state.activeCreeps.push({
-      entity: waveCreep,
-      sprite,
-      hitFlashRemainingMs: 0,
-      deathFadeRemainingMs: 0,
-      footprintCenterOffsetPx,
-      baseTint,
-      isDirectional,
-      facing: isDirectional ? 'side' : undefined,
-      facingFlipped: false,
-    });
-  }
+  state.pendingWaveSpawns = scheduleWaveSpawns(
+    baselineUnits,
+    additionalUnits,
+    'opponent',
+    resolveWaveSpawnTiming(deps.nowMs(), config),
+  );
 }

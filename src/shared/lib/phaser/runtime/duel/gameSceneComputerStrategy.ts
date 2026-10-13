@@ -4,13 +4,7 @@ import {
   type LeakHistoryEntry,
 } from '../../../../../entities/computer-opponent';
 import type { Difficulty } from '../../../../../entities/difficulty';
-import {
-  addCreeps,
-  type AddCreepEntry,
-  type DuelMatchState,
-} from '../../../../../entities/duel-match';
-import type { UnitConfig } from '../../../../../entities/unit';
-import { CreepTypeId } from '../../../../types/content-ids';
+import type { DuelMatchState } from '../../../../../entities/duel-match';
 import { runComputerBuildPhase } from './computerBuildPhase';
 
 export type ComputerBuildPhaseDeps = {
@@ -57,38 +51,4 @@ export function applyComputerBuildPhaseStrategies(
   }
 
   return nextState;
-}
-
-/**
- * Adds the round's shared baseline wave (the same units the player's field
- * gets) to the opponent battlefield.
- */
-export function addBaselineWaveToOpponentBattlefield(
-  state: DuelMatchState,
-  baselineUnits: readonly UnitConfig[],
-): DuelMatchState {
-  if (baselineUnits.length === 0) {
-    return state;
-  }
-
-  const entrance = state.opponent.battlefield.path[0] ?? state.opponent.battlefield.grid.entrance;
-  const baselineEntries: AddCreepEntry[] = baselineUnits.map((unit, index) => ({
-    id: `baseline:opponent:${state.round + 1}:${index}:${unit.id}`,
-    typeId: CreepTypeId.BASIC,
-    hp: unit.health,
-    speed: unit.speed,
-    armor: unit.armor,
-    armorType: unit.armorType,
-    moveType: unit.moveType,
-    sizeClass: unit.sizeClass,
-    entrance,
-  }));
-
-  return {
-    ...state,
-    opponent: {
-      ...state.opponent,
-      battlefield: addCreeps(state.opponent.battlefield, baselineEntries),
-    },
-  };
 }

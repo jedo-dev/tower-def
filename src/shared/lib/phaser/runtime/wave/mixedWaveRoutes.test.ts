@@ -12,11 +12,8 @@ import {
   type MovementRuntimeDeps,
 } from '../movement/gameSceneMovementRuntime';
 import { toCellCenter, writeCellCenter } from '../../scenes/gameScene.helpers';
-import {
-  processPendingWaveSpawns,
-  type WaveRuntimeDependencies,
-  type WaveRuntimeState,
-} from './gameSceneWaveRuntime';
+import { type WaveRuntimeDependencies, type WaveRuntimeState } from './gameSceneWaveRuntime';
+import { processPendingWaveSpawns } from './fieldWaveSpawns';
 
 const ENTRANCE = { x: 0, y: 6 };
 const EXIT = { x: 18, y: 6 };
