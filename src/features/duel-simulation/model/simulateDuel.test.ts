@@ -40,6 +40,17 @@ describe('features/duel-simulation/simulateDuel', () => {
     }
   });
 
+  it('reports the gold each build phase left unspent, before bounties and income', () => {
+    const result = simulateDuel(CONFIG);
+
+    for (const round of result.rounds) {
+      for (const side of [round.a, round.b]) {
+        expect(side.unspentGold).toBeGreaterThanOrEqual(0);
+        expect(side.unspentGold).toBeLessThanOrEqual(side.gold - side.income);
+      }
+    }
+  });
+
   it('ends on lives or on the round limit, naming a winner by lives', () => {
     const result = simulateDuel(CONFIG);
     const { player, opponent } = result.finalState;

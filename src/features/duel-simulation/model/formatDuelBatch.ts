@@ -18,6 +18,7 @@ const HEADER_CELLS = [
   'A/B/draw',
   'draw %',
   'round cap %',
+  `unspent/income r${DuelBatchDefaults.LATE_GAME_AFTER_ROUND + 1}+`,
 ];
 
 function formatMatchup(matchup: DuelBatchMatchup): string {
@@ -39,6 +40,14 @@ function formatTowers(stats: DuelBatchStats): string {
   return `${towers.medianA}/${towers.medianB} (${towers.min}-${towers.max})${early}`;
 }
 
+/** Average unspent gold over average income per side-round, e.g. `85/240`. */
+function formatLateUnspent(stats: DuelBatchStats): string {
+  const late = stats.lateUnspent;
+  return late === null
+    ? 'n/a'
+    : `${Math.round(late.averageUnspentGold)}/${Math.round(late.averageIncome)}`;
+}
+
 function formatStatsCells(label: string, stats: DuelBatchStats): string[] {
   return [
     label,
@@ -48,6 +57,7 @@ function formatStatsCells(label: string, stats: DuelBatchStats): string[] {
     `${stats.winsA}/${stats.winsB}/${stats.draws}`,
     formatShare(stats.draws, stats.matches),
     formatShare(stats.roundCaps, stats.matches),
+    formatLateUnspent(stats),
   ];
 }
 

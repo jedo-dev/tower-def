@@ -33,6 +33,8 @@ export type {
   DuelBatchResult,
   DuelBatchStats,
   DuelMatchSummary,
+  UnspentGoldStats,
+  UnspentGoldTally,
 } from './model/duelBatch';
 export { formatDuelBatch } from './model/formatDuelBatch';
 export { DUEL_BATCH_USAGE, parseDuelBatchArgs } from './model/parseDuelBatchArgs';

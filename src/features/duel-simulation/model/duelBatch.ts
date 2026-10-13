@@ -21,6 +21,8 @@ export enum DuelBatchDefaults {
   LAST_SEED = 10,
   /** Round whose tower count is the opening checkpoint. */
   TOWER_CHECKPOINT_ROUND = 5,
+  /** Rounds after this one count as late game for the unspent-gold metric. */
+  LATE_GAME_AFTER_ROUND = 15,
 }
 
 export type DuelBatchMatchup = {
@@ -35,14 +37,30 @@ export type DuelBatchConfig = {
   baselineRaceId: RaceId;
 };
 
+/** Gold left unspent after build phases, and income, summed over some side-rounds. */
+export type UnspentGoldTally = {
+  unspentGold: number;
+  income: number;
+  /** Side-rounds summed: two per round, one per side. */
+  sideRounds: number;
+};
+
 /** One duel, reduced to what the batch table needs. */
 export type DuelMatchSummary = {
   seed: number;
   rounds: number;
   /** Towers per side after the checkpoint round; null when the match ended earlier. */
   checkpointTowers: { a: number; b: number } | null;
+  /** Both sides, every round after `LATE_GAME_AFTER_ROUND`. */
+  lateUnspent: UnspentGoldTally;
   winner: DuelWinner;
   endReason: DuelEndReason;
+};
+
+/** Average unspent gold and income per side-round. */
+export type UnspentGoldStats = {
+  averageUnspentGold: number;
+  averageIncome: number;
 };
 
 export type CheckpointTowerStats = {
@@ -67,6 +85,8 @@ export type DuelBatchStats = {
   draws: number;
   /** Matches that hit the round limit instead of ending on lives. */
   roundCaps: number;
+  /** Late-game unspent gold against income; null when no match got that far. */
+  lateUnspent: UnspentGoldStats | null;
 };
 
 export type DuelBatchMatchupResult = {
@@ -121,12 +141,23 @@ export const DEFAULT_DUEL_BATCH_CONFIG: DuelBatchConfig = {
   baselineRaceId: DEFAULT_DUEL_SIMULATION_CONFIG.baselineRaceId,
 };
 
+function tallyLateUnspent(result: DuelSimulationResult): UnspentGoldTally {
+  const late = result.rounds.slice(DuelBatchDefaults.LATE_GAME_AFTER_ROUND);
+  const sides = late.flatMap((round) => [round.a, round.b]);
+  return {
+    unspentGold: sides.reduce((sum, side) => sum + side.unspentGold, 0),
+    income: sides.reduce((sum, side) => sum + side.income, 0),
+    sideRounds: sides.length,
+  };
+}
+
 export function summarizeDuel(result: DuelSimulationResult): DuelMatchSummary {
   const checkpoint = result.rounds[DuelBatchDefaults.TOWER_CHECKPOINT_ROUND - 1];
   return {
     seed: result.config.seed,
     rounds: result.rounds.length,
     checkpointTowers: checkpoint ? { a: checkpoint.a.towers, b: checkpoint.b.towers } : null,
+    lateUnspent: tallyLateUnspent(result),
     winner: result.winner,
     endReason: result.endReason,
   };
@@ -165,6 +196,16 @@ function summarizeCheckpointTowers(
   };
 }
 
+function summarizeLateUnspent(summaries: readonly DuelMatchSummary[]): UnspentGoldStats | null {
+  const sideRounds = summaries.reduce((sum, summary) => sum + summary.lateUnspent.sideRounds, 0);
+  if (sideRounds === 0) {
+    return null;
+  }
+  const unspentGold = summaries.reduce((sum, summary) => sum + summary.lateUnspent.unspentGold, 0);
+  const income = summaries.reduce((sum, summary) => sum + summary.lateUnspent.income, 0);
+  return { averageUnspentGold: unspentGold / sideRounds, averageIncome: income / sideRounds };
+}
+
 export function summarizeBatch(summaries: readonly DuelMatchSummary[]): DuelBatchStats {
   const rounds = summaries.map((summary) => summary.rounds);
   return {
@@ -178,6 +219,7 @@ export function summarizeBatch(summaries: readonly DuelMatchSummary[]): DuelBatc
     winsB: countWhere(summaries, (summary) => summary.winner === 'B'),
     draws: countWhere(summaries, (summary) => summary.winner === null),
     roundCaps: countWhere(summaries, (summary) => summary.endReason === 'max_rounds'),
+    lateUnspent: summarizeLateUnspent(summaries),
   };
 }
 

@@ -42,7 +42,10 @@ export type DuelRouteCost = {
 };
 
 export type DuelSideRoundReport = DuelFieldWaveResult & {
+  /** Gold at the end of the round, after bounties and income. */
   gold: number;
+  /** Gold the side left unspent when its build phase ended. */
+  unspentGold: number;
   income: number;
   lives: number;
   livesStolen: number;
@@ -112,6 +115,7 @@ function decideWinner(state: DuelMatchState): DuelWinner {
 
 type SideRoundFacts = {
   wave: DuelFieldWaveResult;
+  unspentGold: number;
   livesStolen: number;
   sentCount: number;
   builtCount: number;
@@ -122,6 +126,7 @@ function reportSide(duelist: DuelMatchState['player'], facts: SideRoundFacts): D
   return {
     ...facts.wave,
     gold: duelist.gold,
+    unspentGold: facts.unspentGold,
     income: duelist.income,
     lives: duelist.hp,
     livesStolen: facts.livesStolen,
@@ -180,6 +185,7 @@ export function simulateDuel(config: DuelSimulationConfig): DuelSimulationResult
       isWaveCutOff: wave.isCutOff,
       a: reportSide(state.player, {
         wave: wave.fieldA,
+        unspentGold: build.state.player.gold,
         livesStolen: settlement.playerLivesStolen,
         sentCount: build.sideA.sentCount,
         builtCount: build.sideA.builtCount,
@@ -187,6 +193,7 @@ export function simulateDuel(config: DuelSimulationConfig): DuelSimulationResult
       }),
       b: reportSide(state.opponent, {
         wave: wave.fieldB,
+        unspentGold: build.state.opponent.gold,
         livesStolen: settlement.opponentLivesStolen,
         sentCount: build.sideB.sentCount,
         builtCount: build.sideB.builtCount,

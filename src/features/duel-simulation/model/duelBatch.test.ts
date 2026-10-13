@@ -19,6 +19,7 @@ function summary(overrides: Partial<DuelMatchSummary>): DuelMatchSummary {
     seed: 1,
     rounds: 20,
     checkpointTowers: { a: 10, b: 12 },
+    lateUnspent: { unspentGold: 0, income: 0, sideRounds: 0 },
     winner: 'A',
     endReason: 'lives',
     ...overrides,
@@ -68,7 +69,18 @@ describe('features/duel-simulation/duelBatch', () => {
       winsB: 1,
       draws: 2,
       roundCaps: 1,
+      lateUnspent: null,
     });
+  });
+
+  it('averages late-game unspent gold and income per side-round', () => {
+    const stats = summarizeBatch([
+      summary({ lateUnspent: { unspentGold: 300, income: 1000, sideRounds: 4 } }),
+      summary({ lateUnspent: { unspentGold: 100, income: 600, sideRounds: 2 } }),
+      summary({ rounds: 12 }),
+    ]);
+
+    expect(stats.lateUnspent).toEqual({ averageUnspentGold: 400 / 6, averageIncome: 1600 / 6 });
   });
 
   it('plays every matchup on every seed and prints one row each plus the matches', () => {
@@ -86,6 +98,7 @@ describe('features/duel-simulation/duelBatch', () => {
     expect(result.overall.matches).toBe(2);
     expect(report).toContain('UNDEAD NORMAL vs ORC NORMAL | 2');
     expect(report).toContain('overall');
+    expect(report).toContain('unspent/income r16+');
     expect(report).toMatch(/UNDEAD NORMAL vs ORC NORMAL: 1:\d+[AB=] 2:\d+[AB=]/);
     expect(formatDuelBatch(runDuelBatch(config))).toBe(report);
   });
