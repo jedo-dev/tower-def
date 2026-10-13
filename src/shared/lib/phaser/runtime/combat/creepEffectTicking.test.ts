@@ -26,28 +26,25 @@ const CONFIG = {
 } as CombatConfig;
 
 function createDeps(): CombatDeps & {
-  goldUpdates: number[];
+  bountiesPaid: number[];
   sounds: string[];
 } {
-  const goldUpdates: number[] = [];
+  const bountiesPaid: number[] = [];
   const sounds: string[] = [];
-  let gold = 0;
 
   return {
-    goldUpdates,
+    bountiesPaid,
     sounds,
     scene: { add: { text: vi.fn(), sprite: vi.fn() } },
     toCellCenter: (position: { x: number; y: number }) => position,
     playArcherAttackAnimation: vi.fn(),
     playSplashAttackAnimation: vi.fn(),
     playSound: (soundId: string) => sounds.push(soundId),
-    getResources: () => ({ gold, lives: 20 }),
-    onGoldUpdated: (nextGold: number) => {
-      gold = nextGold;
-      goldUpdates.push(nextGold);
+    awardKillBounty: () => {
+      bountiesPaid.push(1);
     },
     onHudChanged: vi.fn(),
-  } as unknown as CombatDeps & { goldUpdates: number[]; sounds: string[] };
+  } as unknown as CombatDeps & { bountiesPaid: number[]; sounds: string[] };
 }
 
 function createCreepRenderState(overrides?: {
@@ -115,7 +112,7 @@ describe('updateCreepEffects', () => {
     advanceFrames(battlefield, deps, POISON.durationMs);
 
     expect(creep.entity.lifeState).toBe('dead');
-    expect(deps.goldUpdates).toHaveLength(1);
+    expect(deps.bountiesPaid).toHaveLength(1);
     expect(deps.sounds.filter((sound) => sound === 'combat.creep_death.basic')).toHaveLength(1);
   });
 

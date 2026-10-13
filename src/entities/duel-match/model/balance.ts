@@ -1,3 +1,4 @@
+import { ECONOMY_BALANCE } from '../../../shared/constants/economy';
 import { UnitTier } from '../../unit/model/types';
 import type { DuelMatchConfig, TierEconomyTable } from './types';
 
@@ -61,4 +62,5 @@ export const DUEL_MATCH_BALANCE: DuelMatchConfig = {
   leakedLivesPerStolenLife: DuelBalanceConfig.LEAKED_LIVES_PER_STOLEN_LIFE,
   sendCapPerWave: DuelBalanceConfig.SEND_CAP_PER_WAVE,
   sendUnitTypeCapByTier: SEND_UNIT_TYPE_CAP_BY_TIER,
+  killBountyGold: ECONOMY_BALANCE.creepKillRewardGold,
 } as const;

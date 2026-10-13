@@ -1,6 +1,9 @@
 import type Phaser from 'phaser';
-import { scaleCreepStats, scaleReward, type Difficulty } from '../../../../entities/difficulty';
-import type { DuelMatchState } from '../../../../entities/duel-match';
+import {
+  addKillBounty,
+  awardKillBounty,
+  type DuelMatchState,
+} from '../../../../entities/duel-match';
 import type { UnitConfig } from '../../../../entities/unit';
 import type { SoundId } from '../sound/audio.types';
 import type { GameAudioManager } from '../sound/GameAudioManager';
@@ -39,7 +42,6 @@ export type GameSceneWiringHost = {
   setDuelMatchState: (state: DuelMatchState) => void;
   getSelectedFactionUnits: () => UnitConfig[];
   getComputerSendWaveUnits: () => UnitConfig[];
-  getSelectedDifficulty: () => Difficulty;
   refreshBuildState: () => void;
   publishHudSnapshot: () => void;
   handleGameOverUpdated: (isGameOver: boolean) => void;
@@ -71,14 +73,8 @@ function createPlayerCombatDeps(host: GameSceneWiringHost): CombatRuntimeDepende
       }
       host.getSoundManager()?.play(soundId);
     },
-    getResources: () => ({
-      gold: host.runState.playerGold,
-      lives: host.runState.playerLives,
-    }),
-    // Difficulty tilts the player's economy only; the opponent deps below
-    // deliberately keep the unscaled rewards.
-    scaleReward: (baseReward) => scaleReward(baseReward, host.getSelectedDifficulty()),
-    onGoldUpdated: (nextGold) => updatePlayerGold(host, nextGold),
+    // The player's purse lives in the scene wallet; the same bounty rule applies.
+    awardKillBounty: () => updatePlayerGold(host, addKillBounty(host.runState.playerGold)),
     onHudChanged: () => host.publishHudSnapshot(),
   };
 }
@@ -90,20 +86,9 @@ function createOpponentCombatDeps(host: GameSceneWiringHost): CombatRuntimeDepen
     playArcherAttackAnimation: (tower) => playArcherAttackAnimation(tower),
     playSplashAttackAnimation: (tower) => playPlagueAttackAnimation(host.scene, tower),
     playSound: () => undefined,
-    getResources: () => ({
-      gold: host.getDuelMatchState().opponent.gold,
-      lives: host.getDuelMatchState().opponent.hp,
-    }),
-    onGoldUpdated: (nextGold) => {
-      const duelMatchState = host.getDuelMatchState();
-      host.setDuelMatchState({
-        ...duelMatchState,
-        opponent: {
-          ...duelMatchState.opponent,
-          gold: nextGold,
-        },
-      });
-    },
+    // Kills on the computer's own battlefield pay the computer.
+    awardKillBounty: () =>
+      host.setDuelMatchState(awardKillBounty(host.getDuelMatchState(), 'opponent')),
     onHudChanged: () => host.publishHudSnapshot(),
   };
 }
@@ -117,8 +102,6 @@ function createWaveRuntimeDeps(host: GameSceneWiringHost): WaveRuntimeDependenci
     getAnimationKeyByUnit: (unit) => getAnimationKeyByUnit(unit),
     getCreepTypeFromUnit: (unit) => mapUnitToCreepType(unit),
     getCreepTintByUnit: (unit) => getCreepTintByUnit(unit),
-    scaleReward: (baseReward) => scaleReward(baseReward, host.getSelectedDifficulty()),
-    scaleCreepStats: (stats) => scaleCreepStats(stats, host.getSelectedDifficulty()),
     toCellCenter: (position) => toCellCenter(position),
     onGoldUpdated: (nextGold) => updatePlayerGold(host, nextGold),
     onWavePhaseChanged: (nextPhase) => {

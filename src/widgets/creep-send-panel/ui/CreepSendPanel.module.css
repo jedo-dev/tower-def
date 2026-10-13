@@ -149,6 +149,15 @@
   overflow: hidden;
 }
 
+.buttonRemaining {
+  color: var(--color-text-secondary);
+}
+
+.capacity {
+  margin-left: var(--space-xs);
+  font-variant-numeric: tabular-nums;
+}
+
 .phaseNote {
   color: #ffb15f;
 }

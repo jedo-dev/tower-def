@@ -10,7 +10,6 @@ export type ComputerDifficultyPreset = {
   pressurePriority: number;
   upgradePriority: number;
   extendMazePriority: number;
-  handicapGoldBonus: number;
 };
 
 export const COMPUTER_DIFFICULTY_PRESETS: Record<Difficulty, ComputerDifficultyPreset> = {
@@ -24,7 +23,6 @@ export const COMPUTER_DIFFICULTY_PRESETS: Record<Difficulty, ComputerDifficultyP
     pressurePriority: 0.2,
     upgradePriority: 0.4,
     extendMazePriority: 0.6,
-    handicapGoldBonus: 0,
   },
   [Difficulty.NORMAL]: {
     id: Difficulty.NORMAL,
@@ -36,7 +34,6 @@ export const COMPUTER_DIFFICULTY_PRESETS: Record<Difficulty, ComputerDifficultyP
     pressurePriority: 0.5,
     upgradePriority: 0.5,
     extendMazePriority: 0.5,
-    handicapGoldBonus: 0,
   },
   [Difficulty.HARD]: {
     id: Difficulty.HARD,
@@ -48,19 +45,17 @@ export const COMPUTER_DIFFICULTY_PRESETS: Record<Difficulty, ComputerDifficultyP
     pressurePriority: 0.7,
     upgradePriority: 0.6,
     extendMazePriority: 0.4,
-    handicapGoldBonus: 0,
   },
   [Difficulty.NIGHTMARE]: {
     id: Difficulty.NIGHTMARE,
     name: 'Relentless',
-    description: 'Maximum spending, constant pressure, handicap bonus gold.',
+    description: 'Maximum spending, constant pressure.',
     buildSpendRatio: 0.9,
     sendSpendRatio: 0.7,
     threatThresholdForDefense: 'high',
     pressurePriority: 0.9,
     upgradePriority: 0.7,
     extendMazePriority: 0.3,
-    handicapGoldBonus: 100,
   },
 };
 

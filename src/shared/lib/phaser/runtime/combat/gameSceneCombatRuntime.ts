@@ -5,7 +5,6 @@ import {
   getTowerOnHitEffects,
 } from '../../../../../entities/tower';
 import Phaser from 'phaser';
-import { addGold, type PlayerResources } from '../../../../../entities/player-resources';
 import {
   applyDamageToCreep,
   applyEffectToCreep,
@@ -19,7 +18,6 @@ import {
   selectTowerTarget,
   tickTowerCooldown,
 } from '../../../../../entities/tower';
-import { ECONOMY_BALANCE } from '../../../../constants/economy';
 import { GRID_DIMENSIONS } from '../../../../constants/grid';
 import { TOWER_BONE_ARCHER_EFFECT_FRAMES, TOWER_SPRITE_KEYS } from '../../../../constants/sprites';
 import {
@@ -73,18 +71,16 @@ export type CombatRuntimeDependencies = {
   playArcherAttackAnimation: (tower: TowerRenderState) => void;
   playSplashAttackAnimation: (tower: TowerRenderState) => void;
   playSound: (soundId: SoundId) => void;
-  getResources: () => PlayerResources;
-  /** Applies the difficulty reward modifier; identity when not provided. */
-  scaleReward?: (baseReward: number) => number;
-  onGoldUpdated: (nextGold: number) => void;
+  /**
+   * Pays the kill bounty to the side that owns this battlefield. Both sides
+   * wire it to the shared duel-match bounty rule.
+   */
+  awardKillBounty: () => void;
   onHudChanged: () => void;
 };
 
 function handleCreepKill(deps: CombatRuntimeDependencies): void {
-  const reward =
-    deps.scaleReward?.(ECONOMY_BALANCE.creepKillRewardGold) ?? ECONOMY_BALANCE.creepKillRewardGold;
-  const nextResources = addGold(deps.getResources(), reward);
-  deps.onGoldUpdated(nextResources.gold);
+  deps.awardKillBounty();
   deps.playSound('combat.creep_death.basic');
   deps.playSound('economy.gold_gain');
   deps.onHudChanged();

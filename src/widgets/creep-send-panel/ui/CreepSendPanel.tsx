@@ -2,6 +2,7 @@ import { memo } from 'react';
 import styles from './CreepSendPanel.module.css';
 import { sendGameCommand } from '../../../shared/lib/game-bridge/bridge';
 import { useGameHudSnapshot } from '../../../shared/lib/game-bridge/useGameHudSnapshot';
+import { usePlayerSendLimits } from '../../../shared/lib/game-bridge/useSendLimits';
 import type { GameSetupConfig } from '../../../shared/config/game-setup';
 import { mapCreepSendPanelToViewModel } from '../model/mapCreepSendPanelToViewModel';
 import type { UnitId } from '../../../entities/unit';
@@ -13,7 +14,8 @@ export type CreepSendPanelProps = {
 
 function CreepSendPanelComponent({ setup }: CreepSendPanelProps) {
   const snapshot = useGameHudSnapshot();
-  const viewModel = mapCreepSendPanelToViewModel(snapshot, setup);
+  const sendLimits = usePlayerSendLimits();
+  const viewModel = mapCreepSendPanelToViewModel(snapshot, setup, sendLimits);
 
   function handleSend(creepTypeId: UnitId): void {
     sendGameCommand('send-creep', { creepTypeId });
@@ -32,6 +34,15 @@ function CreepSendPanelComponent({ setup }: CreepSendPanelProps) {
             <span className={`ui-chip ${styles.phaseNote}`}>Locked in battle</span>
           ) : (
             <span className="ui-chip">{viewModel.queueSummary}</span>
+          )}
+          {viewModel.waveCapacitySummary && (
+            <span
+              className={`ui-chip ${styles.capacity}`}
+              aria-label={viewModel.waveCapacityAriaLabel ?? undefined}
+              data-send-capacity="true"
+            >
+              {viewModel.waveCapacitySummary}
+            </span>
           )}
         </span>
         <span
@@ -66,6 +77,11 @@ function CreepSendPanelComponent({ setup }: CreepSendPanelProps) {
               <span>T{button.tier}</span>
               <span className={styles.buttonCost}>${button.cost}</span>
               <span className={styles.buttonIncome}>+{button.incomeGain}</span>
+              {button.remainingOfType !== null && (
+                <span className={styles.buttonRemaining} data-send-remaining="true">
+                  {button.remainingOfType}/{button.typeCap}
+                </span>
+              )}
             </span>
             {button.disabledReason && (
               <span className={styles.buttonReason} aria-hidden="true">

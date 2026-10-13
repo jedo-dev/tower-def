@@ -10,6 +10,7 @@ import {
   DEFAULT_ENEMY_FACTION,
 } from '../../../entities/enemy-faction';
 import { Difficulty, difficulties, DEFAULT_DIFFICULTY } from '../../../entities/difficulty';
+import { getComputerDifficultyPreset } from '../../../entities/computer-opponent';
 import type { GameSetupConfig, AppRoute } from '../../../shared/config/game-setup';
 import { FACTION_THEME_COLOR_VARS } from '../../../shared/constants/theme';
 import './GameSetupPage.css';
@@ -302,14 +303,9 @@ export function GameSetupPage({ onStartGame, onNavigate }: GameSetupPageProps) {
                 <span className="setup-difficulty-desc">{diff.description}</span>
                 <span className="setup-difficulty-modifiers">
                   <span className="setup-difficulty-chip">
-                    Creep HP {formatModifier(diff.creepHealthModifier)}
+                    AI {getComputerDifficultyPreset(diff.id).name}
                   </span>
-                  <span className="setup-difficulty-chip">
-                    Speed {formatModifier(diff.creepSpeedModifier)}
-                  </span>
-                  <span className="setup-difficulty-chip">
-                    Rewards {formatModifier(diff.rewardModifier)}
-                  </span>
+                  <span className="setup-difficulty-chip">Equal stats &amp; gold</span>
                 </span>
               </button>
             ))}
@@ -380,10 +376,6 @@ export function GameSetupPage({ onStartGame, onNavigate }: GameSetupPageProps) {
       )}
     </main>
   );
-}
-
-function formatModifier(modifier: number): string {
-  return `${Math.round(modifier * 100)}%`;
 }
 
 function getEnemyThemeColor(faction: EnemyFaction): string {
