@@ -43,11 +43,17 @@ export type DuelRoundEndResult = {
   winner: RaceId | null;
 };
 
+export type DuelSendLimitRejectionReason = 'wave_send_cap' | 'unit_type_send_cap';
+
+export type DuelSendRejectionReason = 'insufficient_gold' | DuelSendLimitRejectionReason;
+
 export type DuelSendCreepResult = {
   state: DuelMatchState;
   sent: boolean;
   cost: number;
   incomeBonus: number;
+  /** Why the send was refused; `null` when it went through. */
+  rejectionReason: DuelSendRejectionReason | null;
 };
 
 export type TierEconomyTable = Readonly<Record<UnitTier, number>>;
@@ -60,4 +66,8 @@ export type DuelMatchConfig = {
   sendCreepCostByTier: TierEconomyTable;
   sendCreepIncomeBonusByTier: TierEconomyTable;
   hpLossPerLeakedCreep: number;
+  /** Shared by both sides: total creeps one side may queue for one wave. */
+  sendCapPerWave: number;
+  /** Shared by both sides: creeps of one type one side may queue for one wave. */
+  sendUnitTypeCapByTier: TierEconomyTable;
 };

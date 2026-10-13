@@ -170,6 +170,17 @@ Deliverables:
 - Pause and speed controls that remain keyboard accessible.
 - Smoke tests for start round, send creep, upgrade tower, and lose/win conditions.
 
+## Shared Duel Rules
+
+Both sides play by identical rules; difficulty presets change only how well the computer decides, never what it is allowed to do.
+
+- **Equal start:** both sides open on `DuelBalanceConfig.STARTING_GOLD` (500). Difficulty does not tilt the purse.
+- **Send limits per wave** (`entities/duel-match/model/sendLimits.ts`, values in `balance.ts`):
+  - total: 12 creeps per side per wave (`SEND_CAP_PER_WAVE`);
+  - per creep type, by tier (`SEND_UNIT_TYPE_CAP_BY_TIER`): T1 6, T2 5, T3 4, T4 3, T5 3, T6 2.
+  - The send queue is cleared when the wave starts, so the limits reset every wave.
+  - The computer's preset `maxSendsPerRound` may be stricter, but the shared limits are enforced on top of it.
+
 ## Suggested Improvements
 
 - Add difficulty presets for the computer opponent: relaxed, normal, aggressive.

@@ -55,6 +55,10 @@ export function formatSendRejected(payload: GameEventMap['creep-send-rejected'])
       return 'Send failed: wave in progress';
     case 'match_over':
       return 'Send failed: match is over';
+    case 'wave_send_cap':
+      return `Send failed: ${payload.sendLimit ?? '?'} sends per wave`;
+    case 'unit_type_send_cap':
+      return `Send failed: ${payload.sendLimit ?? '?'} of this creep per wave`;
     default:
       return 'Send failed';
   }

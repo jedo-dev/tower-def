@@ -59,5 +59,16 @@ describe('duel event feed model', () => {
     expect(formatSendRejected({ creepTypeId: 'x', reason: 'match_over', gold: 10 })).toBe(
       'Send failed: match is over',
     );
+    expect(
+      formatSendRejected({ creepTypeId: 'x', reason: 'wave_send_cap', gold: 10, sendLimit: 12 }),
+    ).toBe('Send failed: 12 sends per wave');
+    expect(
+      formatSendRejected({
+        creepTypeId: 'x',
+        reason: 'unit_type_send_cap',
+        gold: 10,
+        sendLimit: 2,
+      }),
+    ).toBe('Send failed: 2 of this creep per wave');
   });
 });

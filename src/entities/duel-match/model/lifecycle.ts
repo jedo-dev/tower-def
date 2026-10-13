@@ -1,6 +1,7 @@
 import type { UnitId, UnitTier } from '../../unit/model/types';
 import { DUEL_MATCH_BALANCE } from './balance';
 import { canAffordSend, getIncomeBonusByTier, getSendCostByTier } from './sendEconomy';
+import { checkSendLimits } from './sendLimits';
 import type {
   DuelIncomePayoutResult,
   DuelMatchState,
@@ -105,13 +106,13 @@ export function sendCreep(
   const cost = getSendCostByTier(tier);
   const incomeBonus = getIncomeBonusByTier(tier);
 
+  const limitCheck = checkSendLimits(duelist.sendQueue, creepId, tier);
+  if (!limitCheck.allowed) {
+    return { state, sent: false, cost, incomeBonus, rejectionReason: limitCheck.reason };
+  }
+
   if (!canAffordSend(duelist.gold, tier)) {
-    return {
-      state,
-      sent: false,
-      cost,
-      incomeBonus,
-    };
+    return { state, sent: false, cost, incomeBonus, rejectionReason: 'insufficient_gold' };
   }
 
   const updatedDuelist = {
@@ -129,6 +130,7 @@ export function sendCreep(
     sent: true,
     cost,
     incomeBonus,
+    rejectionReason: null,
   };
 }
 

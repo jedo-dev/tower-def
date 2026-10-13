@@ -10,6 +10,8 @@ export enum DuelBalanceConfig {
   STARTING_GOLD = 500,
   STARTING_INCOME = 50,
   HP_LOSS_PER_LEAKED_CREEP = 1,
+  /** Most creeps one side may queue for a single wave, across every type. */
+  SEND_CAP_PER_WAVE = 12,
 }
 
 export const SEND_CREEP_COST_BY_TIER: TierEconomyTable = {
@@ -30,6 +32,20 @@ export const SEND_CREEP_INCOME_BONUS_BY_TIER: TierEconomyTable = {
   [UnitTier.TIER_6]: 40,
 } as const;
 
+/**
+ * Most creeps of one type a side may queue for a single wave. Cheap creeps can
+ * swarm; expensive ones stay a handful so a saved-up purse cannot dump a wall
+ * of top-tier units in one round.
+ */
+export const SEND_UNIT_TYPE_CAP_BY_TIER: TierEconomyTable = {
+  [UnitTier.TIER_1]: 6,
+  [UnitTier.TIER_2]: 5,
+  [UnitTier.TIER_3]: 4,
+  [UnitTier.TIER_4]: 3,
+  [UnitTier.TIER_5]: 3,
+  [UnitTier.TIER_6]: 2,
+} as const;
+
 export const DUEL_MATCH_BALANCE: DuelMatchConfig = {
   startingHp: DuelBalanceConfig.STARTING_HP,
   startingGold: DuelBalanceConfig.STARTING_GOLD,
@@ -37,4 +53,6 @@ export const DUEL_MATCH_BALANCE: DuelMatchConfig = {
   sendCreepCostByTier: SEND_CREEP_COST_BY_TIER,
   sendCreepIncomeBonusByTier: SEND_CREEP_INCOME_BONUS_BY_TIER,
   hpLossPerLeakedCreep: DuelBalanceConfig.HP_LOSS_PER_LEAKED_CREEP,
+  sendCapPerWave: DuelBalanceConfig.SEND_CAP_PER_WAVE,
+  sendUnitTypeCapByTier: SEND_UNIT_TYPE_CAP_BY_TIER,
 } as const;

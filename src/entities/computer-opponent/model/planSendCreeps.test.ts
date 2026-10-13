@@ -3,7 +3,9 @@ import { RaceId } from '../../../shared/types/content-ids';
 import { getRaceRegistry } from '../../race-registry/model/registries';
 import { Difficulty } from '../../difficulty/model/types';
 import { getSendCostByTier, getIncomeBonusByTier } from '../../duel-match/model/sendEconomy';
+import { getSendCapPerWave, getUnitTypeSendCapByTier } from '../../duel-match/model/sendLimits';
 import { resolveUnitConfigById } from '../../unit/model/registry';
+import type { UnitId } from '../../unit/model/types';
 import type { DecisionContext } from './types';
 import { StrategyIntent } from './types';
 import { createComputerDecisionDebugRecorder } from './decisionDebugSnapshots';
@@ -362,5 +364,48 @@ describe('entities/computer-opponent/planSendCreeps', () => {
       expect(snapshots[0].goldBefore).toBe(1000);
       expect(snapshots[0].actionSummary).toContain('send');
     });
+  });
+});
+
+describe('entities/computer-opponent/planSendCreeps shared send limits', () => {
+  function countById(ids: readonly UnitId[]): Map<UnitId, number> {
+    const counts = new Map<UnitId, number>();
+    for (const id of ids) {
+      counts.set(id, (counts.get(id) ?? 0) + 1);
+    }
+    return counts;
+  }
+
+  for (const difficulty of Object.values(Difficulty)) {
+    it(`never plans past the shared caps on ${difficulty}`, () => {
+      const result = planSendCreeps({
+        context: createTestContext({ difficulty, gold: 1_000_000, round: 20 }),
+      });
+      const ids = result.actions.map((action) => action.creepTypeId);
+
+      expect(ids.length).toBeLessThanOrEqual(getSendCapPerWave());
+      for (const [id, count] of countById(ids)) {
+        const tier = resolveUnitConfigById(id).tier;
+        expect(count).toBeLessThanOrEqual(getUnitTypeSendCapByTier(tier));
+      }
+    });
+  }
+
+  it('counts creeps already queued this wave against the caps', () => {
+    const queued: UnitId[] = Array.from(
+      { length: getSendCapPerWave() - 1 },
+      (): UnitId => 'undead_skeleton',
+    );
+    const result = planSendCreeps({
+      context: createTestContext({
+        difficulty: Difficulty.NIGHTMARE,
+        gold: 1_000_000,
+        round: 20,
+        queuedSends: queued,
+      }),
+    });
+
+    expect(result.actions.length).toBeLessThanOrEqual(1);
+    expect(result.actions.map((action) => action.creepTypeId)).not.toContain('undead_skeleton');
   });
 });
