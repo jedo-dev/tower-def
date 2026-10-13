@@ -52,12 +52,9 @@ describe('entities/computer-opponent damage placement in play', () => {
   const areaTowers = towers.filter(
     (tower) => tower.type === TowerTypeId.SPLASH || tower.type === TowerTypeId.CHAIN,
   );
-  /** Separate stretches of the route a tower reaches: 2 or more where creeps pass twice. */
-  const passesOf = (tower: (typeof towers)[number]) => {
-    const covered = geometry.coveredSamples(tower.position, tower.combatStats.range);
-    return covered.filter((sample, index) => index === 0 || sample !== covered[index - 1] + 1)
-      .length;
-  };
+  /** More route in range than one straight pass can bring: a turn or a second lane. */
+  const seesRouteTwice = (tower: (typeof towers)[number]) =>
+    coverageOf(tower) > 2 * Math.floor(tower.combatStats.range) + 1;
 
   it('mixes area damage towers into the maze walls', () => {
     expect(walls.length).toBeGreaterThan(0);
@@ -67,7 +64,7 @@ describe('entities/computer-opponent damage placement in play', () => {
   it('puts area damage where creeps pass twice: turns and the gap between lanes', () => {
     for (const tower of areaTowers) {
       const where = `${tower.type} at ${tower.position.x},${tower.position.y}`;
-      expect(passesOf(tower), where).toBeGreaterThanOrEqual(2);
+      expect(seesRouteTwice(tower), where).toBe(true);
     }
     expect(mean(areaTowers.map(coverageOf))).toBeGreaterThan(mean(walls.map(coverageOf)));
   });
