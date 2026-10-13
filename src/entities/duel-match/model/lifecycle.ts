@@ -8,12 +8,14 @@ import {
   NO_SENT_CREEP_LEAKS,
   type SentCreepLeaks,
 } from './lifeSteal';
+import { resolveDuelMatchOutcome } from './matchOutcome';
 import type {
   DuelIncomePayoutResult,
   DuelMatchState,
   DuelRoundEndResult,
   DuelRoundStartResult,
   DuelSendCreepResult,
+  DuelSide,
 } from './types';
 
 export function generateBaselineWaveId(round: number): string {
@@ -56,11 +58,22 @@ export function payIncome(state: DuelMatchState): DuelIncomePayoutResult {
   };
 }
 
+function resolveWinnerRace(
+  state: DuelMatchState,
+  winningSide: DuelSide | null,
+): DuelRoundEndResult['winner'] {
+  if (winningSide === null) {
+    return null;
+  }
+  return winningSide === 'player' ? state.player.raceId : state.opponent.raceId;
+}
+
 /**
  * Resolves a round's leaks. `playerLeakedCreeps` and `opponentLeakedCreeps` are
  * every creep that leaked on that side's field; `sentLeaks` says how many of
  * them were sent by the other side, which is what steals lives for the sender.
  * A side that hits 0 HP is out even if its own sends stole lives this round.
+ * When both hit 0 on the same wave, `resolveDuelMatchOutcome` breaks the tie.
  */
 export function endRound(
   state: DuelMatchState,
@@ -87,18 +100,16 @@ export function endRound(
   );
   const playerLivesStolen = isPlayerDead ? 0 : playerSteal.livesGained;
   const opponentLivesStolen = isOpponentDead ? 0 : opponentSteal.livesGained;
-  const isMatchOver = isPlayerDead || isOpponentDead;
-
-  let winner: DuelRoundEndResult['winner'] = null;
-  if (isMatchOver) {
-    if (isPlayerDead && isOpponentDead) {
-      winner = null;
-    } else if (isOpponentDead) {
-      winner = state.player.raceId;
-    } else {
-      winner = state.opponent.raceId;
-    }
-  }
+  const outcome = resolveDuelMatchOutcome({
+    playerHpBefore: state.player.hp,
+    opponentHpBefore: state.opponent.hp,
+    playerHpAfter: newPlayerHp,
+    opponentHpAfter: newOpponentHp,
+    playerLeakedCreeps,
+    opponentLeakedCreeps,
+  });
+  const isMatchOver = outcome.reason !== null;
+  const winner = resolveWinnerRace(state, outcome.winningSide);
 
   return {
     state: {
@@ -121,6 +132,8 @@ export function endRound(
     opponentLivesStolen,
     isMatchOver,
     winner,
+    winningSide: outcome.winningSide,
+    endReason: outcome.reason,
   };
 }
 

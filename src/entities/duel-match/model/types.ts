@@ -46,6 +46,22 @@ export type DuelRoundEndResult = {
   opponentLivesStolen: number;
   isMatchOver: boolean;
   winner: RaceId | null;
+  /** Which side won; `null` while the match goes on or on a draw. */
+  winningSide: DuelSide | null;
+  /** Why the match ended; `null` while it goes on. */
+  endReason: DuelMatchEndReason | null;
+};
+
+/**
+ * How a match was decided: one side out (`knockout`), or both out on the same
+ * wave and settled by fewer leaks that wave, then by more lives before it,
+ * else a `draw`.
+ */
+export type DuelMatchEndReason = 'knockout' | 'fewer_leaks' | 'more_lives_before_wave' | 'draw';
+
+export type DuelMatchOutcome = {
+  winningSide: DuelSide | null;
+  reason: DuelMatchEndReason | null;
 };
 
 export type DuelSendLimitRejectionReason = 'wave_send_cap' | 'unit_type_send_cap';
