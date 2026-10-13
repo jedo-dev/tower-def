@@ -15,15 +15,10 @@ export type BattlefieldInitParams = {
   exit?: GridPoint;
 };
 
-function createDuelistState(
-  raceId: RaceId,
-  grid: GridModel,
-  path: GridPosition[],
-  startingGold: number,
-): DuelistState {
+function createDuelistState(raceId: RaceId, grid: GridModel, path: GridPosition[]): DuelistState {
   return {
     hp: DUEL_MATCH_BALANCE.startingHp,
-    gold: startingGold,
+    gold: DUEL_MATCH_BALANCE.startingGold,
     income: DUEL_MATCH_BALANCE.startingIncome,
     raceId,
     sendQueue: [],
@@ -48,18 +43,8 @@ export function createInitialDuelMatchState(
   return {
     round: 0,
     phase: 'build',
-    player: createDuelistState(
-      playerRaceId,
-      playerGrid,
-      playerPath,
-      DUEL_MATCH_BALANCE.startingGold,
-    ),
-    opponent: createDuelistState(
-      opponentRaceId,
-      opponentGrid,
-      opponentPath,
-      DUEL_MATCH_BALANCE.opponentStartingGold,
-    ),
+    player: createDuelistState(playerRaceId, playerGrid, playerPath),
+    opponent: createDuelistState(opponentRaceId, opponentGrid, opponentPath),
     baselineWaveId: '',
   };
 }

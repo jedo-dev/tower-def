@@ -3,14 +3,11 @@ import type { DuelMatchConfig, TierEconomyTable } from './types';
 
 export enum DuelBalanceConfig {
   STARTING_HP = 20,
-  STARTING_GOLD = 500,
   /**
-   * The opponent opens on a purse of its own. It earns nothing from kills, so
-   * on an equal start it can only spend its income, which is far less than the
-   * player turns over in the same rounds. Doubling the opening lets it get a
-   * maze standing early instead of laying one brick a round.
+   * Both sides open on the same purse. Difficulty never tilts it: presets only
+   * change how well the computer spends it.
    */
-  OPPONENT_STARTING_GOLD = STARTING_GOLD * 2,
+  STARTING_GOLD = 500,
   STARTING_INCOME = 50,
   HP_LOSS_PER_LEAKED_CREEP = 1,
 }
@@ -36,7 +33,6 @@ export const SEND_CREEP_INCOME_BONUS_BY_TIER: TierEconomyTable = {
 export const DUEL_MATCH_BALANCE: DuelMatchConfig = {
   startingHp: DuelBalanceConfig.STARTING_HP,
   startingGold: DuelBalanceConfig.STARTING_GOLD,
-  opponentStartingGold: DuelBalanceConfig.OPPONENT_STARTING_GOLD,
   startingIncome: DuelBalanceConfig.STARTING_INCOME,
   sendCreepCostByTier: SEND_CREEP_COST_BY_TIER,
   sendCreepIncomeBonusByTier: SEND_CREEP_INCOME_BONUS_BY_TIER,

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { difficulties } from './config/difficulties';
 import { Difficulty } from './types';
-import { getDifficultyConfig, scaleCreepStats, scaleReward, scaleStartingGold } from './modifiers';
+import { getDifficultyConfig, scaleCreepStats, scaleReward } from './modifiers';
 
 describe('difficulty modifiers', () => {
   it('resolves every declared difficulty', () => {
@@ -14,11 +14,10 @@ describe('difficulty modifiers', () => {
     expect(getDifficultyConfig('LUDICROUS' as Difficulty).id).toBe(Difficulty.NORMAL);
   });
 
-  it('scales starting gold per preset', () => {
-    expect(scaleStartingGold(500, Difficulty.EASY)).toBe(750);
-    expect(scaleStartingGold(500, Difficulty.NORMAL)).toBe(500);
-    expect(scaleStartingGold(500, Difficulty.HARD)).toBe(400);
-    expect(scaleStartingGold(500, Difficulty.NIGHTMARE)).toBe(300);
+  it('never tilts the starting purse', () => {
+    for (const config of difficulties) {
+      expect(config).not.toHaveProperty('startingGoldModifier');
+    }
   });
 
   it('scales rewards per preset', () => {
