@@ -56,3 +56,20 @@ The player must never be allowed to fully block the creep path.
 Builder factions and their buildable towers are defined via typed config models.
 
 For MVP testing, each faction starts with one archer-type starter tower.
+
+## Decision 008: Lint with oxlint instead of ESLint
+
+Linting runs through oxlint (`npm run lint`), configured in `.oxlintrc.json`.
+ESLint, typescript-eslint and the React ESLint plugins were removed.
+
+The config is a port of the former ESLint setup: ESLint recommended,
+typescript-eslint recommended (including its overrides that turn off core rules
+TypeScript already checks, such as `no-redeclare`), React hooks rules
+(`rules-of-hooks`, `exhaustive-deps` and the React Compiler rules) and
+`only-export-components` for Vite fast refresh.
+
+Reason:
+
+oxlint is part of the Oxc toolchain, is much faster than ESLint, and ships the
+TypeScript and React rules natively, so the project needs a single lint
+dependency instead of six.
