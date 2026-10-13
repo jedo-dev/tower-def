@@ -1,9 +1,11 @@
-// Balance-pass CLI: plays equal-difficulty AI duels across a seed range and
-// prints one table row per matchup (match length, towers at round 5, winner
-// split, draws, round-limit hits). Logic lives in
-// src/features/duel-simulation; this file only wires argv and stdout.
+// Balance-pass CLI: plays AI duels across a seed range and prints one table
+// row per matchup (match length, towers at round 5, winner split, draws,
+// round-limit hits). `--matchups` plays difficulties against each other
+// (each on each race, in each seat) and adds a win-rate row per pair. Logic
+// lives in src/features/duel-simulation; this file only wires argv and stdout.
 //
 //   npm run sim:duel-batch -- --seeds 1-10 --difficulties normal,hard --pairs undead:orc,human:elf
+//   npm run sim:duel-batch -- --seeds 1-20 --matchups normal:easy,hard:normal,nightmare:hard
 import {
   DUEL_BATCH_USAGE,
   formatDuelBatch,

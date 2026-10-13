@@ -8,10 +8,12 @@ import {
   DEFAULT_DUEL_BATCH_RACE_PAIRS,
   type DuelBatchConfig,
 } from './duelBatch';
+import { createCrossDifficultyMatchups, type DifficultyMatchup } from './duelBatchCrossDifficulty';
 
 export const DUEL_BATCH_USAGE =
   'usage: npm run sim:duel-batch -- [--seeds 1-10|1,4,9] [--max-rounds R] ' +
-  '[--difficulties normal,hard] [--pairs undead:orc,human:elf] ' +
+  '[--difficulties normal,hard | --matchups hard:normal,nightmare:hard] ' +
+  '[--pairs undead:orc,human:elf] ' +
   '[--baseline-race undead|orc|human|elf]';
 
 export type DuelBatchArgsResult =
@@ -23,6 +25,7 @@ type BatchOptions = {
   maxRounds: number;
   baselineRaceId: RaceId;
   difficulties: readonly Difficulty[] | null;
+  matchups: readonly DifficultyMatchup[] | null;
   pairs: readonly (readonly [RaceId, RaceId])[] | null;
 };
 
@@ -55,6 +58,20 @@ function parseDifficulties(value: string): Difficulty[] | string {
   return difficulties;
 }
 
+function parseMatchups(value: string): DifficultyMatchup[] | string {
+  const matchups: DifficultyMatchup[] = [];
+  for (const item of value.split(',')) {
+    const [first, second, extra] = item.split(':');
+    const parsed =
+      extra === undefined && first && second ? parseDifficulties(`${first},${second}`) : null;
+    if (parsed === null || typeof parsed === 'string' || parsed[0] === parsed[1]) {
+      return `--matchups expects "difficulty:otherDifficulty" items, got "${item}"`;
+    }
+    matchups.push([parsed[0], parsed[1]]);
+  }
+  return matchups;
+}
+
 function parsePairs(value: string): [RaceId, RaceId][] | string {
   const pairs: [RaceId, RaceId][] = [];
   for (const item of value.split(',')) {
@@ -83,6 +100,10 @@ function applyFlag(options: BatchOptions, flag: string, value: string): BatchOpt
       const difficulties = parseDifficulties(value);
       return typeof difficulties === 'string' ? difficulties : { ...options, difficulties };
     }
+    case '--matchups': {
+      const matchups = parseMatchups(value);
+      return typeof matchups === 'string' ? matchups : { ...options, matchups };
+    }
     case '--pairs': {
       const pairs = parsePairs(value);
       return typeof pairs === 'string' ? pairs : { ...options, pairs };
@@ -97,14 +118,14 @@ function applyFlag(options: BatchOptions, flag: string, value: string): BatchOpt
 }
 
 function toBatchConfig(options: BatchOptions): DuelBatchConfig {
+  const pairs = options.pairs ?? DEFAULT_DUEL_BATCH_RACE_PAIRS;
   return {
     seeds: options.seeds,
     maxRounds: options.maxRounds,
     baselineRaceId: options.baselineRaceId,
-    matchups: createEqualMatchups(
-      options.difficulties ?? DEFAULT_DUEL_BATCH_DIFFICULTIES,
-      options.pairs ?? DEFAULT_DUEL_BATCH_RACE_PAIRS,
-    ),
+    matchups: options.matchups
+      ? createCrossDifficultyMatchups(options.matchups, pairs)
+      : createEqualMatchups(options.difficulties ?? DEFAULT_DUEL_BATCH_DIFFICULTIES, pairs),
   };
 }
 
@@ -115,6 +136,7 @@ export function parseDuelBatchArgs(args: readonly string[]): DuelBatchArgsResult
     maxRounds: DEFAULT_DUEL_BATCH_CONFIG.maxRounds,
     baselineRaceId: DEFAULT_DUEL_BATCH_CONFIG.baselineRaceId,
     difficulties: null,
+    matchups: null,
     pairs: null,
   };
 
@@ -131,5 +153,8 @@ export function parseDuelBatchArgs(args: readonly string[]): DuelBatchArgsResult
     options = next;
   }
 
+  if (options.difficulties && options.matchups) {
+    return { ok: false, error: '--difficulties and --matchups cannot be combined' };
+  }
   return { ok: true, config: toBatchConfig(options) };
 }

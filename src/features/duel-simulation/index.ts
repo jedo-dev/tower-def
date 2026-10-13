@@ -36,6 +36,11 @@ export type {
   UnspentGoldStats,
   UnspentGoldTally,
 } from './model/duelBatch';
+export {
+  createCrossDifficultyMatchups,
+  summarizeCrossDifficulty,
+} from './model/duelBatchCrossDifficulty';
+export type { CrossDifficultyStats, DifficultyMatchup } from './model/duelBatchCrossDifficulty';
 export { formatDuelBatch } from './model/formatDuelBatch';
 export { DUEL_BATCH_USAGE, parseDuelBatchArgs } from './model/parseDuelBatchArgs';
 export type { DuelBatchArgsResult } from './model/parseDuelBatchArgs';

@@ -6,6 +6,7 @@ import {
   type DuelBatchResult,
   type DuelBatchStats,
 } from './duelBatch';
+import { summarizeCrossDifficulty, type CrossDifficultyStats } from './duelBatchCrossDifficulty';
 
 const PERCENT = 100;
 const COLUMN_SEPARATOR = ' | ';
@@ -62,15 +63,39 @@ function formatStatsCells(label: string, stats: DuelBatchStats): string[] {
 }
 
 function padRows(rows: readonly string[][]): string[] {
-  const widths = HEADER_CELLS.map((_, column) =>
-    Math.max(...rows.map((row) => row[column].length)),
-  );
+  const widths = rows[0].map((_, column) => Math.max(...rows.map((row) => row[column].length)));
   return rows.map((row) =>
     row
       .map((cell, column) => cell.padEnd(widths[column]))
       .join(COLUMN_SEPARATOR)
       .trimEnd(),
   );
+}
+
+const CROSS_HEADER_CELLS = [
+  'difficulty matchup',
+  'n',
+  'higher/lower/draw',
+  'higher score %',
+  'rounds med',
+];
+
+function formatCrossCells(stats: CrossDifficultyStats): string[] {
+  return [
+    `${stats.higher} vs ${stats.lower}`,
+    `${stats.matches}`,
+    `${stats.higherWins}/${stats.lowerWins}/${stats.draws}`,
+    `${Math.round(stats.higherScore * PERCENT)}`,
+    `${stats.medianRounds}`,
+  ];
+}
+
+/** Win rates per difficulty pair (draws count half); empty without cross-difficulty matchups. */
+function formatCrossDifficulty(result: DuelBatchResult): string[] {
+  const cross = summarizeCrossDifficulty(result.matchups);
+  return cross.length === 0
+    ? []
+    : ['', ...padRows([CROSS_HEADER_CELLS, ...cross.map(formatCrossCells)])];
 }
 
 const WINNER_MARK = { A: 'A', B: 'B', draw: '=' } as const;
@@ -87,7 +112,8 @@ function formatMatchLine(result: DuelBatchMatchupResult): string {
 
 /**
  * One row per matchup plus an overall row; seeds and the round limit head the
- * table. Below it, every match as `seed:rounds+winner`.
+ * table. Cross-difficulty batches add a win-rate row per difficulty pair.
+ * Below that, every match as `seed:rounds+winner`.
  */
 export function formatDuelBatch(result: DuelBatchResult): string {
   const { seeds, maxRounds, baselineRaceId } = result.config;
@@ -102,6 +128,7 @@ export function formatDuelBatch(result: DuelBatchResult): string {
   return [
     `seeds ${seedLabel} (${seeds.length}) | max rounds ${maxRounds} | baseline ${baselineRaceId}`,
     ...padRows(rows),
+    ...formatCrossDifficulty(result),
     '',
     ...result.matchups.map(formatMatchLine),
   ].join('\n');
