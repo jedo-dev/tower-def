@@ -1,6 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { GridCell } from '../../../../types/grid';
-import { findPathTileChanges, refreshPathTiles, toPathCellKeys } from './pathTiles';
+import {
+  findPathTileChanges,
+  refreshPathTiles,
+  selectPlayerPathRoute,
+  toPathCellKeys,
+} from './pathTiles';
 
 function createRow(length: number): GridCell[] {
   return Array.from({ length }, (_, x) => ({
@@ -73,5 +78,24 @@ describe('refreshPathTiles', () => {
     refreshPathTiles(cells, toPathCellKeys(route), route, () => undefined, drawCell);
 
     expect(drawCell).not.toHaveBeenCalled();
+  });
+});
+
+describe('selectPlayerPathRoute', () => {
+  const buildRoute = [
+    { x: 0, y: 0 },
+    { x: 1, y: 0 },
+  ];
+  const waveRoute = [{ x: 4, y: 0 }];
+
+  it('follows the current board while building, even before any wave routed', () => {
+    expect(selectPlayerPathRoute(true, () => buildRoute, [])).toBe(buildRoute);
+  });
+
+  it('keeps the wave route during a wave without searching the board', () => {
+    const resolveBuildPhaseRoute = vi.fn(() => buildRoute);
+
+    expect(selectPlayerPathRoute(false, resolveBuildPhaseRoute, waveRoute)).toBe(waveRoute);
+    expect(resolveBuildPhaseRoute).not.toHaveBeenCalled();
   });
 });

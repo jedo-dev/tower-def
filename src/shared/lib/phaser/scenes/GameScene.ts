@@ -24,7 +24,7 @@ import {
   startNextWaveCycle,
   type WavePhaseState,
 } from '../../../../features/wave-phase';
-import type { GridCell, GridModel } from '../../../types/grid';
+import type { GridCell, GridModel, GridPoint } from '../../../types/grid';
 import type { GridPosition } from '../../../types/pathfinding';
 import {
   getGameSetupConfig,
@@ -126,7 +126,7 @@ import {
   type GridRendererDeps,
   type GridRendererState,
 } from '../runtime/grid/gameSceneGridRenderer';
-import { refreshPathTiles } from '../runtime/grid/pathTiles';
+import { refreshPathTiles, selectPlayerPathRoute } from '../runtime/grid/pathTiles';
 import {
   registerSceneAudioUnlock,
   registerScenePointerHandlers,
@@ -572,6 +572,11 @@ export class GameScene extends Phaser.Scene {
     this.gridModel = grid;
     this.updateGridOverlayVisualState();
     this.initializeWaveRuntime(grid);
+    // A fresh board: show its path from match start, not only after the
+    // first build or wave start.
+    markRoutePreviewLayoutChanged(this.routePreview);
+    this.arePathTilesStale = true;
+    this.refreshBuildPhasePathTiles();
   }
 
   private initializeWaveRuntime(grid: GridModel): void {
@@ -721,11 +726,21 @@ export class GameScene extends Phaser.Scene {
     refreshPathTiles(
       this.gridModel.cells,
       this.pathCellKeys,
-      getBuildRoutePreviewCurrentRoutes(this.routePreview, this.gridModel).small,
+      this.getPlayerPathRoute(),
       (nextPathCellKeys) => {
         this.pathCellKeys = nextPathCellKeys;
       },
       (cell) => this.drawGridCell(cell),
+    );
+  }
+
+  /** Shares the route preview's memoised search while building. */
+  private getPlayerPathRoute(): readonly GridPoint[] {
+    const grid = this.gridModel;
+    return selectPlayerPathRoute(
+      grid !== null && !this.isGameOver && canPerformBuildActionsByPhase(this.wavePhaseState),
+      () => (grid ? getBuildRoutePreviewCurrentRoutes(this.routePreview, grid).small : []),
+      this.runState.activeCreepRoutes.small,
     );
   }
 
@@ -1148,7 +1163,8 @@ export class GameScene extends Phaser.Scene {
 
     const visiblePath = showOpponent
       ? this.duelMatchState.opponent.battlefield.routes.small
-      : this.runState.activeCreepRoutes.small;
+      : this.getPlayerPathRoute();
+    if (!showOpponent) this.arePathTilesStale = false;
     this.pathCellKeys = new Set(visiblePath.map((cell) => `${cell.x}:${cell.y}`));
     this.redrawTerrainTiles();
   }

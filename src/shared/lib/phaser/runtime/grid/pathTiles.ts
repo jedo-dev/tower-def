@@ -41,3 +41,16 @@ export function refreshPathTiles(
   onPathCellKeysChanged(nextPathCellKeys);
   changedCells.forEach(drawCell);
 }
+
+/**
+ * Route the player's path tiles follow. While building they track the board
+ * as it stands (from match start, before any wave has routed), so the first
+ * build phase already shows the path; during a wave they show its routes.
+ */
+export function selectPlayerPathRoute(
+  isBuildPhase: boolean,
+  resolveBuildPhaseRoute: () => readonly GridPoint[],
+  waveRoute: readonly GridPoint[],
+): readonly GridPoint[] {
+  return isBuildPhase ? resolveBuildPhaseRoute() : waveRoute;
+}
