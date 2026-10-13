@@ -8,6 +8,7 @@ import {
 } from './buildSpendBudget';
 import { computeContextThreatSplit } from './contextThreatSplit';
 import { buildByScore, investInPlan, type BuildRoundState } from './buildRoundActions';
+import { spendSurplus } from './spendSurplus';
 import {
   MAZE_PLAN_HORIZON_ROUNDS,
   MAZE_PLAN_SEARCH_EFFORT_BY_DIFFICULTY,
@@ -177,10 +178,14 @@ export function planBuildDecision(input: BuildPlannerInput): BuildDecisionOutput
   const isPlanShort = followsPlan && investInPlan(round, context, unbuilt, { maxBuilds });
   // Defending wants firepower on the current route; an unfinished plan with
   // too little buildable right now should not stall the opponent either. A
-  // finished plan does not fall back: the maze is done, gold goes to upgrades.
+  // finished plan does not fall back: the maze is done, gold goes to upgrades,
+  // and whatever the threat split held back above a reserve is spent too.
   const expandedBeforeScoring = round.expandedNodeCount;
   if (intent === StrategyIntent.DEFEND || (isPlanShort && !plan.isComplete)) {
     buildByScore(round, context, intent, unbuilt, maxBuilds);
+  }
+  if (plan.isComplete) {
+    spendSurplus(round, context, unbuilt, budget - round.remainingBudget, maxBuilds);
   }
 
   if (round.actions.length === 0) {

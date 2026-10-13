@@ -17,6 +17,11 @@ export type SpendBudgetConfig = {
    * growing the maze to upgrading what it already has.
    */
   mazeCoverageTarget: number;
+  /**
+   * Share of one round of income the opponent keeps in hand once its maze
+   * plan is finished; everything above it is surplus and gets spent.
+   */
+  surplusReserveIncomeShare: number;
 };
 
 export const SPEND_BUDGET_BY_DIFFICULTY: Readonly<Record<Difficulty, Readonly<SpendBudgetConfig>>> =
@@ -26,24 +31,28 @@ export const SPEND_BUDGET_BY_DIFFICULTY: Readonly<Record<Difficulty, Readonly<Sp
       maxBuildActionsPerRound: 4,
       minGoldReserveRatio: 0.25,
       mazeCoverageTarget: 0.25,
+      surplusReserveIncomeShare: 1,
     },
     [Difficulty.NORMAL]: {
       maxSpendRatioPerRound: 0.8,
       maxBuildActionsPerRound: 6,
       minGoldReserveRatio: 0.1,
       mazeCoverageTarget: 0.34,
+      surplusReserveIncomeShare: 0.5,
     },
     [Difficulty.HARD]: {
       maxSpendRatioPerRound: 0.95,
       maxBuildActionsPerRound: 8,
       minGoldReserveRatio: 0.05,
       mazeCoverageTarget: 0.42,
+      surplusReserveIncomeShare: 0.25,
     },
     [Difficulty.NIGHTMARE]: {
       maxSpendRatioPerRound: 1,
       maxBuildActionsPerRound: 10,
       minGoldReserveRatio: 0,
       mazeCoverageTarget: 0.46,
+      surplusReserveIncomeShare: 0,
     },
   };
 

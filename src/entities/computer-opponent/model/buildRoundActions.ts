@@ -19,7 +19,12 @@ import {
 import { DEFEND_REROUTE_PROBE_LIMIT, findBestScoredBuild } from './findBestScoredBuild';
 import { createMazeEvaluator } from './maze-evaluation';
 import { createMazePlanPriority, selectPlanBuilds } from './maze-planning';
-import { DEFENSE_PLACEMENT_WEIGHTS, MAZE_PLACEMENT_WEIGHTS } from './scoreTowerPlacement';
+import {
+  COVERAGE_PLACEMENT_WEIGHTS,
+  DEFENSE_PLACEMENT_WEIGHTS,
+  MAZE_PLACEMENT_WEIGHTS,
+  type PlacementWeights,
+} from './scoreTowerPlacement';
 import type { ComputerAction, DecisionContext } from './types';
 import { StrategyIntent } from './types';
 
@@ -73,6 +78,10 @@ function recordBuild(
 
 function recordUpgrade(round: BuildRoundState, upgrade: PlannedUpgrade): void {
   round.actions.push({ kind: 'upgrade', towerId: upgrade.towerId });
+  // Later passes this round see the new level: its next upgrade, not this one again.
+  round.plannedTowers = round.plannedTowers.map((tower) =>
+    tower.id === upgrade.towerId ? { ...tower, level: tower.level + 1 } : tower,
+  );
   round.remainingBudget -= upgrade.cost;
   round.reasoning.push(
     `Upgrading tower ${upgrade.towerId} for ${upgrade.cost} gold, +${upgrade.value.toFixed(0)} route damage`,
@@ -148,6 +157,12 @@ export function investInPlan(
   return (selection?.anchors.length ?? 0) < count;
 }
 
+/** How single towers are scored: placement weights and route-cutting anchors probed per tower. */
+type ScoringStance = { weights: PlacementWeights; rerouteProbeLimit: number };
+
+/** Only anchors off the current route are scored: the towers never move it. */
+const SURPLUS_STANCE: ScoringStance = { weights: COVERAGE_PLACEMENT_WEIGHTS, rerouteProbeLimit: 0 };
+
 /**
  * Single-tower builds by placement score, each placed against the previous
  * ones on one evaluator that grows with them. Defending probes only the most
@@ -160,8 +175,33 @@ export function buildByScore(
   unbuilt: readonly GridPosition[],
   maxBuilds: number,
 ): void {
-  const mazePlan = createMazePlanPriority(unbuilt);
   const isDefending = intent === StrategyIntent.DEFEND;
+  buildScoredTowers(round, context, unbuilt, maxBuilds, {
+    weights: isDefending ? DEFENSE_PLACEMENT_WEIGHTS : MAZE_PLACEMENT_WEIGHTS,
+    rerouteProbeLimit: isDefending ? DEFEND_REROUTE_PROBE_LIMIT : Infinity,
+  });
+}
+
+/**
+ * Surplus damage towers once the maze is finished: off the route, where they
+ * cover the most of it, cheapest type first (upgrades make them stronger).
+ */
+export function buildCoverageTowers(
+  round: BuildRoundState,
+  context: DecisionContext,
+  maxBuilds: number,
+): void {
+  buildScoredTowers(round, context, [], maxBuilds, SURPLUS_STANCE);
+}
+
+function buildScoredTowers(
+  round: BuildRoundState,
+  context: DecisionContext,
+  unbuilt: readonly GridPosition[],
+  maxBuilds: number,
+  stance: ScoringStance,
+): void {
+  const mazePlan = createMazePlanPriority(unbuilt);
   const evaluator = createMazeEvaluator(round.grid, round.grid.entrance, round.grid.exit);
 
   while (round.buildCount < maxBuilds) {
@@ -170,11 +210,11 @@ export function buildByScore(
       grid: round.grid,
       evaluator,
       mazePlan,
-      weights: isDefending ? DEFENSE_PLACEMENT_WEIGHTS : MAZE_PLACEMENT_WEIGHTS,
+      weights: stance.weights,
       existingTowers: round.plannedTowers,
       budget: round.remainingBudget,
       excludedPositions: round.plannedPositions,
-      rerouteProbeLimit: isDefending ? DEFEND_REROUTE_PROBE_LIMIT : Infinity,
+      rerouteProbeLimit: stance.rerouteProbeLimit,
     });
     const cost = build ? getTowerCostForType(build.towerType, context.raceId) : null;
     if (!build || cost === null || cost > round.remainingBudget) {

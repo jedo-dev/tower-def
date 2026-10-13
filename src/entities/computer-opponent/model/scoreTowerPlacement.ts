@@ -69,6 +69,19 @@ export const DEFENSE_PLACEMENT_WEIGHTS: PlacementWeights = {
 };
 
 /**
+ * Surplus firepower once the maze is finished: nothing but how much of the
+ * route a tower covers. Built off the route only, so it never moves away
+ * from the towers already standing.
+ */
+export const COVERAGE_PLACEMENT_WEIGHTS: PlacementWeights = {
+  plan: 0,
+  mazeGain: 0,
+  pathCoverage: 1,
+  wallSynergy: 0,
+  defenseProximity: 0,
+};
+
+/**
  * Cells of detour that count as "half a great placement". Saturating instead of
  * clamping keeps a 20-cell detour ranked above a 10-cell one.
  */
