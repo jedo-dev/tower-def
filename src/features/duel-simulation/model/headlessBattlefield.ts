@@ -2,7 +2,7 @@ import type { CreepEntity, CreepSenderSide } from '../../../entities/creep';
 import type { BattlefieldState } from '../../../entities/duel-match';
 import {
   createInitialTowerCombatRuntime,
-  recalculateTowerAuras,
+  createTowersWithAuras,
   type TowerCombatRuntime,
   type TowerEntity,
 } from '../../../entities/tower';
@@ -80,9 +80,10 @@ export type HeadlessWaveInput = {
 
 /** Tower copies with their aura bonuses applied, so the duel state stays untouched. */
 function createHeadlessTowers(towers: readonly TowerEntity[]): HeadlessTower[] {
-  const entities = towers.map((tower) => ({ ...tower, combatStats: { ...tower.combatStats } }));
-  recalculateTowerAuras(entities);
-  return entities.map((entity) => ({ entity, runtime: createInitialTowerCombatRuntime() }));
+  return createTowersWithAuras(towers).map((entity) => ({
+    entity,
+    runtime: createInitialTowerCombatRuntime(),
+  }));
 }
 
 export function createHeadlessBattlefield(input: HeadlessWaveInput): HeadlessBattlefield {

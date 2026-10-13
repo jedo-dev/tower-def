@@ -2,7 +2,11 @@ import { TowerAttackKind, TowerTypeId } from '../../../../types/content-ids';
 import { getTowerAttackKind, getTowerCenter } from '../../../../../entities/tower';
 import type Phaser from 'phaser';
 import type { DuelMatchState } from '../../../../../entities/duel-match';
-import { buildableTowers, createInitialTowerCombatRuntime } from '../../../../../entities/tower';
+import {
+  buildableTowers,
+  createInitialTowerCombatRuntime,
+  createTowersWithAuras,
+} from '../../../../../entities/tower';
 import {
   tryResolveUnitConfigById,
   type UnitConfig,
@@ -258,7 +262,8 @@ export function rebuildOpponentBattlefieldRenderState(
 ): void {
   destroyBattlefieldRenderState(battlefield);
 
-  battlefield.towers = opponent.battlefield.towers.map((tower) => {
+  // Same aura rule as the player's field; copies keep the duel state untouched.
+  battlefield.towers = createTowersWithAuras(opponent.battlefield.towers).map((tower) => {
     const sprite =
       getTowerAttackKind(tower.type) === TowerAttackKind.SPLASH
         ? createPlacedPlagueSprite(scene, tower.position)

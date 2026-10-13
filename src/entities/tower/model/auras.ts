@@ -99,3 +99,14 @@ export function recalculateTowerAuras(towers: readonly TowerEntity[]): void {
     tower.combatStats = applyAuraBonusToStats(baseStats, bonus);
   }
 }
+
+/**
+ * Copies of the towers with their auras applied, for a field that is rebuilt
+ * from stored state (the computer's battlefield, the headless duel). The
+ * stored towers stay untouched, so auras never compound across rebuilds.
+ */
+export function createTowersWithAuras(towers: readonly TowerEntity[]): TowerEntity[] {
+  const copies = towers.map((tower) => ({ ...tower, combatStats: { ...tower.combatStats } }));
+  recalculateTowerAuras(copies);
+  return copies;
+}
