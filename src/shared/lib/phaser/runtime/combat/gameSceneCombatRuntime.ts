@@ -1,26 +1,6 @@
-import { TowerAttackKind } from '../../../../types/content-ids';
-import {
-  getTowerArchetype,
-  getTowerAttackKind,
-  getTowerOnHitEffects,
-  getTowerCenter,
-} from '../../../../../entities/tower';
+import { getTowerCenter, getTowerOnHitEffects } from '../../../../../entities/tower';
 import Phaser from 'phaser';
-import {
-  applyDamageToCreep,
-  applyEffectToCreep,
-  isCreepDead,
-  getCreepFootprintCenter,
-  tickCreepEffects,
-  type ApplyEffectInput,
-} from '../../../../../entities/creep';
-import {
-  canTowerAttack,
-  consumeTowerAttack,
-  selectTowerTarget,
-  tickTowerCooldown,
-} from '../../../../../entities/tower';
-import { GRID_DIMENSIONS } from '../../../../constants/grid';
+import { isCreepDead, type ApplyEffectInput } from '../../../../../entities/creep';
 import { TOWER_BONE_ARCHER_EFFECT_FRAMES, TOWER_SPRITE_KEYS } from '../../../../constants/sprites';
 import {
   CREEP_EFFECT_TINTS,
@@ -37,16 +17,23 @@ import type {
   ProjectileState,
   TowerRenderState,
 } from '../../scenes/gameScene.types';
-import type { BattlefieldRenderState } from '../battlefield/battlefieldRenderState';
+import {
+  createBattlefieldRenderState,
+  type BattlefieldRenderState,
+} from '../battlefield/battlefieldRenderState';
 import {
   destroyCreepRenderState,
   refreshCreepEffectVisuals,
   resolveCreepRestingTint,
 } from './creepEffectVisuals';
 import { getCreepDeathAnimationKey } from '../animation/creepFacing';
-
-/** Splash radius, in fine-grid cells, for a splash tower whose content omits one. */
-const DEFAULT_SPLASH_RADIUS_CELLS = 3;
+import {
+  applyTowerEffect,
+  resolveTowerAttacks,
+  tickFieldCreepEffects,
+  type DamageNumberSource,
+  type TowerCombatHooks,
+} from './towerCombatCore';
 
 export type CombatRuntimeConfig = {
   archerProjectileVisualMode: 'projectile' | 'attackEffect';
@@ -124,8 +111,6 @@ function spawnImpactEffect(
   });
 }
 
-type DamageNumberSource = 'hit' | 'effect';
-
 function spawnDamageNumber(
   battlefield: BattlefieldRenderState,
   deps: CombatRuntimeDependencies,
@@ -158,195 +143,6 @@ function spawnDamageNumber(
 function applyCreepHitFeedback(creep: CreepRenderState, config: CombatRuntimeConfig): void {
   creep.hitFlashRemainingMs = config.creepHitFlashDurationMs;
   creep.sprite.setTint(config.creepHitFlashColor);
-}
-
-function applyTowerOnHitEffects(
-  deps: CombatRuntimeDependencies,
-  config: CombatRuntimeConfig,
-  tower: TowerRenderState,
-  creep: CreepRenderState,
-): void {
-  const onHitEffects =
-    tower.entity.combatStats.onHitEffects ?? getTowerOnHitEffects(tower.entity.type);
-
-  if (onHitEffects.length === 0 || creep.entity.status !== 'alive') {
-    return;
-  }
-
-  for (const effect of onHitEffects) {
-    applyTowerEffectToCreep(deps, config, creep, {
-      effectId: effect.effectId,
-      magnitude: effect.magnitude,
-      durationMs: effect.durationMs,
-      maxStacks: effect.maxStacks,
-    });
-  }
-}
-
-function applySingleTargetDamage(
-  battlefield: BattlefieldRenderState,
-  deps: CombatRuntimeDependencies,
-  config: CombatRuntimeConfig,
-  tower: TowerRenderState,
-  targetRenderState: CreepRenderState,
-): void {
-  const damageResult = applyDamageToCreep(
-    targetRenderState.entity,
-    tower.entity.combatStats.damage,
-  );
-
-  targetRenderState.entity = damageResult.creep;
-  applyTowerOnHitEffects(deps, config, tower, targetRenderState);
-  applyCreepHitFeedback(targetRenderState, config);
-  deps.playSound('combat.creep_hit');
-  spawnDamageNumber(
-    battlefield,
-    deps,
-    config,
-    targetRenderState.entity.position,
-    Math.round(damageResult.damageApplied),
-  );
-
-  if (damageResult.killed) {
-    handleCreepKill(deps);
-  }
-}
-
-function applySplashDamage(
-  battlefield: BattlefieldRenderState,
-  deps: CombatRuntimeDependencies,
-  config: CombatRuntimeConfig,
-  tower: TowerRenderState,
-  targetRenderState: CreepRenderState,
-): void {
-  const splashRadius = tower.entity.combatStats.splashRadius ?? DEFAULT_SPLASH_RADIUS_CELLS;
-  const towerCenter = getTowerCenter(tower.entity);
-  const splashRadiusPx = splashRadius * GRID_DIMENSIONS.cellSize;
-
-  const creepsInSplashRadius = battlefield.creeps.filter((creep) => {
-    if (creep.entity.status !== 'alive') {
-      return false;
-    }
-    const creepCenter = deps.toCellCenter(getCreepFootprintCenter(creep.entity));
-    const towerCenterPx = deps.toCellCenter(towerCenter);
-    const distance = Math.hypot(creepCenter.x - towerCenterPx.x, creepCenter.y - towerCenterPx.y);
-    return distance <= splashRadiusPx;
-  });
-
-  let totalDamageDealt = 0;
-  for (const creep of creepsInSplashRadius) {
-    const damageResult = applyDamageToCreep(creep.entity, tower.entity.combatStats.damage);
-    creep.entity = damageResult.creep;
-    applyTowerOnHitEffects(deps, config, tower, creep);
-    applyCreepHitFeedback(creep, config);
-    totalDamageDealt += damageResult.damageApplied;
-
-    if (damageResult.killed) {
-      handleCreepKill(deps);
-    }
-  }
-
-  deps.playSound('combat.creep_hit');
-  spawnDamageNumber(
-    battlefield,
-    deps,
-    config,
-    targetRenderState.entity.position,
-    Math.round(totalDamageDealt),
-  );
-}
-
-/**
- * Picks the creeps an arc jumps to. Selection is by distance and then id, so a
- * given battlefield state always produces the same chain.
- */
-function selectChainTargets(
-  battlefield: BattlefieldRenderState,
-  deps: CombatRuntimeDependencies,
-  from: CreepRenderState,
-  bounces: number,
-  bounceRangeCells: number,
-): CreepRenderState[] {
-  const visited = new Set<string>([from.entity.id]);
-  const chain: CreepRenderState[] = [];
-  let current = from;
-
-  for (let bounce = 0; bounce < bounces; bounce += 1) {
-    const currentCenter = deps.toCellCenter(getCreepFootprintCenter(current.entity));
-    const rangePx = bounceRangeCells * GRID_DIMENSIONS.cellSize;
-
-    const next = battlefield.creeps
-      .filter((creep) => creep.entity.status === 'alive' && !visited.has(creep.entity.id))
-      .map((creep) => {
-        const center = deps.toCellCenter(getCreepFootprintCenter(creep.entity));
-        return {
-          creep,
-          distance: Math.hypot(center.x - currentCenter.x, center.y - currentCenter.y),
-        };
-      })
-      .filter((candidate) => candidate.distance <= rangePx)
-      .sort((left, right) =>
-        left.distance === right.distance
-          ? left.creep.entity.id.localeCompare(right.creep.entity.id)
-          : left.distance - right.distance,
-      )[0];
-
-    if (!next) {
-      break;
-    }
-
-    visited.add(next.creep.entity.id);
-    chain.push(next.creep);
-    current = next.creep;
-  }
-
-  return chain;
-}
-
-function applyChainDamage(
-  battlefield: BattlefieldRenderState,
-  deps: CombatRuntimeDependencies,
-  config: CombatRuntimeConfig,
-  tower: TowerRenderState,
-  targetRenderState: CreepRenderState,
-): void {
-  const chainShape = getTowerArchetype(tower.entity.type).chain;
-
-  applySingleTargetDamage(battlefield, deps, config, tower, targetRenderState);
-
-  if (!chainShape) {
-    return;
-  }
-
-  const chainTargets = selectChainTargets(
-    battlefield,
-    deps,
-    targetRenderState,
-    chainShape.bounces,
-    chainShape.bounceRangeCells,
-  );
-
-  let arcDamage = tower.entity.combatStats.damage;
-
-  for (const creep of chainTargets) {
-    arcDamage *= 1 - chainShape.damageFalloff;
-
-    const damageResult = applyDamageToCreep(creep.entity, arcDamage);
-    creep.entity = damageResult.creep;
-    applyTowerOnHitEffects(deps, config, tower, creep);
-    applyCreepHitFeedback(creep, config);
-    spawnDamageNumber(
-      battlefield,
-      deps,
-      config,
-      creep.entity.position,
-      Math.round(damageResult.damageApplied),
-    );
-
-    if (damageResult.killed) {
-      handleCreepKill(deps);
-    }
-  }
 }
 
 function spawnProjectileFeedback(
@@ -407,65 +203,72 @@ function spawnProjectileFeedback(
   });
 }
 
+/**
+ * Combat hooks for one rendered battlefield: hit flash, damage numbers,
+ * effect repaint, sounds and projectiles. Cached per deps so a frame does not
+ * allocate a fresh hooks object.
+ */
+type RenderCombatHooks = TowerCombatHooks<CreepRenderState, TowerRenderState>;
+
+const renderCombatHooksCache = new WeakMap<
+  CombatRuntimeDependencies,
+  { battlefield: BattlefieldRenderState; config: CombatRuntimeConfig; hooks: RenderCombatHooks }
+>();
+
+function createRenderCombatHooks(
+  battlefield: BattlefieldRenderState,
+  deps: CombatRuntimeDependencies,
+  config: CombatRuntimeConfig,
+): RenderCombatHooks {
+  return {
+    toCellCenter: deps.toCellCenter,
+    onCreepHit: (creep) => applyCreepHitFeedback(creep, config),
+    onTargetStruck: () => deps.playSound('combat.creep_hit'),
+    onDamageDealt: (position, damage, source) =>
+      spawnDamageNumber(battlefield, deps, config, position, damage, source),
+    onEffectApplied: (creep, effectId) => {
+      refreshCreepEffectVisuals(deps.scene, creep, config.creepBaseColor);
+      const soundId = EFFECT_APPLIED_SOUND_BY_EFFECT[effectId];
+      if (soundId) {
+        deps.playSound(soundId);
+      }
+    },
+    onEffectsTicked: (creep) => refreshCreepEffectVisuals(deps.scene, creep, config.creepBaseColor),
+    onCreepKilled: () => handleCreepKill(deps),
+    onTowerFired: (tower, target, isSplashTower) => {
+      if (isSplashTower) {
+        deps.playSplashAttackAnimation(tower);
+      } else {
+        deps.playArcherAttackAnimation(tower);
+      }
+      spawnProjectileFeedback(battlefield, deps, config, tower, target, isSplashTower);
+      deps.playSound(isSplashTower ? 'combat.tower_attack.splash' : 'combat.tower_attack.archer');
+    },
+  };
+}
+
+function getRenderCombatHooks(
+  battlefield: BattlefieldRenderState,
+  deps: CombatRuntimeDependencies,
+  config: CombatRuntimeConfig,
+): RenderCombatHooks {
+  const cached = renderCombatHooksCache.get(deps);
+  if (cached && cached.battlefield === battlefield && cached.config === config) {
+    return cached.hooks;
+  }
+
+  const hooks = createRenderCombatHooks(battlefield, deps, config);
+  renderCombatHooksCache.set(deps, { battlefield, config, hooks });
+  return hooks;
+}
+
 export function updateTowerCombat(
   battlefield: BattlefieldRenderState,
   deps: CombatRuntimeDependencies,
   config: CombatRuntimeConfig,
   deltaMs: number,
 ): void {
-  if (battlefield.towers.length === 0 || battlefield.creeps.length === 0) {
-    return;
-  }
-
-  const creepsForTargeting = battlefield.creeps.map((creep) => creep.entity);
-
-  for (const tower of battlefield.towers) {
-    // Support towers have no attack of their own; their aura does the work.
-    if (getTowerAttackKind(tower.entity.type) === TowerAttackKind.AURA) {
-      continue;
-    }
-
-    tower.runtime = tickTowerCooldown(tower.runtime, deltaMs);
-
-    if (!canTowerAttack(tower.entity, tower.runtime)) {
-      continue;
-    }
-
-    const targetCreep = selectTowerTarget(tower.entity, creepsForTargeting);
-
-    if (!targetCreep) {
-      continue;
-    }
-
-    const targetRenderState = battlefield.creeps.find(
-      (creep) => creep.entity.id === targetCreep.id,
-    );
-
-    if (!targetRenderState) {
-      continue;
-    }
-
-    const attackKind = getTowerAttackKind(tower.entity.type);
-    const isSplashTower = attackKind === TowerAttackKind.SPLASH;
-    const splashRadius = tower.entity.combatStats.splashRadius ?? 0;
-
-    if (isSplashTower && splashRadius > 0) {
-      applySplashDamage(battlefield, deps, config, tower, targetRenderState);
-    } else if (attackKind === TowerAttackKind.CHAIN) {
-      applyChainDamage(battlefield, deps, config, tower, targetRenderState);
-    } else {
-      applySingleTargetDamage(battlefield, deps, config, tower, targetRenderState);
-    }
-
-    tower.runtime = consumeTowerAttack(tower.entity, tower.runtime);
-    if (isSplashTower) {
-      deps.playSplashAttackAnimation(tower);
-    } else {
-      deps.playArcherAttackAnimation(tower);
-    }
-    spawnProjectileFeedback(battlefield, deps, config, tower, targetRenderState, isSplashTower);
-    deps.playSound(isSplashTower ? 'combat.tower_attack.splash' : 'combat.tower_attack.archer');
-  }
+  resolveTowerAttacks(battlefield, getRenderCombatHooks(battlefield, deps, config), deltaMs);
 }
 
 /**
@@ -504,23 +307,12 @@ export function applyTowerEffectToCreep(
   creep: CreepRenderState,
   input: ApplyEffectInput,
 ): boolean {
-  const previousEntity = creep.entity;
-  creep.entity = applyEffectToCreep(creep.entity, input);
-
-  // A weaker application of a strongest-wins effect changes nothing.
-  if (creep.entity === previousEntity) {
-    return false;
-  }
-
-  refreshCreepEffectVisuals(deps.scene, creep, config.creepBaseColor);
-
-  const soundId = EFFECT_APPLIED_SOUND_BY_EFFECT[input.effectId];
-
-  if (soundId) {
-    deps.playSound(soundId);
-  }
-
-  return true;
+  // The battlefield only matters for damage numbers, which effects never spawn.
+  return applyTowerEffect(
+    creep,
+    input,
+    createRenderCombatHooks(createBattlefieldRenderState(), deps, config),
+  );
 }
 
 /**
@@ -539,40 +331,11 @@ export function updateCreepEffects(
   }
 
   const clampedDeltaMs = Math.min(deltaMs, config.effectMaxSimulationDeltaMs);
-
-  for (const creep of battlefield.creeps) {
-    if (creep.entity.status !== 'alive') {
-      continue;
-    }
-
-    const tickResult = tickCreepEffects(creep.entity, clampedDeltaMs);
-
-    if (tickResult.creep === creep.entity) {
-      continue;
-    }
-
-    creep.entity = tickResult.creep;
-    refreshCreepEffectVisuals(deps.scene, creep, config.creepBaseColor);
-
-    if (tickResult.damage <= 0) {
-      continue;
-    }
-
-    const damageResult = applyDamageToCreep(creep.entity, tickResult.damage, { ignoreArmor: true });
-    creep.entity = damageResult.creep;
-    spawnDamageNumber(
-      battlefield,
-      deps,
-      config,
-      creep.entity.position,
-      Math.round(tickResult.damage),
-      'effect',
-    );
-
-    if (damageResult.killed) {
-      handleCreepKill(deps);
-    }
-  }
+  tickFieldCreepEffects(
+    battlefield,
+    getRenderCombatHooks(battlefield, deps, config),
+    clampedDeltaMs,
+  );
 }
 
 export function removeDeadCreepsFromActiveWave(

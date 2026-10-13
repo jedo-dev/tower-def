@@ -1,7 +1,7 @@
-import { endRound, NO_SENT_CREEP_LEAKS, payIncome } from '../../../../../entities/duel-match';
+import { NO_SENT_CREEP_LEAKS, settleRound } from '../../../../../entities/duel-match';
 import type {
   DuelMatchState,
-  DuelRoundEndResult,
+  DuelRoundSettlement,
   SentCreepLeaks,
 } from '../../../../../entities/duel-match';
 import { publishGameEvent } from '../../../game-bridge/bridge';
@@ -32,30 +32,16 @@ export type ApplyDuelRoundEndInput = {
   sentLeaks?: SentCreepLeaks;
 };
 
-export type ApplyDuelRoundEndResult = DuelRoundEndResult & {
-  playerIncomePaid: number;
-  opponentIncomePaid: number;
-};
+export type ApplyDuelRoundEndResult = DuelRoundSettlement;
 
 export function applyDuelRoundEnd(input: ApplyDuelRoundEndInput): ApplyDuelRoundEndResult {
-  const result = endRound(
+  const result = settleRound(
     input.state.duelMatchState,
     input.playerLeakedCreeps,
     input.opponentLeakedCreeps,
     input.sentLeaks ?? NO_SENT_CREEP_LEAKS,
   );
-
-  let playerIncomePaid = 0;
-  let opponentIncomePaid = 0;
-  let nextState = result.state;
-  if (!result.isMatchOver) {
-    const payout = payIncome(nextState);
-    nextState = payout.state;
-    playerIncomePaid = payout.playerIncomePaid;
-    opponentIncomePaid = payout.opponentIncomePaid;
-  }
-
-  input.state.duelMatchState = nextState;
+  input.state.duelMatchState = result.state;
   input.deps.onDuelMatchStateUpdated(input.state.duelMatchState);
 
   if (result.isMatchOver) {
@@ -69,12 +55,7 @@ export function applyDuelRoundEnd(input: ApplyDuelRoundEndInput): ApplyDuelRound
     input.deps.playGameOverSound();
   }
 
-  return {
-    ...result,
-    state: nextState,
-    playerIncomePaid,
-    opponentIncomePaid,
-  };
+  return result;
 }
 
 /**

@@ -33,8 +33,10 @@ export {
   generateBaselineWaveId,
   payIncome,
   sendCreep,
+  settleRound,
   startRound,
 } from './model/lifecycle';
+export type { DuelRoundSettlement } from './model/lifecycle';
 export {
   canAffordSend,
   getIncomeBonusByTier,

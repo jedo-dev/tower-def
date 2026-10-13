@@ -5,6 +5,7 @@ import { hasRouteForSizeClass } from '../pathfinding/findRouteForSizeClass';
 import { UnitSizeClass } from '../../types/content-ids';
 import { createGridModel } from './createGridModel';
 import { doFootprintsOverlap } from './footprint';
+import { createSeededRandom } from '../random/createSeededRandom';
 
 /** Top-left anchors of the entrance and exit zones. */
 export type EdgeEndpoints = {
@@ -26,19 +27,6 @@ export const DEFAULT_EDGE_ENDPOINT_MIN_DISTANCE = Math.max(
 
 /** Zones keep at least one free cell between them. */
 const ZONE_SEPARATION_CELLS = 1;
-
-// mulberry32: tiny deterministic PRNG so the same seed always yields the
-// same endpoints on every client.
-function createSeededRandom(seed: number): () => number {
-  let state = seed >>> 0;
-  return () => {
-    state = (state + 0x6d2b79f5) >>> 0;
-    let t = state;
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
 
 /**
  * Every anchor whose zone lies inside the grid and touches at least one edge,

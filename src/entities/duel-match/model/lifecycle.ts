@@ -124,6 +124,35 @@ export function endRound(
   };
 }
 
+export type DuelRoundSettlement = DuelRoundEndResult & {
+  playerIncomePaid: number;
+  opponentIncomePaid: number;
+};
+
+/**
+ * End of a wave: resolves the leaks (`endRound`) and, unless that ended the
+ * match, pays both sides their income for the next build phase.
+ */
+export function settleRound(
+  state: DuelMatchState,
+  playerLeakedCreeps: number,
+  opponentLeakedCreeps: number,
+  sentLeaks: SentCreepLeaks = NO_SENT_CREEP_LEAKS,
+): DuelRoundSettlement {
+  const result = endRound(state, playerLeakedCreeps, opponentLeakedCreeps, sentLeaks);
+  if (result.isMatchOver) {
+    return { ...result, playerIncomePaid: 0, opponentIncomePaid: 0 };
+  }
+
+  const payout = payIncome(result.state);
+  return {
+    ...result,
+    state: payout.state,
+    playerIncomePaid: payout.playerIncomePaid,
+    opponentIncomePaid: payout.opponentIncomePaid,
+  };
+}
+
 export function sendCreep(
   state: DuelMatchState,
   isPlayer: boolean,

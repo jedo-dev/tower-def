@@ -1,7 +1,4 @@
 import {
-  applyComputerBuildStrategy,
-  applyComputerSendStrategy,
-  buildDecisionContext,
   type ComputerDecisionDebugRecorder,
   type ComputerMazePlanMemory,
   type LeakHistoryEntry,
@@ -15,6 +12,7 @@ import {
 import type { UnitConfig } from '../../../../../entities/unit';
 import { generateWaveUnits } from '../../../../../entities/wave';
 import { CreepTypeId } from '../../../../types/content-ids';
+import { runComputerBuildPhase } from './computerBuildPhase';
 
 export type ComputerBuildPhaseDeps = {
   difficulty: Difficulty;
@@ -26,8 +24,9 @@ export type ComputerBuildPhaseDeps = {
 };
 
 /**
- * Runs the computer opponent build and send strategies for the upcoming round
- * and mirrors decision telemetry into the scene registry.
+ * Runs the computer opponent send and build strategies for the upcoming round
+ * (see `runComputerBuildPhase`) and mirrors decision telemetry into the scene
+ * registry.
  */
 export function applyComputerBuildPhaseStrategies(
   state: DuelMatchState,
@@ -37,41 +36,19 @@ export function applyComputerBuildPhaseStrategies(
     return state;
   }
 
-  // Sends run before builds, and the order is load bearing. Both planners take
-  // a share of whatever gold they are handed, so whichever runs second only
-  // sees the leftovers. With building first the opponent spent itself down to
-  // the point where it could never afford a creep again, its income froze at
-  // the starting value, and a frozen income bought exactly one tower a round -
-  // no maze, no pressure. Income compounds, so it gets first claim.
-  const sendContext = buildDecisionContext({
-    matchState: state,
-    difficulty: deps.difficulty,
-    leakHistory: deps.leakHistory,
-  });
-  const sendResult = applyComputerSendStrategy({
+  const result = runComputerBuildPhase({
     state,
-    context: sendContext,
-    debugRecorder: deps.debugRecorder,
-  });
-  let nextState = sendResult.state;
-  deps.setRegistryValue('duel.opponent.sendCount', sendResult.sentCount);
-
-  const buildContext = buildDecisionContext({
-    matchState: nextState,
     difficulty: deps.difficulty,
     leakHistory: deps.leakHistory,
-  });
-  const buildResult = applyComputerBuildStrategy({
-    state: nextState,
-    context: buildContext,
-    debugRecorder: deps.debugRecorder,
     mazePlan: deps.mazePlanMemory.plan,
+    debugRecorder: deps.debugRecorder,
   });
-  deps.mazePlanMemory.plan = buildResult.mazePlan;
-  nextState = buildResult.state;
-  deps.setRegistryValue('duel.opponent.builtCount', buildResult.builtCount);
-  deps.setRegistryValue('duel.opponent.upgradedCount', buildResult.upgradedCount);
-  deps.setRegistryValue('duel.opponent.buildSpentGold', buildResult.spentGold);
+  deps.mazePlanMemory.plan = result.mazePlan;
+  const nextState = result.state;
+  deps.setRegistryValue('duel.opponent.sendCount', result.sentCount);
+  deps.setRegistryValue('duel.opponent.builtCount', result.builtCount);
+  deps.setRegistryValue('duel.opponent.upgradedCount', result.upgradedCount);
+  deps.setRegistryValue('duel.opponent.buildSpentGold', result.buildSpentGold);
   deps.setRegistryValue('duel.opponent.gold', nextState.opponent.gold);
   deps.setRegistryValue('duel.opponent.income', nextState.opponent.income);
   if (import.meta.env.DEV) {
