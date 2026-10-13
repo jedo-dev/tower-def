@@ -3,7 +3,8 @@ import { createInitialDuelMatchState } from '../../../../../entities/duel-match'
 import { applyComputerSendStrategy } from '../../../../../entities/computer-opponent';
 import { Difficulty } from '../../../../../entities/difficulty';
 import { resolveUnitConfigById, undeadUnits } from '../../../../../entities/unit';
-import { RaceId, UnitMoveType } from '../../../../types/content-ids';
+import { RaceId, UnitMoveType, UnitSizeClass } from '../../../../types/content-ids';
+import { getCreepVisualMetrics } from '../creep/creepVisualMetrics';
 import { createInitialWavePhaseState } from '../../../../../features/wave-phase';
 import {
   processPendingWaveSpawns,
@@ -150,4 +151,60 @@ describe('shared/lib/phaser/runtime/wave creature traits', () => {
     expect(spawned.armorType).toBe(gargoyle.armorType);
     expect(spawned.moveType).toBe(UnitMoveType.AIR);
   });
+});
+
+describe('shared/lib/phaser/runtime/wave creep visual scale', () => {
+  it.each([UnitSizeClass.SMALL, UnitSizeClass.LARGE])(
+    'sizes a %s creep by its size class and centres it on its footprint',
+    (sizeClass) => {
+      const unit = { ...resolveUnitConfigById('undead_gargoyle'), sizeClass };
+      const sprite = createSpriteStub();
+      const createCreepSprite = vi.fn(() => sprite);
+      const state: WaveRuntimeState = {
+        activeCreepPath: [{ x: 8, y: 8 }],
+        activeCreeps: [],
+        pendingWaveSpawns: [{ unit, sequenceIndex: 0, spawnAtMs: 0 }],
+        wavePhaseState: createInitialWavePhaseState(),
+        isWaveCompletionRewardGranted: false,
+        nextWaveStartsAtMs: null,
+        restartScheduledAtMs: null,
+        playerGold: 100,
+        playerLives: 20,
+        isGameOver: false,
+        currentWaveNumber: 1,
+        lastPublishedAutoStartSecondsLeft: null,
+      };
+      const deps: WaveRuntimeDependencies = {
+        nowMs: () => 1_000,
+        getSelectedFactionUnits: () => [unit],
+        getAdditionalWaveUnits: () => [],
+        getSpriteKeyByUnit: () => 'unit:sprite',
+        getAnimationKeyByUnit: () => 'unit:walk',
+        getCreepTypeFromUnit: () => 'basic',
+        toCellCenter: (position) => position,
+        onGoldUpdated: vi.fn(),
+        onWavePhaseChanged: vi.fn(),
+        onBuildStateUpdated: vi.fn(),
+        onHudChanged: vi.fn(),
+        createCreepSprite,
+        playSound: vi.fn(),
+      };
+
+      processPendingWaveSpawns(state, deps, 1_000);
+
+      const metrics = getCreepVisualMetrics(sizeClass);
+      const offset = metrics.footprintCenterOffsetPx;
+      expect(createCreepSprite).toHaveBeenCalledWith(
+        8 + offset,
+        8 + offset,
+        'unit:sprite',
+        'unit:walk',
+      );
+      expect(sprite.setDisplaySize).toHaveBeenCalledWith(
+        metrics.displaySizePx,
+        metrics.displaySizePx,
+      );
+      expect(state.activeCreeps[0]?.footprintCenterOffsetPx).toBe(offset);
+    },
+  );
 });

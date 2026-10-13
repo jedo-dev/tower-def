@@ -9,6 +9,11 @@ export type CreepRenderState = {
   sprite: Phaser.GameObjects.Sprite;
   hitFlashRemainingMs: number;
   deathFadeRemainingMs: number;
+  /**
+   * Pixels from the anchor cell centre to the footprint centre on both axes,
+   * so a large creep is drawn over its whole 2x2 footprint. Zero when omitted.
+   */
+  footprintCenterOffsetPx?: number;
   /** Faction tint to restore after a hit flash; white when untinted. */
   baseTint?: number;
   /** Status pips shown while several effects run at once. */

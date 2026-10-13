@@ -16,7 +16,8 @@ import { calculateWaveStartPath, generateWaveUnits } from '../../../../../entiti
 import type { CreepEntity } from '../../../../../entities/creep';
 import type { UnitConfig } from '../../../../../entities/unit';
 import { ECONOMY_BALANCE } from '../../../../constants/economy';
-import { CREEP_RENDER_DEPTH, CREEP_VISUAL_SIZE_PX } from '../../scenes/gameScene.constants';
+import { CREEP_RENDER_DEPTH } from '../../scenes/gameScene.constants';
+import { getCreepVisualMetrics } from '../creep/creepVisualMetrics';
 import type { GridModel } from '../../../../types/grid';
 import type { GridPosition } from '../../../../types/pathfinding';
 import type { SoundId } from '../../sound/audio.types';
@@ -269,8 +270,15 @@ export function processPendingWaveSpawns(
 
     const spriteKey = deps.getSpriteKeyByUnit(spawn.unit);
     const animationKey = deps.getAnimationKeyByUnit(spawn.unit);
-    const sprite = deps.createCreepSprite(startPoint.x, startPoint.y, spriteKey, animationKey);
-    sprite.setDisplaySize(CREEP_VISUAL_SIZE_PX, CREEP_VISUAL_SIZE_PX);
+    const visualMetrics = getCreepVisualMetrics(spawn.unit.sizeClass);
+    const footprintCenterOffsetPx = visualMetrics.footprintCenterOffsetPx;
+    const sprite = deps.createCreepSprite(
+      startPoint.x + footprintCenterOffsetPx,
+      startPoint.y + footprintCenterOffsetPx,
+      spriteKey,
+      animationKey,
+    );
+    sprite.setDisplaySize(visualMetrics.displaySizePx, visualMetrics.displaySizePx);
     sprite.setDepth(CREEP_RENDER_DEPTH);
     const baseTint = deps.getCreepTintByUnit?.(spawn.unit) ?? 0xffffff;
     sprite.setTint(baseTint);
@@ -285,6 +293,7 @@ export function processPendingWaveSpawns(
       sprite,
       hitFlashRemainingMs: 0,
       deathFadeRemainingMs: 0,
+      footprintCenterOffsetPx,
       baseTint,
       isDirectional,
       facing: isDirectional ? 'side' : undefined,
