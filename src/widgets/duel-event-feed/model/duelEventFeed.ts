@@ -19,9 +19,7 @@ export function appendFeedEntry(
   return next.length > limit ? next.slice(next.length - limit) : next;
 }
 
-export function formatSendQueueUpdated(
-  payload: GameEventMap['send-queue-updated'],
-): string | null {
+export function formatSendQueueUpdated(payload: GameEventMap['send-queue-updated']): string | null {
   if (payload.queue.length === 0) {
     return null;
   }
@@ -30,9 +28,7 @@ export function formatSendQueueUpdated(
     : `Enemy queued a send (${payload.queue.length} total)`;
 }
 
-export function formatIncomeUpdated(
-  payload: GameEventMap['income-updated'],
-): string | null {
+export function formatIncomeUpdated(payload: GameEventMap['income-updated']): string | null {
   if (payload.delta === 0) {
     return null;
   }
@@ -51,9 +47,7 @@ export function formatOpponentHpUpdated(
   return `Enemy ${payload.delta} HP → ${payload.hp}`;
 }
 
-export function formatSendRejected(
-  payload: GameEventMap['creep-send-rejected'],
-): string {
+export function formatSendRejected(payload: GameEventMap['creep-send-rejected']): string {
   switch (payload.reason) {
     case 'insufficient_gold':
       return `Send failed: need ${payload.requiredGold ?? '?'} gold`;

@@ -12,7 +12,11 @@ import {
 } from './content/loadTowerContent';
 import type { BuildableTowerId } from './towerIds';
 
-export type { TowerLevelStats, TowerUpgradeLevel, TowerTypeUpgradeConfig } from '../../../shared/constants/tower';
+export type {
+  TowerLevelStats,
+  TowerUpgradeLevel,
+  TowerTypeUpgradeConfig,
+} from '../../../shared/constants/tower';
 export { TowerUpgradeBalance } from '../../../shared/constants/tower';
 
 export type TowerId = string;

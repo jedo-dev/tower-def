@@ -114,18 +114,14 @@ describe('wave phase state', () => {
   });
 
   it('allows build actions only in build phase', () => {
-    expect(canPerformBuildActions(setWavePhase(createInitialWavePhaseState(), 'build'))).toBe(
-      true,
-    );
-    expect(canPerformBuildActions(setWavePhase(createInitialWavePhaseState(), 'wave'))).toBe(
+    expect(canPerformBuildActions(setWavePhase(createInitialWavePhaseState(), 'build'))).toBe(true);
+    expect(canPerformBuildActions(setWavePhase(createInitialWavePhaseState(), 'wave'))).toBe(false);
+    expect(canPerformBuildActions(setWavePhase(createInitialWavePhaseState(), 'completed'))).toBe(
       false,
     );
-    expect(
-      canPerformBuildActions(setWavePhase(createInitialWavePhaseState(), 'completed')),
-    ).toBe(false);
-    expect(
-      canPerformBuildActions(setWavePhase(createInitialWavePhaseState(), 'game-over')),
-    ).toBe(false);
+    expect(canPerformBuildActions(setWavePhase(createInitialWavePhaseState(), 'game-over'))).toBe(
+      false,
+    );
   });
 
   it('blocks place/sell actions during wave phase and allows in build phase', () => {

@@ -42,10 +42,7 @@ function createSetup(builderFaction: RaceId): GameSetupConfig {
 
 describe('mapCreepSendPanelToViewModel', () => {
   it('lists race-specific sendable creeps with cost and income gain', () => {
-    const viewModel = mapCreepSendPanelToViewModel(
-      createSnapshot(),
-      createSetup(RaceId.UNDEAD),
-    );
+    const viewModel = mapCreepSendPanelToViewModel(createSnapshot(), createSetup(RaceId.UNDEAD));
 
     expect(viewModel.raceName).toBe('Undead');
     expect(viewModel.buttons.map((button) => button.creepTypeId)).toEqual([

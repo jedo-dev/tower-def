@@ -76,10 +76,7 @@ function computeUpgradeableTowers(towers: readonly TowerEntity[], gold: number):
   return upgradeable;
 }
 
-function computeAvailableBuildPositions(
-  duelist: DuelistState,
-  raceId: RaceId,
-): GridPosition[] {
+function computeAvailableBuildPositions(duelist: DuelistState, raceId: RaceId): GridPosition[] {
   const grid = duelist.battlefield.grid;
   const registry = getRaceRegistry(raceId);
   const hasBuildableTowers = registry.buildableTowerIds.length > 0;
@@ -123,10 +120,7 @@ export function buildDecisionContext(input: OpponentSnapshotInput): DecisionCont
     threat: computeThreat(opponent),
     leakHistory,
     affordableTowers: computeAffordableTowers(opponent.gold, opponent.raceId),
-    upgradeableTowerIds: computeUpgradeableTowers(
-      opponent.battlefield.towers,
-      opponent.gold,
-    ),
+    upgradeableTowerIds: computeUpgradeableTowers(opponent.battlefield.towers, opponent.gold),
     availableBuildPositions: computeAvailableBuildPositions(opponent, opponent.raceId),
     enemy: computeEnemySnapshot(matchState.player),
   };

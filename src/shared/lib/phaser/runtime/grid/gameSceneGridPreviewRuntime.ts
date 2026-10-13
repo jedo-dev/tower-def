@@ -26,8 +26,7 @@ export function toGridCell(worldX: number, worldY: number): GridPosition | null 
   const x = Math.floor(worldX / GRID_DIMENSIONS.cellSize);
   const y = Math.floor(worldY / GRID_DIMENSIONS.cellSize);
 
-  const isInsideGrid =
-    x >= 0 && x < GRID_DIMENSIONS.cols && y >= 0 && y < GRID_DIMENSIONS.rows;
+  const isInsideGrid = x >= 0 && x < GRID_DIMENSIONS.cols && y >= 0 && y < GRID_DIMENSIONS.rows;
 
   if (!isInsideGrid) {
     return null;
@@ -86,7 +85,12 @@ export function updateBuildPreview(context: BuildPreviewContext, config: GridPre
   context.overlay.fillStyle(fillColor, 0.42);
   context.overlay.fillRect(x, y, GRID_DIMENSIONS.cellSize, GRID_DIMENSIONS.cellSize);
   context.overlay.lineStyle(2, strokeColor, 1);
-  context.overlay.strokeRect(x + 1, y + 1, GRID_DIMENSIONS.cellSize - 2, GRID_DIMENSIONS.cellSize - 2);
+  context.overlay.strokeRect(
+    x + 1,
+    y + 1,
+    GRID_DIMENSIONS.cellSize - 2,
+    GRID_DIMENSIONS.cellSize - 2,
+  );
 
   context.overlay.lineStyle(2, strokeColor, 0.95);
   context.overlay.beginPath();

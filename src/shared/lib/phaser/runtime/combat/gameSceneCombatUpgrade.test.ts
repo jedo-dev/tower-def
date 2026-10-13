@@ -113,7 +113,9 @@ describe('upgrade tower stats applied to entity', () => {
     const result = simulateUpgrade(tower, resources);
 
     expect(result.success).toBe(true);
-    expect(result.tower.combatStats.attackCooldownMs).toBeLessThan(tower.combatStats.attackCooldownMs);
+    expect(result.tower.combatStats.attackCooldownMs).toBeLessThan(
+      tower.combatStats.attackCooldownMs,
+    );
     expect(result.tower.combatStats.attackCooldownMs).toBe(750);
   });
 

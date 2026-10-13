@@ -32,7 +32,11 @@ export type InputControllerDependencies = {
   trySellTowerAtHoveredCell: () => void;
 };
 
-export function canProcessUserAction(state: InputControllerState, nowMs: number, cooldownMs: number): boolean {
+export function canProcessUserAction(
+  state: InputControllerState,
+  nowMs: number,
+  cooldownMs: number,
+): boolean {
   return nowMs - state.lastActionAtMs >= cooldownMs;
 }
 
@@ -62,9 +66,9 @@ export function handlePointerMove(
   const isStillPressingCell = moveDistance <= config.touchTapMaxMovePx;
 
   if (
-    !state.activeTouchGesture.soldByLongPress
-    && isStillPressingCell
-    && durationMs >= config.touchLongPressMinDurationMs
+    !state.activeTouchGesture.soldByLongPress &&
+    isStillPressingCell &&
+    durationMs >= config.touchLongPressMinDurationMs
   ) {
     deps.trySellTowerAtHoveredCell();
     state.activeTouchGesture.soldByLongPress = true;
@@ -127,9 +131,9 @@ export function handlePointerUp(
     pointer.worldY - state.activeTouchGesture.startY,
   );
   const isTap =
-    durationMs >= config.touchTapMinDurationMs
-    && durationMs <= config.touchTapMaxDurationMs
-    && moveDistance <= config.touchTapMaxMovePx;
+    durationMs >= config.touchTapMinDurationMs &&
+    durationMs <= config.touchTapMaxDurationMs &&
+    moveDistance <= config.touchTapMaxMovePx;
 
   if (isTap && !state.activeTouchGesture.soldByLongPress) {
     deps.tryPlaceTowerAtHoveredCell();
@@ -138,7 +142,10 @@ export function handlePointerUp(
   state.activeTouchGesture = null;
 }
 
-export function handleGameOut(state: InputControllerState, deps: InputControllerDependencies): void {
+export function handleGameOut(
+  state: InputControllerState,
+  deps: InputControllerDependencies,
+): void {
   state.activeTouchGesture = null;
   deps.clearHoveredCell();
   deps.updateHoveredCellDebugRegistry();

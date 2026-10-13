@@ -9,10 +9,7 @@ function createCreepId(waveId: string, creepTypeId: string, spawnIndex: number):
   return `${waveId}:${creepTypeId}:${spawnIndex}`;
 }
 
-export function spawnCreepsFromWave(
-  wave: WaveConfig,
-  entrance: GridPosition,
-): CreepEntity[] {
+export function spawnCreepsFromWave(wave: WaveConfig, entrance: GridPosition): CreepEntity[] {
   const creeps: CreepEntity[] = [];
   let spawnIndex = 0;
 

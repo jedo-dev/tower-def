@@ -19,11 +19,7 @@ export {
   tickTowerCooldown,
 } from './model/cooldown';
 export { getCreepsInTowerRange, selectTowerTarget } from './model/targeting';
-export {
-  applyAuraBonusToStats,
-  recalculateTowerAuras,
-  resolveTowerAuraBonus,
-} from './model/auras';
+export { applyAuraBonusToStats, recalculateTowerAuras, resolveTowerAuraBonus } from './model/auras';
 export type { TowerAuraBonus } from './model/auras';
 export {
   canAffordUpgrade,

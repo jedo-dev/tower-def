@@ -67,8 +67,9 @@ describe('placing an authored tower', () => {
     const result = tryPlaceTowerAtHoveredCell(createState(), createDeps(null));
 
     expect(result.placedTower?.buildableTowerId).toBeUndefined();
-    expect(result.placedTower?.combatStats)
-      .toEqual(TOWER_UPGRADE_CONFIG[TowerTypeId.SINGLE].levels[0].stats);
+    expect(result.placedTower?.combatStats).toEqual(
+      TOWER_UPGRADE_CONFIG[TowerTypeId.SINGLE].levels[0].stats,
+    );
   });
 
   it('costs what its own content says, not a shared default', () => {
@@ -99,17 +100,18 @@ describe('upgrading an authored tower', () => {
   it('follows the archetype curve when the tower declares none', () => {
     const tower = createPlacedTower('elf_moonwell');
 
-    expect(resolveTowerUpgradeConfig(tower))
-      .toBe(TOWER_UPGRADE_CONFIG[tower.type]);
-    expect(getTowerStatsForTowerLevel(tower, 2))
-      .toEqual(TOWER_UPGRADE_CONFIG[tower.type].levels[1].stats);
+    expect(resolveTowerUpgradeConfig(tower)).toBe(TOWER_UPGRADE_CONFIG[tower.type]);
+    expect(getTowerStatsForTowerLevel(tower, 2)).toEqual(
+      TOWER_UPGRADE_CONFIG[tower.type].levels[1].stats,
+    );
   });
 
   it('works for a tower placed before content knew about ids', () => {
     const tower = createPlacedTower(undefined);
 
-    expect(getTowerStatsForTowerLevel(tower, 3))
-      .toEqual(TOWER_UPGRADE_CONFIG[TowerTypeId.SINGLE].levels[2].stats);
+    expect(getTowerStatsForTowerLevel(tower, 3)).toEqual(
+      TOWER_UPGRADE_CONFIG[TowerTypeId.SINGLE].levels[2].stats,
+    );
   });
 
   it('prefers a curve the tower authors for itself', () => {
@@ -128,12 +130,17 @@ describe('upgrading an authored tower', () => {
 describe('race rosters', () => {
   it('resolves every authored tower of every race', () => {
     for (const race of Object.values(RaceId)) {
-      expect(() => resolveBuildableTowerById(
-        race === RaceId.UNDEAD ? 'undead_bone_obelisk'
-          : race === RaceId.ORC ? 'orc_tar_pit'
-            : race === RaceId.HUMAN ? 'human_guard_post'
-              : 'elf_thorn_spire',
-      )).not.toThrow();
+      expect(() =>
+        resolveBuildableTowerById(
+          race === RaceId.UNDEAD
+            ? 'undead_bone_obelisk'
+            : race === RaceId.ORC
+              ? 'orc_tar_pit'
+              : race === RaceId.HUMAN
+                ? 'human_guard_post'
+                : 'elf_thorn_spire',
+        ),
+      ).not.toThrow();
     }
   });
 });

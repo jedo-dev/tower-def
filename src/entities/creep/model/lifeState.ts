@@ -8,10 +8,7 @@ export function isCreepDead(creep: CreepEntity): boolean {
   return creep.lifeState === 'dead' || creep.status === 'dead' || creep.hp <= 0;
 }
 
-export function setCreepLifeState(
-  creep: CreepEntity,
-  lifeState: CreepLifeState,
-): CreepEntity {
+export function setCreepLifeState(creep: CreepEntity, lifeState: CreepLifeState): CreepEntity {
   if (lifeState === 'alive') {
     return {
       ...creep,

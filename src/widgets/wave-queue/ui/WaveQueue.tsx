@@ -22,11 +22,7 @@ function CreepIcons({ items, sectionKey }: { items: WaveQueueItem[]; sectionKey:
   return (
     <>
       {items.slice(0, MAX_VISIBLE_ICONS).map((item, position) => (
-        <div
-          key={`${sectionKey}-${position}`}
-          className={styles.icon}
-          title={item.type}
-        >
+        <div key={`${sectionKey}-${position}`} className={styles.icon} title={item.type}>
           <div className={styles.spriteViewport} aria-label={item.type}>
             <img
               src={CREEP_SPRITES[item.type]}
@@ -68,9 +64,7 @@ function WaveQueueComponent() {
 
       {viewModel.sections.map((section) => (
         <div key={section.key} className={styles.section}>
-          {section.key !== 'live' && (
-            <span className={styles.sectionLabel}>{section.label}</span>
-          )}
+          {section.key !== 'live' && <span className={styles.sectionLabel}>{section.label}</span>}
           <div className={styles.content}>
             <CreepIcons items={section.items} sectionKey={section.key} />
           </div>

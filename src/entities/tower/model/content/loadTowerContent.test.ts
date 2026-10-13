@@ -80,13 +80,15 @@ describe('parseTowerContentFile', () => {
   });
 
   it('rejects an unknown tower id', () => {
-    expect(() => parse(createFile([createTower({ id: 'undead_soul_cannon' })])))
-      .toThrow(`${FILE}: "id" is not a known value: undead_soul_cannon`);
+    expect(() => parse(createFile([createTower({ id: 'undead_soul_cannon' })]))).toThrow(
+      `${FILE}: "id" is not a known value: undead_soul_cannon`,
+    );
   });
 
   it('rejects a tower authored under the wrong race', () => {
-    expect(() => parse(createFile([createTower({ id: 'orc_spear_watchtower' })])))
-      .toThrow(`${FILE} [orc_spear_watchtower]: id does not belong to race UNDEAD`);
+    expect(() => parse(createFile([createTower({ id: 'orc_spear_watchtower' })]))).toThrow(
+      `${FILE} [orc_spear_watchtower]: id does not belong to race UNDEAD`,
+    );
   });
 
   it('rejects a level list that skips or reorders levels', () => {
@@ -113,34 +115,37 @@ describe('parseTowerContentFile', () => {
         file: 'content/towers/archetypes.json',
         data: {
           schemaVersion: 1,
-          archetypes: [
-            createArchetype({ attackKind: undefined }),
-          ],
+          archetypes: [createArchetype({ attackKind: undefined })],
         },
       }),
     ).toThrow(/"attackKind" must be a non-empty string/);
   });
 
   it('rejects an unknown archetype', () => {
-    expect(() => parse(createFile([createTower({ archetype: 'railgun' })])))
-      .toThrow(`${FILE} [undead_bone_archer_tower]: "archetype" is not a known value: railgun`);
+    expect(() => parse(createFile([createTower({ archetype: 'railgun' })]))).toThrow(
+      `${FILE} [undead_bone_archer_tower]: "archetype" is not a known value: railgun`,
+    );
   });
 
   it('rejects an unknown on-hit effect', () => {
-    expect(() => parse(createFile([createTower({ onHitEffects: [{ effectId: 'bleed' }] })])))
-      .toThrow(`${FILE} [undead_bone_archer_tower]: "effectId" is not a known value: bleed`);
+    expect(() =>
+      parse(createFile([createTower({ onHitEffects: [{ effectId: 'bleed' }] })])),
+    ).toThrow(`${FILE} [undead_bone_archer_tower]: "effectId" is not a known value: bleed`);
   });
 
   it('rejects stats outside the authoring bounds', () => {
-    expect(() => parse(createFile([createTower({ range: 99 })])))
-      .toThrow(`${FILE} [undead_bone_archer_tower]: "range" must be between 0.5 and 12, got 99`);
-    expect(() => parse(createFile([createTower({ attackCooldownMs: 10 })])))
-      .toThrow(/attackCooldownMs/);
+    expect(() => parse(createFile([createTower({ range: 99 })]))).toThrow(
+      `${FILE} [undead_bone_archer_tower]: "range" must be between 0.5 and 12, got 99`,
+    );
+    expect(() => parse(createFile([createTower({ attackCooldownMs: 10 })]))).toThrow(
+      /attackCooldownMs/,
+    );
   });
 
   it('rejects unknown fields on a tower', () => {
-    expect(() => parse(createFile([createTower({ chainCount: 3 })])))
-      .toThrow(`${FILE} [undead_bone_archer_tower]: unknown field "chainCount"`);
+    expect(() => parse(createFile([createTower({ chainCount: 3 })]))).toThrow(
+      `${FILE} [undead_bone_archer_tower]: unknown field "chainCount"`,
+    );
   });
 
   it('rejects a file with no towers', () => {
@@ -191,9 +196,7 @@ describe('loadTowerArchetypeContent', () => {
         file: 'content/towers/archetypes.json',
         data: {
           schemaVersion: 1,
-          archetypes: [
-            createArchetype(),
-          ],
+          archetypes: [createArchetype()],
         },
       }),
     ).toThrow(/missing archetype stats for: splash/);
@@ -230,8 +233,14 @@ describe('shipped tower content', () => {
 
       expect(roster.length, race).toBe(4);
       expect(archetypes, race).toContain(TowerTypeId.SINGLE);
-      expect(archetypes.some((archetype) => AREA_ARCHETYPES.includes(archetype)), race).toBe(true);
-      expect(archetypes.some((archetype) => CONTROL_ARCHETYPES.includes(archetype)), race).toBe(true);
+      expect(
+        archetypes.some((archetype) => AREA_ARCHETYPES.includes(archetype)),
+        race,
+      ).toBe(true);
+      expect(
+        archetypes.some((archetype) => CONTROL_ARCHETYPES.includes(archetype)),
+        race,
+      ).toBe(true);
       expect(new Set(archetypes).size, `${race} avoids duplicate archetypes`).toBe(roster.length);
     }
   });

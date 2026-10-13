@@ -50,7 +50,10 @@ function createDeps(): CombatDeps & {
   } as unknown as CombatDeps & { goldUpdates: number[]; sounds: string[] };
 }
 
-function createCreepRenderState(overrides?: { hp?: number; status?: 'alive' | 'escaped' }): CreepRenderState {
+function createCreepRenderState(overrides?: {
+  hp?: number;
+  status?: 'alive' | 'escaped';
+}): CreepRenderState {
   return {
     entity: {
       ...DEFAULT_CREEP_COMBAT_TRAITS,

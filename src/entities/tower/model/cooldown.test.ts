@@ -32,9 +32,7 @@ describe('tower cooldown', () => {
     const runtime = createInitialTowerCombatRuntime();
     const nextRuntime = consumeTowerAttack(tower, runtime);
 
-    expect(nextRuntime.attackCooldownRemainingMs).toBe(
-      tower.combatStats.attackCooldownMs,
-    );
+    expect(nextRuntime.attackCooldownRemainingMs).toBe(tower.combatStats.attackCooldownMs);
     expect(canTowerAttack(tower, nextRuntime)).toBe(false);
   });
 
@@ -45,10 +43,7 @@ describe('tower cooldown', () => {
       consumedRuntime,
       Math.floor(tower.combatStats.attackCooldownMs / 2),
     );
-    const finishedRuntime = tickTowerCooldown(
-      halfwayRuntime,
-      tower.combatStats.attackCooldownMs,
-    );
+    const finishedRuntime = tickTowerCooldown(halfwayRuntime, tower.combatStats.attackCooldownMs);
 
     expect(halfwayRuntime.attackCooldownRemainingMs).toBeGreaterThan(0);
     expect(canTowerAttack(tower, halfwayRuntime)).toBe(false);

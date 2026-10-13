@@ -2,10 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { Difficulty } from '../../difficulty/model/types';
 import { RaceId } from '../../../shared/types/content-ids';
 import { TowerTypeId } from '../../../shared/types/content-ids';
-import {
-  StrategyIntent,
-  STRATEGY_INTENTS,
-} from './types';
+import { StrategyIntent, STRATEGY_INTENTS } from './types';
 import type {
   BuildAction,
   ComputerAction,

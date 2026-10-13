@@ -11,7 +11,10 @@ const { removeDeadCreepsFromActiveWave } = await import('./gameSceneCombatRuntim
 const FADE_MS = 180;
 const DEATH_MS = 620;
 
-function createCreep(frameCount: number, isDead: boolean): CreepRenderState & {
+function createCreep(
+  frameCount: number,
+  isDead: boolean,
+): CreepRenderState & {
   played: string[];
   alphas: number[];
   destroyed: boolean;

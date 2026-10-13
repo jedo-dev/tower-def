@@ -64,8 +64,13 @@ function createDeps(): CombatDeps & { sounds: string[] } {
 
   return {
     sounds,
-    scene: { add: { text: vi.fn(() => createSpriteStub()), sprite: vi.fn(() => createSpriteStub()) } },
-    toCellCenter: (position: { x: number; y: number }) => ({ x: position.x * 40, y: position.y * 40 }),
+    scene: {
+      add: { text: vi.fn(() => createSpriteStub()), sprite: vi.fn(() => createSpriteStub()) },
+    },
+    toCellCenter: (position: { x: number; y: number }) => ({
+      x: position.x * 40,
+      y: position.y * 40,
+    }),
     playArcherAttackAnimation: vi.fn(),
     playSplashAttackAnimation: vi.fn(),
     playSound: (soundId: string) => sounds.push(soundId),
@@ -76,9 +81,8 @@ function createDeps(): CombatDeps & { sounds: string[] } {
 }
 
 function buildTower(towerType: TowerTypeId, level = 1): TowerRenderState {
-  const combatStats = level === 1
-    ? TOWER_COMBAT_STATS_BY_TYPE[towerType]
-    : getTowerStatsForLevel(towerType, level)!;
+  const combatStats =
+    level === 1 ? TOWER_COMBAT_STATS_BY_TYPE[towerType] : getTowerStatsForLevel(towerType, level)!;
   const entity: TowerEntity = {
     id: `tower:${towerType}`,
     position: { x: 2, y: 2 },
@@ -115,7 +119,10 @@ function spawnCreep(): CreepRenderState {
   } as unknown as CreepRenderState;
 }
 
-function createBattlefield(towers: TowerRenderState[], creeps: CreepRenderState[]): BattlefieldRenderState {
+function createBattlefield(
+  towers: TowerRenderState[],
+  creeps: CreepRenderState[],
+): BattlefieldRenderState {
   return {
     towers,
     creeps,
@@ -130,8 +137,18 @@ describe('frost tower', () => {
     const frostCreep = spawnCreep();
     const singleCreep = spawnCreep();
 
-    updateTowerCombat(createBattlefield([buildTower(TowerTypeId.FROST)], [frostCreep]), createDeps(), CONFIG, 16);
-    updateTowerCombat(createBattlefield([buildTower(TowerTypeId.SINGLE)], [singleCreep]), createDeps(), CONFIG, 16);
+    updateTowerCombat(
+      createBattlefield([buildTower(TowerTypeId.FROST)], [frostCreep]),
+      createDeps(),
+      CONFIG,
+      16,
+    );
+    updateTowerCombat(
+      createBattlefield([buildTower(TowerTypeId.SINGLE)], [singleCreep]),
+      createDeps(),
+      CONFIG,
+      16,
+    );
 
     expect(findActiveEffect(frostCreep.entity, EffectId.CHILL)).toBeDefined();
     expect(findActiveEffect(singleCreep.entity, EffectId.CHILL)).toBeUndefined();
@@ -141,7 +158,12 @@ describe('frost tower', () => {
   it('slows the creep while the chill runs and lets it recover afterwards', () => {
     const creep = spawnCreep();
 
-    updateTowerCombat(createBattlefield([buildTower(TowerTypeId.FROST)], [creep]), createDeps(), CONFIG, 16);
+    updateTowerCombat(
+      createBattlefield([buildTower(TowerTypeId.FROST)], [creep]),
+      createDeps(),
+      CONFIG,
+      16,
+    );
 
     expect(getEffectiveSpeedMultiplier(creep.entity)).toBeLessThan(1);
 

@@ -56,7 +56,10 @@ describe('shared/lib/phaser/runtime/movement duel game-over boundary', () => {
     };
     const state = {
       activeCreeps: [creep],
-      activeCreepPath: [{ x: 0, y: 0 }, { x: 1, y: 0 }],
+      activeCreepPath: [
+        { x: 0, y: 0 },
+        { x: 1, y: 0 },
+      ],
       playerGold: 100,
       playerLives: 1,
       isGameOver: false,

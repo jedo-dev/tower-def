@@ -1,9 +1,5 @@
 import type Phaser from 'phaser';
-import {
-  scaleCreepStats,
-  scaleReward,
-  type Difficulty,
-} from '../../../../entities/difficulty';
+import { scaleCreepStats, scaleReward, type Difficulty } from '../../../../entities/difficulty';
 import type { DuelMatchState } from '../../../../entities/duel-match';
 import type { UnitConfig } from '../../../../entities/unit';
 import type { SoundId } from '../sound/audio.types';

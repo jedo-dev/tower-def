@@ -99,16 +99,21 @@ describe('armor mitigation', () => {
   });
 
   it('never mitigates a hit below the damage floor', () => {
-    expect(calculateMitigatedDamage(RAW_DAMAGE, 10_000))
-      .toBe(RAW_DAMAGE * DAMAGE_MITIGATION.minimumDamageFraction);
+    expect(calculateMitigatedDamage(RAW_DAMAGE, 10_000)).toBe(
+      RAW_DAMAGE * DAMAGE_MITIGATION.minimumDamageFraction,
+    );
   });
 
   it('shifts effective armor by the armor class', () => {
-    expect(getEffectiveArmor(createCreep({ armor: 3, armorType: UnitArmorType.HEAVY })))
-      .toBe(3 + ARMOR_TYPE_BONUS[UnitArmorType.HEAVY]);
-    expect(getEffectiveArmor(createCreep({ armor: 3, armorType: UnitArmorType.UNARMORED })))
-      .toBe(3 + ARMOR_TYPE_BONUS[UnitArmorType.UNARMORED]);
-    expect(getEffectiveArmor(createCreep({ armor: 0, armorType: UnitArmorType.UNARMORED }))).toBe(0);
+    expect(getEffectiveArmor(createCreep({ armor: 3, armorType: UnitArmorType.HEAVY }))).toBe(
+      3 + ARMOR_TYPE_BONUS[UnitArmorType.HEAVY],
+    );
+    expect(getEffectiveArmor(createCreep({ armor: 3, armorType: UnitArmorType.UNARMORED }))).toBe(
+      3 + ARMOR_TYPE_BONUS[UnitArmorType.UNARMORED],
+    );
+    expect(getEffectiveArmor(createCreep({ armor: 0, armorType: UnitArmorType.UNARMORED }))).toBe(
+      0,
+    );
   });
 
   it('lowers armor while armor break runs and restores it on expiry', () => {
@@ -117,8 +122,9 @@ describe('armor mitigation', () => {
     const brokenArmor = getEffectiveArmor(broken);
 
     expect(brokenArmor).toBeLessThan(getEffectiveArmor(armored));
-    expect(applyDamageToCreep(broken, RAW_DAMAGE).damageApplied)
-      .toBeGreaterThan(applyDamageToCreep(armored, RAW_DAMAGE).damageApplied);
+    expect(applyDamageToCreep(broken, RAW_DAMAGE).damageApplied).toBeGreaterThan(
+      applyDamageToCreep(armored, RAW_DAMAGE).damageApplied,
+    );
 
     const definition = resolveEffectDefinition(EffectId.ARMOR_BREAK);
     const afterExpiry = tickCreepEffects(broken, definition.durationMs).creep;
@@ -139,8 +145,9 @@ describe('armor mitigation', () => {
   it('lets damage over time bypass armor entirely', () => {
     const armored = createCreep({ armor: 10, armorType: UnitArmorType.HEAVY });
 
-    expect(applyDamageToCreep(armored, RAW_DAMAGE, { ignoreArmor: true }).damageApplied)
-      .toBe(RAW_DAMAGE);
+    expect(applyDamageToCreep(armored, RAW_DAMAGE, { ignoreArmor: true }).damageApplied).toBe(
+      RAW_DAMAGE,
+    );
     expect(applyDamageToCreep(armored, RAW_DAMAGE).damageApplied).toBeLessThan(RAW_DAMAGE);
   });
 });

@@ -28,7 +28,10 @@ export type ApplyComputerBuildStrategyResult = {
   spentGold: number;
 };
 
-function getTowerCostForRace(towerType: TowerTypeId, raceId: DecisionContext['raceId']): number | null {
+function getTowerCostForRace(
+  towerType: TowerTypeId,
+  raceId: DecisionContext['raceId'],
+): number | null {
   const registry = getRaceRegistry(raceId);
   for (const buildableTowerId of registry.buildableTowerIds) {
     const config = buildableTowers.find((tower) => tower.id === buildableTowerId);
@@ -142,7 +145,10 @@ export function applyComputerBuildStrategy(
       }
 
       const upgradeCost = getUpgradeCost(targetTower.type, targetTower.level);
-      if (upgradeCost === null || !canAffordUpgrade(targetTower.type, targetTower.level, gold).allowed) {
+      if (
+        upgradeCost === null ||
+        !canAffordUpgrade(targetTower.type, targetTower.level, gold).allowed
+      ) {
         continue;
       }
 

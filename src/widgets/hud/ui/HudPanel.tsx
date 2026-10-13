@@ -6,7 +6,10 @@ import styles from './HudPanel.module.css';
 import { sendGameCommand } from '../../../shared/lib/game-bridge/bridge';
 import { useBattlefieldView } from '../../../shared/lib/game-bridge/useBattlefieldView';
 import { useGameHudSnapshot } from '../../../shared/lib/game-bridge/useGameHudSnapshot';
-import { mapBattlefieldViewToggleToViewModel, mapHudSnapshotToViewModel } from '../model/mapHudSnapshotToViewModel';
+import {
+  mapBattlefieldViewToggleToViewModel,
+  mapHudSnapshotToViewModel,
+} from '../model/mapHudSnapshotToViewModel';
 import type { HudPressureLevel } from '../model/mapHudSnapshotToViewModel';
 import type { HudFactionType } from '../../../shared/lib/game-bridge/types';
 import type { GameSetupConfig } from '../../../shared/config/game-setup';
@@ -26,10 +29,14 @@ function formatCountdown(secondsLeft: number): string {
 
 function mapFactionToDisplayName(faction: HudFactionType): string {
   switch (faction) {
-    case 'undead': return 'Undead';
-    case 'orc': return 'Orc';
-    case 'human': return 'Human';
-    case 'elf': return 'Elf';
+    case 'undead':
+      return 'Undead';
+    case 'orc':
+      return 'Orc';
+    case 'human':
+      return 'Human';
+    case 'elf':
+      return 'Elf';
   }
 }
 
@@ -49,10 +56,15 @@ function HudPanelComponent({ setup }: HudPanelProps) {
   const snapshot = useGameHudSnapshot();
   const activeBattlefieldView = useBattlefieldView();
   const viewModel = mapHudSnapshotToViewModel(snapshot);
-  const battlefieldViewToggle = mapBattlefieldViewToggleToViewModel(snapshot, activeBattlefieldView);
+  const battlefieldViewToggle = mapBattlefieldViewToggleToViewModel(
+    snapshot,
+    activeBattlefieldView,
+  );
   // Recomputed per HUD snapshot event, not per frame: the bar only changes when
   // gold, race or selection changes.
-  const builderFactionTheme = (setup?.builderFaction ?? RaceId.UNDEAD).toLowerCase() as FactionThemeName;
+  const builderFactionTheme = (
+    setup?.builderFaction ?? RaceId.UNDEAD
+  ).toLowerCase() as FactionThemeName;
   const buildOptions = mapRaceRosterToBuildOptions({
     raceId: setup?.builderFaction ?? RaceId.UNDEAD,
     gold: snapshot.gold,
@@ -86,13 +98,17 @@ function HudPanelComponent({ setup }: HudPanelProps) {
               )}
               aria-label={battlefieldViewToggle.ariaLabel}
               aria-pressed={battlefieldViewToggle.isOpponentActive}
-              onClick={() => sendGameCommand('switch-battlefield-view', { view: battlefieldViewToggle.nextView })}
+              onClick={() =>
+                sendGameCommand('switch-battlefield-view', { view: battlefieldViewToggle.nextView })
+              }
             >
               {battlefieldViewToggle.label}
             </button>
           ) : snapshot.autoStartSecondsLeft !== null ? (
             <div className={styles.timerActions}>
-              <span className={styles.timer}>Auto: {formatCountdown(snapshot.autoStartSecondsLeft)}</span>
+              <span className={styles.timer}>
+                Auto: {formatCountdown(snapshot.autoStartSecondsLeft)}
+              </span>
               <FantasyButton
                 tone="ember"
                 className={`fantasy-button--compact ${styles.forceStartBtn}`}
@@ -131,7 +147,9 @@ function HudPanelComponent({ setup }: HudPanelProps) {
 
       <div className={styles.duelRow} role="status" aria-label={viewModel.duel.ariaLabel}>
         <span className={styles.duelSide}>{viewModel.duel.playerLine}</span>
-        <span className={joinClassNames(styles.duelSide, styles.duelSideEnemy)}>{viewModel.duel.opponentLine}</span>
+        <span className={joinClassNames(styles.duelSide, styles.duelSideEnemy)}>
+          {viewModel.duel.opponentLine}
+        </span>
       </div>
 
       {isExpanded && (
@@ -150,9 +168,11 @@ function HudPanelComponent({ setup }: HudPanelProps) {
                 )}
                 disabled={!option.isAffordable && !option.isSelected}
                 aria-label={option.ariaLabel}
-                onClick={() => sendGameCommand('select-tower', {
-                  towerType: option.isSelected ? null : option.towerType,
-                })}
+                onClick={() =>
+                  sendGameCommand('select-tower', {
+                    towerType: option.isSelected ? null : option.towerType,
+                  })
+                }
               >
                 <span className={styles.towerBtnPortrait}>
                   <PlaceholderIcon label={option.name} faction={builderFactionTheme} />
@@ -172,11 +192,15 @@ function HudPanelComponent({ setup }: HudPanelProps) {
             <span className={styles.infoLabel}>Race:</span>
             <span className={styles.infoValue}>{snapshot.builderFactionName}</span>
             <span className={styles.infoLabel}>Enemy:</span>
-            <span className={styles.infoValue}>{mapFactionToDisplayName(snapshot.selectedFaction)}</span>
+            <span className={styles.infoValue}>
+              {mapFactionToDisplayName(snapshot.selectedFaction)}
+            </span>
             {setup?.difficulty && (
               <>
                 <span className={styles.infoLabel}>Diff:</span>
-                <span className={joinClassNames(styles.infoValue, styles.infoValueDiff)}>{setup.difficulty}</span>
+                <span className={joinClassNames(styles.infoValue, styles.infoValueDiff)}>
+                  {setup.difficulty}
+                </span>
               </>
             )}
           </div>

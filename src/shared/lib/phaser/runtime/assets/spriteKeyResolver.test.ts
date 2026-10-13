@@ -32,20 +32,24 @@ describe('resolveSpriteKey', () => {
   it('falls back to the placeholder of the right kind', () => {
     const textures = createTextures(PLACEHOLDERS);
 
-    expect(resolveSpriteKey(textures, 'tower', 'tower.orc.lightning_totem').spriteKey)
-      .toBe(PLACEHOLDER_TEXTURE_KEYS.TOWER);
-    expect(resolveSpriteKey(textures, 'unit', 'unit.orc.grunt').spriteKey)
-      .toBe(PLACEHOLDER_TEXTURE_KEYS.UNIT);
+    expect(resolveSpriteKey(textures, 'tower', 'tower.orc.lightning_totem').spriteKey).toBe(
+      PLACEHOLDER_TEXTURE_KEYS.TOWER,
+    );
+    expect(resolveSpriteKey(textures, 'unit', 'unit.orc.grunt').spriteKey).toBe(
+      PLACEHOLDER_TEXTURE_KEYS.UNIT,
+    );
   });
 
   it('tints the placeholder with the race that asked for it', () => {
     const textures = createTextures(PLACEHOLDERS);
 
     expect(
-      resolveSpriteKey(textures, 'tower', 'tower.elf.thorn', { raceId: RaceId.ELF }).placeholderTint,
+      resolveSpriteKey(textures, 'tower', 'tower.elf.thorn', { raceId: RaceId.ELF })
+        .placeholderTint,
     ).toBe(UNIT_FACTION_TINTS[RaceId.ELF]);
-    expect(resolveSpriteKey(textures, 'tower', 'tower.elf.thorn').placeholderTint)
-      .toBe(PLACEHOLDER_DEFAULT_TINT);
+    expect(resolveSpriteKey(textures, 'tower', 'tower.elf.thorn').placeholderTint).toBe(
+      PLACEHOLDER_DEFAULT_TINT,
+    );
   });
 
   it('never throws and never returns an empty key', () => {

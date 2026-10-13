@@ -10,9 +10,9 @@ import { PLACEHOLDER_TEXTURE_KEYS } from './placeholderTexture';
 
 const TEXTURES: TextureLookup = {
   exists: (key: string) =>
-    key === 'tower.undead.bone_archer'
-    || key === PLACEHOLDER_TEXTURE_KEYS.TOWER
-    || key === PLACEHOLDER_TEXTURE_KEYS.UNIT,
+    key === 'tower.undead.bone_archer' ||
+    key === PLACEHOLDER_TEXTURE_KEYS.TOWER ||
+    key === PLACEHOLDER_TEXTURE_KEYS.UNIT,
 };
 
 afterEach(() => {

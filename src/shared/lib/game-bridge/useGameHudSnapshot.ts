@@ -5,4 +5,3 @@ import type { GameHudSnapshot } from './types';
 export function useGameHudSnapshot(): GameHudSnapshot {
   return useSyncExternalStore(subscribeGameHudSnapshot, getGameHudSnapshot, getGameHudSnapshot);
 }
-

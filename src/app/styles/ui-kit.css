@@ -45,15 +45,33 @@
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.6));
 }
 
-.ui-btn-small:hover { filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.6)) brightness(1.2); }
-.ui-btn-small:active { transform: translateY(1px); filter: brightness(0.85); }
-.ui-btn-small:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+.ui-btn-small:hover {
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.6)) brightness(1.2);
+}
+.ui-btn-small:active {
+  transform: translateY(1px);
+  filter: brightness(0.85);
+}
+.ui-btn-small:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
 
-.ui-btn-small--close { background-image: url('/assets/ui/kit/small-close.png'); }
-.ui-btn-small--prev { background-image: url('/assets/ui/kit/small-prev.png'); }
-.ui-btn-small--next { background-image: url('/assets/ui/kit/small-next.png'); }
-.ui-btn-small--gear { background-image: url('/assets/ui/kit/small-gear.png'); }
-.ui-btn-small--check { background-image: url('/assets/ui/kit/small-check.png'); }
+.ui-btn-small--close {
+  background-image: url('/assets/ui/kit/small-close.png');
+}
+.ui-btn-small--prev {
+  background-image: url('/assets/ui/kit/small-prev.png');
+}
+.ui-btn-small--next {
+  background-image: url('/assets/ui/kit/small-next.png');
+}
+.ui-btn-small--gear {
+  background-image: url('/assets/ui/kit/small-gear.png');
+}
+.ui-btn-small--check {
+  background-image: url('/assets/ui/kit/small-check.png');
+}
 
 /* Compact FantasyButton for in-game panels: same 9-slice, smaller box. */
 .fantasy-button--compact {
@@ -71,7 +89,9 @@
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.9), 0 0 6px rgba(0, 0, 0, 0.7);
+  text-shadow:
+    0 1px 0 rgba(0, 0, 0, 0.9),
+    0 0 6px rgba(0, 0, 0, 0.7);
 }
 
 /* Resource icons pulled out of the kit's framed squares. */
@@ -85,8 +105,12 @@
   filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.7));
 }
 
-.ui-icon-coin { background-image: url('/assets/ui/kit/icon-coin-bare.png'); }
-.ui-icon-heart { background-image: url('/assets/ui/kit/icon-heart-bare.png'); }
+.ui-icon-coin {
+  background-image: url('/assets/ui/kit/icon-coin-bare.png');
+}
+.ui-icon-heart {
+  background-image: url('/assets/ui/kit/icon-heart-bare.png');
+}
 
 /* Gold serif heading used inside panels ("SEND ORC", "BUILD"). */
 .ui-heading {
@@ -95,7 +119,9 @@
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: #e8c25f;
-  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.9), 0 0 8px rgba(0, 0, 0, 0.6);
+  text-shadow:
+    0 1px 0 rgba(0, 0, 0, 0.9),
+    0 0 8px rgba(0, 0, 0, 0.6);
 }
 
 /* Dark pill chip with a thin rim ("Queue: 2"). */

@@ -9,10 +9,7 @@ import {
   PLACEHOLDER_TOWER_FRAME_COUNT,
   PLACEHOLDER_UNIT_FRAME_COUNT,
 } from '../../scenes/gameScene.constants';
-import {
-  TOWER_SPRITE_SHEET_FRAME,
-  UNIT_SPRITE_SHEET_FRAME,
-} from '../../../../constants/sprites';
+import { TOWER_SPRITE_SHEET_FRAME, UNIT_SPRITE_SHEET_FRAME } from '../../../../constants/sprites';
 
 type AddedFrame = { index: number; x: number; width: number; height: number };
 
@@ -57,7 +54,14 @@ function createSceneStub() {
             setLineDash: vi.fn(),
             fillText: (glyph: string) => stub.glyphs.push(glyph),
           }),
-          add: (index: number, _source: number, x: number, _y: number, width: number, height: number) => {
+          add: (
+            index: number,
+            _source: number,
+            x: number,
+            _y: number,
+            width: number,
+            height: number,
+          ) => {
             stub.frames.push({ index, x, width, height });
           },
           refresh: () => {
@@ -126,7 +130,11 @@ describe('placeholder textures', () => {
   });
 
   it('reports the frame count animation code can rely on', () => {
-    expect(getPlaceholderFrameCount(PLACEHOLDER_TEXTURE_KEYS.UNIT)).toBe(PLACEHOLDER_UNIT_FRAME_COUNT);
-    expect(getPlaceholderFrameCount(PLACEHOLDER_TEXTURE_KEYS.TOWER)).toBe(PLACEHOLDER_TOWER_FRAME_COUNT);
+    expect(getPlaceholderFrameCount(PLACEHOLDER_TEXTURE_KEYS.UNIT)).toBe(
+      PLACEHOLDER_UNIT_FRAME_COUNT,
+    );
+    expect(getPlaceholderFrameCount(PLACEHOLDER_TEXTURE_KEYS.TOWER)).toBe(
+      PLACEHOLDER_TOWER_FRAME_COUNT,
+    );
   });
 });

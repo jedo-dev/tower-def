@@ -2,10 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { GRID_DIMENSIONS } from '../../constants/grid';
 import { hasPathBfs } from '../pathfinding/hasPathBfs';
 import { createGridModel } from './createGridModel';
-import {
-  DEFAULT_EDGE_ENDPOINT_MIN_DISTANCE,
-  generateEdgeEndpoints,
-} from './generateEdgeEndpoints';
+import { DEFAULT_EDGE_ENDPOINT_MIN_DISTANCE, generateEdgeEndpoints } from './generateEdgeEndpoints';
 
 const SAMPLE_SEEDS = Array.from({ length: 50 }, (_, index) => index * 7919 + 1);
 
@@ -34,17 +31,14 @@ describe('shared/lib/grid/generateEdgeEndpoints', () => {
   it('keeps at least the minimum manhattan separation', () => {
     for (const seed of SAMPLE_SEEDS) {
       const { entrance, exit } = generateEdgeEndpoints(seed);
-      expect(manhattan(entrance, exit)).toBeGreaterThanOrEqual(
-        DEFAULT_EDGE_ENDPOINT_MIN_DISTANCE,
-      );
+      expect(manhattan(entrance, exit)).toBeGreaterThanOrEqual(DEFAULT_EDGE_ENDPOINT_MIN_DISTANCE);
     }
   });
 
   it('never returns adjacent or identical endpoints', () => {
     for (const seed of SAMPLE_SEEDS) {
       const { entrance, exit } = generateEdgeEndpoints(seed, { minManhattanDistance: 2 });
-      const isAdjacent =
-        Math.abs(entrance.x - exit.x) <= 1 && Math.abs(entrance.y - exit.y) <= 1;
+      const isAdjacent = Math.abs(entrance.x - exit.x) <= 1 && Math.abs(entrance.y - exit.y) <= 1;
       expect(isAdjacent).toBe(false);
     }
   });

@@ -37,13 +37,18 @@ describe('race identity', () => {
   it('authors every race from content instead of a tier formula', () => {
     for (const [race, roster] of Object.entries(ROSTERS)) {
       expect(roster.length, race).toBeGreaterThan(0);
-      expect(roster.every((unit) => unit.faction === race), race).toBe(true);
+      expect(
+        roster.every((unit) => unit.faction === race),
+        race,
+      ).toBe(true);
     }
   });
 
   it('fields an unbroken tier ladder starting at tier one', () => {
     for (const [race, roster] of Object.entries(ROSTERS)) {
-      const tiers = [...new Set(roster.map((unit) => unit.tier))].sort((left, right) => left - right);
+      const tiers = [...new Set(roster.map((unit) => unit.tier))].sort(
+        (left, right) => left - right,
+      );
 
       expect(tiers[0], race).toBe(UnitTier.TIER_1);
       tiers.forEach((tier, index) => {

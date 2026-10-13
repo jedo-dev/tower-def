@@ -59,5 +59,8 @@ export function applyCreepFacing(creep: CreepRenderState, deltaX: number, deltaY
   creep.facing = facing;
   creep.facingFlipped = isFlipped;
   creep.sprite.setFlipX(isFlipped);
-  creep.sprite.play(toUnitAnimationKey(creep.sprite.texture.key, ANIMATION_BY_FACING[facing]), true);
+  creep.sprite.play(
+    toUnitAnimationKey(creep.sprite.texture.key, ANIMATION_BY_FACING[facing]),
+    true,
+  );
 }

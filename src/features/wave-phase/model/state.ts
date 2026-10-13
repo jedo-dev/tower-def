@@ -40,10 +40,7 @@ export function canPerformBuildActions(state: WavePhaseState): boolean {
   return isBuildPhase(state);
 }
 
-export function isWaveActionAllowed(
-  state: WavePhaseState,
-  action: WaveAction,
-): boolean {
+export function isWaveActionAllowed(state: WavePhaseState, action: WaveAction): boolean {
   if (action === 'place-tower' || action === 'sell-tower') {
     return canPerformBuildActions(state);
   }

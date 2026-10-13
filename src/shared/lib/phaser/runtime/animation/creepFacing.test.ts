@@ -55,7 +55,9 @@ describe('resolveCreepFacing', () => {
 
 describe('isDirectionalCreepSprite', () => {
   it('accepts a full four-row sheet', () => {
-    expect(isDirectionalCreepSprite(createSprite(UNIT_DIRECTIONAL_FRAME_COUNT) as never)).toBe(true);
+    expect(isDirectionalCreepSprite(createSprite(UNIT_DIRECTIONAL_FRAME_COUNT) as never)).toBe(
+      true,
+    );
   });
 
   it('rejects a legacy four-frame strip', () => {
@@ -118,7 +120,8 @@ describe('applyCreepFacing', () => {
 
 describe('getCreepDeathAnimationKey', () => {
   it('derives the death key from the sheet the creep uses', () => {
-    expect(getCreepDeathAnimationKey(createSprite(16) as never))
-      .toBe(`${UNIT_SPRITE_KEYS.ORC_GRUNT}.death`);
+    expect(getCreepDeathAnimationKey(createSprite(16) as never)).toBe(
+      `${UNIT_SPRITE_KEYS.ORC_GRUNT}.death`,
+    );
   });
 });

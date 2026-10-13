@@ -16,4 +16,3 @@ export {
   resolveUnitConfigById,
   tryResolveUnitConfigById,
 } from './model/registry';
-

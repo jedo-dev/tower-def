@@ -22,11 +22,7 @@ import {
 } from '../../../../shared/lib/content/contentValidation';
 import type { TowerTypeId } from '../../../../shared/types/content-ids';
 import { BUILDABLE_TOWER_IDS } from '../towerIds';
-import type {
-  BuildableTowerConfig,
-  TowerCombatStats,
-  TowerOnHitEffect,
-} from '../types';
+import type { BuildableTowerConfig, TowerCombatStats, TowerOnHitEffect } from '../types';
 import {
   TOWER_ARCHETYPE_FILE_KEYS,
   TOWER_ARCHETYPE_OPTIONAL_KEYS,
@@ -108,9 +104,12 @@ function parseOnHitEffects(
 
     return {
       effectId,
-      magnitude: effect.magnitude === undefined ? undefined : readNumber(effect, 'magnitude', location),
-      durationMs: effect.durationMs === undefined ? undefined : readNumber(effect, 'durationMs', location),
-      maxStacks: effect.maxStacks === undefined ? undefined : readNumber(effect, 'maxStacks', location),
+      magnitude:
+        effect.magnitude === undefined ? undefined : readNumber(effect, 'magnitude', location),
+      durationMs:
+        effect.durationMs === undefined ? undefined : readNumber(effect, 'durationMs', location),
+      maxStacks:
+        effect.maxStacks === undefined ? undefined : readNumber(effect, 'maxStacks', location),
     };
   });
 }
@@ -231,9 +230,7 @@ export function parseTowerContentFile(source: TowerContentSource): BuildableTowe
   return rawTowers.map((rawEntry) => parseTowerEntry(rawEntry, location, race));
 }
 
-export function loadTowerContent(
-  sources: readonly TowerContentSource[],
-): BuildableTowerConfig[] {
+export function loadTowerContent(sources: readonly TowerContentSource[]): BuildableTowerConfig[] {
   const towers: BuildableTowerConfig[] = [];
   const fileByTowerId = new Map<string, string>();
 
@@ -384,7 +381,10 @@ export function loadTowerArchetypeContent(
   const missing = TOWER_TYPE_IDS.filter((archetypeId) => !byId.has(archetypeId));
 
   if (missing.length > 0) {
-    throw new ContentValidationError(location, `missing archetype stats for: ${missing.join(', ')}`);
+    throw new ContentValidationError(
+      location,
+      `missing archetype stats for: ${missing.join(', ')}`,
+    );
   }
 
   return Object.fromEntries(byId) as Record<TowerTypeId, TowerArchetypeDefinition>;

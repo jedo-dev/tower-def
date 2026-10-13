@@ -1,7 +1,11 @@
 import type Phaser from 'phaser';
 import type { BuilderFaction } from '../../../../../entities/builder-faction';
 import { GRID_DIMENSIONS } from '../../../../constants/grid';
-import { builderFactionToTerrainFaction, getPropForCell, TILES } from '../../../../../assets/registry';
+import {
+  builderFactionToTerrainFaction,
+  getPropForCell,
+  TILES,
+} from '../../../../../assets/registry';
 import type { GridCell, GridModel } from '../../../../types/grid';
 
 export type GridRendererConfig = {
@@ -54,10 +58,7 @@ function isPathCell(cell: GridCell, deps: GridRendererDeps): boolean {
   return deps.pathCellKeys.has(`${cell.x}:${cell.y}`);
 }
 
-function renderFallbackTerrainCell(
-  state: GridRendererState,
-  cell: GridCell,
-): void {
+function renderFallbackTerrainCell(state: GridRendererState, cell: GridCell): void {
   if (!state.gridGraphics) {
     return;
   }
@@ -65,11 +66,7 @@ function renderFallbackTerrainCell(
   const x = cell.x * GRID_DIMENSIONS.cellSize;
   const y = cell.y * GRID_DIMENSIONS.cellSize;
   const fillColor =
-    cell.role === 'entrance'
-      ? 0x1e8f48
-      : cell.role === 'exit'
-        ? 0xaf4536
-        : 0x253248;
+    cell.role === 'entrance' ? 0x1e8f48 : cell.role === 'exit' ? 0xaf4536 : 0x253248;
 
   state.gridGraphics.fillStyle(fillColor, 1);
   state.gridGraphics.fillRect(x, y, GRID_DIMENSIONS.cellSize, GRID_DIMENSIONS.cellSize);
@@ -187,23 +184,12 @@ export function drawGrid(
       const marker = deps.scene.add.graphics();
       marker.setDepth(config.entranceExitLabelRenderDepth - 1);
       marker.fillStyle(markerColor, config.endpointMarkerFillAlpha);
-      marker.fillRect(
-        x + 1,
-        y + 1,
-        GRID_DIMENSIONS.cellSize - 2,
-        GRID_DIMENSIONS.cellSize - 2,
-      );
+      marker.fillRect(x + 1, y + 1, GRID_DIMENSIONS.cellSize - 2, GRID_DIMENSIONS.cellSize - 2);
       marker.lineStyle(config.endpointMarkerLineWidth, markerColor, 1);
-      marker.strokeRect(
-        x + 1,
-        y + 1,
-        GRID_DIMENSIONS.cellSize - 2,
-        GRID_DIMENSIONS.cellSize - 2,
-      );
+      marker.strokeRect(x + 1, y + 1, GRID_DIMENSIONS.cellSize - 2, GRID_DIMENSIONS.cellSize - 2);
       state.endpointMarkers.push(marker);
 
-      const label = deps.scene
-        .add
+      const label = deps.scene.add
         .text(
           x + GRID_DIMENSIONS.cellSize / 2,
           y + GRID_DIMENSIONS.cellSize / 2,

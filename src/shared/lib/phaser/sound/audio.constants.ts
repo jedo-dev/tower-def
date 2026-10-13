@@ -1,8 +1,4 @@
-import {
-  DEFAULT_SOUND_CONFIG,
-  type SoundId,
-  type SoundPlaybackConfig,
-} from './audio.types';
+import { DEFAULT_SOUND_CONFIG, type SoundId, type SoundPlaybackConfig } from './audio.types';
 import { FactionAudioId, SoundCategory } from './audio.types';
 
 const V = (volume: number) => volume;
@@ -159,7 +155,12 @@ export const SOUND_REGISTRY: Record<SoundId, SoundPlaybackConfig> = {
     cooldownMs: C(40),
     pitchMin: 0.9,
     pitchMax: 1.1,
-    factionTags: [FactionAudioId.UNDEAD, FactionAudioId.ORC, FactionAudioId.HUMAN, FactionAudioId.ELF],
+    factionTags: [
+      FactionAudioId.UNDEAD,
+      FactionAudioId.ORC,
+      FactionAudioId.HUMAN,
+      FactionAudioId.ELF,
+    ],
     maxDurationSec: 0.3,
     startOffsetSec: 0.025,
   },
@@ -206,7 +207,12 @@ export const SOUND_REGISTRY: Record<SoundId, SoundPlaybackConfig> = {
     cooldownMs: C(80),
     pitchMin: 0.85,
     pitchMax: 1.0,
-    factionTags: [FactionAudioId.UNDEAD, FactionAudioId.ORC, FactionAudioId.HUMAN, FactionAudioId.ELF],
+    factionTags: [
+      FactionAudioId.UNDEAD,
+      FactionAudioId.ORC,
+      FactionAudioId.HUMAN,
+      FactionAudioId.ELF,
+    ],
     maxDurationSec: 0.5,
     startOffsetSec: 0.02,
   },

@@ -63,7 +63,12 @@ export type WaveRuntimeDependencies = {
   onWavePhaseChanged: (nextPhase: WavePhaseState) => void;
   onBuildStateUpdated: () => void;
   onHudChanged: () => void;
-  createCreepSprite: (x: number, y: number, spriteKey: string, animationKey: string) => Phaser.GameObjects.Sprite;
+  createCreepSprite: (
+    x: number,
+    y: number,
+    spriteKey: string,
+    animationKey: string,
+  ) => Phaser.GameObjects.Sprite;
   playSound: (soundId: SoundId) => void;
 };
 
@@ -73,7 +78,9 @@ export type WaveRuntimeDependencies = {
  * copy-back is required. The creep list delegates to the battlefield render
  * state so both runtimes share a single source of truth.
  */
-export function createPlayerWaveRuntimeState(battlefield: BattlefieldRenderState): WaveRuntimeState {
+export function createPlayerWaveRuntimeState(
+  battlefield: BattlefieldRenderState,
+): WaveRuntimeState {
   const initialResources = createInitialPlayerResources();
   return {
     get activeCreeps() {
@@ -148,8 +155,8 @@ export function applyWaveCompletionRewardIfResolved(
 
   const nextResources = addGold(
     { gold: state.playerGold, lives: state.playerLives },
-    deps.scaleReward?.(ECONOMY_BALANCE.waveCompletionRewardGold)
-      ?? ECONOMY_BALANCE.waveCompletionRewardGold,
+    deps.scaleReward?.(ECONOMY_BALANCE.waveCompletionRewardGold) ??
+      ECONOMY_BALANCE.waveCompletionRewardGold,
   );
   state.playerGold = nextResources.gold;
   deps.onGoldUpdated(state.playerGold);
@@ -162,7 +169,11 @@ export function applyWaveCompletionRewardIfResolved(
   deps.onHudChanged();
 }
 
-export function updateAutoWaveCountdown(state: WaveRuntimeState, nowMs: number, canBuild: boolean): boolean {
+export function updateAutoWaveCountdown(
+  state: WaveRuntimeState,
+  nowMs: number,
+  canBuild: boolean,
+): boolean {
   if (!canBuild || state.nextWaveStartsAtMs === null) {
     if (state.lastPublishedAutoStartSecondsLeft !== null) {
       state.lastPublishedAutoStartSecondsLeft = null;

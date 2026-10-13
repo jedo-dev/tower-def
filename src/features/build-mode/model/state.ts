@@ -7,10 +7,7 @@ export function createInitialBuildModeState(): BuildModeState {
   };
 }
 
-export function selectTowerType(
-  state: BuildModeState,
-  towerType: TowerType,
-): BuildModeState {
+export function selectTowerType(state: BuildModeState, towerType: TowerType): BuildModeState {
   return {
     ...state,
     selectedTowerType: towerType,

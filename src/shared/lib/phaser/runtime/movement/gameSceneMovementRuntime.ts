@@ -65,7 +65,9 @@ function markCreepEscaped(
 
   deps.onHudChanged();
 
-  const escapedCount = state.activeCreeps.filter((candidate) => candidate.entity.status === 'escaped').length;
+  const escapedCount = state.activeCreeps.filter(
+    (candidate) => candidate.entity.status === 'escaped',
+  ).length;
   deps.onEscapedCountUpdated(escapedCount);
 }
 
@@ -91,7 +93,10 @@ export function moveCreepsAlongPath(
     // A stunned creep holds its ground but must still be able to leak once it
     // is already standing on the exit, so movement stops after the escape check.
     const normalizedStepDistance =
-      (normalizedDeltaMs / 1000) * config.creepBaseMoveSpeedPxPerSec * creep.entity.speed * speedMultiplier;
+      (normalizedDeltaMs / 1000) *
+      config.creepBaseMoveSpeedPxPerSec *
+      creep.entity.speed *
+      speedMultiplier;
 
     const nextPathIndex = creep.entity.pathIndex + 1;
 

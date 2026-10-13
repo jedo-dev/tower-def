@@ -92,10 +92,12 @@ describe('parseUnitContentFile', () => {
   });
 
   it('rejects a trait outside its vocabulary', () => {
-    expect(() => parse(createFile([createEntry({ moveType: 'burrowing' })])))
-      .toThrow(`${FILE} [undead_skeleton]: "moveType" is not a known value: burrowing`);
-    expect(() => parse(createFile([createEntry({ armorType: 'plated' })])))
-      .toThrow(`${FILE} [undead_skeleton]: "armorType" is not a known value: plated`);
+    expect(() => parse(createFile([createEntry({ moveType: 'burrowing' })]))).toThrow(
+      `${FILE} [undead_skeleton]: "moveType" is not a known value: burrowing`,
+    );
+    expect(() => parse(createFile([createEntry({ armorType: 'plated' })]))).toThrow(
+      `${FILE} [undead_skeleton]: "armorType" is not a known value: plated`,
+    );
   });
 
   it('rejects a file that is not an object', () => {
@@ -103,18 +105,21 @@ describe('parseUnitContentFile', () => {
   });
 
   it('rejects unknown top-level fields', () => {
-    expect(() => parse(createFile([createEntry()], { notes: 'wip' })))
-      .toThrow(`${FILE}: unknown field "notes"`);
+    expect(() => parse(createFile([createEntry()], { notes: 'wip' }))).toThrow(
+      `${FILE}: unknown field "notes"`,
+    );
   });
 
   it('rejects an unsupported schema version', () => {
-    expect(() => parse(createFile([createEntry()], { schemaVersion: 2 })))
-      .toThrow(`${FILE}: unsupported schemaVersion 2, expected 1`);
+    expect(() => parse(createFile([createEntry()], { schemaVersion: 2 }))).toThrow(
+      `${FILE}: unsupported schemaVersion 2, expected 1`,
+    );
   });
 
   it('rejects an unknown race', () => {
-    expect(() => parse(createFile([createEntry()], { race: 'GOBLIN' })))
-      .toThrow(`${FILE}: "race" is not a known value: GOBLIN`);
+    expect(() => parse(createFile([createEntry()], { race: 'GOBLIN' }))).toThrow(
+      `${FILE}: "race" is not a known value: GOBLIN`,
+    );
   });
 
   it('rejects a file without creatures', () => {
@@ -126,43 +131,51 @@ describe('parseUnitContentFile', () => {
   });
 
   it('rejects an unknown creature id', () => {
-    expect(() => parse(createFile([createEntry({ id: 'undead_lich' })])))
-      .toThrow(`${FILE}: "id" is not a known value: undead_lich`);
+    expect(() => parse(createFile([createEntry({ id: 'undead_lich' })]))).toThrow(
+      `${FILE}: "id" is not a known value: undead_lich`,
+    );
   });
 
   it('rejects a creature authored under the wrong race', () => {
-    expect(() => parse(createFile([createEntry({ id: 'orc_grunt' })])))
-      .toThrow(`${FILE} [orc_grunt]: id does not belong to race UNDEAD`);
+    expect(() => parse(createFile([createEntry({ id: 'orc_grunt' })]))).toThrow(
+      `${FILE} [orc_grunt]: id does not belong to race UNDEAD`,
+    );
   });
 
   it('rejects unknown fields on a creature', () => {
-    expect(() => parse(createFile([createEntry({ splashRadius: 2 })])))
-      .toThrow(`${FILE} [undead_skeleton]: unknown field "splashRadius"`);
+    expect(() => parse(createFile([createEntry({ splashRadius: 2 })]))).toThrow(
+      `${FILE} [undead_skeleton]: unknown field "splashRadius"`,
+    );
   });
 
   it('rejects a missing name', () => {
-    expect(() => parse(createFile([createEntry({ name: '' })])))
-      .toThrow(`${FILE} [undead_skeleton]: "name" must be a non-empty string`);
+    expect(() => parse(createFile([createEntry({ name: '' })]))).toThrow(
+      `${FILE} [undead_skeleton]: "name" must be a non-empty string`,
+    );
   });
 
   it('rejects a tier outside the declared tiers', () => {
-    expect(() => parse(createFile([createEntry({ tier: 9 })])))
-      .toThrow(`${FILE} [undead_skeleton]: "tier" must be one of 1, 2, 3, 4, 5, 6, got 9`);
+    expect(() => parse(createFile([createEntry({ tier: 9 })]))).toThrow(
+      `${FILE} [undead_skeleton]: "tier" must be one of 1, 2, 3, 4, 5, 6, got 9`,
+    );
   });
 
   it('rejects a stat that is not a finite number', () => {
-    expect(() => parse(createFile([createEntry({ speed: 'fast' })])))
-      .toThrow(`${FILE} [undead_skeleton]: "speed" must be a finite number`);
+    expect(() => parse(createFile([createEntry({ speed: 'fast' })]))).toThrow(
+      `${FILE} [undead_skeleton]: "speed" must be a finite number`,
+    );
   });
 
   it('rejects a stat outside the authoring bounds', () => {
-    expect(() => parse(createFile([createEntry({ health: 99999 })])))
-      .toThrow(`${FILE} [undead_skeleton]: "health" must be between 1 and 5000, got 99999`);
+    expect(() => parse(createFile([createEntry({ health: 99999 })]))).toThrow(
+      `${FILE} [undead_skeleton]: "health" must be between 1 and 5000, got 99999`,
+    );
   });
 
   it('rejects a duplicate creature id inside one file', () => {
-    expect(() => parse(createFile([createEntry(), createEntry()])))
-      .toThrow(`${FILE} [undead_skeleton]: duplicate unit id`);
+    expect(() => parse(createFile([createEntry(), createEntry()]))).toThrow(
+      `${FILE} [undead_skeleton]: duplicate unit id`,
+    );
   });
 });
 
@@ -172,9 +185,12 @@ describe('loadUnitContent', () => {
       { file: FILE, data: createFile([createEntry()]) },
       {
         file: 'content/units/orc.json',
-        data: createFile([createEntry({ id: 'orc_grunt', name: 'Grunt', spriteKey: 'unit.orc.grunt' })], {
-          race: 'ORC',
-        }),
+        data: createFile(
+          [createEntry({ id: 'orc_grunt', name: 'Grunt', spriteKey: 'unit.orc.grunt' })],
+          {
+            race: 'ORC',
+          },
+        ),
       },
     ]);
 
@@ -188,7 +204,9 @@ describe('loadUnitContent', () => {
         { file: FILE, data: createFile([createEntry()]) },
         { file: 'content/units/undead-extra.json', data: createFile([createEntry()]) },
       ]),
-    ).toThrow('content/units/undead-extra.json [undead_skeleton]: duplicate unit id, already declared in content/units/undead.json');
+    ).toThrow(
+      'content/units/undead-extra.json [undead_skeleton]: duplicate unit id, already declared in content/units/undead.json',
+    );
   });
 
   it('returns an empty roster when nothing is authored', () => {

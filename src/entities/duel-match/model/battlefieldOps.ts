@@ -3,11 +3,7 @@ import { CreepTypeId } from '../../../shared/types/content-ids';
 import { resolveUnitConfigById } from '../../unit/model/registry';
 import type { TowerEntity } from '../../tower/model/types';
 import type { DuelMatchState } from './types';
-import type {
-  AddCreepEntry,
-  BattlefieldLeakResult,
-  BattlefieldState,
-} from './battlefield';
+import type { AddCreepEntry, BattlefieldLeakResult, BattlefieldState } from './battlefield';
 
 export function createBattlefieldState(
   grid: BattlefieldState['grid'],
@@ -72,10 +68,7 @@ export function routeQueuedSendsToBattlefields(state: DuelMatchState): DuelMatch
   };
 }
 
-export function addTower(
-  battlefield: BattlefieldState,
-  tower: TowerEntity,
-): BattlefieldState {
+export function addTower(battlefield: BattlefieldState, tower: TowerEntity): BattlefieldState {
   return {
     ...battlefield,
     towers: [...battlefield.towers, tower],
@@ -90,10 +83,7 @@ export function addTower(
   };
 }
 
-export function removeTower(
-  battlefield: BattlefieldState,
-  towerId: string,
-): BattlefieldState {
+export function removeTower(battlefield: BattlefieldState, towerId: string): BattlefieldState {
   const tower = battlefield.towers.find((t) => t.id === towerId);
   if (!tower) {
     return battlefield;

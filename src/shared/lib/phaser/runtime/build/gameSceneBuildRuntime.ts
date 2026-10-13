@@ -1,6 +1,10 @@
 import { TowerTypeId } from '../../../../types/content-ids';
 import { canSpendGold, spendGold } from '../../../../../entities/player-resources';
-import type { BuildableTowerConfig, TowerCombatStats, TowerEntity } from '../../../../../entities/tower';
+import type {
+  BuildableTowerConfig,
+  TowerCombatStats,
+  TowerEntity,
+} from '../../../../../entities/tower';
 import { TOWER_BASE_LEVEL, TOWER_COMBAT_STATS_BY_TYPE } from '../../../../../entities/tower';
 import type { GridCell, GridModel } from '../../../../types/grid';
 import type { GridPosition } from '../../../../types/pathfinding';
@@ -64,8 +68,12 @@ function resolvePlacementStats(
     damage: authoredLevelOne?.damage ?? authoredTower.damage,
     range: authoredLevelOne?.range ?? authoredTower.range,
     attackCooldownMs: authoredLevelOne?.attackCooldownMs ?? authoredTower.attackCooldownMs,
-    ...(authoredTower.splashRadius === undefined ? {} : { splashRadius: authoredTower.splashRadius }),
-    ...(authoredTower.onHitEffects.length === 0 ? {} : { onHitEffects: authoredTower.onHitEffects }),
+    ...(authoredTower.splashRadius === undefined
+      ? {}
+      : { splashRadius: authoredTower.splashRadius }),
+    ...(authoredTower.onHitEffects.length === 0
+      ? {}
+      : { onHitEffects: authoredTower.onHitEffects }),
   };
 }
 
@@ -75,7 +83,9 @@ export function isBuildCellValid(
   cellPosition: GridPosition,
   grid: GridModel,
 ): boolean {
-  const cell = grid.cells.find((candidate) => candidate.x === cellPosition.x && candidate.y === cellPosition.y);
+  const cell = grid.cells.find(
+    (candidate) => candidate.x === cellPosition.x && candidate.y === cellPosition.y,
+  );
 
   if (!cell) return false;
   if (cell.role !== 'empty') return false;
@@ -90,26 +100,61 @@ export function tryPlaceTowerAtHoveredCell(
   deps: BuildRuntimeDeps,
 ): BuildPlacementResult {
   if (!deps.canPerformPlace()) {
-    return { success: false, playerGold: state.playerGold, changedCell: null, placedTower: null, towerType: null };
+    return {
+      success: false,
+      playerGold: state.playerGold,
+      changedCell: null,
+      placedTower: null,
+      towerType: null,
+    };
   }
 
   if (!state.hoveredCell || !state.gridModel) {
-    return { success: false, playerGold: state.playerGold, changedCell: null, placedTower: null, towerType: null };
+    return {
+      success: false,
+      playerGold: state.playerGold,
+      changedCell: null,
+      placedTower: null,
+      towerType: null,
+    };
   }
 
   const hoveredCell = state.hoveredCell;
   if (!isBuildCellValid(state, deps, hoveredCell, state.gridModel)) {
-    return { success: false, playerGold: state.playerGold, changedCell: null, placedTower: null, towerType: null };
+    return {
+      success: false,
+      playerGold: state.playerGold,
+      changedCell: null,
+      placedTower: null,
+      towerType: null,
+    };
   }
 
-  const targetCell = state.gridModel.cells.find((cell) => cell.x === hoveredCell.x && cell.y === hoveredCell.y);
+  const targetCell = state.gridModel.cells.find(
+    (cell) => cell.x === hoveredCell.x && cell.y === hoveredCell.y,
+  );
   if (!targetCell) {
-    return { success: false, playerGold: state.playerGold, changedCell: null, placedTower: null, towerType: null };
+    return {
+      success: false,
+      playerGold: state.playerGold,
+      changedCell: null,
+      placedTower: null,
+      towerType: null,
+    };
   }
 
-  const spendGoldResult = spendGold({ gold: state.playerGold, lives: state.playerLives }, deps.defaultTowerCost);
+  const spendGoldResult = spendGold(
+    { gold: state.playerGold, lives: state.playerLives },
+    deps.defaultTowerCost,
+  );
   if (!spendGoldResult.spent) {
-    return { success: false, playerGold: state.playerGold, changedCell: null, placedTower: null, towerType: null };
+    return {
+      success: false,
+      playerGold: state.playerGold,
+      changedCell: null,
+      placedTower: null,
+      towerType: null,
+    };
   }
 
   targetCell.isOccupied = true;
@@ -162,7 +207,9 @@ export function trySellTowerAtHoveredCell(
     return { success: false, changedCell: null, removedTowerId: null, refundAmount: 0 };
   }
 
-  const targetCell = state.gridModel.cells.find((cell) => cell.x === hoveredCell.x && cell.y === hoveredCell.y);
+  const targetCell = state.gridModel.cells.find(
+    (cell) => cell.x === hoveredCell.x && cell.y === hoveredCell.y,
+  );
   if (!targetCell || targetCell.role !== 'empty' || !targetCell.isOccupied) {
     return { success: false, changedCell: null, removedTowerId: null, refundAmount: 0 };
   }

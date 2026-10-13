@@ -51,7 +51,9 @@ export type TowerCommandDeps = {
   updateBuildPreview: () => void;
 };
 
-function toSelectedTowerSnapshot(tower: BattlefieldRenderState['towers'][number]): SelectedTowerSnapshot {
+function toSelectedTowerSnapshot(
+  tower: BattlefieldRenderState['towers'][number],
+): SelectedTowerSnapshot {
   const authoredTower = tower.entity.buildableTowerId
     ? tryResolveBuildableTowerById(tower.entity.buildableTowerId)
     : undefined;
@@ -89,7 +91,11 @@ export function tryPlaceTowerAtHoveredCell(deps: TowerCommandDeps): void {
   const towerSprite =
     getTowerAttackKind(result.towerType) === TowerAttackKind.SPLASH
       ? createPlacedPlagueSprite(deps.scene, result.placedTower.position)
-      : createPlacedArcherSprite(deps.scene, result.placedTower.position, deps.getBuilderFactionId());
+      : createPlacedArcherSprite(
+          deps.scene,
+          result.placedTower.position,
+          deps.getBuilderFactionId(),
+        );
   deps.playerField.towers.push({
     entity: result.placedTower,
     runtime: createInitialTowerCombatRuntime(),
@@ -230,9 +236,9 @@ export function handleSellTowerCommand(deps: TowerCommandDeps, towerId: string):
   deps.onGoldUpdated(deps.getPlayerGold() + refundAmount);
   deps.onRefundRecorded(refundAmount);
 
-  const cell = deps.getGridModel()?.cells.find(
-    (c) => c.x === tower.entity.position.x && c.y === tower.entity.position.y,
-  );
+  const cell = deps
+    .getGridModel()
+    ?.cells.find((c) => c.x === tower.entity.position.x && c.y === tower.entity.position.y);
   if (cell) {
     cell.isOccupied = false;
     cell.isWalkable = true;

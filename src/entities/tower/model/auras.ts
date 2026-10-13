@@ -22,19 +22,16 @@ function getBaseCombatStats(tower: TowerEntity): TowerCombatStats {
 
 /** The aura a tower projects right now: its level first, archetype otherwise. */
 export function resolveTowerAura(tower: TowerEntity): TowerAuraDefinition | undefined {
-  return tower.combatStats.aura
-    ?? tower.baseCombatStats?.aura
-    ?? getTowerArchetype(tower.type).aura;
+  return (
+    tower.combatStats.aura ?? tower.baseCombatStats?.aura ?? getTowerArchetype(tower.type).aura
+  );
 }
 
 function distanceInCells(left: TowerEntity, right: TowerEntity): number {
   return Math.hypot(left.position.x - right.position.x, left.position.y - right.position.y);
 }
 
-function combineBonus(
-  current: TowerAuraBonus,
-  aura: TowerAuraDefinition,
-): TowerAuraBonus {
+function combineBonus(current: TowerAuraBonus, aura: TowerAuraDefinition): TowerAuraBonus {
   if (aura.stacking === TowerAuraStacking.STACK) {
     return {
       attackSpeedBonus: current.attackSpeedBonus + aura.attackSpeedBonus,
@@ -96,9 +93,7 @@ export function recalculateTowerAuras(towers: readonly TowerEntity[]): void {
     tower.baseCombatStats = baseStats;
 
     // A support tower does not buff itself; it has nothing to buff.
-    const bonus = resolveTowerAura(tower)
-      ? NO_BONUS
-      : resolveTowerAuraBonus(tower, towers);
+    const bonus = resolveTowerAura(tower) ? NO_BONUS : resolveTowerAuraBonus(tower, towers);
 
     tower.auraBonus = bonus === NO_BONUS ? undefined : bonus;
     tower.combatStats = applyAuraBonusToStats(baseStats, bonus);

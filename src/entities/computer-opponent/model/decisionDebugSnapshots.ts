@@ -21,18 +21,20 @@ function summarizeActions(actions: readonly ComputerAction[]): string {
     return 'no actions';
   }
 
-  return actions.map((action) => {
-    switch (action.kind) {
-      case 'build':
-        return `build ${action.towerType} at ${action.position.x},${action.position.y}`;
-      case 'upgrade':
-        return `upgrade ${action.towerId}`;
-      case 'send_creep':
-        return `send ${action.creepTypeId}`;
-      case 'save':
-        return 'save gold';
-    }
-  }).join('; ');
+  return actions
+    .map((action) => {
+      switch (action.kind) {
+        case 'build':
+          return `build ${action.towerType} at ${action.position.x},${action.position.y}`;
+        case 'upgrade':
+          return `upgrade ${action.towerId}`;
+        case 'send_creep':
+          return `send ${action.creepTypeId}`;
+        case 'save':
+          return 'save gold';
+      }
+    })
+    .join('; ');
 }
 
 function resolveDebugKind(actions: readonly ComputerAction[]): ComputerDecisionDebugKind {

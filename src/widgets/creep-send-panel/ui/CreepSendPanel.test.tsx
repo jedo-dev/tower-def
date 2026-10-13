@@ -49,9 +49,7 @@ describe('CreepSendPanel', () => {
 
     const icon = screen.getByRole('img', { name: 'Grunt' });
 
-    expect(icon.style.backgroundImage).toContain(
-      UNIT_SPRITE_ASSETS[UNIT_SPRITE_KEYS.ORC_GRUNT],
-    );
+    expect(icon.style.backgroundImage).toContain(UNIT_SPRITE_ASSETS[UNIT_SPRITE_KEYS.ORC_GRUNT]);
   });
 
   it('keeps the question chip for a race whose art is not drawn yet', () => {

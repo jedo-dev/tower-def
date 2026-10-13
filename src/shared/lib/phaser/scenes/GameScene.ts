@@ -55,10 +55,7 @@ import {
   preloadGameSceneAssets,
 } from '../runtime/assets/gameSceneAssetLoader';
 import { ensurePlaceholderTextures } from '../runtime/assets/placeholderTexture';
-import {
-  startMissingArtReport,
-  stopMissingArtReport,
-} from '../runtime/assets/missingArtReport';
+import { startMissingArtReport, stopMissingArtReport } from '../runtime/assets/missingArtReport';
 import {
   createBattlefieldRenderState,
   destroyBattlefieldCreeps,
@@ -205,7 +202,10 @@ export class GameScene extends Phaser.Scene {
   private selectedBuilderFactionId = DEFAULT_BUILDER_FACTION;
   private selectedFaction: HudFactionType = 'undead';
   private selectedDifficulty: Difficulty = DEFAULT_DIFFICULTY;
-  private duelMatchState: DuelMatchState = createInitialDuelMatchState(RaceId.UNDEAD, RaceId.UNDEAD);
+  private duelMatchState: DuelMatchState = createInitialDuelMatchState(
+    RaceId.UNDEAD,
+    RaceId.UNDEAD,
+  );
   private opponentLeakHistory: LeakHistoryEntry[] = [];
   private readonly computerDecisionRecorder = createComputerDecisionDebugRecorder();
   private matchOutcomeStatus: MatchOutcomeStatus = 'active';
@@ -392,22 +392,74 @@ export class GameScene extends Phaser.Scene {
     processPendingWaveSpawnsRuntime(this.runState, this.wiring.waveRuntimeDeps, _time);
     moveBattlefieldCreeps(this.wiring.playerBattlefieldContext, MOVEMENT_RUNTIME_CONFIG, delta);
     moveBattlefieldCreeps(this.wiring.opponentBattlefieldContext, MOVEMENT_RUNTIME_CONFIG, delta);
-    updateBattlefieldTowerCombat(this.wiring.playerBattlefieldContext, COMBAT_RUNTIME_CONFIG, delta);
-    updateBattlefieldTowerCombat(this.wiring.opponentBattlefieldContext, COMBAT_RUNTIME_CONFIG, delta);
-    updateBattlefieldCreepEffects(this.wiring.playerBattlefieldContext, COMBAT_RUNTIME_CONFIG, delta);
-    updateBattlefieldCreepEffects(this.wiring.opponentBattlefieldContext, COMBAT_RUNTIME_CONFIG, delta);
-    updateBattlefieldCreepHitFeedback(this.wiring.playerBattlefieldContext, COMBAT_RUNTIME_CONFIG, delta);
-    updateBattlefieldCreepHitFeedback(this.wiring.opponentBattlefieldContext, COMBAT_RUNTIME_CONFIG, delta);
+    updateBattlefieldTowerCombat(
+      this.wiring.playerBattlefieldContext,
+      COMBAT_RUNTIME_CONFIG,
+      delta,
+    );
+    updateBattlefieldTowerCombat(
+      this.wiring.opponentBattlefieldContext,
+      COMBAT_RUNTIME_CONFIG,
+      delta,
+    );
+    updateBattlefieldCreepEffects(
+      this.wiring.playerBattlefieldContext,
+      COMBAT_RUNTIME_CONFIG,
+      delta,
+    );
+    updateBattlefieldCreepEffects(
+      this.wiring.opponentBattlefieldContext,
+      COMBAT_RUNTIME_CONFIG,
+      delta,
+    );
+    updateBattlefieldCreepHitFeedback(
+      this.wiring.playerBattlefieldContext,
+      COMBAT_RUNTIME_CONFIG,
+      delta,
+    );
+    updateBattlefieldCreepHitFeedback(
+      this.wiring.opponentBattlefieldContext,
+      COMBAT_RUNTIME_CONFIG,
+      delta,
+    );
     removeDeadBattlefieldCreeps(this.wiring.playerBattlefieldContext, COMBAT_RUNTIME_CONFIG, delta);
-    removeDeadBattlefieldCreeps(this.wiring.opponentBattlefieldContext, COMBAT_RUNTIME_CONFIG, delta);
+    removeDeadBattlefieldCreeps(
+      this.wiring.opponentBattlefieldContext,
+      COMBAT_RUNTIME_CONFIG,
+      delta,
+    );
     this.applyWaveCompletionRewardIfResolved();
     this.tryStartNextWave(_time);
-    updateBattlefieldProjectiles(this.wiring.playerBattlefieldContext, COMBAT_RUNTIME_CONFIG, delta);
-    updateBattlefieldProjectiles(this.wiring.opponentBattlefieldContext, COMBAT_RUNTIME_CONFIG, delta);
-    updateBattlefieldImpactEffects(this.wiring.playerBattlefieldContext, COMBAT_RUNTIME_CONFIG, delta);
-    updateBattlefieldImpactEffects(this.wiring.opponentBattlefieldContext, COMBAT_RUNTIME_CONFIG, delta);
-    updateBattlefieldDamageNumbers(this.wiring.playerBattlefieldContext, COMBAT_RUNTIME_CONFIG, delta);
-    updateBattlefieldDamageNumbers(this.wiring.opponentBattlefieldContext, COMBAT_RUNTIME_CONFIG, delta);
+    updateBattlefieldProjectiles(
+      this.wiring.playerBattlefieldContext,
+      COMBAT_RUNTIME_CONFIG,
+      delta,
+    );
+    updateBattlefieldProjectiles(
+      this.wiring.opponentBattlefieldContext,
+      COMBAT_RUNTIME_CONFIG,
+      delta,
+    );
+    updateBattlefieldImpactEffects(
+      this.wiring.playerBattlefieldContext,
+      COMBAT_RUNTIME_CONFIG,
+      delta,
+    );
+    updateBattlefieldImpactEffects(
+      this.wiring.opponentBattlefieldContext,
+      COMBAT_RUNTIME_CONFIG,
+      delta,
+    );
+    updateBattlefieldDamageNumbers(
+      this.wiring.playerBattlefieldContext,
+      COMBAT_RUNTIME_CONFIG,
+      delta,
+    );
+    updateBattlefieldDamageNumbers(
+      this.wiring.opponentBattlefieldContext,
+      COMBAT_RUNTIME_CONFIG,
+      delta,
+    );
     this.applyBattlefieldViewVisibility();
     this.updatePerformanceTelemetry(delta);
   }
@@ -472,7 +524,12 @@ export class GameScene extends Phaser.Scene {
   }
 
   private initializeWaveRuntime(grid: GridModel): void {
-    initializeWaveRuntimeModule(this.runState, WAVE_RUNTIME_CONFIG, this.wiring.waveRuntimeDeps, grid);
+    initializeWaveRuntimeModule(
+      this.runState,
+      WAVE_RUNTIME_CONFIG,
+      this.wiring.waveRuntimeDeps,
+      grid,
+    );
     destroyBattlefieldTowers(this.playerField);
     destroyBattlefieldRenderState(this.opponentField);
   }
@@ -589,7 +646,12 @@ export class GameScene extends Phaser.Scene {
   }
 
   private drawGridCell(cell: GridCell): void {
-    drawGridCellRuntime(this.gridRendererState, this.getGridRendererDeps(), GRID_RENDERER_CONFIG, cell);
+    drawGridCellRuntime(
+      this.gridRendererState,
+      this.getGridRendererDeps(),
+      GRID_RENDERER_CONFIG,
+      cell,
+    );
   }
 
   private updateGridOverlayVisualState(): void {
@@ -750,7 +812,11 @@ export class GameScene extends Phaser.Scene {
   }
 
   private updateAutoWaveCountdown(nowMs: number): void {
-    const changed = updateAutoWaveCountdownRuntime(this.runState, nowMs, this.canPerformBuildActions());
+    const changed = updateAutoWaveCountdownRuntime(
+      this.runState,
+      nowMs,
+      this.canPerformBuildActions(),
+    );
     if (changed) {
       this.publishHudSnapshot();
     }
@@ -942,7 +1008,11 @@ export class GameScene extends Phaser.Scene {
     // The opponent field is built once per wave; rebuilding it on every view
     // toggle would drop escaped creeps (losing their leak damage) and reset
     // tower cooldowns, granting a free volley per toggle.
-    if (showOpponent && this.opponentField.creeps.length === 0 && this.opponentField.towers.length === 0) {
+    if (
+      showOpponent &&
+      this.opponentField.creeps.length === 0 &&
+      this.opponentField.towers.length === 0
+    ) {
       this.syncOpponentBattlefieldRenderStateFromDuel();
     }
 
@@ -994,7 +1064,10 @@ export class GameScene extends Phaser.Scene {
       selectedTowerType: this.selectedTowerType,
       selectedFaction: this.selectedFaction,
       autoStartSecondsLeft,
-      waveQueue: buildHudWaveQueueWithPending(this.playerField.creeps, this.runState.pendingWaveSpawns),
+      waveQueue: buildHudWaveQueueWithPending(
+        this.playerField.creeps,
+        this.runState.pendingWaveSpawns,
+      ),
       playerSendQueue: buildHudSendQueue(this.duelMatchState.player.sendQueue),
       opponentSendQueue: buildHudSendQueue(this.duelMatchState.opponent.sendQueue),
       pendingCreepCount:
@@ -1026,7 +1099,12 @@ export class GameScene extends Phaser.Scene {
     }
 
     for (const cell of this.getVisibleGridCells()) {
-      drawGridCellRuntime(this.gridRendererState, this.getGridRendererDeps(), GRID_RENDERER_CONFIG, cell);
+      drawGridCellRuntime(
+        this.gridRendererState,
+        this.getGridRendererDeps(),
+        GRID_RENDERER_CONFIG,
+        cell,
+      );
     }
   }
 

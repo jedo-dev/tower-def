@@ -7,7 +7,10 @@ import {
   sendGameCommand,
 } from '../lib/game-bridge/bridge';
 import type { GameHudSnapshot } from '../lib/game-bridge/types';
-import { createInitialDuelMatchState, DEFAULT_ENTRANCE } from '../../entities/duel-match/model/state';
+import {
+  createInitialDuelMatchState,
+  DEFAULT_ENTRANCE,
+} from '../../entities/duel-match/model/state';
 import { addCreeps, addTower } from '../../entities/duel-match/model/battlefieldOps';
 import { sendCreep, startRound } from '../../entities/duel-match/model/lifecycle';
 import { UnitTier } from '../../entities/unit/model/types';
@@ -128,7 +131,12 @@ describe('test setup', () => {
     expect(getActiveBattlefieldView()).toBe('opponent');
 
     const opponentSnapshot = createVisibleBattlefieldSnapshot(stateWithBothSimulations, 'opponent');
-    const interactions: readonly BattlefieldPlayerInteraction[] = ['build', 'upgrade', 'sell', 'select'];
+    const interactions: readonly BattlefieldPlayerInteraction[] = [
+      'build',
+      'upgrade',
+      'sell',
+      'select',
+    ];
     expect(opponentSnapshot.isReadOnly).toBe(true);
     expect(opponentSnapshot.towers).toHaveLength(1);
     expect(opponentSnapshot.creeps.map((creep) => creep.id)).toEqual(['player_send_1']);
@@ -142,6 +150,8 @@ describe('test setup', () => {
     const playerSnapshot = createVisibleBattlefieldSnapshot(stateWithBothSimulations, 'player');
     expect(playerSnapshot.isReadOnly).toBe(false);
     expect(playerSnapshot.creeps.map((creep) => creep.id)).toEqual(['computer_send_1']);
-    expect(createVisibleBattlefieldSnapshot(stateWithBothSimulations, 'opponent').creeps).toHaveLength(1);
+    expect(
+      createVisibleBattlefieldSnapshot(stateWithBothSimulations, 'opponent').creeps,
+    ).toHaveLength(1);
   });
 });

@@ -5,7 +5,11 @@ import type { GridModel } from '../../../shared/types/grid';
 import type { GridPosition } from '../../../shared/types/pathfinding';
 import { RaceId, TowerTypeId } from '../../../shared/types/content-ids';
 import type { DuelMatchState } from '../../duel-match/model/types';
-import { createInitialDuelMatchState, DEFAULT_ENTRANCE, DEFAULT_EXIT } from '../../duel-match/model/state';
+import {
+  createInitialDuelMatchState,
+  DEFAULT_ENTRANCE,
+  DEFAULT_EXIT,
+} from '../../duel-match/model/state';
 import type { TowerEntity } from '../../tower/model/types';
 import { TOWER_COMBAT_STATS_BY_TYPE } from '../../tower/model/types';
 import { createTowerLevel } from '../../tower/model/upgrade';
@@ -134,7 +138,10 @@ function applyBuildDecision(state: SimulationState, output: DecisionOutput): Sim
   return { ...state, grid, towers, spentGold };
 }
 
-function simulateSeededRound(state: SimulationState, profile: RoundProfile): {
+function simulateSeededRound(
+  state: SimulationState,
+  profile: RoundProfile,
+): {
   state: SimulationState;
   buildOutput: DecisionOutput;
   sendActionCount: number;
@@ -197,7 +204,11 @@ describe('entities/computer-opponent/computerBehaviorSimulation', () => {
       estimatedLeakCount: 0,
       leakHistory: [],
       occupiedCells: 2,
-      availableBuildPositions: [{ x: 4, y: 6 }, { x: 5, y: 8 }, { x: 7, y: 6 }],
+      availableBuildPositions: [
+        { x: 4, y: 6 },
+        { x: 5, y: 8 },
+        { x: 7, y: 6 },
+      ],
     };
 
     const firstRound = simulateSeededRound(state, buildRound);
@@ -228,7 +239,10 @@ describe('entities/computer-opponent/computerBehaviorSimulation', () => {
       estimatedLeakCount: 0,
       leakHistory: [],
       occupiedCells: 70,
-      availableBuildPositions: [{ x: 1, y: 5 }, { x: 8, y: 8 }],
+      availableBuildPositions: [
+        { x: 1, y: 5 },
+        { x: 8, y: 8 },
+      ],
     };
 
     const secondRound = simulateSeededRound(state, upgradeRound);

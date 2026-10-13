@@ -1,10 +1,11 @@
 import { TowerTypeId } from '../../../types/content-ids';
-import {
-  builderFactions,
-  type BuilderFactionConfig,
-} from '../../../../entities/builder-faction';
+import { builderFactions, type BuilderFactionConfig } from '../../../../entities/builder-faction';
 import type { CreepEntity } from '../../../../entities/creep';
-import { buildableTowers, getTowerArchetype, type BuildableTowerConfig } from '../../../../entities/tower';
+import {
+  buildableTowers,
+  getTowerArchetype,
+  type BuildableTowerConfig,
+} from '../../../../entities/tower';
 import { getUnitsByFaction, undeadUnits, type UnitConfig } from '../../../../entities/unit';
 import { GRID_DIMENSIONS } from '../../../constants/grid';
 import { RaceId } from '../../../types/content-ids';

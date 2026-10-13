@@ -27,7 +27,9 @@ describe('effect definitions', () => {
     for (const definition of Object.values(EFFECT_DEFINITIONS)) {
       if (definition.kind === EffectKind.DAMAGE_OVER_TIME) {
         expect(definition.tickIntervalMs, definition.id).toBeGreaterThan(0);
-        expect(definition.durationMs, definition.id).toBeGreaterThanOrEqual(definition.tickIntervalMs);
+        expect(definition.durationMs, definition.id).toBeGreaterThanOrEqual(
+          definition.tickIntervalMs,
+        );
       } else {
         expect(definition.tickIntervalMs, definition.id).toBe(0);
       }
@@ -67,8 +69,9 @@ describe('effect definitions', () => {
   it('leaves a creep able to move under any non-stun slow', () => {
     expect(EFFECT_BALANCE.minimumSpeedMultiplier).toBeGreaterThan(0);
     expect(EFFECT_BALANCE.minimumSpeedMultiplier).toBeLessThan(1);
-    expect(1 - resolveEffectDefinition(EffectId.CHILL).magnitude)
-      .toBeGreaterThanOrEqual(EFFECT_BALANCE.minimumSpeedMultiplier);
+    expect(1 - resolveEffectDefinition(EffectId.CHILL).magnitude).toBeGreaterThanOrEqual(
+      EFFECT_BALANCE.minimumSpeedMultiplier,
+    );
   });
 
   it('bounds how many distinct effects one creep can carry', () => {

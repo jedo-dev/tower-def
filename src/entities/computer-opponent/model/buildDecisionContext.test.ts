@@ -17,7 +17,13 @@ function createTestMatchState(overrides?: Partial<DuelMatchState>): DuelMatchSta
   };
 }
 
-function createTestTower(overrides?: { id?: string; x?: number; y?: number; type?: 'single' | 'splash'; level?: number }) {
+function createTestTower(overrides?: {
+  id?: string;
+  x?: number;
+  y?: number;
+  type?: 'single' | 'splash';
+  level?: number;
+}) {
   return {
     id: overrides?.id ?? 'tower_1',
     position: { x: overrides?.x ?? 2, y: overrides?.y ?? 3 },
@@ -83,7 +89,12 @@ describe('entities/computer-opponent/buildDecisionContext', () => {
     it('uses provided difficulty', () => {
       const matchState = createTestMatchState();
 
-      for (const difficulty of [Difficulty.EASY, Difficulty.NORMAL, Difficulty.HARD, Difficulty.NIGHTMARE]) {
+      for (const difficulty of [
+        Difficulty.EASY,
+        Difficulty.NORMAL,
+        Difficulty.HARD,
+        Difficulty.NIGHTMARE,
+      ]) {
         const context = buildDecisionContext({
           matchState,
           difficulty,

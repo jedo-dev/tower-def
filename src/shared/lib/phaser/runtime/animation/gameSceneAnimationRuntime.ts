@@ -26,7 +26,11 @@ const UNIT_WALK_FRAME_RATE = 8;
 const UNIT_DEATH_FRAME_RATE = 7;
 
 /** Row of the sheet each animation reads, in the frame order Phaser assigns. */
-const DIRECTIONAL_ANIMATIONS: ReadonlyArray<{ kind: UnitAnimationKind; row: number; loops: boolean }> = [
+const DIRECTIONAL_ANIMATIONS: ReadonlyArray<{
+  kind: UnitAnimationKind;
+  row: number;
+  loops: boolean;
+}> = [
   { kind: UnitAnimationKind.WALK_DOWN, row: UNIT_SHEET_ROWS.WALK_DOWN, loops: true },
   { kind: UnitAnimationKind.WALK_SIDE, row: UNIT_SHEET_ROWS.WALK_SIDE, loops: true },
   { kind: UnitAnimationKind.WALK_UP, row: UNIT_SHEET_ROWS.WALK_UP, loops: true },
@@ -131,9 +135,30 @@ function createTowerAnimation(
 export function createTowerAnimations(scene: Phaser.Scene): void {
   [...Object.values(TOWER_SPRITE_KEYS), PLACEHOLDER_TEXTURE_KEYS.TOWER].forEach((spriteKey) => {
     const animationSet = getTowerAnimationSet(spriteKey);
-    createTowerAnimation(scene, spriteKey, animationSet.build, TOWER_BONE_ARCHER_ANIMATION_FRAMES.build, 10, 0);
-    createTowerAnimation(scene, spriteKey, animationSet.idle, TOWER_BONE_ARCHER_ANIMATION_FRAMES.idle, 8, -1);
-    createTowerAnimation(scene, spriteKey, animationSet.attack, TOWER_BONE_ARCHER_ANIMATION_FRAMES.attack, 14, 0);
+    createTowerAnimation(
+      scene,
+      spriteKey,
+      animationSet.build,
+      TOWER_BONE_ARCHER_ANIMATION_FRAMES.build,
+      10,
+      0,
+    );
+    createTowerAnimation(
+      scene,
+      spriteKey,
+      animationSet.idle,
+      TOWER_BONE_ARCHER_ANIMATION_FRAMES.idle,
+      8,
+      -1,
+    );
+    createTowerAnimation(
+      scene,
+      spriteKey,
+      animationSet.attack,
+      TOWER_BONE_ARCHER_ANIMATION_FRAMES.attack,
+      14,
+      0,
+    );
     createTowerAnimation(
       scene,
       spriteKey,
@@ -142,7 +167,14 @@ export function createTowerAnimations(scene: Phaser.Scene): void {
       10,
       0,
     );
-    createTowerAnimation(scene, spriteKey, animationSet.sell, TOWER_BONE_ARCHER_ANIMATION_FRAMES.sell, 10, 0);
+    createTowerAnimation(
+      scene,
+      spriteKey,
+      animationSet.sell,
+      TOWER_BONE_ARCHER_ANIMATION_FRAMES.sell,
+      10,
+      0,
+    );
   });
 }
 

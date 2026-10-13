@@ -53,7 +53,10 @@ let snapshot: GameHudSnapshot = {
 
 let activeBattlefieldView: BattlefieldView = 'player';
 
-function isBattlefieldViewSwitchAllowed(view: BattlefieldView, phase: GameHudSnapshot['phase']): boolean {
+function isBattlefieldViewSwitchAllowed(
+  view: BattlefieldView,
+  phase: GameHudSnapshot['phase'],
+): boolean {
   return view === 'player' || phase === 'wave';
 }
 
@@ -143,10 +146,7 @@ export function sendGameCommand<T extends CommandName>(
   });
 }
 
-export function onGameEvent<T extends EventName>(
-  event: T,
-  handler: EventHandler<T>,
-): Unsubscribe {
+export function onGameEvent<T extends EventName>(event: T, handler: EventHandler<T>): Unsubscribe {
   const handlers = eventHandlers.get(event) ?? new Set<EventHandler<EventName>>();
   handlers.add(handler as EventHandler<EventName>);
   eventHandlers.set(event, handlers);
@@ -164,10 +164,7 @@ export function onGameEvent<T extends EventName>(
   };
 }
 
-export function publishGameEvent<T extends EventName>(
-  event: T,
-  payload: GameEventMap[T],
-): void {
+export function publishGameEvent<T extends EventName>(event: T, payload: GameEventMap[T]): void {
   const handlers = eventHandlers.get(event);
   if (!handlers) {
     return;

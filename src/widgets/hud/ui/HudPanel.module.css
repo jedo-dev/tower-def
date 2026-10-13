@@ -32,7 +32,9 @@
   z-index: 2;
 }
 
-.toggle:hover { filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.7)) brightness(1.2); }
+.toggle:hover {
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.7)) brightness(1.2);
+}
 
 .toggle:focus-visible {
   outline: none;
@@ -47,7 +49,9 @@
   transition: transform var(--duration-med) var(--ease-out);
 }
 
-.toggleIconUp { transform: rotate(180deg); }
+.toggleIconUp {
+  transform: rotate(180deg);
+}
 
 .topRow {
   display: flex;
@@ -82,9 +86,13 @@
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
-.resourceRight { justify-content: flex-end; }
+.resourceRight {
+  justify-content: flex-end;
+}
 
-.resourceIcon { flex: 0 0 auto; }
+.resourceIcon {
+  flex: 0 0 auto;
+}
 
 .resourceValue {
   font-family: var(--font-family-stats);
@@ -96,7 +104,9 @@
 }
 
 .startBtn,
-.forceStartBtn { flex: 0 0 auto; }
+.forceStartBtn {
+  flex: 0 0 auto;
+}
 
 .battlefieldViewBtn {
   display: inline-flex;
@@ -148,8 +158,12 @@
   font-size: var(--font-size-2xs);
 }
 
-.pressureMedium { background-image: url('/assets/ui/kit/bar-amber.png'); }
-.pressureHigh { background-image: url('/assets/ui/kit/bar-red.png'); }
+.pressureMedium {
+  background-image: url('/assets/ui/kit/bar-amber.png');
+}
+.pressureHigh {
+  background-image: url('/assets/ui/kit/bar-red.png');
+}
 
 .pressureLabel {
   font-family: var(--font-family-display);
@@ -158,7 +172,9 @@
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: #fff4d6;
-  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.9), 0 0 4px rgba(0, 0, 0, 0.8);
+  text-shadow:
+    0 1px 0 rgba(0, 0, 0, 0.9),
+    0 0 4px rgba(0, 0, 0, 0.8);
   white-space: nowrap;
 }
 
@@ -191,7 +207,9 @@
   border-left: 1px solid rgba(150, 160, 180, 0.3);
 }
 
-.duelSideEnemy { color: #ff7b6b; }
+.duelSideEnemy {
+  color: #ff7b6b;
+}
 
 /* --- expanded --- */
 .expandedContent {
@@ -231,7 +249,9 @@
   transition: filter var(--duration-fast) var(--ease-out);
 }
 
-.towerBtn:hover:not(:disabled) { filter: brightness(1.15); }
+.towerBtn:hover:not(:disabled) {
+  filter: brightness(1.15);
+}
 
 .towerBtn:disabled {
   cursor: not-allowed;
@@ -243,7 +263,9 @@
   box-shadow: var(--focus-ring);
 }
 
-.towerBtnSelected { color: #fff4d6; }
+.towerBtnSelected {
+  color: #fff4d6;
+}
 
 .towerBtnPortrait {
   --placeholder-icon-size: 40px;
@@ -320,7 +342,9 @@
   color: #e6e9ef;
 }
 
-.infoValueDiff { color: #f2d27a; }
+.infoValueDiff {
+  color: #f2d27a;
+}
 
 .selectedInfo {
   display: flex;

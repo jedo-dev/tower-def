@@ -124,9 +124,7 @@ export function sendCreep(
   return {
     state: {
       ...state,
-      ...(isPlayer
-        ? { player: updatedDuelist }
-        : { opponent: updatedDuelist }),
+      ...(isPlayer ? { player: updatedDuelist } : { opponent: updatedDuelist }),
     },
     sent: true,
     cost,

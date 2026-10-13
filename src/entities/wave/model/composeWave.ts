@@ -31,15 +31,9 @@ export function composeWave(input: ComposeWaveInput): WaveComposition {
     source: 'baseline' as const,
   }));
 
-  const playerSendEntries = resolveSendQueueToEntries(
-    input.playerSendQueue,
-    'player-send',
-  );
+  const playerSendEntries = resolveSendQueueToEntries(input.playerSendQueue, 'player-send');
 
-  const opponentSendEntries = resolveSendQueueToEntries(
-    input.opponentSendQueue,
-    'opponent-send',
-  );
+  const opponentSendEntries = resolveSendQueueToEntries(input.opponentSendQueue, 'opponent-send');
 
   return {
     waveId: input.waveId,
@@ -90,7 +84,7 @@ export function buildWavePreview(composition: WaveComposition): WavePreviewSumma
   const lines = Array.from(lineMap.values()).sort((left, right) => {
     if (left.source !== right.source) {
       const sourceOrder: Record<string, number> = {
-        'baseline': 0,
+        baseline: 0,
         'player-send': 1,
         'opponent-send': 2,
       };

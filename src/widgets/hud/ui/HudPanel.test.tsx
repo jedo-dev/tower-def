@@ -101,8 +101,9 @@ describe('HudPanel build bar', () => {
     const buildBar = screen.getByRole('group', { name: 'Buildable towers' });
     const buttons = within(buildBar).getAllByRole('button');
 
-    expect(buttons.map((button) => button.getAttribute('aria-label')))
-      .toEqual(getBuildableTowersByFaction(RaceId.ORC).map((tower) => expect.stringContaining(tower.name)));
+    expect(buttons.map((button) => button.getAttribute('aria-label'))).toEqual(
+      getBuildableTowersByFaction(RaceId.ORC).map((tower) => expect.stringContaining(tower.name)),
+    );
     expect(consoleError).not.toHaveBeenCalled();
   });
 
@@ -128,7 +129,9 @@ describe('HudPanel build bar', () => {
     const buildBar = screen.getByRole('group', { name: 'Buildable towers' });
 
     for (const button of within(buildBar).getAllByRole('button')) {
-      expect((button as HTMLButtonElement).disabled, button.getAttribute('aria-label') ?? '').toBe(true);
+      expect((button as HTMLButtonElement).disabled, button.getAttribute('aria-label') ?? '').toBe(
+        true,
+      );
     }
     expect(consoleError).not.toHaveBeenCalled();
   });
@@ -148,4 +151,3 @@ describe('HudPanel build bar', () => {
     expect(consoleError).not.toHaveBeenCalled();
   });
 });
-

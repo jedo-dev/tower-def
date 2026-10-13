@@ -42,15 +42,18 @@ const ENTRY_KEYS: readonly string[] = [
 
 function parseTraits(entry: Record<string, unknown>, location: ContentLocation): UnitTraits {
   return {
-    moveType: entry.moveType === undefined
-      ? UNIT_TRAIT_DEFAULTS.moveType
-      : readStringFrom(entry, 'moveType', location, UNIT_MOVE_TYPES),
-    sizeClass: entry.sizeClass === undefined
-      ? UNIT_TRAIT_DEFAULTS.sizeClass
-      : readStringFrom(entry, 'sizeClass', location, UNIT_SIZE_CLASSES),
-    armorType: entry.armorType === undefined
-      ? UNIT_TRAIT_DEFAULTS.armorType
-      : readStringFrom(entry, 'armorType', location, UNIT_ARMOR_TYPES),
+    moveType:
+      entry.moveType === undefined
+        ? UNIT_TRAIT_DEFAULTS.moveType
+        : readStringFrom(entry, 'moveType', location, UNIT_MOVE_TYPES),
+    sizeClass:
+      entry.sizeClass === undefined
+        ? UNIT_TRAIT_DEFAULTS.sizeClass
+        : readStringFrom(entry, 'sizeClass', location, UNIT_SIZE_CLASSES),
+    armorType:
+      entry.armorType === undefined
+        ? UNIT_TRAIT_DEFAULTS.armorType
+        : readStringFrom(entry, 'armorType', location, UNIT_ARMOR_TYPES),
   };
 }
 
@@ -105,7 +108,10 @@ export function parseUnitContentFile(source: UnitContentSource): UnitConfig[] {
 
   for (const unit of units) {
     if (seenIds.has(unit.id)) {
-      throw new ContentValidationError({ file: source.file, entityId: unit.id }, 'duplicate unit id');
+      throw new ContentValidationError(
+        { file: source.file, entityId: unit.id },
+        'duplicate unit id',
+      );
     }
     seenIds.add(unit.id);
   }

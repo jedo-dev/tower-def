@@ -65,10 +65,20 @@
   white-space: nowrap;
 }
 
-.count { color: var(--color-text-secondary); }
-.emptyText { color: var(--color-text-label); }
-.baselineHint { color: var(--color-text-muted); flex: 0 0 auto; }
-.sectionLabel { color: var(--color-text-danger); flex: 0 0 auto; }
+.count {
+  color: var(--color-text-secondary);
+}
+.emptyText {
+  color: var(--color-text-label);
+}
+.baselineHint {
+  color: var(--color-text-muted);
+  flex: 0 0 auto;
+}
+.sectionLabel {
+  color: var(--color-text-danger);
+  flex: 0 0 auto;
+}
 
 /* Sections sit inline in the strip instead of stacking into rows. */
 .section {
@@ -131,8 +141,12 @@
 }
 
 @keyframes spriteWalk {
-  from { transform: translateX(0); }
-  to { transform: translateX(-72px); }
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-72px);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

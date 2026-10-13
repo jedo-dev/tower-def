@@ -1,7 +1,4 @@
-export {
-  StrategyIntent,
-  STRATEGY_INTENTS,
-} from './model/types';
+export { StrategyIntent, STRATEGY_INTENTS } from './model/types';
 
 export { buildDecisionContext } from './model/buildDecisionContext';
 export {

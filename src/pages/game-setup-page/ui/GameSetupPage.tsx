@@ -1,6 +1,14 @@
 import { useState, useCallback, useEffect, useRef, type CSSProperties } from 'react';
-import { BuilderFaction, builderFactions, DEFAULT_BUILDER_FACTION } from '../../../entities/builder-faction';
-import { EnemyFaction, enemyFactions, DEFAULT_ENEMY_FACTION } from '../../../entities/enemy-faction';
+import {
+  BuilderFaction,
+  builderFactions,
+  DEFAULT_BUILDER_FACTION,
+} from '../../../entities/builder-faction';
+import {
+  EnemyFaction,
+  enemyFactions,
+  DEFAULT_ENEMY_FACTION,
+} from '../../../entities/enemy-faction';
 import { Difficulty, difficulties, DEFAULT_DIFFICULTY } from '../../../entities/difficulty';
 import type { GameSetupConfig, AppRoute } from '../../../shared/config/game-setup';
 import { FACTION_THEME_COLOR_VARS } from '../../../shared/constants/theme';
@@ -30,7 +38,8 @@ const BUILDER_BACKGROUND_VIDEO: Partial<Record<BuilderFaction, string>> = {
 export function GameSetupPage({ onStartGame, onNavigate }: GameSetupPageProps) {
   const [step, setStep] = useState<SetupStep>('builder-race');
   const [builderRace, setBuilderRace] = useState<BuilderFaction>(DEFAULT_BUILDER_FACTION);
-  const [enemyFactionSelected, setEnemyFactionSelected] = useState<EnemyFaction>(DEFAULT_ENEMY_FACTION);
+  const [enemyFactionSelected, setEnemyFactionSelected] =
+    useState<EnemyFaction>(DEFAULT_ENEMY_FACTION);
   const [difficultySelected, setDifficultySelected] = useState<Difficulty>(DEFAULT_DIFFICULTY);
   const [useDynamicEndpoints, setUseDynamicEndpoints] = useState(false);
   const [isRaceVisible, setIsRaceVisible] = useState(true);
@@ -58,7 +67,14 @@ export function GameSetupPage({ onStartGame, onNavigate }: GameSetupPageProps) {
         });
         break;
     }
-  }, [step, builderRace, enemyFactionSelected, difficultySelected, useDynamicEndpoints, onStartGame]);
+  }, [
+    step,
+    builderRace,
+    enemyFactionSelected,
+    difficultySelected,
+    useDynamicEndpoints,
+    onStartGame,
+  ]);
 
   const handleBack = useCallback(() => {
     switch (step) {
@@ -77,9 +93,12 @@ export function GameSetupPage({ onStartGame, onNavigate }: GameSetupPageProps) {
     }
   }, [step, onNavigate]);
 
-  const currentBuilderConfig = builderFactions.find((f) => f.id === builderRace) ?? builderFactions[0];
-  const currentEnemyConfig = enemyFactions.find((f) => f.id === enemyFactionSelected) ?? enemyFactions[0];
-  const currentDifficultyConfig = difficulties.find((d) => d.id === difficultySelected) ?? difficulties[0];
+  const currentBuilderConfig =
+    builderFactions.find((f) => f.id === builderRace) ?? builderFactions[0];
+  const currentEnemyConfig =
+    enemyFactions.find((f) => f.id === enemyFactionSelected) ?? enemyFactions[0];
+  const currentDifficultyConfig =
+    difficulties.find((d) => d.id === difficultySelected) ?? difficulties[0];
   const currentBuilderVideo = BUILDER_BACKGROUND_VIDEO[builderRace];
   const starterTowerName = formatTowerName(currentBuilderConfig.towerIds[0]);
 
@@ -131,10 +150,18 @@ export function GameSetupPage({ onStartGame, onNavigate }: GameSetupPageProps) {
   );
 
   return (
-    <main className={`game-setup-page${step === 'builder-race' ? ' game-setup-page-race-mode' : ''}`}>
+    <main
+      className={`game-setup-page${step === 'builder-race' ? ' game-setup-page-race-mode' : ''}`}
+    >
       {step !== 'builder-race' && (
         <header className="setup-header">
-          <button type="button" className="setup-back-button" onClick={handleBack} aria-label="Go back" data-sound="ui.close">
+          <button
+            type="button"
+            className="setup-back-button"
+            onClick={handleBack}
+            aria-label="Go back"
+            data-sound="ui.close"
+          >
             {'<'}
           </button>
           <h1 className="setup-title">{STEP_TITLES[step]}</h1>
@@ -157,7 +184,13 @@ export function GameSetupPage({ onStartGame, onNavigate }: GameSetupPageProps) {
         {step === 'builder-race' && (
           <div className="setup-race-selector">
             <div className="setup-race-topbar">
-              <button type="button" className="setup-back-button" onClick={handleBack} aria-label="Go back" data-sound="ui.close">
+              <button
+                type="button"
+                className="setup-back-button"
+                onClick={handleBack}
+                aria-label="Go back"
+                data-sound="ui.close"
+              >
                 {'<'}
               </button>
               <h1 className="setup-race-title">{STEP_TITLES[step]}</h1>
@@ -224,7 +257,12 @@ export function GameSetupPage({ onStartGame, onNavigate }: GameSetupPageProps) {
               </div>
             </div>
 
-            <button type="button" className="setup-next-button" onClick={handleNext} data-sound="ui.success">
+            <button
+              type="button"
+              className="setup-next-button"
+              onClick={handleNext}
+              data-sound="ui.success"
+            >
               Choose
             </button>
           </div>
@@ -285,19 +323,27 @@ export function GameSetupPage({ onStartGame, onNavigate }: GameSetupPageProps) {
           <div className="setup-summary">
             <div className="setup-summary-block">
               <span className="setup-summary-label">Builder Race</span>
-              <span className="setup-summary-value" style={{ '--theme': currentBuilderConfig.themeColor } as CSSProperties}>
+              <span
+                className="setup-summary-value"
+                style={{ '--theme': currentBuilderConfig.themeColor } as CSSProperties}
+              >
                 {currentBuilderConfig.name}
               </span>
             </div>
             <div className="setup-summary-block">
               <span className="setup-summary-label">Enemy Faction</span>
-              <span className="setup-summary-value" style={{ '--theme': getEnemyThemeColor(enemyFactionSelected) } as CSSProperties}>
+              <span
+                className="setup-summary-value"
+                style={{ '--theme': getEnemyThemeColor(enemyFactionSelected) } as CSSProperties}
+              >
                 {currentEnemyConfig.name}
               </span>
             </div>
             <div className="setup-summary-block">
               <span className="setup-summary-label">Difficulty</span>
-              <span className="setup-summary-value setup-summary-value-diff">{currentDifficultyConfig.name}</span>
+              <span className="setup-summary-value setup-summary-value-diff">
+                {currentDifficultyConfig.name}
+              </span>
             </div>
             <div className="setup-summary-block">
               <span className="setup-summary-label">Starter Tower</span>
@@ -325,7 +371,12 @@ export function GameSetupPage({ onStartGame, onNavigate }: GameSetupPageProps) {
 
       {step !== 'builder-race' && (
         <footer className="setup-footer">
-          <button type="button" className="setup-next-button" onClick={handleNext} data-sound="ui.success">
+          <button
+            type="button"
+            className="setup-next-button"
+            onClick={handleNext}
+            data-sound="ui.success"
+          >
             {step === 'summary' ? 'Start Game' : 'Continue'}
           </button>
         </footer>

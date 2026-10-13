@@ -40,9 +40,14 @@ function playRounds(rounds: number, difficulty: Difficulty): DuelMatchState {
 
 describe('shared/phaser/duel/applyComputerBuildPhaseStrategies', () => {
   it('does nothing outside the build phase', () => {
-    const state = { ...createInitialDuelMatchState(RaceId.HUMAN, RaceId.ORC), phase: 'battle' as const };
+    const state = {
+      ...createInitialDuelMatchState(RaceId.HUMAN, RaceId.ORC),
+      phase: 'battle' as const,
+    };
 
-    expect(applyComputerBuildPhaseStrategies(state, createDeps(Difficulty.NORMAL).deps)).toBe(state);
+    expect(applyComputerBuildPhaseStrategies(state, createDeps(Difficulty.NORMAL).deps)).toBe(
+      state,
+    );
   });
 
   it('reports what the opponent did through the registry', () => {

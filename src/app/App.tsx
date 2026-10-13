@@ -30,18 +30,21 @@ export function App() {
   const isUiAudioUnlockedRef = useRef(false);
   const lastHoverAtMsRef = useRef(0);
 
-  const playUiSound = useCallback((soundId: SoundId, volume: number) => {
-    if (!isUiAudioUnlockedRef.current) {
-      return;
-    }
-    const path = resolveUiAudioPath(soundId);
-    if (!path) {
-      return;
-    }
-    const audio = new Audio(path);
-    audio.volume = volume * sfxVolume;
-    void audio.play().catch(() => undefined);
-  }, [sfxVolume]);
+  const playUiSound = useCallback(
+    (soundId: SoundId, volume: number) => {
+      if (!isUiAudioUnlockedRef.current) {
+        return;
+      }
+      const path = resolveUiAudioPath(soundId);
+      if (!path) {
+        return;
+      }
+      const audio = new Audio(path);
+      audio.volume = volume * sfxVolume;
+      void audio.play().catch(() => undefined);
+    },
+    [sfxVolume],
+  );
 
   const handleNavigate = useCallback((newRoute: AppRoute) => {
     setRoute(newRoute);
@@ -79,7 +82,11 @@ export function App() {
         return;
       }
       isUiAudioUnlockedRef.current = true;
-      if (routeRef.current === 'start' || routeRef.current === 'setup' || routeRef.current === 'settings') {
+      if (
+        routeRef.current === 'start' ||
+        routeRef.current === 'setup' ||
+        routeRef.current === 'settings'
+      ) {
         void ambient.play().catch(() => undefined);
       }
     };
@@ -188,10 +195,7 @@ export function App() {
 
   if (route === 'game') {
     return (
-      <ErrorBoundary
-        recoverLabel="Back to menu"
-        onRecover={() => handleNavigate('start')}
-      >
+      <ErrorBoundary recoverLabel="Back to menu" onRecover={() => handleNavigate('start')}>
         <GamePage setup={gameSetup} onExit={() => handleNavigate('start')} />
       </ErrorBoundary>
     );

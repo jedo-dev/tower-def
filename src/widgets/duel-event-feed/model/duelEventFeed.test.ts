@@ -27,11 +27,12 @@ describe('duel event feed model', () => {
 
   it('formats send queue updates per owner and skips empty queues', () => {
     expect(
-      formatSendQueueUpdated({ owner: 'player', queue: [{ creepTypeId: 'undead_skeleton', index: 0 }] }),
+      formatSendQueueUpdated({
+        owner: 'player',
+        queue: [{ creepTypeId: 'undead_skeleton', index: 0 }],
+      }),
     ).toBe('You queued a send (1 total)');
-    expect(
-      formatSendQueueUpdated({ owner: 'opponent', queue: [] }),
-    ).toBeNull();
+    expect(formatSendQueueUpdated({ owner: 'opponent', queue: [] })).toBeNull();
   });
 
   it('formats income deltas and skips zero deltas', () => {
@@ -42,15 +43,18 @@ describe('duel event feed model', () => {
   });
 
   it('formats opponent damage and ignores non-damage updates', () => {
-    expect(formatOpponentHpUpdated({ hp: 18, previousHp: 20, delta: -2 })).toBe(
-      'Enemy -2 HP → 18',
-    );
+    expect(formatOpponentHpUpdated({ hp: 18, previousHp: 20, delta: -2 })).toBe('Enemy -2 HP → 18');
     expect(formatOpponentHpUpdated({ hp: 20, previousHp: 20, delta: 0 })).toBeNull();
   });
 
   it('formats rejection reasons', () => {
     expect(
-      formatSendRejected({ creepTypeId: 'x', reason: 'insufficient_gold', gold: 10, requiredGold: 50 }),
+      formatSendRejected({
+        creepTypeId: 'x',
+        reason: 'insufficient_gold',
+        gold: 10,
+        requiredGold: 50,
+      }),
     ).toBe('Send failed: need 50 gold');
     expect(formatSendRejected({ creepTypeId: 'x', reason: 'match_over', gold: 10 })).toBe(
       'Send failed: match is over',

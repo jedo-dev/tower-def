@@ -62,10 +62,9 @@ describe('tower targeting', () => {
 
   it('returns null when no creep is in range', () => {
     const tower = createTower();
-    const target = selectTowerTarget(
-      tower,
-      [createCreep({ id: 'creep:far', position: { x: 0, y: 0 } })],
-    );
+    const target = selectTowerTarget(tower, [
+      createCreep({ id: 'creep:far', position: { x: 0, y: 0 } }),
+    ]);
 
     expect(target).toBeNull();
   });

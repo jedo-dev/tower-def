@@ -31,8 +31,12 @@
   white-space: nowrap;
 }
 
-.metaGold { color: #f2d27a; }
-.metaIncome { color: #e6e9ef; }
+.metaGold {
+  color: #f2d27a;
+}
+.metaIncome {
+  color: #e6e9ef;
+}
 
 .metaLabel {
   font-size: 11px;
@@ -61,7 +65,9 @@
   font: inherit;
   text-align: center;
   touch-action: manipulation;
-  transition: filter var(--duration-fast) var(--ease-out), transform var(--duration-fast) var(--ease-out);
+  transition:
+    filter var(--duration-fast) var(--ease-out),
+    transform var(--duration-fast) var(--ease-out);
 }
 
 .button:not(:disabled):hover,
@@ -109,8 +115,12 @@
   color: #c9cfdb;
 }
 
-.buttonCost { color: #f2d27a; }
-.buttonIncome { color: #8fd47a; }
+.buttonCost {
+  color: #f2d27a;
+}
+.buttonIncome {
+  color: #8fd47a;
+}
 
 /* On a disabled card the reason replaces the stats, as in the mockup. */
 .buttonReason {
@@ -124,8 +134,12 @@
   white-space: nowrap;
 }
 
-.button:disabled .buttonStats { display: none; }
-.button:disabled .buttonReason { display: block; }
+.button:disabled .buttonStats {
+  display: none;
+}
+.button:disabled .buttonReason {
+  display: block;
+}
 
 .queue {
   flex: 1 1 auto;
@@ -135,8 +149,12 @@
   overflow: hidden;
 }
 
-.phaseNote { color: #ffb15f; }
+.phaseNote {
+  color: #ffb15f;
+}
 
 @media (prefers-reduced-motion: reduce) {
-  .button { transition: none; }
+  .button {
+    transition: none;
+  }
 }

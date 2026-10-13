@@ -8,10 +8,7 @@ function getDistanceInCells(tower: TowerEntity, creep: CreepEntity): number {
   return Math.hypot(dx, dy);
 }
 
-export function getCreepsInTowerRange(
-  tower: TowerEntity,
-  creeps: CreepEntity[],
-): CreepEntity[] {
+export function getCreepsInTowerRange(tower: TowerEntity, creeps: CreepEntity[]): CreepEntity[] {
   return creeps.filter((creep) => {
     if (!isCreepAlive(creep)) {
       return false;
@@ -21,10 +18,7 @@ export function getCreepsInTowerRange(
   });
 }
 
-export function selectTowerTarget(
-  tower: TowerEntity,
-  creeps: CreepEntity[],
-): CreepEntity | null {
+export function selectTowerTarget(tower: TowerEntity, creeps: CreepEntity[]): CreepEntity | null {
   const creepsInRange = getCreepsInTowerRange(tower, creeps);
 
   if (creepsInRange.length === 0) {

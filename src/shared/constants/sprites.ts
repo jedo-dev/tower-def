@@ -19,7 +19,10 @@ export const UNIT_SPRITE_KEYS = {
   ORC_HEADHUNTER: 'unit.orc.headhunter',
 } as const;
 
-export const UNIT_SPRITE_ASSETS: Record<(typeof UNIT_SPRITE_KEYS)[keyof typeof UNIT_SPRITE_KEYS], string> = {
+export const UNIT_SPRITE_ASSETS: Record<
+  (typeof UNIT_SPRITE_KEYS)[keyof typeof UNIT_SPRITE_KEYS],
+  string
+> = {
   [UNIT_SPRITE_KEYS.UNDEAD_SKELETON]: skeletonSprite,
   [UNIT_SPRITE_KEYS.UNDEAD_GHOUL]: ghoulSprite,
   [UNIT_SPRITE_KEYS.UNDEAD_CRYPT_FIEND]: cryptFiendSprite,
@@ -139,7 +142,10 @@ export const TOWER_SPRITE_KEYS = {
   ELF_MOON_ARCHER: 'tower.elf.moon_archer',
 } as const;
 
-export const TOWER_SPRITE_ASSETS: Record<(typeof TOWER_SPRITE_KEYS)[keyof typeof TOWER_SPRITE_KEYS], string> = {
+export const TOWER_SPRITE_ASSETS: Record<
+  (typeof TOWER_SPRITE_KEYS)[keyof typeof TOWER_SPRITE_KEYS],
+  string
+> = {
   [TOWER_SPRITE_KEYS.UNDEAD_BONE_ARCHER]: '/assets/towers/undead_bone_archer.svg',
   [TOWER_SPRITE_KEYS.ELF_MOON_ARCHER]: '/assets/towers/elf_moon_archer.png',
 };

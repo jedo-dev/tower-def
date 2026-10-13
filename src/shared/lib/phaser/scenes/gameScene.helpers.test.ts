@@ -6,10 +6,7 @@ import { CreepTypeId } from '../../../types/content-ids';
 import type { CreepRenderState, PendingWaveSpawn } from './gameScene.types';
 import { buildHudWaveQueue, buildHudWaveQueueWithPending } from './gameScene.helpers';
 
-function createCreepRenderState(
-  id: string,
-  status: CreepEntity['status'],
-): CreepRenderState {
+function createCreepRenderState(id: string, status: CreepEntity['status']): CreepRenderState {
   return {
     entity: {
       ...DEFAULT_CREEP_COMBAT_TRAITS,

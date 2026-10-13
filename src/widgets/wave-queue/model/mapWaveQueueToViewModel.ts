@@ -24,8 +24,7 @@ export function mapWaveQueueToViewModel(snapshot: GameHudSnapshot): WaveQueueVie
       headerLabel,
       countLabel: pendingCreepCount > 0 ? `${pendingCreepCount} creeps` : null,
       baselineHint: null,
-      sections:
-        items.length > 0 ? [{ key: 'live', label: 'Incoming', items }] : [],
+      sections: items.length > 0 ? [{ key: 'live', label: 'Incoming', items }] : [],
       emptyText: items.length === 0 && pendingCreepCount === 0 ? 'No enemies' : null,
     };
   }
@@ -37,8 +36,7 @@ export function mapWaveQueueToViewModel(snapshot: GameHudSnapshot): WaveQueueVie
     }));
     return {
       headerLabel: `Next: ${headerLabel}`,
-      countLabel:
-        enemySendItems.length > 0 ? `+${enemySendItems.length} enemy sends` : null,
+      countLabel: enemySendItems.length > 0 ? `+${enemySendItems.length} enemy sends` : null,
       baselineHint: 'Baseline wave',
       sections:
         enemySendItems.length > 0

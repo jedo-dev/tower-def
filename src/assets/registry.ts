@@ -6,7 +6,10 @@ export const TILES: Record<Faction, { ground: string; path: string }> = {
   orc: { ground: '/assets/tilesets/orc/ground.png', path: '/assets/tilesets/orc/path.png' },
   human: { ground: '/assets/tilesets/human/ground.png', path: '/assets/tilesets/human/path.png' },
   elf: { ground: '/assets/tilesets/elf/ground.png', path: '/assets/tilesets/elf/path.png' },
-  undead: { ground: '/assets/tilesets/undead/ground.png', path: '/assets/tilesets/undead/path.png' },
+  undead: {
+    ground: '/assets/tilesets/undead/ground.png',
+    path: '/assets/tilesets/undead/path.png',
+  },
 };
 
 export const PROPS: Record<Faction, string[]> = {
@@ -25,7 +28,10 @@ export const PROPS: Record<Faction, string[]> = {
 };
 
 export function preloadTerrainAssets(): Promise<void[]> {
-  const urls = [...Object.values(TILES).flatMap((tile) => [tile.ground, tile.path]), ...Object.values(PROPS).flat()];
+  const urls = [
+    ...Object.values(TILES).flatMap((tile) => [tile.ground, tile.path]),
+    ...Object.values(PROPS).flat(),
+  ];
 
   return Promise.all(
     urls.map(
@@ -47,7 +53,7 @@ export function builderFactionToTerrainFaction(faction: BuilderFaction): Faction
 }
 
 function hash(x: number, y: number, seed: number): number {
-  let mixed = seed ^ x * 374761393 ^ y * 668265263;
+  let mixed = seed ^ (x * 374761393) ^ (y * 668265263);
   mixed = (mixed ^ (mixed >>> 13)) * 1274126177;
   return ((mixed ^ (mixed >>> 16)) >>> 0) / 0xffffffff;
 }

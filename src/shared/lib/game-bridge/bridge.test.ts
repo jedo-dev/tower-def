@@ -23,7 +23,9 @@ import { BuilderFaction } from '../../../entities/builder-faction';
 import { EnemyFaction } from '../../../entities/enemy-faction';
 import { Difficulty } from '../../../entities/difficulty';
 
-function createTestTowerSnapshot(overrides?: Partial<SelectedTowerSnapshot>): SelectedTowerSnapshot {
+function createTestTowerSnapshot(
+  overrides?: Partial<SelectedTowerSnapshot>,
+): SelectedTowerSnapshot {
   return {
     id: 'tower:5:3',
     type: 'single',

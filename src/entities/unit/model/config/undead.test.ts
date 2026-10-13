@@ -42,7 +42,9 @@ describe('undead roster', () => {
   });
 
   it('keeps health and reward rising with tier', () => {
-    const cheapestTierOne = Math.min(...getUnitsByTier(UnitTier.TIER_1).map((unit) => unit.rewardGold));
+    const cheapestTierOne = Math.min(
+      ...getUnitsByTier(UnitTier.TIER_1).map((unit) => unit.rewardGold),
+    );
     const frostWyrm = findUnit('undead_frost_wyrm');
 
     expect(frostWyrm.rewardGold).toBeGreaterThan(cheapestTierOne);

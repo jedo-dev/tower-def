@@ -39,7 +39,11 @@ export class GameAudioManager {
 
   private unsubscribeSettings: (() => void) | null = null;
 
-  constructor(scene: Phaser.Scene, enabled: boolean = true, masterVolume: number = AUDIO_CONSTANTS.DEFAULT_MASTER_VOLUME) {
+  constructor(
+    scene: Phaser.Scene,
+    enabled: boolean = true,
+    masterVolume: number = AUDIO_CONSTANTS.DEFAULT_MASTER_VOLUME,
+  ) {
     this.scene = scene;
     this.enabled = enabled;
     this.masterVolume = masterVolume;
@@ -179,9 +183,7 @@ export class GameAudioManager {
   }
 
   public isPlaying(soundId: SoundId): boolean {
-    return this.activeSounds.some(
-      (a) => a.soundId === soundId && a.sound.isPlaying,
-    );
+    return this.activeSounds.some((a) => a.soundId === soundId && a.sound.isPlaying);
   }
 
   public getActiveCount(): number {
@@ -217,7 +219,11 @@ export class GameAudioManager {
     return true;
   }
 
-  private doPlay(soundId: SoundId, config: typeof SOUND_REGISTRY[SoundId], position?: { x: number; y: number }): boolean {
+  private doPlay(
+    soundId: SoundId,
+    config: (typeof SOUND_REGISTRY)[SoundId],
+    position?: { x: number; y: number },
+  ): boolean {
     const audioKey = this.getAudioKey(soundId);
     if (!this.scene.cache.audio.exists(audioKey)) {
       return false;
@@ -342,6 +348,9 @@ export class GameAudioManager {
   }
 }
 
-export function createGameAudioManager(scene: Phaser.Scene, enabled: boolean = true): GameAudioManager {
+export function createGameAudioManager(
+  scene: Phaser.Scene,
+  enabled: boolean = true,
+): GameAudioManager {
   return new GameAudioManager(scene, enabled);
 }

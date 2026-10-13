@@ -3,7 +3,12 @@ import {
   getTowerArchetype,
   type BuildableTowerConfig,
 } from '../../../entities/tower';
-import { EffectId, RaceId, TowerAttackKind, type TowerTypeId } from '../../../shared/types/content-ids';
+import {
+  EffectId,
+  RaceId,
+  TowerAttackKind,
+  type TowerTypeId,
+} from '../../../shared/types/content-ids';
 
 /**
  * The build bar is generated from the race the player is building for, so a
@@ -55,9 +60,7 @@ export type MapRaceRosterInput = {
   selectedTowerType: TowerTypeId | null;
 };
 
-export function mapRaceRosterToBuildOptions(
-  input: MapRaceRosterInput,
-): HudBuildOptionViewModel[] {
+export function mapRaceRosterToBuildOptions(input: MapRaceRosterInput): HudBuildOptionViewModel[] {
   return getBuildableTowersByFaction(input.raceId).map((tower) => {
     const effectHint = resolveEffectHint(tower.towerType);
     const isAffordable = input.gold >= tower.costGold;

@@ -22,7 +22,13 @@ function createTestPath() {
   return findPathBfs(grid).path;
 }
 
-function createTestTower(overrides?: { id?: string; x?: number; y?: number; type?: 'single' | 'splash'; level?: number }): TowerEntity {
+function createTestTower(overrides?: {
+  id?: string;
+  x?: number;
+  y?: number;
+  type?: 'single' | 'splash';
+  level?: number;
+}): TowerEntity {
   return {
     id: overrides?.id ?? 'tower_1',
     position: { x: overrides?.x ?? 2, y: overrides?.y ?? 3 },
@@ -59,7 +65,11 @@ function createTestContext(overrides?: Partial<DecisionContext>): DecisionContex
     leakHistory: [],
     affordableTowers: [TowerTypeId.SINGLE],
     upgradeableTowerIds: [],
-    availableBuildPositions: [{ x: 3, y: 5 }, { x: 4, y: 5 }, { x: 5, y: 5 }],
+    availableBuildPositions: [
+      { x: 3, y: 5 },
+      { x: 4, y: 5 },
+      { x: 5, y: 5 },
+    ],
     ...overrides,
   };
 }
@@ -191,7 +201,10 @@ describe('entities/computer-opponent/planBuildDecision', () => {
       const context = createTestContext({
         gold: 200,
         affordableTowers: [TowerTypeId.SINGLE],
-        availableBuildPositions: [{ x: 3, y: 5 }, { x: 4, y: 5 }],
+        availableBuildPositions: [
+          { x: 3, y: 5 },
+          { x: 4, y: 5 },
+        ],
         mazeCoverage: {
           totalWalkableCells: 150,
           occupiedCells: 5,

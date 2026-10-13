@@ -34,7 +34,8 @@ export function createVisibleBattlefieldSnapshot(
     towers: battlefield.towers,
     creeps: battlefield.creeps,
     leakedCreepCount:
-      battlefield.leakedCount + battlefield.creeps.filter((creep) => creep.status === 'escaped').length,
+      battlefield.leakedCount +
+      battlefield.creeps.filter((creep) => creep.status === 'escaped').length,
   };
 }
 

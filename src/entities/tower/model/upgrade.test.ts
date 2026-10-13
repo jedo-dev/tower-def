@@ -81,7 +81,9 @@ describe('tower stats per level', () => {
 
         expect(entry.stats.damage, towerType).toBeGreaterThanOrEqual(previous.damage);
         expect(entry.stats.range, towerType).toBeGreaterThanOrEqual(previous.range);
-        expect(entry.stats.attackCooldownMs, towerType).toBeLessThanOrEqual(previous.attackCooldownMs);
+        expect(entry.stats.attackCooldownMs, towerType).toBeLessThanOrEqual(
+          previous.attackCooldownMs,
+        );
       });
     }
   });

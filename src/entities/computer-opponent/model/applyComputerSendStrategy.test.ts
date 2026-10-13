@@ -63,8 +63,12 @@ describe('entities/computer-opponent/applyComputerSendStrategy', () => {
     const result = applyComputerSendStrategy({ state, context });
 
     expect(result.sentCount).toBeGreaterThan(0);
-    expect(result.state.opponent.sendQueue).toEqual(result.decision.actions.map((action) => action.creepTypeId));
-    expect(result.state.opponent.sendQueue.every((unitId) => registry.sendableCreepIds.includes(unitId))).toBe(true);
+    expect(result.state.opponent.sendQueue).toEqual(
+      result.decision.actions.map((action) => action.creepTypeId),
+    );
+    expect(
+      result.state.opponent.sendQueue.every((unitId) => registry.sendableCreepIds.includes(unitId)),
+    ).toBe(true);
     expect(result.spentGold).toBe(result.decision.totalCost);
     expect(result.incomeGained).toBe(result.decision.totalIncomeBonus);
     expect(result.state.opponent.gold).toBe(state.opponent.gold - result.spentGold);

@@ -53,10 +53,7 @@ export function canAffordUpgrade(
   return { allowed: true };
 }
 
-export function getTowerStatsForLevel(
-  towerType: TowerType,
-  level: number,
-): TowerLevelStats | null {
+export function getTowerStatsForLevel(towerType: TowerType, level: number): TowerLevelStats | null {
   const config = TOWER_UPGRADE_CONFIG[towerType];
   if (!config) {
     return null;

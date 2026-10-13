@@ -32,8 +32,9 @@ describe('unit registry', () => {
   });
 
   it('throws for an id that has no content', () => {
-    expect(() => resolveUnitConfigById('undead_lich' as UnitId))
-      .toThrow('Missing unit config for id: undead_lich');
+    expect(() => resolveUnitConfigById('undead_lich' as UnitId)).toThrow(
+      'Missing unit config for id: undead_lich',
+    );
     expect(tryResolveUnitConfigById('undead_lich' as UnitId)).toBeUndefined();
   });
 

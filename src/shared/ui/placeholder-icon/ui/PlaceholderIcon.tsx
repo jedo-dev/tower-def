@@ -1,9 +1,6 @@
 import { memo } from 'react';
 import styles from './PlaceholderIcon.module.css';
-import {
-  FACTION_THEME_COLOR_VARS,
-  type FactionThemeName,
-} from '../../../constants/theme';
+import { FACTION_THEME_COLOR_VARS, type FactionThemeName } from '../../../constants/theme';
 
 export const PLACEHOLDER_ICON_GLYPH = '?';
 
@@ -40,7 +37,13 @@ function PlaceholderIconComponent({
         faction && styles.tinted,
         className,
       )}
-      style={faction ? { '--placeholder-icon-accent': FACTION_THEME_COLOR_VARS[faction] } as React.CSSProperties : undefined}
+      style={
+        faction
+          ? ({
+              '--placeholder-icon-accent': FACTION_THEME_COLOR_VARS[faction],
+            } as React.CSSProperties)
+          : undefined
+      }
       role="img"
       aria-label={`${label}: artwork pending`}
     >

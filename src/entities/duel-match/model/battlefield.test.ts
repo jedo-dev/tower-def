@@ -390,7 +390,9 @@ describe('entities/duel-match/battlefield', () => {
       expect(routedState.opponent.battlefield.creeps.map((creep) => creep.id)).toEqual([
         'player:send:1:0:undead_skeleton',
       ]);
-      expect(routedState.player.battlefield.creeps).not.toBe(routedState.opponent.battlefield.creeps);
+      expect(routedState.player.battlefield.creeps).not.toBe(
+        routedState.opponent.battlefield.creeps,
+      );
     });
 
     it('tower placement on one battlefield does not affect the other', () => {

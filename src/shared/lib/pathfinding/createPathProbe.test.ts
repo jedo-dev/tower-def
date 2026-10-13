@@ -95,7 +95,10 @@ describe('shared/pathfinding/createPathProbe', () => {
   });
 
   it('agrees with the reference search on a grid that already has walls', () => {
-    const grid = block(createTestGrid(), [{ x: 4, y: 7 }, { x: 4, y: 6 }]);
+    const grid = block(createTestGrid(), [
+      { x: 4, y: 7 },
+      { x: 4, y: 6 },
+    ]);
     const probe = createPathProbe(grid);
 
     expect(probe.basePath).toEqual(findPathBfs(grid).path);

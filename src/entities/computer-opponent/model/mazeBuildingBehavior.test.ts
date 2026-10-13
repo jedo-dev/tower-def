@@ -144,8 +144,7 @@ describe('entities/computer-opponent/mazeBuildingBehavior', () => {
 
     const covering = field.towers.filter((tower) =>
       path.some(
-        (cell) =>
-          Math.hypot(cell.x - tower.position.x, cell.y - tower.position.y) <= range,
+        (cell) => Math.hypot(cell.x - tower.position.x, cell.y - tower.position.y) <= range,
       ),
     );
 

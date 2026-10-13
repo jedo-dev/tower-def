@@ -24,7 +24,7 @@ export function FantasyButton({
 
   return (
     <button type={type} className={mergedClassName} {...rest}>
-      <span className='fantasy-button__label'>{children}</span>
+      <span className="fantasy-button__label">{children}</span>
     </button>
   );
 }

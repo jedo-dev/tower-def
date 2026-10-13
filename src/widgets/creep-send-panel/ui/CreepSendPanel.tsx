@@ -20,7 +20,11 @@ function CreepSendPanelComponent({ setup }: CreepSendPanelProps) {
   }
 
   return (
-    <section className={`ui-panel ${styles.panel}`} data-creep-send-panel="true" aria-label="Creep sending panel">
+    <section
+      className={`ui-panel ${styles.panel}`}
+      data-creep-send-panel="true"
+      aria-label="Creep sending panel"
+    >
       <div className={styles.header}>
         <span className={`ui-heading ${styles.title}`}>Send {viewModel.raceName}</span>
         <span className={styles.queue} aria-live="polite">
@@ -30,9 +34,14 @@ function CreepSendPanelComponent({ setup }: CreepSendPanelProps) {
             <span className="ui-chip">{viewModel.queueSummary}</span>
           )}
         </span>
-        <span className={styles.meta} aria-label={`Gold ${viewModel.gold}, income ${viewModel.income}`}>
+        <span
+          className={styles.meta}
+          aria-label={`Gold ${viewModel.gold}, income ${viewModel.income}`}
+        >
           <span className={styles.metaGold}>$ {viewModel.gold}</span>
-          <span className={styles.metaIncome}><span className={styles.metaLabel}>INC</span> {viewModel.income}</span>
+          <span className={styles.metaIncome}>
+            <span className={styles.metaLabel}>INC</span> {viewModel.income}
+          </span>
         </span>
       </div>
 

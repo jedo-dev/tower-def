@@ -52,12 +52,7 @@ const elfRegistry: RaceRegistryEntry = {
   description: 'Graceful sentinels with precise moonlit archery.',
   themeColor: '#6bbf89',
   starterTowerId: 'elf_moon_archer_tower',
-  buildableTowerIds: [
-    'elf_moon_archer_tower',
-    'elf_wisp_bloom',
-    'elf_moonwell',
-    'elf_thorn_spire',
-  ],
+  buildableTowerIds: ['elf_moon_archer_tower', 'elf_wisp_bloom', 'elf_moonwell', 'elf_thorn_spire'],
   sendableCreepIds: ['elf_archer', 'elf_huntress', 'elf_dryad', 'elf_chimera'],
 };
 

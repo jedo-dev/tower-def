@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { RaceId } from '../../../shared/types/content-ids';
 import { UnitTier } from '../../unit/model/types';
-import { DUEL_MATCH_BALANCE, SEND_CREEP_COST_BY_TIER, SEND_CREEP_INCOME_BONUS_BY_TIER } from './balance';
+import {
+  DUEL_MATCH_BALANCE,
+  SEND_CREEP_COST_BY_TIER,
+  SEND_CREEP_INCOME_BONUS_BY_TIER,
+} from './balance';
 import {
   canAffordSendCreep,
   clearSendQueue,
@@ -333,9 +337,7 @@ describe('entities/duel-match', () => {
       state = sendResult.state;
 
       const incomeResult = payIncome(state);
-      expect(incomeResult.playerIncomePaid).toBe(
-        DUEL_MATCH_BALANCE.startingIncome + bonus,
-      );
+      expect(incomeResult.playerIncomePaid).toBe(DUEL_MATCH_BALANCE.startingIncome + bonus);
       expect(incomeResult.state.player.gold).toBe(
         state.player.gold + DUEL_MATCH_BALANCE.startingIncome + bonus,
       );
@@ -430,4 +432,3 @@ describe('entities/duel-match', () => {
     });
   });
 });
-

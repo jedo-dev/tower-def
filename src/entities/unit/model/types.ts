@@ -1,8 +1,4 @@
-import type {
-  UnitArmorType,
-  UnitMoveType,
-  UnitSizeClass,
-} from '../../../shared/types/content-ids';
+import type { UnitArmorType, UnitMoveType, UnitSizeClass } from '../../../shared/types/content-ids';
 import { RaceId } from '../../../shared/types/content-ids';
 
 export { RaceId as Faction };
@@ -72,4 +68,3 @@ export type UnitConfig = {
   sizeClass: UnitSizeClass;
   armorType: UnitArmorType;
 };
-

@@ -38,12 +38,14 @@ export type BattlefieldViewToggleViewModel = {
 
 export function mapHudSnapshotToViewModel(snapshot: GameHudSnapshot): HudViewModel {
   const phaseLabel = snapshot.phase === 'game-over' ? 'Game Over' : snapshot.phase;
-  const selectedTowerLabel = snapshot.selectedTowerType === null
-    ? 'None'
-    : snapshot.selectedTowerType === TowerTypeId.SPLASH ? 'Plague' : 'Archer';
-  const modeLabel = snapshot.selectedTowerType === null
-    ? 'Tap a tower to inspect'
-    : `Build: ${selectedTowerLabel}`;
+  const selectedTowerLabel =
+    snapshot.selectedTowerType === null
+      ? 'None'
+      : snapshot.selectedTowerType === TowerTypeId.SPLASH
+        ? 'Plague'
+        : 'Archer';
+  const modeLabel =
+    snapshot.selectedTowerType === null ? 'Tap a tower to inspect' : `Build: ${selectedTowerLabel}`;
   const isWaveActive = snapshot.phase === 'wave';
 
   return {
@@ -76,12 +78,14 @@ export function mapHudPressureToViewModel(snapshot: GameHudSnapshot): HudPressur
   const incomingCount = snapshot.phase === 'wave' ? snapshot.pendingCreepCount : 0;
   const pressureCount = snapshot.phase === 'wave' ? incomingCount : queuedCount;
   const level = mapPressureLevel(pressureCount);
-  const label = snapshot.phase === 'wave' ? `Incoming ${incomingCount}` : `Enemy sends ${queuedCount}`;
-  const detail = snapshot.phase === 'wave'
-    ? `${queuedCount} queued by enemy`
-    : queuedCount === 0
-      ? 'No pressure queued'
-      : 'Queued for next wave';
+  const label =
+    snapshot.phase === 'wave' ? `Incoming ${incomingCount}` : `Enemy sends ${queuedCount}`;
+  const detail =
+    snapshot.phase === 'wave'
+      ? `${queuedCount} queued by enemy`
+      : queuedCount === 0
+        ? 'No pressure queued'
+        : 'Queued for next wave';
 
   return {
     level,
@@ -120,4 +124,3 @@ export function mapBattlefieldViewToggleToViewModel(
     nextView: isOpponentActive ? 'player' : 'opponent',
   };
 }
-

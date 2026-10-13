@@ -9,14 +9,7 @@ export type StartPageProps = {
 export function StartPage({ onNavigate }: StartPageProps) {
   return (
     <main className="start-page">
-      <video
-        className="start-page-video"
-        autoPlay
-        loop
-        muted
-        playsInline
-        aria-hidden
-      >
+      <video className="start-page-video" autoPlay loop muted playsInline aria-hidden>
         <source src="/assets/video/background.mp4" type="video/mp4" />
       </video>
       <div className="start-page-video-overlay" aria-hidden />
@@ -56,9 +49,21 @@ export function StartPage({ onNavigate }: StartPageProps) {
         </nav>
 
         <div className="start-actions" aria-hidden>
-          <button type="button" className="start-action-icon start-action-icon--trophy" aria-label="Achievements" />
-          <button type="button" className="start-action-icon start-action-icon--star" aria-label="Favorites" />
-          <button type="button" className="start-action-icon start-action-icon--gear" aria-label="Settings" />
+          <button
+            type="button"
+            className="start-action-icon start-action-icon--trophy"
+            aria-label="Achievements"
+          />
+          <button
+            type="button"
+            className="start-action-icon start-action-icon--star"
+            aria-label="Favorites"
+          />
+          <button
+            type="button"
+            className="start-action-icon start-action-icon--gear"
+            aria-label="Settings"
+          />
         </div>
 
         <footer className="start-footer">

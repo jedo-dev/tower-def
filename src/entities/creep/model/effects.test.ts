@@ -238,7 +238,10 @@ describe('tower-specific stack caps', () => {
     let creep = createCreep();
 
     for (let application = 0; application < 10; application += 1) {
-      creep = applyEffectToCreep(creep, { effectId: EffectId.POISON, maxStacks: POISON.maxStacks + 2 });
+      creep = applyEffectToCreep(creep, {
+        effectId: EffectId.POISON,
+        maxStacks: POISON.maxStacks + 2,
+      });
     }
 
     expect(findActiveEffect(creep, EffectId.POISON)?.stacks).toBe(POISON.maxStacks + 2);
@@ -261,7 +264,10 @@ describe('tower-specific stack caps', () => {
       creep = applyEffectToCreep(creep, { effectId: EffectId.POISON });
     }
 
-    creep = applyEffectToCreep(creep, { effectId: EffectId.POISON, maxStacks: POISON.maxStacks + 1 });
+    creep = applyEffectToCreep(creep, {
+      effectId: EffectId.POISON,
+      maxStacks: POISON.maxStacks + 1,
+    });
 
     expect(findActiveEffect(creep, EffectId.POISON)?.maxStacks).toBe(POISON.maxStacks + 1);
   });

@@ -24,7 +24,12 @@ function MatchOutcomeOverlayComponent({ onExit }: MatchOutcomeOverlayProps) {
   }
 
   return (
-    <div className={styles.backdrop} role="dialog" aria-modal="true" aria-label={viewModel.ariaLabel}>
+    <div
+      className={styles.backdrop}
+      role="dialog"
+      aria-modal="true"
+      aria-label={viewModel.ariaLabel}
+    >
       <div className={styles.panel}>
         <p className={`${styles.title} ${TONE_CLASS[viewModel.tone]}`}>{viewModel.title}</p>
         <p className={styles.detail}>{viewModel.detail}</p>

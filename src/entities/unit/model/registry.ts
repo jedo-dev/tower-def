@@ -8,9 +8,7 @@ import { UNIT_CONTENT_SOURCES } from './content/unitContentSources';
  */
 const ALL_UNITS: readonly UnitConfig[] = loadUnitContent(UNIT_CONTENT_SOURCES);
 
-const UNIT_BY_ID = new Map<UnitId, UnitConfig>(
-  ALL_UNITS.map((unit) => [unit.id, unit]),
-);
+const UNIT_BY_ID = new Map<UnitId, UnitConfig>(ALL_UNITS.map((unit) => [unit.id, unit]));
 
 export function resolveUnitConfigById(unitId: UnitId): UnitConfig {
   const config = UNIT_BY_ID.get(unitId);

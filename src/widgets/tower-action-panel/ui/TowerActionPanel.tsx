@@ -2,7 +2,10 @@ import { TowerTypeId } from '../../../shared/types/content-ids';
 import { memo } from 'react';
 import styles from './TowerActionPanel.module.css';
 import { sendGameCommand } from '../../../shared/lib/game-bridge/bridge';
-import { clearSelectedTower, useSelectedTower } from '../../../shared/lib/game-bridge/useSelectedTower';
+import {
+  clearSelectedTower,
+  useSelectedTower,
+} from '../../../shared/lib/game-bridge/useSelectedTower';
 import { useGameHudSnapshot } from '../../../shared/lib/game-bridge/useGameHudSnapshot';
 import {
   canAffordUpgrade,
@@ -130,9 +133,7 @@ function TowerActionPanelComponent() {
             onClick={handleUpgrade}
           >
             <span>Upgrade</span>
-            {upgradeCost !== null && (
-              <span className={styles.btnCost}>${upgradeCost}</span>
-            )}
+            {upgradeCost !== null && <span className={styles.btnCost}>${upgradeCost}</span>}
           </button>
         )}
 

@@ -70,8 +70,7 @@ export function generateEdgeEndpoints(
   const entrance = edgeCells[Math.floor(random() * edgeCells.length)];
 
   const exitCandidates = edgeCells.filter(
-    (cell) =>
-      !areAdjacent(cell, entrance) && manhattanDistance(cell, entrance) >= minDistance,
+    (cell) => !areAdjacent(cell, entrance) && manhattanDistance(cell, entrance) >= minDistance,
   );
 
   let exit: GridPoint;
@@ -80,9 +79,7 @@ export function generateEdgeEndpoints(
   } else {
     // Requested distance is unreachable on this grid: take the farthest cell.
     exit = edgeCells.reduce((farthest, cell) =>
-      manhattanDistance(cell, entrance) > manhattanDistance(farthest, entrance)
-        ? cell
-        : farthest,
+      manhattanDistance(cell, entrance) > manhattanDistance(farthest, entrance) ? cell : farthest,
     );
   }
 

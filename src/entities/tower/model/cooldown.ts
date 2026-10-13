@@ -24,10 +24,7 @@ export function tickTowerCooldown(
   };
 }
 
-export function canTowerAttack(
-  tower: TowerEntity,
-  runtime: TowerCombatRuntime,
-): boolean {
+export function canTowerAttack(tower: TowerEntity, runtime: TowerCombatRuntime): boolean {
   if (tower.combatStats.attackCooldownMs <= 0) {
     return true;
   }

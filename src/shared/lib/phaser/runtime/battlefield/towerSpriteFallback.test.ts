@@ -22,7 +22,9 @@ describe('tower sprite fallback', () => {
   it('uses the real sheet for races whose tower art exists', () => {
     const scene = createSceneStub();
 
-    expect(getArcherTowerSpriteKey(scene, RaceId.UNDEAD)).toBe(TOWER_SPRITE_KEYS.UNDEAD_BONE_ARCHER);
+    expect(getArcherTowerSpriteKey(scene, RaceId.UNDEAD)).toBe(
+      TOWER_SPRITE_KEYS.UNDEAD_BONE_ARCHER,
+    );
     expect(getArcherTowerSpriteKey(scene, RaceId.ELF)).toBe(TOWER_SPRITE_KEYS.ELF_MOON_ARCHER);
   });
 

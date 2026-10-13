@@ -203,7 +203,9 @@ describe('entities/computer-opponent/planSendCreeps', () => {
 
   describe('economy and pressure balance', () => {
     function tiersOf(result: ReturnType<typeof planSendCreeps>): number[] {
-      return result.actions.map((action) => resolveUnitConfigById(action.creepTypeId as never).tier);
+      return result.actions.map(
+        (action) => resolveUnitConfigById(action.creepTypeId as never).tier,
+      );
     }
 
     /**
@@ -247,18 +249,32 @@ describe('entities/computer-opponent/planSendCreeps', () => {
     });
 
     it('goes all in on pressure when its own life total is nearly gone', () => {
-      const healthy = planSendCreeps({ context: createTestContext({ gold: 1000, round: 8, hp: 20 }) });
-      const desperate = planSendCreeps({ context: createTestContext({ gold: 1000, round: 8, hp: 2 }) });
+      const healthy = planSendCreeps({
+        context: createTestContext({ gold: 1000, round: 8, hp: 20 }),
+      });
+      const desperate = planSendCreeps({
+        context: createTestContext({ gold: 1000, round: 8, hp: 2 }),
+      });
 
       expect(economyBuyCount(desperate)).toBeLessThan(economyBuyCount(healthy));
     });
 
     it('leans harder on pressure while ahead on income than while behind', () => {
       const ahead = planSendCreeps({
-        context: createTestContext({ gold: 1000, round: 10, income: 120, enemy: { hp: 20, income: 50, towerCount: 5 } }),
+        context: createTestContext({
+          gold: 1000,
+          round: 10,
+          income: 120,
+          enemy: { hp: 20, income: 50, towerCount: 5 },
+        }),
       });
       const behind = planSendCreeps({
-        context: createTestContext({ gold: 1000, round: 10, income: 50, enemy: { hp: 20, income: 120, towerCount: 5 } }),
+        context: createTestContext({
+          gold: 1000,
+          round: 10,
+          income: 50,
+          enemy: { hp: 20, income: 120, towerCount: 5 },
+        }),
       });
 
       expect(economyBuyCount(ahead)).toBeLessThan(economyBuyCount(behind));
@@ -285,10 +301,17 @@ describe('entities/computer-opponent/planSendCreeps', () => {
     });
 
     it('never spends more than the round budget', () => {
-      for (const difficulty of [Difficulty.EASY, Difficulty.NORMAL, Difficulty.HARD, Difficulty.NIGHTMARE]) {
+      for (const difficulty of [
+        Difficulty.EASY,
+        Difficulty.NORMAL,
+        Difficulty.HARD,
+        Difficulty.NIGHTMARE,
+      ]) {
         for (const round of [1, 6, 14]) {
           const gold = 900;
-          const result = planSendCreeps({ context: createTestContext({ gold, difficulty, round }) });
+          const result = planSendCreeps({
+            context: createTestContext({ gold, difficulty, round }),
+          });
 
           expect(result.totalCost).toBeLessThanOrEqual(gold);
         }

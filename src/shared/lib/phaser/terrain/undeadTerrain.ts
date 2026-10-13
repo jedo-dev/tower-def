@@ -40,22 +40,13 @@ function isEntranceOrExitCell(
   return isEntrance || isExit;
 }
 
-function getEdgeDistance(
-  position: GridPosition,
-  cols: number,
-  rows: number,
-): number {
+function getEdgeDistance(position: GridPosition, cols: number, rows: number): number {
   const distanceFromLeft = position.x;
   const distanceFromRight = cols - 1 - position.x;
   const distanceFromTop = position.y;
   const distanceFromBottom = rows - 1 - position.y;
 
-  return Math.min(
-    distanceFromLeft,
-    distanceFromRight,
-    distanceFromTop,
-    distanceFromBottom,
-  );
+  return Math.min(distanceFromLeft, distanceFromRight, distanceFromTop, distanceFromBottom);
 }
 
 export function resolveUndeadTerrainTileIndex(context: TerrainCellContext): number {
@@ -67,11 +58,12 @@ export function resolveUndeadTerrainTileIndex(context: TerrainCellContext): numb
   }
 
   const edgeDistance = getEdgeDistance(position, cols, rows);
-  const edgeFactor = edgeDistance <= 0 ? 1 : edgeDistance === 1 ? 0.7 : edgeDistance === 2 ? 0.35 : 0;
+  const edgeFactor =
+    edgeDistance <= 0 ? 1 : edgeDistance === 1 ? 0.7 : edgeDistance === 2 ? 0.35 : 0;
   const decorationChancePercent =
-    UNDEAD_TERRAIN_DECORATION_BASE_CHANCE_PERCENT
-    + Math.round(UNDEAD_TERRAIN_DECORATION_EDGE_BONUS_PERCENT * edgeFactor);
-  const shouldPlaceDecoration = (baseHash % 100) < decorationChancePercent;
+    UNDEAD_TERRAIN_DECORATION_BASE_CHANCE_PERCENT +
+    Math.round(UNDEAD_TERRAIN_DECORATION_EDGE_BONUS_PERCENT * edgeFactor);
+  const shouldPlaceDecoration = baseHash % 100 < decorationChancePercent;
 
   if (!shouldPlaceDecoration) {
     return UNDEAD_BASE_TILES[baseHash % UNDEAD_BASE_TILES.length];

@@ -220,8 +220,9 @@ function countTowersInAuraRadius(
   }
 
   return existingTowers.filter(
-    (tower) => !isSupportArchetype(tower.type)
-      && euclideanDistance(position, tower.position) <= aura.radiusCells,
+    (tower) =>
+      !isSupportArchetype(tower.type) &&
+      euclideanDistance(position, tower.position) <= aura.radiusCells,
   ).length;
 }
 
@@ -346,9 +347,8 @@ export function scoreTowerPlacement(input: ScorePlacementInput): PlacementScore 
   // the one they walk today: a wall that reroutes them elsewhere is worthless
   // if the tower cannot reach the new route.
   const effectivePath = probeResult?.path ?? path;
-  const mazeGainCells = probeResult && pathProbe
-    ? Math.max(0, probeResult.length - pathProbe.baseLength)
-    : 0;
+  const mazeGainCells =
+    probeResult && pathProbe ? Math.max(0, probeResult.length - pathProbe.baseLength) : 0;
 
   const pathCoverageScore = computePathCoverageScore(
     position,
@@ -397,7 +397,8 @@ type ScoreAllPositionsInput = {
 };
 
 export function scoreAllPlacements(input: ScoreAllPositionsInput): PlacementScore[] {
-  const { grid, towerType, positions, existingTowers, path, pathProbe, mazeSkeleton, weights } = input;
+  const { grid, towerType, positions, existingTowers, path, pathProbe, mazeSkeleton, weights } =
+    input;
 
   const scores: PlacementScore[] = [];
   for (const position of positions) {

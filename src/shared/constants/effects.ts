@@ -1,9 +1,4 @@
-import {
-  EFFECT_IDS,
-  EffectId,
-  EffectKind,
-  EffectStackingRule,
-} from '../types/content-ids';
+import { EFFECT_IDS, EffectId, EffectKind, EffectStackingRule } from '../types/content-ids';
 
 /**
  * Balance table for creep status effects. Towers reference an effect by id and

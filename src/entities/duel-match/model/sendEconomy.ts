@@ -18,17 +18,11 @@ export function getIncomeBonusByTier(tier: UnitTier): number {
   return bonus;
 }
 
-export function canAffordSend(
-  gold: number,
-  tier: UnitTier,
-): boolean {
+export function canAffordSend(gold: number, tier: UnitTier): boolean {
   return gold >= getSendCostByTier(tier);
 }
 
-export function lookupTierValue(
-  table: TierEconomyTable,
-  tier: UnitTier,
-): number {
+export function lookupTierValue(table: TierEconomyTable, tier: UnitTier): number {
   const value = table[tier];
   if (value === undefined) {
     throw new Error(`No value defined for tier: ${tier}`);

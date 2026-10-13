@@ -5,7 +5,11 @@ import type { GridModel } from '../../../shared/types/grid';
 import type { GridPosition } from '../../../shared/types/pathfinding';
 import { RaceId, TowerTypeId } from '../../../shared/types/content-ids';
 import { addTower, createBattlefieldState } from '../../duel-match/model/battlefieldOps';
-import { createInitialDuelMatchState, DEFAULT_ENTRANCE, DEFAULT_EXIT } from '../../duel-match/model/state';
+import {
+  createInitialDuelMatchState,
+  DEFAULT_ENTRANCE,
+  DEFAULT_EXIT,
+} from '../../duel-match/model/state';
 import type { DuelMatchState } from '../../duel-match/model/types';
 import { Difficulty } from '../../difficulty/model/types';
 import type { TowerEntity } from '../../tower/model/types';
@@ -59,7 +63,10 @@ function createContext(overrides?: Partial<DecisionContext>): DecisionContext {
     leakHistory: [],
     affordableTowers: [TowerTypeId.SINGLE],
     upgradeableTowerIds: [],
-    availableBuildPositions: [{ x: 4, y: 6 }, { x: 5, y: 8 }],
+    availableBuildPositions: [
+      { x: 4, y: 6 },
+      { x: 5, y: 8 },
+    ],
     ...overrides,
   };
 }

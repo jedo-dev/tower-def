@@ -27,7 +27,7 @@ export function mapMatchOutcomeToViewModel(snapshot: GameHudSnapshot): MatchOutc
   const tone = resolveTone(status);
   const title = tone === 'victory' ? 'Victory' : tone === 'defeat' ? 'Defeat' : 'Draw';
 
-  const winnerName = winner === null ? null : FACTION_NAMES[winner] ?? winner;
+  const winnerName = winner === null ? null : (FACTION_NAMES[winner] ?? winner);
   const detail =
     tone === 'draw'
       ? `Both keeps fell on wave ${snapshot.waveNumber}`

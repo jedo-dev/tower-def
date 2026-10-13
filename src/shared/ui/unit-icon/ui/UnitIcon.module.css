@@ -13,8 +13,7 @@
   background-repeat: no-repeat;
   /* Frame 0 of row 0 sits in the top-left corner of every sheet. */
   background-position: 0 0;
-  background-size:
-    calc(var(--unit-icon-size, 28px) * var(--unit-icon-columns))
+  background-size: calc(var(--unit-icon-size, 28px) * var(--unit-icon-columns))
     calc(var(--unit-icon-size, 28px) * var(--unit-icon-rows));
   image-rendering: pixelated;
 }

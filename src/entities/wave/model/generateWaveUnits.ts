@@ -31,10 +31,7 @@ function getUnitValue(unit: UnitConfig): number {
   return TIER_VALUE_BY_TIER[unit.tier];
 }
 
-function pickUnitWithTierBias(
-  candidates: UnitConfig[],
-  random: () => number,
-): UnitConfig {
+function pickUnitWithTierBias(candidates: UnitConfig[], random: () => number): UnitConfig {
   const sorted = [...candidates].sort((left, right) => right.tier - left.tier);
   const weighted = sorted.map((unit, index) => ({
     unit,

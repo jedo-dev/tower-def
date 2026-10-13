@@ -86,7 +86,9 @@ describe('entities/computer-opponent/difficultyPresets', () => {
       expect(COMPUTER_DIFFICULTY_PRESETS[Difficulty.EASY].handicapGoldBonus).toBe(0);
       expect(COMPUTER_DIFFICULTY_PRESETS[Difficulty.NORMAL].handicapGoldBonus).toBe(0);
       expect(COMPUTER_DIFFICULTY_PRESETS[Difficulty.HARD].handicapGoldBonus).toBe(0);
-      expect(COMPUTER_DIFFICULTY_PRESETS[Difficulty.NIGHTMARE].handicapGoldBonus).toBeGreaterThan(0);
+      expect(COMPUTER_DIFFICULTY_PRESETS[Difficulty.NIGHTMARE].handicapGoldBonus).toBeGreaterThan(
+        0,
+      );
     });
   });
 

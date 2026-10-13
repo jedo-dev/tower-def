@@ -30,27 +30,33 @@ describe('content validation primitives', () => {
 
   it('treats an omitted optional string as undefined but validates a present one', () => {
     expect(readOptionalString({}, 'description', { file: FILE })).toBeUndefined();
-    expect(() => readOptionalString({ description: 4 }, 'description', { file: FILE }))
-      .toThrow(ContentValidationError);
+    expect(() => readOptionalString({ description: 4 }, 'description', { file: FILE })).toThrow(
+      ContentValidationError,
+    );
   });
 
   it('rejects NaN and Infinity as stat values', () => {
-    expect(() => readNumber({ speed: Number.NaN }, 'speed', { file: FILE })).toThrow(ContentValidationError);
-    expect(() => readNumber({ speed: Number.POSITIVE_INFINITY }, 'speed', { file: FILE }))
-      .toThrow(ContentValidationError);
+    expect(() => readNumber({ speed: Number.NaN }, 'speed', { file: FILE })).toThrow(
+      ContentValidationError,
+    );
+    expect(() => readNumber({ speed: Number.POSITIVE_INFINITY }, 'speed', { file: FILE })).toThrow(
+      ContentValidationError,
+    );
   });
 
   it('narrows a string to the allowed set', () => {
     const allowed = ['ground', 'air'] as const;
 
     expect(readStringFrom({ moveType: 'air' }, 'moveType', { file: FILE }, allowed)).toBe('air');
-    expect(() => readStringFrom({ moveType: 'water' }, 'moveType', { file: FILE }, allowed))
-      .toThrow(`${FILE}: "moveType" is not a known value: water`);
+    expect(() =>
+      readStringFrom({ moveType: 'water' }, 'moveType', { file: FILE }, allowed),
+    ).toThrow(`${FILE}: "moveType" is not a known value: water`);
   });
 
   it('accepts only declared keys', () => {
     expect(() => assertKnownKeys({ id: 'x' }, ['id'], { file: FILE })).not.toThrow();
-    expect(() => assertKnownKeys({ id: 'x', hp: 1 }, ['id'], { file: FILE }))
-      .toThrow(`${FILE}: unknown field "hp"`);
+    expect(() => assertKnownKeys({ id: 'x', hp: 1 }, ['id'], { file: FILE })).toThrow(
+      `${FILE}: unknown field "hp"`,
+    );
   });
 });

@@ -13,9 +13,7 @@ describe('UnitIcon', () => {
 
     const icon = screen.getByRole('img', { name: 'Grunt' });
 
-    expect(icon.style.backgroundImage).toContain(
-      UNIT_SPRITE_ASSETS[UNIT_SPRITE_KEYS.ORC_GRUNT],
-    );
+    expect(icon.style.backgroundImage).toContain(UNIT_SPRITE_ASSETS[UNIT_SPRITE_KEYS.ORC_GRUNT]);
     expect(icon.style.getPropertyValue('--unit-icon-columns')).toBe('4');
     expect(icon.style.getPropertyValue('--unit-icon-rows')).toBe('4');
     expect(icon.style.backgroundPosition).toBe('');

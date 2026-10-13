@@ -1,10 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { applyEffectToCreep, DEFAULT_CREEP_COMBAT_TRAITS } from '../../../../../entities/creep';
 import { CreepTypeId, EffectId } from '../../../../types/content-ids';
-import {
-  CREEP_EFFECT_PIP_MIN_EFFECTS,
-  CREEP_EFFECT_TINTS,
-} from '../../scenes/gameScene.constants';
+import { CREEP_EFFECT_PIP_MIN_EFFECTS, CREEP_EFFECT_TINTS } from '../../scenes/gameScene.constants';
 import {
   destroyCreepRenderState,
   refreshCreepEffectVisuals,

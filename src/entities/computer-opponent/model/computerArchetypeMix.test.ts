@@ -11,16 +11,20 @@ import { getTowerArchetype, TOWER_COMBAT_STATS_BY_TYPE, type TowerEntity } from 
 import { buildableTowers } from '../../tower/model/config/buildableTowers';
 import type { GridModel } from '../../../shared/types/grid';
 import type { GridPosition } from '../../../shared/types/pathfinding';
-import {
-  RaceId,
-  TowerAttackKind,
-  TowerTypeId,
-} from '../../../shared/types/content-ids';
+import { RaceId, TowerAttackKind, TowerTypeId } from '../../../shared/types/content-ids';
 
 const WAVE_COUNT = 10;
 const BUILD_POSITIONS: GridPosition[] = [
-  { x: 2, y: 3 }, { x: 3, y: 3 }, { x: 4, y: 3 }, { x: 5, y: 3 }, { x: 6, y: 3 },
-  { x: 2, y: 9 }, { x: 3, y: 9 }, { x: 4, y: 9 }, { x: 5, y: 9 }, { x: 6, y: 9 },
+  { x: 2, y: 3 },
+  { x: 3, y: 3 },
+  { x: 4, y: 3 },
+  { x: 5, y: 3 },
+  { x: 6, y: 3 },
+  { x: 2, y: 9 },
+  { x: 3, y: 9 },
+  { x: 4, y: 9 },
+  { x: 5, y: 9 },
+  { x: 6, y: 9 },
 ];
 
 function isControlArchetype(towerType: TowerTypeId): boolean {
@@ -73,15 +77,18 @@ function createContext(
     difficulty,
     round,
     phase: 'build',
-    mazeCoverage: { totalWalkableCells: 120, occupiedCells: towers.length, towerCount: towers.length },
+    mazeCoverage: {
+      totalWalkableCells: 120,
+      occupiedCells: towers.length,
+      towerCount: towers.length,
+    },
     threat: { incomingCreepCount: 4, estimatedLeakCount: 0, threatLevel: 'medium' },
     leakHistory: [],
     affordableTowers: affordableTowersFor(raceId, gold),
     upgradeableTowerIds: [],
     availableBuildPositions: BUILD_POSITIONS.filter(
-      (position) => !occupiedPositions.some(
-        (taken) => taken.x === position.x && taken.y === position.y,
-      ),
+      (position) =>
+        !occupiedPositions.some((taken) => taken.x === position.x && taken.y === position.y),
     ),
     intent: undefined,
   };
@@ -102,7 +109,9 @@ function simulateBuildRun(raceId: RaceId, difficulty: Difficulty): TowerEntity[]
         continue;
       }
 
-      towers.push(createTower(`opponent_tower_${towers.length + 1}`, action.towerType, action.position));
+      towers.push(
+        createTower(`opponent_tower_${towers.length + 1}`, action.towerType, action.position),
+      );
       occupied.push(action.position);
     }
   }
@@ -139,8 +148,9 @@ describe('computer opponent archetype mix', () => {
     const first = simulateBuildRun(RaceId.ELF, Difficulty.NORMAL);
     const second = simulateBuildRun(RaceId.ELF, Difficulty.NORMAL);
 
-    expect(second.map((tower) => `${tower.type}@${tower.position.x},${tower.position.y}`))
-      .toEqual(first.map((tower) => `${tower.type}@${tower.position.x},${tower.position.y}`));
+    expect(second.map((tower) => `${tower.type}@${tower.position.x},${tower.position.y}`)).toEqual(
+      first.map((tower) => `${tower.type}@${tower.position.x},${tower.position.y}`),
+    );
   });
 
   it('keeps difficulty presets distinguishable', () => {

@@ -1,4 +1,8 @@
-import { getTowerArchetype, type TowerCombatStats, type TowerOnHitEffect } from '../../../entities/tower';
+import {
+  getTowerArchetype,
+  type TowerCombatStats,
+  type TowerOnHitEffect,
+} from '../../../entities/tower';
 import { resolveEffectDefinition } from '../../../shared/constants/effects';
 import { EffectId, TowerAttackKind, type TowerTypeId } from '../../../shared/types/content-ids';
 
@@ -31,15 +35,24 @@ function describeOnHitEffect(effect: TowerOnHitEffect): TowerEffectLine {
 
   switch (effect.effectId) {
     case EffectId.CHILL:
-      return { key: effect.effectId, label: 'SLOW', value: `${formatPercent(magnitude)} / ${formatSeconds(durationMs)}` };
+      return {
+        key: effect.effectId,
+        label: 'SLOW',
+        value: `${formatPercent(magnitude)} / ${formatSeconds(durationMs)}`,
+      };
     case EffectId.STUN:
       return { key: effect.effectId, label: 'STUN', value: formatSeconds(durationMs) };
     case EffectId.ARMOR_BREAK:
-      return { key: effect.effectId, label: 'ARMOR', value: `-${magnitude} / ${formatSeconds(durationMs)}` };
+      return {
+        key: effect.effectId,
+        label: 'ARMOR',
+        value: `-${magnitude} / ${formatSeconds(durationMs)}`,
+      };
     default: {
-      const perSecond = definition.tickIntervalMs > 0
-        ? (magnitude * MILLISECONDS_PER_SECOND) / definition.tickIntervalMs
-        : magnitude;
+      const perSecond =
+        definition.tickIntervalMs > 0
+          ? (magnitude * MILLISECONDS_PER_SECOND) / definition.tickIntervalMs
+          : magnitude;
       const label = effect.effectId === EffectId.POISON ? 'POISON' : 'BURN';
 
       return {

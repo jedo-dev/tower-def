@@ -6,7 +6,11 @@
   align-items: center;
   justify-content: center;
   padding: var(--space-xl);
-  background: radial-gradient(120% 90% at 50% 40%, rgba(8, 12, 20, 0.72) 0%, rgba(5, 8, 14, 0.92) 100%);
+  background: radial-gradient(
+    120% 90% at 50% 40%,
+    rgba(8, 12, 20, 0.72) 0%,
+    rgba(5, 8, 14, 0.92) 100%
+  );
   backdrop-filter: blur(4px);
   animation: match-outcome-fade var(--duration-med) var(--ease-out);
 }

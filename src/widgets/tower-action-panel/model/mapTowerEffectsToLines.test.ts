@@ -1,12 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import {
-  mapTowerEffectsToLines,
-  mapTowerEffectUpgradeDeltas,
-} from './mapTowerEffectsToLines';
-import {
-  getTowerStatsForLevel,
-  TOWER_COMBAT_STATS_BY_TYPE,
-} from '../../../entities/tower';
+import { mapTowerEffectsToLines, mapTowerEffectUpgradeDeltas } from './mapTowerEffectsToLines';
+import { getTowerStatsForLevel, TOWER_COMBAT_STATS_BY_TYPE } from '../../../entities/tower';
 import { TowerTypeId } from '../../../shared/types/content-ids';
 
 function statsFor(towerType: TowerTypeId, level = 1) {

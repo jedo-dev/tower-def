@@ -3,11 +3,7 @@ import {
   resolveEffectDefinition,
   type EffectDefinition,
 } from '../../../shared/constants/effects';
-import {
-  EffectId,
-  EffectKind,
-  EffectStackingRule,
-} from '../../../shared/types/content-ids';
+import { EffectId, EffectKind, EffectStackingRule } from '../../../shared/types/content-ids';
 import type { ActiveEffect, CreepEntity } from './types';
 
 const NO_EFFECTS: readonly ActiveEffect[] = [];

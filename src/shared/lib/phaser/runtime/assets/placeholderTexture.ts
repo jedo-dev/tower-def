@@ -1,8 +1,5 @@
 import type Phaser from 'phaser';
-import {
-  TOWER_SPRITE_SHEET_FRAME,
-  UNIT_SPRITE_SHEET_FRAME,
-} from '../../../../constants/sprites';
+import { TOWER_SPRITE_SHEET_FRAME, UNIT_SPRITE_SHEET_FRAME } from '../../../../constants/sprites';
 import {
   PLACEHOLDER_BORDER_COLOR,
   PLACEHOLDER_BORDER_DASH_PX,
@@ -101,14 +98,7 @@ function createPlaceholderSpriteSheet(scene: Phaser.Scene, spec: FrameSpec): voi
     drawPlaceholderFrame(context, frameIndex * spec.frameWidth, spec.frameWidth, spec.frameHeight);
     // Numbered frames let animation code address the placeholder exactly like a
     // finished sheet, so no caller needs a special case.
-    texture.add(
-      frameIndex,
-      0,
-      frameIndex * spec.frameWidth,
-      0,
-      spec.frameWidth,
-      spec.frameHeight,
-    );
+    texture.add(frameIndex, 0, frameIndex * spec.frameWidth, 0, spec.frameWidth, spec.frameHeight);
   }
 
   texture.refresh();

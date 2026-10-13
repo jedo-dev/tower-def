@@ -62,7 +62,7 @@ export function resolveSpriteKey(
 
   const placeholderKey = PLACEHOLDER_KEY_BY_KIND[kind];
   const placeholderTint = options?.raceId
-    ? UNIT_FACTION_TINTS[options.raceId] ?? PLACEHOLDER_DEFAULT_TINT
+    ? (UNIT_FACTION_TINTS[options.raceId] ?? PLACEHOLDER_DEFAULT_TINT)
     : PLACEHOLDER_DEFAULT_TINT;
 
   // The placeholder itself may be missing in a headless or torn-down scene; the

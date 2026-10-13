@@ -7,7 +7,6 @@ import { TowerTypeId } from '../../../shared/types/content-ids';
 import type { TowerEntity } from '../../tower/model/types';
 import { scoreTowerPlacement, scoreAllPlacements } from './scoreTowerPlacement';
 
-
 const ENTRANCE = { x: 0, y: 7 };
 const EXIT = { x: 9, y: 7 };
 
@@ -15,7 +14,12 @@ function createTestGrid() {
   return createGridModel({ entrance: ENTRANCE, exit: EXIT });
 }
 
-function createTestTower(overrides?: { id?: string; x?: number; y?: number; type?: 'single' | 'splash' }): TowerEntity {
+function createTestTower(overrides?: {
+  id?: string;
+  x?: number;
+  y?: number;
+  type?: 'single' | 'splash';
+}): TowerEntity {
   return {
     id: overrides?.id ?? 'tower_1',
     position: { x: overrides?.x ?? 2, y: overrides?.y ?? 3 },
@@ -80,9 +84,7 @@ describe('entities/computer-opponent/scoreTowerPlacement', () => {
         const occupiedGrid = {
           ...grid,
           cells: grid.cells.map((cell) =>
-            cell.x === 3 && cell.y === 5
-              ? { ...cell, isOccupied: true, isWalkable: false }
-              : cell,
+            cell.x === 3 && cell.y === 5 ? { ...cell, isOccupied: true, isWalkable: false } : cell,
           ),
         };
 
@@ -301,9 +303,7 @@ describe('entities/computer-opponent/scoreTowerPlacement', () => {
         const withWall = {
           ...grid,
           cells: grid.cells.map((cell) =>
-            cell.x === 4 && cell.y === 0
-              ? { ...cell, isOccupied: true, isWalkable: false }
-              : cell,
+            cell.x === 4 && cell.y === 0 ? { ...cell, isOccupied: true, isWalkable: false } : cell,
           ),
         };
         const pathProbe = createPathProbe(withWall);
@@ -423,12 +423,7 @@ describe('entities/computer-opponent/scoreTowerPlacement', () => {
       const grid = createTestGrid();
       const path = getTestPath();
 
-      const positions = [
-        ENTRANCE,
-        EXIT,
-        { x: 1, y: 1 },
-        { x: 5, y: 7 },
-      ];
+      const positions = [ENTRANCE, EXIT, { x: 1, y: 1 }, { x: 5, y: 7 }];
 
       const scores = scoreAllPlacements({
         grid,

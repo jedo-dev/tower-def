@@ -15,9 +15,7 @@ export function validateTowerPlacementPath(grid: GridModel, placement: GridPosit
     return false;
   }
 
-  const hasTargetCell = grid.cells.some(
-    (cell) => cell.x === placement.x && cell.y === placement.y,
-  );
+  const hasTargetCell = grid.cells.some((cell) => cell.x === placement.x && cell.y === placement.y);
 
   if (!hasTargetCell) {
     return false;

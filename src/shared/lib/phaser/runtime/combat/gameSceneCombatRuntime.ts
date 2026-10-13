@@ -13,7 +13,12 @@ import {
   tickCreepEffects,
   type ApplyEffectInput,
 } from '../../../../../entities/creep';
-import { canTowerAttack, consumeTowerAttack, selectTowerTarget, tickTowerCooldown } from '../../../../../entities/tower';
+import {
+  canTowerAttack,
+  consumeTowerAttack,
+  selectTowerTarget,
+  tickTowerCooldown,
+} from '../../../../../entities/tower';
 import { ECONOMY_BALANCE } from '../../../../constants/economy';
 import { GRID_DIMENSIONS } from '../../../../constants/grid';
 import { TOWER_BONE_ARCHER_EFFECT_FRAMES, TOWER_SPRITE_KEYS } from '../../../../constants/sprites';
@@ -76,8 +81,8 @@ export type CombatRuntimeDependencies = {
 };
 
 function handleCreepKill(deps: CombatRuntimeDependencies): void {
-  const reward = deps.scaleReward?.(ECONOMY_BALANCE.creepKillRewardGold)
-    ?? ECONOMY_BALANCE.creepKillRewardGold;
+  const reward =
+    deps.scaleReward?.(ECONOMY_BALANCE.creepKillRewardGold) ?? ECONOMY_BALANCE.creepKillRewardGold;
   const nextResources = addGold(deps.getResources(), reward);
   deps.onGoldUpdated(nextResources.gold);
   deps.playSound('combat.creep_death.basic');
@@ -99,7 +104,9 @@ function spawnImpactEffect(
     ? TOWER_BONE_ARCHER_EFFECT_FRAMES.attackEffect
     : TOWER_BONE_ARCHER_EFFECT_FRAMES.projectile;
   const effect = deps.scene.add.sprite(x, y, spriteKey, frame);
-  const size = isSplash ? config.projectileDisplaySizePx * 1.7 : config.projectileDisplaySizePx * 1.25;
+  const size = isSplash
+    ? config.projectileDisplaySizePx * 1.7
+    : config.projectileDisplaySizePx * 1.25;
   effect.setDisplaySize(size, size);
   effect.setOrigin(0.5);
   effect.setDepth(config.impactEffectRenderDepth);
@@ -158,8 +165,8 @@ function applyTowerOnHitEffects(
   tower: TowerRenderState,
   creep: CreepRenderState,
 ): void {
-  const onHitEffects = tower.entity.combatStats.onHitEffects
-    ?? getTowerOnHitEffects(tower.entity.type);
+  const onHitEffects =
+    tower.entity.combatStats.onHitEffects ?? getTowerOnHitEffects(tower.entity.type);
 
   if (onHitEffects.length === 0 || creep.entity.status !== 'alive') {
     return;
@@ -182,7 +189,10 @@ function applySingleTargetDamage(
   tower: TowerRenderState,
   targetRenderState: CreepRenderState,
 ): void {
-  const damageResult = applyDamageToCreep(targetRenderState.entity, tower.entity.combatStats.damage);
+  const damageResult = applyDamageToCreep(
+    targetRenderState.entity,
+    tower.entity.combatStats.damage,
+  );
 
   targetRenderState.entity = damageResult.creep;
   applyTowerOnHitEffects(deps, config, tower, targetRenderState);
@@ -236,7 +246,13 @@ function applySplashDamage(
   }
 
   deps.playSound('combat.creep_hit');
-  spawnDamageNumber(battlefield, deps, config, targetRenderState.entity.position, Math.round(totalDamageDealt));
+  spawnDamageNumber(
+    battlefield,
+    deps,
+    config,
+    targetRenderState.entity.position,
+    Math.round(totalDamageDealt),
+  );
 }
 
 /**
@@ -268,11 +284,11 @@ function selectChainTargets(
         };
       })
       .filter((candidate) => candidate.distance <= rangePx)
-      .sort((left, right) => (
+      .sort((left, right) =>
         left.distance === right.distance
           ? left.creep.entity.id.localeCompare(right.creep.entity.id)
-          : left.distance - right.distance
-      ))[0];
+          : left.distance - right.distance,
+      )[0];
 
     if (!next) {
       break;
@@ -344,17 +360,24 @@ function spawnProjectileFeedback(
   const toCenter = deps.toCellCenter(to);
   const lifetimeMs = Math.max(
     config.projectileMinLifetimeMs,
-    Math.min(config.projectileMaxLifetimeMs, Math.round(tower.entity.combatStats.attackCooldownMs * 0.28)),
+    Math.min(
+      config.projectileMaxLifetimeMs,
+      Math.round(tower.entity.combatStats.attackCooldownMs * 0.28),
+    ),
   );
   const frame = isSplash
     ? TOWER_BONE_ARCHER_EFFECT_FRAMES.projectile
     : config.archerProjectileVisualMode === 'projectile'
       ? TOWER_BONE_ARCHER_EFFECT_FRAMES.projectile
       : TOWER_BONE_ARCHER_EFFECT_FRAMES.attackEffect;
-  const effectSpriteKey = isSplash ? TOWER_SPRITE_KEYS.UNDEAD_BONE_ARCHER : tower.sprite.texture.key;
+  const effectSpriteKey = isSplash
+    ? TOWER_SPRITE_KEYS.UNDEAD_BONE_ARCHER
+    : tower.sprite.texture.key;
 
   const projectile = deps.scene.add.sprite(fromCenter.x, fromCenter.y, effectSpriteKey, frame);
-  const displaySize = isSplash ? config.projectileDisplaySizePx * 1.6 : config.projectileDisplaySizePx;
+  const displaySize = isSplash
+    ? config.projectileDisplaySizePx * 1.6
+    : config.projectileDisplaySizePx;
   projectile.setDisplaySize(displaySize, displaySize);
   projectile.setOrigin(0.5);
   projectile.setDepth(config.projectileRenderDepth);
@@ -408,7 +431,9 @@ export function updateTowerCombat(
       continue;
     }
 
-    const targetRenderState = battlefield.creeps.find((creep) => creep.entity.id === targetCreep.id);
+    const targetRenderState = battlefield.creeps.find(
+      (creep) => creep.entity.id === targetCreep.id,
+    );
 
     if (!targetRenderState) {
       continue;
@@ -432,7 +457,14 @@ export function updateTowerCombat(
     } else {
       deps.playArcherAttackAnimation(tower);
     }
-    spawnProjectileFeedback(battlefield, deps, config, tower, targetRenderState.entity.position, isSplashTower);
+    spawnProjectileFeedback(
+      battlefield,
+      deps,
+      config,
+      tower,
+      targetRenderState.entity.position,
+      isSplashTower,
+    );
     deps.playSound(isSplashTower ? 'combat.tower_attack.splash' : 'combat.tower_attack.archer');
   }
 }
@@ -441,7 +473,11 @@ export function updateTowerCombat(
  * A shot is coloured by what it does: an effect tower fires in its effect
  * colour, a plain splash tower stays green.
  */
-function resolveShotTint(towerType: TowerTypeId, isSplash: boolean, splashTint: number): number | undefined {
+function resolveShotTint(
+  towerType: TowerTypeId,
+  isSplash: boolean,
+  splashTint: number,
+): number | undefined {
   const [firstEffect] = getTowerOnHitEffects(towerType);
 
   if (firstEffect) {
@@ -645,10 +681,7 @@ export function updateProjectiles(
   battlefield.projectiles = nextProjectiles;
 }
 
-export function updateImpactEffects(
-  battlefield: BattlefieldRenderState,
-  deltaMs: number,
-): void {
+export function updateImpactEffects(battlefield: BattlefieldRenderState, deltaMs: number): void {
   if (battlefield.impactEffects.length === 0) {
     return;
   }

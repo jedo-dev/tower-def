@@ -192,11 +192,7 @@ type SelectionState = {
 };
 
 /** Buys the best-ranked affordable creep until the purse or the cap runs out. */
-function spendOn(
-  ranked: readonly SendCandidate[],
-  budget: number,
-  state: SelectionState,
-): number {
+function spendOn(ranked: readonly SendCandidate[], budget: number, state: SelectionState): number {
   let remaining = budget;
 
   for (const candidate of ranked) {
@@ -269,9 +265,10 @@ export function planSendCreeps(input: SendPlannerInput): SendPlannerOutput {
       actions: [],
       totalCost: 0,
       totalIncomeBonus: 0,
-      reasoning: context.phase !== 'build'
-        ? 'Not in build phase, cannot send creeps'
-        : 'High threat detected, saving gold for defense',
+      reasoning:
+        context.phase !== 'build'
+          ? 'Not in build phase, cannot send creeps'
+          : 'High threat detected, saving gold for defense',
     });
   }
 

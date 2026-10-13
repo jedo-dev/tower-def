@@ -76,7 +76,11 @@ describe('MatchOutcomeOverlay', () => {
 
   it('shows a draw when both keeps fall', () => {
     publishGameHudSnapshot(
-      createSnapshot({ matchOutcome: { status: 'draw', winner: null }, lives: 0, opponentLives: 0 }),
+      createSnapshot({
+        matchOutcome: { status: 'draw', winner: null },
+        lives: 0,
+        opponentLives: 0,
+      }),
     );
 
     render(<MatchOutcomeOverlay onExit={() => undefined} />);

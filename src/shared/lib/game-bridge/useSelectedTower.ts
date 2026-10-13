@@ -36,7 +36,11 @@ function ensureEventSubscription(): void {
 
 export function useSelectedTower(): SelectedTowerSnapshot | null {
   ensureEventSubscription();
-  return useSyncExternalStore(subscribeSelectedTower, getSelectedTowerSnapshot, getSelectedTowerSnapshot);
+  return useSyncExternalStore(
+    subscribeSelectedTower,
+    getSelectedTowerSnapshot,
+    getSelectedTowerSnapshot,
+  );
 }
 
 export function clearSelectedTower(): void {

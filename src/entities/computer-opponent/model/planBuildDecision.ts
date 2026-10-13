@@ -153,9 +153,7 @@ function findBestBuild(input: FindBestBuildInput): BuildAction | null {
 
   const candidatePositions = context.availableBuildPositions.filter(
     (position) =>
-      !excludedPositions.some(
-        (excluded) => excluded.x === position.x && excluded.y === position.y,
-      ),
+      !excludedPositions.some((excluded) => excluded.x === position.x && excluded.y === position.y),
   );
   if (candidatePositions.length === 0) {
     return null;

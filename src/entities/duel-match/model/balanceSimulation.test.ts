@@ -1,11 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { RaceId } from '../../../shared/types/content-ids';
 import { UnitTier } from '../../unit/model/types';
+import { SEND_CREEP_COST_BY_TIER, SEND_CREEP_INCOME_BONUS_BY_TIER } from './balance';
 import {
-  SEND_CREEP_COST_BY_TIER,
-  SEND_CREEP_INCOME_BONUS_BY_TIER,
-} from './balance';
-import { canAffordSendCreep, clearSendQueue, endRound, payIncome, sendCreep, startRound } from './lifecycle';
+  canAffordSendCreep,
+  clearSendQueue,
+  endRound,
+  payIncome,
+  sendCreep,
+  startRound,
+} from './lifecycle';
 import { getIncomeBonusByTier, getSendCostByTier } from './sendEconomy';
 import { createInitialDuelMatchState } from './state';
 import type { DuelMatchState } from './types';

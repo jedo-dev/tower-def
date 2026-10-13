@@ -17,13 +17,17 @@
   color: rgba(230, 233, 239, 0.7);
   background: transparent;
   padding: 0 2px;
-  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.95), 0 0 6px rgba(0, 0, 0, 0.9);
+  text-shadow:
+    0 1px 0 rgba(0, 0, 0, 0.95),
+    0 0 6px rgba(0, 0, 0, 0.9);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.entry:last-child { color: #e6e9ef; }
+.entry:last-child {
+  color: #e6e9ef;
+}
 
 .entryDamage {
   color: var(--color-text-danger);

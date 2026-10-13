@@ -6,26 +6,42 @@ import { RACE_IDS, RaceId, TowerTypeId } from '../../../shared/types/content-ids
 describe('mapRaceRosterToBuildOptions', () => {
   it('offers exactly the towers the race can build', () => {
     for (const race of RACE_IDS) {
-      const options = mapRaceRosterToBuildOptions({ raceId: race, gold: 1000, selectedTowerType: null });
+      const options = mapRaceRosterToBuildOptions({
+        raceId: race,
+        gold: 1000,
+        selectedTowerType: null,
+      });
 
-      expect(options.map((option) => option.towerId), race)
-        .toEqual(getBuildableTowersByFaction(race).map((tower) => tower.id));
+      expect(
+        options.map((option) => option.towerId),
+        race,
+      ).toEqual(getBuildableTowersByFaction(race).map((tower) => tower.id));
     }
   });
 
   it('swaps the buildable set when the race changes', () => {
-    const undead = mapRaceRosterToBuildOptions({ raceId: RaceId.UNDEAD, gold: 1000, selectedTowerType: null });
-    const elf = mapRaceRosterToBuildOptions({ raceId: RaceId.ELF, gold: 1000, selectedTowerType: null });
+    const undead = mapRaceRosterToBuildOptions({
+      raceId: RaceId.UNDEAD,
+      gold: 1000,
+      selectedTowerType: null,
+    });
+    const elf = mapRaceRosterToBuildOptions({
+      raceId: RaceId.ELF,
+      gold: 1000,
+      selectedTowerType: null,
+    });
 
     expect(undead.map((option) => option.towerId)).not.toEqual(elf.map((option) => option.towerId));
   });
 
   it('marks a tower unaffordable when it costs more than the gold on hand', () => {
-    const [cheapest] = [...mapRaceRosterToBuildOptions({
-      raceId: RaceId.UNDEAD,
-      gold: 1000,
-      selectedTowerType: null,
-    })].sort((left, right) => left.costGold - right.costGold);
+    const [cheapest] = [
+      ...mapRaceRosterToBuildOptions({
+        raceId: RaceId.UNDEAD,
+        gold: 1000,
+        selectedTowerType: null,
+      }),
+    ].sort((left, right) => left.costGold - right.costGold);
 
     const options = mapRaceRosterToBuildOptions({
       raceId: RaceId.UNDEAD,
@@ -53,8 +69,9 @@ describe('mapRaceRosterToBuildOptions', () => {
   it('summarises what each archetype does beyond damage', () => {
     const hintByArchetype = new Map(
       RACE_IDS.flatMap((race) =>
-        mapRaceRosterToBuildOptions({ raceId: race, gold: 1000, selectedTowerType: null })
-          .map((option) => [option.towerType, option.effectHint] as const),
+        mapRaceRosterToBuildOptions({ raceId: race, gold: 1000, selectedTowerType: null }).map(
+          (option) => [option.towerType, option.effectHint] as const,
+        ),
       ),
     );
 
