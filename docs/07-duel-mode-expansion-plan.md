@@ -212,7 +212,15 @@ Why: before the pass the wave-1 baseline could already field two tier-4 creature
 
 Results, seeds 1-10, baseline undead, normal and hard over undead:orc, human:elf, orc:human and elf:undead: median 25 rounds (range 6-31), towers at round 5 median 12 per side (range 9-16), draws 6%, 40-round cap 0%. Other baselines: orc 22 rounds, human 30, elf 32.
 
-Known gaps for follow-up: on seeds 4 and 5 the computer's maze planner builds a useless edge wall and both sides die by round 6-9; orc loses most race pairs; nightmare does not beat hard.
+Maze planner and spending (tower-def-02k.8, tower-def-02k.9):
+
+- The planner scores walls by route exposure (route cells within 4 cells of each block, capped at 4 per cell of route the wall adds) plus route cost, and skips walls that leave the entrance or exit in a strip at most 4 cells wide along the board edge (`maze-planning/constants.ts`). Route cost alone picked such strip walls on seeds 4 and 5: the creeps passed one face of the wall and the blocks past the endpoint only closed the strip.
+- A defending computer keeps walling its maze plan; before, one early leak froze the maze for the 10-round leak window.
+- Once the plan is finished the computer spends everything above a reserve of `surplusReserveIncomeShare` of one round of income (easy 1, normal 0.5, hard 0.25, nightmare 0) on upgrades, then on towers off the route. The batch table reports the late-game result as `unspent/income r16+`.
+
+Results after that, same batch: median 27 rounds (range 21-30), towers at round 5 median 14 per side (range 12-16), draws 16%, 40-round cap 0%, unspent gold after round 15 on average 173 against 538 income. The draws are both sides dying to the same late wave on a mirror map now that neither side's maze collapses early.
+
+Known gaps for follow-up: draws are above the 02k.7 rate; orc loses most race pairs; nightmare does not beat hard.
 
 ## Suggested Improvements
 
