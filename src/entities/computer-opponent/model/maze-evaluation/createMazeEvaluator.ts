@@ -24,18 +24,41 @@ import type { MazeRoute, MazeRoutes, PlacementRouteGain, PlacementRouteProbe } f
 /**
  * Board snapshot for scoring many candidate placements against one baseline.
  * Results are deterministic; scratch buffers are owned by the evaluator and
- * restored after every call, so calls are independent of each other.
+ * restored after every probe, so probes are independent of each other. Only
+ * `place` moves the baseline.
  */
 export type MazeEvaluator = {
-  /** Current small/large routes and their costs. */
+  /** Current small/large routes and their costs, blocks committed with `place` included. */
   readonly routes: MazeRoutes;
   /** Route gain from placing `footprint` at `anchor`, relative to `routes`. */
   routeGainForPlacement(anchor: GridPoint, footprint?: Readonly<Footprint>): PlacementRouteGain;
   /** Same as `routeGainForPlacement`, plus the small route the creeps would walk afterwards. */
   probePlacement(anchor: GridPoint, footprint?: Readonly<Footprint>): PlacementRouteProbe;
+  /**
+   * `probePlacement` without the large route, at half the search work:
+   * `valid` only promises that the block can stand and keeps the small route
+   * open, and `largeGain` is 0. Check `keepsLargeRouteOpen` before building.
+   */
+  probeSmallRoute(anchor: GridPoint, footprint?: Readonly<Footprint>): PlacementRouteProbe;
+  /** True when the block can stand and the large route stays open with it. */
+  keepsLargeRouteOpen(anchor: GridPoint, footprint?: Readonly<Footprint>): boolean;
+  /**
+   * True when the block covers a cell the current small route relies on: it
+   * may lengthen or seal that route, and probing it costs a route search.
+   */
+  touchesSmallRoute(anchor: GridPoint, footprint?: Readonly<Footprint>): boolean;
+  /**
+   * Stands a block for good: later probes and `routes` see it. Only routes
+   * the block touches are searched again, so a board that grows one tower at
+   * a time never needs a fresh evaluator. The caller makes sure the block is
+   * a legal build (see `probePlacement`).
+   */
+  place(anchor: GridPoint, footprint?: Readonly<Footprint>): void;
   /** Cells expanded by every route search so far, baseline included. Counts work, not time. */
   readonly expandedNodeCount: number;
 };
+
+type FoundRoute = { route: MazeRoute; cost: number | null };
 
 const INVALID_PLACEMENT: Readonly<PlacementRouteGain> = Object.freeze({
   valid: false,
@@ -58,7 +81,7 @@ function findRoute(
   agentSize: number,
   start: GridPoint,
   goal: GridPoint,
-): { route: MazeRoute; cost: number | null } {
+): FoundRoute {
   const cost = searchMazeRouteCost(buffers, clearance, agentSize, start, goal);
 
   return Number.isFinite(cost)
@@ -68,9 +91,9 @@ function findRoute(
 
 /**
  * Snapshots `grid` (free cells and capped clearance) and computes both
- * baseline routes. The grid is never mutated; later changes to it are not
- * seen, so create a new evaluator after the board changes. Towers already
- * standing must be marked `isOccupied` on the grid.
+ * baseline routes. The grid is never mutated and later changes to it are not
+ * seen: commit new blocks with `place`, or create a new evaluator. Towers
+ * already standing must be marked `isOccupied` on the grid.
  */
 export function createMazeEvaluator(
   grid: GridModel,
@@ -87,7 +110,7 @@ export function createMazeEvaluator(
 
   const small = findRoute(buffers, clearance, SMALL_ROUTE_AGENT_SIZE, start, goal);
   const large = findRoute(buffers, clearance, LARGE_ROUTE_AGENT_SIZE, start, goal);
-  const routes: MazeRoutes = {
+  let routes: MazeRoutes = {
     smallRoute: small.route,
     largeRoute: large.route,
     smallRouteCost: small.cost,
@@ -120,61 +143,71 @@ export function createMazeEvaluator(
     );
   }
 
-  /** Shared core; reads the rerouted small route only when `withSmallRoute` asks for it. */
+  /** Free on the snapshot and not covered by a block committed with `place`. */
+  function canStand(anchor: GridPoint, footprint: Readonly<Footprint>): boolean {
+    if (!canOccupyFootprint(grid, anchor, footprint)) {
+      return false;
+    }
+    for (let y = anchor.y; y < anchor.y + footprint.height; y += 1) {
+      for (let x = anchor.x; x < anchor.x + footprint.width; x += 1) {
+        if (free[y * cols + x] === 0) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
+  function touches(sweep: Uint8Array, anchor: GridPoint, footprint: Readonly<Footprint>) {
+    const { width, height } = footprint;
+    return doesRectangleTouchMask(sweep, cols, rows, anchor.x, anchor.y, width, height);
+  }
+
+  /** Cost of one size-class route with the block standing; Infinity when sealed. */
+  function searchWithBlock(anchor: GridPoint, footprint: Readonly<Footprint>, agentSize: number) {
+    setFootprintFree(anchor, footprint, 0);
+    const cost = searchMazeRouteCost(buffers, clearance, agentSize, start, goal);
+    setFootprintFree(anchor, footprint, 1);
+    return cost;
+  }
+
+  /**
+   * Shared core. Reads the rerouted small route only when `withSmallRoute`
+   * asks for it, and skips the large route when `withLargeRoute` is false.
+   */
   function evaluatePlacement(
     anchor: GridPoint,
     footprint: Readonly<Footprint>,
     withSmallRoute: boolean,
+    withLargeRoute: boolean,
   ): PlacementRouteProbe {
     const baseSmallCost = routes.smallRouteCost;
-    const baseLargeCost = routes.largeRouteCost;
+    const baseLargeCost = withLargeRoute ? routes.largeRouteCost : 0;
 
-    if (baseSmallCost === null || baseLargeCost === null) {
+    if (baseSmallCost === null || baseLargeCost === null || !canStand(anchor, footprint)) {
       return INVALID_PROBE;
     }
 
-    if (!canOccupyFootprint(grid, anchor, footprint)) {
-      return INVALID_PROBE;
-    }
-
-    const { width, height } = footprint;
-    const touchesSmall = doesRectangleTouchMask(
-      smallSweep,
-      cols,
-      rows,
-      anchor.x,
-      anchor.y,
-      width,
-      height,
-    );
-    const touchesLarge = doesRectangleTouchMask(
-      largeSweep,
-      cols,
-      rows,
-      anchor.x,
-      anchor.y,
-      width,
-      height,
-    );
+    const touchesSmall = touches(smallSweep, anchor, footprint);
+    const touchesLarge = withLargeRoute && touches(largeSweep, anchor, footprint);
 
     if (!touchesSmall && !touchesLarge) {
       return { valid: true, smallGain: 0, largeGain: 0, smallRoute: routes.smallRoute };
     }
 
-    setFootprintFree(anchor, footprint, 0);
     const smallCost = touchesSmall
-      ? searchMazeRouteCost(buffers, clearance, SMALL_ROUTE_AGENT_SIZE, start, goal)
+      ? searchWithBlock(anchor, footprint, SMALL_ROUTE_AGENT_SIZE)
       : baseSmallCost;
-    // The large search reuses the parent buffer, so read the small route first.
+    // Restoring the block leaves the search buffers alone, so the parents of
+    // the small search are still there; the large search would overwrite them.
     const smallRoute =
       touchesSmall && withSmallRoute && Number.isFinite(smallCost)
         ? readMazeRoute(buffers, goal)
         : routes.smallRoute;
     const largeCost =
       touchesLarge && Number.isFinite(smallCost)
-        ? searchMazeRouteCost(buffers, clearance, LARGE_ROUTE_AGENT_SIZE, start, goal)
+        ? searchWithBlock(anchor, footprint, LARGE_ROUTE_AGENT_SIZE)
         : baseLargeCost;
-    setFootprintFree(anchor, footprint, 1);
 
     if (!Number.isFinite(smallCost) || !Number.isFinite(largeCost)) {
       return INVALID_PROBE;
@@ -188,25 +221,62 @@ export function createMazeEvaluator(
     };
   }
 
-  function routeGainForPlacement(
-    anchor: GridPoint,
-    footprint: Readonly<Footprint> = TOWER_FOOTPRINT,
-  ): PlacementRouteGain {
-    const { valid, smallGain, largeGain } = evaluatePlacement(anchor, footprint, false);
-    return valid ? { valid, smallGain, largeGain } : INVALID_PLACEMENT;
+  function keepsLargeRouteOpen(anchor: GridPoint, footprint: Readonly<Footprint>): boolean {
+    if (routes.largeRouteCost === null || !canStand(anchor, footprint)) {
+      return false;
+    }
+    return (
+      !touches(largeSweep, anchor, footprint) ||
+      Number.isFinite(searchWithBlock(anchor, footprint, LARGE_ROUTE_AGENT_SIZE))
+    );
   }
 
-  function probePlacement(
-    anchor: GridPoint,
-    footprint: Readonly<Footprint> = TOWER_FOOTPRINT,
-  ): PlacementRouteProbe {
-    return evaluatePlacement(anchor, footprint, true);
+  /** Searches one size class again on the current board and refreshes its sweep. */
+  function researchRoute(agentSize: number, sweep: Uint8Array): FoundRoute {
+    const found = findRoute(buffers, clearance, agentSize, start, goal);
+    markRouteSweep(found.route ?? [], agentSize, cols, rows, sweep);
+    return found;
+  }
+
+  function place(anchor: GridPoint, footprint: Readonly<Footprint>): void {
+    // A block off a route leaves it standing and still shortest; a sealed
+    // route stays sealed whatever is added.
+    const touchesSmall = routes.smallRoute !== null && touches(smallSweep, anchor, footprint);
+    const touchesLarge = routes.largeRoute !== null && touches(largeSweep, anchor, footprint);
+    setFootprintFree(anchor, footprint, 0);
+    const nextSmall = touchesSmall ? researchRoute(SMALL_ROUTE_AGENT_SIZE, smallSweep) : null;
+    const nextLarge = touchesLarge ? researchRoute(LARGE_ROUTE_AGENT_SIZE, largeSweep) : null;
+    routes = {
+      smallRoute: nextSmall ? nextSmall.route : routes.smallRoute,
+      largeRoute: nextLarge ? nextLarge.route : routes.largeRoute,
+      smallRouteCost: nextSmall ? nextSmall.cost : routes.smallRouteCost,
+      largeRouteCost: nextLarge ? nextLarge.cost : routes.largeRouteCost,
+    };
   }
 
   return {
-    routes,
-    routeGainForPlacement,
-    probePlacement,
+    get routes() {
+      return routes;
+    },
+    routeGainForPlacement(anchor, footprint = TOWER_FOOTPRINT) {
+      const { valid, smallGain, largeGain } = evaluatePlacement(anchor, footprint, false, true);
+      return valid ? { valid, smallGain, largeGain } : INVALID_PLACEMENT;
+    },
+    probePlacement(anchor, footprint = TOWER_FOOTPRINT) {
+      return evaluatePlacement(anchor, footprint, true, true);
+    },
+    probeSmallRoute(anchor, footprint = TOWER_FOOTPRINT) {
+      return evaluatePlacement(anchor, footprint, true, false);
+    },
+    keepsLargeRouteOpen(anchor, footprint = TOWER_FOOTPRINT) {
+      return keepsLargeRouteOpen(anchor, footprint);
+    },
+    touchesSmallRoute(anchor, footprint = TOWER_FOOTPRINT) {
+      return routes.smallRoute !== null && touches(smallSweep, anchor, footprint);
+    },
+    place(anchor, footprint = TOWER_FOOTPRINT) {
+      place(anchor, footprint);
+    },
     get expandedNodeCount() {
       return buffers.expandedNodeCount;
     },

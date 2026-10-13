@@ -6,7 +6,6 @@ import type { GridPosition } from '../../../shared/types/pathfinding';
 import type { TowerEntity } from '../../tower/model/types';
 import { TOWER_BASE_LEVEL, TOWER_COMBAT_STATS_BY_TYPE } from '../../tower/model/types';
 import { getTowerCostForType } from './buildSpendBudget';
-import { createPathProbe } from './createPathProbe';
 import {
   collectInvestmentTypes,
   collectUpgradeCandidates,
@@ -17,7 +16,8 @@ import {
   toRouteCells,
   type PlannedUpgrade,
 } from './damage-placement';
-import { findBestScoredBuild } from './findBestScoredBuild';
+import { DEFEND_REROUTE_PROBE_LIMIT, findBestScoredBuild } from './findBestScoredBuild';
+import { createMazeEvaluator } from './maze-evaluation';
 import { createMazePlanPriority, selectPlanBuilds } from './maze-planning';
 import { DEFENSE_PLACEMENT_WEIGHTS, MAZE_PLACEMENT_WEIGHTS } from './scoreTowerPlacement';
 import type { ComputerAction, DecisionContext } from './types';
@@ -148,7 +148,11 @@ export function investInPlan(
   return (selection?.anchors.length ?? 0) < count;
 }
 
-/** Single-tower builds by placement score, each placed against the previous ones. */
+/**
+ * Single-tower builds by placement score, each placed against the previous
+ * ones on one evaluator that grows with them. Defending probes only the most
+ * promising route-cutting anchors per tower; the maze fallback probes all.
+ */
 export function buildByScore(
   round: BuildRoundState,
   context: DecisionContext,
@@ -157,28 +161,32 @@ export function buildByScore(
   maxBuilds: number,
 ): void {
   const mazePlan = createMazePlanPriority(unbuilt);
-  const weights =
-    intent === StrategyIntent.DEFEND ? DEFENSE_PLACEMENT_WEIGHTS : MAZE_PLACEMENT_WEIGHTS;
+  const isDefending = intent === StrategyIntent.DEFEND;
+  const evaluator = createMazeEvaluator(round.grid, round.grid.entrance, round.grid.exit);
 
   while (round.buildCount < maxBuilds) {
-    const pathProbe = createPathProbe(round.grid);
     const build = findBestScoredBuild({
       context,
       grid: round.grid,
-      pathProbe,
+      evaluator,
       mazePlan,
-      weights,
+      weights: isDefending ? DEFENSE_PLACEMENT_WEIGHTS : MAZE_PLACEMENT_WEIGHTS,
       existingTowers: round.plannedTowers,
       budget: round.remainingBudget,
       excludedPositions: round.plannedPositions,
+      rerouteProbeLimit: isDefending ? DEFEND_REROUTE_PROBE_LIMIT : Infinity,
     });
     const cost = build ? getTowerCostForType(build.towerType, context.raceId) : null;
-    const gain = build ? Math.max(0, pathProbe.probeFootprint(build.position).gain) : 0;
-    round.expandedNodeCount += pathProbe.expandedNodeCount;
     if (!build || cost === null || cost > round.remainingBudget) {
-      return;
+      break;
     }
 
-    recordBuild(round, build.towerType, build.position, cost, `+${gain.toFixed(1)} route cost`);
+    const note = `+${build.routeGain.toFixed(1)} route cost`;
+    recordBuild(round, build.towerType, build.position, cost, note);
+    // The last tower of the round needs no route search of its own.
+    if (round.buildCount < maxBuilds) {
+      evaluator.place(build.position);
+    }
   }
+  round.expandedNodeCount += evaluator.expandedNodeCount;
 }
