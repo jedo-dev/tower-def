@@ -55,3 +55,24 @@ export type {
   ApplyComputerSendStrategyResult,
 } from './model/applyComputerSendStrategy';
 export type { ComputerDifficultyPreset } from './model/difficultyPresets';
+
+export {
+  computeTowerRouteCoverage,
+  countRouteSamplesInRange,
+  createMazeEvaluator,
+  evaluateMaze,
+  gainPerGold,
+  MAZE_COVERAGE_WEIGHTS,
+  MAZE_ROUTE_GAIN_WEIGHTS,
+  routeGainForPlacement,
+} from './model/maze-evaluation';
+export type {
+  MazeEvaluation,
+  MazeEvaluator,
+  MazeRoute,
+  MazeRoutes,
+  MazeSizeClassWeights,
+  MazeTower,
+  PlacementRouteGain,
+  TowerRouteCoverage,
+} from './model/maze-evaluation';
