@@ -37,6 +37,7 @@ let snapshot: GameHudSnapshot = {
   matchOutcome: {
     status: 'active',
     winner: null,
+    reason: null,
   },
   builderFactionName: 'Undead',
   waveNumber: 1,

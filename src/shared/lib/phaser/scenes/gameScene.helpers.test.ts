@@ -4,7 +4,12 @@ import type { CreepEntity } from '../../../../entities/creep';
 import { resolveUnitConfigById } from '../../../../entities/unit';
 import { CreepTypeId } from '../../../types/content-ids';
 import type { CreepRenderState, PendingWaveSpawn } from './gameScene.types';
-import { buildHudWaveQueue, buildHudWaveQueueWithPending } from './gameScene.helpers';
+import {
+  buildHudWaveQueue,
+  buildHudWaveQueueWithPending,
+  mapDuelEndReasonToOutcomeReason,
+  resolveMatchOutcomeStatus,
+} from './gameScene.helpers';
 
 function createCreepRenderState(id: string, status: CreepEntity['status']): CreepRenderState {
   return {
@@ -83,5 +88,25 @@ describe('buildHudWaveQueueWithPending', () => {
     );
 
     expect(new Set(queue.map((item) => item.index)).size).toBe(queue.length);
+  });
+});
+
+describe('match outcome mapping', () => {
+  it('stays active until the match is over', () => {
+    expect(resolveMatchOutcomeStatus(false, null)).toBe('active');
+  });
+
+  it('follows the settled winning side, not the life totals', () => {
+    expect(resolveMatchOutcomeStatus(true, 'player')).toBe('player-won');
+    expect(resolveMatchOutcomeStatus(true, 'opponent')).toBe('player-lost');
+    expect(resolveMatchOutcomeStatus(true, null)).toBe('draw');
+  });
+
+  it('maps every settlement reason onto the bridge reason', () => {
+    expect(mapDuelEndReasonToOutcomeReason(null)).toBeNull();
+    expect(mapDuelEndReasonToOutcomeReason('knockout')).toBe('knockout');
+    expect(mapDuelEndReasonToOutcomeReason('fewer_leaks')).toBe('fewer-leaks');
+    expect(mapDuelEndReasonToOutcomeReason('more_lives_before_wave')).toBe('more-lives');
+    expect(mapDuelEndReasonToOutcomeReason('draw')).toBe('even');
   });
 });

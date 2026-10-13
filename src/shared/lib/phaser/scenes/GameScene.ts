@@ -37,6 +37,7 @@ import type {
   BattlefieldView,
   GameHudSnapshot,
   HudFactionType,
+  MatchOutcomeReason,
   MatchOutcomeStatus,
 } from '../../game-bridge/types';
 import { createGridModel } from '../../grid/createGridModel';
@@ -191,6 +192,7 @@ import {
   resolveBuildableTowerConfig,
   resolveBuilderFaction,
   resolveFactionUnits,
+  mapDuelEndReasonToOutcomeReason,
   resolveMatchOutcomeStatus,
   resolveTowerRangeCells,
   toGridCellKey,
@@ -251,6 +253,7 @@ export class GameScene extends Phaser.Scene {
   private readonly computerMazePlanMemory = createComputerMazePlanMemory();
   private matchOutcomeStatus: MatchOutcomeStatus = 'active';
   private matchWinner: HudFactionType | null = null;
+  private matchOutcomeReason: MatchOutcomeReason | null = null;
   private activeBattlefieldView: BattlefieldView = 'player';
   private mapSeed = DEFAULT_MAP_SEED;
   private setupEndpoints: GameSetupEndpoints | undefined;
@@ -913,11 +916,8 @@ export class GameScene extends Phaser.Scene {
     }
     this.syncDuelPlayerGoldFromWallet();
     this.matchWinner = result.winner === null ? null : mapRaceIdToHudFaction(result.winner);
-    this.matchOutcomeStatus = resolveMatchOutcomeStatus(
-      result.isMatchOver,
-      this.duelMatchState.player.hp,
-      this.duelMatchState.opponent.hp,
-    );
+    this.matchOutcomeStatus = resolveMatchOutcomeStatus(result.isMatchOver, result.winningSide);
+    this.matchOutcomeReason = mapDuelEndReasonToOutcomeReason(result.endReason);
     this.registry.set('duel.match.outcome', this.matchOutcomeStatus);
     if (this.matchWinner !== null) {
       this.registry.set('duel.match.winner', this.matchWinner);
@@ -981,6 +981,7 @@ export class GameScene extends Phaser.Scene {
     this.playerLives = this.duelMatchState.player.hp;
     this.matchOutcomeStatus = 'active';
     this.matchWinner = null;
+    this.matchOutcomeReason = null;
     this.registry.remove('duel.match.winner');
     this.registry.set('duel.match.outcome', this.matchOutcomeStatus);
 
@@ -1208,6 +1209,7 @@ export class GameScene extends Phaser.Scene {
       matchOutcome: {
         status: this.matchOutcomeStatus,
         winner: this.matchWinner,
+        reason: this.matchOutcomeReason,
       },
       builderFactionName: resolveBuilderFaction(this.selectedBuilderFactionId).name,
       waveNumber: this.runState.currentWaveNumber,

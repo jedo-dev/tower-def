@@ -13,7 +13,7 @@ function createSnapshot(overrides?: Partial<GameHudSnapshot>): GameHudSnapshot {
     opponentGold: 250,
     opponentIncome: 70,
     opponentLives: 0,
-    matchOutcome: { status: 'player-won', winner: 'undead' },
+    matchOutcome: { status: 'player-won', winner: 'undead', reason: 'knockout' },
     builderFactionName: 'Undead',
     waveNumber: 12,
     phase: 'game-over',
@@ -38,7 +38,10 @@ describe('MatchOutcomeOverlay', () => {
 
   it('stays hidden while the match is active', () => {
     publishGameHudSnapshot(
-      createSnapshot({ matchOutcome: { status: 'active', winner: null }, phase: 'wave' }),
+      createSnapshot({
+        matchOutcome: { status: 'active', winner: null, reason: null },
+        phase: 'wave',
+      }),
     );
 
     render(<MatchOutcomeOverlay onExit={() => undefined} />);
@@ -62,7 +65,7 @@ describe('MatchOutcomeOverlay', () => {
   it('shows defeat when the opponent wins', () => {
     publishGameHudSnapshot(
       createSnapshot({
-        matchOutcome: { status: 'player-lost', winner: 'orc' },
+        matchOutcome: { status: 'player-lost', winner: 'orc', reason: 'knockout' },
         lives: 0,
         opponentLives: 6,
       }),
@@ -77,7 +80,7 @@ describe('MatchOutcomeOverlay', () => {
   it('shows a draw when both keeps fall', () => {
     publishGameHudSnapshot(
       createSnapshot({
-        matchOutcome: { status: 'draw', winner: null },
+        matchOutcome: { status: 'draw', winner: null, reason: 'even' },
         lives: 0,
         opponentLives: 0,
       }),
@@ -86,6 +89,61 @@ describe('MatchOutcomeOverlay', () => {
     render(<MatchOutcomeOverlay onExit={() => undefined} />);
 
     expect(screen.getByText('Draw')).toBeDefined();
+    expect(screen.getByText('Both keeps fell on wave 12 — dead even')).toBeDefined();
+    expect(consoleError).not.toHaveBeenCalled();
+  });
+
+  it('shows a tie-break victory when both fell and the player leaked fewer', () => {
+    publishGameHudSnapshot(
+      createSnapshot({
+        matchOutcome: { status: 'player-won', winner: 'undead', reason: 'fewer-leaks' },
+        lives: 0,
+        opponentLives: 0,
+      }),
+    );
+
+    render(<MatchOutcomeOverlay onExit={() => undefined} />);
+
+    expect(screen.getByText('Victory')).toBeDefined();
+    expect(screen.getByText('Both fell on wave 12 — you leaked fewer')).toBeDefined();
+    expect(
+      screen.getByRole('dialog', { name: 'Victory. Both fell on wave 12 — you leaked fewer.' }),
+    ).toBeDefined();
+    expect(consoleError).not.toHaveBeenCalled();
+  });
+
+  it('shows a tie-break defeat when both fell and the enemy leaked fewer', () => {
+    publishGameHudSnapshot(
+      createSnapshot({
+        matchOutcome: { status: 'player-lost', winner: 'orc', reason: 'fewer-leaks' },
+        lives: 0,
+        opponentLives: 0,
+      }),
+    );
+
+    render(<MatchOutcomeOverlay onExit={() => undefined} />);
+
+    expect(screen.getByText('Defeat')).toBeDefined();
+    expect(screen.getByText('Both fell on wave 12 — the enemy leaked fewer')).toBeDefined();
+    expect(consoleError).not.toHaveBeenCalled();
+  });
+
+  it('explains a tie-break settled by lives before the wave', () => {
+    publishGameHudSnapshot(
+      createSnapshot({
+        matchOutcome: { status: 'player-lost', winner: 'orc', reason: 'more-lives' },
+        lives: 0,
+        opponentLives: 0,
+      }),
+    );
+
+    render(<MatchOutcomeOverlay onExit={() => undefined} />);
+
+    expect(screen.getByText('Defeat')).toBeDefined();
+    expect(
+      screen.getByText('Both fell on wave 12 with equal leaks — the enemy had more lives'),
+    ).toBeDefined();
+    expect(consoleError).not.toHaveBeenCalled();
   });
 
   it('sends restart-match on rematch and calls onExit on back to menu', () => {

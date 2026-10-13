@@ -1,6 +1,7 @@
 import { TowerTypeId } from '../../../types/content-ids';
 import { builderFactions, type BuilderFactionConfig } from '../../../../entities/builder-faction';
 import type { CreepEntity } from '../../../../entities/creep';
+import type { DuelMatchEndReason, DuelSide } from '../../../../entities/duel-match';
 import {
   buildableTowers,
   getTowerArchetype,
@@ -10,7 +11,11 @@ import { getUnitsByFaction, undeadUnits, type UnitConfig } from '../../../../ent
 import { GRID_DIMENSIONS } from '../../../constants/grid';
 import { RaceId } from '../../../types/content-ids';
 import type { GridPosition } from '../../../types/pathfinding';
-import type { HudFactionType, MatchOutcomeStatus } from '../../game-bridge/types';
+import type {
+  HudFactionType,
+  MatchOutcomeReason,
+  MatchOutcomeStatus,
+} from '../../game-bridge/types';
 import { BONE_ARCHER_TOWER_CONFIG, PLAGUE_TOWER_CONFIG } from './gameScene.constants';
 import type { CreepRenderState, HudWaveQueueItem, PendingWaveSpawn } from './gameScene.types';
 
@@ -130,20 +135,32 @@ export function mapRaceIdToHudFaction(raceId: RaceId): HudFactionType {
   }
 }
 
+/** The player's view of a settled match; the settlement already broke any tie. */
 export function resolveMatchOutcomeStatus(
   isMatchOver: boolean,
-  playerHp: number,
-  opponentHp: number,
+  winningSide: DuelSide | null,
 ): MatchOutcomeStatus {
   if (!isMatchOver) {
     return 'active';
   }
-  const isPlayerDead = playerHp <= 0;
-  const isOpponentDead = opponentHp <= 0;
-  if (isPlayerDead && isOpponentDead) {
+  if (winningSide === null) {
     return 'draw';
   }
-  return isOpponentDead ? 'player-won' : 'player-lost';
+  return winningSide === 'player' ? 'player-won' : 'player-lost';
+}
+
+const MATCH_OUTCOME_REASON_BY_END_REASON: Readonly<Record<DuelMatchEndReason, MatchOutcomeReason>> =
+  {
+    knockout: 'knockout',
+    fewer_leaks: 'fewer-leaks',
+    more_lives_before_wave: 'more-lives',
+    draw: 'even',
+  };
+
+export function mapDuelEndReasonToOutcomeReason(
+  endReason: DuelMatchEndReason | null,
+): MatchOutcomeReason | null {
+  return endReason === null ? null : MATCH_OUTCOME_REASON_BY_END_REASON[endReason];
 }
 
 export function toCellCenter(position: GridPosition): { x: number; y: number } {
