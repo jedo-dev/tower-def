@@ -9,6 +9,7 @@ import {
 } from '../../tower/model/types';
 import { validateTowerPlacementPath } from '../../../shared/lib/pathfinding/validateTowerPlacementPath';
 import type { PathProbe } from '../../../shared/lib/pathfinding/createPathProbe';
+import { getCellAt } from '../../../shared/lib/grid/getCellAt';
 import type { MazeSkeleton } from './createMazeSkeleton';
 
 export type PlacementScore = {
@@ -102,7 +103,7 @@ function isEntranceOrExit(grid: GridModel, position: GridPosition): boolean {
 }
 
 function isOccupied(grid: GridModel, position: GridPosition): boolean {
-  const cell = grid.cells.find((c) => c.x === position.x && c.y === position.y);
+  const cell = getCellAt(grid, position.x, position.y);
   return cell?.isOccupied ?? true;
 }
 
@@ -119,7 +120,7 @@ function isCellBlocked(
     return true;
   }
 
-  const cell = grid.cells.find((c) => c.x === position.x && c.y === position.y);
+  const cell = getCellAt(grid, position.x, position.y);
   return !cell || !cell.isWalkable || cell.isOccupied;
 }
 

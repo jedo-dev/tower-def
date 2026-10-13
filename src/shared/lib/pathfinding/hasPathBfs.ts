@@ -1,5 +1,6 @@
 import type { GridModel } from '../../types/grid';
 import type { GridPosition, PathResult } from '../../types/pathfinding';
+import { getCellAt } from '../grid/getCellAt';
 
 function toCellKey(point: GridPosition): string {
   return `${point.x}:${point.y}`;
@@ -41,7 +42,7 @@ function buildPath(
 }
 
 function isCellBlocked(point: GridPosition, grid: GridModel): boolean {
-  const cell = grid.cells.find((candidate) => candidate.x === point.x && candidate.y === point.y);
+  const cell = getCellAt(grid, point.x, point.y);
 
   if (!cell) {
     return true;
