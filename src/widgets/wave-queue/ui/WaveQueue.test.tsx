@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
-import { publishGameHudSnapshot } from '../../../shared/lib/game-bridge/bridge';
+import { act, render, screen } from '@testing-library/react';
+import { publishGameEvent, publishGameHudSnapshot } from '../../../shared/lib/game-bridge/bridge';
 import type { GameHudSnapshot } from '../../../shared/lib/game-bridge/types';
 import { WaveQueue } from './WaveQueue';
 
@@ -96,6 +96,22 @@ describe('WaveQueue render', () => {
     expect(screen.getByText('Baseline wave')).toBeDefined();
     expect(screen.getByText('Enemy sends')).toBeDefined();
     expect(screen.getByText('+2 enemy sends')).toBeDefined();
+    expect(consoleError).not.toHaveBeenCalled();
+  });
+
+  it('shows the enemy field still fighting instead of "No enemies"', () => {
+    publishGameHudSnapshot(createSnapshot({ phase: 'wave', waveQueue: [], pendingCreepCount: 0 }));
+    publishGameEvent('opponent-field-creeps-updated', { remaining: 3 });
+
+    render(<WaveQueue />);
+
+    expect(screen.getByRole('status').textContent).toBe('Enemy field: 3 left');
+    expect(screen.queryByText('No enemies')).toBeNull();
+
+    act(() => publishGameEvent('opponent-field-creeps-updated', { remaining: 0 }));
+
+    expect(screen.queryByRole('status')).toBeNull();
+    expect(screen.getByText('No enemies')).toBeDefined();
     expect(consoleError).not.toHaveBeenCalled();
   });
 });

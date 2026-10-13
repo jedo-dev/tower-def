@@ -79,5 +79,36 @@ describe('mapWaveQueueToViewModel', () => {
       createSnapshot({ phase: 'wave', waveQueue: [], pendingCreepCount: 0 }),
     );
     expect(vm.emptyText).toBe('No enemies');
+    expect(vm.enemyFieldStatus).toBeNull();
+  });
+
+  it('says the enemy field is still fighting once the player field is clear', () => {
+    const vm = mapWaveQueueToViewModel(
+      createSnapshot({ phase: 'wave', waveQueue: [], pendingCreepCount: 0 }),
+      3,
+    );
+
+    expect(vm.emptyText).toBeNull();
+    expect(vm.enemyFieldStatus).toBe('Enemy field: 3 left');
+  });
+
+  it('keeps the live queue while the player field still has creeps', () => {
+    const vm = mapWaveQueueToViewModel(
+      createSnapshot({
+        phase: 'wave',
+        pendingCreepCount: 1,
+        waveQueue: [{ type: 'ghoul', index: 0 }],
+      }),
+      4,
+    );
+
+    expect(vm.enemyFieldStatus).toBeNull();
+    expect(vm.sections[0].key).toBe('live');
+  });
+
+  it('ignores enemy field creeps outside the wave phase', () => {
+    const vm = mapWaveQueueToViewModel(createSnapshot({ phase: 'build' }), 2);
+
+    expect(vm.enemyFieldStatus).toBeNull();
   });
 });

@@ -161,6 +161,10 @@ import {
   scheduleOpponentFieldWave,
 } from '../runtime/wave/fieldWaveSpawns';
 import {
+  countFieldRemainingCreeps,
+  createOpponentFieldCreepsPublisher,
+} from '../runtime/wave/opponentFieldCreepsPublisher';
+import {
   createSharedBaselineWaveSource,
   resolveBaselineWaveSeed,
   type SharedBaselineWaveSource,
@@ -229,6 +233,10 @@ export class GameScene extends Phaser.Scene {
   private readonly runState = createPlayerWaveRuntimeState(this.playerField);
   // The computer field's spawn schedule; its creep list is opponentField's.
   private readonly opponentWave = createOpponentFieldWaveState(this.opponentField);
+  // Lets the HUD say the round still waits on the computer's field.
+  private readonly opponentFieldCreepsPublisher = createOpponentFieldCreepsPublisher((remaining) =>
+    publishGameEvent('opponent-field-creeps-updated', { remaining }),
+  );
   private readonly teardownCallbacks: Array<() => void> = [];
   private selectedTowerType: TowerTypeId | null = null;
   private selectedBuilderFactionId = DEFAULT_BUILDER_FACTION;
@@ -1220,6 +1228,13 @@ export class GameScene extends Phaser.Scene {
     };
 
     publishGameHudSnapshot(snapshot);
+    // Every kill, leak, wave start and restart ends here; publishes on change only.
+    this.opponentFieldCreepsPublisher.update(
+      countFieldRemainingCreeps(
+        this.opponentField.creeps,
+        this.opponentWave.pendingWaveSpawns.length,
+      ),
+    );
   }
 
   /**

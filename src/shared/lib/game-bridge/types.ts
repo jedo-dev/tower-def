@@ -134,6 +134,14 @@ export type GameEventMap = {
     previousHp: number;
     delta: number;
   };
+  /**
+   * Creeps the computer's field still has to resolve this wave (alive plus not
+   * yet spawned). Emitted only when the count changes (wave start, kill, leak,
+   * match restart), never per frame.
+   */
+  'opponent-field-creeps-updated': {
+    remaining: number;
+  };
   /** A side's sent creeps leaked enough to steal lives for it this round. */
   'lives-stolen': {
     thief: DuelistSide;

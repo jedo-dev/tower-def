@@ -1,6 +1,7 @@
 import { memo, type CSSProperties } from 'react';
 import styles from './WaveQueue.module.css';
 import { useGameHudSnapshot } from '../../../shared/lib/game-bridge/useGameHudSnapshot';
+import { useOpponentFieldRemainingCreeps } from '../../../shared/lib/game-bridge/useOpponentFieldCreeps';
 import type { HudCreepType, WaveQueueItem } from '../../../shared/lib/game-bridge/types';
 import { mapWaveQueueToViewModel } from '../model/mapWaveQueueToViewModel';
 import skeletonSprite from '../../../shared/sprite/skeleton.svg';
@@ -47,7 +48,8 @@ function CreepIcons({ items, sectionKey }: { items: WaveQueueItem[]; sectionKey:
 
 function WaveQueueComponent() {
   const snapshot = useGameHudSnapshot();
-  const viewModel = mapWaveQueueToViewModel(snapshot);
+  const opponentFieldRemaining = useOpponentFieldRemainingCreeps();
+  const viewModel = mapWaveQueueToViewModel(snapshot, opponentFieldRemaining);
 
   return (
     <div className={styles.queue} aria-label="Wave queue">
@@ -70,6 +72,12 @@ function WaveQueueComponent() {
           </div>
         </div>
       ))}
+
+      {viewModel.enemyFieldStatus !== null && (
+        <div className={styles.empty} role="status">
+          <span className={styles.enemyFieldStatus}>{viewModel.enemyFieldStatus}</span>
+        </div>
+      )}
 
       {viewModel.emptyText !== null && (
         <div className={styles.empty}>
