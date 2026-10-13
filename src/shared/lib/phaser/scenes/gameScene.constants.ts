@@ -29,6 +29,16 @@ export const PREVIEW_VALID_FILL = 0x3ecf78;
 export const PREVIEW_VALID_STROKE = 0xaaf5c8;
 export const PREVIEW_INVALID_FILL = 0xe55a4f;
 export const PREVIEW_INVALID_STROKE = 0xffb8b2;
+/** Build-phase route overlay: cool dots for single-cell creeps, warm band for 2x2 ones. */
+export const ROUTE_PREVIEW_SMALL_COLOR = 0x8fe6ff;
+export const ROUTE_PREVIEW_SMALL_ALPHA = 0.95;
+export const ROUTE_PREVIEW_SMALL_DOT_RADIUS_PX = 1.75;
+export const ROUTE_PREVIEW_SMALL_DOTS_PER_STEP = 2;
+export const ROUTE_PREVIEW_LARGE_COLOR = 0xffb648;
+export const ROUTE_PREVIEW_LARGE_BAND_ALPHA = 0.2;
+export const ROUTE_PREVIEW_LARGE_SPINE_WIDTH_PX = 2;
+export const ROUTE_PREVIEW_LARGE_SPINE_ALPHA = 0.8;
+export const ROUTE_PREVIEW_GHOST_ALPHA_FACTOR = 0.35;
 export const GRID_PIXEL_WIDTH = GRID_DIMENSIONS.cols * GRID_DIMENSIONS.cellSize;
 export const GRID_PIXEL_HEIGHT = GRID_DIMENSIONS.rows * GRID_DIMENSIONS.cellSize;
 export const CREEP_BASE_COLOR = 0xffffff;
@@ -153,3 +163,5 @@ export const TERRAIN_DECORATION_TILE_ALPHA = 0.62;
 export const TERRAIN_BASE_TILE_TINT = 0xc3cbbf;
 export const TERRAIN_DECORATION_TILE_TINT = 0xb7bfae;
 export const BUILD_PREVIEW_RENDER_DEPTH = 15;
+/** Above the grid overlay, below the hovered tower block. */
+export const ROUTE_PREVIEW_RENDER_DEPTH = 12;
