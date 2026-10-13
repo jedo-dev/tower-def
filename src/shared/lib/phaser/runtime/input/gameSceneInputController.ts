@@ -1,4 +1,5 @@
 import type Phaser from 'phaser';
+import type { WorldPoint } from '../camera/cameraViewMapping';
 import type { PointerGridTarget } from '../grid/gameSceneGridPreviewRuntime';
 
 export type InputTouchGesture = {
@@ -23,6 +24,8 @@ export type InputControllerConfig = {
 
 export type InputControllerDependencies = {
   nowMs: () => number;
+  /** World position under the pointer on screen now (camera and canvas aware). */
+  toPointerWorldPoint: (pointer: Phaser.Input.Pointer) => WorldPoint;
   toPointerTarget: (worldX: number, worldY: number) => PointerGridTarget | null;
   setHoveredTarget: (target: PointerGridTarget | null) => void;
   clearHoveredCell: () => void;
@@ -50,7 +53,8 @@ export function handlePointerMove(
   config: InputControllerConfig,
   pointer: Phaser.Input.Pointer,
 ): void {
-  deps.setHoveredTarget(deps.toPointerTarget(pointer.worldX, pointer.worldY));
+  const worldPoint = deps.toPointerWorldPoint(pointer);
+  deps.setHoveredTarget(deps.toPointerTarget(worldPoint.x, worldPoint.y));
   deps.updateHoveredCellDebugRegistry();
   deps.updateBuildPreview();
 
@@ -60,8 +64,8 @@ export function handlePointerMove(
 
   const durationMs = deps.nowMs() - state.activeTouchGesture.startedAtMs;
   const moveDistance = Math.hypot(
-    pointer.worldX - state.activeTouchGesture.startX,
-    pointer.worldY - state.activeTouchGesture.startY,
+    worldPoint.x - state.activeTouchGesture.startX,
+    worldPoint.y - state.activeTouchGesture.startY,
   );
   const isStillPressingCell = moveDistance <= config.touchTapMaxMovePx;
 
@@ -83,9 +87,11 @@ export function handlePointerMove(
 export function syncHoveredCellFromPointer(
   deps: InputControllerDependencies,
   pointer: Phaser.Input.Pointer,
-): void {
-  deps.setHoveredTarget(deps.toPointerTarget(pointer.worldX, pointer.worldY));
+): WorldPoint {
+  const worldPoint = deps.toPointerWorldPoint(pointer);
+  deps.setHoveredTarget(deps.toPointerTarget(worldPoint.x, worldPoint.y));
   deps.updateHoveredCellDebugRegistry();
+  return worldPoint;
 }
 
 export function handlePointerDown(
@@ -93,12 +99,12 @@ export function handlePointerDown(
   deps: InputControllerDependencies,
   pointer: Phaser.Input.Pointer,
 ): void {
-  syncHoveredCellFromPointer(deps, pointer);
+  const worldPoint = syncHoveredCellFromPointer(deps, pointer);
   if (pointer.wasTouch) {
     state.activeTouchGesture = {
       startedAtMs: deps.nowMs(),
-      startX: pointer.worldX,
-      startY: pointer.worldY,
+      startX: worldPoint.x,
+      startY: worldPoint.y,
       soldByLongPress: false,
     };
     return;
@@ -124,11 +130,11 @@ export function handlePointerUp(
     return;
   }
 
-  syncHoveredCellFromPointer(deps, pointer);
+  const worldPoint = syncHoveredCellFromPointer(deps, pointer);
   const durationMs = deps.nowMs() - state.activeTouchGesture.startedAtMs;
   const moveDistance = Math.hypot(
-    pointer.worldX - state.activeTouchGesture.startX,
-    pointer.worldY - state.activeTouchGesture.startY,
+    worldPoint.x - state.activeTouchGesture.startX,
+    worldPoint.y - state.activeTouchGesture.startY,
   );
   const isTap =
     durationMs >= config.touchTapMinDurationMs &&

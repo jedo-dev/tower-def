@@ -1,6 +1,7 @@
 import { memo, useEffect, useRef } from 'react';
 import Phaser from 'phaser';
 import { createGameConfig } from '../../../shared/lib/phaser/createGameConfig';
+import { destroyGame } from '../../../shared/lib/phaser/destroyGame';
 import type { GameSetupConfig } from '../../../shared/config/game-setup';
 import './GameCanvas.css';
 
@@ -21,7 +22,7 @@ function GameCanvasComponent({ setup }: GameCanvasProps) {
     gameRef.current = game;
 
     return () => {
-      game.destroy(true);
+      destroyGame(game);
       gameRef.current = null;
     };
   }, [setup]);

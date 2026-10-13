@@ -75,7 +75,10 @@ import {
   updateBattlefieldProjectiles,
   updateBattlefieldTowerCombat,
 } from '../runtime/battlefield/battlefieldUpdateRuntime';
-import { registerResponsiveCamera } from '../runtime/camera/gameSceneCameraRuntime';
+import {
+  registerResponsiveCamera,
+  resolvePointerWorldPoint,
+} from '../runtime/camera/gameSceneCameraRuntime';
 import {
   isBuildAnchorValid as isBuildAnchorValidRuntime,
   type BuildRuntimeDeps,
@@ -269,6 +272,7 @@ export class GameScene extends Phaser.Scene {
 
   private readonly inputControllerDeps: InputControllerDependencies = {
     nowMs: () => this.time.now,
+    toPointerWorldPoint: (pointer) => resolvePointerWorldPoint(this, pointer),
     toPointerTarget: (worldX, worldY) => toPointerGridTarget(worldX, worldY),
     setHoveredTarget: (target) => {
       this.hoveredCell = target?.cell ?? null;
