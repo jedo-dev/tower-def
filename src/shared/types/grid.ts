@@ -17,3 +17,9 @@ export type GridModel = {
   entrance: GridPoint;
   exit: GridPoint;
 };
+
+/** Size of a rectangular object on the grid, in cells. Anchored at its top-left cell. */
+export type Footprint = {
+  width: number;
+  height: number;
+};
