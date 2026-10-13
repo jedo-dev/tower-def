@@ -10,10 +10,9 @@ import {
   type DuelMatchState,
   type DuelSide,
 } from '../../../entities/duel-match';
-import { generateWaveUnits } from '../../../entities/wave';
 import { generateEdgeEndpoints } from '../../../shared/lib/grid/generateEdgeEndpoints';
 import { resolveFactionUnits } from '../../../shared/lib/phaser/scenes/gameScene.helpers';
-import { createSeededRandom } from '../../../shared/lib/random/createSeededRandom';
+import { createSharedBaselineWaveSource } from '../../../shared/lib/phaser/runtime/wave/sharedBaselineWave';
 import type { GridPoint } from '../../../shared/types/grid';
 import {
   createComputerSideMemory,
@@ -30,8 +29,7 @@ import { runDuelWave, type DuelFieldWaveResult } from './duelWave';
 // steps, kills pay the bounty, leaks cost lives and steal lives for the
 // sender, and income is paid. Side A is `player` in the duel state, side B is
 // `opponent`. Not simulated: rendering, sounds, the single-player wave
-// completion reward (the game pays it only to the human wallet) and the
-// game's per-field random baseline (both fields share one seeded wave here).
+// completion reward (the game pays it only to the human wallet).
 
 export type DuelWinner = 'A' | 'B' | null;
 
@@ -138,7 +136,7 @@ function reportSide(duelist: DuelMatchState['player'], facts: SideRoundFacts): D
 /** Plays a whole duel between two computers. Deterministic per config. */
 export function simulateDuel(config: DuelSimulationConfig): DuelSimulationResult {
   const { entrance, exit } = generateEdgeEndpoints(config.seed);
-  const random = createSeededRandom(config.seed);
+  const baselineWaves = createSharedBaselineWaveSource(config.seed);
   const baselineFactionUnits = resolveFactionUnits(config.baselineRaceId);
   const memory: { a: ComputerSideMemory; b: ComputerSideMemory } = {
     a: createComputerSideMemory(),
@@ -159,11 +157,7 @@ export function simulateDuel(config: DuelSimulationConfig): DuelSimulationResult
     const wave = runDuelWave({
       state,
       waveNumber: round,
-      baselineUnits: generateWaveUnits({
-        waveNumber: round,
-        factionUnits: baselineFactionUnits,
-        random,
-      }),
+      baselineUnits: baselineWaves.rollNextWave(round, baselineFactionUnits),
       tickMs: config.tickMs,
       maxTicks: config.maxWaveTicks,
     });

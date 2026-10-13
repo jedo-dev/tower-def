@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { recalculateTowerAuras, resolveTowerAuraBonus } from './auras';
+import { createTowersWithAuras, recalculateTowerAuras, resolveTowerAuraBonus } from './auras';
 import { getTowerArchetype, TOWER_COMBAT_STATS_BY_TYPE, type TowerEntity } from './types';
 import { TowerTypeId } from '../../../shared/types/content-ids';
 
@@ -103,5 +103,19 @@ describe('support auras', () => {
 
     expect(archer.combatStats.damage).toBe(30);
     expect(archer.combatStats.range).toBe(upgradedStats.range + SUPPORT_AURA.rangeBonus);
+  });
+});
+
+describe('createTowersWithAuras', () => {
+  it('returns buffed copies and leaves the source towers alone', () => {
+    const archer = createTower('tower:archer', TowerTypeId.SINGLE, { x: 1, y: 1 });
+    const support = createTower('tower:support', TowerTypeId.SUPPORT, { x: 2, y: 1 });
+    const baseStats = { ...archer.combatStats };
+
+    const [buffedArcher] = createTowersWithAuras([archer, support]);
+
+    expect(buffedArcher.combatStats.range).toBe(baseStats.range + SUPPORT_AURA.rangeBonus);
+    expect(archer.combatStats).toEqual(baseStats);
+    expect(archer.auraBonus).toBeUndefined();
   });
 });

@@ -2,12 +2,12 @@ import { TowerAttackKind, TowerTypeId } from '../../../../types/content-ids';
 import { getTowerAttackKind, getTowerCenter } from '../../../../../entities/tower';
 import type Phaser from 'phaser';
 import type { DuelMatchState } from '../../../../../entities/duel-match';
-import { buildableTowers, createInitialTowerCombatRuntime } from '../../../../../entities/tower';
 import {
-  tryResolveUnitConfigById,
-  type UnitConfig,
-  type UnitId,
-} from '../../../../../entities/unit';
+  buildableTowers,
+  createInitialTowerCombatRuntime,
+  createTowersWithAuras,
+} from '../../../../../entities/tower';
+import type { UnitConfig, UnitId } from '../../../../../entities/unit';
 import { GRID_DIMENSIONS } from '../../../../constants/grid';
 import {
   TOWER_SPRITE_KEYS,
@@ -20,7 +20,6 @@ import type { GridPosition } from '../../../../types/pathfinding';
 import {
   BONE_ARCHER_ORIGIN_X,
   BONE_ARCHER_ORIGIN_Y,
-  CREEP_FALLBACK_SIZE_CLASS,
   PLAGUE_TOWER_CONFIG,
   PLAGUE_TOWER_ORIGIN_X,
   PLAGUE_TOWER_ORIGIN_Y,
@@ -33,8 +32,6 @@ import {
   getTowerAnimationSet,
   getWalkAnimationKeyBySpriteKey,
 } from '../animation/gameSceneAnimationRuntime';
-import { isDirectionalCreepSprite } from '../animation/creepFacing';
-import { getCreepVisualMetrics } from '../creep/creepVisualMetrics';
 import { resolveSpriteKey } from '../assets/spriteKeyResolver';
 import {
   destroyBattlefieldRenderState,
@@ -214,41 +211,10 @@ export function playPlagueAttackAnimation(scene: Phaser.Scene, tower: TowerRende
   });
 }
 
-// Duel battlefield creeps only carry an id; the source unit id is its last
-// ':'-separated segment (see createSendCreepEntries / baseline entries).
-function resolveUnitConfigFromBattlefieldCreepId(creepId: string): UnitConfig | undefined {
-  const unitIdSegment = creepId.split(':').at(-1);
-  if (!unitIdSegment) {
-    return undefined;
-  }
-  return tryResolveUnitConfigById(unitIdSegment as UnitId);
-}
-
-export function createOpponentCreepSprite(
-  scene: Phaser.Scene,
-  x: number,
-  y: number,
-  creepId: string,
-): Phaser.GameObjects.Sprite {
-  const unit = resolveUnitConfigFromBattlefieldCreepId(creepId);
-  const spriteKey = unit ? getSpriteKeyByUnit(unit) : UNIT_SPRITE_KEYS.UNDEAD_SKELETON;
-  const visualMetrics = getCreepVisualMetrics(unit?.sizeClass ?? CREEP_FALLBACK_SIZE_CLASS);
-  const sprite = scene.add.sprite(
-    x + visualMetrics.footprintCenterOffsetPx,
-    y + visualMetrics.footprintCenterOffsetPx,
-    spriteKey,
-    0,
-  );
-  sprite.setDisplaySize(visualMetrics.displaySizePx, visualMetrics.displaySizePx);
-  sprite.setDepth(TOWER_RENDER_DEPTH - 1);
-  sprite.setTint(unit ? getCreepTintByUnit(unit) : 0xffffff);
-  sprite.play(getWalkAnimationKeyBySpriteKey(spriteKey));
-  return sprite;
-}
-
 /**
- * Rebuilds the opponent Phaser render state from the duel match state:
- * destroys the previous sprites and re-creates towers plus alive creeps.
+ * Rebuilds the opponent Phaser render state from the duel match state at wave
+ * start: destroys the previous wave's sprites and re-creates the towers. The
+ * wave's creeps arrive through the field's spawn schedule, like the player's.
  */
 export function rebuildOpponentBattlefieldRenderState(
   scene: Phaser.Scene,
@@ -258,7 +224,8 @@ export function rebuildOpponentBattlefieldRenderState(
 ): void {
   destroyBattlefieldRenderState(battlefield);
 
-  battlefield.towers = opponent.battlefield.towers.map((tower) => {
+  // Same aura rule as the player's field; copies keep the duel state untouched.
+  battlefield.towers = createTowersWithAuras(opponent.battlefield.towers).map((tower) => {
     const sprite =
       getTowerAttackKind(tower.type) === TowerAttackKind.SPLASH
         ? createPlacedPlagueSprite(scene, tower.position)
@@ -270,28 +237,4 @@ export function rebuildOpponentBattlefieldRenderState(
       sprite,
     };
   });
-
-  battlefield.creeps = opponent.battlefield.creeps
-    .filter((creep) => creep.status === 'alive')
-    .map((creep) => {
-      const position = toCellCenter(creep.position);
-      const sprite = createOpponentCreepSprite(scene, position.x, position.y, creep.id);
-      sprite.setVisible(visible);
-      const unit = resolveUnitConfigFromBattlefieldCreepId(creep.id);
-      // Same rule as a freshly spawned creep: a four-row sheet turns and dies on
-      // screen, a legacy strip rotates and fades.
-      const isDirectional = isDirectionalCreepSprite(sprite);
-      return {
-        entity: { ...creep },
-        sprite,
-        hitFlashRemainingMs: 0,
-        deathFadeRemainingMs: 0,
-        footprintCenterOffsetPx: getCreepVisualMetrics(unit?.sizeClass ?? CREEP_FALLBACK_SIZE_CLASS)
-          .footprintCenterOffsetPx,
-        baseTint: unit ? getCreepTintByUnit(unit) : 0xffffff,
-        isDirectional,
-        facing: isDirectional ? ('side' as const) : undefined,
-        facingFlipped: false,
-      };
-    });
 }

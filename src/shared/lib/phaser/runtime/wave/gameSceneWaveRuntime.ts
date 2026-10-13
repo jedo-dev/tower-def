@@ -7,6 +7,7 @@ import {
 import {
   completeWaveIfResolved,
   createInitialWavePhaseState,
+  isWavePhase,
   resetWavePhaseState,
   transitionCompletedToBuild,
   type WavePhaseState,
@@ -15,22 +16,18 @@ import type { BattlefieldRenderState } from '../battlefield/battlefieldRenderSta
 import {
   calculateWaveRoutes,
   EMPTY_WAVE_ROUTES,
-  generateWaveUnits,
   hasWaveRoute,
-  selectWaveRoute,
   type WaveRoutes,
 } from '../../../../../entities/wave';
 import type { UnitConfig } from '../../../../../entities/unit';
 import { ECONOMY_BALANCE } from '../../../../constants/economy';
-import { CREEP_RENDER_DEPTH } from '../../scenes/gameScene.constants';
-import { getCreepVisualMetrics } from '../creep/creepVisualMetrics';
 import type { GridModel } from '../../../../types/grid';
 import type { GridPosition } from '../../../../types/pathfinding';
 import type { SoundId } from '../../sound/audio.types';
 import type { CreepRenderState, PendingWaveSpawn } from '../../scenes/gameScene.types';
 import { destroyCreepRenderState } from '../combat/creepEffectVisuals';
-import { isDirectionalCreepSprite } from '../animation/creepFacing';
-import { createWaveCreepEntity, scheduleWaveSpawns, takeReadyWaveSpawns } from './waveSpawnCore';
+import { scheduleWaveSpawns } from './waveSpawnCore';
+import { isFieldWaveResolved, resolveWaveSpawnTiming } from './fieldWaveSpawns';
 
 export type WaveRuntimeState = {
   activeCreepRoutes: WaveRoutes;
@@ -56,7 +53,6 @@ export type WaveRuntimeConfig = {
 
 export type WaveRuntimeDependencies = {
   nowMs: () => number;
-  getSelectedFactionUnits: () => UnitConfig[];
   getAdditionalWaveUnits: (waveNumber: number) => UnitConfig[];
   getSpriteKeyByUnit: (unit: UnitConfig) => string;
   getAnimationKeyByUnit: (unit: UnitConfig) => string;
@@ -138,17 +134,21 @@ export function initializeWaveRuntime(
   deps.onHudChanged();
 }
 
+/**
+ * Ends the wave once both fields are resolved, so the computer's kills and
+ * leaks are all in before the round is settled. The wave phase, not the creep
+ * list, says a wave is running: the player's corpses may be cleared away
+ * while the computer's field is still busy.
+ */
 export function applyWaveCompletionRewardIfResolved(
   state: WaveRuntimeState,
   config: WaveRuntimeConfig,
   deps: WaveRuntimeDependencies,
+  isOpponentFieldResolved: boolean,
 ): void {
   if (state.isWaveCompletionRewardGranted) return;
-  if (state.pendingWaveSpawns.length > 0) return;
-  if (state.activeCreeps.length === 0) return;
-
-  const hasAliveCreep = state.activeCreeps.some((creep) => creep.entity.status === 'alive');
-  if (hasAliveCreep) return;
+  if (!isWavePhase(state.wavePhaseState)) return;
+  if (!isFieldWaveResolved(state) || !isOpponentFieldResolved) return;
 
   const nextPhase = completeWaveIfResolved(
     state.wavePhaseState,
@@ -221,78 +221,27 @@ export function resetRunToInitialState(state: WaveRuntimeState): void {
   state.lastPublishedAutoStartSecondsLeft = null;
 }
 
+/**
+ * Schedules the player's field for the wave: the round's shared baseline
+ * (rolled once for both fields) followed by the computer's sends.
+ */
 export function spawnWaveCreeps(
   state: WaveRuntimeState,
   config: WaveRuntimeConfig,
   deps: WaveRuntimeDependencies,
+  baselineUnits: readonly UnitConfig[],
 ): void {
   state.activeCreeps.forEach((creep) => destroyCreepRenderState(creep));
   state.activeCreeps = [];
   state.pendingWaveSpawns = [];
 
-  const units = generateWaveUnits({
-    waveNumber: state.currentWaveNumber,
-    factionUnits: deps.getSelectedFactionUnits(),
-  });
   // Extra units on the player's field are the computer's sends.
   const additionalUnits = deps.getAdditionalWaveUnits(state.currentWaveNumber);
 
-  state.pendingWaveSpawns = scheduleWaveSpawns(units, additionalUnits, 'opponent', {
-    firstSpawnAtMs: deps.nowMs() + config.waveFirstSpawnDelayMs,
-    spawnIntervalMs: config.waveSpawnIntervalMs,
-  });
-}
-
-export function processPendingWaveSpawns(
-  state: WaveRuntimeState,
-  deps: WaveRuntimeDependencies,
-  nowMs: number,
-): void {
-  if (state.pendingWaveSpawns.length === 0 || !hasWaveRoute(state.activeCreepRoutes)) return;
-
-  const { ready, pending } = takeReadyWaveSpawns(state.pendingWaveSpawns, nowMs);
-  state.pendingWaveSpawns = pending;
-
-  for (const spawn of ready) {
-    const route = selectWaveRoute(state.activeCreepRoutes, spawn.unit.sizeClass);
-    const startPoint = deps.toCellCenter(route[0]);
-    const waveCreep = createWaveCreepEntity(
-      spawn,
-      state.currentWaveNumber,
-      route,
-      deps.getCreepTypeFromUnit(spawn.unit),
-    );
-
-    const spriteKey = deps.getSpriteKeyByUnit(spawn.unit);
-    const animationKey = deps.getAnimationKeyByUnit(spawn.unit);
-    const visualMetrics = getCreepVisualMetrics(spawn.unit.sizeClass);
-    const footprintCenterOffsetPx = visualMetrics.footprintCenterOffsetPx;
-    const sprite = deps.createCreepSprite(
-      startPoint.x + footprintCenterOffsetPx,
-      startPoint.y + footprintCenterOffsetPx,
-      spriteKey,
-      animationKey,
-    );
-    sprite.setDisplaySize(visualMetrics.displaySizePx, visualMetrics.displaySizePx);
-    sprite.setDepth(CREEP_RENDER_DEPTH);
-    const baseTint = deps.getCreepTintByUnit?.(spawn.unit) ?? 0xffffff;
-    sprite.setTint(baseTint);
-    sprite.play(animationKey);
-
-    // The sheet decides what the creep can do: four rows mean it can turn and die
-    // on screen, a legacy strip keeps the rotate-and-fade behaviour.
-    const isDirectional = isDirectionalCreepSprite(sprite);
-
-    state.activeCreeps.push({
-      entity: waveCreep,
-      sprite,
-      hitFlashRemainingMs: 0,
-      deathFadeRemainingMs: 0,
-      footprintCenterOffsetPx,
-      baseTint,
-      isDirectional,
-      facing: isDirectional ? 'side' : undefined,
-      facingFlipped: false,
-    });
-  }
+  state.pendingWaveSpawns = scheduleWaveSpawns(
+    baselineUnits,
+    additionalUnits,
+    'opponent',
+    resolveWaveSpawnTiming(deps.nowMs(), config),
+  );
 }

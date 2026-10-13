@@ -1,8 +1,14 @@
 import { describe, expect, it, vi } from 'vitest';
-import { rebuildOpponentBattlefieldRenderState } from './battlefieldSpriteFactory';
-import type { BattlefieldRenderState } from './battlefieldRenderState';
+import { resolveUnitConfigById, type UnitConfig } from '../../../../../entities/unit';
 import { UNIT_DIRECTIONAL_FRAME_COUNT, UNIT_SPRITE_KEYS } from '../../../../constants/sprites';
-import type { DuelMatchState } from '../../../../../entities/duel-match';
+import {
+  createOpponentFieldWaveState,
+  processPendingWaveSpawns,
+  scheduleOpponentFieldWave,
+  type FieldSpawnDeps,
+} from '../wave/fieldWaveSpawns';
+import { createBattlefieldRenderState } from './battlefieldRenderState';
+import { getSpriteKeyByUnit } from './battlefieldSpriteFactory';
 
 const DIRECTIONAL_SHEETS: string[] = [
   UNIT_SPRITE_KEYS.ORC_GRUNT,
@@ -11,65 +17,49 @@ const DIRECTIONAL_SHEETS: string[] = [
   UNIT_SPRITE_KEYS.ORC_HEADHUNTER,
 ];
 
-function createSceneStub(): Phaser.Scene {
+function createSprite(key: string): Phaser.GameObjects.Sprite {
   return {
-    add: {
-      sprite: (_x: number, _y: number, key: string) => ({
-        texture: {
-          key,
-          getFrameNames: () =>
-            Array.from(
-              { length: DIRECTIONAL_SHEETS.includes(key) ? UNIT_DIRECTIONAL_FRAME_COUNT : 4 },
-              (_, index) => String(index),
-            ),
-        },
-        setDisplaySize: vi.fn(),
-        setDepth: vi.fn(),
-        setTint: vi.fn(),
-        setVisible: vi.fn(),
-        play: vi.fn(),
-      }),
+    texture: {
+      key,
+      getFrameNames: () =>
+        Array.from(
+          { length: DIRECTIONAL_SHEETS.includes(key) ? UNIT_DIRECTIONAL_FRAME_COUNT : 4 },
+          (_, index) => String(index),
+        ),
     },
-  } as unknown as Phaser.Scene;
+    setDisplaySize: vi.fn(),
+    setDepth: vi.fn(),
+    setTint: vi.fn(),
+    play: vi.fn(),
+    destroy: vi.fn(),
+  } as unknown as Phaser.GameObjects.Sprite;
 }
 
-function createField(): BattlefieldRenderState {
-  return {
-    towers: [],
-    creeps: [],
-    projectiles: [],
-    impactEffects: [],
-    damageNumbers: [],
-  } as unknown as BattlefieldRenderState;
+const SPAWN_DEPS: FieldSpawnDeps = {
+  getSpriteKeyByUnit,
+  getAnimationKeyByUnit: () => 'unit:walk',
+  getCreepTypeFromUnit: () => 'basic',
+  toCellCenter: (position) => position,
+  createCreepSprite: (_x, _y, spriteKey) => createSprite(spriteKey),
+};
+
+function spawnOnComputerField(unit: UnitConfig) {
+  const field = createBattlefieldRenderState();
+  const state = createOpponentFieldWaveState(field);
+  scheduleOpponentFieldWave(state, {
+    routes: { small: [{ x: 0, y: 0 }], large: [{ x: 0, y: 0 }] },
+    waveNumber: 1,
+    baselineUnits: [unit],
+    sentUnits: [],
+    timing: { firstSpawnAtMs: 0, spawnIntervalMs: 100 },
+  });
+  processPendingWaveSpawns(state, SPAWN_DEPS, 0);
+  return field;
 }
 
-function createOpponent(unitId: string): DuelMatchState['opponent'] {
-  return {
-    raceId: 'ORC',
-    battlefield: {
-      towers: [],
-      path: [],
-      creeps: [
-        {
-          id: `opponent-creep-1:${unitId}`,
-          status: 'alive',
-          position: { x: 0, y: 0 },
-        },
-      ],
-    },
-  } as unknown as DuelMatchState['opponent'];
-}
-
-describe('opponent battlefield creeps', () => {
+describe('computer battlefield creeps', () => {
   it('marks a creep with a four-row sheet as directional, so it turns instead of rotating', () => {
-    const field = createField();
-
-    rebuildOpponentBattlefieldRenderState(
-      createSceneStub(),
-      field,
-      createOpponent('orc_grunt'),
-      true,
-    );
+    const field = spawnOnComputerField(resolveUnitConfigById('orc_grunt'));
 
     expect(field.creeps).toHaveLength(1);
     expect(field.creeps[0]).toMatchObject({
@@ -80,14 +70,7 @@ describe('opponent battlefield creeps', () => {
   });
 
   it('leaves a legacy strip on the rotate-and-fade path', () => {
-    const field = createField();
-
-    rebuildOpponentBattlefieldRenderState(
-      createSceneStub(),
-      field,
-      createOpponent('undead_skeleton'),
-      true,
-    );
+    const field = spawnOnComputerField(resolveUnitConfigById('undead_skeleton'));
 
     expect(field.creeps[0]).toMatchObject({ isDirectional: false, facing: undefined });
   });
