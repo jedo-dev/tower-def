@@ -4,6 +4,7 @@ import { applyCreepFacing } from '../animation/creepFacing';
 import { isGameOverByLives, subtractLives } from '../../../../../entities/player-resources';
 import { transitionToGameOver, type WavePhaseState } from '../../../../../features/wave-phase';
 import type { GridPosition } from '../../../../types/pathfinding';
+import { hasWaveRoute, selectWaveRoute, type WaveRoutes } from '../../../pathfinding/waveRoutes';
 import type { SoundId } from '../../sound/audio.types';
 import type { CreepRenderState } from '../../scenes/gameScene.types';
 
@@ -15,7 +16,7 @@ export type MovementRuntimeConfig = {
 
 export type MovementRuntimeState = {
   activeCreeps: CreepRenderState[];
-  activeCreepPath: GridPosition[];
+  activeCreepRoutes: WaveRoutes;
   playerGold: number;
   playerLives: number;
   isGameOver: boolean;
@@ -77,7 +78,7 @@ export function moveCreepsAlongPath(
   config: MovementRuntimeConfig,
   deltaMs: number,
 ): void {
-  if (state.activeCreepPath.length === 0 || state.activeCreeps.length === 0) {
+  if (!hasWaveRoute(state.activeCreepRoutes) || state.activeCreeps.length === 0) {
     return;
   }
 
@@ -98,9 +99,10 @@ export function moveCreepsAlongPath(
       creep.entity.speed *
       speedMultiplier;
 
+    const route = selectWaveRoute(state.activeCreepRoutes, creep.entity.sizeClass);
     const nextPathIndex = creep.entity.pathIndex + 1;
 
-    if (nextPathIndex >= state.activeCreepPath.length) {
+    if (nextPathIndex >= route.length) {
       markCreepEscaped(state, deps, config, creep);
       continue;
     }
@@ -109,7 +111,7 @@ export function moveCreepsAlongPath(
       continue;
     }
 
-    const nextPoint = state.activeCreepPath[nextPathIndex];
+    const nextPoint = route[nextPathIndex];
     const nextCenter = deps.toCellCenter(nextPoint);
     const dx = nextCenter.x - creep.sprite.x;
     const dy = nextCenter.y - creep.sprite.y;
@@ -122,7 +124,7 @@ export function moveCreepsAlongPath(
       creep.entity.pathIndex = nextPathIndex;
       creep.entity.position = { x: nextPoint.x, y: nextPoint.y };
 
-      if (nextPathIndex >= state.activeCreepPath.length - 1) {
+      if (nextPathIndex >= route.length - 1) {
         markCreepEscaped(state, deps, config, creep);
       }
       continue;

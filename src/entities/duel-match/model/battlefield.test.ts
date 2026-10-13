@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_CREEP_COMBAT_TRAITS } from '../../creep';
-import { RaceId } from '../../../shared/types/content-ids';
+import { RaceId, UnitSizeClass } from '../../../shared/types/content-ids';
 import { createGridModel } from '../../../shared/lib/grid/createGridModel';
 import { GridConfig } from '../../../shared/constants/grid';
-import { calculateWaveStartPath } from '../../wave/model/calculateWavePath';
+import { calculateWaveRoutes } from '../../wave/model/calculateWavePath';
 import type { BattlefieldState, AddCreepEntry } from './battlefield';
 import {
   addCreeps,
@@ -16,6 +16,7 @@ import {
   reconcileBattlefieldsForNextRound,
   removeDeadCreeps,
   removeLeakedCreeps,
+  refreshBattlefieldRoutes,
   removeTower,
   routeQueuedSendsToBattlefields,
 } from './battlefieldOps';
@@ -25,8 +26,7 @@ import { UnitTier } from '../../unit/model/types';
 
 function createTestBattlefield(): BattlefieldState {
   const grid = createGridModel({ entrance: DEFAULT_ENTRANCE, exit: DEFAULT_EXIT });
-  const path = calculateWaveStartPath(grid);
-  return createBattlefieldState(grid, path);
+  return createBattlefieldState(grid, calculateWaveRoutes(grid));
 }
 
 function createTestTower(overrides?: { x?: number; y?: number; id?: string }) {
@@ -70,6 +70,18 @@ describe('entities/duel-match/battlefield', () => {
       const battlefield = createTestBattlefield();
       expect(battlefield.grid.cols).toBe(GridConfig.COLS);
       expect(battlefield.grid.rows).toBe(GridConfig.ROWS);
+    });
+  });
+
+  describe('refreshBattlefieldRoutes', () => {
+    it('recomputes both wave routes and the planner path from the grid', () => {
+      const battlefield = addTower(createTestBattlefield(), createTestTower({ x: 4, y: 6 }));
+
+      const refreshed = refreshBattlefieldRoutes(battlefield);
+
+      expect(refreshed.routes).toEqual(calculateWaveRoutes(battlefield.grid));
+      expect(refreshed.path).toEqual(refreshed.routes.small);
+      expect(refreshed.routes.large.length).toBeGreaterThan(0);
     });
   });
 
@@ -137,6 +149,14 @@ describe('entities/duel-match/battlefield', () => {
   });
 
   describe('addCreeps', () => {
+    it('copies the size class onto the creep', () => {
+      const entry = { ...createTestCreepEntry(), sizeClass: UnitSizeClass.LARGE };
+
+      const [creep] = addCreeps(createTestBattlefield(), [entry]).creeps;
+
+      expect(creep.sizeClass).toBe(UnitSizeClass.LARGE);
+    });
+
     it('adds creeps at entrance position', () => {
       const battlefield = createTestBattlefield();
       const entries = [createTestCreepEntry({ id: 'c1' })];

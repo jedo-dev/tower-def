@@ -3,6 +3,7 @@ import { TOWER_FOOTPRINT } from '../../../shared/constants/footprint';
 import { createGridModel } from '../../../shared/lib/grid/createGridModel';
 import { doFootprintsOverlap, isFootprintInBounds } from '../../../shared/lib/grid/footprint';
 import { findPathBfs } from '../../../shared/lib/pathfinding/hasPathBfs';
+import { calculateWaveRoutes } from '../../../shared/lib/pathfinding/waveRoutes';
 import type { GridModel } from '../../../shared/types/grid';
 import type { GridPosition } from '../../../shared/types/pathfinding';
 import { RaceId, TowerTypeId } from '../../../shared/types/content-ids';
@@ -93,8 +94,7 @@ function withOpponentBattlefield(
   grid: GridModel,
   towers: readonly TowerEntity[],
 ): DuelMatchState {
-  const path = findPathBfs(grid).path;
-  let battlefield = createBattlefieldState(grid, path);
+  let battlefield = createBattlefieldState(grid, calculateWaveRoutes(grid));
   for (const tower of towers) {
     battlefield = addTower(battlefield, tower);
   }

@@ -1,13 +1,12 @@
-import { findPathBfs } from '../../../shared/lib/pathfinding/hasPathBfs';
-import type { GridModel } from '../../../shared/types/grid';
-import type { GridPosition } from '../../../shared/types/pathfinding';
-
-export function calculateWaveStartPath(grid: GridModel): GridPosition[] {
-  const result = findPathBfs(grid);
-
-  if (!result.found) {
-    return [];
-  }
-
-  return result.path;
-}
+/**
+ * Routes the next wave walks, one per creep footprint, computed once at wave
+ * start with the same clearance-aware search that validates builds.
+ */
+export {
+  calculateWaveRoutes,
+  EMPTY_WAVE_ROUTES,
+  hasWaveRoute,
+  selectWaveRoute,
+  type WaveRoute,
+  type WaveRoutes,
+} from '../../../shared/lib/pathfinding/waveRoutes';

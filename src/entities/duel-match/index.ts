@@ -21,6 +21,8 @@ export {
   removeDeadCreeps,
   removeLeakedCreeps,
   reconcileBattlefieldsForNextRound,
+  refreshBattlefieldRoutes,
+  refreshOpponentRoutesForWaveStart,
   removeTower,
   routeQueuedSendsToBattlefields,
 } from './model/battlefieldOps';

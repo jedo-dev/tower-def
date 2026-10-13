@@ -104,6 +104,7 @@ export function addBaselineWaveToOpponentBattlefield(
     armor: unit.armor,
     armorType: unit.armorType,
     moveType: unit.moveType,
+    sizeClass: unit.sizeClass,
     entrance,
   }));
 

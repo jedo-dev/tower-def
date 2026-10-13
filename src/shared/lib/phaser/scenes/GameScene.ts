@@ -9,13 +9,14 @@ import {
   countLeakedSentCreeps,
   createInitialDuelMatchState,
   reconcileBattlefieldsForNextRound,
+  refreshOpponentRoutesForWaveStart,
   routeQueuedSendsToBattlefields,
   startRound,
   type DuelMatchState,
 } from '../../../../entities/duel-match';
 import { DEFAULT_DIFFICULTY, type Difficulty } from '../../../../entities/difficulty';
 import { resolveUnitConfigById, type UnitConfig } from '../../../../entities/unit';
-import { calculateWaveStartPath } from '../../../../entities/wave';
+import { calculateWaveRoutes, EMPTY_WAVE_ROUTES, hasWaveRoute } from '../../../../entities/wave';
 import { RaceId } from '../../../types/content-ids';
 import {
   canPerformBuildActions as canPerformBuildActionsByPhase,
@@ -964,15 +965,16 @@ export class GameScene extends Phaser.Scene {
       return;
     }
 
-    const wavePath = calculateWaveStartPath(this.gridModel);
-    if (wavePath.length === 0) {
+    const waveRoutes = calculateWaveRoutes(this.gridModel);
+    if (!hasWaveRoute(waveRoutes)) {
       this.runState.nextWaveStartsAtMs = null;
       this.publishHudSnapshot();
       return;
     }
 
-    this.runState.activeCreepPath = wavePath;
-    this.pathCellKeys = new Set(wavePath.map((cell) => `${cell.x}:${cell.y}`));
+    this.runState.activeCreepRoutes = waveRoutes;
+    // The path preview shows the single-cell route; large creeps may walk wider.
+    this.pathCellKeys = new Set(waveRoutes.small.map((cell) => `${cell.x}:${cell.y}`));
     this.redrawTerrainTiles();
     this.duelMatchState = applyComputerBuildPhaseStrategies(this.duelMatchState, {
       difficulty: this.selectedDifficulty,
@@ -980,6 +982,7 @@ export class GameScene extends Phaser.Scene {
       debugRecorder: this.computerDecisionRecorder,
       setRegistryValue: (key, value) => this.registry.set(key, value),
     });
+    this.duelMatchState = refreshOpponentRoutesForWaveStart(this.duelMatchState);
     this.duelMatchState = routeQueuedSendsToBattlefields(this.duelMatchState);
     this.duelMatchState = reconcileBattlefieldsForNextRound(this.duelMatchState);
     this.duelMatchState = addBaselineWaveToOpponentBattlefield(
@@ -1027,8 +1030,8 @@ export class GameScene extends Phaser.Scene {
     this.applyBattlefieldViewVisibility();
 
     const visiblePath = showOpponent
-      ? this.duelMatchState.opponent.battlefield.path
-      : this.runState.activeCreepPath;
+      ? this.duelMatchState.opponent.battlefield.routes.small
+      : this.runState.activeCreepRoutes.small;
     this.pathCellKeys = new Set(visiblePath.map((cell) => `${cell.x}:${cell.y}`));
     this.redrawTerrainTiles();
   }
@@ -1142,7 +1145,7 @@ export class GameScene extends Phaser.Scene {
     this.gridRendererState.gridGraphics = null;
     clearTerrainSpritesRuntime(this.gridRendererState);
     clearGridLabelsRuntime(this.gridRendererState);
-    this.runState.activeCreepPath = [];
+    this.runState.activeCreepRoutes = EMPTY_WAVE_ROUTES;
     this.runState.pendingWaveSpawns = [];
     this.gridModel = null;
     this.runState.nextWaveStartsAtMs = null;

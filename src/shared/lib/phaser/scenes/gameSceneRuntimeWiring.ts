@@ -195,7 +195,7 @@ export function createGameSceneRuntimeWiring(host: GameSceneWiringHost): GameSce
       movementDeps: createOpponentMovementDeps(host),
       getMovementState: (): MovementRuntimeState => ({
         activeCreeps: host.opponentField.creeps,
-        activeCreepPath: host.getDuelMatchState().opponent.battlefield.path,
+        activeCreepRoutes: host.getDuelMatchState().opponent.battlefield.routes,
         playerGold: host.getDuelMatchState().opponent.gold,
         playerLives: host.getDuelMatchState().opponent.hp,
         isGameOver: host.runState.isGameOver,

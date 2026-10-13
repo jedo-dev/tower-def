@@ -1,9 +1,9 @@
 import type { RaceId } from '../../../shared/types/content-ids';
 import type { GridPoint, GridModel } from '../../../shared/types/grid';
-import type { GridPosition } from '../../../shared/types/pathfinding';
+import type { WaveRoutes } from '../../../shared/lib/pathfinding/waveRoutes';
 import { createGridModel } from '../../../shared/lib/grid/createGridModel';
 import { createDefaultEdgeEndpoints } from '../../../shared/lib/grid/generateEdgeEndpoints';
-import { calculateWaveStartPath } from '../../wave/model/calculateWavePath';
+import { calculateWaveRoutes } from '../../wave/model/calculateWavePath';
 import { DUEL_MATCH_BALANCE } from './balance';
 import { createBattlefieldState } from './battlefieldOps';
 import type { DuelMatchState, DuelistState } from './types';
@@ -18,14 +18,14 @@ export type BattlefieldInitParams = {
   exit?: GridPoint;
 };
 
-function createDuelistState(raceId: RaceId, grid: GridModel, path: GridPosition[]): DuelistState {
+function createDuelistState(raceId: RaceId, grid: GridModel, routes: WaveRoutes): DuelistState {
   return {
     hp: DUEL_MATCH_BALANCE.startingHp,
     gold: DUEL_MATCH_BALANCE.startingGold,
     income: DUEL_MATCH_BALANCE.startingIncome,
     raceId,
     sendQueue: [],
-    battlefield: createBattlefieldState(grid, path),
+    battlefield: createBattlefieldState(grid, routes),
     lifeStealRemainder: 0,
   };
 }
@@ -41,14 +41,14 @@ export function createInitialDuelMatchState(
   const playerGrid = createGridModel({ entrance, exit });
   const opponentGrid = createGridModel({ entrance, exit });
 
-  const playerPath = calculateWaveStartPath(playerGrid);
-  const opponentPath = calculateWaveStartPath(opponentGrid);
+  const playerRoutes = calculateWaveRoutes(playerGrid);
+  const opponentRoutes = calculateWaveRoutes(opponentGrid);
 
   return {
     round: 0,
     phase: 'build',
-    player: createDuelistState(playerRaceId, playerGrid, playerPath),
-    opponent: createDuelistState(opponentRaceId, opponentGrid, opponentPath),
+    player: createDuelistState(playerRaceId, playerGrid, playerRoutes),
+    opponent: createDuelistState(opponentRaceId, opponentGrid, opponentRoutes),
     baselineWaveId: '',
   };
 }

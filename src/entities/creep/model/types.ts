@@ -2,6 +2,7 @@ import type { GridPosition } from '../../../shared/types/pathfinding';
 import {
   UnitArmorType,
   UnitMoveType,
+  UnitSizeClass,
   type CreepTypeId,
   type EffectId,
 } from '../../../shared/types/content-ids';
@@ -23,6 +24,8 @@ export type CreepCombatTraits = {
   armor: number;
   armorType: UnitArmorType;
   moveType: UnitMoveType;
+  /** Footprint class; decides which wave route the creep walks. */
+  sizeClass: UnitSizeClass;
 };
 
 /** Used by spawn paths that have no authored creature behind them. */
@@ -30,6 +33,7 @@ export const DEFAULT_CREEP_COMBAT_TRAITS: CreepCombatTraits = {
   armor: 0,
   armorType: UnitArmorType.LIGHT,
   moveType: UnitMoveType.GROUND,
+  sizeClass: UnitSizeClass.MEDIUM,
 };
 
 /** One timed effect currently running on a creep. */

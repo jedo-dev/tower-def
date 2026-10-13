@@ -12,7 +12,14 @@ import {
   type WavePhaseState,
 } from '../../../../../features/wave-phase';
 import type { BattlefieldRenderState } from '../battlefield/battlefieldRenderState';
-import { calculateWaveStartPath, generateWaveUnits } from '../../../../../entities/wave';
+import {
+  calculateWaveRoutes,
+  EMPTY_WAVE_ROUTES,
+  generateWaveUnits,
+  hasWaveRoute,
+  selectWaveRoute,
+  type WaveRoutes,
+} from '../../../../../entities/wave';
 import type { CreepEntity } from '../../../../../entities/creep';
 import type { UnitConfig } from '../../../../../entities/unit';
 import { ECONOMY_BALANCE } from '../../../../constants/economy';
@@ -25,7 +32,7 @@ import { destroyCreepRenderState } from '../combat/creepEffectVisuals';
 import { isDirectionalCreepSprite } from '../animation/creepFacing';
 
 export type WaveRuntimeState = {
-  activeCreepPath: GridPosition[];
+  activeCreepRoutes: WaveRoutes;
   activeCreeps: CreepRenderState[];
   pendingWaveSpawns: PendingWaveSpawn[];
   wavePhaseState: WavePhaseState;
@@ -85,7 +92,7 @@ export function createPlayerWaveRuntimeState(
     set activeCreeps(nextCreeps: CreepRenderState[]) {
       battlefield.creeps = nextCreeps;
     },
-    activeCreepPath: [],
+    activeCreepRoutes: EMPTY_WAVE_ROUTES,
     pendingWaveSpawns: [],
     wavePhaseState: createInitialWavePhaseState(),
     isWaveCompletionRewardGranted: false,
@@ -105,8 +112,8 @@ export function initializeWaveRuntime(
   deps: WaveRuntimeDependencies,
   grid: GridModel,
 ): void {
-  const waveStartPath = calculateWaveStartPath(grid);
-  state.activeCreepPath = waveStartPath;
+  const waveRoutes = calculateWaveRoutes(grid);
+  state.activeCreepRoutes = waveRoutes;
   state.activeCreeps.forEach((creep) => destroyCreepRenderState(creep));
   state.activeCreeps = [];
   state.isWaveCompletionRewardGranted = false;
@@ -119,7 +126,7 @@ export function initializeWaveRuntime(
   state.playerGold = earlyBonusResult.resources.gold;
   deps.onGoldUpdated(state.playerGold);
 
-  if (waveStartPath.length === 0) {
+  if (!hasWaveRoute(waveRoutes)) {
     state.nextWaveStartsAtMs = null;
     deps.onHudChanged();
     return;
@@ -199,7 +206,7 @@ export function tryRestartRun(state: WaveRuntimeState, nowMs: number): boolean {
 
 export function resetRunToInitialState(state: WaveRuntimeState): void {
   state.nextWaveStartsAtMs = null;
-  state.activeCreepPath = [];
+  state.activeCreepRoutes = EMPTY_WAVE_ROUTES;
   state.pendingWaveSpawns = [];
   state.isWaveCompletionRewardGranted = false;
   state.activeCreeps = [];
@@ -244,14 +251,15 @@ export function processPendingWaveSpawns(
   deps: WaveRuntimeDependencies,
   nowMs: number,
 ): void {
-  if (state.pendingWaveSpawns.length === 0 || state.activeCreepPath.length === 0) return;
+  if (state.pendingWaveSpawns.length === 0 || !hasWaveRoute(state.activeCreepRoutes)) return;
 
-  const startPoint = deps.toCellCenter(state.activeCreepPath[0]);
   const readySpawns = state.pendingWaveSpawns.filter((spawn) => spawn.spawnAtMs <= nowMs);
   state.pendingWaveSpawns = state.pendingWaveSpawns.filter((spawn) => spawn.spawnAtMs > nowMs);
 
   for (const spawn of readySpawns) {
     const creepTypeFromUnit = deps.getCreepTypeFromUnit(spawn.unit);
+    const route = selectWaveRoute(state.activeCreepRoutes, spawn.unit.sizeClass);
+    const startPoint = deps.toCellCenter(route[0]);
     const waveCreep: CreepEntity = {
       id: `wave:creep:${state.currentWaveNumber}:${spawn.sequenceIndex}`,
       type: creepTypeFromUnit,
@@ -261,8 +269,9 @@ export function processPendingWaveSpawns(
       armor: spawn.unit.armor,
       armorType: spawn.unit.armorType,
       moveType: spawn.unit.moveType,
+      sizeClass: spawn.unit.sizeClass,
       status: 'alive',
-      position: { ...state.activeCreepPath[0] },
+      position: { x: route[0].x, y: route[0].y },
       pathIndex: 0,
       ...(spawn.sender === undefined ? {} : { sender: spawn.sender }),
     };

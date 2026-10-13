@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { ENDPOINT_ZONE_FOOTPRINT } from '../../constants/footprint';
 import { GRID_DEFAULT_ROW_CENTER, GRID_DIMENSIONS } from '../../constants/grid';
 import type { GridPoint } from '../../types/grid';
-import { hasPathBfs } from '../pathfinding/hasPathBfs';
+import { hasRouteForSizeClass } from '../pathfinding/findRouteForSizeClass';
+import { UnitSizeClass } from '../../types/content-ids';
 import { createGridModel } from './createGridModel';
 import { doFootprintsOverlap, isFootprintInBounds } from './footprint';
 import {
@@ -72,10 +73,12 @@ describe('shared/lib/grid/generateEdgeEndpoints', () => {
     expect(variants.size).toBeGreaterThan(1);
   });
 
-  it('produces endpoints with a valid initial path', () => {
+  it('produces endpoints that both creep sizes can traverse on an empty board', () => {
     for (const seed of SAMPLE_SEEDS) {
       const { entrance, exit } = generateEdgeEndpoints(seed);
-      expect(hasPathBfs(createGridModel({ entrance, exit }))).toBe(true);
+      const grid = createGridModel({ entrance, exit });
+      expect(hasRouteForSizeClass(grid, entrance, exit, UnitSizeClass.SMALL)).toBe(true);
+      expect(hasRouteForSizeClass(grid, entrance, exit, UnitSizeClass.LARGE)).toBe(true);
     }
   });
 

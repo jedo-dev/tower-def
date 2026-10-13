@@ -3,7 +3,7 @@ import { planBuildDecision } from './planBuildDecision';
 import { scoreTowerPlacement } from './scoreTowerPlacement';
 import type { DecisionContext } from './types';
 import { createGridModel } from '../../../shared/lib/grid/createGridModel';
-import { calculateWaveStartPath } from '../../wave/model/calculateWavePath';
+import { calculateWaveRoutes } from '../../wave/model/calculateWavePath';
 import { DEFAULT_ENTRANCE, DEFAULT_EXIT } from '../../duel-match/model/state';
 import { Difficulty } from '../../difficulty/model/types';
 import { getRaceRegistry } from '../../race-registry';
@@ -96,7 +96,7 @@ function createContext(
 
 function simulateBuildRun(raceId: RaceId, difficulty: Difficulty): TowerEntity[] {
   const grid: GridModel = createGridModel({ entrance: DEFAULT_ENTRANCE, exit: DEFAULT_EXIT });
-  const path = calculateWaveStartPath(grid);
+  const path = [...calculateWaveRoutes(grid).small];
   const towers: TowerEntity[] = [];
   const occupied: GridPosition[] = [];
 
@@ -162,7 +162,7 @@ describe('computer opponent archetype mix', () => {
 
   it('never picks a support tower on an empty field', () => {
     const grid = createGridModel({ entrance: DEFAULT_ENTRANCE, exit: DEFAULT_EXIT });
-    const path = calculateWaveStartPath(grid);
+    const path = [...calculateWaveRoutes(grid).small];
 
     const score = scoreTowerPlacement({
       grid,

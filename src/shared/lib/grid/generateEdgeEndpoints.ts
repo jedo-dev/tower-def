@@ -1,7 +1,8 @@
 import type { Footprint, GridPoint } from '../../types/grid';
 import { GRID_DIMENSIONS } from '../../constants/grid';
 import { ENDPOINT_ZONE_FOOTPRINT } from '../../constants/footprint';
-import { hasPathBfs } from '../pathfinding/hasPathBfs';
+import { hasRouteForSizeClass } from '../pathfinding/findRouteForSizeClass';
+import { UnitSizeClass } from '../../types/content-ids';
 import { createGridModel } from './createGridModel';
 import { doFootprintsOverlap } from './footprint';
 
@@ -139,7 +140,13 @@ export function generateEdgeEndpoints(
 
   const isPathable =
     cols === GRID_DIMENSIONS.cols && rows === GRID_DIMENSIONS.rows
-      ? hasPathBfs(createGridModel({ entrance, exit }))
+      ? // Large creeps need the 2-wide route, so an empty board must carry both sizes.
+        hasRouteForSizeClass(
+          createGridModel({ entrance, exit }),
+          entrance,
+          exit,
+          UnitSizeClass.LARGE,
+        )
       : true;
   if (!isPathable) {
     return createDefaultEdgeEndpoints(cols, rows);

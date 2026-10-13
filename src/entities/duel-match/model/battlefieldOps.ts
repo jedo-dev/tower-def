@@ -1,4 +1,5 @@
 import type { GridPosition } from '../../../shared/types/pathfinding';
+import { calculateWaveRoutes, type WaveRoutes } from '../../../shared/lib/pathfinding/waveRoutes';
 import { CreepTypeId } from '../../../shared/types/content-ids';
 import { TOWER_FOOTPRINT } from '../../../shared/constants/footprint';
 import { withFootprintOccupancy } from '../../../shared/lib/grid/footprint';
@@ -9,14 +10,32 @@ import type { AddCreepEntry, BattlefieldLeakResult, BattlefieldState } from './b
 
 export function createBattlefieldState(
   grid: BattlefieldState['grid'],
-  path: GridPosition[],
+  routes: WaveRoutes,
 ): BattlefieldState {
   return {
     grid,
     towers: [],
     creeps: [],
-    path,
+    path: [...routes.small],
+    routes,
     leakedCount: 0,
+  };
+}
+
+/** Recomputes both wave routes (and the planner path) from the current grid. */
+export function refreshBattlefieldRoutes(battlefield: BattlefieldState): BattlefieldState {
+  const routes = calculateWaveRoutes(battlefield.grid);
+  return { ...battlefield, routes, path: [...routes.small] };
+}
+
+/** Fixes the opponent field's routes for the wave that is about to start. */
+export function refreshOpponentRoutesForWaveStart(state: DuelMatchState): DuelMatchState {
+  return {
+    ...state,
+    opponent: {
+      ...state.opponent,
+      battlefield: refreshBattlefieldRoutes(state.opponent.battlefield),
+    },
   };
 }
 
@@ -38,6 +57,7 @@ function createSendCreepEntries(
       armor: unit.armor,
       armorType: unit.armorType,
       moveType: unit.moveType,
+      sizeClass: unit.sizeClass,
       entrance,
       sender,
     };
@@ -106,6 +126,7 @@ export function addCreeps(
     armor: entry.armor,
     armorType: entry.armorType,
     moveType: entry.moveType,
+    sizeClass: entry.sizeClass,
     status: 'alive' as const,
     position: { x: entry.entrance.x, y: entry.entrance.y },
     pathIndex: 0,

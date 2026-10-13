@@ -56,7 +56,7 @@ describe('shared/lib/phaser/runtime/wave computer send wiring', () => {
 
     const baselineUnits = undeadUnits.slice(0, 2);
     const state: WaveRuntimeState = {
-      activeCreepPath: [],
+      activeCreepRoutes: { small: [], large: [] },
       activeCreeps: [],
       pendingWaveSpawns: [],
       wavePhaseState: createInitialWavePhaseState(),
@@ -112,7 +112,7 @@ describe('shared/lib/phaser/runtime/wave creature traits', () => {
   it('copies authored armor and traits onto the spawned creep', () => {
     const gargoyle = resolveUnitConfigById('undead_gargoyle');
     const state: WaveRuntimeState = {
-      activeCreepPath: [{ x: 0, y: 0 }],
+      activeCreepRoutes: { small: [{ x: 0, y: 0 }], large: [{ x: 0, y: 0 }] },
       activeCreeps: [],
       pendingWaveSpawns: [{ unit: gargoyle, sequenceIndex: 0, spawnAtMs: 0 }],
       wavePhaseState: createInitialWavePhaseState(),
@@ -149,5 +149,6 @@ describe('shared/lib/phaser/runtime/wave creature traits', () => {
     expect(spawned.armor).toBe(gargoyle.armor);
     expect(spawned.armorType).toBe(gargoyle.armorType);
     expect(spawned.moveType).toBe(UnitMoveType.AIR);
+    expect(spawned.sizeClass).toBe(gargoyle.sizeClass);
   });
 });
