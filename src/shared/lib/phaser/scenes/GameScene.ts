@@ -118,6 +118,7 @@ import {
   attachRoutePreviewGraphics,
   createBuildRoutePreviewRuntime,
   destroyRoutePreviewGraphics,
+  getBuildRoutePreviewCurrentRoutes,
   markRoutePreviewLayoutChanged,
   updateBuildRoutePreview,
 } from '../runtime/grid/buildRoutePreviewRuntime';
@@ -129,6 +130,7 @@ import {
   type GridRendererDeps,
   type GridRendererState,
 } from '../runtime/grid/gameSceneGridRenderer';
+import { refreshPathTiles } from '../runtime/grid/pathTiles';
 import {
   registerSceneAudioUnlock,
   registerScenePointerHandlers,
@@ -208,6 +210,8 @@ export class GameScene extends Phaser.Scene {
   private buildPreviewOverlay: Phaser.GameObjects.Graphics | null = null;
   private readonly routePreview = createBuildRoutePreviewRuntime();
   private pathCellKeys = new Set<string>();
+  /** A build or sell changed the board since the path tiles were last drawn. */
+  private arePathTilesStale = false;
   private placedTowerCostsByCellKey = new Map<string, number>();
   private readonly playerField: BattlefieldRenderState = createBattlefieldRenderState();
   private readonly opponentField: BattlefieldRenderState = createBattlefieldRenderState();
@@ -331,9 +335,14 @@ export class GameScene extends Phaser.Scene {
     drawGridCell: (cell) => {
       // Tower commands redraw exactly the cells whose occupancy they changed.
       markRoutePreviewLayoutChanged(this.routePreview);
+      this.arePathTilesStale = true;
       this.drawGridCell(cell);
     },
-    updateBuildPreview: () => this.updateBuildPreview(),
+    // Every build/sell ends here once its cells are redrawn: one path refresh per command.
+    updateBuildPreview: () => {
+      this.refreshBuildPhasePathTiles();
+      this.updateBuildPreview();
+    },
   };
 
   private readonly sendCreepCommandDeps: SendCreepCommandDeps = {
@@ -681,6 +690,27 @@ export class GameScene extends Phaser.Scene {
       this.getBuildRuntimeDeps(),
       anchor,
       grid,
+    );
+  }
+
+  /**
+   * Keeps the terrain path tiles on the current small route while building.
+   * Shares the route preview's memoised search, so it adds no route search.
+   * Outside the build phase the tiles follow the wave's routes (wave start).
+   */
+  private refreshBuildPhasePathTiles(): void {
+    if (!this.arePathTilesStale || !this.gridModel || !this.canPerformBuildActions()) {
+      return;
+    }
+    this.arePathTilesStale = false;
+    refreshPathTiles(
+      this.gridModel.cells,
+      this.pathCellKeys,
+      getBuildRoutePreviewCurrentRoutes(this.routePreview, this.gridModel).small,
+      (nextPathCellKeys) => {
+        this.pathCellKeys = nextPathCellKeys;
+      },
+      (cell) => this.drawGridCell(cell),
     );
   }
 
