@@ -28,6 +28,8 @@ const DEFEND_SCORING_EXPANSION_BUDGET = 40_000;
 
 const SEEDS: readonly (number | null)[] = [null, 1, 2, 3, 4, 5];
 const ROUNDS = 12;
+/** Route cells a defender's maze must have grown by over `ROUNDS` defending rounds. */
+const MIN_DEFENDING_ROUTE_GROWTH = 20;
 
 type PlayedRound = {
   state: DuelMatchState;
@@ -137,6 +139,29 @@ describe('entities/computer-opponent/planBuildDecision defending', () => {
           }
         }
       }
+    }
+  });
+
+  it('keeps walling its maze plan while it defends', () => {
+    for (const seed of [1, 4, 5]) {
+      const played = playDefendingRounds(seed, Difficulty.HARD);
+      const planBuilds = played.flatMap(({ decision, plan }) =>
+        decision.actions.filter(
+          (action) =>
+            action.kind === 'build' &&
+            (decision.mazePlan?.anchors ?? plan?.anchors ?? []).some(
+              (anchor) => anchor.x === action.position.x && anchor.y === action.position.y,
+            ),
+        ),
+      );
+      const first = played[0].state.opponent.battlefield.grid;
+      const last = played[played.length - 1].state.opponent.battlefield.grid;
+      const startCost = createPathProbe(first).baseCost;
+      const endCost = createPathProbe(last).baseCost;
+
+      // A leak no longer freezes the maze for the whole leak window.
+      expect(planBuilds.length, `seed ${seed}`).toBeGreaterThan(ROUNDS);
+      expect(endCost - startCost, `seed ${seed}`).toBeGreaterThan(MIN_DEFENDING_ROUTE_GROWTH);
     }
   });
 

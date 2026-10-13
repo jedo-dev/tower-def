@@ -20,7 +20,7 @@ import type { DecisionContext, DecisionOutput } from './types';
 import { StrategyIntent } from './types';
 import type { ComputerDecisionDebugRecorder } from './decisionDebugSnapshots';
 
-/** Upgrades a defending opponent buys before spending the rest on new firepower. */
+/** Upgrades a defending opponent buys a round; the rest goes to plan walls and new firepower. */
 const DEFEND_UPGRADES_PER_ROUND = 1;
 
 export type BuildPlannerInput = {
@@ -170,8 +170,11 @@ export function planBuildDecision(input: BuildPlannerInput): BuildDecisionOutput
 
   const maxBuilds = SPEND_BUDGET_BY_DIFFICULTY[context.difficulty].maxBuildActionsPerRound;
   if (intent === StrategyIntent.DEFEND) {
-    // One upgrade for the tower that adds most damage, the rest goes to firepower now.
-    investInPlan(round, context, unbuilt, { maxBuilds: 0, maxUpgrades: DEFEND_UPGRADES_PER_ROUND });
+    // Keep walling the plan: a longer route multiplies every tower, and a
+    // defender that stopped froze its maze for the whole leak window after a
+    // single early leak. One upgrade for the tower that adds most damage; what
+    // the plan cannot use goes to firepower on the current route below.
+    investInPlan(round, context, unbuilt, { maxBuilds, maxUpgrades: DEFEND_UPGRADES_PER_ROUND });
   }
 
   const followsPlan = intent === StrategyIntent.EXTEND_MAZE || intent === StrategyIntent.UPGRADE;

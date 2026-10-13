@@ -16,9 +16,10 @@ import type { BuildAction, DecisionContext } from './types';
  * per tower, best screened first. Every probe re-searches the small route
  * (about as many cells as the free board on a grown maze), so probing all of
  * them cost ~50,000 expansions per tower; the top few by screened score are
- * where the winner almost always is.
+ * where the winner almost always is. Six missed it once a defender kept
+ * walling its maze plan (seed 4, round 11 of the defending test).
  */
-export const DEFEND_REROUTE_PROBE_LIMIT = 6;
+export const DEFEND_REROUTE_PROBE_LIMIT = 8;
 
 export type FindBestScoredBuildInput = {
   context: DecisionContext;
