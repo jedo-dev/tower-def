@@ -1,12 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import { Difficulty } from '../../../entities/difficulty';
+import { getBuildableTowersByFaction } from '../../../entities/tower';
 import { RaceId } from '../../../shared/types/content-ids';
 import { simulateMazeBuildRounds, type MazeRouteCost } from './simulateMazeBuildRounds';
 
 /**
- * Route cost bought per 100 gold spent by the old comb-skeleton planner
+ * Route cost bought per 100 gold of walls by the old comb-skeleton planner
  * (tower-def-02k.2 baseline, hard, undead), at rounds 4, 8 and 12:
- * (small + large octile route cost - empty-board cost) / gold spent so far.
+ * (small + large octile route cost - empty-board cost) / wall gold so far.
+ * The comb only ever built the cheapest tower, so its wall gold was all its
+ * gold; the planner now also buys damage (pricier types on the blocks that
+ * see the route most, upgrades), which buys no route and is not counted.
  */
 const COMB_BASELINE_PER_100_GOLD: ReadonlyArray<{
   seed: number | null;
@@ -22,6 +26,9 @@ const COMB_BASELINE_PER_100_GOLD: ReadonlyArray<{
 
 const CHECKED_ROUNDS = [4, 8, 12] as const;
 const GOLD_UNIT = 100;
+const RACE = RaceId.UNDEAD;
+/** Every block priced as the cheapest tower: what walling it costs at least. */
+const WALL_PRICE = Math.min(...getBuildableTowersByFaction(RACE).map((tower) => tower.costGold));
 
 function totalCost(cost: MazeRouteCost): number {
   return (cost.small ?? 0) + (cost.large ?? 0);
@@ -29,22 +36,22 @@ function totalCost(cost: MazeRouteCost): number {
 
 describe('features/maze-simulation search planner vs comb baseline', () => {
   it.each(COMB_BASELINE_PER_100_GOLD)(
-    'buys more route per gold than the comb on seed $seed',
+    'buys more route per wall gold than the comb on seed $seed',
     ({ seed, byRound }) => {
       const result = simulateMazeBuildRounds({
         rounds: 12,
         difficulty: Difficulty.HARD,
-        raceId: RaceId.UNDEAD,
+        raceId: RACE,
         seed,
       });
       const emptyCost = totalCost(result.initialRouteCost);
 
       for (const round of CHECKED_ROUNDS) {
         const report = result.rounds[round - 1];
-        const spent = result.rounds
+        const wallGold = result.rounds
           .slice(0, round)
-          .reduce((sum, played) => sum + played.spentGold, 0);
-        const perHundredGold = ((totalCost(report.routeCost) - emptyCost) / spent) * GOLD_UNIT;
+          .reduce((sum, played) => sum + played.builtCount * WALL_PRICE, 0);
+        const perHundredGold = ((totalCost(report.routeCost) - emptyCost) / wallGold) * GOLD_UNIT;
 
         expect(perHundredGold).toBeGreaterThan(byRound[round]);
       }

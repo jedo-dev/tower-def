@@ -6,12 +6,8 @@ import {
   getCheapestTowerCost,
   SPEND_BUDGET_BY_DIFFICULTY,
 } from './buildSpendBudget';
-import {
-  addBestUpgrade,
-  buildByScore,
-  buildFromPlan,
-  type BuildRoundState,
-} from './buildRoundActions';
+import { computeContextThreatSplit } from './contextThreatSplit';
+import { buildByScore, investInPlan, type BuildRoundState } from './buildRoundActions';
 import {
   MAZE_PLAN_HORIZON_ROUNDS,
   MAZE_PLAN_SEARCH_EFFORT_BY_DIFFICULTY,
@@ -22,6 +18,9 @@ import {
 import type { DecisionContext, DecisionOutput } from './types';
 import { StrategyIntent } from './types';
 import type { ComputerDecisionDebugRecorder } from './decisionDebugSnapshots';
+
+/** Upgrades a defending opponent buys before spending the rest on new firepower. */
+const DEFEND_UPGRADES_PER_ROUND = 1;
 
 export type BuildPlannerInput = {
   context: DecisionContext;
@@ -93,6 +92,16 @@ function refreshMazePlan(input: BuildPlannerInput): MazePlanUpdate {
   });
 }
 
+/**
+ * What this build phase may spend: by threat when the context carries a
+ * defence assessment (all it needs when threatened, easing off once the
+ * margin is comfortable), the difficulty's fixed spend ratio otherwise.
+ */
+function computeBuildBudget(context: DecisionContext): number {
+  const split = computeContextThreatSplit(context);
+  return split ? split.buildBudget : computeSpendBudget(context.gold, context.difficulty);
+}
+
 function createSaveDecision(reasoning: string): DecisionOutput {
   return {
     intent: StrategyIntent.SAVE_GOLD,
@@ -129,7 +138,7 @@ export function planBuildDecision(input: BuildPlannerInput): BuildDecisionOutput
   const planUpdate = refreshMazePlan(input);
   const { plan, unbuilt } = planUpdate;
   const intent = selectIntent(context, unbuilt.length);
-  const budget = computeSpendBudget(context.gold, context.difficulty);
+  const budget = computeBuildBudget(context);
 
   if (budget <= 0) {
     const output = createSaveDecision('No budget available for spending');
@@ -147,13 +156,14 @@ export function planBuildDecision(input: BuildPlannerInput): BuildDecisionOutput
     expandedNodeCount: planUpdate.expandedNodeCount,
   };
 
-  if (intent === StrategyIntent.UPGRADE || intent === StrategyIntent.DEFEND) {
-    addBestUpgrade(round, context, existingTowers);
+  const maxBuilds = SPEND_BUDGET_BY_DIFFICULTY[context.difficulty].maxBuildActionsPerRound;
+  if (intent === StrategyIntent.DEFEND) {
+    // One upgrade for the tower that adds most damage, the rest goes to firepower now.
+    investInPlan(round, context, unbuilt, { maxBuilds: 0, maxUpgrades: DEFEND_UPGRADES_PER_ROUND });
   }
 
-  const maxBuilds = SPEND_BUDGET_BY_DIFFICULTY[context.difficulty].maxBuildActionsPerRound;
   const followsPlan = intent === StrategyIntent.EXTEND_MAZE || intent === StrategyIntent.UPGRADE;
-  const isPlanShort = followsPlan && buildFromPlan(round, context, unbuilt, maxBuilds);
+  const isPlanShort = followsPlan && investInPlan(round, context, unbuilt, { maxBuilds });
   // Defending wants firepower on the current route; an unfinished plan with
   // too little buildable right now should not stall the opponent either. A
   // finished plan does not fall back: the maze is done, gold goes to upgrades.

@@ -5,7 +5,11 @@ import {
   type LeakHistoryEntry,
 } from '../../../../../entities/computer-opponent';
 import { Difficulty } from '../../../../../entities/difficulty';
-import { createInitialDuelMatchState, payIncome } from '../../../../../entities/duel-match';
+import {
+  clearSendQueue,
+  createInitialDuelMatchState,
+  payIncome,
+} from '../../../../../entities/duel-match';
 import type { DuelMatchState } from '../../../../../entities/duel-match';
 import { RaceId } from '../../../../types/content-ids';
 import { findPathBfs } from '../../../pathfinding/hasPathBfs';
@@ -27,7 +31,11 @@ function createDeps(difficulty: Difficulty, leakHistory: LeakHistoryEntry[] = []
   };
 }
 
-/** Plays whole build phases: strategies, then the income payout. */
+/**
+ * Plays whole build phases: strategies, the income payout, then the wave
+ * start that routes every queued send onto a field and empties the queues
+ * (so the per-wave send limits apply per wave, as in a match).
+ */
 function playRounds(rounds: number, difficulty: Difficulty): DuelMatchState {
   let state = createInitialDuelMatchState(RaceId.HUMAN, RaceId.ORC);
   // One match, one opponent memory: the maze plan carries across rounds.
@@ -36,7 +44,7 @@ function playRounds(rounds: number, difficulty: Difficulty): DuelMatchState {
   for (let round = 1; round <= rounds; round += 1) {
     state = { ...state, round, phase: 'build' };
     state = applyComputerBuildPhaseStrategies(state, deps);
-    state = payIncome(state).state;
+    state = clearSendQueue(payIncome(state).state);
   }
 
   return state;
