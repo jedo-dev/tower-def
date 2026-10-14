@@ -73,7 +73,8 @@ describe('creep cards', () => {
 
     expect(mapUnitToCreepCard(withLore).lore).toBe('It hungers.');
     expect(mapUnitToCreepCard({ ...ghoul, lore: '' } as UnitConfig).lore).toBeNull();
-    expect(mapUnitToCreepCard(ghoul).lore).toBeNull();
+    const { lore: _authoredLore, ...withoutLore } = ghoul;
+    expect(mapUnitToCreepCard(withoutLore as UnitConfig).lore).toBeNull();
   });
 });
 
