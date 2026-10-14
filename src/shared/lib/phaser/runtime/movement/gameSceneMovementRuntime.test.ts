@@ -56,6 +56,7 @@ describe('shared/lib/phaser/runtime/movement duel game-over boundary', () => {
       onBuildStateNeedsRefresh: vi.fn(),
       onHudChanged: vi.fn(),
       playSound: vi.fn(),
+      soundRouter: { playTowerSound: vi.fn(), playCreepSound: vi.fn() },
     };
     const state = {
       activeCreeps: [creep],
@@ -114,6 +115,7 @@ describe('shared/lib/phaser/runtime/movement status effects', () => {
       onBuildStateNeedsRefresh: vi.fn(),
       onHudChanged: vi.fn(),
       playSound: vi.fn(),
+      soundRouter: { playTowerSound: vi.fn(), playCreepSound: vi.fn() },
     };
   }
 

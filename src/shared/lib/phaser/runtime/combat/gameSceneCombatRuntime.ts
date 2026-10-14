@@ -10,6 +10,8 @@ import {
 import { EffectId, type TowerTypeId } from '../../../../types/content-ids';
 import type { GridPosition } from '../../../../types/pathfinding';
 import type { SoundId } from '../../sound/audio.types';
+import { CreepSoundSlot, TowerSoundSlot } from '../../../../types/sound-ids';
+import type { GameSoundRouter } from '../audio/gameSoundRouting';
 import type {
   CreepRenderState,
   DamageNumberState,
@@ -62,7 +64,10 @@ export type CombatRuntimeDependencies = {
   toCellCenter: (position: GridPosition) => { x: number; y: number };
   playArcherAttackAnimation: (tower: TowerRenderState) => void;
   playSplashAttackAnimation: (tower: TowerRenderState) => void;
+  /** Fixed cues (economy, status effects); tower and creature sounds go through `soundRouter`. */
   playSound: (soundId: SoundId) => void;
+  /** Resolves tower and creature sounds through the race sound profiles. */
+  soundRouter: GameSoundRouter;
   /**
    * Pays the kill bounty to the side that owns this battlefield. Both sides
    * wire it to the shared duel-match bounty rule.
@@ -71,9 +76,9 @@ export type CombatRuntimeDependencies = {
   onHudChanged: () => void;
 };
 
-function handleCreepKill(deps: CombatRuntimeDependencies): void {
+function handleCreepKill(deps: CombatRuntimeDependencies, creep: CreepRenderState): void {
   deps.awardKillBounty();
-  deps.playSound('combat.creep_death.basic');
+  deps.soundRouter.playCreepSound(creep, CreepSoundSlot.DEATH);
   deps.playSound('economy.gold_gain');
   deps.onHudChanged();
 }
@@ -222,8 +227,11 @@ function createRenderCombatHooks(
 ): RenderCombatHooks {
   return {
     toCellCenter: deps.toCellCenter,
-    onCreepHit: (creep) => applyCreepHitFeedback(creep, config),
-    onTargetStruck: () => deps.playSound('combat.creep_hit'),
+    onCreepHit: (creep) => {
+      applyCreepHitFeedback(creep, config);
+      deps.soundRouter.playCreepSound(creep, CreepSoundSlot.HIT);
+    },
+    onTargetStruck: (tower) => deps.soundRouter.playTowerSound(tower.entity, TowerSoundSlot.IMPACT),
     onDamageDealt: (position, damage, source) =>
       spawnDamageNumber(battlefield, deps, config, position, damage, source),
     onEffectApplied: (creep, effectId) => {
@@ -234,7 +242,7 @@ function createRenderCombatHooks(
       }
     },
     onEffectsTicked: (creep) => refreshCreepEffectVisuals(deps.scene, creep, config.creepBaseColor),
-    onCreepKilled: () => handleCreepKill(deps),
+    onCreepKilled: (creep) => handleCreepKill(deps, creep),
     onTowerFired: (tower, target, isSplashTower) => {
       if (isSplashTower) {
         deps.playSplashAttackAnimation(tower);
@@ -242,7 +250,7 @@ function createRenderCombatHooks(
         deps.playArcherAttackAnimation(tower);
       }
       spawnProjectileFeedback(battlefield, deps, config, tower, target, isSplashTower);
-      deps.playSound(isSplashTower ? 'combat.tower_attack.splash' : 'combat.tower_attack.archer');
+      deps.soundRouter.playTowerSound(tower.entity, TowerSoundSlot.ATTACK);
     },
   };
 }

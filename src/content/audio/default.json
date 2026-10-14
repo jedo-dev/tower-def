@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "sounds": {
+    "attack": "combat.attack.archer",
+    "impact": "combat.attack.archer",
+    "build": "ui.success",
+    "sell": "economy.refund",
+    "upgrade": "ui.success",
+    "creepHit": "combat.creep_hit",
+    "creepDeath": "combat.attack.splash",
+    "creepEscape": "ui.error"
+  },
+  "archetypes": {
+    "splash": { "attack": "combat.attack.splash" }
+  }
+}

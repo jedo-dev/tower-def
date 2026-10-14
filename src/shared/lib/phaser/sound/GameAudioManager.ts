@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { FactionAudioId, SoundCategory, type SoundId } from './audio.types';
+import { SoundCategory, type SoundId } from './audio.types';
 import {
   AUDIO_CONSTANTS,
   PENDING_SOUND_ASSETS,
@@ -11,7 +11,6 @@ import {
   getSfxUserScale,
   subscribeAudioSettings,
 } from '../../audio/audioSettingsStore';
-import type { HudFactionType } from '../../game-bridge/types';
 
 type ActiveSound = {
   sound: Phaser.Sound.BaseSound;
@@ -34,8 +33,6 @@ export class GameAudioManager {
   private cooldowns: Map<SoundId, CooldownEntry> = new Map();
   private categoryPlayCounts: Map<SoundCategory, number> = new Map();
   private lastCleanupCheckMs: number = 0;
-  private selectedFaction: FactionAudioId = FactionAudioId.UNDEAD;
-  private soundKeyById: Map<SoundId, string> = new Map();
 
   private unsubscribeSettings: (() => void) | null = null;
 
@@ -82,25 +79,6 @@ export class GameAudioManager {
     this.masterVolume = Math.max(0, Math.min(1, volume));
   }
 
-  public setFaction(faction: HudFactionType): void {
-    switch (faction) {
-      case 'undead':
-        this.selectedFaction = FactionAudioId.UNDEAD;
-        break;
-      case 'orc':
-        this.selectedFaction = FactionAudioId.ORC;
-        break;
-      case 'human':
-        this.selectedFaction = FactionAudioId.HUMAN;
-        break;
-      case 'elf':
-        this.selectedFaction = FactionAudioId.ELF;
-        break;
-      default:
-        this.selectedFaction = FactionAudioId.UNDEAD;
-    }
-  }
-
   public play(soundId: SoundId, position?: { x: number; y: number }): boolean {
     if (!this.enabled || !this.isUnlocked) {
       return false;
@@ -131,20 +109,6 @@ export class GameAudioManager {
       this.decrementCategoryCount(config.category);
     }
     return played;
-  }
-
-  public playFactionVariant(baseSoundId: SoundId, position?: { x: number; y: number }): boolean {
-    const config = SOUND_REGISTRY[baseSoundId];
-    if (!config || config.factionTags.length === 0) {
-      return this.play(baseSoundId, position);
-    }
-
-    const factionVariant = `${baseSoundId}.${this.selectedFaction}` as SoundId;
-    if (SOUND_REGISTRY[factionVariant]) {
-      return this.play(factionVariant, position);
-    }
-
-    return this.play(baseSoundId, position);
   }
 
   public stopAll(): void {
@@ -286,7 +250,7 @@ export class GameAudioManager {
   }
 
   private getAudioKey(soundId: SoundId): string {
-    return this.soundKeyById.get(soundId) ?? `audio.${soundId}`;
+    return `audio.${soundId}`;
   }
 
   private removeFinishedSound(sound: Phaser.Sound.BaseSound): void {
@@ -315,26 +279,16 @@ export class GameAudioManager {
     finished.forEach((active) => this.removeFinishedSound(active.sound));
   }
 
+  /** Queues every clip that has a file. Each id owns its file, so keys never collide. */
   public preload(): void {
-    const loadedPathToKey = new Map<string, string>();
-    (Object.keys(SOUND_REGISTRY) as SoundId[]).forEach((soundId) => {
-      const assetPath = SOUND_ASSET_PATHS[soundId];
-      if (!assetPath || PENDING_SOUND_ASSETS.includes(soundId)) {
+    (Object.keys(SOUND_ASSET_PATHS) as SoundId[]).forEach((soundId) => {
+      if (PENDING_SOUND_ASSETS.includes(soundId)) {
         return;
       }
 
-      const existingKey = loadedPathToKey.get(assetPath);
-      if (existingKey) {
-        this.soundKeyById.set(soundId, existingKey);
-        return;
-      }
-
-      const key = `audio.${soundId}`;
-      this.soundKeyById.set(soundId, key);
-      loadedPathToKey.set(assetPath, key);
-
+      const key = this.getAudioKey(soundId);
       if (!this.scene.cache.audio.exists(key)) {
-        this.scene.load.audio(key, [assetPath]);
+        this.scene.load.audio(key, [SOUND_ASSET_PATHS[soundId]]);
       }
     });
   }

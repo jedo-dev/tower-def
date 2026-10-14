@@ -1,3 +1,5 @@
+import type { TowerSoundSet } from '../../../../shared/types/sound-ids';
+
 /**
  * Authored tower content contract.
  *
@@ -35,6 +37,8 @@ export type TowerContentEntry = {
   onHitEffects?: TowerOnHitEffectEntry[];
   /** Optional per-tower upgrade curve; the archetype curve is used without it. */
   levels?: TowerLevelContentEntry[];
+  /** Per-tower sound overrides; see "Sound profiles" in docs/08-content-authoring.md. */
+  sounds?: TowerSoundSet;
   spriteKey: string;
   description: string;
 };
@@ -133,6 +137,7 @@ export const TOWER_CONTENT_OPTIONAL_KEYS: readonly (keyof TowerContentEntry)[] =
   'splashRadius',
   'onHitEffects',
   'levels',
+  'sounds',
 ];
 
 export const TOWER_CONTENT_FILE_KEYS: readonly (keyof TowerContentFile)[] = [

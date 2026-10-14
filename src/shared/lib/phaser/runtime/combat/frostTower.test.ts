@@ -74,6 +74,11 @@ function createDeps(): CombatDeps & { sounds: string[] } {
     playArcherAttackAnimation: vi.fn(),
     playSplashAttackAnimation: vi.fn(),
     playSound: (soundId: string) => sounds.push(soundId),
+    // Profile slots are recorded by name, so assertions do not depend on content.
+    soundRouter: {
+      playTowerSound: (_tower: unknown, slot: string) => sounds.push(slot),
+      playCreepSound: (_creep: unknown, slot: string) => sounds.push(slot),
+    },
     awardKillBounty: vi.fn(),
     onHudChanged: vi.fn(),
   } as unknown as CombatDeps & { sounds: string[] };

@@ -177,6 +177,7 @@ function createSpawnedCreep(
     deathFadeRemainingMs: 0,
     footprintCenterOffsetPx,
     baseTint,
+    race: spawn.unit.faction,
     isDirectional,
     facing: isDirectional ? 'side' : undefined,
     facingFlipped: false,

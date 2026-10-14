@@ -272,3 +272,118 @@ that referenced the key. Production installs no listener and collects nothing.
 Sound follows the same idea: ids listed in `PENDING_SOUND_ASSETS`
 (`shared/lib/phaser/sound/audio.constants.ts`) are skipped by the preloader and
 stay silent until their wav lands. See `docs/SOUND_ASSET_LIST.md`.
+
+---
+
+# Sound Profiles
+
+Which clip a tower or creature plays is authored data, like its stats. Clips
+are registered once in code; profiles in `src/content/audio/` pick them.
+
+```txt
+src/content/audio/
+  default.json        complete fallback, every slot set
+  races/
+    undead.json       race-wide and per-archetype sounds
+    orc.json
+    human.json
+    elf.json
+```
+
+## Clips and ids
+
+A sound id (`SOUND_IDS` in `src/shared/types/sound-ids.ts`) names exactly one
+clip, and every clip has its own file (`SOUND_CLIPS` in
+`src/shared/lib/phaser/sound/registry/`). Two ids never point at the same file;
+a test enforces it. When two races should sound alike, their profiles name the
+same id, so the sharing is visible in content instead of hidden in a path map.
+
+## Slots
+
+| Slot | Played when | Resolved by |
+| --- | --- | --- |
+| `attack` | a tower fires | tower |
+| `impact` | a tower shot lands on its primary target | tower |
+| `build` | a tower is placed | tower |
+| `sell` | a tower is sold | tower |
+| `upgrade` | a tower levels up | tower |
+| `creepHit` | a creature takes a tower hit (throttled) | creature race |
+| `creepDeath` | a creature dies | creature race |
+| `creepEscape` | a creature reaches the exit | creature race |
+
+UI, economy, wave and status-effect cues are not slots: they sound the same for
+every race and are played by id.
+
+## Fallback order
+
+For a tower slot the first match wins:
+
+1. the tower's own `sounds` entry in `src/content/towers/<race>.json`,
+2. the race profile's `archetypes.<archetype>` entry,
+3. the race profile's race-wide `sounds`,
+4. the default profile's `archetypes.<archetype>` entry,
+5. the default profile's `sounds` (always set).
+
+A tower's race is the race of its content file. Creature slots use the
+creature's race profile, then the default.
+
+## File format
+
+```json
+{
+  "schemaVersion": 1,
+  "race": "ORC",
+  "sounds": {
+    "build": "combat.build.orc",
+    "creepDeath": "combat.creep_death.orc"
+  },
+  "archetypes": {
+    "chain": { "attack": "combat.attack.chain.orc" }
+  }
+}
+```
+
+`default.json` has the same shape without `race`, and its `sounds` must set
+every slot. Archetype entries accept tower slots only.
+
+A tower override sits on the tower entry:
+
+```json
+{
+  "id": "orc_lightning_totem",
+  "archetype": "chain",
+  "sounds": { "attack": "combat.attack.chain.orc" }
+}
+```
+
+## Validation
+
+Profiles load and validate with the module, like stats. Each of these fails
+fast, naming the file and the race, archetype (`ORC/chain`) or tower id:
+
+- an unknown sound id, e.g. `content/audio/races/orc.json [ORC/chain]:
+  "attack" names an unknown sound id "combat.zap"`,
+- an unknown slot, archetype or field,
+- a creature slot on an archetype entry or tower,
+- a default profile missing a slot,
+- a race with no profile file, or two files for one race.
+
+## Giving a race or tower its own sound
+
+1. Create the clip: add a recipe for it (see `docs/SOUND_ASSET_LIST.md`) or
+   drop an authored wav under `public/assets/audio/sfx/<category>/`.
+2. Register the id in `SOUND_IDS` and its clip (file, volume, cooldown) in the
+   matching file under `src/shared/lib/phaser/sound/registry/`.
+3. Point the profile at it: race-wide in `sounds`, for one archetype under
+   `archetypes`, or for a single tower in that tower's `sounds`.
+4. Run `npm run check`.
+
+## Where the code lives
+
+| Concern | File |
+| --- | --- |
+| Ids and slots | `src/shared/types/sound-ids.ts` |
+| Clip registry | `src/shared/lib/phaser/sound/registry/` |
+| Profile schema and loader | `src/entities/sound-profile/model/` |
+| Resolver | `src/entities/sound-profile/model/resolveSound.ts` |
+| Game wiring | `src/shared/lib/phaser/runtime/audio/gameSoundRouting.ts` |

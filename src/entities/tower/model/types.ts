@@ -4,6 +4,7 @@ import type { TowerTypeUpgradeConfig } from '../../../shared/constants/tower';
 import type { EffectId, RaceId } from '../../../shared/types/content-ids';
 import { TOWER_TYPE_IDS, TowerTypeId } from '../../../shared/types/content-ids';
 import type { TowerAttackKind } from '../../../shared/types/content-ids';
+import type { TowerSoundSet } from '../../../shared/types/sound-ids';
 import {
   loadTowerArchetypeContent,
   type TowerArchetypeDefinition,
@@ -53,6 +54,8 @@ export type BuildableTowerConfig = {
   onHitEffects: TowerOnHitEffect[];
   /** Per-tower upgrade curve; falls back to the archetype curve when absent. */
   levels?: TowerLevelDefinition[];
+  /** Authored sound overrides; the race and default sound profiles fill the rest. */
+  sounds?: TowerSoundSet;
   spriteKey: string;
   description: string;
 };

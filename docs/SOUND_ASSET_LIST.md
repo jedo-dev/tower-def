@@ -198,7 +198,7 @@ assets/
 
 ## Implementation Notes
 
-1. **Faction Routing**: The audio system routes sounds based on `selectedFaction`. If a faction-specific variant exists, it plays; otherwise, falls back to default.
+1. **Race Routing**: Tower and creature sounds are picked by the sound profiles in `src/content/audio` (tower -> archetype -> race -> default). See "Sound Profiles" in `docs/08-content-authoring.md`. Every id owns exactly one file.
 
 2. **Throttling**: The system prevents audio spam by tracking cooldowns and limiting simultaneous sounds per category.
 
