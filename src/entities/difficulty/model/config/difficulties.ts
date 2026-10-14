@@ -4,22 +4,22 @@ export const difficulties: DifficultyConfig[] = [
   {
     id: Difficulty.EASY,
     name: 'Easy',
-    description: 'Relaxed gameplay for beginners.',
+    description: 'The computer builds slowly and reacts late to leaks.',
   },
   {
     id: Difficulty.NORMAL,
     name: 'Normal',
-    description: 'Standard challenge for experienced players.',
+    description: 'The computer builds at a steady pace and invests before it attacks.',
   },
   {
     id: Difficulty.HARD,
     name: 'Hard',
-    description: 'Tough opponents for veterans.',
+    description: 'The computer builds at full speed but attacks too early.',
   },
   {
     id: Difficulty.NIGHTMARE,
     name: 'Nightmare',
-    description: 'Extreme difficulty for the brave.',
+    description: 'The computer plays its best: fastest builds, deepest maze search, patient sends.',
   },
 ];
 

@@ -1,124 +1,93 @@
 import { describe, expect, it } from 'vitest';
 import { Difficulty } from '../../difficulty/model/types';
+import { SPEND_BUDGET_BY_DIFFICULTY } from './buildSpendBudget';
+import { DECISION_MISTAKES_BY_DIFFICULTY } from './decisionMistakes';
 import {
   COMPUTER_DIFFICULTY_PRESETS,
   DEFAULT_COMPUTER_PRESET,
   getComputerDifficultyPreset,
 } from './difficultyPresets';
+import { MAZE_PLAN_SEARCH_EFFORT_BY_DIFFICULTY } from './maze-planning';
+import { SEND_TUNING_BY_DIFFICULTY } from './sendTuning';
+
+const LADDER: readonly Difficulty[] = [
+  Difficulty.EASY,
+  Difficulty.NORMAL,
+  Difficulty.HARD,
+  Difficulty.NIGHTMARE,
+];
 
 describe('entities/computer-opponent/difficultyPresets', () => {
   describe('COMPUTER_DIFFICULTY_PRESETS', () => {
-    it('contains presets for all difficulty levels', () => {
-      expect(COMPUTER_DIFFICULTY_PRESETS[Difficulty.EASY]).toBeDefined();
-      expect(COMPUTER_DIFFICULTY_PRESETS[Difficulty.NORMAL]).toBeDefined();
-      expect(COMPUTER_DIFFICULTY_PRESETS[Difficulty.HARD]).toBeDefined();
-      expect(COMPUTER_DIFFICULTY_PRESETS[Difficulty.NIGHTMARE]).toBeDefined();
-    });
-
-    it('each preset has required fields', () => {
-      for (const difficulty of Object.values(Difficulty)) {
+    it('names and describes every difficulty, each name distinct', () => {
+      for (const difficulty of LADDER) {
         const preset = COMPUTER_DIFFICULTY_PRESETS[difficulty];
         expect(preset.id).toBe(difficulty);
-        expect(preset.name).toBeDefined();
-        expect(preset.description).toBeDefined();
-        expect(preset.buildSpendRatio).toBeGreaterThanOrEqual(0);
-        expect(preset.buildSpendRatio).toBeLessThanOrEqual(1);
-        expect(preset.sendSpendRatio).toBeGreaterThanOrEqual(0);
-        expect(preset.sendSpendRatio).toBeLessThanOrEqual(1);
-        expect(['low', 'medium', 'high']).toContain(preset.threatThresholdForDefense);
-        expect(preset.pressurePriority).toBeGreaterThanOrEqual(0);
-        expect(preset.pressurePriority).toBeLessThanOrEqual(1);
-        expect(preset.upgradePriority).toBeGreaterThanOrEqual(0);
-        expect(preset.upgradePriority).toBeLessThanOrEqual(1);
-        expect(preset.extendMazePriority).toBeGreaterThanOrEqual(0);
-        expect(preset.extendMazePriority).toBeLessThanOrEqual(1);
+        expect(preset.name.length).toBeGreaterThan(0);
+        expect(preset.description.length).toBeGreaterThan(0);
       }
-    });
-  });
-
-  describe('spend ratios', () => {
-    it('build spend ratio increases with difficulty', () => {
-      const easy = COMPUTER_DIFFICULTY_PRESETS[Difficulty.EASY].buildSpendRatio;
-      const normal = COMPUTER_DIFFICULTY_PRESETS[Difficulty.NORMAL].buildSpendRatio;
-      const hard = COMPUTER_DIFFICULTY_PRESETS[Difficulty.HARD].buildSpendRatio;
-      const nightmare = COMPUTER_DIFFICULTY_PRESETS[Difficulty.NIGHTMARE].buildSpendRatio;
-
-      expect(easy).toBeLessThan(normal);
-      expect(normal).toBeLessThan(hard);
-      expect(hard).toBeLessThan(nightmare);
+      const names = LADDER.map((difficulty) => COMPUTER_DIFFICULTY_PRESETS[difficulty].name);
+      expect(new Set(names).size).toBe(names.length);
     });
 
-    it('send spend ratio increases with difficulty', () => {
-      const easy = COMPUTER_DIFFICULTY_PRESETS[Difficulty.EASY].sendSpendRatio;
-      const normal = COMPUTER_DIFFICULTY_PRESETS[Difficulty.NORMAL].sendSpendRatio;
-      const hard = COMPUTER_DIFFICULTY_PRESETS[Difficulty.HARD].sendSpendRatio;
-      const nightmare = COMPUTER_DIFFICULTY_PRESETS[Difficulty.NIGHTMARE].sendSpendRatio;
-
-      expect(easy).toBeLessThan(normal);
-      expect(normal).toBeLessThan(hard);
-      expect(hard).toBeLessThan(nightmare);
-    });
-  });
-
-  describe('priority tuning', () => {
-    it('relaxed preset is more defensive', () => {
-      const easy = COMPUTER_DIFFICULTY_PRESETS[Difficulty.EASY];
-      expect(easy.pressurePriority).toBeLessThan(easy.extendMazePriority);
-      expect(easy.threatThresholdForDefense).toBe('medium');
-    });
-
-    it('aggressive preset is more pressure-focused', () => {
-      const hard = COMPUTER_DIFFICULTY_PRESETS[Difficulty.HARD];
-      expect(hard.pressurePriority).toBeGreaterThan(hard.extendMazePriority);
-      expect(hard.threatThresholdForDefense).toBe('high');
-    });
-
-    it('nightmare preset has highest pressure priority', () => {
-      const nightmare = COMPUTER_DIFFICULTY_PRESETS[Difficulty.NIGHTMARE];
-      const hard = COMPUTER_DIFFICULTY_PRESETS[Difficulty.HARD];
-      expect(nightmare.pressurePriority).toBeGreaterThan(hard.pressurePriority);
-    });
-  });
-
-  describe('decisions only', () => {
     it('carries no stat or economy handicap at any difficulty', () => {
-      for (const difficulty of Object.values(Difficulty)) {
-        const preset = COMPUTER_DIFFICULTY_PRESETS[difficulty];
-        expect(preset).not.toHaveProperty('handicapGoldBonus');
-        expect(preset).not.toHaveProperty('creepHealthModifier');
-        expect(preset).not.toHaveProperty('creepSpeedModifier');
-        expect(preset).not.toHaveProperty('rewardModifier');
+      for (const difficulty of LADDER) {
+        expect(Object.keys(COMPUTER_DIFFICULTY_PRESETS[difficulty]).sort()).toEqual([
+          'description',
+          'id',
+          'name',
+        ]);
       }
     });
   });
 
-  describe('DEFAULT_COMPUTER_PRESET', () => {
-    it('is the normal difficulty preset', () => {
+  // Strength is ordered by decision quality alone (sim:duel-batch --matchups,
+  // docs/07): build pace, plan search, send timing and deliberate mistakes.
+  describe('decision ladder', () => {
+    it('builds more towers a round at every step up', () => {
+      const paces = LADDER.map(
+        (difficulty) => SPEND_BUDGET_BY_DIFFICULTY[difficulty].maxBuildActionsPerRound,
+      );
+      for (let step = 1; step < paces.length; step += 1) {
+        expect(paces[step]).toBeGreaterThan(paces[step - 1]);
+      }
+    });
+
+    it('searches the maze plan hardest on nightmare', () => {
+      const nightmare = MAZE_PLAN_SEARCH_EFFORT_BY_DIFFICULTY[Difficulty.NIGHTMARE];
+      for (const difficulty of LADDER.slice(0, -1)) {
+        const effort = MAZE_PLAN_SEARCH_EFFORT_BY_DIFFICULTY[difficulty];
+        expect(nightmare.finalistCount).toBeGreaterThan(effort.finalistCount);
+        expect(nightmare.maxExpandedNodes).toBeGreaterThan(effort.maxExpandedNodes);
+      }
+    });
+
+    it('rushes pressure on hard and waits for income on nightmare', () => {
+      const hard = SEND_TUNING_BY_DIFFICULTY[Difficulty.HARD];
+      const nightmare = SEND_TUNING_BY_DIFFICULTY[Difficulty.NIGHTMARE];
+      expect(hard.economyRounds).toBeLessThan(nightmare.economyRounds);
+      expect(hard.basePressureWeight).toBeGreaterThan(nightmare.basePressureWeight);
+    });
+
+    it('makes the late-reaction mistake on easy only', () => {
+      expect(DECISION_MISTAKES_BY_DIFFICULTY[Difficulty.EASY].leakReactionDelayRounds).toBe(1);
+      for (const difficulty of LADDER.slice(1)) {
+        expect(DECISION_MISTAKES_BY_DIFFICULTY[difficulty].leakReactionDelayRounds).toBe(0);
+      }
+    });
+  });
+
+  describe('lookup', () => {
+    it('defaults to the normal preset', () => {
       expect(DEFAULT_COMPUTER_PRESET.id).toBe(Difficulty.NORMAL);
     });
-  });
 
-  describe('getComputerDifficultyPreset', () => {
-    it('returns correct preset for each difficulty', () => {
-      for (const difficulty of Object.values(Difficulty)) {
-        const preset = getComputerDifficultyPreset(difficulty);
-        expect(preset.id).toBe(difficulty);
+    it('returns the shared preset for each difficulty', () => {
+      for (const difficulty of LADDER) {
+        expect(getComputerDifficultyPreset(difficulty)).toBe(
+          COMPUTER_DIFFICULTY_PRESETS[difficulty],
+        );
       }
-    });
-
-    it('returns the same reference as COMPUTER_DIFFICULTY_PRESETS', () => {
-      for (const difficulty of Object.values(Difficulty)) {
-        const preset = getComputerDifficultyPreset(difficulty);
-        expect(preset).toBe(COMPUTER_DIFFICULTY_PRESETS[difficulty]);
-      }
-    });
-  });
-
-  describe('determinism', () => {
-    it('presets are immutable references', () => {
-      const preset1 = getComputerDifficultyPreset(Difficulty.NORMAL);
-      const preset2 = getComputerDifficultyPreset(Difficulty.NORMAL);
-      expect(preset1).toBe(preset2);
     });
   });
 });
