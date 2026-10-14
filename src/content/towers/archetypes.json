@@ -73,7 +73,7 @@
       "id": "frost",
       "name": "Frost",
       "attackKind": "single-target",
-      "damage": 13,
+      "damage": 19,
       "range": 6,
       "attackCooldownMs": 900,
       "onHitEffects": [
@@ -87,7 +87,7 @@
         {
           "level": 1,
           "upgradeCostGold": 0,
-          "damage": 13,
+          "damage": 19,
           "range": 6,
           "attackCooldownMs": 900,
           "onHitEffects": [
@@ -101,7 +101,7 @@
         {
           "level": 2,
           "upgradeCostGold": 45,
-          "damage": 17,
+          "damage": 25,
           "range": 6.4,
           "attackCooldownMs": 850,
           "onHitEffects": [
@@ -115,7 +115,7 @@
         {
           "level": 3,
           "upgradeCostGold": 90,
-          "damage": 21,
+          "damage": 31,
           "range": 6.8,
           "attackCooldownMs": 800,
           "onHitEffects": [
@@ -139,7 +139,7 @@
       "onHitEffects": [
         {
           "effectId": "poison",
-          "magnitude": 6,
+          "magnitude": 4,
           "durationMs": 4000,
           "maxStacks": 3
         }
@@ -154,7 +154,7 @@
           "onHitEffects": [
             {
               "effectId": "poison",
-              "magnitude": 6,
+              "magnitude": 4,
               "durationMs": 4000,
               "maxStacks": 3
             }
@@ -169,7 +169,7 @@
           "onHitEffects": [
             {
               "effectId": "poison",
-              "magnitude": 8,
+              "magnitude": 6,
               "durationMs": 4000,
               "maxStacks": 4
             }
@@ -184,7 +184,7 @@
           "onHitEffects": [
             {
               "effectId": "poison",
-              "magnitude": 11,
+              "magnitude": 8,
               "durationMs": 4000,
               "maxStacks": 5
             }
@@ -197,35 +197,35 @@
       "id": "chain",
       "name": "Chain Lightning",
       "attackKind": "chain",
-      "damage": 16,
+      "damage": 24,
       "range": 6,
-      "attackCooldownMs": 1100,
+      "attackCooldownMs": 1000,
       "chain": {
-        "bounces": 2,
+        "bounces": 3,
         "bounceRangeCells": 4,
-        "damageFalloff": 0.35
+        "damageFalloff": 0.25
       },
       "levels": [
         {
           "level": 1,
           "upgradeCostGold": 0,
-          "damage": 16,
+          "damage": 24,
           "range": 6,
-          "attackCooldownMs": 1100
+          "attackCooldownMs": 1000
         },
         {
           "level": 2,
           "upgradeCostGold": 55,
-          "damage": 26,
+          "damage": 35,
           "range": 6.4,
-          "attackCooldownMs": 1050
+          "attackCooldownMs": 950
         },
         {
           "level": 3,
           "upgradeCostGold": 105,
-          "damage": 36,
+          "damage": 48,
           "range": 6.8,
-          "attackCooldownMs": 1000
+          "attackCooldownMs": 900
         }
       ],
       "description": "Strikes a target then jumps to nearby creeps with weaker arcs."
@@ -239,7 +239,7 @@
       "attackCooldownMs": 1000,
       "aura": {
         "radiusCells": 5,
-        "attackSpeedBonus": 0.2,
+        "attackSpeedBonus": 0.18,
         "rangeBonus": 0.8,
         "stacking": "strongest"
       },
@@ -252,7 +252,7 @@
           "attackCooldownMs": 1000,
           "aura": {
             "radiusCells": 5,
-            "attackSpeedBonus": 0.2,
+            "attackSpeedBonus": 0.18,
             "rangeBonus": 0.8,
             "stacking": "strongest"
           }
@@ -265,7 +265,7 @@
           "attackCooldownMs": 1000,
           "aura": {
             "radiusCells": 6,
-            "attackSpeedBonus": 0.28,
+            "attackSpeedBonus": 0.26,
             "rangeBonus": 1.1,
             "stacking": "strongest"
           }
@@ -278,7 +278,7 @@
           "attackCooldownMs": 1000,
           "aura": {
             "radiusCells": 7,
-            "attackSpeedBonus": 0.36,
+            "attackSpeedBonus": 0.34,
             "rangeBonus": 1.4,
             "stacking": "strongest"
           }

@@ -122,10 +122,13 @@ describe('entities/computer-opponent/spendSurplus', () => {
   });
 
   it('leaves an unfinished plan to the threat split', () => {
-    const state = createState(900);
+    // A purse the threat split cannot spend inside its per-round action cap, so
+    // the gap does not hinge on whether one more tower happens to fit its ratio.
+    const gold = 1200;
+    const state = createState(gold);
     const unfinished: MazePlan = { ...finishedPlan(state), isComplete: false };
-    const { result } = playBuildPhase(900, Difficulty.HARD, unfinished);
-    const { result: finished } = playBuildPhase(900, Difficulty.HARD, null);
+    const { result } = playBuildPhase(gold, Difficulty.HARD, unfinished);
+    const { result: finished } = playBuildPhase(gold, Difficulty.HARD, null);
 
     expect(result.spentGold).toBeLessThan(finished.spentGold);
   });

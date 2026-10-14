@@ -30,7 +30,7 @@
       "name": "Moonwell",
       "archetype": "frost",
       "costGold": 70,
-      "damage": 13,
+      "damage": 19,
       "range": 6,
       "attackCooldownMs": 900,
       "onHitEffects": [
@@ -47,14 +47,14 @@
       "id": "elf_thorn_spire",
       "name": "Thorn Spire",
       "archetype": "poison",
-      "costGold": 65,
+      "costGold": 70,
       "damage": 8,
       "range": 6,
       "attackCooldownMs": 1000,
       "onHitEffects": [
         {
           "effectId": "poison",
-          "magnitude": 6,
+          "magnitude": 4,
           "durationMs": 4000,
           "maxStacks": 3
         }

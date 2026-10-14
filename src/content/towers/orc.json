@@ -30,9 +30,9 @@
       "name": "Lightning Totem",
       "archetype": "chain",
       "costGold": 85,
-      "damage": 16,
+      "damage": 24,
       "range": 6,
-      "attackCooldownMs": 1100,
+      "attackCooldownMs": 1000,
       "spriteKey": "tower.orc.lightning_totem",
       "description": "Shaman totem whose bolt leaps from creep to creep."
     },
@@ -41,7 +41,7 @@
       "name": "Tar Pit",
       "archetype": "frost",
       "costGold": 70,
-      "damage": 13,
+      "damage": 19,
       "range": 6,
       "attackCooldownMs": 900,
       "onHitEffects": [

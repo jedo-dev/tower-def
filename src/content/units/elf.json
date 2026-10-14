@@ -46,7 +46,7 @@
       "id": "elf_chimera",
       "name": "Chimera",
       "tier": 4,
-      "health": 165,
+      "health": 150,
       "speed": 1.3,
       "armor": 1,
       "damage": 38,
