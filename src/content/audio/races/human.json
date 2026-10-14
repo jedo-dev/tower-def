@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "race": "HUMAN",
+  "sounds": {
+    "impact": "combat.impact.human",
+    "build": "combat.build.human",
+    "creepDeath": "combat.creep_death.human"
+  },
+  "archetypes": {
+    "single": {
+      "attack": "combat.attack.single.human"
+    },
+    "splash": {
+      "attack": "combat.attack.splash.human"
+    },
+    "poison": {
+      "attack": "combat.attack.poison.human"
+    }
+  }
+}

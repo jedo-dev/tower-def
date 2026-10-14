@@ -1,4 +1,4 @@
-import type { TowerTypeId } from '../../../types/content-ids';
+import type { RaceId, TowerTypeId } from '../../../types/content-ids';
 import type Phaser from 'phaser';
 import type { CreepEntity, CreepSenderSide } from '../../../../entities/creep';
 import type { UnitConfig } from '../../../../entities/unit';
@@ -16,6 +16,8 @@ export type CreepRenderState = {
   footprintCenterOffsetPx?: number;
   /** Faction tint to restore after a hit flash; white when untinted. */
   baseTint?: number;
+  /** Race of the creature, so its hit, death and escape use its race sound profile. */
+  race?: RaceId;
   /** Status pips shown while several effects run at once. */
   effectPips?: Phaser.GameObjects.Text;
   /** Effect set the sprite currently reflects, so repaints stay change-driven. */

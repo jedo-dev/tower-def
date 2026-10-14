@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "race": "ORC",
+  "sounds": {
+    "impact": "combat.impact.orc",
+    "build": "combat.build.orc",
+    "creepDeath": "combat.creep_death.orc"
+  },
+  "archetypes": {
+    "single": {
+      "attack": "combat.attack.single.orc"
+    },
+    "splash": {
+      "attack": "combat.attack.splash.orc"
+    },
+    "chain": {
+      "attack": "combat.attack.chain.orc"
+    },
+    "frost": {
+      "attack": "combat.attack.frost.orc"
+    }
+  }
+}

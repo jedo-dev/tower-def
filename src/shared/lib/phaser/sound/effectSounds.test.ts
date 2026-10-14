@@ -62,7 +62,7 @@ describe('status effect sounds', () => {
 
   it('points every effect stinger at a declared asset path', () => {
     for (const soundId of EFFECT_SOUND_IDS) {
-      expect(SOUND_ASSET_PATHS[soundId], soundId).toMatch(/combat_effect_.+\.wav$/);
+      expect(SOUND_ASSET_PATHS[soundId], soundId).toMatch(/combat\/effects\/.+\.wav$/);
     }
   });
 

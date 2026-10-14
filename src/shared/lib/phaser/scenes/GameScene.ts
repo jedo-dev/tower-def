@@ -172,6 +172,7 @@ import {
 } from '../runtime/wave/sharedBaselineWave';
 import type { GameSetupEndpoints } from '../../../config/game-setup';
 import { GameAudioManager } from '../sound/GameAudioManager';
+import { createGameSoundRouter, type GameSoundRouter } from '../runtime/audio/gameSoundRouting';
 import {
   BUILD_PREVIEW_RENDER_DEPTH,
   ROUTE_PREVIEW_RENDER_DEPTH,
@@ -317,12 +318,19 @@ export class GameScene extends Phaser.Scene {
     trySellTowerAtHoveredCell: () => trySellTowerAtHoveredCell(this.towerCommandDeps),
   };
 
+  /** Tower and creature sounds, resolved through the race sound profiles. */
+  private readonly soundRouter: GameSoundRouter = createGameSoundRouter(
+    (soundId) => this.soundManager?.play(soundId),
+    () => this.selectedBuilderFactionId,
+  );
+
   private readonly wiring = createGameSceneRuntimeWiring({
     scene: this,
     runState: this.runState,
     playerField: this.playerField,
     opponentField: this.opponentField,
     getSoundManager: () => this.soundManager,
+    soundRouter: this.soundRouter,
     getDuelMatchState: () => this.duelMatchState,
     setDuelMatchState: (state) => {
       this.duelMatchState = state;
@@ -354,6 +362,7 @@ export class GameScene extends Phaser.Scene {
       this.registry.set('economy.lastSellRefund', refundAmount);
     },
     playSound: (soundId: SoundId) => this.soundManager?.play(soundId),
+    soundRouter: this.soundRouter,
     markUserActionProcessed: () => this.markUserActionProcessed(),
     onHudChanged: () => this.publishHudSnapshot(),
     drawGridCell: (cell) => {
@@ -424,7 +433,6 @@ export class GameScene extends Phaser.Scene {
         () => this.ensureBaseAmbientPlaying(),
       ),
     );
-    this.soundManager?.setFaction(this.selectedFaction);
     createUnitWalkAnimations(this);
     createTowerAnimations(this);
     this.registerBridgeCommandHandlers();
@@ -545,7 +553,6 @@ export class GameScene extends Phaser.Scene {
           this.playerLives = this.duelMatchState.player.hp;
           publishPlayerSendLimits(this.duelMatchState, this.selectedBuilderFactionId);
         }
-        this.soundManager?.setFaction(this.selectedFaction);
         this.registry.set('wave.selectedFaction', this.selectedFaction);
         this.publishHudSnapshot();
       }),

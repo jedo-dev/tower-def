@@ -1,100 +1,12 @@
-import { BuilderFaction } from '../../../../entities/builder-faction';
-import type { HudFactionType } from '../../game-bridge/types';
+export type { SoundId } from '../../../types/sound-ids';
 
 export enum SoundCategory {
   UI = 'UI',
   COMBAT = 'COMBAT',
   ECONOMY = 'ECONOMY',
   SYSTEM = 'SYSTEM',
-  ENVIRONMENT = 'ENVIRONMENT',
-  FACTION = 'FACTION',
   AMBIENT = 'AMBIENT',
 }
-
-export enum FactionAudioId {
-  UNDEAD = 'undead',
-  ORC = 'orc',
-  HUMAN = 'human',
-  ELF = 'elf',
-}
-
-export type FactionId = FactionAudioId | BuilderFaction;
-
-export function mapHudFactionToAudioFaction(faction: HudFactionType): FactionAudioId {
-  switch (faction) {
-    case 'undead':
-      return FactionAudioId.UNDEAD;
-    case 'orc':
-      return FactionAudioId.ORC;
-    case 'human':
-      return FactionAudioId.HUMAN;
-    case 'elf':
-      return FactionAudioId.ELF;
-    default:
-      return FactionAudioId.UNDEAD;
-  }
-}
-
-export function mapBuilderFactionToAudioFaction(faction: BuilderFaction): FactionAudioId {
-  switch (faction) {
-    case BuilderFaction.UNDEAD:
-      return FactionAudioId.UNDEAD;
-    case BuilderFaction.ORC:
-      return FactionAudioId.ORC;
-    case BuilderFaction.HUMAN:
-      return FactionAudioId.HUMAN;
-    case BuilderFaction.ELF:
-      return FactionAudioId.ELF;
-  }
-}
-
-export type SoundId =
-  | 'ui.click'
-  | 'ui.hover'
-  | 'ui.open'
-  | 'ui.close'
-  | 'ui.error'
-  | 'ui.success'
-  | 'ui.build_select'
-  | 'ui.faction_select'
-  | 'ui.wave_start'
-  | 'ui.wave_complete'
-  | 'ui.game_over'
-  | 'ui.victory'
-  | 'system.pause'
-  | 'system.unpause'
-  | 'system.restart'
-  | 'economy.gold_gain'
-  | 'economy.gold_spent'
-  | 'economy.refund'
-  | 'economy.life_lost'
-  | 'economy.wave_reward'
-  | 'combat.tower_attack.archer'
-  | 'combat.tower_attack.archer.undead'
-  | 'combat.tower_attack.archer.orc'
-  | 'combat.tower_attack.archer.human'
-  | 'combat.tower_attack.archer.elf'
-  | 'combat.tower_attack.splash'
-  | 'combat.tower_attack.splash.undead'
-  | 'combat.tower_attack.splash.orc'
-  | 'combat.tower_attack.splash.human'
-  | 'combat.tower_attack.splash.elf'
-  | 'combat.creep_hit'
-  | 'combat.effect_applied.chill'
-  | 'combat.effect_applied.poison'
-  | 'combat.effect_applied.stun'
-  | 'combat.creep_death.basic'
-  | 'combat.creep_death.elite'
-  | 'combat.creep_escape'
-  | 'combat.invalid_build'
-  | 'combat.successful_build'
-  | 'combat.sell_tower'
-  | 'ambient.map'
-  | 'ambient.tension'
-  | 'ambient.faction.undead'
-  | 'ambient.faction.orc'
-  | 'ambient.faction.human'
-  | 'ambient.faction.elf';
 
 export type SoundPlaybackConfig = {
   volume: number;
@@ -106,7 +18,12 @@ export type SoundPlaybackConfig = {
   category: SoundCategory;
   loop: boolean;
   spatial: boolean;
-  factionTags: FactionAudioId[];
+};
+
+/** One registered clip: how it plays and the single file it plays from. */
+export type SoundClipDefinition = SoundPlaybackConfig & {
+  /** Path under `public/`, e.g. `assets/audio/sfx/ui/ui_click_01.wav`. */
+  assetPath: string;
 };
 
 export const DEFAULT_SOUND_CONFIG: SoundPlaybackConfig = {
@@ -119,14 +36,4 @@ export const DEFAULT_SOUND_CONFIG: SoundPlaybackConfig = {
   category: SoundCategory.SYSTEM,
   loop: false,
   spatial: false,
-  factionTags: [],
-};
-
-export type SoundAssetDefinition = {
-  id: SoundId;
-  filename: string;
-  config: SoundPlaybackConfig;
-  usage: string;
-  emotion: string;
-  suggestedDurationSec: number;
 };

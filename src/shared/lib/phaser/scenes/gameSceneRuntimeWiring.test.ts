@@ -22,6 +22,7 @@ function createHost(): GameSceneWiringHost & { duelState: () => DuelMatchState }
     playerField: emptyField,
     opponentField: emptyField,
     getSoundManager: () => null,
+    soundRouter: { playTowerSound: vi.fn(), playCreepSound: vi.fn() },
     getDuelMatchState: () => duelMatchState,
     setDuelMatchState: (state) => {
       duelMatchState = state;

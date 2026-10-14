@@ -20,6 +20,8 @@ import { publishGameEvent } from '../../../game-bridge/bridge';
 import type { SelectedTowerSnapshot } from '../../../game-bridge/types';
 import { SELL_REFUND_RATIO } from '../../scenes/gameScene.constants';
 import type { SoundId } from '../../sound/audio.types';
+import { TowerSoundSlot } from '../../../../types/sound-ids';
+import type { GameSoundRouter } from '../audio/gameSoundRouting';
 import type { BattlefieldRenderState } from '../battlefield/battlefieldRenderState';
 import {
   createPlacedArcherSprite,
@@ -48,6 +50,8 @@ export type TowerCommandDeps = {
   onGoldUpdated: (nextGold: number) => void;
   onRefundRecorded: (refundAmount: number) => void;
   playSound: (soundId: SoundId) => void;
+  /** Build, sell and upgrade sounds, resolved through the tower's sound profile. */
+  soundRouter: GameSoundRouter;
   markUserActionProcessed: () => void;
   onHudChanged: () => void;
   drawGridCell: (cell: GridCell) => void;
@@ -87,7 +91,7 @@ export function tryPlaceTowerAtHoveredCell(deps: TowerCommandDeps): void {
     deps.getBuildRuntimeDeps(),
   );
   if (!result.success || !result.placedTower || !result.towerType) {
-    deps.playSound('combat.invalid_build');
+    deps.playSound('ui.error');
     return;
   }
 
@@ -106,7 +110,7 @@ export function tryPlaceTowerAtHoveredCell(deps: TowerCommandDeps): void {
   });
   refreshFieldAuras(deps.playerField);
   deps.onGoldUpdated(result.playerGold);
-  deps.playSound('combat.successful_build');
+  deps.soundRouter.playTowerSound(result.placedTower, TowerSoundSlot.BUILD);
   deps.playSound('economy.gold_spent');
   deps.markUserActionProcessed();
   deps.onHudChanged();
@@ -137,12 +141,12 @@ export function trySellTowerAtHoveredCell(deps: TowerCommandDeps): void {
     const shouldKeep = tower.entity.id !== result.removedTowerId;
     if (!shouldKeep) {
       playBoneArcherSellAnimation(tower);
+      deps.soundRouter.playTowerSound(tower.entity, TowerSoundSlot.SELL);
     }
     return shouldKeep;
   });
   refreshFieldAuras(deps.playerField);
   deps.onRefundRecorded(result.refundAmount);
-  deps.playSound('combat.sell_tower');
   deps.playSound('economy.refund');
   deps.markUserActionProcessed();
   deps.onHudChanged();
@@ -184,7 +188,7 @@ export function handleUpgradeTowerCommand(deps: TowerCommandDeps, towerId: strin
   const { entity } = tower;
   const upgradeCheck = canAffordUpgrade(entity.type, entity.level, deps.getPlayerGold());
   if (!upgradeCheck.allowed) {
-    deps.playSound('combat.invalid_build');
+    deps.playSound('ui.error');
     return;
   }
 
@@ -204,7 +208,7 @@ export function handleUpgradeTowerCommand(deps: TowerCommandDeps, towerId: strin
     upgradeCost,
   );
   if (!spendResult.spent) {
-    deps.playSound('combat.invalid_build');
+    deps.playSound('ui.error');
     return;
   }
 
@@ -213,7 +217,7 @@ export function handleUpgradeTowerCommand(deps: TowerCommandDeps, towerId: strin
   entity.baseCombatStats = { ...nextStats };
   refreshFieldAuras(deps.playerField);
   deps.onGoldUpdated(spendResult.resources.gold);
-  deps.playSound('ui.success');
+  deps.soundRouter.playTowerSound(entity, TowerSoundSlot.UPGRADE);
   deps.playSound('economy.gold_spent');
   deps.onHudChanged();
 
@@ -260,7 +264,7 @@ export function handleSellTowerCommand(deps: TowerCommandDeps, towerId: string):
 
   freeTowerCells(deps, tower.entity.position);
 
-  deps.playSound('combat.sell_tower');
+  deps.soundRouter.playTowerSound(tower.entity, TowerSoundSlot.SELL);
   deps.playSound('economy.refund');
   deps.onHudChanged();
   publishGameEvent('selected-tower', { tower: null });

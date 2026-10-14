@@ -47,6 +47,7 @@ function createDeps(): MovementRuntimeDeps {
     onBuildStateNeedsRefresh: vi.fn(),
     onHudChanged: vi.fn(),
     playSound: vi.fn(),
+    soundRouter: { playTowerSound: vi.fn(), playCreepSound: vi.fn() },
   };
 }
 

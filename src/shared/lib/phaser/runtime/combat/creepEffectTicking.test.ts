@@ -40,6 +40,11 @@ function createDeps(): CombatDeps & {
     playArcherAttackAnimation: vi.fn(),
     playSplashAttackAnimation: vi.fn(),
     playSound: (soundId: string) => sounds.push(soundId),
+    // Profile slots are recorded by name, so assertions do not depend on content.
+    soundRouter: {
+      playTowerSound: (_tower: unknown, slot: string) => sounds.push(slot),
+      playCreepSound: (_creep: unknown, slot: string) => sounds.push(slot),
+    },
     awardKillBounty: () => {
       bountiesPaid.push(1);
     },
@@ -113,7 +118,7 @@ describe('updateCreepEffects', () => {
 
     expect(creep.entity.lifeState).toBe('dead');
     expect(deps.bountiesPaid).toHaveLength(1);
-    expect(deps.sounds.filter((sound) => sound === 'combat.creep_death.basic')).toHaveLength(1);
+    expect(deps.sounds.filter((sound) => sound === 'creepDeath')).toHaveLength(1);
   });
 
   it('leaves escaped creeps alone', () => {

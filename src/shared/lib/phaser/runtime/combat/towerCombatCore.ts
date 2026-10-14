@@ -47,14 +47,14 @@ export type TowerCombatHooks<C extends CombatCreep, T extends CombatTower> = {
   /** A creep took a tower hit (single, splash or chain arc). */
   onCreepHit: (creep: C) => void;
   /** The primary target of a single or splash shot was struck. */
-  onTargetStruck: () => void;
+  onTargetStruck: (tower: T) => void;
   onDamageDealt: (position: GridPosition, damage: number, source: DamageNumberSource) => void;
   /** An effect landed and changed the creep. */
   onEffectApplied: (creep: C, effectId: EffectId) => void;
   /** Effects on the creep advanced (expired, ticked or wore off). */
   onEffectsTicked: (creep: C) => void;
   /** Called once per kill, from a hit or from damage over time. */
-  onCreepKilled: () => void;
+  onCreepKilled: (creep: C) => void;
   /** The tower attacked; its cooldown is already consumed. */
   onTowerFired: (tower: T, target: C, isSplashTower: boolean) => void;
 };
@@ -125,11 +125,11 @@ function applySingleTargetDamage<C extends CombatCreep, T extends CombatTower>(
   hooks: TowerCombatHooks<C, T>,
 ): void {
   const result = strikeCreep(tower, target, tower.entity.combatStats.damage, hooks);
-  hooks.onTargetStruck();
+  hooks.onTargetStruck(tower);
   hooks.onDamageDealt(target.entity.position, Math.round(result.damageApplied), 'hit');
 
   if (result.killed) {
-    hooks.onCreepKilled();
+    hooks.onCreepKilled(target);
   }
 }
 
@@ -158,11 +158,11 @@ function applySplashDamage<C extends CombatCreep, T extends CombatTower>(
     totalDamageDealt += result.damageApplied;
 
     if (result.killed) {
-      hooks.onCreepKilled();
+      hooks.onCreepKilled(creep);
     }
   }
 
-  hooks.onTargetStruck();
+  hooks.onTargetStruck(tower);
   hooks.onDamageDealt(target.entity.position, Math.round(totalDamageDealt), 'hit');
 }
 
@@ -244,7 +244,7 @@ function applyChainDamage<C extends CombatCreep, T extends CombatTower>(
     hooks.onDamageDealt(creep.entity.position, Math.round(result.damageApplied), 'hit');
 
     if (result.killed) {
-      hooks.onCreepKilled();
+      hooks.onCreepKilled(creep);
     }
   }
 }
@@ -336,7 +336,7 @@ export function tickFieldCreepEffects<C extends CombatCreep, T extends CombatTow
     hooks.onDamageDealt(creep.entity.position, Math.round(tickResult.damage), 'effect');
 
     if (damageResult.killed) {
-      hooks.onCreepKilled();
+      hooks.onCreepKilled(creep);
     }
   }
 }

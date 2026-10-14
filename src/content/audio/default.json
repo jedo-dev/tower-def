@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "sounds": {
+    "attack": "combat.attack.default",
+    "impact": "combat.impact.default",
+    "build": "combat.build",
+    "sell": "combat.sell",
+    "upgrade": "combat.upgrade",
+    "creepHit": "combat.creep_hit",
+    "creepDeath": "combat.creep_death",
+    "creepEscape": "combat.creep_escape"
+  }
+}

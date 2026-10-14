@@ -23,5 +23,7 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src"]
+  "include": ["src"],
+  /* Suites that read files from disk need node typings; tsconfig.tools.json checks them. */
+  "exclude": ["src/**/*.node.test.ts"]
 }

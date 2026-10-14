@@ -5,6 +5,8 @@ import { transitionToGameOver, type WavePhaseState } from '../../../../../featur
 import type { GridPosition } from '../../../../types/pathfinding';
 import { hasWaveRoute, type WaveRoute, type WaveRoutes } from '../../../pathfinding/waveRoutes';
 import type { SoundId } from '../../sound/audio.types';
+import { CreepSoundSlot } from '../../../../types/sound-ids';
+import type { GameSoundRouter } from '../audio/gameSoundRouting';
 import type { CreepRenderState } from '../../scenes/gameScene.types';
 import { walkCreepsAlongRoutes, type MutablePoint } from './routeWalk';
 
@@ -38,6 +40,8 @@ export type MovementRuntimeDeps = {
   onBuildStateNeedsRefresh: () => void;
   onHudChanged: () => void;
   playSound: (soundId: SoundId) => void;
+  /** Creature sounds, resolved through the creature's race sound profile. */
+  soundRouter: GameSoundRouter;
 };
 
 function markCreepEscaped(
@@ -51,7 +55,7 @@ function markCreepEscaped(
   }
 
   creep.entity.status = 'escaped';
-  deps.playSound('combat.creep_escape');
+  deps.soundRouter.playCreepSound(creep, CreepSoundSlot.ESCAPE);
   deps.playSound('economy.life_lost');
   const nextResources = subtractLives({ gold: state.playerGold, lives: state.playerLives }, 1);
   state.playerLives = nextResources.lives;

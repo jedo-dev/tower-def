@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "race": "UNDEAD",
+  "sounds": {
+    "impact": "combat.impact.undead",
+    "build": "combat.build.undead",
+    "creepDeath": "combat.creep_death.undead"
+  },
+  "archetypes": {
+    "single": {
+      "attack": "combat.attack.single.undead"
+    },
+    "splash": {
+      "attack": "combat.attack.splash.undead"
+    },
+    "frost": {
+      "attack": "combat.attack.frost.undead"
+    }
+  }
+}

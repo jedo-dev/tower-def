@@ -7,6 +7,7 @@ import {
 import type { UnitConfig } from '../../../../entities/unit';
 import type { SoundId } from '../sound/audio.types';
 import type { GameAudioManager } from '../sound/GameAudioManager';
+import { SILENT_SOUND_ROUTER, type GameSoundRouter } from '../runtime/audio/gameSoundRouting';
 import type { BattlefieldRenderState } from '../runtime/battlefield/battlefieldRenderState';
 import {
   getAnimationKeyByUnit,
@@ -38,6 +39,8 @@ export type GameSceneWiringHost = {
   playerField: BattlefieldRenderState;
   opponentField: BattlefieldRenderState;
   getSoundManager: () => GameAudioManager | null;
+  /** Tower and creature sounds for the player's battlefield. */
+  soundRouter: GameSoundRouter;
   getDuelMatchState: () => DuelMatchState;
   setDuelMatchState: (state: DuelMatchState) => void;
   getComputerSendWaveUnits: () => UnitConfig[];
@@ -65,13 +68,8 @@ function createPlayerCombatDeps(host: GameSceneWiringHost): CombatRuntimeDepende
     toCellCenter: (position) => toCellCenter(position),
     playArcherAttackAnimation: (tower) => playArcherAttackAnimation(tower),
     playSplashAttackAnimation: (tower) => playPlagueAttackAnimation(host.scene, tower),
-    playSound: (soundId: SoundId) => {
-      if (soundId === 'combat.tower_attack.archer' || soundId === 'combat.tower_attack.splash') {
-        host.getSoundManager()?.playFactionVariant(soundId);
-        return;
-      }
-      host.getSoundManager()?.play(soundId);
-    },
+    playSound: (soundId: SoundId) => host.getSoundManager()?.play(soundId),
+    soundRouter: host.soundRouter,
     // The player's purse lives in the scene wallet; the same bounty rule applies.
     awardKillBounty: () => updatePlayerGold(host, addKillBounty(host.runState.playerGold)),
     onHudChanged: () => host.publishHudSnapshot(),
@@ -85,6 +83,7 @@ function createOpponentCombatDeps(host: GameSceneWiringHost): CombatRuntimeDepen
     playArcherAttackAnimation: (tower) => playArcherAttackAnimation(tower),
     playSplashAttackAnimation: (tower) => playPlagueAttackAnimation(host.scene, tower),
     playSound: () => undefined,
+    soundRouter: SILENT_SOUND_ROUTER,
     // Kills on the computer's own battlefield pay the computer.
     awardKillBounty: () =>
       host.setDuelMatchState(awardKillBounty(host.getDuelMatchState(), 'opponent')),
@@ -134,6 +133,7 @@ function createPlayerMovementDeps(host: GameSceneWiringHost): MovementRuntimeDep
     onBuildStateNeedsRefresh: () => host.refreshBuildState(),
     onHudChanged: () => host.publishHudSnapshot(),
     playSound: (soundId: SoundId) => host.getSoundManager()?.play(soundId),
+    soundRouter: host.soundRouter,
   };
 }
 
@@ -151,6 +151,7 @@ function createOpponentMovementDeps(host: GameSceneWiringHost): MovementRuntimeD
     onBuildStateNeedsRefresh: () => undefined,
     onHudChanged: () => host.publishHudSnapshot(),
     playSound: (soundId: SoundId) => host.getSoundManager()?.play(soundId),
+    soundRouter: host.soundRouter,
   };
 }
 

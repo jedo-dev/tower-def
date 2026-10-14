@@ -42,6 +42,7 @@ function createDeps(overrides: Partial<MovementRuntimeDeps> = {}): MovementRunti
     onBuildStateNeedsRefresh: vi.fn(),
     onHudChanged: vi.fn(),
     playSound: vi.fn(),
+    soundRouter: { playTowerSound: vi.fn(), playCreepSound: vi.fn() },
     ...overrides,
   };
 }

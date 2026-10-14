@@ -20,6 +20,8 @@ import {
   type ContentLocation,
 } from '../../../../shared/lib/content/contentValidation';
 import type { TowerTypeId } from '../../../../shared/types/content-ids';
+import { TOWER_SOUND_SLOTS } from '../../../../shared/types/sound-ids';
+import { readSoundSlotSet } from '../../../../shared/lib/content/soundSlotValidation';
 import { BUILDABLE_TOWER_IDS } from '../towerIds';
 import type { BuildableTowerConfig, TowerCombatStats, TowerOnHitEffect } from '../types';
 import {
@@ -188,6 +190,7 @@ function parseTowerEntry(
   }
 
   const splashRadius = parseOptionalStat(entry, 'splashRadius', location);
+  const sounds = readSoundSlotSet(entry, 'sounds', TOWER_SOUND_SLOTS, location);
 
   return {
     id,
@@ -206,6 +209,7 @@ function parseTowerEntry(
     ...(splashRadius === undefined ? {} : { splashRadius }),
     ...(entry.levels === undefined ? {} : { levels: parseLevels(entry, location) }),
     onHitEffects: parseOnHitEffects(entry, location),
+    ...(sounds === undefined ? {} : { sounds }),
     spriteKey: readString(entry, 'spriteKey', location),
     description: readString(entry, 'description', location),
   };

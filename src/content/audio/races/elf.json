@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "race": "ELF",
+  "sounds": {
+    "impact": "combat.impact.elf",
+    "build": "combat.build.elf",
+    "creepDeath": "combat.creep_death.elf"
+  },
+  "archetypes": {
+    "single": {
+      "attack": "combat.attack.single.elf"
+    },
+    "splash": {
+      "attack": "combat.attack.splash.elf"
+    },
+    "frost": {
+      "attack": "combat.attack.frost.elf"
+    },
+    "poison": {
+      "attack": "combat.attack.poison.elf"
+    }
+  }
+}
