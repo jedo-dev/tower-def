@@ -13,6 +13,7 @@ export {
   selectWaveRoute,
   type WaveRoute,
   type WaveRoutes,
+  type WaveRouteTraits,
 } from './model/calculateWavePath';
 export { generateWaveUnits, getWaveBudget, getWaveUnitCap } from './model/generateWaveUnits';
 export {

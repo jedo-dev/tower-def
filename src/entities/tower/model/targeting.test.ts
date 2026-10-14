@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_CREEP_COMBAT_TRAITS } from '../../creep';
-import { UnitSizeClass } from '../../../shared/types/content-ids';
+import { UnitMoveType, UnitSizeClass } from '../../../shared/types/content-ids';
 import type { CreepEntity } from '../../creep';
-import { getCreepsInTowerRange, selectTowerTarget } from './targeting';
+import { canTowerTargetCreep, getCreepsInTowerRange, selectTowerTarget } from './targeting';
 import { TOWER_COMBAT_STATS_BY_TYPE, type TowerEntity } from './types';
 
 function createTower(overrides?: Partial<TowerEntity>): TowerEntity {
@@ -134,5 +134,49 @@ describe('tower targeting from a 2x2 footprint', () => {
     const creep = createCreep({ position: { x: 5.5 + range - 0.1, y: 5.5 } });
 
     expect(getCreepsInTowerRange(tower, [creep])).toHaveLength(1);
+  });
+});
+
+describe('tower target scope (allowedTargets)', () => {
+  const flier = (overrides?: Partial<CreepEntity>) =>
+    createCreep({ id: 'creep:air', moveType: UnitMoveType.AIR, ...overrides });
+
+  it('a ground-only tower never sees an air creep, even in range', () => {
+    const splash = createTower({ type: 'splash', combatStats: TOWER_COMBAT_STATS_BY_TYPE.splash });
+    expect(getCreepsInTowerRange(splash, [flier({ position: { x: 6, y: 5 } })])).toEqual([]);
+    expect(selectTowerTarget(splash, [flier({ position: { x: 6, y: 5 } })])).toBeNull();
+  });
+
+  it('a both-scope tower shoots air and ground alike', () => {
+    const archer = createTower();
+    const result = getCreepsInTowerRange(archer, [
+      flier({ position: { x: 6, y: 5 } }),
+      createCreep({ id: 'creep:ground', position: { x: 7, y: 5 } }),
+    ]);
+    expect(result.map((creep) => creep.id)).toEqual(['creep:air', 'creep:ground']);
+  });
+
+  it('an authored scope on the tower entity overrides the archetype', () => {
+    expect(canTowerTargetCreep(createTower({ allowedTargets: 'ground' }), flier())).toBe(false);
+    expect(canTowerTargetCreep(createTower({ allowedTargets: 'air' }), createCreep())).toBe(false);
+    expect(canTowerTargetCreep(createTower({ allowedTargets: 'air' }), flier())).toBe(true);
+  });
+
+  it('prefers the creep closest to its exit, air first on a tie, then the nearest', () => {
+    const archer = createTower();
+    const ground = createCreep({
+      id: 'creep:ground',
+      position: { x: 6, y: 5 },
+      remainingRouteDistance: 9,
+    });
+    const air = flier({ position: { x: 8, y: 5 }, remainingRouteDistance: 9 });
+    const groundAhead = createCreep({
+      id: 'creep:ahead',
+      position: { x: 9, y: 5 },
+      remainingRouteDistance: 4,
+    });
+
+    expect(selectTowerTarget(archer, [ground, air])?.id).toBe('creep:air');
+    expect(selectTowerTarget(archer, [air, ground, groundAhead])?.id).toBe('creep:ahead');
   });
 });

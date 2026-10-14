@@ -17,7 +17,7 @@ import {
 import { DEFAULT_DIFFICULTY, type Difficulty } from '../../../entities/difficulty';
 import { resolveUnitConfigById, type UnitConfig } from '../../../entities/unit';
 import { calculateWaveRoutes, EMPTY_WAVE_ROUTES, hasWaveRoute } from '../../../entities/wave';
-import { RaceId } from '../../../shared/types/content-ids';
+import { RaceId, UnitMoveType } from '../../../shared/types/content-ids';
 import {
   canPerformBuildActions as canPerformBuildActionsByPhase,
   isWaveActionAllowed,
@@ -726,6 +726,7 @@ export class GameScene extends Phaser.Scene {
         isBuildPhase: this.canPerformBuildActions(),
         hoveredAnchor: this.hoveredBuildAnchor,
         isHoveredAnchorValid,
+        hasAirCreeps: this.doesFacedRosterHaveAirCreeps(),
       },
       ROUTE_PREVIEW_CONFIG,
     );
@@ -1011,6 +1012,11 @@ export class GameScene extends Phaser.Scene {
 
   private getSelectedFactionUnits(): UnitConfig[] {
     return resolveFactionUnits(mapHudFactionToRaceId(this.selectedFaction));
+  }
+
+  /** The baseline waves and the computer's sends both draw from the enemy roster. */
+  private doesFacedRosterHaveAirCreeps(): boolean {
+    return this.getSelectedFactionUnits().some((unit) => unit.moveType === UnitMoveType.AIR);
   }
 
   private getComputerSendWaveUnits(): UnitConfig[] {

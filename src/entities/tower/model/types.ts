@@ -1,7 +1,7 @@
 import towerArchetypeContent from '../../../content/towers/archetypes.json';
 import type { GridPosition } from '../../../shared/types/pathfinding';
 import type { TowerTypeUpgradeConfig } from './upgradeConfig';
-import type { EffectId, RaceId } from '../../../shared/types/content-ids';
+import type { EffectId, RaceId, TowerTargetScope } from '../../../shared/types/content-ids';
 import { TOWER_TYPE_IDS, TowerTypeId } from '../../../shared/types/content-ids';
 import type { TowerAttackKind } from '../../../shared/types/content-ids';
 import type { TowerSoundSet } from '../../../shared/types/sound-ids';
@@ -52,6 +52,8 @@ export type BuildableTowerConfig = {
   levels?: TowerLevelDefinition[];
   /** Authored sound overrides; the race and default sound profiles fill the rest. */
   sounds?: TowerSoundSet;
+  /** Which creeps the tower shoots: ground, air or both. `both` unless authored. */
+  allowedTargets: TowerTargetScope;
   spriteKey: string;
   description: string;
 };
@@ -104,6 +106,16 @@ export function getTowerOnHitEffects(towerType: TowerTypeId): readonly TowerOnHi
   return TOWER_ARCHETYPE_DEFINITIONS[towerType].onHitEffects;
 }
 
+/**
+ * Which creeps a tower shoots: the authored tower's own scope when it was
+ * built from content, the archetype's otherwise (computer towers, tests).
+ */
+export function resolveTowerTargetScope(
+  tower: Pick<TowerEntity, 'type' | 'allowedTargets'>,
+): TowerTargetScope {
+  return tower.allowedTargets ?? TOWER_ARCHETYPE_DEFINITIONS[tower.type].allowedTargets;
+}
+
 export const TOWER_BASE_LEVEL = 1;
 
 export type TowerEntity = {
@@ -113,6 +125,8 @@ export type TowerEntity = {
   type: TowerType;
   /** Authored tower it was built from; absent for towers placed before content. */
   buildableTowerId?: BuildableTowerId;
+  /** Target scope of the authored tower; absent means the archetype's scope. */
+  allowedTargets?: TowerTargetScope;
   level: number;
   /** Stats the tower actually fights with, support auras included. */
   combatStats: TowerCombatStats;

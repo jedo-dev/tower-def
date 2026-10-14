@@ -24,6 +24,8 @@ export type DuelFieldWaveResult = {
   kills: number;
   leaks: number;
   sentLeaks: number;
+  /** Leaks of air creeps, which bypass the maze on the straight air route. */
+  airLeaks: number;
 };
 
 export type DuelWaveResult = {
@@ -86,6 +88,7 @@ function summarizeField(field: HeadlessBattlefield): DuelFieldWaveResult {
     kills: field.kills,
     leaks: field.leaks,
     sentLeaks: field.sentLeaks,
+    airLeaks: field.airLeaks,
   };
 }
 

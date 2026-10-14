@@ -2,7 +2,6 @@ import { getEffectiveSpeedMultiplier, type CreepEntity } from '../../../../entit
 import type { GridPosition } from '../../../../shared/types/pathfinding';
 import { getRemainingRouteDistance } from '../../../../shared/lib/pathfinding/routeProgress';
 import {
-  hasWaveRoute,
   selectWaveRoute,
   type WaveRoute,
   type WaveRoutes,
@@ -134,7 +133,8 @@ export function advanceCreepAlongRoute(
 }
 
 /**
- * Moves every alive creep along the wave route for its size class and reports
+ * Moves every alive creep along the wave route for its move type and size
+ * class (air creeps fly the straight air route over the maze) and reports
  * each one that reaches the exit. `deltaMs` is used as given; clamping frame
  * hitches is the caller's job.
  */
@@ -145,7 +145,7 @@ export function walkCreepsAlongRoutes<C extends RouteWalker>(
   deltaMs: number,
   onReachedExit: (creep: C) => void,
 ): void {
-  if (!hasWaveRoute(routes) || creeps.length === 0) {
+  if (creeps.length === 0) {
     return;
   }
 
@@ -154,7 +154,10 @@ export function walkCreepsAlongRoutes<C extends RouteWalker>(
       continue;
     }
 
-    const route = selectWaveRoute(routes, creep.entity.sizeClass);
+    const route = selectWaveRoute(routes, creep.entity);
+    if (route.length === 0) {
+      continue;
+    }
 
     // A stunned creep holds its ground but must still be able to leak once it
     // is already standing on the exit, so movement stops after the escape check.

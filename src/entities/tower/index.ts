@@ -2,6 +2,7 @@ export {
   getTowerArchetype,
   getTowerAttackKind,
   getTowerOnHitEffects,
+  resolveTowerTargetScope,
   TOWER_ARCHETYPE_DEFINITIONS,
   TOWER_COMBAT_STATS_BY_TYPE,
 } from './model/types';
@@ -18,7 +19,7 @@ export {
   createInitialTowerCombatRuntime,
   tickTowerCooldown,
 } from './model/cooldown';
-export { getCreepsInTowerRange, selectTowerTarget } from './model/targeting';
+export { canTowerTargetCreep, getCreepsInTowerRange, selectTowerTarget } from './model/targeting';
 export { getTowerCenter, isTowerCoveringCell } from './model/footprint';
 export {
   applyAuraBonusToStats,

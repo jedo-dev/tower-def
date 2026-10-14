@@ -6,6 +6,8 @@
       "id": "undead_bone_archer_tower",
       "name": "Bone Archer Tower",
       "archetype": "single",
+
+      "allowedTargets": "both",
       "costGold": 50,
       "damage": 20,
       "range": 6,
@@ -17,6 +19,8 @@
       "id": "undead_plague_tower",
       "name": "Plague Tower",
       "archetype": "splash",
+
+      "allowedTargets": "ground",
       "costGold": 75,
       "damage": 18,
       "range": 5,
@@ -29,6 +33,8 @@
       "id": "undead_frost_wyrm_nest",
       "name": "Frost Wyrm Nest",
       "archetype": "frost",
+
+      "allowedTargets": "both",
       "costGold": 70,
       "damage": 19,
       "range": 6,

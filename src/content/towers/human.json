@@ -6,6 +6,8 @@
       "id": "human_guard_archer_tower",
       "name": "Guard Archer Tower",
       "archetype": "single",
+
+      "allowedTargets": "both",
       "costGold": 50,
       "damage": 20,
       "range": 6,
@@ -17,6 +19,8 @@
       "id": "human_cannon_bastion",
       "name": "Cannon Bastion",
       "archetype": "splash",
+
+      "allowedTargets": "ground",
       "costGold": 75,
       "damage": 18,
       "range": 5,
@@ -29,6 +33,8 @@
       "id": "human_alchemist_tower",
       "name": "Alchemist Tower",
       "archetype": "poison",
+
+      "allowedTargets": "both",
       "costGold": 70,
       "damage": 8,
       "range": 6,

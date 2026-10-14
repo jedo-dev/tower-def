@@ -100,8 +100,12 @@ describe('movement along octile routes', () => {
   it('takes sqrt(2) times as long for a diagonal step as for an orthogonal one', () => {
     const diagonal = createCreep({ x: 0, y: 0 });
     const orthogonal = createCreep({ x: 0, y: 0 });
-    const diagonalState = createState([diagonal], { small: DIAGONAL_ROUTE, large: [] });
-    const orthogonalState = createState([orthogonal], { small: ORTHOGONAL_ROUTE, large: [] });
+    const diagonalState = createState([diagonal], { small: DIAGONAL_ROUTE, large: [], air: [] });
+    const orthogonalState = createState([orthogonal], {
+      small: ORTHOGONAL_ROUTE,
+      large: [],
+      air: [],
+    });
     const deps = createDeps();
 
     moveCreepsAlongPath(orthogonalState, deps, CONFIG, ORTHOGONAL_STEP_MS);
@@ -125,7 +129,7 @@ describe('movement along octile routes', () => {
 
   it('carries distance past a waypoint into the next segment', () => {
     const creep = createCreep({ x: 0, y: 0 });
-    const state = createState([creep], { small: DIAGONAL_ROUTE, large: [] });
+    const state = createState([creep], { small: DIAGONAL_ROUTE, large: [], air: [] });
 
     moveCreepsAlongPath(state, createDeps(), CONFIG, DIAGONAL_STEP_MS * 1.5);
 
@@ -136,7 +140,7 @@ describe('movement along octile routes', () => {
 
   it('keeps a large creep on its 2x2 footprint centre, one cell from its anchor corner', () => {
     const large = createCreep({ x: 0, y: 0 }, UnitSizeClass.LARGE);
-    const state = createState([large], { small: ORTHOGONAL_ROUTE, large: DIAGONAL_ROUTE });
+    const state = createState([large], { small: ORTHOGONAL_ROUTE, large: DIAGONAL_ROUTE, air: [] });
 
     moveCreepsAlongPath(state, createDeps(), CONFIG, DIAGONAL_STEP_MS + EPSILON_MS);
 
@@ -148,7 +152,7 @@ describe('movement along octile routes', () => {
 
   it('leaks the creep once it reaches the last waypoint of its route', () => {
     const creep = createCreep({ x: 0, y: 0 });
-    const state = createState([creep], { small: DIAGONAL_ROUTE, large: [] });
+    const state = createState([creep], { small: DIAGONAL_ROUTE, large: [], air: [] });
 
     moveCreepsAlongPath(state, createDeps(), CONFIG, DIAGONAL_STEP_MS * 1.99);
     expect(creep.entity.status).toBe('alive');
@@ -167,7 +171,7 @@ describe('movement along octile routes', () => {
       },
     });
     const creeps = [createCreep({ x: 0, y: 0 }), createCreep({ x: 0, y: 0 }, UnitSizeClass.LARGE)];
-    const state = createState(creeps, { small: ORTHOGONAL_ROUTE, large: DIAGONAL_ROUTE });
+    const state = createState(creeps, { small: ORTHOGONAL_ROUTE, large: DIAGONAL_ROUTE, air: [] });
 
     for (let frame = 0; frame < 20; frame += 1) {
       moveCreepsAlongPath(state, deps, CONFIG, 16);
@@ -179,7 +183,7 @@ describe('movement along octile routes', () => {
 
   it('does not replace the position object while a creep is between waypoints', () => {
     const creep = createCreep({ x: 0, y: 0 });
-    const state = createState([creep], { small: DIAGONAL_ROUTE, large: [] });
+    const state = createState([creep], { small: DIAGONAL_ROUTE, large: [], air: [] });
     const positionBefore = creep.entity.position;
 
     moveCreepsAlongPath(state, createDeps(), CONFIG, 16);
