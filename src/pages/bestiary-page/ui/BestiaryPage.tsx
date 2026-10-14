@@ -1,4 +1,4 @@
-import { useMemo, useState, type CSSProperties } from 'react';
+import { useCallback, useMemo, useRef, useState, type CSSProperties } from 'react';
 import type { AppRoute } from '../../../shared/config/game-setup';
 import { RaceId } from '../../../shared/types/content-ids';
 import { buildBestiaryViewModel } from '../model/buildBestiaryViewModel';
@@ -23,9 +23,19 @@ export function BestiaryPage({ onNavigate, viewModel }: BestiaryPageProps) {
   const race =
     resolvedViewModel.races.find((candidate) => candidate.raceId === selectedRaceId) ??
     resolvedViewModel.races[0];
+  const pageRef = useRef<HTMLElement | null>(null);
+
+  // A new race starts at the top of its codex, not wherever the last one was scrolled to.
+  const handleSelectRace = useCallback((raceId: RaceId) => {
+    setSelectedRaceId(raceId);
+    const page = pageRef.current;
+    if (page && typeof page.scrollTo === 'function') {
+      page.scrollTo({ top: 0 });
+    }
+  }, []);
 
   return (
-    <main className={styles.page}>
+    <main className={styles.page} ref={pageRef}>
       <div className={styles.stickyTop}>
         <header className={styles.header}>
           <button
@@ -43,7 +53,7 @@ export function BestiaryPage({ onNavigate, viewModel }: BestiaryPageProps) {
         <RaceTabs
           races={resolvedViewModel.races}
           selectedRaceId={selectedRaceId}
-          onSelect={setSelectedRaceId}
+          onSelect={handleSelectRace}
         />
       </div>
 
