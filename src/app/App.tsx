@@ -13,6 +13,7 @@ import {
   DEFAULT_SFX_VOLUME,
   setAudioSettings,
 } from '../shared/lib/audio/audioSettingsStore';
+import { createAmbientFader, type AmbientFader } from '../shared/lib/audio/ambientFader';
 
 function resolveUiAudioPath(soundId: SoundId): string | undefined {
   const assetPath = SOUND_ASSET_PATHS[soundId];
@@ -25,6 +26,7 @@ export function App() {
   const [sfxVolume, setSfxVolume] = useState(DEFAULT_SFX_VOLUME);
   const [ambientVolume, setAmbientVolume] = useState(DEFAULT_AMBIENT_VOLUME);
   const ambientRef = useRef<HTMLAudioElement | null>(null);
+  const ambientFaderRef = useRef<AmbientFader | null>(null);
   const ambientVolumeRef = useRef(ambientVolume);
   const routeRef = useRef<AppRoute>('start');
   const isUiAudioUnlockedRef = useRef(false);
@@ -76,6 +78,8 @@ export function App() {
     ambient.volume = ambientVolumeRef.current;
     ambient.preload = 'auto';
     ambientRef.current = ambient;
+    const ambientFader = createAmbientFader({ audio: ambient });
+    ambientFaderRef.current = ambientFader;
 
     const unlockAudio = () => {
       if (isUiAudioUnlockedRef.current) {
@@ -87,7 +91,7 @@ export function App() {
         routeRef.current === 'setup' ||
         routeRef.current === 'settings'
       ) {
-        void ambient.play().catch(() => undefined);
+        ambientFader.play();
       }
     };
 
@@ -100,50 +104,34 @@ export function App() {
     return () => {
       window.removeEventListener('pointerdown', onPointerDown);
       window.removeEventListener('keydown', onKeyDown);
+      ambientFader.cancel();
       ambient.pause();
       ambient.currentTime = 0;
       ambientRef.current = null;
+      ambientFaderRef.current = null;
     };
   }, []);
 
   useEffect(() => {
     ambientVolumeRef.current = ambientVolume;
-    if (ambientRef.current) {
-      ambientRef.current.volume = ambientVolume;
+    const ambient = ambientRef.current;
+    if (ambient && !ambientFaderRef.current?.isFading()) {
+      ambient.volume = ambientVolume;
     }
   }, [ambientVolume]);
 
   useEffect(() => {
-    const ambient = ambientRef.current;
-    if (!ambient || !isUiAudioUnlockedRef.current) {
+    const ambientFader = ambientFaderRef.current;
+    if (!ambientFader || !isUiAudioUnlockedRef.current) {
       return;
     }
 
     if (route === 'start' || route === 'setup' || route === 'settings') {
-      void ambient.play().catch(() => undefined);
+      ambientFader.play();
       return;
     }
 
-    const initialVolume = ambient.volume;
-    const fadeMs = 220;
-    const stepMs = 20;
-    const steps = Math.max(1, Math.floor(fadeMs / stepMs));
-    let step = 0;
-    const timer = window.setInterval(() => {
-      step += 1;
-      const next = Math.max(0, initialVolume * (1 - step / steps));
-      ambient.volume = next;
-      if (step >= steps) {
-        window.clearInterval(timer);
-        ambient.pause();
-        ambient.currentTime = 0;
-        ambient.volume = initialVolume;
-      }
-    }, stepMs);
-
-    return () => {
-      window.clearInterval(timer);
-    };
+    ambientFader.fadeOut();
   }, [route]);
 
   useEffect(() => {
