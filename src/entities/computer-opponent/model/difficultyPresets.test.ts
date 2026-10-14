@@ -69,6 +69,19 @@ describe('entities/computer-opponent/difficultyPresets', () => {
       expect(hard.basePressureWeight).toBeGreaterThan(nightmare.basePressureWeight);
     });
 
+    it('sends as heavily as hard on normal, so build pace alone separates them', () => {
+      // Normal's race balance needs the heavy opening (docs/07, tower-def-i55);
+      // the normal < hard step is the build pace, 4 towers a round against 8.
+      const normal = SEND_TUNING_BY_DIFFICULTY[Difficulty.NORMAL];
+      const hard = SEND_TUNING_BY_DIFFICULTY[Difficulty.HARD];
+      expect(normal.maxSendRatioPerRound).toBe(hard.maxSendRatioPerRound);
+      expect(normal.maxSendsPerRound).toBe(hard.maxSendsPerRound);
+      expect(normal.economyRounds).toBeLessThanOrEqual(hard.economyRounds);
+      expect(SPEND_BUDGET_BY_DIFFICULTY[Difficulty.NORMAL].maxBuildActionsPerRound).toBeLessThan(
+        SPEND_BUDGET_BY_DIFFICULTY[Difficulty.HARD].maxBuildActionsPerRound,
+      );
+    });
+
     it('makes the late-reaction mistake on easy only', () => {
       expect(DECISION_MISTAKES_BY_DIFFICULTY[Difficulty.EASY].leakReactionDelayRounds).toBe(1);
       for (const difficulty of LADDER.slice(1)) {

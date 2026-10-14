@@ -28,10 +28,10 @@ export const SEND_TUNING_BY_DIFFICULTY: Readonly<Record<Difficulty, Readonly<Sen
     basePressureWeight: 0.2,
   },
   [Difficulty.NORMAL]: {
-    maxSendRatioPerRound: 0.35,
-    maxSendsPerRound: 5,
-    economyRounds: 4,
-    basePressureWeight: 0.4,
+    maxSendRatioPerRound: 0.7,
+    maxSendsPerRound: 9,
+    economyRounds: 0,
+    basePressureWeight: 0.8,
   },
   [Difficulty.HARD]: {
     maxSendRatioPerRound: 0.7,
