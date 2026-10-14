@@ -7,6 +7,7 @@ import {
   SPEND_BUDGET_BY_DIFFICULTY,
 } from './buildSpendBudget';
 import { computeContextThreatSplit } from './contextThreatSplit';
+import { selectNoticedLeaks } from './decisionMistakes';
 import { buildByScore, investInPlan, type BuildRoundState } from './buildRoundActions';
 import { spendSurplus } from './spendSurplus';
 import {
@@ -53,7 +54,8 @@ function selectIntent(context: DecisionContext, unbuiltPlanBlocks: number): Stra
     return StrategyIntent.DEFEND;
   }
 
-  const hasRecentLeaks = context.leakHistory.some((entry) => entry.leakedCount > 0);
+  const noticedLeaks = selectNoticedLeaks(context.leakHistory, context.difficulty);
+  const hasRecentLeaks = noticedLeaks.some((entry) => entry.leakedCount > 0);
   if (hasRecentLeaks) {
     return StrategyIntent.DEFEND;
   }

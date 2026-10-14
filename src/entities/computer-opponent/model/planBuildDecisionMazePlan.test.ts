@@ -12,12 +12,13 @@ import type { MazePlan } from './maze-planning';
 import { planBuildDecision, type BuildDecisionOutput } from './planBuildDecision';
 
 /**
- * Route-search cells one hard build decision may expand on the 20x30 board.
- * Measured at about 60,000 at worst (plan search capped at 40,000, plus
- * pruning and build ordering); at roughly 0.3 microseconds per expansion
- * that is ~20 ms on a desktop, well under the 50 ms budget.
+ * Route-search cells one hard or nightmare build decision may expand on the
+ * 20x30 board. Hard measured about 60,000 at worst (plan search capped at
+ * 40,000, plus pruning and build ordering); nightmare searches the plan
+ * harder and must still stay under it. At roughly 0.3 microseconds per
+ * expansion that is ~25 ms on a desktop, well under the 50 ms budget.
  */
-const HARD_DECISION_EXPANSION_BUDGET = 80_000;
+const DECISION_EXPANSION_BUDGET = 80_000;
 
 const SEEDS: readonly (number | null)[] = [null, 1, 2, 3, 4, 5];
 
@@ -107,10 +108,14 @@ describe('entities/computer-opponent/planBuildDecision maze plan', () => {
     }
   });
 
-  it('keeps every hard build decision within its search budget', () => {
-    for (const seed of SEEDS) {
-      for (const { decision } of playRounds(seed, 12, Difficulty.HARD)) {
-        expect(decision.mazeSearchExpandedNodes).toBeLessThan(HARD_DECISION_EXPANSION_BUDGET);
+  it('keeps every hard and nightmare build decision within its search budget', () => {
+    for (const difficulty of [Difficulty.HARD, Difficulty.NIGHTMARE]) {
+      for (const seed of SEEDS) {
+        for (const { decision } of playRounds(seed, 12, difficulty)) {
+          expect(decision.mazeSearchExpandedNodes, `${difficulty} seed ${seed}`).toBeLessThan(
+            DECISION_EXPANSION_BUDGET,
+          );
+        }
       }
     }
   });
