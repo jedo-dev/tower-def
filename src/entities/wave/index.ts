@@ -15,8 +15,14 @@ export {
   type WaveRoutes,
   type WaveRouteTraits,
 } from './model/calculateWavePath';
-export { generateWaveUnits, getWaveBudget, getWaveUnitCap } from './model/generateWaveUnits';
 export {
+  generateWaveUnits,
+  getWaveBudget,
+  getWaveUnitCap,
+  getWaveUnitValue,
+} from './model/generateWaveUnits';
+export {
+  WAVE_AIR_UNIT_BUDGET_MULTIPLIER,
   WAVE_BUDGET_CURVE,
   WAVE_HEALTH_GROWTH,
   WAVE_TIER_UNLOCK_WAVE,

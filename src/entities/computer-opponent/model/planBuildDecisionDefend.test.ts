@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { TOWER_FOOTPRINT } from '../../../shared/constants/footprint';
 import { withFootprintOccupancy } from '../../../shared/lib/grid/footprint';
 import { generateEdgeEndpoints } from '../../../shared/lib/grid/generateEdgeEndpoints';
+import { calculateAirRoute } from '../../../shared/lib/pathfinding/airRoute';
 import { canPlaceFootprint } from '../../../shared/lib/pathfinding/validateFootprintPlacement';
 import { RaceId } from '../../../shared/types/content-ids';
 import { Difficulty } from '../../difficulty/model/types';
@@ -15,6 +16,7 @@ import { createMazeEvaluator } from './maze-evaluation';
 import { createMazePlanPriority, type MazePlan, type MazePlanPriority } from './maze-planning';
 import type { BuildDecisionOutput } from './planBuildDecision';
 import { DEFENSE_PLACEMENT_WEIGHTS, scoreAllPlacements } from './scoreTowerPlacement';
+import { resolveAirThreatShare } from './threat-budget/resolveAirThreatShare';
 import type { BuildAction, DecisionContext } from './types';
 import { StrategyIntent } from './types';
 
@@ -76,6 +78,9 @@ function findBestBuildByFullProbe(
 ): BuildAction | null {
   const { grid, towers } = state.opponent.battlefield;
   const pathProbe = createPathProbe(grid);
+  // The same air lane the production search scores against.
+  const airThreatShare = resolveAirThreatShare(context);
+  const airPath = airThreatShare > 0 ? calculateAirRoute(grid.entrance, grid.exit) : undefined;
   let best: BuildAction | null = null;
   let bestValuePerGold = 0;
 
@@ -93,6 +98,8 @@ function findBestBuildByFullProbe(
       pathProbe,
       mazePlan,
       weights: DEFENSE_PLACEMENT_WEIGHTS,
+      airPath,
+      airThreatShare,
     }).find((score) => score.isValid);
     if (top && top.totalScore / cost > bestValuePerGold) {
       bestValuePerGold = top.totalScore / cost;

@@ -60,7 +60,7 @@ src/content/
 | `rewardGold` | yes | Gold the defender earns for the kill. |
 | `spriteKey` | yes | Art key, `unit.<race>.<name>`. Missing art falls back to a placeholder. |
 | `description` | no | Flavour text. Cosmetic only. |
-| `moveType` | no | `ground` (default) or `air`. |
+| `moveType` | no | `ground` (default) or `air`. Air creatures ignore the maze: they fly the straight line from the entrance to the exit at their own speed, towers never block them, and only towers whose `allowedTargets` is `air` or `both` can shoot them. A flier costs `WAVE_AIR_UNIT_BUDGET_MULTIPLIER` times its tier value of the wave budget (`entities/wave/model/waveBalance.ts`). |
 | `sizeClass` | no | `small`, `medium` (default) or `large`. |
 | `armorType` | no | `unarmored`, `light` (default) or `heavy`. Shifts effective armor points. |
 
@@ -70,7 +70,7 @@ Unknown fields are rejected: add the field to the schema first
 ## Balance-sensitive vs cosmetic
 
 **Balance-sensitive:** `tier`, `health`, `speed`, `armor`, `rewardGold`,
-`armorType`. Changing these changes how a wave plays.
+`armorType`, `moveType`. Changing these changes how a wave plays.
 
 **Cosmetic:** `name`, `description`, `spriteKey`, `sizeClass`.
 
@@ -172,6 +172,28 @@ are measured from the centre of the tower's 2x2 footprint.
 
 Creature `speed` is not a cell value: it multiplies the base move speed in
 pixels per second, so the grid change did not touch creature files.
+
+## Target scope
+
+`allowedTargets` says which creatures a tower may shoot: `ground`, `air` or
+`both`. It is optional on both the archetype and the race tower entry and
+defaults to `both`; a value outside the three fails on load naming the file
+and the id. Today every race tower mirrors its archetype (a test enforces it):
+
+| Archetype | `allowedTargets` | Why |
+| --- | --- | --- |
+| `single` | `both` | Single-target shots reach a flier. |
+| `frost` | `both` | Single-target; the chill keeps fliers in range longer. |
+| `poison` | `both` | Single-target flask; ticks ignore armour. |
+| `splash` | `ground` | Area blast on the ground; a flier over it is untouched. |
+| `chain` | `ground` | Area arcs between ground creeps. |
+| `support` | `both` (omitted) | Has no attack; the scope is meaningless and left out. |
+
+The rule of thumb: area attacks stay on the ground, single-target attacks
+reach the air. Loaders expose the resolved value on `BuildableTowerConfig`
+and `TowerArchetypeDefinition` (`allowedTargets`), so a roster view can show
+"targets: ground / air / both". Targeting, splash and chain all consult it
+(`entities/tower/model/targeting.ts`, `canTowerTargetCreep`).
 
 ## Schema versions
 

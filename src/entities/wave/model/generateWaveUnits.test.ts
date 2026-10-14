@@ -1,7 +1,17 @@
 import { describe, expect, it } from 'vitest';
+import { UnitMoveType } from '../../../shared/types/content-ids';
 import { UnitTier, undeadUnits } from '../../unit';
-import { generateWaveUnits, getWaveBudget, getWaveUnitCap } from './generateWaveUnits';
-import { WAVE_TIER_UNLOCK_WAVE, WAVE_UNIT_COUNT_BOUNDS } from './waveBalance';
+import {
+  generateWaveUnits,
+  getWaveBudget,
+  getWaveUnitCap,
+  getWaveUnitValue,
+} from './generateWaveUnits';
+import {
+  WAVE_AIR_UNIT_BUDGET_MULTIPLIER,
+  WAVE_TIER_UNLOCK_WAVE,
+  WAVE_UNIT_COUNT_BOUNDS,
+} from './waveBalance';
 
 describe('generateWaveUnits', () => {
   it('returns at least five units for early waves', () => {
@@ -75,5 +85,23 @@ describe('generateWaveUnits curve', () => {
 
       expect(units.length).toBeLessThanOrEqual(getWaveUnitCap(waveNumber));
     }
+  });
+
+  it('charges a flier more of the budget than a ground creature of its tier', () => {
+    const gargoyle = undeadUnits.find((unit) => unit.id === 'undead_gargoyle');
+    expect(gargoyle?.moveType).toBe(UnitMoveType.AIR);
+    if (!gargoyle) return;
+
+    const grounded = { ...gargoyle, moveType: UnitMoveType.GROUND };
+    expect(getWaveUnitValue(gargoyle)).toBe(
+      getWaveUnitValue(grounded) * WAVE_AIR_UNIT_BUDGET_MULTIPLIER,
+    );
+
+    // A wave rich enough to exceed the five-creature floor fields fewer fliers than walkers.
+    const roll = () => 0;
+    const waveNumber = WAVE_TIER_UNLOCK_WAVE[gargoyle.tier] + 7;
+    const fliers = generateWaveUnits({ waveNumber, factionUnits: [gargoyle], random: roll });
+    const walkers = generateWaveUnits({ waveNumber, factionUnits: [grounded], random: roll });
+    expect(fliers.length).toBeLessThan(walkers.length);
   });
 });
