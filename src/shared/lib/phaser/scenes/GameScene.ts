@@ -208,6 +208,7 @@ import {
   MOVEMENT_RUNTIME_CONFIG,
   WAVE_RUNTIME_CONFIG,
 } from './gameScene.runtimeConfigs';
+import type { GameSceneInspection } from './gameScene.types';
 
 export class GameScene extends Phaser.Scene {
   public static readonly KEY = 'GameScene';
@@ -386,6 +387,23 @@ export class GameScene extends Phaser.Scene {
 
   constructor() {
     super(GameScene.KEY);
+  }
+
+  /** Test seam: a read-only snapshot of live runtime state (see GameSceneInspection). */
+  public inspectRuntimeState(): GameSceneInspection {
+    return {
+      duelMatchState: this.duelMatchState,
+      playerField: this.playerField,
+      opponentField: this.opponentField,
+      pendingPlayerSpawns: this.runState.pendingWaveSpawns,
+      pendingOpponentSpawns: this.opponentWave.pendingWaveSpawns,
+      wavePhaseState: this.wavePhaseState,
+      waveNumber: this.runState.currentWaveNumber,
+      playerGold: this.playerGold,
+      isGameOver: this.isGameOver,
+      activeBattlefieldView: this.activeBattlefieldView,
+      gridModel: this.gridModel,
+    };
   }
 
   public preload(): void {

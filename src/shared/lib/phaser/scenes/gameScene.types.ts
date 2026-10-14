@@ -3,6 +3,11 @@ import type Phaser from 'phaser';
 import type { CreepEntity, CreepSenderSide } from '../../../../entities/creep';
 import type { UnitConfig } from '../../../../entities/unit';
 import type { TowerCombatRuntime, TowerEntity } from '../../../../entities/tower';
+import type { DuelMatchState } from '../../../../entities/duel-match';
+import type { WavePhaseState } from '../../../../features/wave-phase';
+import type { BattlefieldView } from '../../game-bridge/types';
+import type { GridModel } from '../../../types/grid';
+import type { BattlefieldRenderState } from '../runtime/battlefield/battlefieldRenderState';
 
 export type CreepRenderState = {
   entity: CreepEntity;
@@ -74,4 +79,24 @@ export type PendingWaveSpawn = {
 export type HudWaveQueueItem = {
   type: 'skeleton' | 'ghoul' | 'crypt_fiend' | 'gargoyle';
   index: number;
+};
+
+/**
+ * Read-only view of GameScene's runtime state. It exists for the headless scene
+ * test harness (`shared/lib/phaser/test/sceneHarness`): scenario tests observe
+ * the live objects instead of reaching into private fields. Nothing in the game
+ * reads it.
+ */
+export type GameSceneInspection = {
+  duelMatchState: DuelMatchState;
+  playerField: Readonly<BattlefieldRenderState>;
+  opponentField: Readonly<BattlefieldRenderState>;
+  pendingPlayerSpawns: readonly PendingWaveSpawn[];
+  pendingOpponentSpawns: readonly PendingWaveSpawn[];
+  wavePhaseState: WavePhaseState;
+  waveNumber: number;
+  playerGold: number;
+  isGameOver: boolean;
+  activeBattlefieldView: BattlefieldView;
+  gridModel: GridModel | null;
 };
