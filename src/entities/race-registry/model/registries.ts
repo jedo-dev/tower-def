@@ -28,7 +28,7 @@ const orcRegistry: RaceRegistryEntry = {
     'orc_lightning_totem',
     'orc_tar_pit',
   ],
-  sendableCreepIds: ['orc_grunt', 'orc_peon', 'orc_wolf_rider', 'orc_troll', 'orc_headhunter'],
+  sendableCreepIds: ['orc_grunt', 'orc_wolf_rider', 'orc_troll', 'orc_headhunter'],
 };
 
 const humanRegistry: RaceRegistryEntry = {
@@ -43,13 +43,7 @@ const humanRegistry: RaceRegistryEntry = {
     'human_alchemist_tower',
     'human_guard_post',
   ],
-  sendableCreepIds: [
-    'human_militia',
-    'human_peasant',
-    'human_footman',
-    'human_rifleman',
-    'human_siege_engine',
-  ],
+  sendableCreepIds: ['human_militia', 'human_footman', 'human_rifleman', 'human_siege_engine'],
 };
 
 const elfRegistry: RaceRegistryEntry = {
@@ -59,7 +53,7 @@ const elfRegistry: RaceRegistryEntry = {
   themeColor: '#6bbf89',
   starterTowerId: 'elf_moon_archer_tower',
   buildableTowerIds: ['elf_moon_archer_tower', 'elf_wisp_bloom', 'elf_moonwell', 'elf_thorn_spire'],
-  sendableCreepIds: ['elf_archer', 'elf_wisp', 'elf_huntress', 'elf_dryad', 'elf_chimera'],
+  sendableCreepIds: ['elf_archer', 'elf_huntress', 'elf_dryad', 'elf_chimera'],
 };
 
 export const raceRegistries: RaceRegistryMap = {

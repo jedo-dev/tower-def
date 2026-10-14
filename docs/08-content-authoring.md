@@ -138,6 +138,11 @@ race the player builds.
 Every race also keeps an internal fast-and-frail outlier: the fastest creature
 in a roster must have less health than the slowest one.
 
+The second tier-1 creature of orc, human and elf (peon, peasant, wisp) is
+baseline-only: it is not in `sendableCreepIds`, so each race sends four creeps.
+A second tier-1 send only gives the computer twelve cheap income buys a wave
+(see "Roster completion" in `docs/07-duel-mode-expansion-plan.md`).
+
 ## Adding a creature
 
 1. Add the id to `UNIT_IDS` in `src/entities/unit/model/types.ts`.

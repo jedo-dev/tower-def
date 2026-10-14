@@ -325,6 +325,46 @@ Tried and rejected: a build-only opening (no sends for the first one, two or fou
 
 How to measure it: `npm run sim:duel-batch -- --difficulties normal --pairs undead:orc,undead:human,undead:elf,orc:human,orc:elf,human:elf --seeds 1-10 --maps classic` and again with `--maps seeded`; each map takes about a minute.
 
+### Roster completion (tower-def-xwc.2)
+
+Orc, human and elf now field the undead roster shape: two tier-1 creatures, one each of tiers 2 to 4, two tier-5 and one tier-6, with at least one flyer and one large creature per race (`src/content/units/*.json`, art prompts under `docs/art-prompts/`). The new tier-5 and tier-6 numbers follow the undead ones (140-190 health at tier 5, 300-340 at tier 6), so the late baseline waves weigh about the same whichever race the player builds.
+
+| Race | New creatures (tier: health / speed / armor, traits) |
+| --- | --- |
+| Orc | Peon (1: 50 / 1.2 / 0, small, unarmored), Shaman (5: 170 / 1.1 / 2, unarmored), Wind Rider (5: 160 / 1.45 / 1, air), Tauren (6: 340 / 0.85 / 5, large, heavy) |
+| Human | Peasant (1: 40 / 1.0 / 0, small, unarmored), Knight (5: 190 / 1.2 / 4, heavy), Sorceress (5: 140 / 1.35 / 0, small, unarmored), Gryphon Rider (6: 300 / 1.2 / 4, air, large, heavy) |
+| Elf | Wisp (1: 32 / 2.0 / 0, small, unarmored), Druid of the Claw (5: 175 / 1.2 / 2, large), Hippogryph (5: 140 / 1.75 / 0, air), Mountain Giant (6: 330 / 0.8 / 5, large, heavy) |
+
+The new tier-1 creatures are **baseline-only**: they are not in `sendableCreepIds`, so every race still sends four creeps (undead keeps its two tier-1 sends and leaves the abomination out). With a second tier-1 send, the computer fills its income buys with it after the first type hits the per-type cap (6), so hard sent six archers and three wisps instead of three huntresses; on the elf pairs (classic, seeds 1-10) that took elf from 40% with the wisp baseline-only to 25% with it sendable, and the wisp's stats make no difference to that choice (the planner ranks income buys by tier, not by creature).
+
+**What the batch measures, and what it does not.** `sim:duel-batch` plays both fields against one baseline race (`--baseline-race`, default undead). The computer opponent, however, estimates the next baseline wave from the *other seat's* roster (`threat-budget/assessDefence.ts` reads `matchState.player.raceId`), which is right in the game (the baseline is the player's roster) and wrong in the simulator for every seat whose race is not the baseline race. Until this pass that error was small, because orc, human and elf stopped at tier 4; now every roster reaches tier 6 and the estimate is as heavy as the undead one. Check: with the estimate pinned to the undead roster, the old and the new rosters play seeds 1-10 on the classic map **identically** (same 60 results), so with the default baseline the new creatures change nothing but the opponent's expectations.
+
+Standard batch (hard vs hard, six race pairs, seeds 1-10, classic and seeded, baseline undead, 120 duels, 60 per race, a draw counting half):
+
+| Race | Before | After |
+| --- | --- | --- |
+| Undead | 47.5% | 58.3% |
+| Orc | 47.5% | 45.8% |
+| Human | 54.2% | 64.2% |
+| Elf | 50.8% | 31.7% |
+
+Pacing held: median 26 rounds (22-29) on the classic map and 27 (22-32) on the seeded map, 12-13 towers at round 5, draws 2-3%, no round-cap hits. The spread is the estimate error above, not the waves or the sends (both are unchanged in this batch).
+
+Game-faithful batch, each race as the player with its own baseline against the other three (hard vs hard, classic, seeds 1-10, 30 duels per row; the seat-A computer still estimates from the opponent's roster):
+
+| Player race | Before: wins / median rounds / unspent gold r16+ | After: wins / median rounds / unspent gold r16+ |
+| --- | --- | --- |
+| Undead | 9 of 30 / 25 / 130 | 12.5 of 30 / 26 / 127 |
+| Orc | 19 of 30 / 31 / 165 | 19 of 30 / 27 / 97 |
+| Human | 17 of 30 / 30 / 199 | 24 of 30 / 25 / 94 |
+| Elf | 13 of 30 / 32.5 / 766 | 3.5 of 30 / 29.5 / 206 |
+
+What the new tiers were for shows up here: orc, human and elf baselines now end matches in 25-30 rounds instead of 30-34, and the gold floating after round 15 drops from 165-766 to 94-206, because tier-5 and tier-6 creatures let the waves outgrow a full board the way the undead waves already did. The elf home loss is the known elf defence problem (poison and frost against fast unarmored waves, see "Normal race balance") made visible by waves that no longer plateau: in those duels the elf side builds more towers than its opponent (71 against 43 at round 20 on seed 1) and still leaks three to five creeps a round in the crush. Slowing the wisp and hippogryph (1.8 / 1.45) or armouring the druid and giant (4 heavy / 6) did not move it (0 of 10 against undead and orc either way), so the new creatures keep the undead-shaped numbers.
+
+Not reached: the 40-60% band per race. Follow-ups, as separate tasks: make the opponent estimate the baseline wave from the match's baseline race (store it on `DuelMatchState`; the game sets the player's race, the simulator its `--baseline-race`) so the batch measures waves instead of expectations, then re-run both tables; and a tower pass for the elf roster against fast unarmored waves.
+
+How to measure it: the standard batch as in "Race balance" above, plus `npm run sim:duel-batch -- --difficulties hard --pairs elf:undead,elf:orc,elf:human --seeds 1-10 --maps classic --baseline-race elf` for each race in the player seat.
+
 ## Suggested Improvements
 
 - Add difficulty presets for the computer opponent: relaxed, normal, aggressive.
