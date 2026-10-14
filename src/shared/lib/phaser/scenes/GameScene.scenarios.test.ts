@@ -1,15 +1,20 @@
 import { afterEach, beforeAll, describe, expect, it } from 'vitest';
+import { EnemyFaction } from '../../../../entities/enemy-faction';
 import { getRaceRegistry } from '../../../../entities/race-registry';
 import { RaceId, TowerTypeId } from '../../../types/content-ids';
 import {
   createGameSceneHarness,
+  HARNESS_DEFAULT_SETUP,
   preloadGameScene,
   type GameSceneHarness,
   type GameSceneHarnessOptions,
 } from '../test/sceneHarness';
+import { resolveBuildableTowerConfig } from './gameScene.helpers';
 
 /** A free 2x2 build spot in the middle of the 20x30 board. */
 const MID_BOARD_ANCHOR = { x: 8, y: 14 };
+/** Longer than the scene's 160 ms action cooldown. */
+const ACTION_COOLDOWN_FRAMES = 12;
 const MAX_FRAMES_PER_ROUND = 6000;
 
 describe('GameScene scenarios (headless harness)', () => {
@@ -102,6 +107,80 @@ describe('GameScene scenarios (headless harness)', () => {
       const { playerField, opponentField } = game.inspect();
       expect(playerField.towers.every((tower) => !tower.sprite.visible)).toBe(true);
       expect(opponentField.towers.every((tower) => tower.sprite.visible)).toBe(true);
+    });
+  });
+
+  describe('smoke', () => {
+    it('places a tower: spends gold, occupies the footprint and updates the HUD', async () => {
+      const game = await start();
+      const startingGold = game.inspect().playerGold;
+      const towerCost = resolveBuildableTowerConfig(RaceId.UNDEAD, TowerTypeId.SINGLE)?.costGold;
+
+      game.command('select-tower', { towerType: TowerTypeId.SINGLE });
+      game.clickBuildAnchor(MID_BOARD_ANCHOR);
+
+      const state = game.inspect();
+      expect(state.playerField.towers).toHaveLength(1);
+      expect(state.playerField.towers[0].entity.position).toEqual(MID_BOARD_ANCHOR);
+      expect(state.playerGold).toBe(startingGold - (towerCost ?? Number.NaN));
+      expect(game.latestHud().gold).toBe(state.playerGold);
+      const anchorCell = state.gridModel?.cells.find(
+        (cell) => cell.x === MID_BOARD_ANCHOR.x && cell.y === MID_BOARD_ANCHOR.y,
+      );
+      expect(anchorCell?.isOccupied).toBe(true);
+
+      // The same spot is taken now: the second build is rejected and costs nothing.
+      game.tick(ACTION_COOLDOWN_FRAMES);
+      game.clickBuildAnchor(MID_BOARD_ANCHOR);
+      expect(game.inspect().playerField.towers).toHaveLength(1);
+      expect(game.inspect().playerGold).toBe(state.playerGold);
+    });
+
+    it('starts a wave: creeps spawn on both fields and the round resolves back to build', async () => {
+      const game = await start();
+      const waveNumberBefore = game.inspect().waveNumber;
+
+      game.command('start-wave', undefined);
+
+      expect(game.inspect().wavePhaseState.phase).toBe('wave');
+      expect(game.inspect().waveNumber).toBe(waveNumberBefore + 1);
+      expect(game.latestHud()).toMatchObject({ phase: 'wave', canStartWave: false });
+      expect(game.inspect().pendingPlayerSpawns.length).toBeGreaterThan(0);
+
+      game.tickUntil(() => game.inspect().playerField.creeps.length > 0, MAX_FRAMES_PER_ROUND);
+      expect(game.inspect().opponentField.creeps.length).toBeGreaterThan(0);
+
+      game.tickUntil(() => game.inspect().wavePhaseState.phase === 'build', MAX_FRAMES_PER_ROUND);
+      expect(game.latestHud().canStartWave).toBe(true);
+      // No player towers: every baseline creep leaked.
+      expect(game.inspect().duelMatchState.player.hp).toBeLessThan(20);
+    });
+
+    it('loses the match when the player hp reaches 0', async () => {
+      const game = await start({
+        setup: { ...HARNESS_DEFAULT_SETUP, enemyFaction: EnemyFaction.ORC },
+      });
+
+      game.tickUntil(() => {
+        if (game.latestHud().canStartWave) game.command('start-wave', undefined);
+        return game.inspect().isGameOver;
+      }, MAX_FRAMES_PER_ROUND * 5);
+
+      expect(game.inspect().duelMatchState.player.hp).toBe(0);
+      expect(game.latestHud()).toMatchObject({
+        lives: 0,
+        canStartWave: false,
+        matchOutcome: { status: 'player-lost', winner: 'orc', reason: 'knockout' },
+      });
+      const outcomeSnapshots = game
+        .hudSnapshots()
+        .filter((snapshot) => snapshot.matchOutcome.status !== 'active');
+      expect(outcomeSnapshots.length).toBeGreaterThan(0);
+
+      // The run is over: commands no longer start waves.
+      game.command('start-wave', undefined);
+      game.tick(60);
+      expect(game.inspect().wavePhaseState.phase).not.toBe('wave');
     });
   });
 });
