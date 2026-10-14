@@ -258,6 +258,46 @@ Known gaps: race imbalance still dominates single matchups. Playing orc, the hig
 
 Same-wave tie-break (tower-def-ago): when both sides lose their last lives on the same wave, the side that leaked fewer creeps that wave wins; on equal leaks the side with more lives before the wave wins; only when both are equal is it a draw. The rule lives in the shared settlement (`resolveDuelMatchOutcome`, used by `endRound`), so the game and `sim:duel` / `sim:duel-batch` agree, and the outcome overlay names the reason. Same batch: draws 16% to 3% (13 to 2 of 80), match lengths unchanged.
 
+### Race balance (tower-def-zs6)
+
+Measured as hard vs hard, all six race pairs in both seats, seeds 1-10 on the classic and the seeded map, baseline undead. Seats are mirror images (each seat-swapped duel ends the other way round, checked on all 240 duels), so the 120 distinct duels decide the score; a draw counts half.
+
+Diagnosis: what loses a duel is baseline-wave leaks, not sends. Before the pass a side leaked 13-21 baseline creeps per match but only about 2 of the creeps its opponent sent. Defence is decided by the tower roster, and races share the `single` and `splash` archetypes, so the gap came from the two archetypes each race has alone: undead frost + support, orc frost + chain, human poison + support, elf frost + poison.
+
+- **Chain (orc only) was the weakest tower:** about 30 damage per second over two weak arcs for 85 gold, against 25 for a 50-gold single tower. The computer built six to ten and rarely upgraded them, and orc leaked the most baseline creeps (21 a match).
+- **Poison (human, elf) was the strongest:** three stacks of 12 damage per second each, ignoring armor and still ticking after the creep leaves range, so about 44 damage per second for 65 gold. It is best against the armored undead baseline, which is why both poison races led.
+- **Frost (undead, orc, elf) did too little damage:** the computer takes a control tower early and fills about a fifth of its towers with frost, at 14 damage per second each. Human, the only race without frost, never pays that tax.
+- **Support (human, undead)** slightly beat frost for its gold in a dense maze, which kept human ahead of elf.
+- Sends barely mattered. Orc creeps already have the most armour-adjusted health per send gold. The elf chimera is the elves' pressure pick, and a small cut to its health took the edge off the race whose sends leaked most often (about 3 a match against about 2).
+
+Changes (archetypes are shared, so each tower file mirrors its archetype's level 1; chain is orc-only, poison is human and elf):
+
+| Lever | File | Old | New |
+| --- | --- | --- | --- |
+| Chain damage L1 / L2 / L3 | `towers/archetypes.json`, `towers/orc.json` | 16 / 26 / 36 | 24 / 35 / 48 |
+| Chain cooldown L1 / L2 / L3 (ms) | same | 1100 / 1050 / 1000 | 1000 / 950 / 900 |
+| Chain bounces / falloff | same | 2 / 0.35 | 3 / 0.25 |
+| Poison magnitude L1 / L2 / L3 (per stack, per 500 ms) | `towers/archetypes.json`, `towers/human.json`, `towers/elf.json` | 6 / 8 / 11 | 4 / 6 / 8 |
+| Poison tower cost | `towers/human.json`, `towers/elf.json` | 65 | 70 |
+| Frost damage L1 / L2 / L3 | `towers/archetypes.json`, frost towers of undead, orc, elf | 13 / 17 / 21 | 19 / 25 / 31 |
+| Support attack speed bonus L1 / L2 / L3 | `towers/archetypes.json` | 0.2 / 0.28 / 0.36 | 0.18 / 0.26 / 0.34 |
+| Elf chimera health | `units/elf.json` | 165 | 150 |
+
+Results (per-race score over 60 duels each):
+
+| Race | Before | After |
+| --- | --- | --- |
+| Undead | 49.2% | 47.5% |
+| Orc | 6.7% | 47.5% |
+| Human | 78.3% | 54.2% |
+| Elf | 65.8% | 50.8% |
+
+Pacing held. Hard vs hard took a median of 25 rounds (19-31) with 12 towers at round 5 before, and 26 rounds (22-32) with 12 towers (8-15) after. The default normal batch (`--difficulties normal`, 80 duels) runs a median of 23 rounds with 11 towers at round 5. Difficulty order spot-check, nightmare vs hard, seeds 1-3, classic: nightmare won 48 of 48.
+
+How to measure it: `npm run sim:duel-batch -- --difficulties hard --pairs undead:orc,undead:human,undead:elf,orc:human,orc:elf,human:elf --seeds 1-10`. Add the reversed pairs to play both seats.
+
+Known gap: race balance on **normal** is still uneven. Seeds 1-5, both maps, six pairs: orc 78%, human 67%, undead 32%, elf 23% (before: orc 12%, human 93%, undead 35%, elf 60%). Chain strength works like a switch. With the old chain, orc leaks 1.3 sent creeps a match on normal; with the new one it leaks none, because the normal preset sends at most five creeps a round and the bounces clear them. Cutting chain level 1 damage or the third bounce did not move the normal result, and the old chain loses hard. Fixing normal therefore looks like a send-preset question, not a content one.
+
 ## Suggested Improvements
 
 - Add difficulty presets for the computer opponent: relaxed, normal, aggressive.

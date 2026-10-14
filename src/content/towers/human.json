@@ -29,14 +29,14 @@
       "id": "human_alchemist_tower",
       "name": "Alchemist Tower",
       "archetype": "poison",
-      "costGold": 65,
+      "costGold": 70,
       "damage": 8,
       "range": 6,
       "attackCooldownMs": 1000,
       "onHitEffects": [
         {
           "effectId": "poison",
-          "magnitude": 6,
+          "magnitude": 4,
           "durationMs": 4000,
           "maxStacks": 3
         }

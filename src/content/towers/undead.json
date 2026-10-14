@@ -30,7 +30,7 @@
       "name": "Frost Wyrm Nest",
       "archetype": "frost",
       "costGold": 70,
-      "damage": 13,
+      "damage": 19,
       "range": 6,
       "attackCooldownMs": 900,
       "onHitEffects": [
