@@ -1,0 +1,55 @@
+Knight — тир 5, наземный — unit.human.knight
+Контракт листа: 128x128 = 4 ряда по 4 кадра 32x32.
+Ряды: 0 движение вниз (на зрителя), 1 движение вбок (вправо), 2 движение вверх, 3 смерть.
+Статус: нужен арт
+
+Один запрос, «Изображения для обработки» оставить пустым.
+Сборка: python tools/build-sprite-sheet.py raw.png src/shared/sprite/human_knight.png --grid 4x4 --cell 32 --normalize-rows 0,1,2
+
+============================================================
+
+A complete 16-frame character sprite sheet of "Knight" for a tower defense game, HD pixel art.
+
+STYLE: HD pixel art in the 16-bit era JRPG / Warcraft III style - crisp pixel clusters, one clean 1px dark outline around the whole silhouette, a strictly limited palette of about 12-16 colours, soft dithered shading and a subtle cool rim light from the upper left. NOT vector, NOT smooth digital painting, NOT a 3D render, NOT chibi-cute, NOT anime lineart. Dark fantasy mood, muted saturation, strong value contrast so the shape stays readable against pale grey stone terrain.
+
+SUBJECT: a kingdom knight on an armoured warhorse, a GROUND WALKER on four hooves (no wings, no flight). A tall horse in a steel blue caparison with gold trim, its head and chest plated in polished steel; the rider wears full plate with a closed helmet, a deep red plume, a kite shield on the leading arm bearing a gold crest and a long lance angled forward. He must LOOK heavy and disciplined: a measured armoured canter, the lance steady, nothing bouncing.
+
+PALETTE (human faction, use these and nothing else, plus the per-subject additions listed below): steel blue #5e94d6, polished steel, gold trim, grey stone, deep red cloth, near-black outline. Per-subject additions: none.
+
+CONSISTENCY - THE MOST IMPORTANT RULE: the SAME creature appears in all 16 cells. Identical proportions, identical colours, identical gear and markings, identical scale and identical eye level in every cell. Only the pose and the camera direction change between cells.
+
+SHEET LAYOUT: one square image, a grid of 4 columns x 4 rows = 16 equal square cells, read left to right, top row first. Each cell is one pixel-art frame rendered for a final size of 32x32 px, so keep the detail budget low enough to survive that downscale.
+
+ROW 1 (cells 1-4) - MOVING TOWARD THE VIEWER, front view: head, chest and the front legs visible, the rider or the back of the beast rising behind.
+  cell 1 CONTACT - the same phase seen from the front: front legs spread wide in a long stride, the body low.
+  cell 2 GATHER - the same phase seen from the front: legs drawn together under the body, the head lifted.
+  cell 3 CONTACT MIRRORED - the same phase seen from the front: the opposite legs leading, wide stride, the body low again.
+  cell 4 SUSPENSION - the same phase seen from the front: legs tucked, the body at its HIGHEST point of the stride.
+
+ROW 2 (cells 5-8) - MOVING SIDEWAYS, strict profile, facing RIGHT.
+  cell 5 CONTACT - front legs reaching far forward, hind legs stretched back, the longest silhouette of the cycle, body low.
+  cell 6 GATHER - all four legs drawn in under the body, back arched, head lifted.
+  cell 7 CONTACT MIRRORED - the opposite diagonal of legs leading, the stride wide again, body low.
+  cell 8 SUSPENSION - legs tucked off the ground, body at its HIGHEST point, back flat.
+
+ROW 3 (cells 9-12) - MOVING AWAY FROM THE VIEWER, back view: the hindquarters and the back of the head visible, no face.
+  cell 9 CONTACT - the same phase seen from the back: hind legs spread in a long stride, the body low.
+  cell 10 GATHER - the same phase seen from the back: legs drawn together, the head lifted.
+  cell 11 CONTACT MIRRORED - the same phase seen from the back: the opposite legs leading, the body low again.
+  cell 12 SUSPENSION - the same phase seen from the back: legs tucked, the body at its HIGHEST point of the stride.
+
+ROW 4 (cells 13-16) - DEATH, side view facing RIGHT, same camera as row 2.
+  cell 13 IMPACT - struck: head thrown back, front legs buckling, the body twisting away from the blow.
+  cell 14 FALLING - collapsing sideways, legs folding, the body dropping toward the ground.
+  cell 15 DOWN - lying on its side, legs sprawled, silhouette low and flat.
+  cell 16 FADING - the body mostly gone, only a faint flattened dark shape and a few scattered pixels of dust.
+
+WITHIN EACH ROW the four poses must be visibly DIFFERENT from each other - never draw the same pose twice, exaggerate the motion if needed.
+
+SILHOUETTE at 28x28 px: a horse-and-rider block, longer than it is tall, with the lance line slanting forward past the horse's head and the plume breaking the top of the outline - the only mounted shape in the human roster.
+
+BACKGROUND: one flat solid magenta #FF00FF across the whole image, behind and between the cells. No transparency, no gradient, no texture, no ground line, no horizontal stroke, no shadow under the subject, no glow bleeding onto the magenta.
+
+FRAMING: each subject centred in its own cell with about 10% empty margin on every side, feet on a consistent baseline inside each row, nothing cropped. No borders, frames or grid lines drawn between cells.
+
+FORBIDDEN: no text, numbers, labels or watermarks anywhere in the image; no extra props, scenery or effects; never two subjects in one cell; do not change the camera angle inside a row.

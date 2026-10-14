@@ -1,0 +1,55 @@
+Sorceress — тир 5, наземный — unit.human.sorceress
+Контракт листа: 128x128 = 4 ряда по 4 кадра 32x32.
+Ряды: 0 движение вниз (на зрителя), 1 движение вбок (вправо), 2 движение вверх, 3 смерть.
+Статус: нужен арт
+
+Один запрос, «Изображения для обработки» оставить пустым.
+Сборка: python tools/build-sprite-sheet.py raw.png src/shared/sprite/human_sorceress.png --grid 4x4 --cell 32 --normalize-rows 0,1,2
+
+============================================================
+
+A complete 16-frame character sprite sheet of "Sorceress" for a tower defense game, HD pixel art.
+
+STYLE: HD pixel art in the 16-bit era JRPG / Warcraft III style - crisp pixel clusters, one clean 1px dark outline around the whole silhouette, a strictly limited palette of about 12-16 colours, soft dithered shading and a subtle cool rim light from the upper left. NOT vector, NOT smooth digital painting, NOT a 3D render, NOT chibi-cute, NOT anime lineart. Dark fantasy mood, muted saturation, strong value contrast so the shape stays readable against pale grey stone terrain.
+
+SUBJECT: a kingdom sorceress of the mage tower, a GROUND WALKER (no wings, no flight). A slim woman in a long steel blue robe with gold trim at the hem and cuffs, a deep red sash, a tall pointed hood and a silver circlet; no armour at all. She carries a slender staff with a pale blue-white crystal at its tip, and the same glow sits in her free hand. She must LOOK quick and light: a brisk gliding walk, the robe swinging, the staff carried forward like a lantern.
+
+PALETTE (human faction, use these and nothing else, plus the per-subject additions listed below): steel blue #5e94d6, polished steel, gold trim, grey stone, deep red cloth, near-black outline. Per-subject additions: a pale blue-white glow used ONLY for the staff crystal and the hand.
+
+CONSISTENCY - THE MOST IMPORTANT RULE: the SAME creature appears in all 16 cells. Identical proportions, identical colours, identical gear and markings, identical scale and identical eye level in every cell. Only the pose and the camera direction change between cells.
+
+SHEET LAYOUT: one square image, a grid of 4 columns x 4 rows = 16 equal square cells, read left to right, top row first. Each cell is one pixel-art frame rendered for a final size of 32x32 px, so keep the detail budget low enough to survive that downscale.
+
+ROW 1 (cells 1-4) - MOVING TOWARD THE VIEWER, front view: face, chest and the front of the body visible, the weapon held across the body.
+  cell 1 CONTACT - the same phase seen from the front: front leg fully extended forward with the heel planted, rear leg fully extended back on the toe, a wide clear gap between the legs, arms swung to their extremes.
+  cell 2 PASSING DOWN - the same phase seen from the front: legs close together under the hips, the free leg passing forward with a bent knee, body at its LOWEST point, shoulders dipped.
+  cell 3 CONTACT MIRRORED - the same phase seen from the front: the opposite leg forward and planted, the other extended back, wide stride, arms swung the other way.
+  cell 4 PASSING UP - the same phase seen from the front: legs close together, the free leg passing back, body at its HIGHEST point of the stride, shoulders lifted.
+
+ROW 2 (cells 5-8) - MOVING SIDEWAYS, strict profile, facing RIGHT.
+  cell 5 CONTACT - front leg fully extended forward with the heel planted, rear leg fully extended back on the toe, a wide clear gap between the legs, arms swung to their extremes.
+  cell 6 PASSING DOWN - legs close together under the hips, the free leg passing forward with a bent knee, body at its LOWEST point, shoulders dipped.
+  cell 7 CONTACT MIRRORED - the opposite leg forward and planted, the other extended back, wide stride, arms swung the other way.
+  cell 8 PASSING UP - legs close together, the free leg passing back, body at its HIGHEST point of the stride, shoulders lifted.
+
+ROW 3 (cells 9-12) - MOVING AWAY FROM THE VIEWER, back view: the back of the head and shoulders visible, no face, the weapon crossing the back.
+  cell 9 CONTACT - the same phase seen from the back: front leg fully extended forward with the heel planted, rear leg fully extended back on the toe, a wide clear gap between the legs, arms swung to their extremes.
+  cell 10 PASSING DOWN - the same phase seen from the back: legs close together under the hips, the free leg passing forward with a bent knee, body at its LOWEST point, shoulders dipped.
+  cell 11 CONTACT MIRRORED - the same phase seen from the back: the opposite leg forward and planted, the other extended back, wide stride, arms swung the other way.
+  cell 12 PASSING UP - the same phase seen from the back: legs close together, the free leg passing back, body at its HIGHEST point of the stride, shoulders lifted.
+
+ROW 4 (cells 13-16) - DEATH, side view facing RIGHT, same camera as row 2.
+  cell 13 IMPACT - struck: head snapped back, torso arched backwards, arms flung wide, the weapon leaving its grip, feet still on the ground.
+  cell 14 FALLING - knees buckling, the body collapsing sideways and downward, the weapon already falling separately.
+  cell 15 DOWN - lying on the ground, limbs sprawled, the weapon on the ground beside it, silhouette low and flat.
+  cell 16 FADING - the body mostly gone, only a faint flattened dark shape, a few scattered pixels of dust and the weapon left behind.
+
+WITHIN EACH ROW the four poses must be visibly DIFFERENT from each other - never draw the same pose twice, exaggerate the motion if needed.
+
+SILHOUETTE at 28x28 px: a narrow upright figure flaring into a long robe at the ankles, the pointed hood on top and the staff line with a bright tip rising beside her - thinner and taller than the footman, never confused with the plated infantry.
+
+BACKGROUND: one flat solid magenta #FF00FF across the whole image, behind and between the cells. No transparency, no gradient, no texture, no ground line, no horizontal stroke, no shadow under the subject, no glow bleeding onto the magenta.
+
+FRAMING: each subject centred in its own cell with about 10% empty margin on every side, feet on a consistent baseline inside each row, nothing cropped. No borders, frames or grid lines drawn between cells.
+
+FORBIDDEN: no text, numbers, labels or watermarks anywhere in the image; no extra props, scenery or effects; never two subjects in one cell; do not change the camera angle inside a row.

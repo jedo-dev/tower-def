@@ -123,10 +123,17 @@ Each race is meant to read differently, and the tests enforce it
 
 | Race | Identity |
 | --- | --- |
-| Undead | Wide spread, the only race with tiers 5 and 6. |
+| Undead | Wide spread: the frail ghoul, the armored crypt fiend, the flying gargoyle, the hulking abomination. |
 | Orc | Bulkiest and slow, with the wolf rider as the fast outlier. |
 | Human | The armored race, slowest on average. |
 | Elf | Fastest and frailest, with the chimera as its heavy straggler. |
+
+Identity is measured over tiers 1 to 4. Every race fields the same roster
+shape (tower-def-xwc.2): two tier-1 creatures, one each of tiers 2 to 4, two
+tier-5 creatures and one tier-6, with at least one flyer and one large creature
+per race. Tiers 5 and 6 follow the undead numbers (about 140-190 health at
+tier 5, 300-340 at tier 6) so the late baseline waves weigh the same whichever
+race the player builds.
 
 Every race also keeps an internal fast-and-frail outlier: the fastest creature
 in a roster must have less health than the slowest one.

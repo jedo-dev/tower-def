@@ -1,0 +1,55 @@
+Hippogryph — тир 5, летающий — unit.elf.hippogryph
+Контракт листа: 128x128 = 4 ряда по 4 кадра 32x32.
+Ряды: 0 движение вниз (на зрителя), 1 движение вбок (вправо), 2 движение вверх, 3 смерть.
+Статус: нужен арт
+
+Один запрос, «Изображения для обработки» оставить пустым.
+Сборка: python tools/build-sprite-sheet.py raw.png src/shared/sprite/elf_hippogryph.png --grid 4x4 --cell 32 --normalize-rows 0,1,2
+
+============================================================
+
+A complete 16-frame character sprite sheet of "Hippogryph" for a tower defense game, HD pixel art.
+
+STYLE: HD pixel art in the 16-bit era JRPG / Warcraft III style - crisp pixel clusters, one clean 1px dark outline around the whole silhouette, a strictly limited palette of about 12-16 colours, soft dithered shading and a subtle cool rim light from the upper left. NOT vector, NOT smooth digital painting, NOT a 3D render, NOT chibi-cute, NOT anime lineart. Dark fantasy mood, muted saturation, strong value contrast so the shape stays readable against a dark desaturated forest floor.
+
+SUBJECT: an elven hippogryph. FLYER, not a ground walker, faces RIGHT. A lean beast with the head, hooked beak and feathered wings of a great eagle, the antlers and slim legs of a stag, and a tufted stag tail; feathers in moonlit green and silver, the antlers and legs in pale birch wood, teal glow in the eyes. No rider, no saddle. It must LOOK fast and light: long narrow wings in quick strokes, legs tucked, the neck stretched forward.
+
+PALETTE (elf faction, use only these, plus the per-subject additions listed below): moonlit green #6bbf89, silver, pale birch wood, teal glow accents, deep forest shadow as the darkest value. Per-subject additions: none.
+
+CONSISTENCY - THE MOST IMPORTANT RULE: the SAME creature appears in all 16 cells. Identical proportions, identical colours, identical gear and markings, identical scale and identical eye level in every cell. Only the pose and the camera direction change between cells.
+
+SHEET LAYOUT: one square image, a grid of 4 columns x 4 rows = 16 equal square cells, read left to right, top row first. Each cell is one pixel-art frame rendered for a final size of 32x32 px, so keep the detail budget low enough to survive that downscale.
+
+ROW 1 (cells 1-4) - MOVING TOWARD THE VIEWER, front view: seen head-on, both wings spread symmetrically to the left and right, the head toward the viewer.
+  cell 1 WINGS FULL UP - the same phase seen from the front: wings raised high above the back, membranes stretched, body at its lowest point of the hover.
+  cell 2 WINGS MID DOWN - the same phase seen from the front: wings sweeping downward past the body, catching the air.
+  cell 3 WINGS FULL DOWN - the same phase seen from the front: wings spread low beneath the body, tips near the bottom of the cell, body at its highest point.
+  cell 4 WINGS MID UP - the same phase seen from the front: wings rising back toward the start, leading cleanly into the first frame.
+
+ROW 2 (cells 5-8) - MOVING SIDEWAYS, strict profile, facing RIGHT.
+  cell 5 WINGS FULL UP - wings raised high above the back, stretched, body at its lowest point of the hover.
+  cell 6 WINGS MID DOWN - wings sweeping downward past the body, catching the air.
+  cell 7 WINGS FULL DOWN - wings spread low beneath the body, tips near the bottom of the cell, body at its highest point.
+  cell 8 WINGS MID UP - wings rising back toward the start, leading cleanly into the first frame.
+
+ROW 3 (cells 9-12) - MOVING AWAY FROM THE VIEWER, back view: seen from behind, both wings spread symmetrically, the back of the head and the tail toward the viewer.
+  cell 9 WINGS FULL UP - the same phase seen from the back: wings raised high above the back, body at its lowest point of the hover.
+  cell 10 WINGS MID DOWN - the same phase seen from the back: wings sweeping downward past the body.
+  cell 11 WINGS FULL DOWN - the same phase seen from the back: wings spread low beneath the body, body at its highest point.
+  cell 12 WINGS MID UP - the same phase seen from the back: wings rising back toward the start, leading cleanly into the first frame.
+
+ROW 4 (cells 13-16) - DEATH, side view facing RIGHT, same camera as row 2.
+  cell 13 STRUCK - hit in mid-air: wings crumpling inward, head thrown back, the body starting to drop.
+  cell 14 TUMBLING - falling out of the sky, wings folded and useless, the body rotated nose-down.
+  cell 15 CRASHED - hit the ground: the body flattened on its side, one wing bent under it, the other splayed out.
+  cell 16 FADING - the body mostly gone, only a faint flattened dark shape and a few scattered pixels of dust.
+
+WITHIN EACH ROW the four poses must be visibly DIFFERENT from each other - never draw the same pose twice, exaggerate the motion if needed.
+
+SILHOUETTE at 28x28 px: a narrow winged shape, wings long and pointed rather than broad, with the antler fork on the head and the thin tucked legs beneath - visibly lighter and slimmer than the chimera.
+
+BACKGROUND: one flat solid magenta #FF00FF across the whole image, behind and between the cells. No transparency, no gradient, no texture, no ground line, no horizontal stroke, no shadow under the subject, no glow bleeding onto the magenta.
+
+FRAMING: each subject centred in its own cell with about 10% empty margin on every side, the body at a constant hover height inside each row, nothing cropped. No borders, frames or grid lines drawn between cells.
+
+FORBIDDEN: no text, numbers, labels or watermarks anywhere in the image; no extra props, scenery or effects; never two subjects in one cell; do not change the camera angle inside a row.

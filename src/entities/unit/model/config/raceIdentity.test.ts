@@ -14,8 +14,9 @@ const ROSTERS: Record<RaceId, UnitConfig[]> = {
 };
 
 /**
- * Races declare different tier ranges, so identity is compared over the tiers
- * every race actually fields (1 to 4) instead of the whole roster.
+ * Identity is compared over the opening tiers (1 to 4), the creatures that
+ * decide the early waves and duel sends; tiers 5 and 6 are late-game heavies
+ * that follow the same shape in every race.
  */
 const COMPARABLE_TIERS: readonly UnitTier[] = [
   UnitTier.TIER_1,

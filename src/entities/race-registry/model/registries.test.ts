@@ -197,21 +197,21 @@ describe('entities/race-registry', () => {
           name: 'Orc',
           starterTower: 'orc_spear_watchtower',
           towerCount: 4,
-          creepCount: 4,
+          creepCount: 5,
         },
         {
           raceId: 'HUMAN',
           name: 'Human',
           starterTower: 'human_guard_archer_tower',
           towerCount: 4,
-          creepCount: 4,
+          creepCount: 5,
         },
         {
           raceId: 'ELF',
           name: 'Elf',
           starterTower: 'elf_moon_archer_tower',
           towerCount: 4,
-          creepCount: 4,
+          creepCount: 5,
         },
       ]);
     });
