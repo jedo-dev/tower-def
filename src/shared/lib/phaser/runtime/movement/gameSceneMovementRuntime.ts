@@ -1,7 +1,5 @@
 import { syncCreepEffectPipPosition } from '../combat/creepEffectVisuals';
 import { applyCreepFacing } from '../animation/creepFacing';
-import { isGameOverByLives, subtractLives } from '../../../../../entities/player-resources';
-import { transitionToGameOver, type WavePhaseState } from '../../../../../features/wave-phase';
 import type { GridPosition } from '../../../../types/pathfinding';
 import { hasWaveRoute, type WaveRoute, type WaveRoutes } from '../../../pathfinding/waveRoutes';
 import type { SoundId } from '../../sound/audio.types';
@@ -13,41 +11,33 @@ import { walkCreepsAlongRoutes, type MutablePoint } from './routeWalk';
 export type MovementRuntimeConfig = {
   creepMaxSimulationDeltaMs: number;
   creepBaseMoveSpeedPxPerSec: number;
-  restartDelayMs: number;
 };
 
 export type MovementRuntimeState = {
   activeCreeps: CreepRenderState[];
   activeCreepRoutes: WaveRoutes;
-  playerGold: number;
-  playerLives: number;
-  isGameOver: boolean;
-  restartScheduledAtMs: number | null;
-  wavePhaseState: WavePhaseState;
 };
 
 export type { MutablePoint };
 
 export type MovementRuntimeDeps = {
-  nowMs: () => number;
   /** Writes the pixel centre of `position`'s cell into `out`. */
   writeCellCenter: (position: GridPosition, out: MutablePoint) => void;
-  onLivesUpdated: (lives: number) => void;
-  onGameOverUpdated: (isGameOver: boolean) => void;
-  shouldEndRunOnLivesDepleted: () => boolean;
-  onWavePhaseUpdated: (nextWavePhase: WavePhaseState) => void;
   onEscapedCountUpdated: (escapedCount: number) => void;
-  onBuildStateNeedsRefresh: () => void;
   onHudChanged: () => void;
   playSound: (soundId: SoundId) => void;
   /** Creature sounds, resolved through the creature's race sound profile. */
   soundRouter: GameSoundRouter;
 };
 
+/**
+ * Marks a creep that reached the exit. A leak costs no life here: the duel
+ * state's HP is the only life counter, and the round settlement charges the
+ * field's leaks once the wave is over.
+ */
 function markCreepEscaped(
   state: MovementRuntimeState,
   deps: MovementRuntimeDeps,
-  config: MovementRuntimeConfig,
   creep: CreepRenderState,
 ): void {
   if (creep.entity.status === 'escaped') {
@@ -57,20 +47,6 @@ function markCreepEscaped(
   creep.entity.status = 'escaped';
   deps.soundRouter.playCreepSound(creep, CreepSoundSlot.ESCAPE);
   deps.playSound('economy.life_lost');
-  const nextResources = subtractLives({ gold: state.playerGold, lives: state.playerLives }, 1);
-  state.playerLives = nextResources.lives;
-  deps.onLivesUpdated(state.playerLives);
-
-  if (isGameOverByLives({ lives: state.playerLives }) && deps.shouldEndRunOnLivesDepleted()) {
-    state.isGameOver = true;
-    state.wavePhaseState = transitionToGameOver(state.wavePhaseState);
-    state.restartScheduledAtMs ??= deps.nowMs() + config.restartDelayMs;
-    deps.onWavePhaseUpdated(state.wavePhaseState);
-    deps.onGameOverUpdated(state.isGameOver);
-    deps.onBuildStateNeedsRefresh();
-    deps.playSound('ui.game_over');
-  }
-
   deps.onHudChanged();
 
   const escapedCount = state.activeCreeps.filter(
@@ -135,6 +111,6 @@ export function moveCreepsAlongPath(
       commitMove: commitSpriteMove,
     },
     normalizedDeltaMs,
-    (creep) => markCreepEscaped(state, deps, config, creep),
+    (creep) => markCreepEscaped(state, deps, creep),
   );
 }

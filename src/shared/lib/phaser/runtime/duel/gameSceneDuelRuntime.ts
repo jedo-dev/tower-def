@@ -12,7 +12,6 @@ export type DuelMatchRuntimeState = {
   wavePhaseState: WavePhaseState;
   isGameOver: boolean;
   nextWaveStartsAtMs: number | null;
-  restartScheduledAtMs: number | null;
 };
 
 export type DuelMatchRuntimeDeps = {
@@ -48,7 +47,6 @@ export function applyDuelRoundEnd(input: ApplyDuelRoundEndInput): ApplyDuelRound
     input.state.isGameOver = true;
     input.state.wavePhaseState = transitionToGameOver(input.state.wavePhaseState);
     input.state.nextWaveStartsAtMs = null;
-    input.state.restartScheduledAtMs = null;
     input.deps.onWavePhaseUpdated(input.state.wavePhaseState);
     input.deps.onGameOverUpdated(input.state.isGameOver);
     input.deps.onBuildStateNeedsRefresh();

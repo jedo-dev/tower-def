@@ -13,7 +13,7 @@ const STARTING_WALLET = 120;
 
 function createHost(): GameSceneWiringHost & { duelState: () => DuelMatchState } {
   let duelMatchState = createInitialDuelMatchState(RaceId.UNDEAD, RaceId.ORC);
-  const runState = { playerGold: STARTING_WALLET, playerLives: 20 } as WaveRuntimeState;
+  const runState = { playerGold: STARTING_WALLET } as WaveRuntimeState;
   const emptyField = { creeps: [], towers: [] } as unknown as BattlefieldRenderState;
 
   return {
@@ -57,5 +57,32 @@ describe('kill bounty wiring', () => {
 
     expect(host.duelState().opponent.gold).toBe(opponentGoldBefore + getKillBountyGold());
     expect(host.runState.playerGold).toBe(STARTING_WALLET);
+  });
+});
+
+describe('life counter wiring', () => {
+  it('drives the registry lives from the duel state HP when a round settles', () => {
+    const host = createHost();
+    const wiring = createGameSceneRuntimeWiring(host);
+    const settled = host.duelState();
+    const nextState: DuelMatchState = {
+      ...settled,
+      player: { ...settled.player, hp: settled.player.hp - 3 },
+    };
+
+    wiring.duelMatchRuntimeDeps.onDuelMatchStateUpdated(nextState);
+
+    expect(host.duelState().player.hp).toBe(settled.player.hp - 3);
+    expect(host.scene.registry.set).toHaveBeenCalledWith('economy.lives', settled.player.hp - 3);
+  });
+
+  it('keeps no second life counter on the player run state', () => {
+    const host = createHost();
+    const wiring = createGameSceneRuntimeWiring(host);
+
+    wiring.playerBattlefieldContext.movementDeps.onEscapedCountUpdated(1);
+
+    expect(host.runState).not.toHaveProperty('playerLives');
+    expect(host.scene.registry.set).not.toHaveBeenCalledWith('economy.lives', expect.anything());
   });
 });

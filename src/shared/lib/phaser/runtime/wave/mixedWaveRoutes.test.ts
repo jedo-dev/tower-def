@@ -81,9 +81,7 @@ describe('mixed wave on a board with a 1-cell gap', () => {
       wavePhaseState: createInitialWavePhaseState(),
       isWaveCompletionRewardGranted: false,
       nextWaveStartsAtMs: null,
-      restartScheduledAtMs: null,
       playerGold: 100,
-      playerLives: 20,
       isGameOver: false,
       currentWaveNumber: 1,
       lastPublishedAutoStartSecondsLeft: null,
@@ -97,14 +95,8 @@ describe('mixed wave on a board with a 1-cell gap', () => {
       createCreepSprite: (x: number, y: number) => createSpriteStub(x, y),
     } as unknown as WaveRuntimeDependencies;
     const movementDeps: MovementRuntimeDeps = {
-      nowMs: () => 0,
       writeCellCenter,
-      onLivesUpdated: vi.fn(),
-      onGameOverUpdated: vi.fn(),
-      shouldEndRunOnLivesDepleted: () => false,
-      onWavePhaseUpdated: vi.fn(),
       onEscapedCountUpdated: vi.fn(),
-      onBuildStateNeedsRefresh: vi.fn(),
       onHudChanged: vi.fn(),
       playSound: vi.fn(),
       soundRouter: { playTowerSound: vi.fn(), playCreepSound: vi.fn() },
@@ -122,7 +114,7 @@ describe('mixed wave on a board with a 1-cell gap', () => {
       moveCreepsAlongPath(
         state,
         movementDeps,
-        { creepMaxSimulationDeltaMs: 100, creepBaseMoveSpeedPxPerSec: 64, restartDelayMs: 0 },
+        { creepMaxSimulationDeltaMs: 100, creepBaseMoveSpeedPxPerSec: 64 },
         FRAME_MS,
       );
       visitedBySmall.push({ ...small.entity.position });

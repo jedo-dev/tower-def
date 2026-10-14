@@ -23,7 +23,6 @@ export type BuildRuntimeState = {
   /** Top-left anchor of the tower block the pointer would build. */
   hoveredBuildAnchor: GridPosition | null;
   playerGold: number;
-  playerLives: number;
   /** What each placed tower cost, keyed by its anchor cell. */
   placedTowerCostsByCellKey: Map<string, number>;
 };
@@ -153,10 +152,7 @@ export function tryPlaceTowerAtHoveredCell(
 
   const towerType = resolveSelectedTowerType(deps);
   const towerCost = deps.resolveTowerCost(towerType);
-  const spendGoldResult = spendGold(
-    { gold: state.playerGold, lives: state.playerLives },
-    towerCost,
-  );
+  const spendGoldResult = spendGold({ gold: state.playerGold }, towerCost);
   if (!spendGoldResult.spent) {
     return failedPlacement(state.playerGold);
   }

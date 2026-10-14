@@ -7,6 +7,5 @@ describe('player resources model', () => {
     const resources = createInitialPlayerResources();
 
     expect(resources.gold).toBe(ECONOMY_BALANCE.startingGold);
-    expect(resources.lives).toBe(ECONOMY_BALANCE.startingLives);
   });
 });

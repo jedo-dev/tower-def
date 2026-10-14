@@ -22,7 +22,6 @@ const EPSILON_MS = 0.01;
 const CONFIG = {
   creepMaxSimulationDeltaMs: 10_000,
   creepBaseMoveSpeedPxPerSec: SPEED_PX_PER_SEC,
-  restartDelayMs: 0,
 };
 
 function writeCellCenter(position: GridPosition, out: MutablePoint): void {
@@ -32,14 +31,8 @@ function writeCellCenter(position: GridPosition, out: MutablePoint): void {
 
 function createDeps(overrides: Partial<MovementRuntimeDeps> = {}): MovementRuntimeDeps {
   return {
-    nowMs: () => 0,
     writeCellCenter,
-    onLivesUpdated: vi.fn(),
-    onGameOverUpdated: vi.fn(),
-    shouldEndRunOnLivesDepleted: () => false,
-    onWavePhaseUpdated: vi.fn(),
     onEscapedCountUpdated: vi.fn(),
-    onBuildStateNeedsRefresh: vi.fn(),
     onHudChanged: vi.fn(),
     playSound: vi.fn(),
     soundRouter: { playTowerSound: vi.fn(), playCreepSound: vi.fn() },
@@ -89,11 +82,6 @@ function createState(creeps: CreepRenderState[], routes: WaveRoutes): MovementRu
   return {
     activeCreeps: creeps,
     activeCreepRoutes: routes,
-    playerGold: 0,
-    playerLives: 20,
-    isGameOver: false,
-    restartScheduledAtMs: null,
-    wavePhaseState: { phase: 'wave' },
   };
 }
 
@@ -168,7 +156,6 @@ describe('movement along octile routes', () => {
     moveCreepsAlongPath(state, createDeps(), CONFIG, DIAGONAL_STEP_MS * 0.02);
     expect(creep.entity.status).toBe('escaped');
     expect(creep.entity.position).toEqual({ x: 2, y: 2 });
-    expect(state.playerLives).toBe(19);
   });
 
   it('reuses fixed scratch points for every waypoint lookup instead of allocating', () => {

@@ -149,7 +149,6 @@ import {
   initializeWaveRuntime as initializeWaveRuntimeModule,
   resetRunToInitialState as resetRunToInitialStateRuntime,
   spawnWaveCreeps as spawnWaveCreepsRuntime,
-  tryRestartRun as tryRestartRunRuntime,
   tryStartNextWave as tryStartNextWaveRuntime,
   updateAutoWaveCountdown as updateAutoWaveCountdownRuntime,
 } from '../runtime/wave/gameSceneWaveRuntime';
@@ -276,14 +275,6 @@ export class GameScene extends Phaser.Scene {
     this.runState.playerGold = nextGold;
   }
 
-  private get playerLives(): number {
-    return this.runState.playerLives;
-  }
-
-  private set playerLives(nextLives: number) {
-    this.runState.playerLives = nextLives;
-  }
-
   private get wavePhaseState(): WavePhaseState {
     return this.runState.wavePhaseState;
   }
@@ -353,7 +344,6 @@ export class GameScene extends Phaser.Scene {
     getGridModel: () => this.gridModel,
     getBuilderFactionId: () => this.selectedBuilderFactionId,
     getPlayerGold: () => this.playerGold,
-    getPlayerLives: () => this.playerLives,
     onGoldUpdated: (nextGold) => {
       this.playerGold = nextGold;
       this.registry.set('economy.gold', nextGold);
@@ -437,7 +427,7 @@ export class GameScene extends Phaser.Scene {
     createTowerAnimations(this);
     this.registerBridgeCommandHandlers();
     this.registry.set('economy.gold', this.playerGold);
-    this.registry.set('economy.lives', this.playerLives);
+    this.registry.set('economy.lives', this.duelMatchState.player.hp);
     this.registry.set('phase.build.active', this.canPerformBuildActions());
     this.registry.set('phase.game.over', this.isGameOver);
     this.registry.set('economy.earlyWaveStartBonus.granted', false);
@@ -451,7 +441,6 @@ export class GameScene extends Phaser.Scene {
 
   public update(_time: number, delta: number): void {
     this.updateAutoWaveCountdown(_time);
-    this.tryRestartRun(_time);
 
     if (this.isGameOver) {
       return;
@@ -550,7 +539,7 @@ export class GameScene extends Phaser.Scene {
             this.selectedBuilderFactionId,
             mapHudFactionToRaceId(this.selectedFaction),
           );
-          this.playerLives = this.duelMatchState.player.hp;
+          this.registry.set('economy.lives', this.duelMatchState.player.hp);
           publishPlayerSendLimits(this.duelMatchState, this.selectedBuilderFactionId);
         }
         this.registry.set('wave.selectedFaction', this.selectedFaction);
@@ -651,7 +640,6 @@ export class GameScene extends Phaser.Scene {
       hoveredCell: this.hoveredCell,
       hoveredBuildAnchor: this.hoveredBuildAnchor,
       playerGold: this.playerGold,
-      playerLives: this.playerLives,
       placedTowerCostsByCellKey: this.placedTowerCostsByCellKey,
     };
   }
@@ -829,8 +817,8 @@ export class GameScene extends Phaser.Scene {
     // The scene wallet is the source of truth: seed it from the duel balance
     // table so both sides start level. Difficulty never tilts the purse.
     this.playerGold = this.duelMatchState.player.gold;
-    this.playerLives = this.duelMatchState.player.hp;
     this.registry.set('economy.gold', this.playerGold);
+    this.registry.set('economy.lives', this.duelMatchState.player.hp);
     this.opponentLeakHistory = [];
     this.computerDecisionRecorder.clear();
     this.computerMazePlanMemory.plan = null;
@@ -890,7 +878,6 @@ export class GameScene extends Phaser.Scene {
       wavePhaseState: this.wavePhaseState,
       isGameOver: this.isGameOver,
       nextWaveStartsAtMs: this.runState.nextWaveStartsAtMs,
-      restartScheduledAtMs: this.runState.restartScheduledAtMs,
     };
     const playerLeakedCreeps = this.playerField.creeps.filter(
       (creep) => creep.entity.status === 'escaped',
@@ -915,7 +902,6 @@ export class GameScene extends Phaser.Scene {
     this.wavePhaseState = duelRuntimeState.wavePhaseState;
     this.isGameOver = duelRuntimeState.isGameOver;
     this.runState.nextWaveStartsAtMs = duelRuntimeState.nextWaveStartsAtMs;
-    this.runState.restartScheduledAtMs = duelRuntimeState.restartScheduledAtMs;
     publishRoundLifeEvents(previousOpponentHp, result);
     if (result.playerIncomePaid > 0) {
       this.playerGold += result.playerIncomePaid;
@@ -954,10 +940,6 @@ export class GameScene extends Phaser.Scene {
     this.startNextWaveFromBuildState();
   }
 
-  private tryRestartRun(nowMs: number): void {
-    if (tryRestartRunRuntime(this.runState, nowMs)) this.resetRunToInitialState();
-  }
-
   private resetRunToInitialState(): void {
     this.opponentLeakHistory = [];
     this.computerDecisionRecorder.clear();
@@ -985,7 +967,6 @@ export class GameScene extends Phaser.Scene {
     );
     publishPlayerSendLimits(this.duelMatchState, this.selectedBuilderFactionId);
     this.playerGold = this.duelMatchState.player.gold;
-    this.playerLives = this.duelMatchState.player.hp;
     this.matchOutcomeStatus = 'active';
     this.matchWinner = null;
     this.matchOutcomeReason = null;
@@ -993,7 +974,7 @@ export class GameScene extends Phaser.Scene {
     this.registry.set('duel.match.outcome', this.matchOutcomeStatus);
 
     this.registry.set('economy.gold', this.playerGold);
-    this.registry.set('economy.lives', this.playerLives);
+    this.registry.set('economy.lives', this.duelMatchState.player.hp);
     this.registry.set('phase.game.over', this.isGameOver);
     this.registry.set('phase.build.active', this.canPerformBuildActions());
     this.registry.set('wave.number', this.runState.currentWaveNumber);
@@ -1308,7 +1289,6 @@ export class GameScene extends Phaser.Scene {
     clearFieldWaveSchedule(this.opponentWave);
     this.gridModel = null;
     this.runState.nextWaveStartsAtMs = null;
-    this.runState.restartScheduledAtMs = null;
     this.placedTowerCostsByCellKey.clear();
     this.inputControllerState.activeTouchGesture = null;
     this.inputControllerState.lastActionAtMs = Number.NEGATIVE_INFINITY;

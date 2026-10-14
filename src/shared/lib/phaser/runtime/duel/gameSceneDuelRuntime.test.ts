@@ -11,7 +11,6 @@ function createRuntimeState(overrides?: Partial<DuelMatchRuntimeState>): DuelMat
     wavePhaseState: { phase: 'wave' },
     isGameOver: false,
     nextWaveStartsAtMs: 10_000,
-    restartScheduledAtMs: 20_000,
     ...overrides,
   };
 }

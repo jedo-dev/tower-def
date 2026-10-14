@@ -116,21 +116,10 @@ function createWaveRuntimeDeps(host: GameSceneWiringHost): WaveRuntimeDependenci
 
 function createPlayerMovementDeps(host: GameSceneWiringHost): MovementRuntimeDeps {
   return {
-    nowMs: () => host.scene.time.now,
     writeCellCenter,
-    onLivesUpdated: (lives) => {
-      host.runState.playerLives = lives;
-      host.scene.registry.set('economy.lives', host.getDuelMatchState().player.hp);
-    },
-    onGameOverUpdated: (isGameOver) => host.handleGameOverUpdated(isGameOver),
-    shouldEndRunOnLivesDepleted: () => false,
-    onWavePhaseUpdated: (nextWavePhase) => {
-      host.runState.wavePhaseState = nextWavePhase;
-    },
     onEscapedCountUpdated: (escapedCount) => {
       host.scene.registry.set('wave.escapedCreeps', escapedCount);
     },
-    onBuildStateNeedsRefresh: () => host.refreshBuildState(),
     onHudChanged: () => host.publishHudSnapshot(),
     playSound: (soundId: SoundId) => host.getSoundManager()?.play(soundId),
     soundRouter: host.soundRouter,
@@ -139,16 +128,10 @@ function createPlayerMovementDeps(host: GameSceneWiringHost): MovementRuntimeDep
 
 function createOpponentMovementDeps(host: GameSceneWiringHost): MovementRuntimeDeps {
   return {
-    nowMs: () => host.scene.time.now,
     writeCellCenter,
-    onLivesUpdated: () => undefined,
-    onGameOverUpdated: () => undefined,
-    shouldEndRunOnLivesDepleted: () => false,
-    onWavePhaseUpdated: () => undefined,
     onEscapedCountUpdated: (escapedCount) => {
       host.scene.registry.set('duel.opponent.escapedCreeps', escapedCount);
     },
-    onBuildStateNeedsRefresh: () => undefined,
     onHudChanged: () => host.publishHudSnapshot(),
     playSound: (soundId: SoundId) => host.getSoundManager()?.play(soundId),
     soundRouter: host.soundRouter,
@@ -159,7 +142,7 @@ function createDuelMatchRuntimeDeps(host: GameSceneWiringHost): DuelMatchRuntime
   return {
     onDuelMatchStateUpdated: (state) => {
       host.setDuelMatchState(state);
-      host.runState.playerLives = state.player.hp;
+      // The duel state's HP is the one life counter for HUD, registry and game over.
       host.scene.registry.set('economy.lives', state.player.hp);
       host.scene.registry.set('duel.opponent.hp', state.opponent.hp);
     },
@@ -195,11 +178,6 @@ export function createGameSceneRuntimeWiring(host: GameSceneWiringHost): GameSce
       getMovementState: (): MovementRuntimeState => ({
         activeCreeps: host.opponentField.creeps,
         activeCreepRoutes: host.getDuelMatchState().opponent.battlefield.routes,
-        playerGold: host.getDuelMatchState().opponent.gold,
-        playerLives: host.getDuelMatchState().opponent.hp,
-        isGameOver: host.runState.isGameOver,
-        restartScheduledAtMs: host.runState.restartScheduledAtMs,
-        wavePhaseState: host.runState.wavePhaseState,
       }),
       afterFieldMutated: () => host.syncOpponentDuelCreepsFromField(),
     },

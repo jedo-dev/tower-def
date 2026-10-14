@@ -18,7 +18,6 @@ export const CREEP_MAX_SIMULATION_DELTA_MS = 34;
 export const INITIAL_PLAYER_RESOURCES = createInitialPlayerResources();
 export const EARLY_WAVE_START_BONUS_PLACEHOLDER_ELIGIBLE = false;
 export const AUTO_WAVE_START_DELAY_MS = 30000;
-export const RESTART_DELAY_MS = 1200;
 export const ACTION_COOLDOWN_MS = 160;
 export const TOUCH_TAP_MIN_DURATION_MS = 0;
 export const TOUCH_TAP_MAX_DURATION_MS = 350;

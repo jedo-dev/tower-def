@@ -88,7 +88,7 @@ describe('upgrade tower stats applied to entity', () => {
 
   it('upgrade to level 2 increases damage', () => {
     const tower = createTestTower();
-    const resources: PlayerResources = { gold: 100, lives: 20 };
+    const resources: PlayerResources = { gold: 100 };
     const result = simulateUpgrade(tower, resources);
 
     expect(result.success).toBe(true);
@@ -99,7 +99,7 @@ describe('upgrade tower stats applied to entity', () => {
 
   it('upgrade to level 2 increases range', () => {
     const tower = createTestTower();
-    const resources: PlayerResources = { gold: 100, lives: 20 };
+    const resources: PlayerResources = { gold: 100 };
     const result = simulateUpgrade(tower, resources);
 
     expect(result.success).toBe(true);
@@ -109,7 +109,7 @@ describe('upgrade tower stats applied to entity', () => {
 
   it('upgrade to level 2 reduces cooldown', () => {
     const tower = createTestTower();
-    const resources: PlayerResources = { gold: 100, lives: 20 };
+    const resources: PlayerResources = { gold: 100 };
     const result = simulateUpgrade(tower, resources);
 
     expect(result.success).toBe(true);
@@ -121,7 +121,7 @@ describe('upgrade tower stats applied to entity', () => {
 
   it('upgrade to level 3 further improves stats', () => {
     let tower = createTestTower();
-    let resources: PlayerResources = { gold: 200, lives: 20 };
+    let resources: PlayerResources = { gold: 200 };
 
     const r1 = simulateUpgrade(tower, resources);
     tower = r1.tower;
@@ -141,7 +141,7 @@ describe('upgrade gold deduction', () => {
   it('gold is deducted exactly once per upgrade', () => {
     const tower = createTestTower();
     const initialGold = 100;
-    const resources: PlayerResources = { gold: initialGold, lives: 20 };
+    const resources: PlayerResources = { gold: initialGold };
     const upgradeCost = getUpgradeCost(tower.type, tower.level)!;
 
     const result = simulateUpgrade(tower, resources);
@@ -152,7 +152,7 @@ describe('upgrade gold deduction', () => {
 
   it('upgrade fails when gold is insufficient', () => {
     const tower = createTestTower();
-    const resources: PlayerResources = { gold: 5, lives: 20 };
+    const resources: PlayerResources = { gold: 5 };
 
     const result = simulateUpgrade(tower, resources);
 
@@ -163,7 +163,7 @@ describe('upgrade gold deduction', () => {
 
   it('sequential upgrades deduct correct total gold', () => {
     let tower = createTestTower();
-    let resources: PlayerResources = { gold: 500, lives: 20 };
+    let resources: PlayerResources = { gold: 500 };
     const initialGold = resources.gold;
 
     const cost1 = getUpgradeCost(tower.type, 1)!;
@@ -182,7 +182,7 @@ describe('upgrade gold deduction', () => {
 
   it('upgrade at max level is rejected', () => {
     const tower = createTestTower({ level: 3 });
-    const resources: PlayerResources = { gold: 1000, lives: 20 };
+    const resources: PlayerResources = { gold: 1000 };
 
     const result = simulateUpgrade(tower, resources);
 
@@ -200,7 +200,7 @@ describe('upgraded stats affect combat', () => {
 
     const baseTarget = selectTowerTarget(baseTower, [farCreep]);
 
-    const upgradeResult = simulateUpgrade(baseTower, { gold: 100, lives: 20 });
+    const upgradeResult = simulateUpgrade(baseTower, { gold: 100 });
     const upgradedTower = upgradeResult.tower;
     const upgradedTarget = selectTowerTarget(upgradedTower, [farCreep]);
 
@@ -211,7 +211,7 @@ describe('upgraded stats affect combat', () => {
 
   it('upgraded tower cooldown allows faster attacks', () => {
     const baseTower = createTestTower();
-    const upgradedResult = simulateUpgrade(baseTower, { gold: 100, lives: 20 });
+    const upgradedResult = simulateUpgrade(baseTower, { gold: 100 });
     const upgradedTower = upgradedResult.tower;
 
     const baseRuntime = createInitialTowerCombatRuntime();
@@ -233,7 +233,7 @@ describe('upgraded stats affect combat', () => {
 
   it('upgraded damage kills creep in fewer hits', () => {
     const baseTower = createTestTower();
-    const upgradeResult = simulateUpgrade(baseTower, { gold: 100, lives: 20 });
+    const upgradeResult = simulateUpgrade(baseTower, { gold: 100 });
     const upgradedTower = upgradeResult.tower;
 
     const creepHp = 50;
@@ -263,7 +263,7 @@ describe('splash tower upgrade', () => {
       type: 'splash',
       combatStats: getTowerStatsForLevel('splash', 1)!,
     });
-    const resources: PlayerResources = { gold: 100, lives: 20 };
+    const resources: PlayerResources = { gold: 100 };
     const result = simulateUpgrade(tower, resources);
 
     expect(result.success).toBe(true);
@@ -275,7 +275,7 @@ describe('splash tower upgrade', () => {
       type: 'splash',
       combatStats: getTowerStatsForLevel('splash', 1)!,
     });
-    const resources: PlayerResources = { gold: 100, lives: 20 };
+    const resources: PlayerResources = { gold: 100 };
     const result = simulateUpgrade(tower, resources);
 
     expect(result.success).toBe(true);

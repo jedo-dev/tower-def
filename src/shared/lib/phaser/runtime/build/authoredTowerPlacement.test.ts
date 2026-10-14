@@ -24,7 +24,6 @@ function createState(): BuildRuntimeState {
     hoveredCell: { ...HOVERED_CELL },
     hoveredBuildAnchor: { ...HOVERED_CELL },
     playerGold: 500,
-    playerLives: 20,
     placedTowerCostsByCellKey: new Map(),
   };
 }

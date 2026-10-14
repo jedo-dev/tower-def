@@ -36,9 +36,7 @@ export type WaveRuntimeState = {
   wavePhaseState: WavePhaseState;
   isWaveCompletionRewardGranted: boolean;
   nextWaveStartsAtMs: number | null;
-  restartScheduledAtMs: number | null;
   playerGold: number;
-  playerLives: number;
   isGameOver: boolean;
   currentWaveNumber: number;
   lastPublishedAutoStartSecondsLeft: number | null;
@@ -94,9 +92,7 @@ export function createPlayerWaveRuntimeState(
     wavePhaseState: createInitialWavePhaseState(),
     isWaveCompletionRewardGranted: false,
     nextWaveStartsAtMs: null,
-    restartScheduledAtMs: null,
     playerGold: initialResources.gold,
-    playerLives: initialResources.lives,
     isGameOver: false,
     currentWaveNumber: 1,
     lastPublishedAutoStartSecondsLeft: null,
@@ -116,7 +112,7 @@ export function initializeWaveRuntime(
   state.isWaveCompletionRewardGranted = false;
 
   const earlyBonusResult = applyEarlyWaveStartBonusPlaceholder(
-    { gold: state.playerGold, lives: state.playerLives },
+    { gold: state.playerGold },
     ECONOMY_BALANCE.earlyWaveStartBonusGold,
     config.earlyWaveStartBonusPlaceholderEligible,
   );
@@ -158,7 +154,7 @@ export function applyWaveCompletionRewardIfResolved(
   deps.onWavePhaseChanged(state.wavePhaseState);
 
   const nextResources = addGold(
-    { gold: state.playerGold, lives: state.playerLives },
+    { gold: state.playerGold },
     ECONOMY_BALANCE.waveCompletionRewardGold,
   );
   state.playerGold = nextResources.gold;
@@ -198,13 +194,6 @@ export function tryStartNextWave(state: WaveRuntimeState, nowMs: number): boolea
   return true;
 }
 
-export function tryRestartRun(state: WaveRuntimeState, nowMs: number): boolean {
-  if (state.restartScheduledAtMs === null) return false;
-  if (nowMs < state.restartScheduledAtMs) return false;
-  state.restartScheduledAtMs = null;
-  return true;
-}
-
 export function resetRunToInitialState(state: WaveRuntimeState): void {
   state.nextWaveStartsAtMs = null;
   state.activeCreepRoutes = EMPTY_WAVE_ROUTES;
@@ -214,7 +203,6 @@ export function resetRunToInitialState(state: WaveRuntimeState): void {
 
   const initialResources = createInitialPlayerResources();
   state.playerGold = initialResources.gold;
-  state.playerLives = initialResources.lives;
   state.wavePhaseState = resetWavePhaseState();
   state.isGameOver = false;
   state.currentWaveNumber = 1;

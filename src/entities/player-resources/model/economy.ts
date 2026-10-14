@@ -10,24 +10,6 @@ export type EarlyWaveStartBonusResult = {
   granted: boolean;
 };
 
-export function isGameOverByLives(resources: Pick<PlayerResources, 'lives'>): boolean {
-  return resources.lives <= 0;
-}
-
-export function subtractLives(
-  resources: PlayerResources,
-  livesToSubtract: number,
-): PlayerResources {
-  if (livesToSubtract <= 0) {
-    return resources;
-  }
-
-  return {
-    ...resources,
-    lives: Math.max(0, resources.lives - livesToSubtract),
-  };
-}
-
 export function addGold(resources: PlayerResources, goldToAdd: number): PlayerResources {
   if (goldToAdd <= 0) {
     return resources;

@@ -22,7 +22,6 @@ const SPEED_PX_PER_SEC = 160;
 const CONFIG = {
   creepMaxSimulationDeltaMs: 10_000,
   creepBaseMoveSpeedPxPerSec: SPEED_PX_PER_SEC,
-  restartDelayMs: 0,
 };
 
 /** Long winding-free single-cell route: 11 cells to the exit. */
@@ -37,14 +36,8 @@ function writeCellCenter(position: GridPosition, out: MutablePoint): void {
 
 function createDeps(): MovementRuntimeDeps {
   return {
-    nowMs: () => 0,
     writeCellCenter,
-    onLivesUpdated: vi.fn(),
-    onGameOverUpdated: vi.fn(),
-    shouldEndRunOnLivesDepleted: () => false,
-    onWavePhaseUpdated: vi.fn(),
     onEscapedCountUpdated: vi.fn(),
-    onBuildStateNeedsRefresh: vi.fn(),
     onHudChanged: vi.fn(),
     playSound: vi.fn(),
     soundRouter: { playTowerSound: vi.fn(), playCreepSound: vi.fn() },
@@ -91,11 +84,6 @@ function createState(creeps: CreepRenderState[]): MovementRuntimeState {
   return {
     activeCreeps: creeps,
     activeCreepRoutes: { small: SMALL_ROUTE, large: LARGE_ROUTE },
-    playerGold: 0,
-    playerLives: 20,
-    isGameOver: false,
-    restartScheduledAtMs: null,
-    wavePhaseState: { phase: 'wave' },
   };
 }
 

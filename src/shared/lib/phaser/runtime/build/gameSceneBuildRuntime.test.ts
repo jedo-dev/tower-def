@@ -26,7 +26,6 @@ function createState(grid: GridModel = createGridModel(createDefaultEdgeEndpoint
     hoveredCell: null,
     hoveredBuildAnchor: null,
     playerGold: 1000,
-    playerLives: 20,
     placedTowerCostsByCellKey: new Map(),
   };
   return state;

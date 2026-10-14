@@ -46,7 +46,6 @@ export type TowerCommandDeps = {
   getGridModel: () => GridModel | null;
   getBuilderFactionId: () => RaceId;
   getPlayerGold: () => number;
-  getPlayerLives: () => number;
   onGoldUpdated: (nextGold: number) => void;
   onRefundRecorded: (refundAmount: number) => void;
   playSound: (soundId: SoundId) => void;
@@ -203,10 +202,7 @@ export function handleUpgradeTowerCommand(deps: TowerCommandDeps, towerId: strin
     return;
   }
 
-  const spendResult = spendGold(
-    { gold: deps.getPlayerGold(), lives: deps.getPlayerLives() },
-    upgradeCost,
-  );
+  const spendResult = spendGold({ gold: deps.getPlayerGold() }, upgradeCost);
   if (!spendResult.spent) {
     deps.playSound('ui.error');
     return;

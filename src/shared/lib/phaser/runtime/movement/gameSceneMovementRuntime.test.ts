@@ -24,8 +24,8 @@ function createSpriteStub(): Phaser.GameObjects.Sprite {
   } as unknown as Phaser.GameObjects.Sprite;
 }
 
-describe('shared/lib/phaser/runtime/movement duel game-over boundary', () => {
-  it('does not end the match immediately when legacy lives hit zero in duel mode', () => {
+describe('shared/lib/phaser/runtime/movement leaks', () => {
+  it('marks a leaked creep escaped without ending the match or touching a life counter', () => {
     const creep: CreepRenderState = {
       entity: {
         ...DEFAULT_CREEP_COMBAT_TRAITS,
@@ -43,17 +43,11 @@ describe('shared/lib/phaser/runtime/movement duel game-over boundary', () => {
       deathFadeRemainingMs: 0,
     };
     const deps: MovementRuntimeDeps = {
-      nowMs: () => 1_000,
       writeCellCenter: (position, out) => {
         out.x = position.x;
         out.y = position.y;
       },
-      onLivesUpdated: vi.fn(),
-      onGameOverUpdated: vi.fn(),
-      shouldEndRunOnLivesDepleted: () => false,
-      onWavePhaseUpdated: vi.fn(),
       onEscapedCountUpdated: vi.fn(),
-      onBuildStateNeedsRefresh: vi.fn(),
       onHudChanged: vi.fn(),
       playSound: vi.fn(),
       soundRouter: { playTowerSound: vi.fn(), playCreepSound: vi.fn() },
@@ -67,29 +61,20 @@ describe('shared/lib/phaser/runtime/movement duel game-over boundary', () => {
         ],
         large: [],
       },
-      playerGold: 100,
-      playerLives: 1,
-      isGameOver: false,
-      restartScheduledAtMs: null,
-      wavePhaseState: { phase: 'wave' as const },
     };
 
     moveCreepsAlongPath(
       state,
       deps,
-      {
-        creepMaxSimulationDeltaMs: 1_000,
-        creepBaseMoveSpeedPxPerSec: 10,
-        restartDelayMs: 5_000,
-      },
+      { creepMaxSimulationDeltaMs: 1_000, creepBaseMoveSpeedPxPerSec: 10 },
       1_000,
     );
 
-    expect(state.playerLives).toBe(0);
     expect(creep.entity.status).toBe('escaped');
-    expect(state.isGameOver).toBe(false);
-    expect(state.wavePhaseState.phase).toBe('wave');
-    expect(deps.onGameOverUpdated).not.toHaveBeenCalled();
+    expect(deps.onEscapedCountUpdated).toHaveBeenCalledWith(1);
+    expect(deps.playSound).toHaveBeenCalledWith('economy.life_lost');
+    expect(deps.onHudChanged).toHaveBeenCalled();
+    expect(Object.keys(state)).toEqual(['activeCreeps', 'activeCreepRoutes']);
   });
 });
 
@@ -97,22 +82,15 @@ describe('shared/lib/phaser/runtime/movement status effects', () => {
   const CONFIG = {
     creepMaxSimulationDeltaMs: 100,
     creepBaseMoveSpeedPxPerSec: 100,
-    restartDelayMs: 5_000,
   };
 
   function createDeps(): MovementRuntimeDeps {
     return {
-      nowMs: () => 1_000,
       writeCellCenter: (position, out) => {
         out.x = position.x * 100;
         out.y = position.y * 100;
       },
-      onLivesUpdated: vi.fn(),
-      onGameOverUpdated: vi.fn(),
-      shouldEndRunOnLivesDepleted: () => false,
-      onWavePhaseUpdated: vi.fn(),
       onEscapedCountUpdated: vi.fn(),
-      onBuildStateNeedsRefresh: vi.fn(),
       onHudChanged: vi.fn(),
       playSound: vi.fn(),
       soundRouter: { playTowerSound: vi.fn(), playCreepSound: vi.fn() },
@@ -150,11 +128,6 @@ describe('shared/lib/phaser/runtime/movement status effects', () => {
         ],
         large: [],
       },
-      playerGold: 100,
-      playerLives: 20,
-      isGameOver: false,
-      restartScheduledAtMs: null,
-      wavePhaseState: { phase: 'wave' as const },
     };
   }
 
