@@ -63,6 +63,8 @@ export type UnitConfig = {
   rewardGold: number;
   spriteKey: string;
   description?: string;
+  /** Bestiary flavour text, one or two sentences in the race's voice. */
+  lore?: string;
   /** Resolved traits: content may omit them, the loader fills the defaults. */
   moveType: UnitMoveType;
   sizeClass: UnitSizeClass;

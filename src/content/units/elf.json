@@ -14,7 +14,8 @@
       "sizeClass": "small",
       "armorType": "unarmored",
       "spriteKey": "unit.elf.archer",
-      "description": "Swift sentinel striking from the shadows of the forest."
+      "description": "Swift sentinel striking from the shadows of the forest.",
+      "lore": "She learned the bow before she learned to speak, and the forest taught her both. The arrow is loosed before the leaf lands."
     },
     {
       "id": "elf_huntress",
@@ -26,7 +27,8 @@
       "damage": 20,
       "rewardGold": 10,
       "spriteKey": "unit.elf.huntress",
-      "description": "Mounted glaive rider that crosses the map before towers reload."
+      "description": "Mounted glaive rider that crosses the map before towers reload.",
+      "lore": "Glaive and nightsaber move as one shadow under the moon. What she hunts does not hear the branches part."
     },
     {
       "id": "elf_dryad",
@@ -40,7 +42,8 @@
       "sizeClass": "small",
       "armorType": "unarmored",
       "spriteKey": "unit.elf.dryad",
-      "description": "Half-spirit creature that slips through unarmored and quick."
+      "description": "Half-spirit creature that slips through unarmored and quick.",
+      "lore": "Daughter of the grove, half bark and half breeze. Spells slide off her like rain off a leaf."
     },
     {
       "id": "elf_chimera",
@@ -55,7 +58,8 @@
       "sizeClass": "large",
       "armorType": "heavy",
       "spriteKey": "unit.elf.chimera",
-      "description": "Twin-headed beast too heavy to keep up with its own kin."
+      "description": "Twin-headed beast too heavy to keep up with its own kin.",
+      "lore": "Two heads grown from one old grudge of the wild. It is too heavy for the canopy, so it comes the long way, and it still comes."
     }
   ]
 }

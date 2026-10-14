@@ -11,7 +11,8 @@
       "range": 6,
       "attackCooldownMs": 800,
       "spriteKey": "tower.human.guard_archer",
-      "description": "Disciplined marksmen watch over fortified walls."
+      "description": "Disciplined marksmen watch over fortified walls.",
+      "lore": "A watchtower with a roster, a bell and a sergeant. Shifts change at dawn and the arrows never stop."
     },
     {
       "id": "human_cannon_bastion",
@@ -23,7 +24,8 @@
       "attackCooldownMs": 1200,
       "splashRadius": 3,
       "spriteKey": "tower.human.cannon_bastion",
-      "description": "Dwarven powder and iron shot, loud and wide."
+      "description": "Dwarven powder and iron shot, loud and wide.",
+      "lore": "Dwarven powder packed into kingdom stone. One shot is heard in three valleys and felt in the whole line."
     },
     {
       "id": "human_alchemist_tower",
@@ -42,7 +44,8 @@
         }
       ],
       "spriteKey": "tower.human.alchemist_tower",
-      "description": "Flasks of slow-working blight that ignore armor."
+      "description": "Flasks of slow-working blight that ignore armor.",
+      "lore": "A university tower with the windows bricked up. The flasks that leave it keep working long after the lecture."
     },
     {
       "id": "human_guard_post",
@@ -53,7 +56,8 @@
       "range": 1,
       "attackCooldownMs": 1000,
       "spriteKey": "tower.human.guard_post",
-      "description": "A captain barking orders sharpens the whole wall."
+      "description": "A captain barking orders sharpens the whole wall.",
+      "lore": "A captain, a banner and a voice that carries. Every wall within earshot stands straighter and fires faster."
     }
   ]
 }

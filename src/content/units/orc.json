@@ -12,7 +12,8 @@
       "damage": 16,
       "rewardGold": 7,
       "spriteKey": "unit.orc.grunt",
-      "description": "Brutish warrior that trades footwork for raw bulk."
+      "description": "Brutish warrior that trades footwork for raw bulk.",
+      "lore": "Axe, hide, teeth. A grunt needs nothing else and asks for nothing else, and the warchief never has to ask twice."
     },
     {
       "id": "orc_wolf_rider",
@@ -24,7 +25,8 @@
       "damage": 20,
       "rewardGold": 13,
       "spriteKey": "unit.orc.wolf_rider",
-      "description": "Swift mounted raider that punishes gaps in the line."
+      "description": "Swift mounted raider that punishes gaps in the line.",
+      "lore": "The wolf chose the rider, not the other way around. Together they outrun the arrow and bite before the bow is drawn."
     },
     {
       "id": "orc_troll",
@@ -38,7 +40,8 @@
       "sizeClass": "large",
       "armorType": "heavy",
       "spriteKey": "unit.orc.troll",
-      "description": "Lumbering berserker that soaks a whole volley."
+      "description": "Lumbering berserker that soaks a whole volley.",
+      "lore": "Trolls heal what they lose and forget what they healed. Hit it hard the first time, because it will not remember to fall."
     },
     {
       "id": "orc_headhunter",
@@ -50,7 +53,8 @@
       "damage": 46,
       "rewardGold": 23,
       "spriteKey": "unit.orc.headhunter",
-      "description": "Elite skirmisher hitting far harder than its bulk suggests."
+      "description": "Elite skirmisher hitting far harder than its bulk suggests.",
+      "lore": "Every skull on his belt was a warning nobody listened to. The spear is for the ones who still will not."
     }
   ]
 }

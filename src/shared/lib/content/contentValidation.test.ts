@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
+  CONTENT_LORE_MAX_LENGTH,
   ContentValidationError,
   assertKnownKeys,
   readNumber,
+  readOptionalBoundedString,
   readOptionalString,
   readRecord,
   readStringFrom,
@@ -58,5 +60,16 @@ describe('content validation primitives', () => {
     expect(() => assertKnownKeys({ id: 'x', hp: 1 }, ['id'], { file: FILE })).toThrow(
       `${FILE}: unknown field "hp"`,
     );
+  });
+
+  it('bounds optional text by length and names the overflow', () => {
+    const location = { file: FILE, entityId: 'undead_ghoul' };
+
+    expect(readOptionalBoundedString({}, 'lore', location, 10)).toBeUndefined();
+    expect(readOptionalBoundedString({ lore: 'short' }, 'lore', location, 10)).toBe('short');
+    expect(() => readOptionalBoundedString({ lore: 'eleven chars' }, 'lore', location, 10)).toThrow(
+      `${FILE} [undead_ghoul]: "lore" must be at most 10 characters, got 12`,
+    );
+    expect(CONTENT_LORE_MAX_LENGTH).toBe(160);
   });
 });

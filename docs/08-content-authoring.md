@@ -59,7 +59,8 @@ src/content/
 | `damage` | yes | Damage the creature deals; reserved for duel pressure. |
 | `rewardGold` | yes | Gold the defender earns for the kill. |
 | `spriteKey` | yes | Art key, `unit.<race>.<name>`. Missing art falls back to a placeholder. |
-| `description` | no | Flavour text. Cosmetic only. |
+| `description` | no | One-line flavour text for the HUD and wave preview. Cosmetic only. |
+| `lore` | no | Bestiary text, one or two sentences in the race's voice, at most `CONTENT_LORE_MAX_LENGTH` (160) characters. Cosmetic only; the loader rejects longer text. |
 | `moveType` | no | `ground` (default) or `air`. |
 | `sizeClass` | no | `small`, `medium` (default) or `large`. |
 | `armorType` | no | `unarmored`, `light` (default) or `heavy`. Shifts effective armor points. |
@@ -72,7 +73,33 @@ Unknown fields are rejected: add the field to the schema first
 **Balance-sensitive:** `tier`, `health`, `speed`, `armor`, `rewardGold`,
 `armorType`. Changing these changes how a wave plays.
 
-**Cosmetic:** `name`, `description`, `spriteKey`, `sizeClass`.
+**Cosmetic:** `name`, `description`, `lore`, `spriteKey`, `sizeClass`.
+
+## Lore voice
+
+Every creature and tower carries a `lore` line; the bestiary shows it under the
+portrait. Write it in the race's voice, in English, and keep it under the limit:
+
+| Race | Voice |
+| --- | --- |
+| Undead | Cold, necromantic, patient; the dead as a resource. |
+| Orc | Brutal, tribal, blunt; the horde speaks in short sentences. |
+| Human | Disciplined, martial, institutional; rosters, drills, bells. |
+| Elf | Lyrical, forest-bound; moonlight, groves, the long memory of trees. |
+
+## Tier display values
+
+A roster screen shows what a tier costs to send, what income it grants, how
+many of one type fit in a wave and from which baseline wave the tier appears.
+Read all four through `getSendTierDisplay(tier)` / `listSendTierDisplays()`
+(`entities/duel-match/model/sendEconomyDisplay.ts`); they resolve the balance
+tables in `entities/duel-match/model/balance.ts` and
+`entities/wave/model/waveBalance.ts`, so no screen keeps a copy of a number.
+
+```ts
+getSendTierDisplay(UnitTier.TIER_1);
+// { tier: 1, sendCostGold: 50, incomeBonusGold: 10, sendCapPerType: 6, baselineUnlockWave: 1 }
+```
 
 `tier` is the one field that does double duty: it decides how much of the wave
 budget a creature consumes, from which wave the baseline may field it
@@ -153,6 +180,11 @@ Tower stats live in `src/content/towers/<race>.json` (the buildable roster of
 each race) and `src/content/towers/archetypes.json` (base stats and upgrade
 curves). Both files carry `schemaVersion` 2 (`TOWER_CONTENT_SCHEMA_VERSION` in
 `src/entities/tower/model/content/towerContent.types.ts`).
+
+## Tower fields
+
+Besides the stats below, a tower entry has the same cosmetic `description` and
+optional `lore` fields as a creature, with the same length limit on `lore`.
 
 ## Units
 

@@ -14,7 +14,8 @@
       "sizeClass": "small",
       "armorType": "unarmored",
       "spriteKey": "unit.undead.skeleton",
-      "description": "Restless bones marching from forgotten crypts."
+      "description": "Restless bones marching from forgotten crypts.",
+      "lore": "The grave gives back what it was lent. These bones answer the call long after the flesh forgot whose name they bore."
     },
     {
       "id": "undead_ghoul",
@@ -28,7 +29,8 @@
       "sizeClass": "small",
       "armorType": "unarmored",
       "spriteKey": "unit.undead.ghoul",
-      "description": "Feral clawed scavenger that outruns slow defenses."
+      "description": "Feral clawed scavenger that outruns slow defenses.",
+      "lore": "It fed on the fallen until hunger was all that remained. It runs because the hunger does; nothing else is left to tire."
     },
     {
       "id": "undead_crypt_fiend",
@@ -41,7 +43,8 @@
       "rewardGold": 11,
       "armorType": "heavy",
       "spriteKey": "unit.undead.crypt_fiend",
-      "description": "A spider-like horror wrapped in deathly chitin."
+      "description": "A spider-like horror wrapped in deathly chitin.",
+      "lore": "Woven from spider and corpse in the deep vaults, it carries the cold of the crypt in every joint of its chitin."
     },
     {
       "id": "undead_gargoyle",
@@ -55,7 +58,8 @@
       "moveType": "air",
       "armorType": "heavy",
       "spriteKey": "unit.undead.gargoyle",
-      "description": "Winged stone predator that dives past the front line."
+      "description": "Winged stone predator that dives past the front line.",
+      "lore": "Stone that remembers being carved to watch. Its wings are dead weight it has learned to lift out of spite."
     },
     {
       "id": "undead_abomination",
@@ -69,7 +73,8 @@
       "sizeClass": "large",
       "armorType": "heavy",
       "spriteKey": "unit.undead.abomination",
-      "description": "Patchworked brute that soaks damage instead of dodging it."
+      "description": "Patchworked brute that soaks damage instead of dodging it.",
+      "lore": "Three corpses, one purpose. Every stitch is a vow the dead made to keep walking while the living still have gold to lose."
     },
     {
       "id": "undead_necromancer",
@@ -82,7 +87,8 @@
       "rewardGold": 28,
       "armorType": "unarmored",
       "spriteKey": "unit.undead.necromancer",
-      "description": "Dark acolyte worth killing early and worth gold when you do."
+      "description": "Dark acolyte worth killing early and worth gold when you do.",
+      "lore": "He counts the dead the way the living count coin, and he is never short. Kill him before the ledger fills."
     },
     {
       "id": "undead_banshee",
@@ -97,7 +103,8 @@
       "sizeClass": "small",
       "armorType": "unarmored",
       "spriteKey": "unit.undead.banshee",
-      "description": "Wailing spirit drifting between life and oblivion."
+      "description": "Wailing spirit drifting between life and oblivion.",
+      "lore": "Her wail is the last breath of a village that burned for the cause. She remembers every name, and she is not finished."
     },
     {
       "id": "undead_frost_wyrm",
@@ -112,7 +119,8 @@
       "sizeClass": "large",
       "armorType": "heavy",
       "spriteKey": "unit.undead.frost_wyrm",
-      "description": "Ancient dragon bound to ice and undeath."
+      "description": "Ancient dragon bound to ice and undeath.",
+      "lore": "A dragon ten centuries dead, roused with ice where its heart was. The cold it breathes has forgotten what warmth was for."
     }
   ]
 }

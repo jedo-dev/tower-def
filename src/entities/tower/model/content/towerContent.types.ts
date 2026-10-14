@@ -41,6 +41,8 @@ export type TowerContentEntry = {
   sounds?: TowerSoundSet;
   spriteKey: string;
   description: string;
+  /** Bestiary flavour text in the race's voice; at most `CONTENT_LORE_MAX_LENGTH`. */
+  lore?: string;
 };
 
 export type TowerContentFile = {
@@ -138,6 +140,7 @@ export const TOWER_CONTENT_OPTIONAL_KEYS: readonly (keyof TowerContentEntry)[] =
   'onHitEffects',
   'levels',
   'sounds',
+  'lore',
 ];
 
 export const TOWER_CONTENT_FILE_KEYS: readonly (keyof TowerContentFile)[] = [

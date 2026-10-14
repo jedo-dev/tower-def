@@ -8,6 +8,7 @@ import {
   UnitSizeClass,
 } from '../../../../shared/types/content-ids';
 import { UNIT_TRAIT_DEFAULTS } from './unitContent.types';
+import { CONTENT_LORE_MAX_LENGTH } from '../../../../shared/lib/content/contentValidation';
 import { UnitTier } from '../types';
 
 const FILE = 'content/units/undead.json';
@@ -89,6 +90,29 @@ describe('parseUnitContentFile', () => {
     expect(unit.moveType).toBe(UnitMoveType.AIR);
     expect(unit.sizeClass).toBe(UnitSizeClass.LARGE);
     expect(unit.armorType).toBe(UnitArmorType.HEAVY);
+  });
+
+  it('reads the lore a creature declares and leaves it undefined otherwise', () => {
+    const [withLore, withoutLore] = parse(
+      createFile([
+        createEntry({ lore: 'The grave gives back what it was lent.' }),
+        createEntry({ id: 'undead_ghoul' }),
+      ]),
+    );
+
+    expect(withLore.lore).toBe('The grave gives back what it was lent.');
+    expect(withoutLore.lore).toBeUndefined();
+  });
+
+  it('rejects lore longer than the display limit', () => {
+    const lore = 'x'.repeat(CONTENT_LORE_MAX_LENGTH + 1);
+
+    expect(() => parse(createFile([createEntry({ lore })]))).toThrow(
+      `${FILE} [undead_skeleton]: "lore" must be at most ${CONTENT_LORE_MAX_LENGTH} characters, got ${CONTENT_LORE_MAX_LENGTH + 1}`,
+    );
+    expect(() => parse(createFile([createEntry({ lore: '' })]))).toThrow(
+      `${FILE} [undead_skeleton]: "lore" must be a non-empty string`,
+    );
   });
 
   it('rejects a trait outside its vocabulary', () => {

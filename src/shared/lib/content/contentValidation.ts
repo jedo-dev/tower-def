@@ -17,6 +17,12 @@ export type NumericBound = {
   max: number;
 };
 
+/**
+ * Longest `lore` text a creature or tower may carry. Lore is read on a phone
+ * screen next to a portrait, so it stays at one or two sentences.
+ */
+export const CONTENT_LORE_MAX_LENGTH = 160;
+
 function describeLocation(location: ContentLocation): string {
   return location.entityId ? `${location.file} [${location.entityId}]` : location.file;
 }
@@ -74,6 +80,25 @@ export function readOptionalString(
   }
 
   return readString(source, key, location);
+}
+
+/** Optional text with an upper length bound, e.g. bestiary lore. */
+export function readOptionalBoundedString(
+  source: Record<string, unknown>,
+  key: string,
+  location: ContentLocation,
+  maxLength: number,
+): string | undefined {
+  const value = readOptionalString(source, key, location);
+
+  if (value !== undefined && value.length > maxLength) {
+    throw new ContentValidationError(
+      location,
+      `"${key}" must be at most ${maxLength} characters, got ${value.length}`,
+    );
+  }
+
+  return value;
 }
 
 export function readNumber(

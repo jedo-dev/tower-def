@@ -15,6 +15,7 @@ import {
 } from '../../../../shared/types/content-ids';
 import { BUILDABLE_TOWER_IDS } from '../towerIds';
 import { GRID_DIMENSIONS } from '../../../../shared/constants/grid';
+import { CONTENT_LORE_MAX_LENGTH } from '../../../../shared/lib/content/contentValidation';
 
 /** Tower reach before the fine-grid migration, authored in 32px cells. */
 const COARSE_CELL_SIZE_PX = 32;
@@ -64,6 +65,26 @@ describe('parseTowerContentFile', () => {
       spriteKey: 'tower.undead.bone_archer',
       description: 'Necromantic archer nest built from cursed remains.',
     });
+  });
+
+  it('reads the lore a tower declares and omits it otherwise', () => {
+    const [withLore, withoutLore] = parse(
+      createFile([
+        createTower({ lore: 'Archers who died at their posts and were not relieved.' }),
+        createTower({ id: 'undead_plague_tower', archetype: 'splash' }),
+      ]),
+    );
+
+    expect(withLore.lore).toBe('Archers who died at their posts and were not relieved.');
+    expect(withoutLore).not.toHaveProperty('lore');
+  });
+
+  it('rejects lore longer than the display limit', () => {
+    const lore = 'x'.repeat(CONTENT_LORE_MAX_LENGTH + 1);
+
+    expect(() => parse(createFile([createTower({ lore })]))).toThrow(
+      `${FILE} [undead_bone_archer_tower]: "lore" must be at most ${CONTENT_LORE_MAX_LENGTH} characters, got ${CONTENT_LORE_MAX_LENGTH + 1}`,
+    );
   });
 
   it('reads splash radius and on-hit effects when a tower declares them', () => {
