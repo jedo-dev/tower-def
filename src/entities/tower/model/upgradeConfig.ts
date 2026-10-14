@@ -1,5 +1,5 @@
-import type { TowerOnHitEffect } from '../../entities/tower/model/types';
-import type { TowerAuraDefinition } from '../../entities/tower/model/content/loadTowerContent';
+import type { TowerOnHitEffect } from './types';
+import type { TowerAuraDefinition } from './content/loadTowerContent';
 
 /**
  * Upgrade curves live in `src/content/towers/archetypes.json`, one per

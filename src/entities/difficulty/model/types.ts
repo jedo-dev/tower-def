@@ -1,9 +1,6 @@
-export enum Difficulty {
-  EASY = 'EASY',
-  NORMAL = 'NORMAL',
-  HARD = 'HARD',
-  NIGHTMARE = 'NIGHTMARE',
-}
+import { Difficulty } from '../../../shared/types/difficulty';
+
+export { Difficulty };
 
 /** Display data only; difficulty never scales creep stats or the economy. */
 export type DifficultyConfig = {

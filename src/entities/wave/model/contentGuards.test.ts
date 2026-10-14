@@ -5,11 +5,11 @@ import {
   tryResolveUnitConfigById,
   UNIT_IDS,
   type UnitConfig,
-} from '../../entities/unit';
-import { UNIT_STAT_BOUNDS } from '../../entities/unit/model/content/unitContent.types';
-import { generateWaveUnits, getWaveUnitCap, WAVE_UNIT_COUNT_BOUNDS } from '../../entities/wave';
-import { getAllRaceRegistries } from '../../entities/race-registry';
-import { RACE_IDS } from '../types/content-ids';
+} from '../../unit';
+import { UNIT_STAT_BOUNDS } from '../../unit/model/content/unitContent.types';
+import { generateWaveUnits, getWaveUnitCap, WAVE_UNIT_COUNT_BOUNDS } from '../index';
+import { getAllRaceRegistries } from '../../race-registry';
+import { RACE_IDS } from '../../../shared/types/content-ids';
 
 /**
  * Guards that catch bad creature authoring before it reaches a scene. The

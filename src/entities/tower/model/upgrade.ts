@@ -1,5 +1,5 @@
 import { ECONOMY_BALANCE } from '../../../shared/constants/economy';
-import type { TowerLevelStats } from '../../../shared/constants/tower';
+import type { TowerLevelStats } from './upgradeConfig';
 import type { TowerEntity, TowerType } from './types';
 import { TOWER_BASE_LEVEL, TOWER_UPGRADE_CONFIG } from './types';
 import { tryResolveBuildableTowerById } from './config/buildableTowers';

@@ -17,11 +17,9 @@ import type {
   HudTowerType,
   SelectedTowerSnapshot,
 } from './types';
-import { TOWER_TYPE_IDS, TowerTypeId } from '../../types/content-ids';
+import { RaceId, TOWER_TYPE_IDS, TowerTypeId } from '../../types/content-ids';
 import type { GameSetupConfig } from '../../config/game-setup';
-import { BuilderFaction } from '../../../entities/builder-faction';
-import { EnemyFaction } from '../../../entities/enemy-faction';
-import { Difficulty } from '../../../entities/difficulty';
+import { Difficulty } from '../../types/difficulty';
 
 function createTestTowerSnapshot(
   overrides?: Partial<SelectedTowerSnapshot>,
@@ -314,8 +312,8 @@ describe('game bridge event system', () => {
 
   it('carries a fixed-endpoints setup payload through the bridge', () => {
     const config: GameSetupConfig = {
-      builderFaction: BuilderFaction.UNDEAD,
-      enemyFaction: EnemyFaction.ORC,
+      builderFaction: RaceId.UNDEAD,
+      enemyFaction: RaceId.ORC,
       difficulty: Difficulty.NORMAL,
       endpoints: { mode: 'fixed' },
     };
@@ -328,8 +326,8 @@ describe('game bridge event system', () => {
 
   it('carries a dynamic-endpoints setup payload with its seed through the bridge', () => {
     const config: GameSetupConfig = {
-      builderFaction: BuilderFaction.ELF,
-      enemyFaction: EnemyFaction.HUMAN,
+      builderFaction: RaceId.ELF,
+      enemyFaction: RaceId.HUMAN,
       difficulty: Difficulty.HARD,
       endpoints: { mode: 'dynamic', seed: 20260821 },
     };

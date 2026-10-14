@@ -12,11 +12,9 @@ import {
   TowerTypeId,
   type ModifierId,
 } from './content-ids';
-import { builderFactions, BuilderFaction } from '../../entities/builder-faction';
-import { enemyFactions, EnemyFaction } from '../../entities/enemy-faction';
-import { buildableTowers } from '../../entities/tower';
-import { undeadUnits, orcUnits, humanUnits, elfUnits, Faction } from '../../entities/unit';
-import { raceRegistries } from '../../entities/race-registry';
+
+// Entity content is checked against these ids in
+// `entities/race-registry/model/canonicalContentIds.test.ts`.
 
 describe('shared/types/content-ids', () => {
   describe('RaceId', () => {
@@ -38,12 +36,6 @@ describe('shared/types/content-ids', () => {
       expect(isRaceId('ELF')).toBe(true);
       expect(isRaceId('demon')).toBe(false);
       expect(isRaceId('')).toBe(false);
-    });
-
-    it('is the single source of truth for builder, enemy and unit faction enums', () => {
-      expect(BuilderFaction).toBe(RaceId);
-      expect(EnemyFaction).toBe(RaceId);
-      expect(Faction).toBe(RaceId);
     });
   });
 
@@ -95,82 +87,6 @@ describe('shared/types/content-ids', () => {
     it('is a future-safe type with no concrete modifiers registered yet', () => {
       const noRegistry = (globalThis as { __MODIFIER_REGISTRY__?: unknown }).__MODIFIER_REGISTRY__;
       expect(noRegistry).toBeUndefined();
-    });
-  });
-
-  describe('content configs use canonical IDs', () => {
-    it('every builder faction references a RaceId value', () => {
-      for (const faction of builderFactions) {
-        expect(isRaceId(faction.id)).toBe(true);
-      }
-    });
-
-    it('every enemy faction references a RaceId value', () => {
-      for (const faction of enemyFactions) {
-        expect(isRaceId(faction.id)).toBe(true);
-      }
-    });
-
-    it('every buildable tower references a RaceId faction and a TowerTypeId tower type', () => {
-      for (const tower of buildableTowers) {
-        expect(isRaceId(tower.faction)).toBe(true);
-        expect(isTowerTypeId(tower.towerType)).toBe(true);
-      }
-    });
-
-    it('every undead unit references a RaceId faction', () => {
-      for (const unit of undeadUnits) {
-        expect(isRaceId(unit.faction)).toBe(true);
-      }
-    });
-
-    it('every orc unit references a RaceId faction', () => {
-      for (const unit of orcUnits) {
-        expect(isRaceId(unit.faction)).toBe(true);
-      }
-    });
-
-    it('every human unit references a RaceId faction', () => {
-      for (const unit of humanUnits) {
-        expect(isRaceId(unit.faction)).toBe(true);
-      }
-    });
-
-    it('every elf unit references a RaceId faction', () => {
-      for (const unit of elfUnits) {
-        expect(isRaceId(unit.faction)).toBe(true);
-      }
-    });
-  });
-
-  describe('race registries use canonical IDs', () => {
-    it('every race registry entry references a valid RaceId', () => {
-      for (const raceId of RACE_IDS) {
-        const registry = raceRegistries[raceId];
-        expect(registry).toBeDefined();
-        expect(isRaceId(registry.raceId)).toBe(true);
-      }
-    });
-
-    it('every race registry has a non-empty name', () => {
-      for (const raceId of RACE_IDS) {
-        const registry = raceRegistries[raceId];
-        expect(registry.name.length).toBeGreaterThan(0);
-      }
-    });
-
-    it('every race registry has at least one buildable tower', () => {
-      for (const raceId of RACE_IDS) {
-        const registry = raceRegistries[raceId];
-        expect(registry.buildableTowerIds.length).toBeGreaterThan(0);
-      }
-    });
-
-    it('every race registry has at least one sendable creep', () => {
-      for (const raceId of RACE_IDS) {
-        const registry = raceRegistries[raceId];
-        expect(registry.sendableCreepIds.length).toBeGreaterThan(0);
-      }
     });
   });
 });

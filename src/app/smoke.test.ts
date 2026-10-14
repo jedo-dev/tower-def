@@ -1,25 +1,22 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_CREEP_COMBAT_TRAITS } from '../../entities/creep';
-import { RaceId } from '../types/content-ids';
+import { DEFAULT_CREEP_COMBAT_TRAITS } from '../entities/creep';
+import { RaceId } from '../shared/types/content-ids';
 import {
   getActiveBattlefieldView,
   publishGameHudSnapshot,
   sendGameCommand,
-} from '../lib/game-bridge/bridge';
-import type { GameHudSnapshot } from '../lib/game-bridge/types';
-import {
-  createInitialDuelMatchState,
-  DEFAULT_ENTRANCE,
-} from '../../entities/duel-match/model/state';
-import { addCreeps, addTower } from '../../entities/duel-match/model/battlefieldOps';
-import { sendCreep, startRound } from '../../entities/duel-match/model/lifecycle';
-import { UnitTier } from '../../entities/unit/model/types';
+} from '../shared/lib/game-bridge/bridge';
+import type { GameHudSnapshot } from '../shared/lib/game-bridge/types';
+import { createInitialDuelMatchState, DEFAULT_ENTRANCE } from '../entities/duel-match/model/state';
+import { addCreeps, addTower } from '../entities/duel-match/model/battlefieldOps';
+import { sendCreep, startRound } from '../entities/duel-match/model/lifecycle';
+import { UnitTier } from '../entities/unit/model/types';
 import {
   canPlayerInteractWithVisibleBattlefield,
   createVisibleBattlefieldSnapshot,
   type BattlefieldPlayerInteraction,
-} from '../../entities/duel-match/model/battlefieldView';
-import { mapBattlefieldViewToggleToViewModel } from '../../widgets/hud/model/mapHudSnapshotToViewModel';
+} from '../entities/duel-match/model/battlefieldView';
+import { mapBattlefieldViewToggleToViewModel } from '../widgets/hud/model/mapHudSnapshotToViewModel';
 
 function createHudSnapshot(overrides?: Partial<GameHudSnapshot>): GameHudSnapshot {
   return {

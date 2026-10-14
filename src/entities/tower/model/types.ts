@@ -1,6 +1,6 @@
 import towerArchetypeContent from '../../../content/towers/archetypes.json';
 import type { GridPosition } from '../../../shared/types/pathfinding';
-import type { TowerTypeUpgradeConfig } from '../../../shared/constants/tower';
+import type { TowerTypeUpgradeConfig } from './upgradeConfig';
 import type { EffectId, RaceId } from '../../../shared/types/content-ids';
 import { TOWER_TYPE_IDS, TowerTypeId } from '../../../shared/types/content-ids';
 import type { TowerAttackKind } from '../../../shared/types/content-ids';
@@ -13,12 +13,8 @@ import {
 } from './content/loadTowerContent';
 import type { BuildableTowerId } from './towerIds';
 
-export type {
-  TowerLevelStats,
-  TowerUpgradeLevel,
-  TowerTypeUpgradeConfig,
-} from '../../../shared/constants/tower';
-export { TowerUpgradeBalance } from '../../../shared/constants/tower';
+export type { TowerLevelStats, TowerUpgradeLevel, TowerTypeUpgradeConfig } from './upgradeConfig';
+export { TowerUpgradeBalance } from './upgradeConfig';
 
 export type TowerId = string;
 
