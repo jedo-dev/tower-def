@@ -154,6 +154,38 @@ export const TOWER_SPRITE_SHEET_FRAME = {
   height: 60,
 } as const;
 
+/** Every tower sheet is 300x180: five 60px frames across, three rows down. */
+export const TOWER_SPRITE_SHEET_LAYOUT = {
+  columns: 5,
+  rows: 3,
+} as const;
+
+export type TowerSpriteSheet = {
+  spriteKey: TowerSpriteKey;
+  url: string;
+  layout: typeof TOWER_SPRITE_SHEET_LAYOUT;
+  /** Frame the HTML portrait shows: the first idle pose. */
+  portraitFrame: number;
+};
+
+function isTowerSpriteKey(spriteKey: string): spriteKey is TowerSpriteKey {
+  return spriteKey in TOWER_SPRITE_ASSETS;
+}
+
+/** The portrait frame of a tower sheet; null while the tower has no art. */
+export function tryResolveTowerSpriteSheet(spriteKey: string): TowerSpriteSheet | null {
+  if (!isTowerSpriteKey(spriteKey)) {
+    return null;
+  }
+
+  return {
+    spriteKey,
+    url: TOWER_SPRITE_ASSETS[spriteKey],
+    layout: TOWER_SPRITE_SHEET_LAYOUT,
+    portraitFrame: TOWER_SHEET_FRAME_LAYOUTS[spriteKey].idle[0],
+  };
+}
+
 export const TOWER_ANIMATION_KEYS = {
   UNDEAD_BONE_ARCHER_BUILD: 'tower.undead.bone_archer.build',
   UNDEAD_BONE_ARCHER_IDLE: 'tower.undead.bone_archer.idle',

@@ -1,0 +1,24 @@
+/* One frame of a tower sheet, scaled to the icon size. The sheet is pixel art,
+   so it is nearest-neighbour scaled instead of smoothed. */
+.icon {
+  display: inline-block;
+  box-sizing: border-box;
+  min-width: var(--tower-icon-size, 28px);
+  min-height: var(--tower-icon-size, 28px);
+  width: var(--tower-icon-size, 28px);
+  height: var(--tower-icon-size, 28px);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  background-color: var(--glass-bg-soft);
+  background-repeat: no-repeat;
+  background-position: calc(var(--tower-icon-size, 28px) * var(--tower-icon-column) * -1)
+    calc(var(--tower-icon-size, 28px) * var(--tower-icon-row) * -1);
+  background-size: calc(var(--tower-icon-size, 28px) * var(--tower-icon-columns))
+    calc(var(--tower-icon-size, 28px) * var(--tower-icon-rows));
+  image-rendering: pixelated;
+}
+
+/* Matches the placeholder chip: a lone icon inside a control claims 44x44. */
+.iconInteractive {
+  --tower-icon-size: 44px;
+}

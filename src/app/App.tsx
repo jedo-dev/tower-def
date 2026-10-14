@@ -3,6 +3,7 @@ import { StartPage } from '../pages/start-page';
 import { GameSetupPage } from '../pages/game-setup-page';
 import { LazyGamePage, resetGamePageLoad } from '../pages/game-page';
 import { SettingsPage } from '../pages/settings-page';
+import { LazyBestiaryPage, resetBestiaryPageLoad } from '../pages/bestiary-page';
 import type { AppRoute, GameSetupConfig } from '../shared/config/game-setup';
 import { setGameSetupConfig } from '../shared/lib/game-bridge/bridge';
 import { ErrorBoundary } from '../shared/ui/error-boundary';
@@ -31,6 +32,14 @@ import {
 const MENU_CLIP_URLS: readonly string[] = (Object.keys(SOUND_CLIPS) as SoundId[])
   .filter((soundId) => SOUND_CLIPS[soundId].category === SoundCategory.UI)
   .map((soundId) => resolveSoundClipUrl(soundId));
+
+/** Screens that share the menu ambience; the match fades it out. */
+const MENU_ROUTES: ReadonlySet<AppRoute> = new Set<AppRoute>([
+  'start',
+  'setup',
+  'settings',
+  'bestiary',
+]);
 
 export function App() {
   const [route, setRoute] = useState<AppRoute>('start');
@@ -67,6 +76,11 @@ export function App() {
     setRoute('start');
   }, []);
 
+  const handleRecoverFromBestiaryError = useCallback(() => {
+    resetBestiaryPageLoad();
+    setRoute('start');
+  }, []);
+
   const handleStartGame = useCallback((config: GameSetupConfig) => {
     setGameSetupConfig(config);
     setGameSetup(config);
@@ -100,11 +114,7 @@ export function App() {
         return;
       }
       isUiAudioUnlockedRef.current = true;
-      if (
-        routeRef.current === 'start' ||
-        routeRef.current === 'setup' ||
-        routeRef.current === 'settings'
-      ) {
+      if (MENU_ROUTES.has(routeRef.current)) {
         ambientFader.play();
       }
     };
@@ -140,7 +150,7 @@ export function App() {
       return;
     }
 
-    if (route === 'start' || route === 'setup' || route === 'settings') {
+    if (MENU_ROUTES.has(route)) {
       ambientFader.play();
       return;
     }
@@ -199,6 +209,14 @@ export function App() {
     return (
       <ErrorBoundary recoverLabel="Back to menu" onRecover={handleRecoverFromGameError}>
         <LazyGamePage setup={gameSetup} onExit={() => handleNavigate('start')} />
+      </ErrorBoundary>
+    );
+  }
+
+  if (route === 'bestiary') {
+    return (
+      <ErrorBoundary recoverLabel="Back to menu" onRecover={handleRecoverFromBestiaryError}>
+        <LazyBestiaryPage onNavigate={handleNavigate} />
       </ErrorBoundary>
     );
   }

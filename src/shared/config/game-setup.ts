@@ -15,4 +15,4 @@ export type GameSetupConfig = {
   endpoints?: GameSetupEndpoints;
 };
 
-export type AppRoute = 'start' | 'setup' | 'game' | 'settings';
+export type AppRoute = 'start' | 'setup' | 'game' | 'settings' | 'bestiary';
