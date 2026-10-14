@@ -3,3 +3,9 @@
 
 # Use bd merge for beads JSONL files
 .beads/issues.jsonl merge=beads
+
+# Audio assets are binary whatever their extension says
+*.wav binary
+*.ogg binary
+*.m4a binary
+*.mp3 binary

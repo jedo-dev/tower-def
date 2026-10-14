@@ -19,11 +19,25 @@ describe('sound registry', () => {
     expect(shared).toEqual([]);
   });
 
-  it('keeps every clip under the sfx root', () => {
+  it('keeps every clip under the sfx root: generated sfx as WAV, ambience as OGG', () => {
     for (const soundId of SOUND_IDS) {
+      const extension = soundId.startsWith('ambient.') ? 'ogg' : 'wav';
       expect(SOUND_ASSET_PATHS[soundId], soundId.toString()).toMatch(
-        new RegExp(`^${SFX_ASSET_ROOT}/[a-z]+/.+\\.wav$`),
+        new RegExp(`^${SFX_ASSET_ROOT}/[a-z]+/.+\\.${extension}$`),
       );
+    }
+  });
+
+  it('gives only the ambience a fallback container', () => {
+    for (const soundId of SOUND_IDS) {
+      const { fallbackAssetPath } = SOUND_CLIPS[soundId];
+      if (soundId.startsWith('ambient.')) {
+        expect(fallbackAssetPath, soundId).toMatch(
+          new RegExp(`^${SFX_ASSET_ROOT}/ambient/.+\\.m4a$`),
+        );
+      } else {
+        expect(fallbackAssetPath, soundId).toBeUndefined();
+      }
     }
   });
 });

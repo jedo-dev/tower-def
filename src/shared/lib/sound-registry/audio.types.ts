@@ -24,6 +24,11 @@ export type SoundPlaybackConfig = {
 export type SoundClipDefinition = SoundPlaybackConfig & {
   /** Path under `public/`, e.g. `assets/audio/sfx/ui/ui_click_01.wav`. */
   assetPath: string;
+  /**
+   * The same clip in a container for browsers that cannot decode `assetPath`
+   * (Safari and iOS play no OGG Vorbis). Only the authored ambience needs one.
+   */
+  fallbackAssetPath?: string;
 };
 
 export const DEFAULT_SOUND_CONFIG: SoundPlaybackConfig = {

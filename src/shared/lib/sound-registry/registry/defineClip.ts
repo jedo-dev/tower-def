@@ -15,19 +15,27 @@ export type SoundClipGroup<TPrefix extends string> = Record<
   SoundClipDefinition
 >;
 
+/** A clip shipped in two containers: the preferred one and a fallback. */
+export type SoundClipFiles = {
+  primary: string;
+  fallback: string;
+};
+
 /**
  * Declares one clip. `file` is relative to `SFX_ASSET_ROOT`, e.g.
  * `ui/ui_click_01.wav`; everything not overridden keeps the default config.
  */
 export function defineClip(
-  file: string,
+  file: string | SoundClipFiles,
   category: SoundCategory,
   overrides: Partial<SoundPlaybackConfig> = {},
 ): SoundClipDefinition {
+  const files = typeof file === 'string' ? { primary: file } : file;
   return {
     ...DEFAULT_SOUND_CONFIG,
     ...overrides,
     category,
-    assetPath: `${SFX_ASSET_ROOT}/${file}`,
+    assetPath: `${SFX_ASSET_ROOT}/${files.primary}`,
+    ...('fallback' in files ? { fallbackAssetPath: `${SFX_ASSET_ROOT}/${files.fallback}` } : {}),
   };
 }

@@ -30,7 +30,7 @@ import {
 
 const MENU_CLIP_URLS: readonly string[] = (Object.keys(SOUND_CLIPS) as SoundId[])
   .filter((soundId) => SOUND_CLIPS[soundId].category === SoundCategory.UI)
-  .map(resolveSoundClipUrl);
+  .map((soundId) => resolveSoundClipUrl(soundId));
 
 export function App() {
   const [route, setRoute] = useState<AppRoute>('start');

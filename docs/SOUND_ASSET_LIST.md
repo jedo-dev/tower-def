@@ -1,12 +1,13 @@
 # Sound Assets
 
 Every sound effect in the game is **our own**: it is synthesized from a recipe
-by `npm run gen:sfx`. The only authored files are the two ambience loops.
+by `npm run gen:sfx`. The only authored files are the two ambience loops,
+which `npm run encode:ambient` cuts and compresses from the full recordings.
 
 | Kind | Source | Location |
 | --- | --- | --- |
 | Generated SFX (57 clips) | recipes in `src/shared/lib/sfx-synth/recipes/` | `public/assets/audio/sfx/{ui,system,economy,combat}/` |
-| Ambience (2 loops) | authored, never regenerated | `public/assets/audio/sfx/ambient/` |
+| Ambience (2 loops) | recordings in `assets-src/audio/ambient/` (not shipped) | `public/assets/audio/sfx/ambient/` as `.ogg` + `.m4a` |
 
 Which tower or creature plays which clip is decided by the sound profiles in
 `src/content/audio/` (tower -> archetype -> race -> default). See "Sound
@@ -21,11 +22,42 @@ file; a test fails if two ids share one.
 - Budget: all generated clips together stay under 1.5 MB (currently ~700 KB).
   The generator and a test both enforce it.
 
+### Ambience
+
+- Primary: OGG Vorbis, libvorbis quality 2 (~96 kbps), stereo 48 kHz, as the
+  recordings are. Chromium, Firefox and Phaser's Web Audio path decode it.
+- Fallback: AAC-LC 96 kbps in `.m4a`, for Safari and iOS, which decode no
+  Vorbis. `resolveSoundClipUrl` picks the file per session with
+  `HTMLMediaElement.canPlayType` (`shared/lib/sound-registry/audioFormatSupport.ts`),
+  so the menu player and the game preloader fetch the same file.
+- Budget: both `.ogg` files together stay under 1.5 MB (currently ~1.2 MB).
+  The encoder and `ambientAssets.node.test.ts` both enforce it.
+- Each file is one seamless loop (61 s map, 47 s tension) cut from the full
+  recording: the loop end is chosen where the music repeats best and its tail
+  is crossfaded into the pre-roll before the loop start, so the jump back is a
+  normal sample step. The encoder checks the boundary numerically and that
+  the Ogg stream declares exactly the loop length.
+
 ## Regenerating
 
 ```bash
 npm run gen:sfx
 ```
+
+The ambience loops are cut and encoded separately:
+
+```bash
+npm run encode:ambient
+```
+
+It reads the full recordings from `assets-src/audio/ambient/` (Suno exports;
+ID3-tagged MP3, 48 kHz stereo, 11 MB and 4.5 MB, kept in git because they are
+already in its history), the loop points from
+`src/shared/lib/ambient-loop/ambientEncoding.ts`, and writes the `.ogg` and
+`.m4a` files the registry points at. Encoding goes through the ffmpeg binary
+that the `@ffmpeg-installer/ffmpeg` devDependency ships, so nothing has to be
+installed on the machine. Commit the encoded files with any change to the
+loop points.
 
 The generator renders every recipe to the path its id is registered with,
 deletes generated wav files no id points at, and prints duration and size per
@@ -140,8 +172,8 @@ Dark fantasy around D minor: low-mid, soft attacks, short tails. Frequent cues
 
 | Sound ID | Usage | File |
 | --- | --- | --- |
-| `ambient.map` | Menu and map ambience loop | `ambient/ambient_map_01.wav` |
-| `ambient.tension` | In-game tension loop | `ambient/ambient_tension_01.wav` |
+| `ambient.map` | Menu and map ambience loop | `ambient/ambient_map_01.ogg` (+ `.m4a`) |
+| `ambient.tension` | In-game tension loop | `ambient/ambient_tension_01.ogg` (+ `.m4a`) |
 
 ## Recipes
 

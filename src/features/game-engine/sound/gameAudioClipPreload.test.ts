@@ -114,6 +114,6 @@ describe('GameAudioManager clip preload', () => {
   });
 
   it('resolves every clip to one absolute URL shared by menu and game', () => {
-    expect(resolveSoundClipUrl('ambient.map')).toBe('/assets/audio/sfx/ambient/ambient_map_01.wav');
+    expect(resolveSoundClipUrl('ambient.map')).toBe('/assets/audio/sfx/ambient/ambient_map_01.ogg');
   });
 });

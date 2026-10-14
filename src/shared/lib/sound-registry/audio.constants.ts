@@ -1,4 +1,5 @@
 import type { SoundClipDefinition, SoundId, SoundPlaybackConfig } from './audio.types';
+import { isAudioAssetPlayable } from './audioFormatSupport';
 import { COMBAT_SOUND_CLIPS } from './registry/combatSounds';
 import {
   AMBIENT_SOUND_CLIPS,
@@ -30,10 +31,17 @@ export const SOUND_ASSET_PATHS: Record<SoundId, string> = Object.fromEntries(
 
 /**
  * Absolute URL a clip is fetched from. Every player (menu and game) resolves
- * clips through here, so the session clip cache sees one key per file.
+ * clips through here, so the session clip cache sees one key per file. A clip
+ * with a fallback container is served from it when the browser cannot play
+ * the primary one (Safari and iOS have no OGG Vorbis).
  */
-export function resolveSoundClipUrl(soundId: SoundId): string {
-  return `/${SOUND_ASSET_PATHS[soundId]}`;
+export function resolveSoundClipUrl(
+  soundId: SoundId,
+  isPlayable: (assetPath: string) => boolean = isAudioAssetPlayable,
+): string {
+  const { assetPath, fallbackAssetPath } = SOUND_CLIPS[soundId];
+  const chosen = fallbackAssetPath && !isPlayable(assetPath) ? fallbackAssetPath : assetPath;
+  return `/${chosen}`;
 }
 
 /**
