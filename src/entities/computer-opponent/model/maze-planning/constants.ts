@@ -85,5 +85,5 @@ export const MAZE_PLAN_SEARCH_EFFORT_BY_DIFFICULTY: Readonly<
   [Difficulty.EASY]: { finalistCount: 1, maxExpandedNodes: 30_000 },
   [Difficulty.NORMAL]: { finalistCount: 2, maxExpandedNodes: 35_000 },
   [Difficulty.HARD]: { finalistCount: 3, maxExpandedNodes: 40_000 },
-  [Difficulty.NIGHTMARE]: { finalistCount: 4, maxExpandedNodes: 50_000 },
+  [Difficulty.NIGHTMARE]: { finalistCount: 6, maxExpandedNodes: 60_000 },
 };

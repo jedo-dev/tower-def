@@ -41,8 +41,8 @@ export const SEND_TUNING_BY_DIFFICULTY: Readonly<Record<Difficulty, Readonly<Sen
   },
   [Difficulty.NIGHTMARE]: {
     maxSendRatioPerRound: 0.7,
-    maxSendsPerRound: 9,
-    economyRounds: 2,
-    basePressureWeight: 0.8,
+    maxSendsPerRound: 7,
+    economyRounds: 4,
+    basePressureWeight: 0.5,
   },
 };

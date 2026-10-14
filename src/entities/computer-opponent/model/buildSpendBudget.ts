@@ -28,14 +28,14 @@ export const SPEND_BUDGET_BY_DIFFICULTY: Readonly<Record<Difficulty, Readonly<Sp
   {
     [Difficulty.EASY]: {
       maxSpendRatioPerRound: 0.5,
-      maxBuildActionsPerRound: 4,
+      maxBuildActionsPerRound: 3,
       minGoldReserveRatio: 0.25,
       mazeCoverageTarget: 0.25,
       surplusReserveIncomeShare: 1,
     },
     [Difficulty.NORMAL]: {
       maxSpendRatioPerRound: 0.8,
-      maxBuildActionsPerRound: 6,
+      maxBuildActionsPerRound: 4,
       minGoldReserveRatio: 0.1,
       mazeCoverageTarget: 0.34,
       surplusReserveIncomeShare: 0.5,
