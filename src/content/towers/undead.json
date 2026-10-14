@@ -11,7 +11,8 @@
       "range": 6,
       "attackCooldownMs": 800,
       "spriteKey": "tower.undead.bone_archer",
-      "description": "Necromantic archer nest built from cursed remains."
+      "description": "Necromantic archer nest built from cursed remains.",
+      "lore": "Archers who died at their posts and were not relieved. The bowstrings are sinew; the arrows do not care who they were."
     },
     {
       "id": "undead_plague_tower",
@@ -23,7 +24,8 @@
       "attackCooldownMs": 1200,
       "splashRadius": 3,
       "spriteKey": "tower.undead.plague",
-      "description": "Launches toxic clouds that burst over everything nearby."
+      "description": "Launches toxic clouds that burst over everything nearby.",
+      "lore": "A cauldron of the last plague, kept warm. Each burst is a village that will never need burying."
     },
     {
       "id": "undead_frost_wyrm_nest",
@@ -41,7 +43,8 @@
         }
       ],
       "spriteKey": "tower.undead.frost_wyrm_nest",
-      "description": "A wyrm hatchling breathes killing cold over the path."
+      "description": "A wyrm hatchling breathes killing cold over the path.",
+      "lore": "The hatchling was dead before it hatched. It breathes the grave's cold and the path slows to listen."
     },
     {
       "id": "undead_bone_obelisk",
@@ -52,7 +55,8 @@
       "range": 1,
       "attackCooldownMs": 1000,
       "spriteKey": "tower.undead.bone_obelisk",
-      "description": "Grave-magic pillar that quickens every tower around it."
+      "description": "Grave-magic pillar that quickens every tower around it.",
+      "lore": "A spire of spines humming with grave-song. Around it the dead work faster, because the dead do not rest."
     }
   ]
 }

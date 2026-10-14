@@ -10,10 +10,12 @@ import {
   type TowerAuraStacking,
 } from '../../../../shared/types/content-ids';
 import {
+  CONTENT_LORE_MAX_LENGTH,
   ContentValidationError,
   assertKnownKeys,
   readArray,
   readNumber,
+  readOptionalBoundedString,
   readRecord,
   readString,
   readStringFrom,
@@ -191,6 +193,7 @@ function parseTowerEntry(
 
   const splashRadius = parseOptionalStat(entry, 'splashRadius', location);
   const sounds = readSoundSlotSet(entry, 'sounds', TOWER_SOUND_SLOTS, location);
+  const lore = readOptionalBoundedString(entry, 'lore', location, CONTENT_LORE_MAX_LENGTH);
 
   return {
     id,
@@ -212,6 +215,7 @@ function parseTowerEntry(
     ...(sounds === undefined ? {} : { sounds }),
     spriteKey: readString(entry, 'spriteKey', location),
     description: readString(entry, 'description', location),
+    ...(lore === undefined ? {} : { lore }),
   };
 }
 

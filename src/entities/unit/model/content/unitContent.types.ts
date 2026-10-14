@@ -24,6 +24,8 @@ export type UnitContentEntry = {
   rewardGold: number;
   spriteKey: string;
   description?: string;
+  /** Bestiary flavour text in the race's voice; at most `CONTENT_LORE_MAX_LENGTH`. */
+  lore?: string;
   moveType?: string;
   sizeClass?: string;
   armorType?: string;
@@ -85,6 +87,7 @@ export const UNIT_CONTENT_REQUIRED_KEYS: readonly (keyof UnitContentEntry)[] = [
 
 export const UNIT_CONTENT_OPTIONAL_KEYS: readonly (keyof UnitContentEntry)[] = [
   'description',
+  'lore',
   'moveType',
   'sizeClass',
   'armorType',

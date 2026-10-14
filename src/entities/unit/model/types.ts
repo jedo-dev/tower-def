@@ -36,17 +36,29 @@ export const UNIT_IDS = [
   'undead_banshee',
   'undead_frost_wyrm',
   'orc_grunt',
+  'orc_peon',
   'orc_wolf_rider',
   'orc_troll',
   'orc_headhunter',
+  'orc_shaman',
+  'orc_wind_rider',
+  'orc_tauren',
   'human_militia',
+  'human_peasant',
   'human_footman',
   'human_rifleman',
   'human_siege_engine',
+  'human_knight',
+  'human_sorceress',
+  'human_gryphon_rider',
   'elf_archer',
+  'elf_wisp',
   'elf_huntress',
   'elf_dryad',
   'elf_chimera',
+  'elf_druid_of_the_claw',
+  'elf_hippogryph',
+  'elf_mountain_giant',
 ] as const;
 
 export type UnitId = (typeof UNIT_IDS)[number];
@@ -63,6 +75,8 @@ export type UnitConfig = {
   rewardGold: number;
   spriteKey: string;
   description?: string;
+  /** Bestiary flavour text, one or two sentences in the race's voice. */
+  lore?: string;
   /** Resolved traits: content may omit them, the loader fills the defaults. */
   moveType: UnitMoveType;
   sizeClass: UnitSizeClass;

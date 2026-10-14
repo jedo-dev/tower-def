@@ -6,12 +6,14 @@ import {
   UNIT_SIZE_CLASSES,
 } from '../../../../shared/types/content-ids';
 import {
+  CONTENT_LORE_MAX_LENGTH,
   ContentValidationError,
   assertKnownKeys,
   assertSchemaVersion,
   readArray,
   readIntegerFrom,
   readNumber,
+  readOptionalBoundedString,
   readOptionalString,
   readRecord,
   readString,
@@ -84,6 +86,7 @@ function parseUnitEntry(
     rewardGold: readNumber(entry, 'rewardGold', location, UNIT_STAT_BOUNDS.rewardGold),
     spriteKey: readString(entry, 'spriteKey', location),
     description: readOptionalString(entry, 'description', location),
+    lore: readOptionalBoundedString(entry, 'lore', location, CONTENT_LORE_MAX_LENGTH),
     ...parseTraits(entry, location),
   };
 }

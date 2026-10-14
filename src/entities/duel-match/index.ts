@@ -44,6 +44,8 @@ export {
   getSendCostByTier,
   lookupTierValue,
 } from './model/sendEconomy';
+export { getSendTierDisplay, listSendTierDisplays } from './model/sendEconomyDisplay';
+export type { SendTierDisplay } from './model/sendEconomyDisplay';
 export {
   checkSendLimits,
   countQueuedSendsOfUnit,

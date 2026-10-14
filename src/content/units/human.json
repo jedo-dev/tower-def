@@ -14,7 +14,23 @@
       "sizeClass": "small",
       "armorType": "unarmored",
       "spriteKey": "unit.human.militia",
-      "description": "Common folk pressed into service with pitchforks and hope."
+      "description": "Common folk pressed into service with pitchforks and hope.",
+      "lore": "Farmers with pitchforks and a bell that would not stop ringing. They hold the line because the line runs through their fields."
+    },
+    {
+      "id": "human_peasant",
+      "name": "Peasant",
+      "tier": 1,
+      "health": 40,
+      "speed": 1.0,
+      "armor": 0,
+      "damage": 8,
+      "rewardGold": 5,
+      "sizeClass": "small",
+      "armorType": "unarmored",
+      "spriteKey": "unit.human.peasant",
+      "description": "Conscript with a hoe, slow and easily spent.",
+      "lore": "Conscripted at harvest with a hoe and a hymn. He was promised the war would be over before the fields needed him."
     },
     {
       "id": "human_footman",
@@ -27,7 +43,8 @@
       "rewardGold": 11,
       "armorType": "heavy",
       "spriteKey": "unit.human.footman",
-      "description": "Shielded soldier that blunts light towers on its own."
+      "description": "Shielded soldier that blunts light towers on its own.",
+      "lore": "Drilled until the shield is heavier to drop than to carry. The footman does not break; he is relieved."
     },
     {
       "id": "human_rifleman",
@@ -40,7 +57,8 @@
       "rewardGold": 15,
       "armorType": "unarmored",
       "spriteKey": "unit.human.rifleman",
-      "description": "Sharpshooter with a dwarven rifle and little protection."
+      "description": "Sharpshooter with a dwarven rifle and little protection.",
+      "lore": "A dwarven rifle, a flask of black powder and a grudge against anything taller than him. He shoots before the sermon ends."
     },
     {
       "id": "human_siege_engine",
@@ -54,7 +72,53 @@
       "sizeClass": "large",
       "armorType": "heavy",
       "spriteKey": "unit.human.siege_engine",
-      "description": "Plated war machine that crawls forward and refuses to die."
+      "description": "Plated war machine that crawls forward and refuses to die.",
+      "lore": "Iron, oak and a crew that stopped flinching years ago. It does not storm the gate; it arrives at it and waits."
+    },
+    {
+      "id": "human_knight",
+      "name": "Knight",
+      "tier": 5,
+      "health": 190,
+      "speed": 1.2,
+      "armor": 4,
+      "damage": 32,
+      "rewardGold": 28,
+      "armorType": "heavy",
+      "spriteKey": "unit.human.knight",
+      "description": "Plated cavalry that shrugs off light arrows at a canter.",
+      "lore": "Plate forged in the capital, oath sworn in the chapel. He does not stop for arrows; he has stopped for nothing yet."
+    },
+    {
+      "id": "human_sorceress",
+      "name": "Sorceress",
+      "tier": 5,
+      "health": 140,
+      "speed": 1.35,
+      "armor": 0,
+      "damage": 34,
+      "rewardGold": 28,
+      "sizeClass": "small",
+      "armorType": "unarmored",
+      "spriteKey": "unit.human.sorceress",
+      "description": "Quick arcane caster with no armor to speak of.",
+      "lore": "Trained in the tower at Dalaran, she can turn a volley into mist. Just not two volleys."
+    },
+    {
+      "id": "human_gryphon_rider",
+      "name": "Gryphon Rider",
+      "tier": 6,
+      "health": 300,
+      "speed": 1.2,
+      "armor": 4,
+      "damage": 60,
+      "rewardGold": 34,
+      "moveType": "air",
+      "sizeClass": "large",
+      "armorType": "heavy",
+      "spriteKey": "unit.human.gryphon_rider",
+      "description": "Dwarven hammer-wielder on a gryphon, the kingdom's answer from above.",
+      "lore": "A dwarf, a storm hammer and a gryphon that answers to no one else. The sky is the only wall the kingdom could not build."
     }
   ]
 }

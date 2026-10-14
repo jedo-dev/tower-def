@@ -59,7 +59,8 @@ src/content/
 | `damage` | yes | Damage the creature deals; reserved for duel pressure. |
 | `rewardGold` | yes | Gold the defender earns for the kill. |
 | `spriteKey` | yes | Art key, `unit.<race>.<name>`. Missing art falls back to a placeholder. |
-| `description` | no | Flavour text. Cosmetic only. |
+| `description` | no | One-line flavour text for the HUD and wave preview. Cosmetic only. |
+| `lore` | no | Bestiary text, one or two sentences in the race's voice, at most `CONTENT_LORE_MAX_LENGTH` (160) characters. Cosmetic only; the loader rejects longer text. |
 | `moveType` | no | `ground` (default) or `air`. |
 | `sizeClass` | no | `small`, `medium` (default) or `large`. |
 | `armorType` | no | `unarmored`, `light` (default) or `heavy`. Shifts effective armor points. |
@@ -72,7 +73,33 @@ Unknown fields are rejected: add the field to the schema first
 **Balance-sensitive:** `tier`, `health`, `speed`, `armor`, `rewardGold`,
 `armorType`. Changing these changes how a wave plays.
 
-**Cosmetic:** `name`, `description`, `spriteKey`, `sizeClass`.
+**Cosmetic:** `name`, `description`, `lore`, `spriteKey`, `sizeClass`.
+
+## Lore voice
+
+Every creature and tower carries a `lore` line; the bestiary shows it under the
+portrait. Write it in the race's voice, in English, and keep it under the limit:
+
+| Race | Voice |
+| --- | --- |
+| Undead | Cold, necromantic, patient; the dead as a resource. |
+| Orc | Brutal, tribal, blunt; the horde speaks in short sentences. |
+| Human | Disciplined, martial, institutional; rosters, drills, bells. |
+| Elf | Lyrical, forest-bound; moonlight, groves, the long memory of trees. |
+
+## Tier display values
+
+A roster screen shows what a tier costs to send, what income it grants, how
+many of one type fit in a wave and from which baseline wave the tier appears.
+Read all four through `getSendTierDisplay(tier)` / `listSendTierDisplays()`
+(`entities/duel-match/model/sendEconomyDisplay.ts`); they resolve the balance
+tables in `entities/duel-match/model/balance.ts` and
+`entities/wave/model/waveBalance.ts`, so no screen keeps a copy of a number.
+
+```ts
+getSendTierDisplay(UnitTier.TIER_1);
+// { tier: 1, sendCostGold: 50, incomeBonusGold: 10, sendCapPerType: 6, baselineUnlockWave: 1 }
+```
 
 `tier` is the one field that does double duty: it decides how much of the wave
 budget a creature consumes, from which wave the baseline may field it
@@ -96,13 +123,25 @@ Each race is meant to read differently, and the tests enforce it
 
 | Race | Identity |
 | --- | --- |
-| Undead | Wide spread, the only race with tiers 5 and 6. |
+| Undead | Wide spread: the frail ghoul, the armored crypt fiend, the flying gargoyle, the hulking abomination. |
 | Orc | Bulkiest and slow, with the wolf rider as the fast outlier. |
 | Human | The armored race, slowest on average. |
 | Elf | Fastest and frailest, with the chimera as its heavy straggler. |
 
+Identity is measured over tiers 1 to 4. Every race fields the same roster
+shape (tower-def-xwc.2): two tier-1 creatures, one each of tiers 2 to 4, two
+tier-5 creatures and one tier-6, with at least one flyer and one large creature
+per race. Tiers 5 and 6 follow the undead numbers (about 140-190 health at
+tier 5, 300-340 at tier 6) so the late baseline waves weigh the same whichever
+race the player builds.
+
 Every race also keeps an internal fast-and-frail outlier: the fastest creature
 in a roster must have less health than the slowest one.
+
+The second tier-1 creature of orc, human and elf (peon, peasant, wisp) is
+baseline-only: it is not in `sendableCreepIds`, so each race sends four creeps.
+A second tier-1 send only gives the computer twelve cheap income buys a wave
+(see "Roster completion" in `docs/07-duel-mode-expansion-plan.md`).
 
 ## Adding a creature
 
@@ -153,6 +192,11 @@ Tower stats live in `src/content/towers/<race>.json` (the buildable roster of
 each race) and `src/content/towers/archetypes.json` (base stats and upgrade
 curves). Both files carry `schemaVersion` 2 (`TOWER_CONTENT_SCHEMA_VERSION` in
 `src/entities/tower/model/content/towerContent.types.ts`).
+
+## Tower fields
+
+Besides the stats below, a tower entry has the same cosmetic `description` and
+optional `lore` fields as a creature, with the same length limit on `lore`.
 
 ## Units
 

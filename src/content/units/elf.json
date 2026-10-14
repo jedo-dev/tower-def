@@ -14,7 +14,23 @@
       "sizeClass": "small",
       "armorType": "unarmored",
       "spriteKey": "unit.elf.archer",
-      "description": "Swift sentinel striking from the shadows of the forest."
+      "description": "Swift sentinel striking from the shadows of the forest.",
+      "lore": "She learned the bow before she learned to speak, and the forest taught her both. The arrow is loosed before the leaf lands."
+    },
+    {
+      "id": "elf_wisp",
+      "name": "Wisp",
+      "tier": 1,
+      "health": 32,
+      "speed": 2.0,
+      "armor": 0,
+      "damage": 6,
+      "rewardGold": 5,
+      "sizeClass": "small",
+      "armorType": "unarmored",
+      "spriteKey": "unit.elf.wisp",
+      "description": "Grove spirit that darts past slow towers and dies to one hit.",
+      "lore": "A spirit of the grove, more light than body. It drifts where the forest wants to look and ends where it must."
     },
     {
       "id": "elf_huntress",
@@ -26,7 +42,8 @@
       "damage": 20,
       "rewardGold": 10,
       "spriteKey": "unit.elf.huntress",
-      "description": "Mounted glaive rider that crosses the map before towers reload."
+      "description": "Mounted glaive rider that crosses the map before towers reload.",
+      "lore": "Glaive and nightsaber move as one shadow under the moon. What she hunts does not hear the branches part."
     },
     {
       "id": "elf_dryad",
@@ -40,7 +57,8 @@
       "sizeClass": "small",
       "armorType": "unarmored",
       "spriteKey": "unit.elf.dryad",
-      "description": "Half-spirit creature that slips through unarmored and quick."
+      "description": "Half-spirit creature that slips through unarmored and quick.",
+      "lore": "Daughter of the grove, half bark and half breeze. Spells slide off her like rain off a leaf."
     },
     {
       "id": "elf_chimera",
@@ -55,7 +73,51 @@
       "sizeClass": "large",
       "armorType": "heavy",
       "spriteKey": "unit.elf.chimera",
-      "description": "Twin-headed beast too heavy to keep up with its own kin."
+      "description": "Twin-headed beast too heavy to keep up with its own kin.",
+      "lore": "Two heads grown from one old grudge of the wild. It is too heavy for the canopy, so it comes the long way, and it still comes."
+    },
+    {
+      "id": "elf_druid_of_the_claw",
+      "name": "Druid of the Claw",
+      "tier": 5,
+      "health": 175,
+      "speed": 1.2,
+      "armor": 2,
+      "damage": 32,
+      "rewardGold": 28,
+      "sizeClass": "large",
+      "spriteKey": "unit.elf.druid_of_the_claw",
+      "description": "Bear-shaped druid, the broadest thing the forest sends on foot.",
+      "lore": "He slept a thousand years as a bear and woke as one. The claw remembers what the druid chose to forget."
+    },
+    {
+      "id": "elf_hippogryph",
+      "name": "Hippogryph",
+      "tier": 5,
+      "health": 140,
+      "speed": 1.75,
+      "armor": 0,
+      "damage": 30,
+      "rewardGold": 28,
+      "moveType": "air",
+      "spriteKey": "unit.elf.hippogryph",
+      "description": "Crag flyer that crosses the board before towers turn.",
+      "lore": "Half eagle, half stag, wholly of the high crags. It stoops like a thought and is gone before the string sings."
+    },
+    {
+      "id": "elf_mountain_giant",
+      "name": "Mountain Giant",
+      "tier": 6,
+      "health": 330,
+      "speed": 0.8,
+      "armor": 5,
+      "damage": 60,
+      "rewardGold": 34,
+      "sizeClass": "large",
+      "armorType": "heavy",
+      "spriteKey": "unit.elf.mountain_giant",
+      "description": "Walking crag with trees on its back and no reason to hurry.",
+      "lore": "The mountain grew tired of being climbed and stood up. Trees ride on its shoulders, and it does not hurry for anyone."
     }
   ]
 }

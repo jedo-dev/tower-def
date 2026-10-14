@@ -54,6 +54,8 @@ export type BuildableTowerConfig = {
   sounds?: TowerSoundSet;
   spriteKey: string;
   description: string;
+  /** Bestiary flavour text, one or two sentences in the race's voice. */
+  lore?: string;
 };
 
 export type TowerCombatStats = {

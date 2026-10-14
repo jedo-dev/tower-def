@@ -11,7 +11,8 @@
       "range": 6,
       "attackCooldownMs": 800,
       "spriteKey": "tower.elf.moon_archer",
-      "description": "Moonlit archers strike swiftly from sacred boughs."
+      "description": "Moonlit archers strike swiftly from sacred boughs.",
+      "lore": "A platform grown, not built, in the crown of an elder tree. Its archers draw by moonlight and release in silence."
     },
     {
       "id": "elf_wisp_bloom",
@@ -23,7 +24,8 @@
       "attackCooldownMs": 1200,
       "splashRadius": 3,
       "spriteKey": "tower.elf.wisp_bloom",
-      "description": "A bloom of wisps that bursts over anything close."
+      "description": "A bloom of wisps that bursts over anything close.",
+      "lore": "Wisps gathered into one bright flower of the grove. When it opens, everything near it is briefly, brilliantly gone."
     },
     {
       "id": "elf_moonwell",
@@ -41,7 +43,8 @@
         }
       ],
       "spriteKey": "tower.elf.moonwell",
-      "description": "Cold moonlight pools over the path and slows it."
+      "description": "Cold moonlight pools over the path and slows it.",
+      "lore": "Still water that remembers the moon. The path that crosses it grows heavy with the cold of a long night."
     },
     {
       "id": "elf_thorn_spire",
@@ -60,7 +63,8 @@
         }
       ],
       "spriteKey": "tower.elf.thorn_spire",
-      "description": "Barbed thorns that keep working long after the hit."
+      "description": "Barbed thorns that keep working long after the hit.",
+      "lore": "The forest's own answer to trespass, a spire of barbed vine. The thorns stay in the wound and keep working."
     }
   ]
 }
