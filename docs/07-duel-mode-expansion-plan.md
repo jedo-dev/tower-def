@@ -232,14 +232,14 @@ Difficulty changes only how well the computer decides; stats, gold, income and l
 | Build spend ratio / gold reserve | same | 0.5 / 0.25 | 0.8 / 0.1 | 0.95 / 0.05 | 1 / 0 |
 | Maze coverage target / surplus reserve (income share) | same | 0.25 / 1 | 0.34 / 0.5 | 0.42 / 0.25 | 0.46 / 0 |
 | Plan search: finalists / expansion cap | `maze-planning/constants.ts` | 1 / 30k | 2 / 35k | 3 / 40k | 6 / 60k (was 4 / 50k) |
-| Sends: max share / max creeps / economy rounds / base pressure | `sendTuning.ts` | 0.2 / 3 / 5 / 0.2 | 0.35 / 5 / 4 / 0.4 | 0.7 / 9 / 2 / 0.8 (was 0.5 / 7 / 3 / 0.6) | 0.7 / 7 / 4 / 0.5 (was 0.7 / 9 / 2 / 0.8) |
+| Sends: max share / max creeps / economy rounds / base pressure | `sendTuning.ts` | 0.2 / 3 / 5 / 0.2 | 0.7 / 9 / 0 / 0.8 (was 0.35 / 5 / 4 / 0.4, see "Normal race balance") | 0.7 / 9 / 2 / 0.8 (was 0.5 / 7 / 3 / 0.6) | 0.7 / 7 / 4 / 0.5 (was 0.7 / 9 / 2 / 0.8) |
 | Defence margins: threatened / comfortable | `threat-budget/constants.ts` | 1.8 / 3.2 | 1.6 / 2.8 | 1.5 / 2.5 | 1.4 / 2.3 |
 | Leak reaction delay (build phases) | `decisionMistakes.ts` | 1 (new) | 0 | 0 | 0 |
 
 What separates the steps:
 
 - **Easy < normal:** easy places fewer towers a round and notices a leak one build phase late, so it starts defending a round after the damage.
-- **Normal < hard:** normal places four towers a round, which starves its maze once income grows; hard places eight.
+- **Normal < hard:** normal places four towers a round, which starves its maze once income grows; hard places eight. Both send the same way since tower-def-i55 (normal pressures from its first round, hard from its third), so build pace alone separates them: hard beats normal 86% (seeds 1-3, both maps, 96 duels).
 - **Hard < nightmare:** hard rushes pressure (sends from round 3 with an 80% pressure split and up to 9 creeps, the old nightmare tuning); every creep the defender kills pays it a bounty, so early heavy sends feed the other side. Nightmare grows income for four rounds, then sends at a 50% pressure split, at most 7 creeps, and searches its maze plan harder (6 finalists, 60k expansions; one decision stays under 80k, `planBuildDecisionMazePlan.test.ts`).
 
 Measure with `npm run sim:duel-batch -- --seeds 1-20 --matchups normal:easy,hard:normal,nightmare:hard`. Each difficulty pair plays the four default race pairs four ways (each difficulty on each race, in each seat), so race and seat imbalance cancel out; a draw counts half.
@@ -296,7 +296,34 @@ Pacing held. Hard vs hard took a median of 25 rounds (19-31) with 12 towers at r
 
 How to measure it: `npm run sim:duel-batch -- --difficulties hard --pairs undead:orc,undead:human,undead:elf,orc:human,orc:elf,human:elf --seeds 1-10`. Add the reversed pairs to play both seats.
 
-Known gap: race balance on **normal** is still uneven. Seeds 1-5, both maps, six pairs: orc 78%, human 67%, undead 32%, elf 23% (before: orc 12%, human 93%, undead 35%, elf 60%). Chain strength works like a switch. With the old chain, orc leaks 1.3 sent creeps a match on normal; with the new one it leaks none, because the normal preset sends at most five creeps a round and the bounces clear them. Cutting chain level 1 damage or the third bounce did not move the normal result, and the old chain loses hard. Fixing normal therefore looks like a send-preset question, not a content one.
+Known gap after the pass: race balance on **normal** was still uneven; tower-def-i55 below takes it up.
+
+### Normal race balance (tower-def-i55)
+
+Measured as normal vs normal, six race pairs, seeds 1-10, classic and seeded map (120 duels, 60 per race), baseline undead, a draw counting half. Before: orc 87.5%, human 65%, undead 22%, elf 26% (classic: 97 / 63 / 20 / 20; seeded: 78 / 67 / 23 / 32).
+
+Diagnosis, from a per-round leak profile of the same duels (`DuelSideRoundReport.sentLeaks` against `leaks`):
+
+- Sent creeps never leak on normal, for any race: 0.0-0.3 a match, on any send preset tried, including a full pressure split. The chain tower is not what stops them; every maze does. Sends act only through the economy (income per send, kill bounties for the other side).
+- What decides a normal duel is the baseline wave. With the old preset the opening send was two or three tier-1 creeps, so the opening put little gold into towers and the early mazes leaked: baseline leaks in rounds 1-12 were 0 for orc (chain holds the tier-1 waves), 5.7 for human, 8.8 for undead and 9.0 for elf. A side that leaks is "threatened", its sends shrink to the income floor, its income falls behind, and the gap compounds into the crush. On hard the eight-tower build pace keeps early leaks near zero for every race, which is why hard was balanced and normal was not.
+- The send share works as a switch through the opening send: `500 x share x threatenedSendScale / 50` tier-1 creeps in the first round. Up to a share of 0.6 that is three creeps, and only undead leaks them; at 0.7 it is four, every race leaks about 2.3 of them and steals as many lives back, the kill bounties buy the second-round tower, and early baseline leaks drop to about 1 for every race. The match is then an economy race into the crush (income after round 15 about 500 against 200), which human and elf scale into better than orc.
+
+Changes (`sendTuning.ts`, normal only; easy, hard and nightmare are untouched):
+
+| Lever | Old | New |
+| --- | --- | --- |
+| Max send share of the purse | 0.35 | 0.7 |
+| Max creeps a round | 5 | 9 |
+| Economy rounds (income-only opening) | 4 | 0 |
+| Base pressure weight | 0.4 | 0.8 |
+
+Results, same batch, after: orc 45%, human 64%, undead 37.5%, elf 53% (classic: 25 / 83 / 37 / 55; seeded: 65 / 45 / 38 / 52). Pacing held: median 24 rounds on the classic map and 26 on the seeded map (range 20-31), 11-12 towers at round 5, draws 3-8%, no round-cap hits. Difficulty order, seeds 1-3, both maps, 96 duels each: hard beats normal 82/12/2 (86%), normal beats easy 92/2/2 (97%).
+
+Not reached: human is above 60% and undead below 40% over both maps. Human's edge is the classic map (83%; 45% on seeded maps), where its late crush defence leaks 12 baseline creeps a match against 16-19 for the others; hard shows the same classic bias (human 65%, undead 33% on classic, seeds 1-10). No send preset moves it, because sends never leak into a late maze. It is a map and roster question for a content pass, not a send one.
+
+Tried and rejected: a build-only opening (no sends for the first one, two or four rounds) removes the opening lottery but hands the match to orc's early maze (orc 90-100%); the per-round creep cap never binds after the opening and cannot shrink the late economy without shrinking the opening send (a cap of 2 or 3 is the old regime); the pressure split (0.5 to 1.0) and economy rounds (0 to 3) move single races by about 10 points without changing the picture; a lower share with a higher `threatenedSendScale` keeps the opening send but leaves the late economy unchanged.
+
+How to measure it: `npm run sim:duel-batch -- --difficulties normal --pairs undead:orc,undead:human,undead:elf,orc:human,orc:elf,human:elf --seeds 1-10 --maps classic` and again with `--maps seeded`; each map takes about a minute.
 
 ## Suggested Improvements
 

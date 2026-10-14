@@ -10,6 +10,7 @@ import type { DecisionContext } from './types';
 import { StrategyIntent } from './types';
 import { createComputerDecisionDebugRecorder } from './decisionDebugSnapshots';
 import { planSendCreeps } from './planSendCreeps';
+import { SEND_TUNING_BY_DIFFICULTY } from './sendTuning';
 
 function createTestContext(overrides?: Partial<DecisionContext>): DecisionContext {
   return {
@@ -220,8 +221,19 @@ describe('entities/computer-opponent/planSendCreeps', () => {
       return tiersOf(result).filter((tier) => tier === 1).length;
     }
 
+    /**
+     * The split walks from income to pressure over the match. Normal pressures
+     * from its first round (docs/07, tower-def-i55), so the walk is read on
+     * nightmare, which keeps the economy opening and has pressure headroom.
+     */
+    const BALANCE_DIFFICULTY = Difficulty.NIGHTMARE;
+
+    function createBalanceContext(overrides?: Partial<DecisionContext>): DecisionContext {
+      return createTestContext({ difficulty: BALANCE_DIFFICULTY, ...overrides });
+    }
+
     it('spends the opening rounds on the best income per gold', () => {
-      const result = planSendCreeps({ context: createTestContext({ gold: 1000, round: 1 }) });
+      const result = planSendCreeps({ context: createBalanceContext({ gold: 1000, round: 1 }) });
 
       // Tier 1 pays back fastest, so an opening buy is nothing but tier 1.
       expect(tiersOf(result)).toEqual(tiersOf(result).map(() => 1));
@@ -229,14 +241,14 @@ describe('entities/computer-opponent/planSendCreeps', () => {
     });
 
     it('shifts towards tougher creeps once the opening is over', () => {
-      const opening = planSendCreeps({ context: createTestContext({ gold: 1000, round: 1 }) });
-      const late = planSendCreeps({ context: createTestContext({ gold: 1000, round: 15 }) });
+      const opening = planSendCreeps({ context: createBalanceContext({ gold: 1000, round: 1 }) });
+      const late = planSendCreeps({ context: createBalanceContext({ gold: 1000, round: 15 }) });
 
       expect(Math.max(...tiersOf(late))).toBeGreaterThan(Math.max(...tiersOf(opening)));
     });
 
     it('buys more income per gold than a naive most-expensive-first plan would', () => {
-      const result = planSendCreeps({ context: createTestContext({ gold: 1000, round: 1 }) });
+      const result = planSendCreeps({ context: createBalanceContext({ gold: 1000, round: 1 }) });
 
       const incomePerGold = result.totalIncomeBonus / result.totalCost;
       const worstTier = Math.max(
@@ -252,10 +264,10 @@ describe('entities/computer-opponent/planSendCreeps', () => {
 
     it('goes all in on pressure when its own life total is nearly gone', () => {
       const healthy = planSendCreeps({
-        context: createTestContext({ gold: 1000, round: 8, hp: 20 }),
+        context: createBalanceContext({ gold: 1000, round: 8, hp: 20 }),
       });
       const desperate = planSendCreeps({
-        context: createTestContext({ gold: 1000, round: 8, hp: 2 }),
+        context: createBalanceContext({ gold: 1000, round: 8, hp: 2 }),
       });
 
       expect(economyBuyCount(desperate)).toBeLessThan(economyBuyCount(healthy));
@@ -263,7 +275,7 @@ describe('entities/computer-opponent/planSendCreeps', () => {
 
     it('leans harder on pressure while ahead on income than while behind', () => {
       const ahead = planSendCreeps({
-        context: createTestContext({
+        context: createBalanceContext({
           gold: 1000,
           round: 10,
           income: 120,
@@ -271,7 +283,7 @@ describe('entities/computer-opponent/planSendCreeps', () => {
         }),
       });
       const behind = planSendCreeps({
-        context: createTestContext({
+        context: createBalanceContext({
           gold: 1000,
           round: 10,
           income: 50,
@@ -284,10 +296,12 @@ describe('entities/computer-opponent/planSendCreeps', () => {
 
     it('caps how many creeps one round can send', () => {
       const result = planSendCreeps({
-        context: createTestContext({ gold: 100000, difficulty: Difficulty.NORMAL, round: 1 }),
+        context: createBalanceContext({ gold: 100000, round: 1 }),
       });
 
-      expect(result.actions.length).toBeLessThanOrEqual(5);
+      expect(result.actions.length).toBeLessThanOrEqual(
+        SEND_TUNING_BY_DIFFICULTY[BALANCE_DIFFICULTY].maxSendsPerRound,
+      );
     });
 
     it('sends more on a harder difficulty than on an easier one', () => {
