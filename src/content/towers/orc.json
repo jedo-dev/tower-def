@@ -6,6 +6,8 @@
       "id": "orc_spear_watchtower",
       "name": "Spear Watchtower",
       "archetype": "single",
+
+      "allowedTargets": "both",
       "costGold": 50,
       "damage": 20,
       "range": 6,
@@ -18,6 +20,8 @@
       "id": "orc_burning_pit",
       "name": "Burning Pit",
       "archetype": "splash",
+
+      "allowedTargets": "ground",
       "costGold": 75,
       "damage": 18,
       "range": 5,
@@ -31,6 +35,8 @@
       "id": "orc_lightning_totem",
       "name": "Lightning Totem",
       "archetype": "chain",
+
+      "allowedTargets": "ground",
       "costGold": 85,
       "damage": 24,
       "range": 6,
@@ -43,6 +49,8 @@
       "id": "orc_tar_pit",
       "name": "Tar Pit",
       "archetype": "frost",
+
+      "allowedTargets": "both",
       "costGold": 70,
       "damage": 19,
       "range": 6,

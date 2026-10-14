@@ -50,7 +50,7 @@ function spawnOnComputerField(unit: UnitConfig) {
   const field = createBattlefieldRenderState();
   const state = createOpponentFieldWaveState(field);
   scheduleOpponentFieldWave(state, {
-    routes: { small: [{ x: 0, y: 0 }], large: [{ x: 0, y: 0 }] },
+    routes: { small: [{ x: 0, y: 0 }], large: [{ x: 0, y: 0 }], air: [{ x: 0, y: 0 }] },
     waveNumber: 1,
     baselineUnits: [unit],
     sentUnits: [],

@@ -38,6 +38,12 @@ export const ROUTE_PREVIEW_LARGE_BAND_ALPHA = 0.2;
 export const ROUTE_PREVIEW_LARGE_SPINE_WIDTH_PX = 2;
 export const ROUTE_PREVIEW_LARGE_SPINE_ALPHA = 0.8;
 export const ROUTE_PREVIEW_GHOST_ALPHA_FACTOR = 0.35;
+/** The air line: a faint dashed stroke, read as "fliers cross here" without competing with the maze routes. */
+export const ROUTE_PREVIEW_AIR_COLOR = 0xd8c8ff;
+export const ROUTE_PREVIEW_AIR_ALPHA = 0.45;
+export const ROUTE_PREVIEW_AIR_WIDTH_PX = 1.5;
+export const ROUTE_PREVIEW_AIR_DASH_PX = 6;
+export const ROUTE_PREVIEW_AIR_GAP_PX = 5;
 export const GRID_PIXEL_WIDTH = GRID_DIMENSIONS.cols * GRID_DIMENSIONS.cellSize;
 export const GRID_PIXEL_HEIGHT = GRID_DIMENSIONS.rows * GRID_DIMENSIONS.cellSize;
 export const CREEP_BASE_COLOR = 0xffffff;

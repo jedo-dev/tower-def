@@ -25,7 +25,7 @@ const CONFIG: WaveRuntimeConfig = {
   waveFirstSpawnDelayMs: 250,
   earlyWaveStartBonusPlaceholderEligible: false,
 };
-const ROUTES = { small: [{ x: 0, y: 0 }], large: [{ x: 0, y: 0 }] };
+const ROUTES = { small: [{ x: 0, y: 0 }], large: [{ x: 0, y: 0 }], air: [{ x: 0, y: 0 }] };
 const BASELINE = undeadUnits.slice(0, 3);
 const PLAYER_SENDS = [resolveUnitConfigById('undead_ghoul')];
 const COMPUTER_SENDS = [resolveUnitConfigById('undead_gargoyle')];
@@ -152,7 +152,7 @@ describe('computer field wave schedule', () => {
     const state = createOpponentFieldWaveState(field);
 
     scheduleOpponentFieldWave(state, {
-      routes: { small: [], large: [] },
+      routes: { small: [], large: [], air: [] },
       waveNumber: 1,
       baselineUnits: BASELINE,
       sentUnits: PLAYER_SENDS,

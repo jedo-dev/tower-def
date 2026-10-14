@@ -9,4 +9,5 @@ export {
   selectWaveRoute,
   type WaveRoute,
   type WaveRoutes,
+  type WaveRouteTraits,
 } from '../../../shared/lib/pathfinding/waveRoutes';

@@ -11,8 +11,8 @@ import {
 } from './buildRoutePreviewModel';
 
 const GRID = createGridModel(createDefaultEdgeEndpoints());
-const CURRENT: WaveRoutes = { small: [{ x: 0, y: 0 }], large: [{ x: 0, y: 0 }] };
-const PROJECTED: WaveRoutes = { small: [{ x: 1, y: 1 }], large: [{ x: 1, y: 1 }] };
+const CURRENT: WaveRoutes = { small: [{ x: 0, y: 0 }], large: [{ x: 0, y: 0 }], air: [] };
+const PROJECTED: WaveRoutes = { small: [{ x: 1, y: 1 }], large: [{ x: 1, y: 1 }], air: [] };
 
 function createCountingSearches() {
   const searches = {
@@ -28,6 +28,7 @@ function input(overrides: Partial<Parameters<typeof resolveRoutePreviewFrame>[1]
     isBuildPhase: true,
     hoveredAnchor: { x: 4, y: 4 },
     isHoveredAnchorValid: true,
+    hasAirCreeps: false,
     ...overrides,
   };
 }
@@ -50,7 +51,9 @@ describe('build route preview model', () => {
       isVisible: true,
       current: CURRENT,
       projected: PROJECTED,
+      showsAirRoute: false,
     });
+    expect(resolveRoutePreviewFrame(cache, input({ hasAirCreeps: true })).showsAirRoute).toBe(true);
     expect(resolveRoutePreviewFrame(cache, input({ isHoveredAnchorValid: false })).projected).toBe(
       null,
     );

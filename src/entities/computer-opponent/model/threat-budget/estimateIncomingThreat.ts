@@ -1,3 +1,4 @@
+import { UnitMoveType } from '../../../../shared/types/content-ids';
 import { getSendCostByTier } from '../../../duel-match/model/sendEconomy';
 import type { UnitConfig } from '../../../unit/model/types';
 import { generateWaveUnits } from '../../../wave/model/generateWaveUnits';
@@ -27,21 +28,44 @@ export type IncomingThreat = {
   creepCount: number;
   /** Mean creep speed over the wave, in speed points. */
   averageSpeed: number;
+  /** The part of `totalHealth` that flies the straight air route over the maze. */
+  airHealth: number;
+  airCreepCount: number;
+  /** Mean speed of the air creeps; the reference speed when none are expected. */
+  airAverageSpeed: number;
 };
 
-type CreepGroup = { health: number; count: number; speedSum: number };
+type CreepGroup = {
+  health: number;
+  count: number;
+  speedSum: number;
+  airHealth: number;
+  airCount: number;
+  airSpeedSum: number;
+};
 
-const EMPTY_GROUP: CreepGroup = { health: 0, count: 0, speedSum: 0 };
+const EMPTY_GROUP: CreepGroup = {
+  health: 0,
+  count: 0,
+  speedSum: 0,
+  airHealth: 0,
+  airCount: 0,
+  airSpeedSum: 0,
+};
 
 function sumUnits(units: readonly UnitConfig[]): CreepGroup {
-  return units.reduce<CreepGroup>(
-    (group, unit) => ({
-      health: group.health + computeEffectiveHealth(unit),
+  return units.reduce<CreepGroup>((group, unit) => {
+    const health = computeEffectiveHealth(unit);
+    const flies = unit.moveType === UnitMoveType.AIR;
+    return {
+      health: group.health + health,
       count: group.count + 1,
       speedSum: group.speedSum + unit.speed,
-    }),
-    EMPTY_GROUP,
-  );
+      airHealth: group.airHealth + (flies ? health : 0),
+      airCount: group.airCount + (flies ? 1 : 0),
+      airSpeedSum: group.airSpeedSum + (flies ? unit.speed : 0),
+    };
+  }, EMPTY_GROUP);
 }
 
 /** Creeps `gold` buys from `sendables` at their average price, health and speed. */
@@ -53,10 +77,14 @@ function estimateSends(gold: number, sendables: readonly UnitConfig[]): CreepGro
   const averageCost =
     sendables.reduce((sum, unit) => sum + getSendCostByTier(unit.tier), 0) / sendables.length;
   const count = gold / averageCost;
+  const share = count / roster.count;
   return {
-    health: (roster.health / roster.count) * count,
+    health: roster.health * share,
     count,
-    speedSum: (roster.speedSum / roster.count) * count,
+    speedSum: roster.speedSum * share,
+    airHealth: roster.airHealth * share,
+    airCount: roster.airCount * share,
+    airSpeedSum: roster.airSpeedSum * share,
   };
 }
 
@@ -82,6 +110,7 @@ export function estimateIncomingThreat(input: IncomingThreatInput): IncomingThre
   const healthMultiplier = getWaveHealthMultiplier(input.waveNumber);
   const baselineHealth = baseline.health * healthMultiplier;
   const sendHealth = sends.health * healthMultiplier;
+  const airCreepCount = baseline.airCount + sends.airCount;
 
   return {
     baselineHealth,
@@ -90,5 +119,11 @@ export function estimateIncomingThreat(input: IncomingThreatInput): IncomingThre
     creepCount,
     averageSpeed:
       creepCount > 0 ? (baseline.speedSum + sends.speedSum) / creepCount : REFERENCE_CREEP_SPEED,
+    airHealth: (baseline.airHealth + sends.airHealth) * healthMultiplier,
+    airCreepCount,
+    airAverageSpeed:
+      airCreepCount > 0
+        ? (baseline.airSpeedSum + sends.airSpeedSum) / airCreepCount
+        : REFERENCE_CREEP_SPEED,
   };
 }

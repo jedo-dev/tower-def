@@ -57,7 +57,7 @@ describe('features/game-engine/runtime/wave computer send wiring', () => {
 
     const baselineUnits = undeadUnits.slice(0, 2);
     const state: WaveRuntimeState = {
-      activeCreepRoutes: { small: [], large: [] },
+      activeCreepRoutes: { small: [], large: [], air: [] },
       activeCreeps: [],
       pendingWaveSpawns: [],
       wavePhaseState: createInitialWavePhaseState(),
@@ -111,7 +111,11 @@ describe('features/game-engine/runtime/wave creature traits', () => {
   it('copies authored armor and traits onto the spawned creep', () => {
     const gargoyle = resolveUnitConfigById('undead_gargoyle');
     const state: WaveRuntimeState = {
-      activeCreepRoutes: { small: [{ x: 0, y: 0 }], large: [{ x: 0, y: 0 }] },
+      activeCreepRoutes: {
+        small: [{ x: 0, y: 0 }],
+        large: [{ x: 0, y: 0 }],
+        air: [{ x: 0, y: 0 }],
+      },
       activeCreeps: [],
       pendingWaveSpawns: [{ unit: gargoyle, sequenceIndex: 0, spawnAtMs: 0 }],
       wavePhaseState: createInitialWavePhaseState(),
@@ -157,7 +161,11 @@ describe('features/game-engine/runtime/wave creep visual scale', () => {
       const sprite = createSpriteStub();
       const createCreepSprite = vi.fn(() => sprite);
       const state: WaveRuntimeState = {
-        activeCreepRoutes: { small: [{ x: 8, y: 8 }], large: [{ x: 8, y: 8 }] },
+        activeCreepRoutes: {
+          small: [{ x: 8, y: 8 }],
+          large: [{ x: 8, y: 8 }],
+          air: [{ x: 8, y: 8 }],
+        },
         activeCreeps: [],
         pendingWaveSpawns: [{ unit, sequenceIndex: 0, spawnAtMs: 0 }],
         wavePhaseState: createInitialWavePhaseState(),

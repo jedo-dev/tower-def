@@ -76,6 +76,7 @@ export function toLedgerTowers(towers: readonly TowerEntity[]): LedgerTower[] {
     anchor: tower.position,
     towerType: tower.type,
     stats: statsAtLevel(tower),
+    ...(tower.allowedTargets === undefined ? {} : { allowedTargets: tower.allowedTargets }),
   }));
 }
 

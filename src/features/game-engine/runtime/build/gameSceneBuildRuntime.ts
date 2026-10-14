@@ -172,7 +172,9 @@ export function tryPlaceTowerAtHoveredCell(
     position: { x: anchor.x, y: anchor.y },
     cost: towerCost,
     type: towerType,
-    ...(authoredTower ? { buildableTowerId: authoredTower.id } : {}),
+    ...(authoredTower
+      ? { buildableTowerId: authoredTower.id, allowedTargets: authoredTower.allowedTargets }
+      : {}),
     level: TOWER_BASE_LEVEL,
     combatStats: resolvePlacementStats(towerType, authoredTower),
   };

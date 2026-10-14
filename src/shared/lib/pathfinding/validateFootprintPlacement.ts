@@ -6,12 +6,17 @@ import {
   withFootprintOccupancy,
 } from '../grid/footprint';
 import type { GridPosition } from '../../types/pathfinding';
+import { calculateAirRoute } from './airRoute';
 import { findRoutesBySizeClass } from './findRouteForSizeClass';
 
-/** Both size-class routes after a placement; both exist by construction. */
+/**
+ * Both size-class routes after a placement (both exist by construction) and
+ * the air line, which no placement can move.
+ */
 export type ProjectedPlacementRoutes = {
   readonly small: readonly GridPosition[];
   readonly large: readonly GridPosition[];
+  readonly air: readonly GridPosition[];
 };
 
 /**
@@ -47,7 +52,11 @@ export function projectFootprintPlacementRoutes(
     return null;
   }
 
-  return { small: routes.small, large: routes.large };
+  return {
+    small: routes.small,
+    large: routes.large,
+    air: calculateAirRoute(grid.entrance, grid.exit),
+  };
 }
 
 /** True when both creep size classes can still reach the exit with the footprint placed. */

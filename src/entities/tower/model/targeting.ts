@@ -1,7 +1,8 @@
 import { getCreepFootprintCenterOffsetInCells, isCreepAlive } from '../../creep';
 import type { CreepEntity } from '../../creep';
+import { canTargetScopeHitMoveType, UnitMoveType } from '../../../shared/types/content-ids';
 import { getTowerCenter } from './footprint';
-import type { TowerEntity } from './types';
+import { resolveTowerTargetScope, type TowerEntity } from './types';
 
 /** Measured between the centres of the tower's and the creep's footprints. */
 function getDistanceInCells(tower: TowerEntity, creep: CreepEntity): number {
@@ -17,9 +18,18 @@ function getRemainingDistanceToExit(creep: CreepEntity): number {
   return creep.remainingRouteDistance ?? Number.POSITIVE_INFINITY;
 }
 
+/** Whether the tower's target scope (`allowedTargets`) lets it shoot this creep. */
+export function canTowerTargetCreep(
+  tower: Pick<TowerEntity, 'type' | 'allowedTargets'>,
+  creep: Pick<CreepEntity, 'moveType'>,
+): boolean {
+  return canTargetScopeHitMoveType(resolveTowerTargetScope(tower), creep.moveType);
+}
+
+/** Alive creeps in range that the tower is allowed to shoot. */
 export function getCreepsInTowerRange(tower: TowerEntity, creeps: CreepEntity[]): CreepEntity[] {
   return creeps.filter((creep) => {
-    if (!isCreepAlive(creep)) {
+    if (!isCreepAlive(creep) || !canTowerTargetCreep(tower, creep)) {
       return false;
     }
 
@@ -28,9 +38,12 @@ export function getCreepsInTowerRange(tower: TowerEntity, creeps: CreepEntity[])
 }
 
 /**
- * Targets the creep in range closest to its exit, measured along each creep's
- * own route (small and large creeps can walk routes of different lengths).
- * Ties go to the creep nearest the tower.
+ * Target priority (the WispTD rule):
+ *   1. the creep closest to its exit, measured along its own route (ground
+ *      routes differ by footprint and the air line is shorter than any maze);
+ *   2. on a tie, air before ground: a flier past the maze leaks first;
+ *   3. then the creep nearest the tower.
+ * Creeps the tower's `allowedTargets` scope cannot hit are never considered.
  */
 export function selectTowerTarget(tower: TowerEntity, creeps: CreepEntity[]): CreepEntity | null {
   const creepsInRange = getCreepsInTowerRange(tower, creeps);
@@ -49,6 +62,12 @@ export function selectTowerTarget(tower: TowerEntity, creeps: CreepEntity[]): Cr
 
     if (candidateRemaining > bestRemaining) {
       return best;
+    }
+
+    const candidateFlies = candidate.moveType === UnitMoveType.AIR;
+    const bestFlies = best.moveType === UnitMoveType.AIR;
+    if (candidateFlies !== bestFlies) {
+      return candidateFlies ? candidate : best;
     }
 
     const bestDistance = getDistanceInCells(tower, best);

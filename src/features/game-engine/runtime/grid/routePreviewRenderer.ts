@@ -17,6 +17,12 @@ export type RoutePreviewConfig = {
   largeRouteSpineAlpha: number;
   /** Alpha factor for today's routes while a placement's routes are shown over them. */
   ghostAlphaFactor: number;
+  airRouteColor: number;
+  airRouteAlpha: number;
+  airRouteWidthPx: number;
+  /** Dash and gap lengths of the air line, in pixels. */
+  airRouteDashPx: number;
+  airRouteGapPx: number;
 };
 
 export type RoutePreviewRenderState = {
@@ -116,6 +122,47 @@ function drawLargeRouteSpine(
   graphics.strokePath();
 }
 
+/**
+ * The air line: a thin dashed straight line through the cell centres of the
+ * air route, subtle enough to sit under the ground routes. Drawn once per
+ * frame; a placement never moves it.
+ */
+function drawAirRoute(
+  graphics: Phaser.GameObjects.Graphics,
+  route: WaveRoute,
+  config: RoutePreviewConfig,
+): void {
+  if (route.length < 2) {
+    return;
+  }
+  const period = config.airRouteDashPx + config.airRouteGapPx;
+  graphics.lineStyle(config.airRouteWidthPx, config.airRouteColor, config.airRouteAlpha);
+  graphics.beginPath();
+  let carried = 0;
+  for (let index = 0; index + 1 < route.length; index += 1) {
+    const fromX = cellCenterPx(route[index].x);
+    const fromY = cellCenterPx(route[index].y);
+    const toX = cellCenterPx(route[index + 1].x);
+    const toY = cellCenterPx(route[index + 1].y);
+    const length = Math.hypot(toX - fromX, toY - fromY);
+    let distance = carried;
+    while (distance < length) {
+      const dashEnd = Math.min(length, distance + config.airRouteDashPx);
+      graphics.moveTo(
+        fromX + ((toX - fromX) * distance) / length,
+        fromY + ((toY - fromY) * distance) / length,
+      );
+      graphics.lineTo(
+        fromX + ((toX - fromX) * dashEnd) / length,
+        fromY + ((toY - fromY) * dashEnd) / length,
+      );
+      distance += period;
+    }
+    carried = distance - length;
+  }
+  graphics.strokePath();
+}
+
 function drawRoutesInFull(
   graphics: Phaser.GameObjects.Graphics,
   routes: WaveRoutes,
@@ -141,13 +188,15 @@ function isSameFrame(left: RoutePreviewFrame, right: RoutePreviewFrame): boolean
   return (
     left.isVisible === right.isVisible &&
     left.current === right.current &&
-    left.projected === right.projected
+    left.projected === right.projected &&
+    left.showsAirRoute === right.showsAirRoute
   );
 }
 
 /**
- * Draws the small and large routes, and the routes a hovered placement would
- * produce. Redraws only when the frame changed; returns whether it did.
+ * Draws the small and large routes, the air line when the frame asks for it,
+ * and the routes a hovered placement would produce. Redraws only when the
+ * frame changed; returns whether it did.
  */
 export function renderRoutePreview(
   state: RoutePreviewRenderState,
@@ -165,6 +214,9 @@ export function renderRoutePreview(
     return true;
   }
 
+  if (frame.showsAirRoute) {
+    drawAirRoute(graphics, frame.current.air, config);
+  }
   if (frame.projected) {
     drawRoutesAsGhost(graphics, frame.current, config);
     drawRoutesInFull(graphics, frame.projected, config);

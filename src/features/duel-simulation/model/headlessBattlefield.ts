@@ -7,6 +7,7 @@ import {
   type TowerEntity,
 } from '../../../entities/tower';
 import type { UnitConfig } from '../../../entities/unit';
+import { UnitMoveType } from '../../../shared/types/content-ids';
 import { selectWaveRoute, type WaveRoutes } from '../../../shared/lib/pathfinding/waveRoutes';
 import {
   resolveTowerAttacks,
@@ -35,7 +36,7 @@ import type { DuelSimulationTiming } from './duelSimulationConfig';
 // One duel battlefield during a wave, without a renderer. Every step is a
 // runtime core the game scene runs too:
 //   spawns    waveSpawnCore      (schedule + creep entity; the scene adds a sprite)
-//   movement  routeWalk          (per-size routes; the scene moves a sprite)
+//   movement  routeWalk          (per-size and air routes; the scene moves a sprite)
 //   combat    towerCombatCore    (targeting, single/splash/chain, on-hit effects)
 //   effects   towerCombatCore    (damage over time, expiry)
 // Positions live in plain points where the scene keeps sprites; nothing here
@@ -65,6 +66,8 @@ export type HeadlessBattlefield = {
   leaks: number;
   /** Leaks of creeps the other side sent; they steal lives for the sender. */
   sentLeaks: number;
+  /** Leaks of air creeps, which fly the straight air route over the maze. */
+  airLeaks: number;
 };
 
 export type HeadlessWaveInput = {
@@ -100,6 +103,7 @@ export function createHeadlessBattlefield(input: HeadlessWaveInput): HeadlessBat
     kills: 0,
     leaks: 0,
     sentLeaks: 0,
+    airLeaks: 0,
   };
 }
 
@@ -141,7 +145,11 @@ function spawnReadyCreeps(field: HeadlessBattlefield): void {
   field.pendingSpawns = pending;
 
   for (const spawn of ready) {
-    const route = selectWaveRoute(field.routes, spawn.unit.sizeClass);
+    const route = selectWaveRoute(field.routes, spawn.unit);
+    if (route.length === 0) {
+      // Nothing to walk (a sealed ground route): the creep cannot spawn.
+      continue;
+    }
     const start = toCellCenter(route[0]);
     const { footprintCenterOffsetPx } = getCreepVisualMetrics(spawn.unit.sizeClass);
     field.creeps.push({
@@ -160,6 +168,9 @@ function markEscaped(field: HeadlessBattlefield, creep: HeadlessCreep): void {
   field.leaks += 1;
   if (creep.entity.sender !== undefined) {
     field.sentLeaks += 1;
+  }
+  if (creep.entity.moveType === UnitMoveType.AIR) {
+    field.airLeaks += 1;
   }
 }
 

@@ -6,6 +6,8 @@
       "id": "elf_moon_archer_tower",
       "name": "Moon Archer Tower",
       "archetype": "single",
+
+      "allowedTargets": "both",
       "costGold": 50,
       "damage": 20,
       "range": 6,
@@ -18,6 +20,8 @@
       "id": "elf_wisp_bloom",
       "name": "Wisp Bloom",
       "archetype": "splash",
+
+      "allowedTargets": "ground",
       "costGold": 75,
       "damage": 18,
       "range": 5,
@@ -31,6 +35,8 @@
       "id": "elf_moonwell",
       "name": "Moonwell",
       "archetype": "frost",
+
+      "allowedTargets": "both",
       "costGold": 70,
       "damage": 19,
       "range": 6,
@@ -50,6 +56,8 @@
       "id": "elf_thorn_spire",
       "name": "Thorn Spire",
       "archetype": "poison",
+
+      "allowedTargets": "both",
       "costGold": 70,
       "damage": 8,
       "range": 6,
