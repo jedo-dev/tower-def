@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { StartPage } from '../pages/start-page';
 import { GameSetupPage } from '../pages/game-setup-page';
-import { GamePage } from '../pages/game-page/GamePage';
+import { LazyGamePage, resetGamePageLoad } from '../pages/game-page';
 import { SettingsPage } from '../pages/settings-page';
 import type { AppRoute, GameSetupConfig } from '../shared/config/game-setup';
 import { setGameSetupConfig } from '../shared/lib/game-bridge/bridge';
@@ -56,6 +56,12 @@ export function App() {
 
   const handleNavigate = useCallback((newRoute: AppRoute) => {
     setRoute(newRoute);
+  }, []);
+
+  const handleRecoverFromGameError = useCallback(() => {
+    // A failed game-chunk download is retried on the next start.
+    resetGamePageLoad();
+    setRoute('start');
   }, []);
 
   const handleStartGame = useCallback((config: GameSetupConfig) => {
@@ -188,8 +194,8 @@ export function App() {
 
   if (route === 'game') {
     return (
-      <ErrorBoundary recoverLabel="Back to menu" onRecover={() => handleNavigate('start')}>
-        <GamePage setup={gameSetup} onExit={() => handleNavigate('start')} />
+      <ErrorBoundary recoverLabel="Back to menu" onRecover={handleRecoverFromGameError}>
+        <LazyGamePage setup={gameSetup} onExit={() => handleNavigate('start')} />
       </ErrorBoundary>
     );
   }
