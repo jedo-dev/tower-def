@@ -6,6 +6,7 @@ import {
 import type { Difficulty } from '../../../../../entities/difficulty';
 import type { DuelMatchState } from '../../../../../entities/duel-match';
 import { runComputerBuildPhase } from './computerBuildPhase';
+import { publishOpponentSendChanges } from './duelSideEvents';
 
 export type ComputerBuildPhaseDeps = {
   difficulty: Difficulty;
@@ -18,8 +19,8 @@ export type ComputerBuildPhaseDeps = {
 
 /**
  * Runs the computer opponent send and build strategies for the upcoming round
- * (see `runComputerBuildPhase`) and mirrors decision telemetry into the scene
- * registry.
+ * (see `runComputerBuildPhase`), mirrors decision telemetry into the scene
+ * registry and publishes the computer's queue and income changes to the UI.
  */
 export function applyComputerBuildPhaseStrategies(
   state: DuelMatchState,
@@ -44,6 +45,7 @@ export function applyComputerBuildPhaseStrategies(
   deps.setRegistryValue('duel.opponent.buildSpentGold', result.buildSpentGold);
   deps.setRegistryValue('duel.opponent.gold', nextState.opponent.gold);
   deps.setRegistryValue('duel.opponent.income', nextState.opponent.income);
+  publishOpponentSendChanges(state, nextState);
   if (import.meta.env.DEV) {
     deps.setRegistryValue('duel.opponent.decisionSnapshots', [
       ...deps.debugRecorder.getSnapshots(),

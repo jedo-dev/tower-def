@@ -9,6 +9,7 @@ import { getRaceRegistry } from '../../../../../entities/race-registry';
 import { resolveUnitConfigById } from '../../../../../entities/unit';
 import type { RaceId } from '../../../../types/content-ids';
 import { publishGameEvent } from '../../../game-bridge/bridge';
+import { toSendQueueItems } from './duelSideEvents';
 import { publishPlayerSendLimits } from './gameSceneSendLimits';
 
 export type SendCreepCommandDeps = {
@@ -92,10 +93,7 @@ export function handleSendCreepCommand(deps: SendCreepCommandDeps, creepTypeId: 
   deps.onGoldUpdated(nextState.player.gold);
   publishGameEvent('send-queue-updated', {
     owner: 'player',
-    queue: nextState.player.sendQueue.map((queuedCreepTypeId, index) => ({
-      creepTypeId: queuedCreepTypeId,
-      index,
-    })),
+    queue: toSendQueueItems(nextState.player.sendQueue),
   });
   publishPlayerSendLimits(nextState, deps.getBuilderFactionId());
   publishGameEvent('income-updated', {

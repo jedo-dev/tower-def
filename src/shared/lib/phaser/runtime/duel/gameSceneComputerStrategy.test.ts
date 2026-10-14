@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   createComputerDecisionDebugRecorder,
   createComputerMazePlanMemory,
@@ -14,6 +14,9 @@ import type { DuelMatchState } from '../../../../../entities/duel-match';
 import { RaceId } from '../../../../types/content-ids';
 import { findPathBfs } from '../../../pathfinding/hasPathBfs';
 import { applyComputerBuildPhaseStrategies } from './gameSceneComputerStrategy';
+import { onGameEvent } from '../../../game-bridge/bridge';
+import type { GameEventMap } from '../../../game-bridge/types';
+import { publishOpponentSendChanges } from './duelSideEvents';
 
 function createDeps(difficulty: Difficulty, leakHistory: LeakHistoryEntry[] = []) {
   const registry = new Map<string, number | readonly unknown[]>();
@@ -113,5 +116,76 @@ describe('shared/phaser/duel/applyComputerBuildPhaseStrategies', () => {
     expect(afterOneRound.player).toEqual(start.player);
     // Twenty rounds later the opponent has still never built on the other field.
     expect(playRounds(20, Difficulty.HARD).player.battlefield.towers).toHaveLength(0);
+  });
+});
+
+describe('shared/phaser/duel computer send events (bridge integration)', () => {
+  const unsubscribers: Array<() => void> = [];
+
+  afterEach(() => {
+    unsubscribers.splice(0).forEach((unsubscribe) => unsubscribe());
+  });
+
+  function listen<T extends 'send-queue-updated' | 'income-updated'>(event: T) {
+    const handler = vi.fn<(payload: GameEventMap[T]) => void>();
+    unsubscribers.push(onGameEvent(event, handler));
+    return handler;
+  }
+
+  it('publishes an opponent-owned queue and income event when the computer sends', () => {
+    const queueHandler = listen('send-queue-updated');
+    const incomeHandler = listen('income-updated');
+    const state = createInitialDuelMatchState(RaceId.HUMAN, RaceId.ORC);
+
+    const nextState = applyComputerBuildPhaseStrategies(state, createDeps(Difficulty.NORMAL).deps);
+
+    expect(nextState.opponent.sendQueue.length).toBeGreaterThan(0);
+    expect(queueHandler).toHaveBeenCalledTimes(1);
+    expect(queueHandler).toHaveBeenCalledWith({
+      owner: 'opponent',
+      queue: nextState.opponent.sendQueue.map((creepTypeId, index) => ({ creepTypeId, index })),
+    });
+    expect(incomeHandler).toHaveBeenCalledTimes(1);
+    expect(incomeHandler).toHaveBeenCalledWith({
+      owner: 'opponent',
+      income: nextState.opponent.income,
+      delta: nextState.opponent.income - state.opponent.income,
+    });
+    expect(nextState.opponent.income).toBeGreaterThan(state.opponent.income);
+  });
+
+  it('publishes nothing for the player side and nothing outside the build phase', () => {
+    const queueHandler = listen('send-queue-updated');
+    const incomeHandler = listen('income-updated');
+    const battleState = {
+      ...createInitialDuelMatchState(RaceId.HUMAN, RaceId.ORC),
+      phase: 'battle' as const,
+    };
+
+    applyComputerBuildPhaseStrategies(battleState, createDeps(Difficulty.NORMAL).deps);
+    expect(queueHandler).not.toHaveBeenCalled();
+    expect(incomeHandler).not.toHaveBeenCalled();
+
+    applyComputerBuildPhaseStrategies(
+      createInitialDuelMatchState(RaceId.HUMAN, RaceId.ORC),
+      createDeps(Difficulty.NORMAL).deps,
+    );
+
+    const owners = [...queueHandler.mock.calls, ...incomeHandler.mock.calls].map(
+      ([payload]) => payload.owner,
+    );
+    expect(owners.length).toBeGreaterThan(0);
+    expect(owners.every((owner) => owner === 'opponent')).toBe(true);
+  });
+
+  it('stays silent when the computer changed neither its queue nor its income', () => {
+    const queueHandler = listen('send-queue-updated');
+    const incomeHandler = listen('income-updated');
+    const state = createInitialDuelMatchState(RaceId.HUMAN, RaceId.ORC);
+
+    publishOpponentSendChanges(state, { ...state, opponent: { ...state.opponent } });
+
+    expect(queueHandler).not.toHaveBeenCalled();
+    expect(incomeHandler).not.toHaveBeenCalled();
   });
 });
