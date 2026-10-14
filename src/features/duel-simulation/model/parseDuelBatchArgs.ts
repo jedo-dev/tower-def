@@ -9,11 +9,12 @@ import {
   type DuelBatchConfig,
 } from './duelBatch';
 import { createCrossDifficultyMatchups, type DifficultyMatchup } from './duelBatchCrossDifficulty';
+import { isDuelMapKind, type DuelMapKind } from './duelSimulationConfig';
 
 export const DUEL_BATCH_USAGE =
   'usage: npm run sim:duel-batch -- [--seeds 1-10|1,4,9] [--max-rounds R] ' +
   '[--difficulties normal,hard | --matchups hard:normal,nightmare:hard] ' +
-  '[--pairs undead:orc,human:elf] ' +
+  '[--pairs undead:orc,human:elf] [--maps classic,seeded] ' +
   '[--baseline-race undead|orc|human|elf]';
 
 export type DuelBatchArgsResult =
@@ -22,6 +23,7 @@ export type DuelBatchArgsResult =
 
 type BatchOptions = {
   seeds: readonly number[];
+  maps: readonly DuelMapKind[];
   maxRounds: number;
   baselineRaceId: RaceId;
   difficulties: readonly Difficulty[] | null;
@@ -72,6 +74,17 @@ function parseMatchups(value: string): DifficultyMatchup[] | string {
   return matchups;
 }
 
+function parseMaps(value: string): DuelMapKind[] | string {
+  const maps: DuelMapKind[] = [];
+  for (const item of value.toLowerCase().split(',')) {
+    if (!isDuelMapKind(item) || maps.includes(item)) {
+      return `--maps expects distinct classic or seeded items, got "${value}"`;
+    }
+    maps.push(item);
+  }
+  return maps;
+}
+
 function parsePairs(value: string): [RaceId, RaceId][] | string {
   const pairs: [RaceId, RaceId][] = [];
   for (const item of value.split(',')) {
@@ -89,6 +102,10 @@ function applyFlag(options: BatchOptions, flag: string, value: string): BatchOpt
     case '--seeds': {
       const seeds = parseSeeds(value);
       return typeof seeds === 'string' ? seeds : { ...options, seeds };
+    }
+    case '--maps': {
+      const maps = parseMaps(value);
+      return typeof maps === 'string' ? maps : { ...options, maps };
     }
     case '--max-rounds': {
       const maxRounds = Number(value);
@@ -121,6 +138,7 @@ function toBatchConfig(options: BatchOptions): DuelBatchConfig {
   const pairs = options.pairs ?? DEFAULT_DUEL_BATCH_RACE_PAIRS;
   return {
     seeds: options.seeds,
+    maps: options.maps,
     maxRounds: options.maxRounds,
     baselineRaceId: options.baselineRaceId,
     matchups: options.matchups
@@ -133,6 +151,7 @@ function toBatchConfig(options: BatchOptions): DuelBatchConfig {
 export function parseDuelBatchArgs(args: readonly string[]): DuelBatchArgsResult {
   let options: BatchOptions = {
     seeds: DEFAULT_DUEL_BATCH_CONFIG.seeds,
+    maps: DEFAULT_DUEL_BATCH_CONFIG.maps,
     maxRounds: DEFAULT_DUEL_BATCH_CONFIG.maxRounds,
     baselineRaceId: DEFAULT_DUEL_BATCH_CONFIG.baselineRaceId,
     difficulties: null,

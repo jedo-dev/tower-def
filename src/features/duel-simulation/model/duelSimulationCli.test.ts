@@ -30,10 +30,13 @@ describe('features/duel-simulation/parseDuelSimulationArgs', () => {
       '5',
       '--baseline-race',
       'orc',
+      '--map',
+      'classic',
     ]);
 
     expect(parsed.ok && parsed.config).toMatchObject({
       seed: 7,
+      map: 'classic',
       maxRounds: 5,
       baselineRaceId: RaceId.ORC,
       sideA: { difficulty: Difficulty.NIGHTMARE, raceId: RaceId.HUMAN },
@@ -46,6 +49,7 @@ describe('features/duel-simulation/parseDuelSimulationArgs', () => {
     expect(parseDuelSimulationArgs(['--race-a', 'dwarf']).ok).toBe(false);
     expect(parseDuelSimulationArgs(['--max-rounds', '0']).ok).toBe(false);
     expect(parseDuelSimulationArgs(['--seed']).ok).toBe(false);
+    expect(parseDuelSimulationArgs(['--map', 'random']).ok).toBe(false);
   });
 });
 

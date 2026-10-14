@@ -62,7 +62,11 @@ describe('features/duel-simulation/duelBatchCrossDifficulty', () => {
     ];
 
     const cross = summarizeCrossDifficulty(
-      results.map((result) => ({ ...result, stats: summarizeBatch(result.summaries) })),
+      results.map((result) => ({
+        ...result,
+        map: 'seeded' as const,
+        stats: summarizeBatch(result.summaries),
+      })),
     );
 
     expect(cross).toEqual([

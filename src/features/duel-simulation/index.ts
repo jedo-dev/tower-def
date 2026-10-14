@@ -9,9 +9,15 @@ export type {
 } from './model/simulateDuel';
 export {
   DEFAULT_DUEL_SIMULATION_CONFIG,
+  DUEL_MAP_KINDS,
   DuelSimulationDefaults,
+  isDuelMapKind,
 } from './model/duelSimulationConfig';
-export type { DuelSimulationConfig, DuelSimulationSide } from './model/duelSimulationConfig';
+export type {
+  DuelMapKind,
+  DuelSimulationConfig,
+  DuelSimulationSide,
+} from './model/duelSimulationConfig';
 export { formatDuelRoundLine, formatDuelSimulation } from './model/formatDuelSimulation';
 export { DUEL_SIMULATION_USAGE, parseDuelSimulationArgs } from './model/parseDuelSimulationArgs';
 export type { DuelSimulationArgsResult } from './model/parseDuelSimulationArgs';

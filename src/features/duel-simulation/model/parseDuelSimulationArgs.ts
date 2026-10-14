@@ -1,9 +1,13 @@
 import { Difficulty } from '../../../entities/difficulty';
 import { isRaceId } from '../../../shared/types/content-ids';
-import { DEFAULT_DUEL_SIMULATION_CONFIG, type DuelSimulationConfig } from './duelSimulationConfig';
+import {
+  DEFAULT_DUEL_SIMULATION_CONFIG,
+  isDuelMapKind,
+  type DuelSimulationConfig,
+} from './duelSimulationConfig';
 
 export const DUEL_SIMULATION_USAGE =
-  'usage: npm run sim:duel -- [--seed N] [--max-rounds R] ' +
+  'usage: npm run sim:duel -- [--seed N] [--map classic|seeded] [--max-rounds R] ' +
   '[--difficulty-a|--difficulty-b easy|normal|hard|nightmare] ' +
   '[--race-a|--race-b|--baseline-race undead|orc|human|elf]';
 
@@ -40,6 +44,10 @@ function applyFlag(
     case '--seed': {
       const seed = parseInteger(flag, value, 0);
       return typeof seed === 'string' ? seed : { ...config, seed };
+    }
+    case '--map': {
+      const map = value.toLowerCase();
+      return isDuelMapKind(map) ? { ...config, map } : `unknown map "${value}"`;
     }
     case '--max-rounds': {
       const maxRounds = parseInteger(flag, value, 1);

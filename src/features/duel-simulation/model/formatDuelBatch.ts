@@ -106,27 +106,32 @@ function formatMatch(summary: DuelMatchSummary): string {
   return `${summary.seed}:${summary.rounds}${mark}`;
 }
 
+function formatResultLabel(result: DuelBatchMatchupResult): string {
+  return `${result.map} ${formatMatchup(result.matchup)}`;
+}
+
 function formatMatchLine(result: DuelBatchMatchupResult): string {
-  return `${formatMatchup(result.matchup)}: ${result.summaries.map(formatMatch).join(' ')}`;
+  return `${formatResultLabel(result)}: ${result.summaries.map(formatMatch).join(' ')}`;
 }
 
 /**
- * One row per matchup plus an overall row; seeds and the round limit head the
+ * One row per map and matchup plus an overall row; seeds and the round limit head the
  * table. Cross-difficulty batches add a win-rate row per difficulty pair.
  * Below that, every match as `seed:rounds+winner`.
  */
 export function formatDuelBatch(result: DuelBatchResult): string {
-  const { seeds, maxRounds, baselineRaceId } = result.config;
+  const { seeds, maps, maxRounds, baselineRaceId } = result.config;
   const seedLabel = seeds.length > 0 ? `${seeds[0]}..${seeds[seeds.length - 1]}` : 'none';
   const rows = [
     HEADER_CELLS,
     ...result.matchups.map((matchup) =>
-      formatStatsCells(formatMatchup(matchup.matchup), matchup.stats),
+      formatStatsCells(formatResultLabel(matchup), matchup.stats),
     ),
     formatStatsCells('overall', result.overall),
   ];
   return [
-    `seeds ${seedLabel} (${seeds.length}) | max rounds ${maxRounds} | baseline ${baselineRaceId}`,
+    `seeds ${seedLabel} (${seeds.length}) | maps ${maps.join(',')} | max rounds ${maxRounds} | ` +
+      `baseline ${baselineRaceId}`,
     ...padRows(rows),
     ...formatCrossDifficulty(result),
     '',

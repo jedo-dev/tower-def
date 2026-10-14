@@ -2,6 +2,8 @@ import { Difficulty } from '../../../entities/difficulty';
 import { RaceId } from '../../../shared/types/content-ids';
 import {
   DEFAULT_DUEL_SIMULATION_CONFIG,
+  DUEL_MAP_KINDS,
+  type DuelMapKind,
   type DuelSimulationConfig,
   type DuelSimulationSide,
 } from './duelSimulationConfig';
@@ -32,6 +34,8 @@ export type DuelBatchMatchup = {
 
 export type DuelBatchConfig = {
   seeds: readonly number[];
+  /** Every matchup is played on each of these maps (per seed). */
+  maps: readonly DuelMapKind[];
   matchups: readonly DuelBatchMatchup[];
   maxRounds: number;
   baselineRaceId: RaceId;
@@ -91,6 +95,7 @@ export type DuelBatchStats = {
 
 export type DuelBatchMatchupResult = {
   matchup: DuelBatchMatchup;
+  map: DuelMapKind;
   summaries: DuelMatchSummary[];
   stats: DuelBatchStats;
 };
@@ -136,6 +141,7 @@ export function createSeedRange(first: number, last: number): number[] {
 
 export const DEFAULT_DUEL_BATCH_CONFIG: DuelBatchConfig = {
   seeds: createSeedRange(DuelBatchDefaults.FIRST_SEED, DuelBatchDefaults.LAST_SEED),
+  maps: DUEL_MAP_KINDS,
   matchups: createEqualMatchups(DEFAULT_DUEL_BATCH_DIFFICULTIES, DEFAULT_DUEL_BATCH_RACE_PAIRS),
   maxRounds: DEFAULT_DUEL_SIMULATION_CONFIG.maxRounds,
   baselineRaceId: DEFAULT_DUEL_SIMULATION_CONFIG.baselineRaceId,
@@ -226,11 +232,13 @@ export function summarizeBatch(summaries: readonly DuelMatchSummary[]): DuelBatc
 function toSimulationConfig(
   config: DuelBatchConfig,
   matchup: DuelBatchMatchup,
+  map: DuelMapKind,
   seed: number,
 ): DuelSimulationConfig {
   return {
     ...DEFAULT_DUEL_SIMULATION_CONFIG,
     seed,
+    map,
     sideA: matchup.sideA,
     sideB: matchup.sideB,
     maxRounds: config.maxRounds,
@@ -238,14 +246,16 @@ function toSimulationConfig(
   };
 }
 
-/** Plays every matchup on every seed. Deterministic per config. */
+/** Plays every matchup on every map and seed. Deterministic per config. */
 export function runDuelBatch(config: DuelBatchConfig): DuelBatchResult {
-  const matchups = config.matchups.map((matchup) => {
-    const summaries = config.seeds.map((seed) =>
-      summarizeDuel(simulateDuel(toSimulationConfig(config, matchup, seed))),
-    );
-    return { matchup, summaries, stats: summarizeBatch(summaries) };
-  });
+  const matchups = config.maps.flatMap((map) =>
+    config.matchups.map((matchup) => {
+      const summaries = config.seeds.map((seed) =>
+        summarizeDuel(simulateDuel(toSimulationConfig(config, matchup, map, seed))),
+      );
+      return { matchup, map, summaries, stats: summarizeBatch(summaries) };
+    }),
+  );
   return {
     config,
     matchups,

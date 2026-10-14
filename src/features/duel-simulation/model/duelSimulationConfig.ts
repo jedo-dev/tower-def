@@ -30,6 +30,19 @@ export const DUEL_SIMULATION_TIMING: DuelSimulationTiming = {
 
 export const DUEL_SIMULATION_BASE_MOVE_SPEED_PX_PER_SEC = CREEP_BASE_MOVE_SPEED_PX_PER_SEC;
 
+/**
+ * Which map a duel is played on: `classic` is the fixed lane the game uses
+ * when dynamic entrances are off (entrance left-middle, exit right-middle);
+ * `seeded` draws edge endpoints from the duel seed.
+ */
+export type DuelMapKind = 'classic' | 'seeded';
+
+export const DUEL_MAP_KINDS: readonly DuelMapKind[] = ['classic', 'seeded'];
+
+export function isDuelMapKind(value: string): value is DuelMapKind {
+  return (DUEL_MAP_KINDS as readonly string[]).includes(value);
+}
+
 /** One computer duelist. */
 export type DuelSimulationSide = {
   difficulty: Difficulty;
@@ -37,8 +50,9 @@ export type DuelSimulationSide = {
 };
 
 export type DuelSimulationConfig = {
-  /** Seeds the map endpoints and the baseline waves. */
+  /** Seeds the baseline waves, and the map endpoints on a `seeded` map. */
   seed: number;
+  map: DuelMapKind;
   sideA: DuelSimulationSide;
   sideB: DuelSimulationSide;
   maxRounds: number;
@@ -50,6 +64,7 @@ export type DuelSimulationConfig = {
 
 export const DEFAULT_DUEL_SIMULATION_CONFIG: DuelSimulationConfig = {
   seed: DuelSimulationDefaults.SEED,
+  map: 'seeded',
   sideA: { difficulty: Difficulty.HARD, raceId: RaceId.UNDEAD },
   sideB: { difficulty: Difficulty.NORMAL, raceId: RaceId.ORC },
   maxRounds: DuelSimulationDefaults.MAX_ROUNDS,

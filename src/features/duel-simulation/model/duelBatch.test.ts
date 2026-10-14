@@ -83,23 +83,26 @@ describe('features/duel-simulation/duelBatch', () => {
     expect(stats.lateUnspent).toEqual({ averageUnspentGold: 400 / 6, averageIncome: 1600 / 6 });
   });
 
-  it('plays every matchup on every seed and prints one row each plus the matches', () => {
+  it('plays every matchup on every map and seed and prints one row each plus the matches', () => {
     const config: DuelBatchConfig = {
       ...DEFAULT_DUEL_BATCH_CONFIG,
       seeds: createSeedRange(1, 2),
+      maps: ['classic', 'seeded'],
       maxRounds: 6,
       matchups: createEqualMatchups([Difficulty.NORMAL], [[RaceId.UNDEAD, RaceId.ORC]]),
     };
     const result = runDuelBatch(config);
     const report = formatDuelBatch(result);
 
-    expect(result.matchups).toHaveLength(1);
+    expect(result.matchups.map((matchup) => matchup.map)).toEqual(['classic', 'seeded']);
     expect(result.matchups[0].summaries.map((match) => match.seed)).toEqual([1, 2]);
-    expect(result.overall.matches).toBe(2);
-    expect(report).toContain('UNDEAD NORMAL vs ORC NORMAL | 2');
+    expect(result.overall.matches).toBe(4);
+    expect(report).toContain('maps classic,seeded');
+    expect(report).toContain('classic UNDEAD NORMAL vs ORC NORMAL | 2');
+    expect(report).toMatch(/seeded UNDEAD NORMAL vs ORC NORMAL +\| 2/);
     expect(report).toContain('overall');
     expect(report).toContain('unspent/income r16+');
-    expect(report).toMatch(/UNDEAD NORMAL vs ORC NORMAL: 1:\d+[AB=] 2:\d+[AB=]/);
+    expect(report).toMatch(/classic UNDEAD NORMAL vs ORC NORMAL: 1:\d+[AB=] 2:\d+[AB=]/);
     expect(formatDuelBatch(runDuelBatch(config))).toBe(report);
   });
 });
@@ -121,10 +124,13 @@ describe('features/duel-simulation/parseDuelBatchArgs', () => {
       '12',
       '--baseline-race',
       'elf',
+      '--maps',
+      'classic',
     ]);
 
     expect(parsed.ok && parsed.config).toEqual({
       seeds: [3, 4, 5],
+      maps: ['classic'],
       maxRounds: 12,
       baselineRaceId: RaceId.ELF,
       matchups: createEqualMatchups(
@@ -144,5 +150,7 @@ describe('features/duel-simulation/parseDuelBatchArgs', () => {
     expect(parseDuelBatchArgs(['--max-rounds', '0']).ok).toBe(false);
     expect(parseDuelBatchArgs(['--speed', '2']).ok).toBe(false);
     expect(parseDuelBatchArgs(['--seeds']).ok).toBe(false);
+    expect(parseDuelBatchArgs(['--maps', 'random']).ok).toBe(false);
+    expect(parseDuelBatchArgs(['--maps', 'classic,classic']).ok).toBe(false);
   });
 });

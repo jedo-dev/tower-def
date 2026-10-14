@@ -11,7 +11,10 @@ import {
   type DuelMatchOutcome,
   type DuelSide,
 } from '../../../entities/duel-match';
-import { generateEdgeEndpoints } from '../../../shared/lib/grid/generateEdgeEndpoints';
+import {
+  createDefaultEdgeEndpoints,
+  generateEdgeEndpoints,
+} from '../../../shared/lib/grid/generateEdgeEndpoints';
 import { resolveFactionUnits } from '../../../shared/lib/phaser/scenes/gameScene.helpers';
 import { createSharedBaselineWaveSource } from '../../../shared/lib/phaser/runtime/wave/sharedBaselineWave';
 import type { GridPoint } from '../../../shared/types/grid';
@@ -145,7 +148,8 @@ function reportSide(duelist: DuelMatchState['player'], facts: SideRoundFacts): D
 
 /** Plays a whole duel between two computers. Deterministic per config. */
 export function simulateDuel(config: DuelSimulationConfig): DuelSimulationResult {
-  const { entrance, exit } = generateEdgeEndpoints(config.seed);
+  const { entrance, exit } =
+    config.map === 'classic' ? createDefaultEdgeEndpoints() : generateEdgeEndpoints(config.seed);
   const baselineWaves = createSharedBaselineWaveSource(config.seed);
   const baselineFactionUnits = resolveFactionUnits(config.baselineRaceId);
   const memory: { a: ComputerSideMemory; b: ComputerSideMemory } = {
