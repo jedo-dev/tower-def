@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { SOUND_IDS } from '../../types/sound-ids';
-import { SFX_ASSET_ROOT, SOUND_ASSET_PATHS } from '../phaser/sound/audio.constants';
+import { SFX_ASSET_ROOT, SOUND_ASSET_PATHS } from '../sound-registry/audio.constants';
 import { readWavHeader } from './encodeWav';
 import { GENERATED_SOUND_IDS, SFX_RECIPES } from './recipes';
 import { renderSfxRecipeToWav } from './renderRecipe';

@@ -157,9 +157,9 @@ python tools/build-sprite-sheet.py raw.png public/assets/towers/orc_tar_pit.png 
 1. Положить лист `128×32` в `src/shared/sprite/<race>_<name>.png`.
 2. В `src/shared/constants/sprites.ts`: импорт файла, ключ в `UNIT_SPRITE_KEYS`,
    пара в `UNIT_SPRITE_ASSETS`, ключ анимации в `UNIT_ANIMATION_KEYS`.
-3. В `src/shared/lib/phaser/runtime/animation/gameSceneAnimationRuntime.ts`:
+3. В `src/features/game-engine/runtime/animation/gameSceneAnimationRuntime.ts`:
    добавить пару в `UNIT_WALK_ANIMATIONS` и `case` в `getWalkAnimationKeyBySpriteKey`.
-4. В `src/shared/lib/phaser/runtime/battlefield/battlefieldSpriteFactory.ts`:
+4. В `src/features/game-engine/runtime/battlefield/battlefieldSpriteFactory.ts`:
    дописать id существа в `getSpriteKeyByUnit`. Без этого крип продолжит брать
    тир-фоллбек нежити с тинтом расы, даже если файл лежит на месте.
 5. Ключ в контенте (`src/content/units/<race>.json`) менять не нужно — он уже

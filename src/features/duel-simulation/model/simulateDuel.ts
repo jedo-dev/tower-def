@@ -15,8 +15,8 @@ import {
   createDefaultEdgeEndpoints,
   generateEdgeEndpoints,
 } from '../../../shared/lib/grid/generateEdgeEndpoints';
-import { resolveFactionUnits } from '../../../shared/lib/phaser/scenes/gameScene.helpers';
-import { createSharedBaselineWaveSource } from '../../../shared/lib/phaser/runtime/wave/sharedBaselineWave';
+import { resolveFactionUnits } from '../../game-engine/scenes/gameScene.helpers';
+import { createSharedBaselineWaveSource } from '../../game-engine/runtime/wave/sharedBaselineWave';
 import type { GridPoint } from '../../../shared/types/grid';
 import {
   createComputerSideMemory,

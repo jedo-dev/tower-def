@@ -3,7 +3,7 @@ import {
   CREEP_BASE_MOVE_SPEED_PX_PER_SEC,
   WAVE_FIRST_SPAWN_DELAY_MS,
   WAVE_SPAWN_INTERVAL_MS,
-} from '../../../shared/lib/phaser/scenes/gameScene.constants';
+} from '../../game-engine/scenes/gameScene.constants';
 import { RaceId } from '../../../shared/types/content-ids';
 
 export enum DuelSimulationDefaults {

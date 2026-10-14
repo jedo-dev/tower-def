@@ -6,7 +6,7 @@
 //   npm run gen:sfx
 import { mkdirSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
-import { SFX_ASSET_ROOT, SOUND_ASSET_PATHS } from '../src/shared/lib/phaser/sound/audio.constants';
+import { SFX_ASSET_ROOT, SOUND_ASSET_PATHS } from '../src/shared/lib/sound-registry/audio.constants';
 import {
   GENERATED_SOUND_IDS,
   SFX_RECIPES,

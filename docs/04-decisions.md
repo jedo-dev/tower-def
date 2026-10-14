@@ -124,3 +124,30 @@ A duel is only fair if neither side gets a luckier wave, an easier spawn
 pattern or weaker towers. The cost is that the player may wait a few seconds
 after clearing their own field while the computer's field finishes; the
 enemy view shows what is left.
+
+## Decision 012: The Phaser engine is a feature slice, not shared code
+
+The Phaser runtime (scenes, runtime cores, the audio manager and the scene
+test harness) lives in `src/features/game-engine/`. It may depend on
+`entities/*` and on sibling features (`wave-phase`), and it is consumed only
+through its barrel by the game canvas widget; the headless duel simulation
+(`features/duel-simulation`) and the tools under `tools/` reach into the same
+Phaser-free runtime cores.
+
+`shared/` keeps only engine-agnostic pieces: pathfinding, the grid model,
+board snapshots, the audio clip cache, the typed game bridge, constants, and
+the sound clip registry (`shared/lib/sound-registry`), which the menus and the
+sfx generator read without pulling Phaser in.
+
+`src/shared/fsdImportRules.node.test.ts` walks every import under `src/` and
+fails the suite when a layer imports a layer above it
+(`shared < entities < features < widgets < pages < app`). Slice isolation
+inside one layer (an entity importing another entity, a feature importing
+another feature) is tolerated and not checked.
+
+Reason:
+
+The engine depends on the whole game domain, so it never was shared code;
+keeping it under `shared/lib` let `shared` import `entities` and `features`
+and made the layer rules unenforceable. A feature slice names the dependency
+direction honestly, and the guard test keeps it that way.

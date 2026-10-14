@@ -12,24 +12,24 @@ import {
   resolveTowerAttacks,
   tickFieldCreepEffects,
   type TowerCombatHooks,
-} from '../../../shared/lib/phaser/runtime/combat/towerCombatCore';
-import { getCreepVisualMetrics } from '../../../shared/lib/phaser/runtime/creep/creepVisualMetrics';
+} from '../../game-engine/runtime/combat/towerCombatCore';
+import { getCreepVisualMetrics } from '../../game-engine/runtime/creep/creepVisualMetrics';
 import {
   walkCreepsAlongRoutes,
   type MutablePoint,
   type RouteWalkMotion,
-} from '../../../shared/lib/phaser/runtime/movement/routeWalk';
+} from '../../game-engine/runtime/movement/routeWalk';
 import {
   createWaveCreepEntity,
   scheduleWaveSpawns,
   takeReadyWaveSpawns,
-} from '../../../shared/lib/phaser/runtime/wave/waveSpawnCore';
+} from '../../game-engine/runtime/wave/waveSpawnCore';
 import {
   mapUnitToCreepType,
   toCellCenter,
   writeCellCenter,
-} from '../../../shared/lib/phaser/scenes/gameScene.helpers';
-import type { PendingWaveSpawn } from '../../../shared/lib/phaser/scenes/gameScene.types';
+} from '../../game-engine/scenes/gameScene.helpers';
+import type { PendingWaveSpawn } from '../../game-engine/scenes/gameScene.types';
 import type { DuelSimulationTiming } from './duelSimulationConfig';
 
 // One duel battlefield during a wave, without a renderer. Every step is a

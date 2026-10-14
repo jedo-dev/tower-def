@@ -17,7 +17,7 @@ file; a test fails if two ids share one.
 
 - WAV, PCM 16-bit, mono, 22050 Hz.
 - Normalized towards one loudness (RMS 0.2, peak ceiling 0.95), so registry
-  volumes in `src/shared/lib/phaser/sound/registry/` are the real mix controls.
+  volumes in `src/shared/lib/sound-registry/registry/` are the real mix controls.
 - Budget: all generated clips together stay under 1.5 MB (currently ~700 KB).
   The generator and a test both enforce it.
 
@@ -155,7 +155,7 @@ as `bell`, `thump` and `burst` in `recipes/recipeKit.ts`.
 ## Adding or changing a sound
 
 1. Register the id in `SOUND_IDS` (`src/shared/types/sound-ids.ts`) and its
-   clip in `src/shared/lib/phaser/sound/registry/`.
+   clip in `src/shared/lib/sound-registry/registry/`.
 2. Add its recipe to the matching file in `src/shared/lib/sfx-synth/recipes/`
    (the recipe map is typed, so a missing recipe does not compile).
 3. If a tower or creature should use it, point a sound profile at it.

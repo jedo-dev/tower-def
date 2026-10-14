@@ -6,9 +6,12 @@ import { SettingsPage } from '../pages/settings-page';
 import type { AppRoute, GameSetupConfig } from '../shared/config/game-setup';
 import { setGameSetupConfig } from '../shared/lib/game-bridge/bridge';
 import { ErrorBoundary } from '../shared/ui/error-boundary';
-import type { SoundId } from '../shared/lib/phaser/sound/audio.types';
-import { resolveSoundClipUrl, SOUND_CLIPS } from '../shared/lib/phaser/sound/audio.constants';
-import { SoundCategory } from '../shared/lib/phaser/sound/audio.types';
+import {
+  resolveSoundClipUrl,
+  SOUND_CLIPS,
+  SoundCategory,
+  type SoundId,
+} from '../shared/lib/sound-registry';
 import {
   DEFAULT_AMBIENT_VOLUME,
   DEFAULT_SFX_VOLUME,

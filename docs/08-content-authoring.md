@@ -271,7 +271,7 @@ layout, palette and style rules already baked in.
 3. Make sure the content `spriteKey` matches the registered key exactly.
 
 That is all: the sprite resolver
-(`shared/lib/phaser/runtime/assets/spriteKeyResolver.ts`) prefers real art
+(`features/game-engine/runtime/assets/spriteKeyResolver.ts`) prefers real art
 whenever the texture is registered, so the placeholder disappears with no other
 code change.
 
@@ -285,7 +285,7 @@ that referenced the key. Production installs no listener and collects nothing.
 ## Pending audio
 
 Sound follows the same idea: ids listed in `PENDING_SOUND_ASSETS`
-(`shared/lib/phaser/sound/audio.constants.ts`) are skipped by the preloader and
+(`shared/lib/sound-registry/audio.constants.ts`) are skipped by the preloader and
 stay silent until their wav lands. See `docs/SOUND_ASSET_LIST.md`.
 
 ---
@@ -309,7 +309,7 @@ src/content/audio/
 
 A sound id (`SOUND_IDS` in `src/shared/types/sound-ids.ts`) names exactly one
 clip, and every clip has its own file (`SOUND_CLIPS` in
-`src/shared/lib/phaser/sound/registry/`). Two ids never point at the same file;
+`src/shared/lib/sound-registry/registry/`). Two ids never point at the same file;
 a test enforces it. When two races should sound alike, their profiles name the
 same id, so the sharing is visible in content instead of hidden in a path map.
 
@@ -388,7 +388,7 @@ fast, naming the file and the race, archetype (`ORC/chain`) or tower id:
 1. Create the clip: add a recipe for it (see `docs/SOUND_ASSET_LIST.md`) or
    drop an authored wav under `public/assets/audio/sfx/<category>/`.
 2. Register the id in `SOUND_IDS` and its clip (file, volume, cooldown) in the
-   matching file under `src/shared/lib/phaser/sound/registry/`.
+   matching file under `src/shared/lib/sound-registry/registry/`.
 3. Point the profile at it: race-wide in `sounds`, for one archetype under
    `archetypes`, or for a single tower in that tower's `sounds`.
 4. Run `npm run check`.
@@ -398,7 +398,7 @@ fast, naming the file and the race, archetype (`ORC/chain`) or tower id:
 | Concern | File |
 | --- | --- |
 | Ids and slots | `src/shared/types/sound-ids.ts` |
-| Clip registry | `src/shared/lib/phaser/sound/registry/` |
+| Clip registry | `src/shared/lib/sound-registry/registry/` |
 | Profile schema and loader | `src/entities/sound-profile/model/` |
 | Resolver | `src/entities/sound-profile/model/resolveSound.ts` |
-| Game wiring | `src/shared/lib/phaser/runtime/audio/gameSoundRouting.ts` |
+| Game wiring | `src/features/game-engine/runtime/audio/gameSoundRouting.ts` |

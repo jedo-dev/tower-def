@@ -3,7 +3,7 @@ import type { DuelMatchState } from '../../../entities/duel-match';
 import {
   runComputerBuildPhase,
   type ComputerBuildPhaseResult,
-} from '../../../shared/lib/phaser/runtime/duel/computerBuildPhase';
+} from '../../game-engine/runtime/duel/computerBuildPhase';
 import type { DuelSimulationSide } from './duelSimulationConfig';
 
 // Both duelists are computers. The computer strategies always play
