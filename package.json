@@ -15,6 +15,7 @@
     "sim:maze": "tsx tools/sim-maze.ts",
     "sim:duel": "tsx tools/sim-duel.ts",
     "sim:duel-batch": "tsx tools/sim-duel-batch.ts",
+    "gen:sfx": "tsx tools/generate-sfx.ts",
     "check": "npm run typecheck && npm run lint && npm run format:check && vitest run"
   },
   "dependencies": {

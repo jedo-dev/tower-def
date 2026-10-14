@@ -5,49 +5,36 @@ const SYSTEM = SoundCategory.SYSTEM;
 const ECONOMY = SoundCategory.ECONOMY;
 const AMBIENT = SoundCategory.AMBIENT;
 
+const STEADY = { pitchMin: 0.98, pitchMax: 1.02 } as const;
+
 export const SYSTEM_SOUND_CLIPS: SoundClipGroup<'system'> = {
-  'system.pause': defineClip('system/system_pause_01.wav', SYSTEM, {
-    volume: 0.25,
-    maxDurationSec: 0.2,
-  }),
-  'system.unpause': defineClip('system/system_unpause_01.wav', SYSTEM, {
-    volume: 0.25,
-    maxDurationSec: 0.2,
-  }),
-  'system.restart': defineClip('system/system_restart_01.wav', SYSTEM, {
-    volume: 0.3,
-    maxDurationSec: 0.3,
-  }),
+  'system.pause': defineClip('system/system_pause.wav', SYSTEM, { ...STEADY, volume: 0.25 }),
+  'system.unpause': defineClip('system/system_unpause.wav', SYSTEM, { ...STEADY, volume: 0.25 }),
+  'system.restart': defineClip('system/system_restart.wav', SYSTEM, { ...STEADY, volume: 0.3 }),
 };
 
 export const ECONOMY_SOUND_CLIPS: SoundClipGroup<'economy'> = {
-  'economy.gold_gain': defineClip('economy/economy_gold_gain_01.wav', ECONOMY, {
-    volume: 0.25,
-    pitchMin: 1.15,
-    pitchMax: 1.25,
-    maxDurationSec: 0.25,
+  // Plays on every kill: quiet, short and slightly varied so it never drills.
+  'economy.gold_gain': defineClip('economy/economy_gold_gain.wav', ECONOMY, {
+    volume: 0.16,
+    cooldownMs: 90,
+    pitchMin: 0.94,
+    pitchMax: 1.08,
   }),
-  'economy.gold_spent': defineClip('economy/economy_gold_spent_01.wav', ECONOMY, {
+  'economy.gold_spent': defineClip('economy/economy_gold_spent.wav', ECONOMY, {
+    ...STEADY,
     volume: 0.2,
-    pitchMin: 0.9,
-    pitchMax: 1.0,
-    maxDurationSec: 0.2,
   }),
-  'economy.refund': defineClip('economy/economy_refund_01.wav', ECONOMY, {
-    volume: 0.2,
-    maxDurationSec: 0.25,
+  'economy.refund': defineClip('economy/economy_refund.wav', ECONOMY, { ...STEADY, volume: 0.2 }),
+  'economy.life_lost': defineClip('economy/economy_life_lost.wav', ECONOMY, {
+    ...STEADY,
+    volume: 0.36,
+    cooldownMs: 150,
   }),
-  'economy.life_lost': defineClip('economy/economy_life_lost_01.wav', ECONOMY, {
-    volume: 0.4,
-    pitchMin: 0.75,
-    pitchMax: 0.9,
-    maxDurationSec: 0.4,
-  }),
-  'economy.wave_reward': defineClip('economy/economy_wave_reward_01.wav', ECONOMY, {
-    volume: 0.35,
-    pitchMin: 1.1,
-    pitchMax: 1.2,
-    maxDurationSec: 0.5,
+  'economy.wave_reward': defineClip('economy/economy_wave_reward.wav', ECONOMY, {
+    volume: 0.3,
+    pitchMin: 1,
+    pitchMax: 1,
   }),
 };
 

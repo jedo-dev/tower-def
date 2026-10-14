@@ -33,12 +33,7 @@ export const SOUND_ASSET_PATHS: Record<SoundId, string> = Object.fromEntries(
  * pending asset stays silent instead of failing a request every session.
  * Remove an id from this list the moment its file lands.
  */
-export const PENDING_SOUND_ASSETS: readonly SoundId[] = [
-  'combat.creep_hit',
-  'combat.effect_applied.chill',
-  'combat.effect_applied.poison',
-  'combat.effect_applied.stun',
-];
+export const PENDING_SOUND_ASSETS: readonly SoundId[] = [];
 
 export const AUDIO_CONSTANTS = {
   MAX_SIMULTANEOUS_SOUNDS: 12,

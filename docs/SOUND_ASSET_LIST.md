@@ -1,207 +1,170 @@
-# Sound Asset Requirements
+# Sound Assets
 
-## Overview
+Every sound effect in the game is **our own**: it is synthesized from a recipe
+by `npm run gen:sfx`. The only authored files are the two ambience loops.
 
-This document lists all expected sound assets for the Tower Defense game, grouped by category. These assets are needed to complete the audio system implementation.
+| Kind | Source | Location |
+| --- | --- | --- |
+| Generated SFX (57 clips) | recipes in `src/shared/lib/sfx-synth/recipes/` | `public/assets/audio/sfx/{ui,system,economy,combat}/` |
+| Ambience (2 loops) | authored, never regenerated | `public/assets/audio/sfx/ambient/` |
 
-**Note**: No actual sound files are provided. This is a specification document for asset creation/import.
+Which tower or creature plays which clip is decided by the sound profiles in
+`src/content/audio/` (tower -> archetype -> race -> default). See "Sound
+Profiles" in `docs/08-content-authoring.md`. Every sound id owns exactly one
+file; a test fails if two ids share one.
 
-Rows marked **(pending)** are registered in code but skipped by the preloader
-(`PENDING_SOUND_ASSETS` in `shared/lib/phaser/sound/audio.constants.ts`). They
-stay silent until the file lands; drop the file in and remove the id from that
-list to switch the sound on.
+## Format
 
----
+- WAV, PCM 16-bit, mono, 22050 Hz.
+- Normalized towards one loudness (RMS 0.2, peak ceiling 0.95), so registry
+  volumes in `src/shared/lib/phaser/sound/registry/` are the real mix controls.
+- Budget: all generated clips together stay under 1.5 MB (currently ~700 KB).
+  The generator and a test both enforce it.
 
-## UI Sounds
+## Regenerating
 
-| Sound ID | Usage | Emotion | Duration | Filename |
-|----------|-------|---------|----------|----------|
-| `ui.click` | Button taps, menu selections | Clean, responsive click | 0.05-0.1s | `ui_click_01.wav` |
-| `ui.hover` | Menu item hover feedback | Subtle, gentle | 0.03-0.05s | `ui_hover_01.wav` |
-| `ui.open` | Opening panels/menus | Smooth whoosh/slide | 0.15-0.25s | `ui_open_01.wav` |
-| `ui.close` | Closing panels/menus | Reverse of open | 0.15-0.25s | `ui_close_01.wav` |
-| `ui.error` | Invalid actions, errors | Low, harsh buzz | 0.2-0.3s | `ui_error_01.wav` |
-| `ui.success` | Successful actions | Bright, positive | 0.15-0.25s | `ui_success_01.wav` |
-| `ui.build_select` | Selecting tower to build | Intentional selection | 0.1-0.15s | `ui_build_select_01.wav` |
-| `ui.faction_select` | Selecting faction | Confirmation tone | 0.15-0.2s | `ui_faction_select_01.wav` |
-| `ui.wave_start` | Starting a wave | Urgent, rallying | 0.3-0.5s | `ui_wave_start_01.wav` |
-| `ui.wave_complete` | Wave completion | Victory fanfare | 0.4-0.6s | `ui_wave_complete_01.wav` |
-| `ui.game_over` | Game over state | Somber, defeat | 0.8-1.2s | `ui_game_over_01.wav` |
-| `ui.victory` | Victory state | Triumphant | 1.0-1.5s | `ui_victory_01.wav` |
-
----
-
-## System Sounds
-
-| Sound ID | Usage | Emotion | Duration | Filename |
-|----------|-------|---------|----------|----------|
-| `system.pause` | Pausing the game | Interruption | 0.1-0.2s | `system_pause_01.wav` |
-| `system.unpause` | Resuming the game | Continuation | 0.1-0.2s | `system_unpause_01.wav` |
-| `system.restart` | Restarting run | Reset confirmation | 0.2-0.3s | `system_restart_01.wav` |
-
----
-
-## Economy Sounds
-
-| Sound ID | Usage | Emotion | Duration | Filename |
-|----------|-------|---------|----------|----------|
-| `economy.gold_gain` | Receiving gold (kills) | Positive, coin-like | 0.15-0.25s | `economy_gold_gain_01.wav` |
-| `economy.gold_spent` | Spending gold (build) | Transaction confirmation | 0.1-0.2s | `economy_gold_spent_01.wav` |
-| `economy.refund` | Selling tower refund | Soft reversal | 0.15-0.25s | `economy_refund_01.wav` |
-| `economy.life_lost` | Creep escapes | Negative, warning | 0.3-0.4s | `economy_life_lost_01.wav` |
-| `economy.wave_reward` | Wave completion reward | Reward fanfare | 0.3-0.5s | `economy_wave_reward_01.wav` |
-
----
-
-## Combat Sounds
-
-### Tower Attacks
-
-| Sound ID | Usage | Emotion | Duration | Filename |
-|----------|-------|---------|----------|----------|
-| `combat.tower_attack.archer` | Archer tower fires | Sharp projectile | 0.15-0.3s | `combat_archer_attack_01.wav` |
-| `combat.tower_attack.splash` | Splash/area tower fires | Impactful blast | 0.3-0.5s | `combat_splash_attack_01.wav` |
-
-### Creep Sounds
-
-| Sound ID | Usage | Emotion | Duration | Filename |
-|----------|-------|---------|----------|----------|
-| `combat.creep_hit` | Creep takes damage | Impact feedback | 0.1-0.2s | `combat_creep_hit_01.wav` |
-| `combat.effect_applied.chill` | Chill (slow) lands on a creep | Icy shimmer | 0.2-0.3s | `combat_effect_chill_01.wav` **(pending)** |
-| `combat.effect_applied.poison` | Poison or burn lands on a creep | Wet corrosive hiss | 0.2-0.3s | `combat_effect_poison_01.wav` **(pending)** |
-| `combat.effect_applied.stun` | Stun lands on a creep | Dull concussive thud | 0.15-0.25s | `combat_effect_stun_01.wav` **(pending)** |
-| `combat.creep_death.basic` | Basic creep dies | Death thud | 0.2-0.35s | `combat_creep_death_basic_01.wav` |
-| `combat.creep_death.elite` | Elite creep dies | Heavier death | 0.3-0.5s | `combat_creep_death_elite_01.wav` |
-| `combat.creep_escape` | Creep reaches exit | Failure warning | 0.25-0.4s | `combat_creep_escape_01.wav` |
-
-### Build Sounds
-
-| Sound ID | Usage | Emotion | Duration | Filename |
-|----------|-------|---------|----------|----------|
-| `combat.invalid_build` | Invalid tower placement | Error rejection | 0.15-0.25s | `combat_invalid_build_01.wav` |
-| `combat.successful_build` | Successful tower placement | Construction confirmation | 0.2-0.35s | `combat_successful_build_01.wav` |
-| `combat.sell_tower` | Selling a tower | Dismantle sound | 0.2-0.3s | `combat_sell_tower_01.wav` |
-
----
-
-## Ambient Sounds
-
-| Sound ID | Usage | Emotion | Duration | Filename |
-|----------|-------|---------|----------|----------|
-| `ambient.map` | General map ambience | Atmospheric background | Loop | `ambient_map_01.wav` |
-| `ambient.tension` | Tension during waves | Building tension | Loop | `ambient_tension_01.wav` |
-| `ambient.faction.undead` | Undead faction ambience | Dark, necromantic | Loop | `ambient_faction_undead_01.wav` |
-| `ambient.faction.orc` | Orc faction ambience | Brutal, war-like | Loop | `ambient_faction_orc_01.wav` |
-| `ambient.faction.human` | Human faction ambience | Orderly, disciplined | Loop | `ambient_faction_human_01.wav` |
-| `ambient.faction.elf` | Elf faction ambience | Magical, natural | Loop | `ambient_faction_elf_01.wav` |
-
----
-
-## Faction-Specific Tower Sounds
-
-### Undead (Necromantic Identity)
-
-| Sound ID | Usage | Emotion | Duration | Filename |
-|----------|-------|---------|----------|----------|
-| `combat.tower_attack.archer.undead` | Undead archer fires | Cursed magical arrow | 0.2-0.35s | `undead_archer_attack_01.wav` |
-| `combat.tower_attack.splash.undead` | Undead plague/spell | Necrotic burst | 0.3-0.5s | `undead_plague_attack_01.wav` |
-
-### Orc (Brutal Identity)
-
-| Sound ID | Usage | Emotion | Duration | Filename |
-|----------|-------|---------|----------|----------|
-| `combat.tower_attack.archer.orc` | Orc archer fires | Heavy bow thunk | 0.2-0.35s | `orc_archer_attack_01.wav` |
-| `combat.tower_attack.splash.orc` | Orc splash tower | War drum impact | 0.3-0.5s | `orc_splash_attack_01.wav` |
-
-### Human (Disciplined Identity)
-
-| Sound ID | Usage | Emotion | Duration | Filename |
-|----------|-------|---------|----------|----------|
-| `combat.tower_attack.archer.human` | Human archer fires | Clean steel bow | 0.15-0.3s | `human_archer_attack_01.wav` |
-| `combat.tower_attack.splash.human` | Human splash tower | Precision burst | 0.25-0.4s | `human_splash_attack_01.wav` |
-
-### Elf (Magical Identity)
-
-| Sound ID | Usage | Emotion | Duration | Filename |
-|----------|-------|---------|----------|----------|
-| `combat.tower_attack.archer.elf` | Elf archer fires | Mystical arrow | 0.2-0.35s | `elf_archer_attack_01.wav` |
-| `combat.tower_attack.splash.elf` | Elf splash tower | Arcane explosion | 0.3-0.5s | `elf_splash_attack_01.wav` |
-
----
-
-## Audio Specifications
-
-### Technical Requirements
-
-- **Format**: WAV (preferred) or OGG/MP3 fallback
-- **Sample Rate**: 44.1kHz
-- **Bit Depth**: 16-bit minimum, 24-bit preferred
-- **Channels**: Mono for SFX, Stereo for ambient/music
-
-### Volume Guidelines
-
-| Category | Base Volume | Notes |
-|----------|-------------|-------|
-| UI | 0.25-0.35 | Clear but not overwhelming |
-| Combat | 0.28-0.40 | Must cut through gameplay |
-| Economy | 0.20-0.35 | Subtle feedback |
-| Ambient | 0.12-0.18 | Background layer |
-| System | 0.25-0.30 | Informational |
-
-### Pitch Variation
-
-All combat and UI sounds should have natural pitch variation (0.95-1.05) to prevent repetitive "machine-gun" effect.
-
-### Cooldowns
-
-| Sound | Cooldown | Reason |
-|-------|----------|--------|
-| Tower attacks | 150-300ms | Prevent audio spam |
-| Creep hits | 80ms | Fast but not chaotic |
-| Creep deaths | 100ms | Each death unique |
-| UI clicks | 50ms | Rapid clicking support |
-
----
-
-## Asset Structure
-
-```
-assets/
-└── audio/
-    ├── sfx/
-    │   ├── ui/
-    │   │   ├── ui_click_01.wav
-    │   │   ├── ui_hover_01.wav
-    │   │   └── ...
-    │   ├── combat/
-    │   │   ├── combat_archer_attack_01.wav
-    │   │   ├── combat_creep_hit_01.wav
-    │   │   └── ...
-    │   ├── economy/
-    │   │   ├── economy_gold_gain_01.wav
-    │   │   └── ...
-    │   └── system/
-    │       ├── system_pause_01.wav
-    │       └── ...
-    └── ambient/
-        ├── ambient_map_01.wav
-        ├── ambient_tension_01.wav
-        └── faction/
-            ├── ambient_faction_undead_01.wav
-            ├── ambient_faction_orc_01.wav
-            ├── ambient_faction_human_01.wav
-            └── ambient_faction_elf_01.wav
+```bash
+npm run gen:sfx
 ```
 
----
+The generator renders every recipe to the path its id is registered with,
+deletes generated wav files no id points at, and prints duration and size per
+clip. It is deterministic: the same recipe and seed give the same bytes on
+every machine. `generatedSfx.node.test.ts` re-renders each recipe and compares
+it with the committed file, so a recipe edit without regenerating fails the
+suite.
 
-## Implementation Notes
+## Palette
 
-1. **Race Routing**: Tower and creature sounds are picked by the sound profiles in `src/content/audio` (tower -> archetype -> race -> default). See "Sound Profiles" in `docs/08-content-authoring.md`. Every id owns exactly one file.
+Dark fantasy around D minor: low-mid, soft attacks, short tails. Frequent cues
+(hits, coins, attacks) are the shortest and quietest.
 
-2. **Throttling**: The system prevents audio spam by tracking cooldowns and limiting simultaneous sounds per category.
+### UI
 
-3. **Mobile**: Audio is locked until first user interaction to comply with browser autoplay policies.
+| Sound ID | What to listen for |
+| --- | --- |
+| `ui.click` | Short wooden tick. |
+| `ui.hover` | Faint, very short upward blip. |
+| `ui.open` | Rising breathy whoosh with a soft D-to-A glide. |
+| `ui.close` | The same whoosh falling back down. |
+| `ui.error` | Two low, beating buzz pulses. |
+| `ui.success` | Two-note chime, D then A. |
+| `ui.build_select` | Wooden knock with a low G tone. |
+| `ui.faction_select` | Small gong strike with a chime on top. |
+| `ui.wave_start` | War horn on D with a fifth and a drum hit. |
+| `ui.wave_complete` | Rising D minor bell arpeggio with a short echo. |
+| `ui.game_over` | Low gong and a descending A-F-D dirge (~1.2 s). |
+| `ui.victory` | Brass D major fanfare ending on a held chord (~1.2 s). |
 
-4. **Spatial Audio**: Optional spatial positioning can be enabled for creep sounds based on their grid position.
+### System
+
+| Sound ID | What to listen for |
+| --- | --- |
+| `system.pause` | Two soft blips stepping down. |
+| `system.unpause` | Two soft blips stepping up. |
+| `system.restart` | Falling whoosh landing on a thump. |
+
+### Economy
+
+| Sound ID | What to listen for |
+| --- | --- |
+| `economy.gold_gain` | Tiny double coin clink (every kill, kept quiet). |
+| `economy.gold_spent` | Coin dropping into a pouch. |
+| `economy.refund` | Two rising clinks with a light swish. |
+| `economy.life_lost` | Heavy heartbeat thud under a dissonant low drone. |
+| `economy.wave_reward` | Cascade of coins over a low bell. |
+
+### Combat fallbacks and status effects
+
+| Sound ID | What to listen for |
+| --- | --- |
+| `combat.attack.default` | Generic bow twang (any tower without a race sound). |
+| `combat.impact.default` | Dull thud. |
+| `combat.build` | Two stone knocks and a small chime. |
+| `combat.sell` | Rattling crumble with a falling tone. |
+| `combat.upgrade` | Rising three-bell shimmer with sparkle. |
+| `combat.creep_hit` | Very short soft body thump, layered under impacts. |
+| `combat.creep_death` | Low growl falling away. |
+| `combat.creep_escape` | Two-tone low warning, A then F. |
+| `combat.effect_applied.chill` | Icy high shimmer with frost crackle. |
+| `combat.effect_applied.poison` | Wet hiss with little bubbles. |
+| `combat.effect_applied.stun` | Dull concussive drop. |
+
+### Undead - bony clicks and necrotic hiss
+
+| Sound ID | What to listen for |
+| --- | --- |
+| `combat.attack.single.undead` | Bone click, dark twang, hissing tail. |
+| `combat.attack.splash.undead` | Gloopy plague lob with a wobbling hiss. |
+| `combat.attack.frost.undead` | Wyrm breath: cold airy rush over a low growl. |
+| `combat.impact.undead` | Dry bone crack. |
+| `combat.build.undead` | Rattle of bones over a low hum. |
+| `combat.creep_death.undead` | Crumbling clicks and a hollow exhale. |
+
+### Orc - thuds and drums
+
+| Sound ID | What to listen for |
+| --- | --- |
+| `combat.attack.single.orc` | Spear whoosh ending in a heavy thunk. |
+| `combat.attack.splash.orc` | Gritty fire roar over a deep drum. |
+| `combat.attack.chain.orc` | Crackling lightning with a growling buzz. |
+| `combat.attack.frost.orc` | Tar gloop: two wobbling low bubbles. |
+| `combat.impact.orc` | War drum thud. |
+| `combat.build.orc` | Double drum hit and a wood knock. |
+| `combat.creep_death.orc` | Gritty grunt and a thud. |
+
+### Human - steel, powder and glass
+
+| Sound ID | What to listen for |
+| --- | --- |
+| `combat.attack.single.human` | Crisp crossbow snap with a metal click. |
+| `combat.attack.splash.human` | Cannon boom. |
+| `combat.attack.poison.human` | Glass flask pop and fizz. |
+| `combat.impact.human` | Steel clang. |
+| `combat.build.human` | Hammer on anvil, two strikes. |
+| `combat.creep_death.human` | Armour clatter and a fall. |
+
+### Elf - bowstrings, air and chimes
+
+| Sound ID | What to listen for |
+| --- | --- |
+| `combat.attack.single.elf` | Soft bowstring with an airy swish. |
+| `combat.attack.splash.elf` | Two airy chimes and a breath. |
+| `combat.attack.frost.elf` | Glassy shimmering tones. |
+| `combat.attack.poison.elf` | Thorny whip crack. |
+| `combat.impact.elf` | Light chime tick. |
+| `combat.build.elf` | Leaf rustle into two rising chimes. |
+| `combat.creep_death.elf` | Soft sigh with a falling chime. |
+
+### Ambience (authored)
+
+| Sound ID | Usage | File |
+| --- | --- | --- |
+| `ambient.map` | Menu and map ambience loop | `ambient/ambient_map_01.wav` |
+| `ambient.tension` | In-game tension loop | `ambient/ambient_tension_01.wav` |
+
+## Recipes
+
+A recipe is data: a seed and a list of layers. Each layer is an oscillator
+(`sine`, `triangle`, `square`, `saw`, `fm`) or sample-and-hold `noise`, with an
+ADSR envelope, optional pitch sweep, vibrato, tremolo, soft drive and
+low/high/band-pass filters (sweepable). A recipe may add a feedback echo.
+Types live in `src/shared/lib/sfx-synth/sfxRecipe.types.ts`; shorthands such
+as `bell`, `thump` and `burst` in `recipes/recipeKit.ts`.
+
+## Adding or changing a sound
+
+1. Register the id in `SOUND_IDS` (`src/shared/types/sound-ids.ts`) and its
+   clip in `src/shared/lib/phaser/sound/registry/`.
+2. Add its recipe to the matching file in `src/shared/lib/sfx-synth/recipes/`
+   (the recipe map is typed, so a missing recipe does not compile).
+3. If a tower or creature should use it, point a sound profile at it.
+4. Run `npm run gen:sfx`, listen, and commit the recipe and the wav together.
+
+## Playback rules
+
+- **Throttling**: each clip has a cooldown and each category a voice limit
+  (`AUDIO_CONSTANTS`), so a splash on twenty creeps stays one cue.
+- **Pitch variation**: combat clips vary slightly (about 6%) to avoid the
+  machine-gun effect; stingers stay in key.
+- **Mobile**: audio is locked until the first user interaction.
