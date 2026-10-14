@@ -142,10 +142,9 @@ export const TOWER_SPRITE_KEYS = {
   ELF_MOON_ARCHER: 'tower.elf.moon_archer',
 } as const;
 
-export const TOWER_SPRITE_ASSETS: Record<
-  (typeof TOWER_SPRITE_KEYS)[keyof typeof TOWER_SPRITE_KEYS],
-  string
-> = {
+export type TowerSpriteKey = (typeof TOWER_SPRITE_KEYS)[keyof typeof TOWER_SPRITE_KEYS];
+
+export const TOWER_SPRITE_ASSETS: Record<TowerSpriteKey, string> = {
   [TOWER_SPRITE_KEYS.UNDEAD_BONE_ARCHER]: '/assets/towers/undead_bone_archer.svg',
   [TOWER_SPRITE_KEYS.ELF_MOON_ARCHER]: '/assets/towers/elf_moon_archer.png',
 };
@@ -168,13 +167,35 @@ export const TOWER_ANIMATION_KEYS = {
   ELF_MOON_ARCHER_SELL: 'tower.elf.moon_archer.sell',
 } as const;
 
-export const TOWER_BONE_ARCHER_ANIMATION_FRAMES = {
+/**
+ * Frame slots a tower sheet draws its animations in. `hitReaction` is null
+ * when the sheet has no hit-reaction pose; the animation then reuses the first
+ * idle frame instead of showing an empty slot.
+ */
+export type TowerSheetFrameLayout = {
+  build: readonly number[];
+  idle: readonly number[];
+  attack: readonly number[];
+  hitReaction: readonly number[] | null;
+  sell: readonly number[];
+};
+
+/** The tower sheet contract from docs/08: slots 8 and 14 stay empty. */
+export const TOWER_SHEET_CONTRACT_FRAMES: TowerSheetFrameLayout = {
   build: [0, 1, 2],
   idle: [3, 4],
   attack: [5, 6, 7],
   hitReaction: [9],
   sell: [10, 11],
-} as const;
+};
+
+/** Per-sheet deviations from the contract, checked against the shipped art. */
+export const TOWER_SHEET_FRAME_LAYOUTS: Record<TowerSpriteKey, TowerSheetFrameLayout> = {
+  // Legacy sheet: the hit-reaction pose sits in slot 8, slots 9 and 14 are empty.
+  [TOWER_SPRITE_KEYS.UNDEAD_BONE_ARCHER]: { ...TOWER_SHEET_CONTRACT_FRAMES, hitReaction: [8] },
+  // Slots 8, 9 and 14 are empty: no hit-reaction pose was drawn.
+  [TOWER_SPRITE_KEYS.ELF_MOON_ARCHER]: { ...TOWER_SHEET_CONTRACT_FRAMES, hitReaction: null },
+};
 
 export const TOWER_BONE_ARCHER_EFFECT_FRAMES = {
   projectile: 12,

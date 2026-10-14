@@ -211,7 +211,7 @@ nothing renders invisible.
 
 ## Frame layout
 
-Sheets are horizontal strips of equal frames.
+Sheets are grids of equal frames, numbered left-to-right, top-to-bottom.
 
 **Creeps** - `32x32` per frame, 16 frames in a 4x4 grid (`128x128`):
 
@@ -225,17 +225,32 @@ Sheets are horizontal strips of equal frames.
 Sheets with only 4 frames are the old contract: they still animate, but the creep rotates on
 vertical path segments instead of turning, and death falls back to an alpha fade.
 
-**Towers** - `60x60` per frame, 14 frames:
+**Towers** - `60x60` per frame, 15 slots in a 5x3 grid (`300x180`), numbered
+left-to-right, top-to-bottom (the prompts in `docs/09` use the same slot numbers):
 
-| Frames | Meaning |
+| Slot | Meaning |
 | --- | --- |
 | 0-2 | build |
 | 3-4 | idle (loops) |
 | 5-7 | attack |
-| 9 | hit reaction |
+| 8 | empty |
+| 9 | hit reaction (optional) |
 | 10-11 | sell |
 | 12 | projectile |
 | 13 | attack impact effect |
+| 14 | empty |
+
+The contract lives in `TOWER_SHEET_CONTRACT_FRAMES`. A shipped sheet that
+deviates from it declares its real slots in `TOWER_SHEET_FRAME_LAYOUTS`
+(`shared/constants/sprites.ts`) - check the art, never assume. Today:
+
+- `tower.undead.bone_archer` (legacy) draws its hit reaction in slot 8; slots 9
+  and 14 are empty.
+- `tower.elf.moon_archer` has no hit-reaction pose (slots 8, 9 and 14 empty), so
+  its layout sets `hitReaction: null`.
+
+A sheet without a hit-reaction pose plays its first idle frame instead, so the
+reaction never shows a blank slot. The placeholder follows the contract.
 
 Frame counts live in `PLACEHOLDER_UNIT_FRAME_COUNT` and
 `PLACEHOLDER_TOWER_FRAME_COUNT`; the placeholder is generated with exactly

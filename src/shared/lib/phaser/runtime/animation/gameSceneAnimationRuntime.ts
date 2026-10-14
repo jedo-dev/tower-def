@@ -3,7 +3,6 @@ import { PLACEHOLDER_TEXTURE_KEYS } from '../assets/placeholderTexture';
 import {
   PLACEHOLDER_ANIMATION_KEYS,
   TOWER_ANIMATION_SETS,
-  TOWER_BONE_ARCHER_ANIMATION_FRAMES,
   TOWER_SPRITE_KEYS,
   UNIT_DIRECTIONAL_FRAME_COUNT,
   UNIT_SHEET_FRAMES_PER_ROW,
@@ -12,6 +11,7 @@ import {
   UnitAnimationKind,
   toUnitAnimationKey,
 } from '../../../../constants/sprites';
+import { resolveTowerAnimationFrames } from './towerAnimationFrames';
 
 /** Animation keys a tower sheet must provide, real art or placeholder alike. */
 export type TowerAnimationSet = {
@@ -135,46 +135,12 @@ function createTowerAnimation(
 export function createTowerAnimations(scene: Phaser.Scene): void {
   [...Object.values(TOWER_SPRITE_KEYS), PLACEHOLDER_TEXTURE_KEYS.TOWER].forEach((spriteKey) => {
     const animationSet = getTowerAnimationSet(spriteKey);
-    createTowerAnimation(
-      scene,
-      spriteKey,
-      animationSet.build,
-      TOWER_BONE_ARCHER_ANIMATION_FRAMES.build,
-      10,
-      0,
-    );
-    createTowerAnimation(
-      scene,
-      spriteKey,
-      animationSet.idle,
-      TOWER_BONE_ARCHER_ANIMATION_FRAMES.idle,
-      8,
-      -1,
-    );
-    createTowerAnimation(
-      scene,
-      spriteKey,
-      animationSet.attack,
-      TOWER_BONE_ARCHER_ANIMATION_FRAMES.attack,
-      14,
-      0,
-    );
-    createTowerAnimation(
-      scene,
-      spriteKey,
-      animationSet.hitReaction,
-      TOWER_BONE_ARCHER_ANIMATION_FRAMES.hitReaction,
-      10,
-      0,
-    );
-    createTowerAnimation(
-      scene,
-      spriteKey,
-      animationSet.sell,
-      TOWER_BONE_ARCHER_ANIMATION_FRAMES.sell,
-      10,
-      0,
-    );
+    const frames = resolveTowerAnimationFrames(spriteKey);
+    createTowerAnimation(scene, spriteKey, animationSet.build, frames.build, 10, 0);
+    createTowerAnimation(scene, spriteKey, animationSet.idle, frames.idle, 8, -1);
+    createTowerAnimation(scene, spriteKey, animationSet.attack, frames.attack, 14, 0);
+    createTowerAnimation(scene, spriteKey, animationSet.hitReaction, frames.hitReaction, 10, 0);
+    createTowerAnimation(scene, spriteKey, animationSet.sell, frames.sell, 10, 0);
   });
 }
 
