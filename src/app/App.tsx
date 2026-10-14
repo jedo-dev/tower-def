@@ -7,25 +7,34 @@ import type { AppRoute, GameSetupConfig } from '../shared/config/game-setup';
 import { setGameSetupConfig } from '../shared/lib/game-bridge/bridge';
 import { ErrorBoundary } from '../shared/ui/error-boundary';
 import type { SoundId } from '../shared/lib/phaser/sound/audio.types';
-import { SOUND_ASSET_PATHS } from '../shared/lib/phaser/sound/audio.constants';
+import { resolveSoundClipUrl, SOUND_CLIPS } from '../shared/lib/phaser/sound/audio.constants';
+import { SoundCategory } from '../shared/lib/phaser/sound/audio.types';
 import {
   DEFAULT_AMBIENT_VOLUME,
   DEFAULT_SFX_VOLUME,
   setAudioSettings,
 } from '../shared/lib/audio/audioSettingsStore';
-import { createAmbientFader, type AmbientFader } from '../shared/lib/audio/ambientFader';
+import {
+  createAmbientFader,
+  type AmbientFader,
+  type FadeableAudio,
+} from '../shared/lib/audio/ambientFader';
+import {
+  getMenuAmbientAudio,
+  playMenuClip,
+  prefetchMenuClips,
+} from '../shared/lib/audio/menuAudio';
 
-function resolveUiAudioPath(soundId: SoundId): string | undefined {
-  const assetPath = SOUND_ASSET_PATHS[soundId];
-  return assetPath ? `/${assetPath}` : undefined;
-}
+const MENU_CLIP_URLS: readonly string[] = (Object.keys(SOUND_CLIPS) as SoundId[])
+  .filter((soundId) => SOUND_CLIPS[soundId].category === SoundCategory.UI)
+  .map(resolveSoundClipUrl);
 
 export function App() {
   const [route, setRoute] = useState<AppRoute>('start');
   const [gameSetup, setGameSetup] = useState<GameSetupConfig | null>(null);
   const [sfxVolume, setSfxVolume] = useState(DEFAULT_SFX_VOLUME);
   const [ambientVolume, setAmbientVolume] = useState(DEFAULT_AMBIENT_VOLUME);
-  const ambientRef = useRef<HTMLAudioElement | null>(null);
+  const ambientRef = useRef<FadeableAudio | null>(null);
   const ambientFaderRef = useRef<AmbientFader | null>(null);
   const ambientVolumeRef = useRef(ambientVolume);
   const routeRef = useRef<AppRoute>('start');
@@ -37,13 +46,10 @@ export function App() {
       if (!isUiAudioUnlockedRef.current) {
         return;
       }
-      const path = resolveUiAudioPath(soundId);
-      if (!path) {
+      if (!(soundId in SOUND_CLIPS)) {
         return;
       }
-      const audio = new Audio(path);
-      audio.volume = volume * sfxVolume;
-      void audio.play().catch(() => undefined);
+      playMenuClip(resolveSoundClipUrl(soundId), volume * sfxVolume);
     },
     [sfxVolume],
   );
@@ -73,10 +79,9 @@ export function App() {
   }, [route]);
 
   useEffect(() => {
-    const ambient = new Audio('/assets/audio/sfx/ambient/ambient_map_01.wav');
-    ambient.loop = true;
+    prefetchMenuClips(MENU_CLIP_URLS);
+    const ambient = getMenuAmbientAudio(resolveSoundClipUrl('ambient.map'));
     ambient.volume = ambientVolumeRef.current;
-    ambient.preload = 'auto';
     ambientRef.current = ambient;
     const ambientFader = createAmbientFader({ audio: ambient });
     ambientFaderRef.current = ambientFader;

@@ -1,16 +1,18 @@
 import Phaser from 'phaser';
 import { SoundCategory, type SoundId } from './audio.types';
-import {
-  AUDIO_CONSTANTS,
-  PENDING_SOUND_ASSETS,
-  SOUND_ASSET_PATHS,
-  SOUND_REGISTRY,
-} from './audio.constants';
+import { AUDIO_CONSTANTS, SOUND_REGISTRY } from './audio.constants';
 import {
   getAmbientUserScale,
   getSfxUserScale,
   subscribeAudioSettings,
 } from '../../audio/audioSettingsStore';
+import { sessionAudioClipCache, type AudioClipCache } from '../../audio/audioClipCache';
+import { preloadGameAudioClips } from './gameAudioClipPreloader';
+
+/** `Game#pendingDestroy` is set by `destroy()` but missing from Phaser's typings. */
+function isGamePendingDestroy(game: Phaser.Game): boolean {
+  return (game as Phaser.Game & { pendingDestroy?: boolean }).pendingDestroy === true;
+}
 
 type ActiveSound = {
   sound: Phaser.Sound.BaseSound;
@@ -27,6 +29,8 @@ type CooldownEntry = {
 export class GameAudioManager {
   private readonly scene: Phaser.Scene;
   private readonly enabled: boolean;
+  private readonly clipCache: AudioClipCache;
+  private isDestroyed: boolean = false;
   private masterVolume: number;
   private isUnlocked: boolean = false;
   private activeSounds: ActiveSound[] = [];
@@ -40,9 +44,11 @@ export class GameAudioManager {
     scene: Phaser.Scene,
     enabled: boolean = true,
     masterVolume: number = AUDIO_CONSTANTS.DEFAULT_MASTER_VOLUME,
+    clipCache: AudioClipCache = sessionAudioClipCache,
   ) {
     this.scene = scene;
     this.enabled = enabled;
+    this.clipCache = clipCache;
     this.masterVolume = masterVolume;
     this.unsubscribeSettings = subscribeAudioSettings(() => {
       this.applyUserVolumeToActiveAmbient();
@@ -279,21 +285,20 @@ export class GameAudioManager {
     finished.forEach((active) => this.removeFinishedSound(active.sound));
   }
 
-  /** Queues every clip that has a file. Each id owns its file, so keys never collide. */
+  /** Prepares every clip that has a file; see `preloadGameAudioClips`. */
   public preload(): void {
-    (Object.keys(SOUND_ASSET_PATHS) as SoundId[]).forEach((soundId) => {
-      if (PENDING_SOUND_ASSETS.includes(soundId)) {
-        return;
-      }
-
-      const key = this.getAudioKey(soundId);
-      if (!this.scene.cache.audio.exists(key)) {
-        this.scene.load.audio(key, [SOUND_ASSET_PATHS[soundId]]);
-      }
+    preloadGameAudioClips({
+      scene: this.scene,
+      clipCache: this.clipCache,
+      // A game torn down before its scene shut down (e.g. a StrictMode
+      // remount mid-preload) never destroys this manager, so check both.
+      isActive: () => !this.isDestroyed && !isGamePendingDestroy(this.scene.sys.game),
+      getAudioKey: (soundId) => this.getAudioKey(soundId),
     });
   }
 
   public destroy(): void {
+    this.isDestroyed = true;
     this.unsubscribeSettings?.();
     this.unsubscribeSettings = null;
     this.stopAll();

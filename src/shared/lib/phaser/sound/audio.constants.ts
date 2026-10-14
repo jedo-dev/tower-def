@@ -29,6 +29,14 @@ export const SOUND_ASSET_PATHS: Record<SoundId, string> = Object.fromEntries(
 ) as Record<SoundId, string>;
 
 /**
+ * Absolute URL a clip is fetched from. Every player (menu and game) resolves
+ * clips through here, so the session clip cache sees one key per file.
+ */
+export function resolveSoundClipUrl(soundId: SoundId): string {
+  return `/${SOUND_ASSET_PATHS[soundId]}`;
+}
+
+/**
  * Sounds whose files are not authored yet. The preloader skips them, so a
  * pending asset stays silent instead of failing a request every session.
  * Remove an id from this list the moment its file lands.
