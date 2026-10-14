@@ -1,4 +1,4 @@
-import { BuilderFaction } from '../entities/builder-faction';
+import { BuilderFaction } from '../../../../entities/builder-faction';
 
 export type Faction = 'orc' | 'human' | 'elf' | 'undead';
 

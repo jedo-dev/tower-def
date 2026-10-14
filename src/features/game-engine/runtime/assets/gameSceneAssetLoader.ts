@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { PROPS, TILES, type Faction } from '../../../../assets/registry';
+import { PROPS, TILES, type Faction } from './terrainAssetRegistry';
 import {
   TOWER_SPRITE_ASSETS,
   TOWER_SPRITE_KEYS,

@@ -1,7 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from './app/App';
-import { preloadTerrainAssets } from './assets/registry';
+import { preloadTerrainAssets } from './features/game-engine/runtime/assets/terrainAssetRegistry';
 import './app/styles/global.css';
 import './app/styles/ui-kit.css';
 

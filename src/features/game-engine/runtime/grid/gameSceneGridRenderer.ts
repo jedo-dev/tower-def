@@ -1,7 +1,11 @@
 import type Phaser from 'phaser';
 import type { BuilderFaction } from '../../../../entities/builder-faction';
 import { GRID_DIMENSIONS } from '../../../../shared/constants/grid';
-import { builderFactionToTerrainFaction, getPropForCell, TILES } from '../../../../assets/registry';
+import {
+  builderFactionToTerrainFaction,
+  getPropForCell,
+  TILES,
+} from '../assets/terrainAssetRegistry';
 import type { GridCell, GridModel } from '../../../../shared/types/grid';
 
 export type GridRendererConfig = {

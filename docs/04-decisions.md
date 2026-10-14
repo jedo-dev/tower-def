@@ -127,8 +127,9 @@ enemy view shows what is left.
 
 ## Decision 012: The Phaser engine is a feature slice, not shared code
 
-The Phaser runtime (scenes, runtime cores, the audio manager and the scene
-test harness) lives in `src/features/game-engine/`. It may depend on
+The Phaser runtime (scenes, runtime cores, the audio manager, the terrain
+asset registry and the scene test harness) lives in
+`src/features/game-engine/`. It may depend on
 `entities/*` and on sibling features (`wave-phase`), and it is consumed only
 through its barrel by the game canvas widget; the headless duel simulation
 (`features/duel-simulation`) and the tools under `tools/` reach into the same
