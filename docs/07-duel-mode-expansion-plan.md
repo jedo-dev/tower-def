@@ -220,7 +220,41 @@ Maze planner and spending (tower-def-02k.8, tower-def-02k.9):
 
 Results after that, same batch: median 27 rounds (range 21-30), towers at round 5 median 14 per side (range 12-16), draws 16%, 40-round cap 0%, unspent gold after round 15 on average 173 against 538 income. The draws are both sides dying to the same late wave on a mirror map now that neither side's maze collapses early.
 
-Known gaps for follow-up: draws are above the 02k.7 rate; orc loses most race pairs; nightmare does not beat hard.
+Known gaps for follow-up: draws are above the 02k.7 rate; orc loses most race pairs; nightmare did not beat hard (fixed by tower-def-02k.5 below).
+
+### Difficulty presets
+
+Difficulty changes only how well the computer decides; stats, gold, income and lives are equal on every difficulty. Each difficulty is a set of decision parameters, kept next to the planner that reads it (all under `entities/computer-opponent/model/`):
+
+| Decision | Where | Easy | Normal | Hard | Nightmare |
+| --- | --- | --- | --- | --- | --- |
+| Towers per round (`maxBuildActionsPerRound`) | `buildSpendBudget.ts` | 3 (was 4) | 4 (was 6) | 8 | 10 |
+| Build spend ratio / gold reserve | same | 0.5 / 0.25 | 0.8 / 0.1 | 0.95 / 0.05 | 1 / 0 |
+| Maze coverage target / surplus reserve (income share) | same | 0.25 / 1 | 0.34 / 0.5 | 0.42 / 0.25 | 0.46 / 0 |
+| Plan search: finalists / expansion cap | `maze-planning/constants.ts` | 1 / 30k | 2 / 35k | 3 / 40k | 6 / 60k (was 4 / 50k) |
+| Sends: max share / max creeps / economy rounds / base pressure | `sendTuning.ts` | 0.2 / 3 / 5 / 0.2 | 0.35 / 5 / 4 / 0.4 | 0.7 / 9 / 2 / 0.8 (was 0.5 / 7 / 3 / 0.6) | 0.7 / 7 / 4 / 0.5 (was 0.7 / 9 / 2 / 0.8) |
+| Defence margins: threatened / comfortable | `threat-budget/constants.ts` | 1.8 / 3.2 | 1.6 / 2.8 | 1.5 / 2.5 | 1.4 / 2.3 |
+| Leak reaction delay (build phases) | `decisionMistakes.ts` | 1 (new) | 0 | 0 | 0 |
+
+What separates the steps:
+
+- **Easy < normal:** easy places fewer towers a round and notices a leak one build phase late, so it starts defending a round after the damage.
+- **Normal < hard:** normal places four towers a round, which starves its maze once income grows; hard places eight.
+- **Hard < nightmare:** hard rushes pressure (sends from round 3 with an 80% pressure split and up to 9 creeps, the old nightmare tuning); every creep the defender kills pays it a bounty, so early heavy sends feed the other side. Nightmare grows income for four rounds, then sends at a 50% pressure split, at most 7 creeps, and searches its maze plan harder (6 finalists, 60k expansions; one decision stays under 80k, `planBuildDecisionMazePlan.test.ts`).
+
+Measure with `npm run sim:duel-batch -- --seeds 1-20 --matchups normal:easy,hard:normal,nightmare:hard`. Each difficulty pair plays the four default race pairs four ways (each difficulty on each race, in each seat), so race and seat imbalance cancel out; a draw counts half.
+
+Results, seeds 1-20, baseline undead, with the double-knockout tie-break (tower-def-ago):
+
+| Matchup | Before (higher/lower/draw, score) | After (higher/lower/draw, score) | Median rounds after |
+| --- | --- | --- | --- |
+| normal vs easy | 214/102/4, 67.5% | 230/88/2, 72.2% | 23 |
+| hard vs normal | 200/114/6, 63.4% | 258/62/0, 80.6% | 25 |
+| nightmare vs hard | 198/122/0, 61.9% | 220/100/0, 68.8% | 26 |
+
+Equal-difficulty duels (four race pairs, 80 matches each): median 22 rounds on easy, 25 on normal, 25 on hard, 28 on nightmare (before: 26, 27, 26.5, 27).
+
+Known gaps: race imbalance still dominates single matchups. Playing orc, the higher difficulty wins only 13% (nightmare vs hard) to 55% (hard vs normal) of its games; playing undead it wins 83-98%. Plan search effort and the maze coverage target barely move win rates; build pace, spend reserve and send timing are the levers that do.
 
 Same-wave tie-break (tower-def-ago): when both sides lose their last lives on the same wave, the side that leaked fewer creeps that wave wins; on equal leaks the side with more lives before the wave wins; only when both are equal is it a draw. The rule lives in the shared settlement (`resolveDuelMatchOutcome`, used by `endRound`), so the game and `sim:duel` / `sim:duel-batch` agree, and the outcome overlay names the reason. Same batch: draws 16% to 3% (13 to 2 of 80), match lengths unchanged.
 
