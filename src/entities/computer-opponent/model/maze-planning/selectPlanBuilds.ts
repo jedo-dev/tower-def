@@ -87,6 +87,8 @@ function pickNext(
 export function selectPlanBuilds(input: PlanBuildSelectionInput): PlanBuildSelection {
   const { grid, candidates, maxBuilds } = input;
   const board = createMazePlanningBoard(grid);
+  // Blocks only ever go up on this board (probes come down again), so the fields stay valid.
+  board.pinRouteHeuristics();
   const anchors: GridPoint[] = [];
   const gains: number[] = [];
   const taken = new Set<number>();
@@ -103,6 +105,10 @@ export function selectPlanBuilds(input: PlanBuildSelectionInput): PlanBuildSelec
     anchors.push(anchor);
     gains.push(next.gain);
     currentCost += next.gain;
+    if (anchors.length < maxBuilds) {
+      // Each build reroutes the creeps; probes for the next one search far less on fresh fields.
+      board.pinRouteHeuristics();
+    }
   }
 
   return { anchors, gains, expandedNodeCount: board.expandedNodeCount };

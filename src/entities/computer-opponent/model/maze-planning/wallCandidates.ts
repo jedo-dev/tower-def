@@ -1,23 +1,28 @@
 import { TOWER_FOOTPRINT } from '../../../../shared/constants/footprint';
 import type { Footprint, GridPoint } from '../../../../shared/types/grid';
-import { MAZE_PLAN_LANE_WIDTH, MAZE_PLAN_MAX_ENDPOINT_STRIP_WIDTH } from './constants';
+import { MAZE_PLAN_MAX_CLOSING_WALL_BLOCKS, MAZE_PLAN_MAX_ENDPOINT_STRIP_WIDTH } from './constants';
+import {
+  buildChain,
+  buildEdgeLine,
+  isAttached,
+  type WallDirection,
+  type WallSiteView,
+} from './wallChains';
 
-/** A wall either runs along a row (across the columns) or along a column. */
-export type WallAxis = 'row' | 'column';
+export type { WallDirection, WallSiteView } from './wallChains';
 
 /**
- * One straight wall of tower blocks, attached to a board edge and running
- * across the field until only a lane for the largest creeps is left at the
- * far edge. Anchors are ordered from the attached edge outwards, which is
- * also the order that makes a half-built wall already push the route around
- * its tip.
+ * One wall of tower blocks: a chain that starts against an obstacle (a board
+ * edge or a standing block) and runs in a straight or diagonal line until
+ * only a lane for the largest creeps is left before the next obstacle.
+ * Diagonal walls are blocks touching at corners, which seal just like a
+ * straight wall (no corner cutting) but span both axes. Anchors are ordered
+ * from the attached end outwards, which is also the order that makes a
+ * half-built wall already push the route around its tip.
  */
 export type WallCandidate = {
-  readonly axis: WallAxis;
-  /** Anchor row of a row wall, anchor column of a column wall. */
-  readonly line: number;
-  /** Attached to the left (row wall) or top (column wall) edge. */
-  readonly fromLowEdge: boolean;
+  readonly direction: WallDirection;
+  readonly start: GridPoint;
   readonly anchors: readonly GridPoint[];
 };
 
@@ -27,94 +32,133 @@ export type EndpointZone = {
   readonly footprint: Readonly<Footprint>;
 };
 
-/** Anchor offsets along one axis, from the low edge (or the high edge) towards the lane. */
-function collectOffsets(size: number, block: number, fromLowEdge: boolean): number[] {
-  const offsets: number[] = [];
+/** Straight directions first, then diagonals; the order breaks ties. */
+export const WALL_DIRECTIONS: readonly WallDirection[] = [
+  { x: 1, y: 0 },
+  { x: -1, y: 0 },
+  { x: 0, y: 1 },
+  { x: 0, y: -1 },
+  { x: 1, y: 1 },
+  { x: -1, y: 1 },
+  { x: 1, y: -1 },
+  { x: -1, y: -1 },
+];
 
-  if (fromLowEdge) {
-    for (let offset = 0; offset + block <= size - MAZE_PLAN_LANE_WIDTH; offset += block) {
-      offsets.push(offset);
-    }
-    return offsets;
-  }
+const { width: BLOCK_WIDTH, height: BLOCK_HEIGHT } = TOWER_FOOTPRINT;
 
-  for (let offset = size - block; offset >= MAZE_PLAN_LANE_WIDTH; offset -= block) {
-    offsets.push(offset);
-  }
-  return offsets;
+export function isDiagonalWall(wall: WallCandidate): boolean {
+  return wall.direction.x !== 0 && wall.direction.y !== 0;
 }
 
 /**
- * True when `zone` lies in a narrow strip between `wall` and the board edge
- * the wall runs along (at most `MAZE_PLAN_MAX_ENDPOINT_STRIP_WIDTH` wide).
+ * Index of the line a wall runs along: its anchor row (horizontal wall), its
+ * anchor column (vertical wall) or its diagonal. Neighbouring lines differ by 1.
  */
-function isZoneInEdgeStrip(
-  wall: WallCandidate,
-  zone: EndpointZone,
-  cols: number,
-  rows: number,
-): boolean {
-  const isRow = wall.axis === 'row';
-  const size = isRow ? rows : cols;
-  const thickness = isRow ? TOWER_FOOTPRINT.height : TOWER_FOOTPRINT.width;
+export function getWallLine(wall: WallCandidate): number {
+  const { direction, start } = wall;
+  if (direction.y === 0) {
+    return start.y;
+  }
+  if (direction.x === 0) {
+    return start.x;
+  }
+  return direction.x === direction.y ? start.x - start.y : start.x + start.y;
+}
+
+/**
+ * True when `zone` lies in a narrow strip between a straight wall and the
+ * board edge the wall runs along (at most `MAZE_PLAN_MAX_ENDPOINT_STRIP_WIDTH`
+ * wide). Creeps walking such a strip pass one face of the wall only.
+ */
+function isZoneInEdgeStrip(wall: WallCandidate, zone: EndpointZone, view: WallSiteView): boolean {
+  if (isDiagonalWall(wall)) {
+    return false;
+  }
+  const isRow = wall.direction.y === 0;
+  const line = getWallLine(wall);
+  const size = isRow ? view.rows : view.cols;
+  const thickness = isRow ? BLOCK_HEIGHT : BLOCK_WIDTH;
   const zoneStart = isRow ? zone.anchor.y : zone.anchor.x;
   const zoneEnd = zoneStart + (isRow ? zone.footprint.height : zone.footprint.width);
-  const wallEnd = wall.line + thickness;
+  const wallEnd = line + thickness;
 
-  const isInLowStrip = zoneEnd <= wall.line && wall.line <= MAZE_PLAN_MAX_ENDPOINT_STRIP_WIDTH;
+  const isInLowStrip = zoneEnd <= line && line <= MAZE_PLAN_MAX_ENDPOINT_STRIP_WIDTH;
   const isInHighStrip =
     zoneStart >= wallEnd && size - wallEnd <= MAZE_PLAN_MAX_ENDPOINT_STRIP_WIDTH;
   return isInLowStrip || isInHighStrip;
 }
 
 /**
- * Every edge-attached wall the planner considers, in a fixed order: walls
- * along each tower row (from the left and from the right edge), then walls
- * along each tower column. Alternating walls from opposite edges is what
- * produces a serpentine; which ones, and in what order, is left to the search.
- * Walls that would squeeze an endpoint zone into a strip along the board edge
- * are left out (see `MAZE_PLAN_MAX_ENDPOINT_STRIP_WIDTH`).
+ * Every wall the planner considers on the board as it stands, in a fixed
+ * order (direction, then row-major start): straight and diagonal chains from
+ * each board edge and from each face of a block already there, short walls
+ * that close a passage exactly (see `MAZE_PLAN_MAX_CLOSING_WALL_BLOCKS`) and
+ * edge-to-edge lines across obstacles (see `buildEdgeLine`). Attaching to
+ * blocks is what lets a short wall branch off an existing one instead of
+ * crossing the whole board; alternating walls is what produces a serpentine,
+ * and which ones, in what order, is left to the search. Walls that would
+ * squeeze an endpoint zone into a strip along the board edge are left out
+ * (see `MAZE_PLAN_MAX_ENDPOINT_STRIP_WIDTH`).
  */
 export function createWallCandidates(
-  cols: number,
-  rows: number,
+  view: WallSiteView,
   endpointZones: readonly EndpointZone[] = [],
 ): WallCandidate[] {
-  const { width, height } = TOWER_FOOTPRINT;
   const candidates: WallCandidate[] = [];
-
-  for (let line = 0; line + height <= rows; line += 1) {
-    for (const fromLowEdge of [true, false]) {
-      const anchors = collectOffsets(cols, width, fromLowEdge).map((x) => ({ x, y: line }));
-      if (anchors.length > 0) {
-        candidates.push({ axis: 'row', line, fromLowEdge, anchors });
-      }
+  // A lone block is the same wall whichever way it would have run on.
+  const seenSingles = new Set<number>();
+  const addCandidate = (direction: WallDirection, start: GridPoint, anchors: GridPoint[]) => {
+    const singleKey = anchors.length === 1 ? anchors[0].y * view.cols + anchors[0].x : -1;
+    if (anchors.length === 0 || seenSingles.has(singleKey)) {
+      return;
     }
-  }
+    if (singleKey >= 0) {
+      seenSingles.add(singleKey);
+    }
+    candidates.push({ direction, start, anchors });
+  };
 
-  for (let line = 0; line + width <= cols; line += 1) {
-    for (const fromLowEdge of [true, false]) {
-      const anchors = collectOffsets(rows, height, fromLowEdge).map((y) => ({ x: line, y }));
-      if (anchors.length > 0) {
-        candidates.push({ axis: 'column', line, fromLowEdge, anchors });
+  for (const direction of WALL_DIRECTIONS) {
+    for (let y = 0; y + BLOCK_HEIGHT <= view.rows; y += 1) {
+      for (let x = 0; x + BLOCK_WIDTH <= view.cols; x += 1) {
+        const start = { x, y };
+        if (!isAttached(view, direction, start)) {
+          continue;
+        }
+        const { anchors, closing } = buildChain(view, direction, start);
+        addCandidate(direction, start, anchors);
+        if (closing !== null && anchors.length < MAZE_PLAN_MAX_CLOSING_WALL_BLOCKS) {
+          addCandidate(direction, start, [...anchors, closing]);
+        }
+        // Only from a start that fits, so the line keeps the edge-gap rule at its root.
+        const line =
+          anchors.length > 0 || closing !== null ? buildEdgeLine(view, direction, start) : [];
+        if (line.length > anchors.length) {
+          addCandidate(direction, start, line);
+        }
       }
     }
   }
 
   return candidates.filter(
-    (wall) => !endpointZones.some((zone) => isZoneInEdgeStrip(wall, zone, cols, rows)),
+    (wall) => !endpointZones.some((zone) => isZoneInEdgeStrip(wall, zone, view)),
   );
 }
 
-/** Candidates one line either side of `wall`, attached to the same edge. */
+/**
+ * Candidates on a line either side of `wall` that run the same way from about
+ * the same place: what `wall` would be one cell over.
+ */
 export function findNeighborWalls(
   candidates: readonly WallCandidate[],
   wall: WallCandidate,
 ): WallCandidate[] {
+  const line = getWallLine(wall);
   return candidates.filter(
     (other) =>
-      other.axis === wall.axis &&
-      other.fromLowEdge === wall.fromLowEdge &&
-      Math.abs(other.line - wall.line) === 1,
+      other.direction === wall.direction &&
+      Math.abs(getWallLine(other) - line) === 1 &&
+      Math.max(Math.abs(other.start.x - wall.start.x), Math.abs(other.start.y - wall.start.y)) <=
+        BLOCK_WIDTH,
   );
 }

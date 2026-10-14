@@ -9,22 +9,21 @@ import { createMazeEvaluator } from '../maze-evaluation';
 import type { MazePlanSearchEffort } from './constants';
 import { createMazePlanningBoard } from './mazePlanningBoard';
 import { searchMazeWalls } from './searchMazeWalls';
-import { createWallCandidates } from './wallCandidates';
 
-const UNCAPPED_EFFORT: MazePlanSearchEffort = { finalistCount: 3, maxExpandedNodes: 1_000_000 };
+const UNCAPPED_EFFORT: MazePlanSearchEffort = {
+  screenedWallCount: 1_000,
+  finalistCount: 3,
+  maxExpandedNodes: 1_000_000,
+};
 
 function plan(grid: GridModel, towerBudget: number, effort = UNCAPPED_EFFORT) {
   const board = createMazePlanningBoard(grid);
   const result = searchMazeWalls({
     board,
-    candidates: createWallCandidates(
-      grid.cols,
-      grid.rows,
-      [grid.entrance, grid.exit].map((anchor) => ({
-        anchor,
-        footprint: grid.endpointZoneFootprint,
-      })),
-    ),
+    endpointZones: [grid.entrance, grid.exit].map((anchor) => ({
+      anchor,
+      footprint: grid.endpointZoneFootprint,
+    })),
     towerBudget,
     effort,
   });
@@ -127,7 +126,11 @@ describe('computer-opponent/maze-planning/searchMazeWalls', () => {
 
   it('stops at its effort cap and says it was cut short', () => {
     const grid = createGridModel(generateEdgeEndpoints(2));
-    const effort: MazePlanSearchEffort = { finalistCount: 3, maxExpandedNodes: 2_000 };
+    const effort: MazePlanSearchEffort = {
+      screenedWallCount: 1_000,
+      finalistCount: 3,
+      maxExpandedNodes: 2_000,
+    };
     const capped = plan(grid, 30, effort);
     const full = plan(grid, 30);
 

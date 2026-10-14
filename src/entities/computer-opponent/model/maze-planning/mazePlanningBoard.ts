@@ -14,6 +14,7 @@ import {
   recomputeCappedClearance,
 } from '../maze-evaluation/mazeClearance';
 import {
+  computeMazeDistanceField,
   createMazeRouteSearchBuffers,
   readMazeRoute,
   searchMazeRouteCost,
@@ -39,17 +40,27 @@ export type MazePlanningBoard = {
   readonly rows: number;
   /** In bounds and every cell of the block is an empty-role, free cell right now. */
   canPlace(anchor: GridPoint): boolean;
+  /** Outside the board, or a cell no creep can stand on right now (a block or rock). */
+  isObstacle(x: number, y: number): boolean;
   place(anchor: GridPoint): void;
   remove(anchor: GridPoint): void;
   /** Route costs for the current blocks; null when either size class is sealed. */
   evaluate(): PlanningRouteCosts | null;
   /** Small route cost alone (half the work of `evaluate`); Infinity when sealed. */
   evaluateSmall(): number;
+  /** The small route's cells for the current blocks, entrance first; empty when sealed. */
+  smallRoute(): readonly GridPoint[];
   /**
    * Small-route samples within `range` of every block on the board (standing
    * towers and placed blocks), summed over the blocks; 0 when sealed.
    */
   evaluateExposure(range: number): number;
+  /**
+   * Measures both routes' distance-to-exit fields on the blocks standing now
+   * and steers every later route search with them (exact costs, far fewer
+   * cells expanded) until one of those blocks is removed again.
+   */
+  pinRouteHeuristics(): void;
   /** Copy of the cached routes, to hand back to `restoreRoutes`. */
   saveRoutes(): PlanningRouteSnapshot;
   /**
@@ -67,6 +78,8 @@ export type MazePlanningBoard = {
  */
 type RouteCache = {
   agentSize: number;
+  /** Distance-to-exit field steering the search; null for the octile heuristic. */
+  field: Float64Array | null;
   cost: number | undefined;
   sweep: Uint8Array;
   /** The route behind `cost`; empty when sealed. Never mutated, only replaced. */
@@ -91,7 +104,13 @@ function restoreRouteCache(cache: RouteCache, saved: SavedRoute): void {
 }
 
 function createRouteCache(agentSize: number, cellCount: number): RouteCache {
-  return { agentSize, cost: undefined, sweep: new Uint8Array(cellCount), route: [] };
+  return {
+    agentSize,
+    field: null,
+    cost: undefined,
+    sweep: new Uint8Array(cellCount),
+    route: [],
+  };
 }
 
 function markBuildableCells(grid: GridModel, free: Uint8Array, buildable: Uint8Array): void {
@@ -116,6 +135,8 @@ export function createMazePlanningBoard(grid: GridModel): MazePlanningBoard {
   const large = createRouteCache(LARGE_ROUTE_AGENT_SIZE, cols * rows);
   const { width, height } = TOWER_FOOTPRINT;
   const blocks = collectStandingBlocks(grid);
+  /** Blocks (a prefix of `blocks`) the route fields were measured on; null when unpinned. */
+  let pinnedBlockCount: number | null = null;
 
   fillFreeCells(grid, free);
   markBuildableCells(grid, free, buildable);
@@ -170,7 +191,14 @@ export function createMazePlanningBoard(grid: GridModel): MazePlanningBoard {
 
   function resolveCost(cache: RouteCache): number {
     if (cache.cost === undefined) {
-      cache.cost = searchMazeRouteCost(buffers, clearance, cache.agentSize, start, goal);
+      cache.cost = searchMazeRouteCost(
+        buffers,
+        clearance,
+        cache.agentSize,
+        start,
+        goal,
+        cache.field,
+      );
       cache.route = Number.isFinite(cache.cost) ? readMazeRoute(buffers, goal) : [];
       if (Number.isFinite(cache.cost)) {
         markRouteSweep(cache.route, cache.agentSize, cols, rows, cache.sweep);
@@ -183,6 +211,9 @@ export function createMazePlanningBoard(grid: GridModel): MazePlanningBoard {
     cols,
     rows,
     canPlace,
+    isObstacle(x: number, y: number): boolean {
+      return x < 0 || y < 0 || x >= cols || y >= rows || free[y * cols + x] === 0;
+    },
     place(anchor: GridPoint): void {
       invalidateOnPlace(small, anchor);
       invalidateOnPlace(large, anchor);
@@ -194,6 +225,12 @@ export function createMazePlanningBoard(grid: GridModel): MazePlanningBoard {
       const index = blocks.findLastIndex((block) => block.x === anchor.x && block.y === anchor.y);
       if (index >= 0) {
         blocks.splice(index, 1);
+      }
+      if (pinnedBlockCount !== null && index < pinnedBlockCount) {
+        // A freed cell may shorten the way out: the fields could overestimate now.
+        pinnedBlockCount = null;
+        small.field = null;
+        large.field = null;
       }
       small.cost = undefined;
       large.cost = undefined;
@@ -214,10 +251,21 @@ export function createMazePlanningBoard(grid: GridModel): MazePlanningBoard {
     evaluateSmall(): number {
       return resolveCost(small);
     },
+    smallRoute(): readonly GridPoint[] {
+      resolveCost(small);
+      return small.route;
+    },
     evaluateExposure(range: number): number {
       return Number.isFinite(resolveCost(small))
         ? countRouteExposure(small.route, blocks, range)
         : 0;
+    },
+    pinRouteHeuristics(): void {
+      for (const cache of [small, large]) {
+        cache.field ??= new Float64Array(cols * rows);
+        computeMazeDistanceField(buffers, clearance, cache.agentSize, goal, cache.field);
+      }
+      pinnedBlockCount = blocks.length;
     },
     saveRoutes(): PlanningRouteSnapshot {
       return { small: copyRouteCache(small), large: copyRouteCache(large) };

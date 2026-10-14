@@ -7,7 +7,11 @@ import type { GridModel, GridPoint } from '../../../../shared/types/grid';
 import type { MazePlanSearchEffort } from './constants';
 import { getMazeBoardKey, updateMazePlan, type MazePlan } from './mazePlan';
 
-const EFFORT: MazePlanSearchEffort = { finalistCount: 3, maxExpandedNodes: 1_000_000 };
+const EFFORT: MazePlanSearchEffort = {
+  screenedWallCount: 1_000,
+  finalistCount: 3,
+  maxExpandedNodes: 1_000_000,
+};
 
 function withBlocks(grid: GridModel, anchors: readonly GridPoint[]): GridModel {
   return anchors.reduce(

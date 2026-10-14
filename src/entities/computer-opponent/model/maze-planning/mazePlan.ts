@@ -4,7 +4,6 @@ import type { GridModel, GridPoint } from '../../../../shared/types/grid';
 import type { MazePlanSearchEffort } from './constants';
 import { createMazePlanningBoard, type MazePlanningBoard } from './mazePlanningBoard';
 import { searchMazeWalls } from './searchMazeWalls';
-import { createWallCandidates } from './wallCandidates';
 
 /**
  * The maze the computer opponent is working towards, kept across rounds so it
@@ -90,7 +89,7 @@ function search(board: MazePlanningBoard, input: MazePlanUpdateInput, budget: nu
   }));
   return searchMazeWalls({
     board,
-    candidates: createWallCandidates(board.cols, board.rows, endpointZones),
+    endpointZones,
     towerBudget: budget,
     effort: input.effort,
   });

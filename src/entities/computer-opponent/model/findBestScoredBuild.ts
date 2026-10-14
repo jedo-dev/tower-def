@@ -16,10 +16,13 @@ import type { BuildAction, DecisionContext } from './types';
  * per tower, best screened first. Every probe re-searches the small route
  * (about as many cells as the free board on a grown maze), so probing all of
  * them cost ~50,000 expansions per tower; the top few by screened score are
- * where the winner almost always is. Six missed it once a defender kept
- * walling its maze plan (seed 4, round 11 of the defending test).
+ * where the winner usually is. Six missed it once a defender kept walling
+ * its maze plan (seed 4, round 11 of the defending test); 32 still missed it
+ * on the diagonal lanes of the classic map (tower-def-oui), where a block
+ * that shuts a two-cell lane reroutes far more than its screened score
+ * shows. Defending rounds measured under 1,000 scoring expansions with 40.
  */
-export const DEFEND_REROUTE_PROBE_LIMIT = 8;
+export const DEFEND_REROUTE_PROBE_LIMIT = 40;
 
 export type FindBestScoredBuildInput = {
   context: DecisionContext;

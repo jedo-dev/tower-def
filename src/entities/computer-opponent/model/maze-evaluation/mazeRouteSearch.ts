@@ -49,6 +49,11 @@ function isInside(buffers: MazeRouteSearchBuffers, point: GridPoint): boolean {
  * so both return the same route. Returns the route cost, or Infinity when
  * unreachable; afterwards `buffers.parent` holds the route for
  * `readMazeRoute`. Only the priority queue is allocated per call.
+ *
+ * `distanceField` (see `computeMazeDistanceField`), when given, replaces the
+ * octile heuristic: distances to the goal measured on this board with fewer
+ * blocks never overestimate, so the cost stays exact, but far fewer cells are
+ * expanded inside a maze. Among equally short routes it may pick another one.
  */
 export function searchMazeRouteCost(
   buffers: MazeRouteSearchBuffers,
@@ -56,6 +61,7 @@ export function searchMazeRouteCost(
   agentSize: number,
   start: GridPoint,
   goal: GridPoint,
+  distanceField: Float64Array | null = null,
 ): number {
   const { cols, rows, costFromStart, parent, closed } = buffers;
 
@@ -130,7 +136,14 @@ export function searchMazeRouteCost(
         continue;
       }
 
-      const heuristic = octileHeuristic(targetX, targetY, goal.x, goal.y);
+      const heuristic =
+        distanceField === null
+          ? octileHeuristic(targetX, targetY, goal.x, goal.y)
+          : distanceField[target];
+      if (heuristic === Infinity) {
+        // Cut off from the goal even before the latest blocks went up.
+        continue;
+      }
       costFromStart[target] = tentativeCost;
       parent[target] = current;
       open.push(target, tentativeCost + heuristic, heuristic);
@@ -138,6 +151,72 @@ export function searchMazeRouteCost(
   }
 
   return Infinity;
+}
+
+/**
+ * Exact route cost from every cell to `goal` for an agentSize x agentSize
+ * agent (Infinity where the goal cannot be reached), by Dijkstra outwards
+ * from the goal under the same move rules as `searchMazeRouteCost`; moves are
+ * symmetric, so this is also the cost of reaching the goal. Adding blocks
+ * only ever lengthens these, so the field stays a valid heuristic for the
+ * board it was measured on plus any blocks placed later.
+ */
+export function computeMazeDistanceField(
+  buffers: MazeRouteSearchBuffers,
+  clearance: Uint8Array,
+  agentSize: number,
+  goal: GridPoint,
+  field: Float64Array,
+): void {
+  const { cols, rows, closed } = buffers;
+  field.fill(Infinity);
+  if (!isInside(buffers, goal) || clearance[goal.y * cols + goal.x] < agentSize) {
+    return;
+  }
+
+  closed.fill(0);
+  const open = createOctilePriorityQueue(cols * rows);
+  const goalIndex = goal.y * cols + goal.x;
+  field[goalIndex] = 0;
+  open.push(goalIndex, 0, 0);
+
+  while (open.size > 0) {
+    const current = open.pop();
+    if (closed[current] === 1) {
+      continue;
+    }
+    closed[current] = 1;
+    buffers.expandedNodeCount += 1;
+    const currentX = current % cols;
+    const currentY = (current - currentX) / cols;
+
+    for (let direction = 0; direction < OCTILE_DIRECTION_COUNT; direction += 1) {
+      const deltaX = OCTILE_NEIGHBOR_DX[direction];
+      const deltaY = OCTILE_NEIGHBOR_DY[direction];
+      const targetX = currentX + deltaX;
+      const targetY = currentY + deltaY;
+      if (targetX < 0 || targetX >= cols || targetY < 0 || targetY >= rows) {
+        continue;
+      }
+      const target = targetY * cols + targetX;
+      if (clearance[target] < agentSize || closed[target] === 1) {
+        continue;
+      }
+      if (
+        deltaX !== 0 &&
+        deltaY !== 0 &&
+        (clearance[currentY * cols + targetX] < agentSize ||
+          clearance[targetY * cols + currentX] < agentSize)
+      ) {
+        continue;
+      }
+      const cost = field[current] + getStepCost(direction);
+      if (cost < field[target]) {
+        field[target] = cost;
+        open.push(target, cost, 0);
+      }
+    }
+  }
 }
 
 /** Route ending at `goal` from the parents left by the last successful search, start first. */

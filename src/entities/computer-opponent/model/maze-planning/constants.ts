@@ -40,14 +40,24 @@ export const MAZE_PLAN_EXPOSURE_PER_ROUTE_CELL_CAP = 4;
  */
 export const MAZE_PLAN_MAX_ENDPOINT_STRIP_WIDTH = 4;
 
-/** Route-cost differences below this are rounding noise, not a longer maze. */
-export const MAZE_PLAN_COST_EPSILON = 1e-6;
+/**
+ * Longest wall offered that closes a passage instead of leaving a lane: a
+ * block or two that shut a gap between obstacles (a shortcut through a maze).
+ * Longer closing walls would mostly seal the board; leaving those out keeps
+ * the route searches for walls that can actually be built.
+ */
+export const MAZE_PLAN_MAX_CLOSING_WALL_BLOCKS = 2;
 
 /**
- * Wall lines screened on the cheap first pass: every other one. Neighbouring
- * lines score almost alike, and the finalists' neighbours are evaluated fully.
+ * Weighted route cost (both routes) a wall must add per block to join the
+ * plan: about half a cell per route. Below that a wall mostly buys exposure,
+ * lining a route it barely bends; such a wall once took a dozen towers on
+ * seed 1 for a detour of a few cells.
  */
-export const MAZE_PLAN_SCREENING_LINE_STRIDE = 2;
+export const MAZE_PLAN_MIN_GAIN_PER_BLOCK = 1;
+
+/** Route-cost differences below this are rounding noise, not a longer maze. */
+export const MAZE_PLAN_COST_EPSILON = 1e-6;
 
 /**
  * Unbuilt plan blocks, in plan order, weighed against each other for the next
@@ -66,6 +76,12 @@ export const MAZE_PLAN_HORIZON_ROUNDS = 6;
 /** How hard the planner searches; the difficulty dial of maze quality. */
 export type MazePlanSearchEffort = {
   /**
+   * Walls screened on the small route at a time, picked by their estimated
+   * detour per block (no route search); the next ones only get screened when
+   * none of these qualifies.
+   */
+  screenedWallCount: number;
+  /**
    * Screened walls promoted to a full (small and large route) evaluation per
    * added wall, each with the lines either side of it. More finalists catch
    * walls the small-route screen underrates.
@@ -82,8 +98,24 @@ export type MazePlanSearchEffort = {
 export const MAZE_PLAN_SEARCH_EFFORT_BY_DIFFICULTY: Readonly<
   Record<Difficulty, Readonly<MazePlanSearchEffort>>
 > = {
-  [Difficulty.EASY]: { finalistCount: 1, maxExpandedNodes: 30_000 },
-  [Difficulty.NORMAL]: { finalistCount: 2, maxExpandedNodes: 35_000 },
-  [Difficulty.HARD]: { finalistCount: 3, maxExpandedNodes: 40_000 },
-  [Difficulty.NIGHTMARE]: { finalistCount: 6, maxExpandedNodes: 60_000 },
+  [Difficulty.EASY]: {
+    screenedWallCount: 12,
+    finalistCount: 1,
+    maxExpandedNodes: 30_000,
+  },
+  [Difficulty.NORMAL]: {
+    screenedWallCount: 18,
+    finalistCount: 2,
+    maxExpandedNodes: 35_000,
+  },
+  [Difficulty.HARD]: {
+    screenedWallCount: 24,
+    finalistCount: 3,
+    maxExpandedNodes: 40_000,
+  },
+  [Difficulty.NIGHTMARE]: {
+    screenedWallCount: 36,
+    finalistCount: 6,
+    maxExpandedNodes: 45_000,
+  },
 };
