@@ -41,6 +41,7 @@ export {
   INITIAL_TOWER_LEVEL,
 } from './model/upgrade';
 export type { UpgradeCheckResult } from './model/upgrade';
+export { resolveTowerPlacementStats } from './model/placementStats';
 export type {
   BuildableTowerConfig,
   BuildableTowerId,

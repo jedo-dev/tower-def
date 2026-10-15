@@ -1,11 +1,11 @@
 import { TOWER_FOOTPRINT } from '../../../shared/constants/footprint';
 import { withFootprintOccupancy } from '../../../shared/lib/grid/footprint';
-import { UnitMoveType, type TowerTypeId } from '../../../shared/types/content-ids';
+import { UnitMoveType, type RaceId, type TowerTypeId } from '../../../shared/types/content-ids';
 import { calculateAirRoute } from '../../../shared/lib/pathfinding/airRoute';
 import type { GridModel } from '../../../shared/types/grid';
 import type { GridPosition } from '../../../shared/types/pathfinding';
 import type { TowerEntity } from '../../tower/model/types';
-import { TOWER_BASE_LEVEL, TOWER_COMBAT_STATS_BY_TYPE } from '../../tower/model/types';
+import { createComputerTowerEntity } from './computerTowerEntity';
 import { getTowerCostForType } from './buildSpendBudget';
 import {
   collectInvestmentTypes,
@@ -54,19 +54,20 @@ function createPlannedTower(
   towerType: TowerTypeId,
   position: GridPosition,
   cost: number,
+  raceId: RaceId,
 ): TowerEntity {
-  return {
-    id: `planned:tower:${position.x}:${position.y}`,
+  return createComputerTowerEntity(
+    `planned:tower:${position.x}:${position.y}`,
+    towerType,
     position,
     cost,
-    type: towerType,
-    level: TOWER_BASE_LEVEL,
-    combatStats: { ...TOWER_COMBAT_STATS_BY_TYPE[towerType] },
-  };
+    raceId,
+  );
 }
 
 function recordBuild(
   round: BuildRoundState,
+  raceId: RaceId,
   towerType: TowerTypeId,
   position: GridPosition,
   cost: number,
@@ -74,7 +75,7 @@ function recordBuild(
 ): void {
   round.actions.push({ kind: 'build', towerType, position });
   round.plannedPositions.push(position);
-  round.plannedTowers.push(createPlannedTower(towerType, position, cost));
+  round.plannedTowers.push(createPlannedTower(towerType, position, cost, raceId));
   round.grid = withFootprintOccupancy(round.grid, position, TOWER_FOOTPRINT, true);
   round.remainingBudget -= cost;
   round.buildCount += 1;
@@ -183,7 +184,7 @@ export function investInPlan(
   for (const build of investment.builds) {
     const kind = build.towerType === wall?.towerType ? 'maze wall' : 'damage tower';
     const note = `${kind} of the plan, +${build.routeGain.toFixed(1)} route cells`;
-    recordBuild(round, build.towerType, build.anchor, build.cost, note);
+    recordBuild(round, context.raceId, build.towerType, build.anchor, build.cost, note);
   }
   investment.upgrades.forEach((upgrade) => recordUpgrade(round, upgrade));
   return (selection?.anchors.length ?? 0) < count;
@@ -254,7 +255,7 @@ function buildScoredTowers(
     }
 
     const note = `+${build.routeGain.toFixed(1)} route cost`;
-    recordBuild(round, build.towerType, build.position, cost, note);
+    recordBuild(round, context.raceId, build.towerType, build.position, cost, note);
     // The last tower of the round needs no route search of its own.
     if (round.buildCount < maxBuilds) {
       evaluator.place(build.position);

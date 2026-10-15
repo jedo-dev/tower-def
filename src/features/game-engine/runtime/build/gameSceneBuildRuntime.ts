@@ -1,11 +1,7 @@
 import { TowerTypeId } from '../../../../shared/types/content-ids';
 import { canSpendGold, spendGold } from '../../../../entities/player-resources';
-import type {
-  BuildableTowerConfig,
-  TowerCombatStats,
-  TowerEntity,
-} from '../../../../entities/tower';
-import { TOWER_BASE_LEVEL, TOWER_COMBAT_STATS_BY_TYPE } from '../../../../entities/tower';
+import type { BuildableTowerConfig, TowerEntity } from '../../../../entities/tower';
+import { TOWER_BASE_LEVEL, resolveTowerPlacementStats } from '../../../../entities/tower';
 import { TOWER_FOOTPRINT } from '../../../../shared/constants/footprint';
 import type { Footprint, GridCell, GridModel } from '../../../../shared/types/grid';
 import type { GridPosition } from '../../../../shared/types/pathfinding';
@@ -60,37 +56,6 @@ export type BuildSellResult = {
   removedTowerId: string | null;
   refundAmount: number;
 };
-
-/**
- * A tower fights with its authored numbers when content declares them, and with
- * the archetype defaults otherwise.
- */
-function resolvePlacementStats(
-  towerType: TowerTypeId,
-  authoredTower: BuildableTowerConfig | null,
-): TowerCombatStats {
-  const archetypeStats = TOWER_COMBAT_STATS_BY_TYPE[towerType];
-
-  if (!authoredTower) {
-    return { ...archetypeStats };
-  }
-
-  const authoredLevelOne = authoredTower.levels?.[0]?.stats;
-
-  return {
-    ...archetypeStats,
-    ...(authoredLevelOne ?? {}),
-    damage: authoredLevelOne?.damage ?? authoredTower.damage,
-    range: authoredLevelOne?.range ?? authoredTower.range,
-    attackCooldownMs: authoredLevelOne?.attackCooldownMs ?? authoredTower.attackCooldownMs,
-    ...(authoredTower.splashRadius === undefined
-      ? {}
-      : { splashRadius: authoredTower.splashRadius }),
-    ...(authoredTower.onHitEffects.length === 0
-      ? {}
-      : { onHitEffects: authoredTower.onHitEffects }),
-  };
-}
 
 function resolveSelectedTowerType(deps: BuildRuntimeDeps): TowerTypeId {
   return deps.selectedTowerType ?? TowerTypeId.SINGLE;
@@ -176,7 +141,7 @@ export function tryPlaceTowerAtHoveredCell(
       ? { buildableTowerId: authoredTower.id, allowedTargets: authoredTower.allowedTargets }
       : {}),
     level: TOWER_BASE_LEVEL,
-    combatStats: resolvePlacementStats(towerType, authoredTower),
+    combatStats: resolveTowerPlacementStats(towerType, authoredTower),
   };
 
   state.playerGold = spendGoldResult.resources.gold;

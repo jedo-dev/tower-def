@@ -9,9 +9,14 @@
 
       "allowedTargets": "both",
       "costGold": 50,
-      "damage": 20,
+      "damage": 25,
       "range": 6,
       "attackCooldownMs": 800,
+      "levels": [
+        { "level": 1, "upgradeCostGold": 0, "damage": 25, "range": 6, "attackCooldownMs": 800 },
+        { "level": 2, "upgradeCostGold": 40, "damage": 37, "range": 6.4, "attackCooldownMs": 750 },
+        { "level": 3, "upgradeCostGold": 80, "damage": 50, "range": 6.8, "attackCooldownMs": 700 }
+      ],
       "spriteKey": "tower.human.guard_archer",
       "description": "Disciplined marksmen watch over fortified walls.",
       "lore": "A watchtower with a roster, a bell and a sergeant. Shifts change at dawn and the arrows never stop."

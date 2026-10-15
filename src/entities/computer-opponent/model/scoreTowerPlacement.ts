@@ -3,9 +3,10 @@ import type { GridPosition } from '../../../shared/types/pathfinding';
 import {
   canTargetScopeHitMoveType,
   UnitMoveType,
+  type TowerTargetScope,
   type TowerTypeId,
 } from '../../../shared/types/content-ids';
-import type { TowerEntity } from '../../tower/model/types';
+import type { TowerCombatStats, TowerEntity } from '../../tower/model/types';
 import {
   getTowerArchetype,
   resolveTowerTargetScope,
@@ -110,6 +111,10 @@ type ScorePlacementInput = {
   airPath?: readonly GridPosition[];
   /** Share of the next wave's health that flies (0..1); 0 or absent ignores the air line. */
   airThreatShare?: number;
+  /** The race's authored target scope for `towerType`; the archetype's when absent. */
+  allowedTargets?: TowerTargetScope;
+  /** The race's authored level 1 stats for `towerType`; the archetype's when absent. */
+  combatStats?: TowerCombatStats;
 };
 
 function euclideanDistance(a: GridPosition, b: GridPosition): number {
@@ -166,21 +171,18 @@ function countTowersInAuraRadius(
   ).length;
 }
 
-/** Share of `path` a tower of `towerType` at `position` reaches; 0 when it cannot shoot that lane. */
+/** Share of `path` a tower of `towerType` at `position` reaches; 0 when its scope cannot shoot that lane. */
 function computeLaneCoverage(
   position: GridPosition,
-  towerType: TowerTypeId,
+  range: number,
+  scope: TowerTargetScope,
   path: readonly GridPosition[],
   moveType: UnitMoveType,
 ): number {
-  const stats = TOWER_COMBAT_STATS_BY_TYPE[towerType];
-  if (!stats || path.length === 0) {
+  if (path.length === 0 || !canTargetScopeHitMoveType(scope, moveType)) {
     return 0;
   }
-  if (!canTargetScopeHitMoveType(resolveTowerTargetScope({ type: towerType }), moveType)) {
-    return 0;
-  }
-  return countPathCellsInRange(position, stats.range, path) / path.length;
+  return countPathCellsInRange(position, range, path) / path.length;
 }
 
 /**
@@ -191,6 +193,8 @@ function computeLaneCoverage(
 function computePathCoverageScore(
   position: GridPosition,
   towerType: TowerTypeId,
+  range: number,
+  scope: TowerTargetScope,
   path: readonly GridPosition[],
   existingTowers: readonly TowerEntity[],
   airPath: readonly GridPosition[] | undefined,
@@ -209,12 +213,12 @@ function computePathCoverageScore(
     return countTowersInAuraRadius(position, towerType, existingTowers) / damageTowerCount;
   }
 
-  const ground = computeLaneCoverage(position, towerType, path, UnitMoveType.GROUND);
+  const ground = computeLaneCoverage(position, range, scope, path, UnitMoveType.GROUND);
   if (!airPath || airThreatShare <= 0) {
     return ground;
   }
   const share = Math.min(1, airThreatShare);
-  const air = computeLaneCoverage(position, towerType, airPath, UnitMoveType.AIR);
+  const air = computeLaneCoverage(position, range, scope, airPath, UnitMoveType.AIR);
   return (1 - share) * ground + share * air;
 }
 
@@ -290,6 +294,8 @@ export function scoreTowerPlacement(input: ScorePlacementInput): PlacementScore 
   const pathCoverageScore = computePathCoverageScore(
     center,
     towerType,
+    (input.combatStats ?? TOWER_COMBAT_STATS_BY_TYPE[towerType]).range,
+    resolveTowerTargetScope({ type: towerType, allowedTargets: input.allowedTargets }),
     effectivePath,
     existingTowers,
     input.airPath,

@@ -1,10 +1,11 @@
 import { getCellAt } from '../../../shared/lib/grid/getCellAt';
 import { calculateAirRoute } from '../../../shared/lib/pathfinding/airRoute';
-import type { TowerTypeId } from '../../../shared/types/content-ids';
+import type { TowerTargetScope, TowerTypeId } from '../../../shared/types/content-ids';
 import type { GridModel } from '../../../shared/types/grid';
 import type { GridPosition } from '../../../shared/types/pathfinding';
-import type { TowerEntity } from '../../tower/model/types';
-import { getTowerCostForType } from './buildSpendBudget';
+import type { TowerCombatStats, TowerEntity } from '../../tower/model/types';
+import { resolveTowerPlacementStats } from '../../tower/model/placementStats';
+import { getRaceTowerConfig } from './buildSpendBudget';
 import type { PathProbe, PathProbeResult } from './createPathProbe';
 import type { MazeEvaluator } from './maze-evaluation';
 import type { MazePlanPriority } from './maze-planning';
@@ -49,7 +50,12 @@ export type ScoredBuild = BuildAction & {
   routeGain: number;
 };
 
-type PricedTower = { towerType: TowerTypeId; cost: number };
+type PricedTower = {
+  towerType: TowerTypeId;
+  cost: number;
+  allowedTargets: TowerTargetScope;
+  combatStats: TowerCombatStats;
+};
 
 type ScoredCandidate = PricedTower & {
   position: GridPosition;
@@ -66,9 +72,14 @@ const SEALED: PathProbeResult = Object.freeze({ path: null, cost: 0, gain: 0 });
 function collectPricedTowers(context: DecisionContext, budget: number): PricedTower[] {
   const priced: PricedTower[] = [];
   for (const towerType of context.affordableTowers) {
-    const cost = getTowerCostForType(towerType, context.raceId);
-    if (cost !== null && cost > 0 && cost <= budget) {
-      priced.push({ towerType, cost });
+    const authored = getRaceTowerConfig(towerType, context.raceId);
+    if (authored && authored.costGold > 0 && authored.costGold <= budget) {
+      priced.push({
+        towerType,
+        cost: authored.costGold,
+        allowedTargets: authored.allowedTargets,
+        combatStats: resolveTowerPlacementStats(towerType, authored),
+      });
     }
   }
   return priced;
@@ -134,7 +145,8 @@ export function findBestScoredBuild(input: FindBestScoredBuildInput): ScoredBuil
   /** Scores one anchor for every priced tower type against the route in `result`. */
   function scoreAnchor(position: GridPosition, positionIndex: number, result: PathProbeResult) {
     const pathProbe = toPathProbe(result);
-    return pricedTowers.map(({ towerType, cost }, typeIndex): ScoredCandidate | null => {
+    return pricedTowers.map((priced, typeIndex): ScoredCandidate | null => {
+      const { towerType, cost, allowedTargets, combatStats } = priced;
       const score = scoreTowerPlacement({
         grid,
         position,
@@ -146,6 +158,8 @@ export function findBestScoredBuild(input: FindBestScoredBuildInput): ScoredBuil
         weights,
         airPath,
         airThreatShare,
+        allowedTargets,
+        combatStats,
       });
       // Value per gold, not raw value: a cheap tower walls a cell just as well
       // as a pricey one, so raw scores would overpay for every brick.
@@ -153,6 +167,8 @@ export function findBestScoredBuild(input: FindBestScoredBuildInput): ScoredBuil
         ? {
             towerType,
             cost,
+            allowedTargets,
+            combatStats,
             position,
             typeIndex,
             positionIndex,

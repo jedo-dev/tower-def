@@ -3,9 +3,9 @@ import { withFootprintOccupancy } from '../../../../shared/lib/grid/footprint';
 import type { RaceId, TowerTypeId } from '../../../../shared/types/content-ids';
 import type { GridModel, GridPoint } from '../../../../shared/types/grid';
 import type { TowerCombatStats, TowerEntity } from '../../../tower/model/types';
-import { TOWER_COMBAT_STATS_BY_TYPE } from '../../../tower/model/types';
-import { getTowerStatsForLevel, getUpgradeCost } from '../../../tower/model/upgrade';
-import { getTowerCostForType } from '../buildSpendBudget';
+import { resolveTowerPlacementStats } from '../../../tower/model/placementStats';
+import { getTowerStatsForTowerLevel, getUpgradeCost } from '../../../tower/model/upgrade';
+import { getRaceTowerConfig } from '../buildSpendBudget';
 import { MAZE_ROUTE_GAIN_WEIGHTS } from '../maze-evaluation/constants';
 import { createMazeEvaluator } from '../maze-evaluation/createMazeEvaluator';
 import type { MazeRoutes } from '../maze-evaluation/types';
@@ -65,9 +65,10 @@ export function createPlannedRoute(grid: GridModel, unbuilt: readonly GridPoint[
   };
 }
 
+/** The tower's own stats at its level (its race's authored curve when it has one), before auras. */
 function statsAtLevel(tower: TowerEntity): TowerCombatStats {
   return (
-    getTowerStatsForLevel(tower.type, tower.level) ?? tower.baseCombatStats ?? tower.combatStats
+    getTowerStatsForTowerLevel(tower, tower.level) ?? tower.baseCombatStats ?? tower.combatStats
   );
 }
 
@@ -91,7 +92,7 @@ export function collectUpgradeCandidates(
       return;
     }
     const cost = getUpgradeCost(tower.type, tower.level);
-    const nextStats = getTowerStatsForLevel(tower.type, tower.level + 1);
+    const nextStats = getTowerStatsForTowerLevel(tower, tower.level + 1);
     if (cost !== null && cost > 0 && nextStats) {
       candidates.push({ towerId: tower.id, ledgerIndex, cost, nextStats });
     }
@@ -99,16 +100,24 @@ export function collectUpgradeCandidates(
   return candidates;
 }
 
-/** Every affordable type with its race price and level 1 stats, cheapest first. */
+/**
+ * Every affordable type with its race price, level 1 stats and the race's
+ * authored target scope, cheapest first.
+ */
 export function collectInvestmentTypes(
   towerTypes: readonly TowerTypeId[],
   raceId: RaceId,
 ): InvestmentTowerType[] {
   const types: InvestmentTowerType[] = [];
   for (const towerType of towerTypes) {
-    const cost = getTowerCostForType(towerType, raceId);
-    if (cost !== null && cost > 0) {
-      types.push({ towerType, cost, stats: { ...TOWER_COMBAT_STATS_BY_TYPE[towerType] } });
+    const authored = getRaceTowerConfig(towerType, raceId);
+    if (authored && authored.costGold > 0) {
+      types.push({
+        towerType,
+        cost: authored.costGold,
+        stats: resolveTowerPlacementStats(towerType, authored),
+        allowedTargets: authored.allowedTargets,
+      });
     }
   }
   return types.sort((left, right) => left.cost - right.cost);
