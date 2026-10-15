@@ -68,11 +68,12 @@ function resolveDisabledReason(
   isAffordable: boolean,
   cost: number,
 ): string | null {
+  // Short enough to fit two 9px lines on a creep card at 360px.
   if (isBattleActive) {
-    return 'sending is locked during battle';
+    return 'locked in battle';
   }
   if (isWaveCapReached) {
-    return 'wave send limit reached';
+    return 'wave limit reached';
   }
   if (isAtTypeCap) {
     return 'send limit reached';
