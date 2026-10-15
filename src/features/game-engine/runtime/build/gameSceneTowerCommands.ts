@@ -155,8 +155,16 @@ export function trySellTowerAtHoveredCell(deps: TowerCommandDeps): void {
   deps.updateBuildPreview();
 }
 
-/** Selects the player tower standing on the hovered cell, whichever of its cells it is. */
+/**
+ * Selects the player tower standing on the hovered cell, whichever of its
+ * cells it is. The opponent view is read-only: the player's towers sit under
+ * the enemy board there, so a tap must not open their actions.
+ */
 export function trySelectTowerAtHoveredCell(deps: TowerCommandDeps): boolean {
+  if (!deps.isPlayerViewActive()) {
+    return false;
+  }
+
   const hoveredCell = deps.getHoveredCell();
   if (!hoveredCell || !deps.getGridModel()) {
     return false;

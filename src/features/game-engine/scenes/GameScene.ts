@@ -159,6 +159,7 @@ import {
   tryStartNextWave as tryStartNextWaveRuntime,
   updateAutoWaveCountdown as updateAutoWaveCountdownRuntime,
 } from '../runtime/wave/gameSceneWaveRuntime';
+import { resolveAutoStartSecondsLeft } from '../runtime/wave/autoStartCountdown';
 import {
   clearFieldWaveSchedule,
   createOpponentFieldWaveState,
@@ -199,6 +200,7 @@ import {
   resolveBuildableTowerConfig,
   resolveBuilderFaction,
   resolveFactionUnits,
+  resolveHudWaveNumber,
   mapDuelEndReasonToOutcomeReason,
   resolveMatchOutcomeStatus,
   resolveTowerRangeCells,
@@ -464,6 +466,7 @@ export class GameScene extends Phaser.Scene {
     // Draws the build-phase routes before the first pointer move.
     this.updateBuildPreview();
     this.publishHudSnapshot();
+    publishGameEvent('match-started', { trigger: 'setup' });
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, this.handleSceneShutdown, this);
     this.events.once(Phaser.Scenes.Events.DESTROY, this.handleSceneShutdown, this);
   }
@@ -593,6 +596,10 @@ export class GameScene extends Phaser.Scene {
         }
 
         this.activeBattlefieldView = payload.activeView;
+        if (payload.activeView !== 'player') {
+          // The opponent view is read-only: close the player's tower actions.
+          publishGameEvent('selected-tower', { tower: null });
+        }
         this.renderVisibleBattlefield();
         this.publishHudSnapshot();
       }),
@@ -1029,6 +1036,8 @@ export class GameScene extends Phaser.Scene {
 
     this.drawGrid();
     publishGameEvent('selected-tower', { tower: null });
+    // Last, so nothing the reset itself emitted outlives it in per-match UI.
+    publishGameEvent('match-started', { trigger: 'restart' });
   }
 
   /** The enemy faction chosen at setup: the roster the baseline wave rolls from. */
@@ -1130,6 +1139,9 @@ export class GameScene extends Phaser.Scene {
       return;
     }
 
+    // From here on this is the wave being fought; the HUD counts it as such.
+    this.runState.currentWaveNumber += 1;
+    this.registry.set('wave.number', this.runState.currentWaveNumber);
     this.runState.activeCreepRoutes = waveRoutes;
     // The path preview shows the single-cell route; large creeps may walk wider.
     this.pathCellKeys = new Set(waveRoutes.small.map((cell) => `${cell.x}:${cell.y}`));
@@ -1161,8 +1173,6 @@ export class GameScene extends Phaser.Scene {
     this.updateBuildPreview();
     this.runState.isWaveCompletionRewardGranted = false;
     this.runState.nextWaveStartsAtMs = null;
-    this.runState.currentWaveNumber += 1;
-    this.registry.set('wave.number', this.runState.currentWaveNumber);
     this.renderVisibleBattlefield();
     this.publishHudSnapshot();
   }
@@ -1236,8 +1246,8 @@ export class GameScene extends Phaser.Scene {
 
   private publishHudSnapshot(): void {
     const autoStartSecondsLeft =
-      !this.isGameOver && this.canPerformBuildActions() && this.runState.nextWaveStartsAtMs !== null
-        ? Math.max(0, Math.ceil((this.runState.nextWaveStartsAtMs - this.time.now) / 1000))
+      !this.isGameOver && this.canPerformBuildActions()
+        ? resolveAutoStartSecondsLeft(this.runState.nextWaveStartsAtMs, this.time.now)
         : null;
 
     const snapshot: GameHudSnapshot = {
@@ -1253,7 +1263,7 @@ export class GameScene extends Phaser.Scene {
         reason: this.matchOutcomeReason,
       },
       builderFactionName: resolveBuilderFaction(this.selectedBuilderFactionId).name,
-      waveNumber: this.runState.currentWaveNumber,
+      waveNumber: resolveHudWaveNumber(this.runState.currentWaveNumber, this.wavePhaseState.phase),
       phase: this.wavePhaseState.phase,
       canStartWave: !this.isGameOver && this.canPerformBuildActions(),
       selectedTowerType: this.selectedTowerType,

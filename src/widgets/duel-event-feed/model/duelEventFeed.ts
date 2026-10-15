@@ -19,6 +19,11 @@ export function appendFeedEntry(
   return next.length > limit ? next.slice(next.length - limit) : next;
 }
 
+/** A new match starts with an empty feed. */
+export function clearFeedEntries(): DuelFeedEntry[] {
+  return [];
+}
+
 export function formatSendQueueUpdated(payload: GameEventMap['send-queue-updated']): string | null {
   if (payload.queue.length === 0) {
     return null;

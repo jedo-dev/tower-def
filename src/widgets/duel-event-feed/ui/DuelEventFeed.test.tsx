@@ -44,6 +44,28 @@ describe('DuelEventFeed render', () => {
     expect(consoleError).not.toHaveBeenCalled();
   });
 
+  it('clears the previous match on match-started (rematch regression)', () => {
+    render(<DuelEventFeed />);
+
+    act(() => {
+      publishGameEvent('income-updated', { owner: 'player', income: 60, delta: 10 });
+      publishGameEvent('lives-stolen', { thief: 'opponent', lives: 2, hp: 22 });
+    });
+    expect(screen.getByRole('log').children).toHaveLength(2);
+
+    act(() => {
+      publishGameEvent('match-started', { trigger: 'restart' });
+    });
+    expect(screen.queryByRole('log')).toBeNull();
+
+    act(() => {
+      publishGameEvent('income-updated', { owner: 'opponent', income: 55, delta: 5 });
+    });
+    expect(screen.getByRole('log').children).toHaveLength(1);
+    expect(screen.getByText('Enemy income +5 → 55')).toBeDefined();
+    expect(consoleError).not.toHaveBeenCalled();
+  });
+
   it('stops listening after unmount', () => {
     const { unmount } = render(<DuelEventFeed />);
     unmount();

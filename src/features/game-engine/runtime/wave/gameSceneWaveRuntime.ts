@@ -26,6 +26,7 @@ import type { GridPosition } from '../../../../shared/types/pathfinding';
 import type { SoundId } from '../../../../shared/lib/sound-registry/audio.types';
 import type { CreepRenderState, PendingWaveSpawn } from '../../scenes/gameScene.types';
 import { destroyCreepRenderState } from '../combat/creepEffectVisuals';
+import { resolveAutoStartSecondsLeft } from './autoStartCountdown';
 import { scheduleWaveSpawns } from './waveSpawnCore';
 import { isFieldWaveResolved, resolveWaveSpawnTiming } from './fieldWaveSpawns';
 
@@ -38,6 +39,7 @@ export type WaveRuntimeState = {
   nextWaveStartsAtMs: number | null;
   playerGold: number;
   isGameOver: boolean;
+  /** Waves started so far: the wave being fought, or 0 before the first. */
   currentWaveNumber: number;
   lastPublishedAutoStartSecondsLeft: number | null;
 };
@@ -94,7 +96,7 @@ export function createPlayerWaveRuntimeState(
     nextWaveStartsAtMs: null,
     playerGold: initialResources.gold,
     isGameOver: false,
-    currentWaveNumber: 1,
+    currentWaveNumber: 0,
     lastPublishedAutoStartSecondsLeft: null,
   };
 }
@@ -181,7 +183,7 @@ export function updateAutoWaveCountdown(
     return false;
   }
 
-  const nextSecondsLeft = Math.max(0, Math.ceil((state.nextWaveStartsAtMs - nowMs) / 1000));
+  const nextSecondsLeft = resolveAutoStartSecondsLeft(state.nextWaveStartsAtMs, nowMs);
   if (state.lastPublishedAutoStartSecondsLeft === nextSecondsLeft) return false;
 
   state.lastPublishedAutoStartSecondsLeft = nextSecondsLeft;
@@ -205,7 +207,7 @@ export function resetRunToInitialState(state: WaveRuntimeState): void {
   state.playerGold = initialResources.gold;
   state.wavePhaseState = resetWavePhaseState();
   state.isGameOver = false;
-  state.currentWaveNumber = 1;
+  state.currentWaveNumber = 0;
   state.lastPublishedAutoStartSecondsLeft = null;
 }
 

@@ -111,6 +111,11 @@ export type GameCommandMap = {
 };
 
 export type GameEventMap = {
+  /**
+   * A match begins on a clean slate: at scene start and on every restart.
+   * Per-match UI state (the duel event feed) resets on it.
+   */
+  'match-started': { trigger: 'setup' | 'restart' };
   'selected-tower': { tower: SelectedTowerSnapshot | null };
   'battlefield-view-changed': {
     activeView: BattlefieldView;

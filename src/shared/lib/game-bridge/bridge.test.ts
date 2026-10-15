@@ -1,14 +1,19 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
   clearGameSetupConfig,
+  createInitialGameHudSnapshot,
   getActiveBattlefieldView,
+  getGameHudSnapshot,
   getGameSetupConfig,
   onGameCommand,
   onGameEvent,
   publishGameEvent,
   publishGameHudSnapshot,
+  requestBattlefieldView,
+  resetGameBridgeState,
   sendGameCommand,
   setGameSetupConfig,
+  subscribeGameHudSnapshot,
 } from './bridge';
 import type {
   BattlefieldView,
@@ -355,6 +360,36 @@ describe('game bridge event system', () => {
       .map(([filePath]) => filePath);
 
     expect(offenders).toEqual([]);
+  });
+
+  it('resets to the neutral snapshot and the player view when a game is destroyed', () => {
+    publishGameHudSnapshot(createTestHudSnapshot({ gold: 320, phase: 'wave', waveNumber: 4 }));
+    expect(requestBattlefieldView('opponent')).toBe(true);
+    const onSnapshot = vi.fn();
+    const onViewChanged = vi.fn();
+    const onFieldCreeps = vi.fn();
+    const stopSnapshot = subscribeGameHudSnapshot(onSnapshot);
+    const stopView = onGameEvent('battlefield-view-changed', onViewChanged);
+    const stopFieldCreeps = onGameEvent('opponent-field-creeps-updated', onFieldCreeps);
+
+    resetGameBridgeState();
+
+    expect(getGameHudSnapshot()).toEqual(createInitialGameHudSnapshot());
+    expect(getActiveBattlefieldView()).toBe('player');
+    expect(onSnapshot).toHaveBeenCalledTimes(1);
+    expect(onViewChanged).toHaveBeenCalledWith({
+      activeView: 'player',
+      requestedView: 'player',
+      accepted: true,
+    });
+    expect(onFieldCreeps).toHaveBeenCalledWith({ remaining: 0 });
+
+    // Idempotent: a second reset does not re-announce the view.
+    resetGameBridgeState();
+    expect(onViewChanged).toHaveBeenCalledTimes(1);
+    stopSnapshot();
+    stopView();
+    stopFieldCreeps();
   });
 });
 
