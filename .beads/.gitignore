@@ -50,3 +50,6 @@ sem/
 # bd 1.x embedded Dolt store and local backups
 embeddeddolt/
 backup/
+
+# Local agent interaction log
+interactions.jsonl
