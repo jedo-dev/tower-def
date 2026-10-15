@@ -7,6 +7,7 @@ import type { DuelMatchState } from '../../../entities/duel-match';
 import type { WavePhaseState } from '../../wave-phase';
 import type { BattlefieldView } from '../../../shared/lib/game-bridge/types';
 import type { GridModel } from '../../../shared/types/grid';
+import type { GridPosition } from '../../../shared/types/pathfinding';
 import type { BattlefieldRenderState } from '../runtime/battlefield/battlefieldRenderState';
 import type { CameraView } from '../runtime/camera/cameraViewMapping';
 import type { GridRendererState } from '../runtime/grid/gameSceneGridRenderer';
@@ -108,4 +109,6 @@ export type GameSceneInspection = {
   cameraView: CameraView;
   /** Zoom relative to the fit zoom (1 = whole board). */
   cameraZoomFactor: number;
+  /** Block armed by a first touch tap, awaiting its confirming tap. */
+  pendingPlacementAnchor: GridPosition | null;
 };

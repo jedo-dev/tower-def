@@ -26,6 +26,7 @@ import {
 } from '../../wave-phase';
 import type { GridCell, GridModel, GridPoint } from '../../../shared/types/grid';
 import type { GridPosition } from '../../../shared/types/pathfinding';
+import { getControlSettings } from '../../../shared/lib/control-settings/controlSettingsStore';
 import {
   getGameSetupConfig,
   onGameCommand,
@@ -100,6 +101,7 @@ import {
   type BuildRuntimeDeps,
   type BuildRuntimeState,
 } from '../runtime/build/gameSceneBuildRuntime';
+import { resolvePlacementTap } from '../runtime/build/placementConfirmation';
 import {
   handleSellTowerCommand,
   handleUpgradeTowerCommand,
@@ -248,6 +250,8 @@ export class GameScene extends Phaser.Scene {
   private isSceneCleanedUp = false;
   private hoveredCell: GridPosition | null = null;
   private hoveredBuildAnchor: GridPosition | null = null;
+  /** Block armed by a first touch tap; the preview stays on it until it is built or moved. */
+  private pendingPlacementAnchor: GridPosition | null = null;
   private gridModel: GridModel | null = null;
   private readonly gridRendererState: GridRendererState = {
     gridGraphics: null,
@@ -460,7 +464,13 @@ export class GameScene extends Phaser.Scene {
       gridRenderer: this.gridRendererState,
       cameraView: this.getBoardCamera().view,
       cameraZoomFactor: getBoardZoomFactor(this.getBoardCamera()),
+      pendingPlacementAnchor: this.pendingPlacementAnchor,
     };
+  }
+
+  /** The block the preview shows: the armed one on touch, else the hovered one. */
+  private getPreviewAnchor(): GridPosition | null {
+    return this.pendingPlacementAnchor ?? this.hoveredBuildAnchor;
   }
 
   private getBoardCamera(): BoardCameraState {
@@ -757,6 +767,7 @@ export class GameScene extends Phaser.Scene {
         if (payload.activeView !== 'player') {
           // The opponent view is read-only: close the player's tower actions.
           publishGameEvent('selected-tower', { tower: null });
+          this.pendingPlacementAnchor = null;
         }
         this.renderVisibleBattlefield();
         this.publishHudSnapshot();
@@ -892,7 +903,7 @@ export class GameScene extends Phaser.Scene {
         overlay: this.buildPreviewOverlay,
         gridGraphics: this.gridRendererState.gridGraphics,
         gridModel: this.gridModel,
-        hoveredBuildAnchor: this.hoveredBuildAnchor,
+        hoveredBuildAnchor: this.getPreviewAnchor(),
         canPerformBuildActions: this.canPerformBuildActions(),
         selectedTowerRangeCells: resolveTowerRangeCells(this.selectedTowerType),
         isBuildAnchorValid: (anchor, grid) => this.isBuildAnchorValid(anchor, grid),
@@ -906,7 +917,7 @@ export class GameScene extends Phaser.Scene {
       {
         grid: this.gridModel,
         isBuildPhase: this.canPerformBuildActions(),
-        hoveredAnchor: this.hoveredBuildAnchor,
+        hoveredAnchor: this.getPreviewAnchor(),
         isHoveredAnchorValid,
         hasAirCreeps: this.doesFacedRosterHaveAirCreeps(),
       },
@@ -1174,6 +1185,7 @@ export class GameScene extends Phaser.Scene {
     this.placedTowerCostsByCellKey.clear();
     this.hoveredCell = null;
     this.hoveredBuildAnchor = null;
+    this.pendingPlacementAnchor = null;
     this.buildPreviewOverlay?.clear();
     markRoutePreviewLayoutChanged(this.routePreview);
     this.pathCellKeys.clear();
@@ -1230,6 +1242,10 @@ export class GameScene extends Phaser.Scene {
   }
 
   private handlePointerMove(pointer: Phaser.Input.Pointer): void {
+    if (!pointer.wasTouch && this.pendingPlacementAnchor) {
+      // Back on a mouse: the preview follows the cursor again.
+      this.pendingPlacementAnchor = null;
+    }
     handlePointerMoveRuntime(
       this.inputControllerState,
       this.inputControllerDeps,
@@ -1292,8 +1308,36 @@ export class GameScene extends Phaser.Scene {
     }
 
     const isBuildTap = this.activeBattlefieldView === 'player' && this.canPerformBuildActions();
-    tryPlaceTowerAtHoveredCell(this.towerCommandDeps);
+    const confirmsWithSecondTap =
+      pointer.wasTouch && getControlSettings().confirmPlacementWithSecondTap;
+    if (isBuildTap && confirmsWithSecondTap) {
+      this.handleTwoTapPlacement();
+    } else {
+      this.pendingPlacementAnchor = null;
+      tryPlaceTowerAtHoveredCell(this.towerCommandDeps);
+    }
     return isBuildTap ? 'build-tap' : 'board-tap';
+  }
+
+  /** First tap arms the hovered block; a second tap on it builds (a refusal keeps it armed). */
+  private handleTwoTapPlacement(): void {
+    if (!this.hoveredBuildAnchor) {
+      return;
+    }
+    const decision = resolvePlacementTap(this.pendingPlacementAnchor, this.hoveredBuildAnchor);
+    if (decision.kind === 'arm') {
+      this.pendingPlacementAnchor = decision.anchor;
+      this.soundManager?.play('ui.click');
+      this.updateBuildPreview();
+      return;
+    }
+
+    const towersBefore = this.playerField.towers.length;
+    tryPlaceTowerAtHoveredCell(this.towerCommandDeps);
+    if (this.playerField.towers.length > towersBefore) {
+      this.pendingPlacementAnchor = null;
+      this.updateBuildPreview();
+    }
   }
 
   private handleGameOut(): void {
@@ -1352,6 +1396,7 @@ export class GameScene extends Phaser.Scene {
     if (!this.soundManager?.isPlaying('ambient.tension')) {
       this.soundManager?.play('ambient.tension');
     }
+    this.pendingPlacementAnchor = null;
     this.registry.set('phase.build.active', this.canPerformBuildActions());
     this.updateGridOverlayVisualState();
     this.updateBuildPreview();
@@ -1563,5 +1608,6 @@ export class GameScene extends Phaser.Scene {
     this.soundManager = null;
     this.hoveredCell = null;
     this.hoveredBuildAnchor = null;
+    this.pendingPlacementAnchor = null;
   }
 }

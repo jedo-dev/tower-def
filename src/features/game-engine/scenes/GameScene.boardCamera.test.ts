@@ -120,6 +120,10 @@ describe('GameScene board camera: pinch zoom and pan (tower-def-d9f.1)', () => {
       game.dragTouch({ x: 300, y: 300 }, { x: 180, y: 220 });
       expect(zoomFactor(game)).toBeGreaterThan(1.5);
 
+      // Two-tap confirmation (the touch default): the first tap arms the block.
+      game.touchTapAt(game.anchorScreenPoint(MID_BOARD_ANCHOR));
+      expect(game.inspect().pendingPlacementAnchor).toEqual(MID_BOARD_ANCHOR);
+      game.tick(ACTION_COOLDOWN_FRAMES);
       game.touchTapAt(game.anchorScreenPoint(MID_BOARD_ANCHOR));
 
       expect(game.inspect().playerField.towers.map((tower) => tower.entity.position)).toEqual([

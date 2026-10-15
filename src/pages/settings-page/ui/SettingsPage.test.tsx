@@ -1,7 +1,12 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { MUTE_TOGGLE_LABEL, SettingsPage, type SettingsPageProps } from './SettingsPage';
+import {
+  CONFIRM_PLACEMENT_LABEL,
+  MUTE_TOGGLE_LABEL,
+  SettingsPage,
+  type SettingsPageProps,
+} from './SettingsPage';
 
 function renderSettings(overrides: Partial<SettingsPageProps> = {}) {
   const props: SettingsPageProps = {
@@ -12,6 +17,8 @@ function renderSettings(overrides: Partial<SettingsPageProps> = {}) {
     onSfxVolumeChange: vi.fn(),
     onAmbientVolumeChange: vi.fn(),
     onMuteToggle: vi.fn(),
+    confirmPlacementWithSecondTap: true,
+    onConfirmPlacementChange: vi.fn(),
     ...overrides,
   };
   render(<SettingsPage {...props} />);
@@ -36,6 +43,26 @@ describe('SettingsPage', () => {
 
     fireEvent.click(muteButton);
     expect(props.onMuteToggle).toHaveBeenCalledTimes(1);
+
+    expect(consoleError).not.toHaveBeenCalled();
+    consoleError.mockRestore();
+  });
+
+  it('exposes the two-tap placement switch and reports toggles', () => {
+    const consoleError = vi.spyOn(console, 'error');
+    const props = renderSettings({ confirmPlacementWithSecondTap: true });
+
+    const toggle = screen.getByRole('switch', { name: CONFIRM_PLACEMENT_LABEL });
+    expect((toggle as HTMLInputElement).checked).toBe(true);
+
+    fireEvent.click(toggle);
+    expect(props.onConfirmPlacementChange).toHaveBeenCalledWith(false);
+
+    cleanup();
+    renderSettings({ confirmPlacementWithSecondTap: false });
+    const off = screen.getByRole('switch', { name: CONFIRM_PLACEMENT_LABEL });
+    expect((off as HTMLInputElement).checked).toBe(false);
+    expect(off.getAttribute('aria-checked')).toBe('false');
 
     expect(consoleError).not.toHaveBeenCalled();
     consoleError.mockRestore();

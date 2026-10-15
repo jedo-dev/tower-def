@@ -128,6 +128,39 @@
   color: var(--color-accent-gold);
 }
 
+/* On/off switch row: a native checkbox at the 44px touch target. */
+.settings-section-toggle {
+  grid-template-columns: 1fr var(--touch-target-min);
+}
+
+.settings-section-toggle .settings-label {
+  text-transform: none;
+  letter-spacing: 0.02em;
+}
+
+.settings-switch {
+  width: var(--touch-target-min);
+  height: var(--touch-target-min);
+  margin: 0;
+  cursor: pointer;
+  accent-color: var(--color-accent-gold);
+}
+
+.settings-switch:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-radius: var(--radius-md);
+}
+
+.settings-hint {
+  grid-column: 1 / -1;
+  margin: 0;
+  font-family: var(--font-family-ui);
+  font-size: var(--font-size-sm);
+  line-height: 1.4;
+  color: var(--color-text-label);
+}
+
 /* Procedural range control: filled track via the --fill custom property. */
 .settings-slider {
   grid-column: 1 / -1;
