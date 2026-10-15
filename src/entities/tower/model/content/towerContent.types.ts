@@ -39,6 +39,8 @@ export type TowerContentEntry = {
   levels?: TowerLevelContentEntry[];
   /** Per-tower sound overrides; see "Sound profiles" in docs/08-content-authoring.md. */
   sounds?: TowerSoundSet;
+  /** `ground`, `air` or `both`; `both` when absent. Mirrors the archetype today. */
+  allowedTargets?: string;
   spriteKey: string;
   description: string;
   /** Bestiary flavour text in the race's voice; at most `CONTENT_LORE_MAX_LENGTH`. */
@@ -90,6 +92,8 @@ export type TowerArchetypeContentEntry = {
   onHitEffects?: TowerOnHitEffectEntry[];
   chain?: TowerChainContentEntry;
   aura?: TowerAuraContentEntry;
+  /** `ground`, `air` or `both`; `both` when absent. */
+  allowedTargets?: string;
   /** Upgrade curve: level 1 is what the tower is built with. */
   levels: TowerLevelContentEntry[];
   description: string;
@@ -141,6 +145,7 @@ export const TOWER_CONTENT_OPTIONAL_KEYS: readonly (keyof TowerContentEntry)[] =
   'levels',
   'sounds',
   'lore',
+  'allowedTargets',
 ];
 
 export const TOWER_CONTENT_FILE_KEYS: readonly (keyof TowerContentFile)[] = [
@@ -180,6 +185,7 @@ export const TOWER_ARCHETYPE_OPTIONAL_KEYS: readonly (keyof TowerArchetypeConten
   'onHitEffects',
   'chain',
   'aura',
+  'allowedTargets',
 ];
 
 export const TOWER_CHAIN_KEYS: readonly (keyof TowerChainContentEntry)[] = [

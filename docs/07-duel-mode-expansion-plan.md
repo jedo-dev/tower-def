@@ -365,6 +365,68 @@ Not reached: the 40-60% band per race. Follow-ups, as separate tasks: make the o
 
 How to measure it: the standard batch as in "Race balance" above, plus `npm run sim:duel-batch -- --difficulties hard --pairs elf:undead,elf:orc,elf:human --seeds 1-10 --maps classic --baseline-race elf` for each race in the player seat.
 
+### Air creeps and target scopes (tower-def-xwc.4)
+
+Fliers (unit `moveType: air`: undead gargoyle, banshee, frost wyrm, elf
+chimera, and any creature a content file marks `air`) ignore the maze, as in
+WispTD. Rules:
+
+- **Air route.** Every wave carries a third route, `WaveRoutes.air`: the octile
+  direct line from the entrance anchor to the exit anchor (diagonal steps while
+  both axes differ, then straight), computed once at wave start with the ground
+  routes (`shared/lib/pathfinding/airRoute.ts`). It ignores occupancy, so no
+  tower blocks a flier; build validation stays about the ground routes. An air
+  creep of any size walks it at its own speed; `remainingRouteDistance` is
+  measured along it like any route.
+- **Target scopes.** Towers declare `allowedTargets: ground | air | both`
+  (default `both`; see docs/08 "Target scope"). Area archetypes (`splash`,
+  `chain`) are ground-only, single-target archetypes (`single`, `frost`,
+  `poison`) hit both. Targeting, splash blasts and chain arcs skip creeps the
+  tower cannot hit.
+- **Priority.** A tower shoots the creep in range closest to its exit along its
+  own route; on a tie, air before ground (a flier past the maze leaks first);
+  then the nearest creep (`selectTowerTarget`).
+- **Wave budget.** A flier meets a fraction of the fire a walker takes through
+  a maze, so it costs `WAVE_AIR_UNIT_BUDGET_MULTIPLIER` (3) times its tier
+  value of the baseline wave budget. Creature stats are untouched.
+- **Computer opponent.** The threat estimate splits the next wave into a ground
+  lane (maze route, towers that hit ground) and an air lane (air line, towers
+  that hit air); the defence margin is the weaker lane and the shortfall gold
+  the sum (`threat-budget/`). Placement values a tower on both lanes with a
+  dual ledger (`damage-placement/dualRouteLedger.ts`) and the scored coverage
+  weighs the air line by the air share of the lane shortfall
+  (`computeAirThreatShare`): a maze that holds the ground sends every coverage
+  tower to the fliers. Deterministic; the defend search budgets hold.
+- **Preview.** While the roster the board faces has fliers, the build overlay
+  draws the air line as a faint dashed straight line.
+
+Measured as hard vs hard, seeds 1-6, classic and seeded maps, baseline undead,
+four race pairs (48 duels):
+
+| | Before | Air budget x3, scopes per the WispTD table (chain `both`, poison `ground`) | Shipped (air budget x3, chain `ground`, poison `both`) |
+| --- | --- | --- | --- |
+| Rounds, median (range) | 26 (22-31) | 23 (19-28) | 23 (20-28) |
+| Towers at round 5, median | 12.5 / 12.5 | 12 / 12 | 12 / 12 |
+| Draws | 4% | 0% | 4% |
+| Race score (undead / orc / human / elf) | 42 / 46 / 50 / 54% | 38 / 88 / 4 / 71% | 44 / 54 / 27 / 75% |
+
+Without the budget multiplier (fliers at their tier value) the same batch ran
+a median of 17 rounds (14-21): nearly every leak was an air leak, both sides
+held the ground and bled two or three fliers a round from the gargoyle wave
+(5) on, then five to seven a round once frost wyrms arrived (16), which ended
+matches nine rounds early. The multiplier brought pacing back inside the
+target. Race balance is now decided by how many archetypes a race can point
+at the air: orc won 88% of its duels while its chain tower hit fliers, human
+lost 96% with the archer as its only anti-air. The shipped scopes (area on the
+ground, single-target on both) cut that to orc 54% and human 27%.
+
+Known gap: human (one anti-air damage archetype plus support) stays below 40%
+and elf (three) above 60%. The lever is the roster, not the scopes or the AI:
+an air creature's authored health is what makes a flier worth several walkers,
+and tiers 5-6 for orc, human and elf are being authored in parallel. Revisit
+`WAVE_AIR_UNIT_BUDGET_MULTIPLIER` and the air creatures' health together once
+those rosters land.
+
 ## Suggested Improvements
 
 - Add difficulty presets for the computer opponent: relaxed, normal, aggressive.

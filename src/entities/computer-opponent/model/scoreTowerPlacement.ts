@@ -1,8 +1,16 @@
 import type { GridModel } from '../../../shared/types/grid';
 import type { GridPosition } from '../../../shared/types/pathfinding';
-import type { TowerTypeId } from '../../../shared/types/content-ids';
+import {
+  canTargetScopeHitMoveType,
+  UnitMoveType,
+  type TowerTypeId,
+} from '../../../shared/types/content-ids';
 import type { TowerEntity } from '../../tower/model/types';
-import { getTowerArchetype, TOWER_COMBAT_STATS_BY_TYPE } from '../../tower/model/types';
+import {
+  getTowerArchetype,
+  resolveTowerTargetScope,
+  TOWER_COMBAT_STATS_BY_TYPE,
+} from '../../tower/model/types';
 import { getTowerCenter } from '../../tower/model/footprint';
 import { TOWER_FOOTPRINT } from '../../../shared/constants/footprint';
 import { getFootprintCenter } from '../../../shared/lib/grid/footprint';
@@ -98,6 +106,10 @@ type ScorePlacementInput = {
   /** The maze plan the opponent is filling in. Without it the term stays neutral. */
   mazePlan?: MazePlanPriority;
   weights?: PlacementWeights;
+  /** The straight air line fliers take; coverage of it counts when `airThreatShare` > 0. */
+  airPath?: readonly GridPosition[];
+  /** Share of the next wave's health that flies (0..1); 0 or absent ignores the air line. */
+  airThreatShare?: number;
 };
 
 function euclideanDistance(a: GridPosition, b: GridPosition): number {
@@ -154,11 +166,35 @@ function countTowersInAuraRadius(
   ).length;
 }
 
+/** Share of `path` a tower of `towerType` at `position` reaches; 0 when it cannot shoot that lane. */
+function computeLaneCoverage(
+  position: GridPosition,
+  towerType: TowerTypeId,
+  path: readonly GridPosition[],
+  moveType: UnitMoveType,
+): number {
+  const stats = TOWER_COMBAT_STATS_BY_TYPE[towerType];
+  if (!stats || path.length === 0) {
+    return 0;
+  }
+  if (!canTargetScopeHitMoveType(resolveTowerTargetScope({ type: towerType }), moveType)) {
+    return 0;
+  }
+  return countPathCellsInRange(position, stats.range, path) / path.length;
+}
+
+/**
+ * Route coverage over both lanes: the ground route, and the air line weighted
+ * by the share of the wave that flies. A ground-only tower scores nothing on
+ * the air lane, so with fliers coming an anti-air type wins the same block.
+ */
 function computePathCoverageScore(
   position: GridPosition,
   towerType: TowerTypeId,
   path: readonly GridPosition[],
   existingTowers: readonly TowerEntity[],
+  airPath: readonly GridPosition[] | undefined,
+  airThreatShare: number,
 ): number {
   // A support tower covers towers, not path: score it by what it would buff.
   if (isSupportArchetype(towerType)) {
@@ -173,17 +209,13 @@ function computePathCoverageScore(
     return countTowersInAuraRadius(position, towerType, existingTowers) / damageTowerCount;
   }
 
-  const stats = TOWER_COMBAT_STATS_BY_TYPE[towerType];
-  if (!stats) {
-    return 0;
+  const ground = computeLaneCoverage(position, towerType, path, UnitMoveType.GROUND);
+  if (!airPath || airThreatShare <= 0) {
+    return ground;
   }
-
-  const cellsInRange = countPathCellsInRange(position, stats.range, path);
-  if (path.length === 0) {
-    return 0;
-  }
-
-  return cellsInRange / path.length;
+  const share = Math.min(1, airThreatShare);
+  const air = computeLaneCoverage(position, towerType, airPath, UnitMoveType.AIR);
+  return (1 - share) * ground + share * air;
 }
 
 function computeDefenseProximityScore(
@@ -231,6 +263,7 @@ function createInvalidScore(
 
 export function scoreTowerPlacement(input: ScorePlacementInput): PlacementScore {
   const { grid, position, towerType, existingTowers, path, pathProbe, mazePlan } = input;
+  const airThreatShare = input.airThreatShare ?? 0;
   const weights = input.weights ?? MAZE_PLACEMENT_WEIGHTS;
 
   const footprintBlockReason = classifyTowerFootprint(grid, position);
@@ -259,6 +292,8 @@ export function scoreTowerPlacement(input: ScorePlacementInput): PlacementScore 
     towerType,
     effectivePath,
     existingTowers,
+    input.airPath,
+    airThreatShare,
   );
   const defenseProximityScore = computeDefenseProximityScore(center, existingTowers);
   const archetypeValueScore = computeArchetypeValueScore(towerType, existingTowers);
@@ -298,6 +333,8 @@ type ScoreAllPositionsInput = {
   pathProbe?: PathProbe;
   mazePlan?: MazePlanPriority;
   weights?: PlacementWeights;
+  airPath?: readonly GridPosition[];
+  airThreatShare?: number;
 };
 
 export function scoreAllPlacements(input: ScoreAllPositionsInput): PlacementScore[] {
@@ -315,6 +352,8 @@ export function scoreAllPlacements(input: ScoreAllPositionsInput): PlacementScor
         pathProbe,
         mazePlan,
         weights,
+        airPath: input.airPath,
+        airThreatShare: input.airThreatShare,
       }),
     );
   }

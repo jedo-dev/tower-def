@@ -1,8 +1,9 @@
 import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { EnemyFaction } from '../../../entities/enemy-faction';
 import { getRaceRegistry } from '../../../entities/race-registry';
+import { resolveUnitConfigById } from '../../../entities/unit';
 import { GRID_DIMENSIONS } from '../../../shared/constants/grid';
-import { RaceId, TowerTypeId } from '../../../shared/types/content-ids';
+import { RaceId, TowerTypeId, UnitMoveType } from '../../../shared/types/content-ids';
 import type { GridCell, GridPoint } from '../../../shared/types/grid';
 import type { FakeGameObject } from '../test/fakePhaser';
 import {
@@ -59,6 +60,53 @@ describe('GameScene scenarios (headless harness)', () => {
       expect(sentSpawns.map((spawn) => spawn.unit.id)).toEqual([sentUnitId]);
       // Consumed by the wave start, not before.
       expect(game.inspect().duelMatchState.player.sendQueue).toEqual([]);
+    });
+  });
+
+  describe('air creeps', () => {
+    it('flies a sent gargoyle straight along the air line over the opponent maze', async () => {
+      const game = await start();
+      const flierId = getRaceRegistry(RaceId.UNDEAD).sendableCreepIds.find(
+        (unitId) => resolveUnitConfigById(unitId).moveType === UnitMoveType.AIR,
+      );
+      expect(flierId).toBeDefined();
+      if (!flierId) return;
+
+      game.command('send-creep', { creepTypeId: flierId });
+      game.command('start-wave', undefined);
+
+      const { grid, routes } = game.inspect().duelMatchState.opponent.battlefield;
+      const airCells = new Set(routes.air.map((cell) => `${cell.x}:${cell.y}`));
+      expect(routes.air[0]).toEqual(grid.entrance);
+      expect(routes.air[routes.air.length - 1]).toEqual(grid.exit);
+      // The computer has walled its maze: the ground route is longer than the air line.
+      expect(game.inspect().opponentField.towers.length).toBeGreaterThan(0);
+      expect(routes.small.length).toBeGreaterThan(routes.air.length);
+
+      const findFlier = () =>
+        game
+          .inspect()
+          .opponentField.creeps.find((creep) => creep.entity.moveType === UnitMoveType.AIR);
+      game.tickUntil(() => findFlier() !== undefined, MAX_FRAMES_PER_ROUND);
+
+      const visited = new Set<string>();
+      game.tickUntil(() => {
+        const flier = findFlier();
+        if (!flier) return true;
+        visited.add(`${flier.entity.position.x}:${flier.entity.position.y}`);
+        return flier.entity.status !== 'alive';
+      }, MAX_FRAMES_PER_ROUND);
+
+      const flier = findFlier();
+      expect(flier?.entity.status).not.toBe('alive');
+      expect(visited.size).toBeGreaterThan(1);
+      // Every cell it stood on lies on the air line, never on the maze route.
+      for (const cell of visited) {
+        expect(airCells.has(cell), cell).toBe(true);
+      }
+      if (flier?.entity.status === 'escaped') {
+        expect(flier.entity.position).toEqual(grid.exit);
+      }
     });
   });
 

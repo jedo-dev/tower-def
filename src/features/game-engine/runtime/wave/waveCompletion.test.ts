@@ -30,7 +30,7 @@ function createState(
   wavePhaseState: WavePhaseState = startNextWaveCycle(createInitialWavePhaseState()),
 ): WaveRuntimeState {
   return {
-    activeCreepRoutes: { small: [], large: [] },
+    activeCreepRoutes: { small: [], large: [], air: [] },
     activeCreeps,
     pendingWaveSpawns: [],
     wavePhaseState,

@@ -23,6 +23,15 @@ export const WAVE_TIER_VALUE_BY_TIER: Readonly<Record<UnitTier, number>> = {
 };
 
 /**
+ * Budget multiplier for creatures that fly. An air creature skips the maze
+ * and crosses the board on the straight air line, so it meets a fraction of
+ * the fire a ground creature of the same tier walks through; charging it
+ * more of the wave budget keeps fliers a threat rather than the whole wave.
+ * Tuned in tower-def-xwc.4 (docs/07, "Air creeps").
+ */
+export const WAVE_AIR_UNIT_BUDGET_MULTIPLIER = 3;
+
+/**
  * First wave a tier may appear in. Early waves are fodder an opening defence
  * can learn on; heavy creatures arrive once a maze can exist.
  */

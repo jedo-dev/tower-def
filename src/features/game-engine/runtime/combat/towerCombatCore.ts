@@ -8,6 +8,7 @@ import {
 } from '../../../../entities/creep';
 import {
   canTowerAttack,
+  canTowerTargetCreep,
   consumeTowerAttack,
   getTowerArchetype,
   getTowerAttackKind,
@@ -143,8 +144,9 @@ function applySplashDamage<C extends CombatCreep, T extends CombatTower>(
   const splashRadiusPx = splashRadius * GRID_DIMENSIONS.cellSize;
   const towerCenterPx = hooks.toCellCenter(getTowerCenter(tower.entity));
 
+  // A ground-only splash never touches a flier over its blast; a both-scope one does.
   const creepsInSplashRadius = field.creeps.filter((creep) => {
-    if (creep.entity.status !== 'alive') {
+    if (creep.entity.status !== 'alive' || !canTowerTargetCreep(tower.entity, creep.entity)) {
       return false;
     }
     const creepCenter = hooks.toCellCenter(getCreepFootprintCenter(creep.entity));
@@ -167,12 +169,14 @@ function applySplashDamage<C extends CombatCreep, T extends CombatTower>(
 }
 
 /**
- * Picks the creeps an arc jumps to. Selection is by distance and then id, so a
- * given battlefield state always produces the same chain.
+ * Picks the creeps an arc jumps to, among those the tower may hit. Selection
+ * is by distance and then id, so a given battlefield state always produces
+ * the same chain.
  */
 function selectChainTargets<C extends CombatCreep, T extends CombatTower>(
   field: CombatField<C, T>,
   hooks: TowerCombatHooks<C, T>,
+  tower: T,
   from: C,
   bounces: number,
   bounceRangeCells: number,
@@ -186,7 +190,12 @@ function selectChainTargets<C extends CombatCreep, T extends CombatTower>(
     const rangePx = bounceRangeCells * GRID_DIMENSIONS.cellSize;
 
     const next = field.creeps
-      .filter((creep) => creep.entity.status === 'alive' && !visited.has(creep.entity.id))
+      .filter(
+        (creep) =>
+          creep.entity.status === 'alive' &&
+          !visited.has(creep.entity.id) &&
+          canTowerTargetCreep(tower.entity, creep.entity),
+      )
       .map((creep) => {
         const center = hooks.toCellCenter(getCreepFootprintCenter(creep.entity));
         return {
@@ -230,6 +239,7 @@ function applyChainDamage<C extends CombatCreep, T extends CombatTower>(
   const chainTargets = selectChainTargets(
     field,
     hooks,
+    tower,
     target,
     chainShape.bounces,
     chainShape.bounceRangeCells,

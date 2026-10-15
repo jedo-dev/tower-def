@@ -13,12 +13,15 @@ export type RoutePreviewFrame = {
   readonly current: WaveRoutes | null;
   /** Routes with the hovered tower placed; null when not hovering a valid build. */
   readonly projected: WaveRoutes | null;
+  /** Draw the straight air line too: the roster the board faces has fliers. */
+  readonly showsAirRoute: boolean;
 };
 
 export const HIDDEN_ROUTE_PREVIEW: RoutePreviewFrame = {
   isVisible: false,
   current: null,
   projected: null,
+  showsAirRoute: false,
 };
 
 export type RoutePreviewInput = {
@@ -28,6 +31,8 @@ export type RoutePreviewInput = {
   hoveredAnchor: GridPosition | null;
   /** Full build rule (free cells, gold, open routes) for the hovered anchor. */
   isHoveredAnchorValid: boolean;
+  /** The roster this board faces has air creeps, so the air line is worth showing. */
+  hasAirCreeps: boolean;
 };
 
 /** Route searches the preview needs; injectable so tests can count them. */
@@ -121,7 +126,8 @@ export function getProjectedPreviewRoutes(
 /**
  * Decides what the route overlay shows. Waves hide it: creeps then trace the
  * route themselves and the path tiles stay visible, so the overlay would only
- * clutter a small mobile board.
+ * clutter a small mobile board. The air line is shown only while the roster
+ * the board faces has fliers; no placement can move it.
  */
 export function resolveRoutePreviewFrame(
   cache: BuildRoutePreviewCache,
@@ -136,5 +142,5 @@ export function resolveRoutePreviewFrame(
     input.hoveredAnchor && input.isHoveredAnchorValid
       ? getProjectedPreviewRoutes(cache, input.grid, input.hoveredAnchor)
       : null;
-  return { isVisible: true, current, projected };
+  return { isVisible: true, current, projected, showsAirRoute: input.hasAirCreeps };
 }

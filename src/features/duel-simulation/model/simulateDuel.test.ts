@@ -42,8 +42,11 @@ describe('features/duel-simulation/simulateDuel', () => {
 
   it('reports the gold each build phase left unspent, before bounties and income', () => {
     const result = simulateDuel(CONFIG);
+    // The settlement pays no income on the round that ends the match.
+    const paidRounds = result.endReason === 'lives' ? result.rounds.slice(0, -1) : result.rounds;
 
-    for (const round of result.rounds) {
+    expect(paidRounds.length).toBeGreaterThan(0);
+    for (const round of paidRounds) {
       for (const side of [round.a, round.b]) {
         expect(side.unspentGold).toBeGreaterThanOrEqual(0);
         expect(side.unspentGold).toBeLessThanOrEqual(side.gold - side.income);
@@ -60,11 +63,14 @@ describe('features/duel-simulation/simulateDuel', () => {
     } else {
       expect(result.rounds).toHaveLength(CONFIG.maxRounds);
     }
+    // A match on lives may end in a same-wave double knockout that the
+    // settlement's tie-break decides; on the round cap only lives decide.
+    const atLeast = result.endReason === 'lives' ? 'toBeGreaterThanOrEqual' : 'toBeGreaterThan';
     if (result.winner === 'A') {
-      expect(player.hp).toBeGreaterThan(opponent.hp);
+      expect(player.hp)[atLeast](opponent.hp);
     }
     if (result.winner === 'B') {
-      expect(opponent.hp).toBeGreaterThan(player.hp);
+      expect(opponent.hp)[atLeast](player.hp);
     }
   });
 

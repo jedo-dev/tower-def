@@ -1,4 +1,5 @@
 import { getCellAt } from '../../../shared/lib/grid/getCellAt';
+import { calculateAirRoute } from '../../../shared/lib/pathfinding/airRoute';
 import type { TowerTypeId } from '../../../shared/types/content-ids';
 import type { GridModel } from '../../../shared/types/grid';
 import type { GridPosition } from '../../../shared/types/pathfinding';
@@ -8,6 +9,7 @@ import type { PathProbe, PathProbeResult } from './createPathProbe';
 import type { MazeEvaluator } from './maze-evaluation';
 import type { MazePlanPriority } from './maze-planning';
 import { scoreTowerPlacement, type PlacementWeights } from './scoreTowerPlacement';
+import { resolveAirThreatShare } from './threat-budget/resolveAirThreatShare';
 import { classifyTowerFootprint } from './towerPlacementGeometry';
 import type { BuildAction, DecisionContext } from './types';
 
@@ -110,6 +112,9 @@ export function findBestScoredBuild(input: FindBestScoredBuildInput): ScoredBuil
   const basePath = smallRoute;
   const baseCost = smallRouteCost;
   const unchangedRoute: PathProbeResult = { path: basePath, cost: baseCost, gain: 0 };
+  // Fliers take the straight line: coverage of it counts by their share of the wave.
+  const airThreatShare = resolveAirThreatShare(context);
+  const airPath = airThreatShare > 0 ? calculateAirRoute(grid.entrance, grid.exit) : undefined;
 
   function toPathProbe(result: PathProbeResult): PathProbe {
     return {
@@ -139,6 +144,8 @@ export function findBestScoredBuild(input: FindBestScoredBuildInput): ScoredBuil
         pathProbe,
         mazePlan,
         weights,
+        airPath,
+        airThreatShare,
       });
       // Value per gold, not raw value: a cheap tower walls a cell just as well
       // as a pricey one, so raw scores would overpay for every brick.

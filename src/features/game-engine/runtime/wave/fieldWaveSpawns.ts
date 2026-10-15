@@ -2,6 +2,7 @@ import type Phaser from 'phaser';
 import type { UnitConfig } from '../../../../entities/unit';
 import type { CreepType } from '../../../../entities/creep';
 import {
+  EMPTY_WAVE_ROUTES,
   hasWaveRoute,
   selectWaveRoute,
   type WaveRoutes,
@@ -78,7 +79,7 @@ export function createOpponentFieldWaveState(field: BattlefieldRenderState): Fie
     set activeCreeps(nextCreeps: CreepRenderState[]) {
       field.creeps = nextCreeps;
     },
-    activeCreepRoutes: { small: [], large: [] },
+    activeCreepRoutes: EMPTY_WAVE_ROUTES,
     pendingWaveSpawns: [],
     currentWaveNumber: 1,
   };
@@ -145,7 +146,7 @@ function createSpawnedCreep(
   deps: FieldSpawnDeps,
   spawn: PendingWaveSpawn,
 ): CreepRenderState {
-  const route = selectWaveRoute(state.activeCreepRoutes, spawn.unit.sizeClass);
+  const route = selectWaveRoute(state.activeCreepRoutes, spawn.unit);
   const startPoint = deps.toCellCenter(route[0]);
   const waveCreep = createWaveCreepEntity(
     spawn,

@@ -60,6 +60,7 @@ describe('features/game-engine/runtime/movement leaks', () => {
           { x: 1, y: 0 },
         ],
         large: [],
+        air: [],
       },
     };
 
@@ -127,6 +128,7 @@ describe('features/game-engine/runtime/movement status effects', () => {
           { x: 3, y: 0 },
         ],
         large: [],
+        air: [],
       },
     };
   }

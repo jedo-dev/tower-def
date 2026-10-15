@@ -7,7 +7,11 @@ export {
 export { computeEffectiveHealth } from './effectiveHealth';
 export { estimateDefenceCapability } from './estimateDefenceCapability';
 export { estimateIncomingThreat } from './estimateIncomingThreat';
-export { splitThreatBudget } from './splitThreatBudget';
+export {
+  computeAirThreatShare,
+  computeDefenceMargin,
+  splitThreatBudget,
+} from './splitThreatBudget';
 
 export type { ThreatBudgetTuning } from './constants';
 export type {
@@ -16,4 +20,9 @@ export type {
   DefenceWallPrice,
 } from './estimateDefenceCapability';
 export type { IncomingThreat, IncomingThreatInput } from './estimateIncomingThreat';
-export type { DefenceAssessment, ThreatBudgetInput, ThreatBudgetSplit } from './splitThreatBudget';
+export type {
+  DefenceAssessment,
+  DefenceLaneAssessment,
+  ThreatBudgetInput,
+  ThreatBudgetSplit,
+} from './splitThreatBudget';
