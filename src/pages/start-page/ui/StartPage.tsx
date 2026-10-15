@@ -2,6 +2,9 @@ import type { AppRoute } from '../../../shared/config/game-setup';
 import { FantasyButton } from '../../../shared/ui/fantasy-button';
 import './StartPage.css';
 
+/** Shown on menu actions whose feature is not built yet; they stay inert. */
+export const COMING_SOON_LABEL = 'Coming soon';
+
 export type StartPageProps = {
   onNavigate: (route: AppRoute) => void;
 };
@@ -46,30 +49,28 @@ export function StartPage({ onNavigate }: StartPageProps) {
           >
             Settings
           </FantasyButton>
-          <FantasyButton
-            className="start-button-secondary start-button-danger"
-            tone="danger"
-            onClick={() => onNavigate('start')}
-          >
-            Exit
-          </FantasyButton>
         </nav>
 
-        <div className="start-actions" aria-hidden>
+        <div className="start-actions">
           <button
             type="button"
             className="start-action-icon start-action-icon--trophy"
-            aria-label="Achievements"
+            aria-label={`Achievements (${COMING_SOON_LABEL})`}
+            aria-disabled="true"
+            title={COMING_SOON_LABEL}
           />
           <button
             type="button"
             className="start-action-icon start-action-icon--star"
-            aria-label="Favorites"
+            aria-label={`Favorites (${COMING_SOON_LABEL})`}
+            aria-disabled="true"
+            title={COMING_SOON_LABEL}
           />
           <button
             type="button"
             className="start-action-icon start-action-icon--gear"
             aria-label="Settings"
+            onClick={() => onNavigate('settings')}
           />
         </div>
 

@@ -223,6 +223,18 @@
   background-image: url('/assets/ui/kit/icon-gear.png');
 }
 
+.start-action-icon[aria-disabled='true'] {
+  cursor: not-allowed;
+  opacity: 0.45;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.6)) grayscale(0.8);
+}
+
+.start-action-icon[aria-disabled='true']:hover,
+.start-action-icon[aria-disabled='true']:active {
+  transform: none;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.6)) grayscale(0.8);
+}
+
 .start-action-icon:hover {
   transform: translateY(-1px);
   filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.6)) drop-shadow(0 0 10px rgba(240, 200, 120, 0.45))
