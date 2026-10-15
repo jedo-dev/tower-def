@@ -6,6 +6,8 @@ export type HudViewModel = {
   selectedTowerLabel: string;
   modeLabel: string;
   isStartWaveDisabled: boolean;
+  /** Tower building is a build-phase action; during a wave the build bar is locked. */
+  isBuildLocked: boolean;
   isArcherSelected: boolean;
   pressure: HudPressureViewModel;
   duel: HudDuelViewModel;
@@ -53,6 +55,7 @@ export function mapHudSnapshotToViewModel(snapshot: GameHudSnapshot): HudViewMod
     selectedTowerLabel,
     modeLabel,
     isStartWaveDisabled: isWaveActive || !snapshot.canStartWave,
+    isBuildLocked: isWaveActive,
     isArcherSelected: snapshot.selectedTowerType === TowerTypeId.SINGLE,
     pressure: mapHudPressureToViewModel(snapshot),
     duel: mapHudDuelToViewModel(snapshot),

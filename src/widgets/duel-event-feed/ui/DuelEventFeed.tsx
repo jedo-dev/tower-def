@@ -4,6 +4,7 @@ import { onGameEvent } from '../../../shared/lib/game-bridge/bridge';
 import {
   appendFeedEntry,
   clearFeedEntries,
+  formatBuildRejected,
   formatIncomeUpdated,
   formatLivesStolen,
   formatOpponentHpUpdated,
@@ -49,6 +50,9 @@ function DuelEventFeedComponent() {
     const unsubscribeRejected = onGameEvent('creep-send-rejected', (payload) => {
       push('rejected', formatSendRejected(payload));
     });
+    const unsubscribeBuildRejected = onGameEvent('build-rejected', (payload) => {
+      push('rejected', formatBuildRejected(payload));
+    });
     // A rematch is a new match: the previous one's entries do not carry over.
     const unsubscribeMatchStarted = onGameEvent('match-started', () => {
       setEntries(clearFeedEntries());
@@ -61,6 +65,7 @@ function DuelEventFeedComponent() {
       unsubscribeHp();
       unsubscribeLivesStolen();
       unsubscribeRejected();
+      unsubscribeBuildRejected();
     };
   }, []);
 

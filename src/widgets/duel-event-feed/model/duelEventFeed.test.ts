@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
+import { TowerTypeId } from '../../../shared/types/content-ids';
+import type { BuildRejectionReason } from '../../../shared/lib/game-bridge/types';
 import {
   appendFeedEntry,
   DUEL_EVENT_FEED_LIMIT,
+  formatBuildRejected,
   formatIncomeUpdated,
   formatLivesStolen,
   formatOpponentHpUpdated,
@@ -55,6 +58,24 @@ describe('duel event feed model', () => {
     expect(formatLivesStolen({ thief: 'opponent', lives: 1, hp: 9 })).toBe(
       'Enemy sends stole +1 HP → 9',
     );
+  });
+
+  it('formats every build rejection reason as a "Build failed" line', () => {
+    const anchor = { x: 4, y: 6 };
+    const towerType = TowerTypeId.SINGLE;
+    const lines: Record<BuildRejectionReason, string> = {
+      cells_occupied: 'Build failed: cells occupied',
+      insufficient_gold: 'Build failed: not enough gold',
+      path_blocked_small: 'Build failed: blocks the path',
+      path_blocked_large: 'Build failed: blocks the path for large creeps',
+      not_build_phase: 'Build failed: wave in progress',
+      match_over: 'Build failed: match is over',
+      opponent_view: 'Build failed: switch to your field',
+    };
+
+    for (const [reason, line] of Object.entries(lines) as [BuildRejectionReason, string][]) {
+      expect(formatBuildRejected({ reason, towerType, anchor })).toBe(line);
+    }
   });
 
   it('formats rejection reasons', () => {

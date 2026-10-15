@@ -21,6 +21,19 @@ export type CreepSendRejectionReason =
   | 'match_over'
   | 'wave_send_cap'
   | 'unit_type_send_cap';
+/**
+ * Why a tower build was refused. The two path reasons tell the builder which
+ * creep size class the block would cut off: a small block seals everything,
+ * a large block only the wide creeps.
+ */
+export type BuildRejectionReason =
+  | 'cells_occupied'
+  | 'insufficient_gold'
+  | 'path_blocked_small'
+  | 'path_blocked_large'
+  | 'not_build_phase'
+  | 'match_over'
+  | 'opponent_view';
 
 export type WaveQueueItem = {
   type: HudCreepType;
@@ -160,5 +173,11 @@ export type GameEventMap = {
     thief: DuelistSide;
     lives: number;
     hp: number;
+  };
+  /** A tower build the player attempted was refused; `anchor` is the block's top-left cell. */
+  'build-rejected': {
+    reason: BuildRejectionReason;
+    towerType: HudTowerType;
+    anchor: { x: number; y: number } | null;
   };
 };

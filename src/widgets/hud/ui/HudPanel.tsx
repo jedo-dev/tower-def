@@ -20,6 +20,8 @@ export type HudPanelProps = {
   setup: GameSetupConfig | null;
 };
 
+export const BUILD_PHASE_ONLY_HINT = 'Build phase only';
+
 function formatCountdown(secondsLeft: number): string {
   const safeSeconds = Math.max(0, secondsLeft);
   const minutes = Math.floor(safeSeconds / 60);
@@ -70,6 +72,9 @@ function HudPanelComponent({ setup }: HudPanelProps) {
     gold: snapshot.gold,
     selectedTowerType: snapshot.selectedTowerType,
   });
+  // Towers go down in the build phase only; the buttons say so during a wave
+  // instead of letting a tap end in a silent error sound.
+  const isBuildLocked = viewModel.isBuildLocked;
 
   return (
     <section className={`ui-panel ${styles.panel}`} aria-label="Game HUD">
@@ -155,6 +160,11 @@ function HudPanelComponent({ setup }: HudPanelProps) {
       {isExpanded && (
         <div className={styles.expandedContent}>
           <div className={`ui-heading ${styles.buildHeading}`}>Build</div>
+          {isBuildLocked && (
+            <div className={styles.buildPhaseHint} role="note">
+              {BUILD_PHASE_ONLY_HINT}
+            </div>
+          )}
           <div className={styles.towerButtons} role="group" aria-label="Buildable towers">
             {buildOptions.map((option) => (
               <button
@@ -165,14 +175,18 @@ function HudPanelComponent({ setup }: HudPanelProps) {
                   styles.towerBtn,
                   option.isSelected && 'ui-slot--selected',
                   option.isSelected && styles.towerBtnSelected,
+                  isBuildLocked && styles.towerBtnLocked,
                 )}
                 disabled={!option.isAffordable && !option.isSelected}
+                aria-disabled={isBuildLocked || undefined}
                 aria-label={option.ariaLabel}
-                onClick={() =>
+                title={isBuildLocked ? BUILD_PHASE_ONLY_HINT : undefined}
+                onClick={() => {
+                  if (isBuildLocked) return;
                   sendGameCommand('select-tower', {
                     towerType: option.isSelected ? null : option.towerType,
-                  })
-                }
+                  });
+                }}
               >
                 <span className={styles.towerBtnPortrait}>
                   <PlaceholderIcon label={option.name} faction={builderFactionTheme} />

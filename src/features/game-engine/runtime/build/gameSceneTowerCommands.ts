@@ -1,5 +1,5 @@
 import { recalculateTowerAuras } from '../../../../entities/tower';
-import { TowerAttackKind } from '../../../../shared/types/content-ids';
+import { TowerAttackKind, TowerTypeId } from '../../../../shared/types/content-ids';
 import { getTowerAttackKind, isTowerCoveringCell } from '../../../../entities/tower';
 import { TOWER_FOOTPRINT } from '../../../../shared/constants/footprint';
 import { getFootprintCells } from '../../../../shared/lib/grid/footprint';
@@ -17,7 +17,10 @@ import type { GridPosition } from '../../../../shared/types/pathfinding';
 import { getCellAt } from '../../../../shared/lib/grid/getCellAt';
 import type { RaceId } from '../../../../shared/types/content-ids';
 import { publishGameEvent } from '../../../../shared/lib/game-bridge/bridge';
-import type { SelectedTowerSnapshot } from '../../../../shared/lib/game-bridge/types';
+import type {
+  BuildRejectionReason,
+  SelectedTowerSnapshot,
+} from '../../../../shared/lib/game-bridge/types';
 import { SELL_REFUND_RATIO } from '../../scenes/gameScene.constants';
 import type { SoundId } from '../../../../shared/lib/sound-registry/audio.types';
 import { TowerSoundSlot } from '../../../../shared/types/sound-ids';
@@ -80,8 +83,26 @@ function toSelectedTowerSnapshot(
   };
 }
 
+function rejectBuild(
+  deps: TowerCommandDeps,
+  reason: BuildRejectionReason | null,
+  anchor: GridPosition | null,
+): void {
+  deps.playSound('ui.error');
+  if (reason === null) {
+    return;
+  }
+  publishGameEvent('build-rejected', {
+    reason,
+    towerType: deps.getBuildRuntimeDeps().selectedTowerType ?? TowerTypeId.SINGLE,
+    anchor: anchor ? { x: anchor.x, y: anchor.y } : null,
+  });
+}
+
 export function tryPlaceTowerAtHoveredCell(deps: TowerCommandDeps): void {
   if (!deps.isPlayerViewActive()) {
+    // The enemy board is read-only; say so instead of swallowing the tap.
+    rejectBuild(deps, 'opponent_view', deps.getBuildRuntimeState().hoveredBuildAnchor);
     return;
   }
 
@@ -90,7 +111,7 @@ export function tryPlaceTowerAtHoveredCell(deps: TowerCommandDeps): void {
     deps.getBuildRuntimeDeps(),
   );
   if (!result.success || !result.placedTower || !result.towerType) {
-    deps.playSound('ui.error');
+    rejectBuild(deps, result.rejectionReason, result.anchor);
     return;
   }
 

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { tryPlaceTowerAtHoveredCell, trySellTowerAtHoveredCell } from './gameSceneBuildRuntime';
 import type { BuildRuntimeDeps, BuildRuntimeState } from './gameSceneBuildRuntime';
 import { createGridModel } from '../../../../shared/lib/grid/createGridModel';
-import { validateFootprintPlacementPath } from '../../../../shared/lib/pathfinding/validateFootprintPlacement';
+import { checkFootprintPlacementPath } from '../../../../shared/lib/pathfinding/validateFootprintPlacement';
 import {
   getTowerStatsForTowerLevel,
   resolveBuildableTowerById,
@@ -37,8 +37,8 @@ function createDeps(authoredTower: BuildableTowerConfig | null): BuildRuntimeDep
     resolveBuildableTower: () => authoredTower,
     toGridCellKey: (position) => `${position.x}:${position.y}`,
     toTowerId: (position) => `tower:${position.x}:${position.y}`,
-    validateFootprintPlacementPath: (grid, anchor, footprint) =>
-      validateFootprintPlacementPath(grid, anchor, footprint),
+    checkFootprintPlacementPath: (grid, anchor, footprint) =>
+      checkFootprintPlacementPath(grid, anchor, footprint),
     sellRefundRatio: 0.5,
   };
 }

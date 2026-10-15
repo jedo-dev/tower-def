@@ -58,6 +58,27 @@ export function formatLivesStolen(payload: GameEventMap['lives-stolen']): string
     : `Enemy sends stole +${payload.lives} HP → ${payload.hp}`;
 }
 
+export function formatBuildRejected(payload: GameEventMap['build-rejected']): string {
+  switch (payload.reason) {
+    case 'cells_occupied':
+      return 'Build failed: cells occupied';
+    case 'insufficient_gold':
+      return 'Build failed: not enough gold';
+    case 'path_blocked_small':
+      return 'Build failed: blocks the path';
+    case 'path_blocked_large':
+      return 'Build failed: blocks the path for large creeps';
+    case 'not_build_phase':
+      return 'Build failed: wave in progress';
+    case 'match_over':
+      return 'Build failed: match is over';
+    case 'opponent_view':
+      return 'Build failed: switch to your field';
+    default:
+      return 'Build failed';
+  }
+}
+
 export function formatSendRejected(payload: GameEventMap['creep-send-rejected']): string {
   switch (payload.reason) {
     case 'insufficient_gold':

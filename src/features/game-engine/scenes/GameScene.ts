@@ -46,7 +46,7 @@ import {
   type EdgeEndpoints,
 } from '../../../shared/lib/grid/generateEdgeEndpoints';
 import type { SoundId } from '../../../shared/lib/sound-registry/audio.types';
-import { validateFootprintPlacementPath } from '../../../shared/lib/pathfinding/validateFootprintPlacement';
+import { checkFootprintPlacementPath } from '../../../shared/lib/pathfinding/validateFootprintPlacement';
 import {
   createUnitWalkAnimations,
   createTowerAnimations,
@@ -688,6 +688,12 @@ export class GameScene extends Phaser.Scene {
         this.canProcessUserAction() &&
         isWaveActionAllowed(this.wavePhaseState, 'place-tower') &&
         !this.isGameOver,
+      resolvePlaceRejection: () => {
+        if (this.activeBattlefieldView !== 'player') return 'opponent_view';
+        if (this.isGameOver) return 'match_over';
+        if (!isWaveActionAllowed(this.wavePhaseState, 'place-tower')) return 'not_build_phase';
+        return null;
+      },
       canPerformSell: () =>
         this.activeBattlefieldView === 'player' &&
         this.canProcessUserAction() &&
@@ -702,8 +708,8 @@ export class GameScene extends Phaser.Scene {
         resolveBuildableTowerConfig(this.selectedBuilderFactionId, towerType),
       toGridCellKey: (position) => toGridCellKey(position),
       toTowerId: (position) => toTowerId(position),
-      validateFootprintPlacementPath: (grid, anchor, footprint) =>
-        validateFootprintPlacementPath(grid, anchor, footprint),
+      checkFootprintPlacementPath: (grid, anchor, footprint) =>
+        checkFootprintPlacementPath(grid, anchor, footprint),
       sellRefundRatio: SELL_REFUND_RATIO,
     };
   }
