@@ -83,7 +83,7 @@ function createCreep(start: GridPosition, sizeClass: UnitSizeClass, speed: numbe
 function createState(creeps: CreepRenderState[]): MovementRuntimeState {
   return {
     activeCreeps: creeps,
-    activeCreepRoutes: { small: SMALL_ROUTE, large: LARGE_ROUTE },
+    activeCreepRoutes: { small: SMALL_ROUTE, large: LARGE_ROUTE, air: [] },
   };
 }
 

@@ -7,6 +7,11 @@ import type { MovementRuntimeConfig } from '../runtime/movement/gameSceneMovemen
 import type { WaveRuntimeConfig } from '../runtime/wave/gameSceneWaveRuntime';
 import {
   ACTION_COOLDOWN_MS,
+  ROUTE_PREVIEW_AIR_ALPHA,
+  ROUTE_PREVIEW_AIR_COLOR,
+  ROUTE_PREVIEW_AIR_DASH_PX,
+  ROUTE_PREVIEW_AIR_GAP_PX,
+  ROUTE_PREVIEW_AIR_WIDTH_PX,
   ROUTE_PREVIEW_GHOST_ALPHA_FACTOR,
   ROUTE_PREVIEW_LARGE_BAND_ALPHA,
   ROUTE_PREVIEW_LARGE_COLOR,
@@ -125,6 +130,11 @@ export const ROUTE_PREVIEW_CONFIG: RoutePreviewConfig = {
   largeRouteSpineWidthPx: ROUTE_PREVIEW_LARGE_SPINE_WIDTH_PX,
   largeRouteSpineAlpha: ROUTE_PREVIEW_LARGE_SPINE_ALPHA,
   ghostAlphaFactor: ROUTE_PREVIEW_GHOST_ALPHA_FACTOR,
+  airRouteColor: ROUTE_PREVIEW_AIR_COLOR,
+  airRouteAlpha: ROUTE_PREVIEW_AIR_ALPHA,
+  airRouteWidthPx: ROUTE_PREVIEW_AIR_WIDTH_PX,
+  airRouteDashPx: ROUTE_PREVIEW_AIR_DASH_PX,
+  airRouteGapPx: ROUTE_PREVIEW_AIR_GAP_PX,
 };
 
 export const GRID_RENDERER_CONFIG: GridRendererConfig = {

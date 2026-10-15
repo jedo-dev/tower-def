@@ -1,6 +1,7 @@
 import { TOWER_FOOTPRINT } from '../../../shared/constants/footprint';
 import { withFootprintOccupancy } from '../../../shared/lib/grid/footprint';
-import type { TowerTypeId } from '../../../shared/types/content-ids';
+import { UnitMoveType, type TowerTypeId } from '../../../shared/types/content-ids';
+import { calculateAirRoute } from '../../../shared/lib/pathfinding/airRoute';
 import type { GridModel } from '../../../shared/types/grid';
 import type { GridPosition } from '../../../shared/types/pathfinding';
 import type { TowerEntity } from '../../tower/model/types';
@@ -9,13 +10,19 @@ import { getTowerCostForType } from './buildSpendBudget';
 import {
   collectInvestmentTypes,
   collectUpgradeCandidates,
+  createDualRouteLedger,
   createPlannedRoute,
   createRouteDamageLedger,
+  createRouteGeometry,
   planRoundInvestments,
   toLedgerTowers,
   toRouteCells,
+  type LedgerTower,
+  type PlannedRoute,
   type PlannedUpgrade,
+  type RouteDamageLedger,
 } from './damage-placement';
+import { resolveAirThreatShare } from './threat-budget/resolveAirThreatShare';
 import { DEFEND_REROUTE_PROBE_LIMIT, findBestScoredBuild } from './findBestScoredBuild';
 import { createMazeEvaluator } from './maze-evaluation';
 import { createMazePlanPriority, selectPlanBuilds } from './maze-planning';
@@ -88,6 +95,31 @@ function recordUpgrade(round: BuildRoundState, upgrade: PlannedUpgrade): void {
   );
 }
 
+/**
+ * The damage ledger a round invests against: the planned ground route, and
+ * when the next wave has fliers, the straight air line as a second lane
+ * weighted by the share of the wave that flies.
+ */
+function createInvestmentLedger(
+  round: BuildRoundState,
+  context: DecisionContext,
+  plannedRoute: PlannedRoute,
+): RouteDamageLedger {
+  const towers: LedgerTower[] = toLedgerTowers(round.plannedTowers);
+  const ground = createRouteDamageLedger(plannedRoute.geometry, towers);
+  const airShare = resolveAirThreatShare(context);
+  if (airShare <= 0) {
+    return ground;
+  }
+  const { entrance, exit } = round.grid;
+  const air = createRouteDamageLedger(
+    createRouteGeometry(calculateAirRoute(entrance, exit)),
+    towers,
+    UnitMoveType.AIR,
+  );
+  return createDualRouteLedger(ground, air, airShare);
+}
+
 export type PlanInvestmentOptions = {
   /** Most new blocks this round. */
   maxBuilds: number;
@@ -138,7 +170,7 @@ export function investInPlan(
     ),
   }));
   const investment = planRoundInvestments({
-    ledger: createRouteDamageLedger(plannedRoute.geometry, toLedgerTowers(round.plannedTowers)),
+    ledger: createInvestmentLedger(round, context, plannedRoute),
     wall,
     damageTypes: types.slice(1),
     walls,

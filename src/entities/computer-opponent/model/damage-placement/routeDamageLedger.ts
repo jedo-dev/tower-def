@@ -1,4 +1,5 @@
 import type { GridPoint } from '../../../../shared/types/grid';
+import { UnitMoveType } from '../../../../shared/types/content-ids';
 import {
   CREEP_ARRIVALS_PER_SECOND,
   CREEP_CELLS_PER_SECOND_AT_UNIT_SPEED,
@@ -6,6 +7,7 @@ import {
 } from './constants';
 import type { RouteGeometry } from './routeGeometry';
 import {
+  canDamageModelTowerHit,
   computeAura,
   computeChill,
   computeSampleDamageRate,
@@ -25,9 +27,13 @@ export type LedgerTower = DamageModelTower & { anchor: GridPoint };
  * turn, which reaches the route twice, is worth twice the same tower on a
  * straight. Frost and support towers are valued by what they add to the
  * others: the slow stretches their time in range, the aura their fire rate.
+ * A ledger values one lane: the creeps walking its route move by `moveType`,
+ * so a tower whose `allowedTargets` cannot hit them contributes nothing here.
  */
 export type RouteDamageLedger = {
   readonly geometry: RouteGeometry;
+  /** Move type of the creeps on this lane (ground maze or air line). */
+  readonly moveType: UnitMoveType;
   readonly towers: readonly LedgerTower[];
   add(tower: LedgerTower): number;
   replace(index: number, tower: LedgerTower): void;
@@ -46,15 +52,23 @@ function slowTimeGain(slow: number): number {
 export function createRouteDamageLedger(
   geometry: RouteGeometry,
   initialTowers: readonly LedgerTower[] = [],
+  moveType: UnitMoveType = UnitMoveType.GROUND,
 ): RouteDamageLedger {
   const towers: LedgerTower[] = [...initialTowers];
   const field = new Float64Array(geometry.length);
   let isFieldStale = true;
 
+  /** Damage rate on this lane: zero for a tower that cannot shoot its creeps. */
+  function sampleRate(tower: LedgerTower, sample: number): number {
+    return canDamageModelTowerHit(tower, moveType)
+      ? computeSampleDamageRate(tower, geometry, sample)
+      : 0;
+  }
+
   function directSamples(tower: LedgerTower): number {
     let total = 0;
     for (const sample of geometry.coveredSamples(tower.anchor, tower.stats.range)) {
-      total += computeSampleDamageRate(tower, geometry, sample);
+      total += sampleRate(tower, sample);
     }
     return total;
   }
@@ -83,7 +97,7 @@ export function createRouteDamageLedger(
     towers.forEach((tower, index) => {
       const boost = 1 + auraBoostAt(tower.anchor, NO_INDEX, index);
       for (const sample of geometry.coveredSamples(tower.anchor, tower.stats.range)) {
-        field[sample] += computeSampleDamageRate(tower, geometry, sample) * boost;
+        field[sample] += sampleRate(tower, sample) * boost;
       }
     });
     isFieldStale = false;
@@ -108,7 +122,7 @@ export function createRouteDamageLedger(
   function chillWindow(tower: LedgerTower): { from: number; to: number; magnitude: number } {
     const chill = computeChill(tower);
     const covered = geometry.coveredSamples(tower.anchor, tower.stats.range);
-    if (chill.magnitude <= 0 || covered.length === 0) {
+    if (chill.magnitude <= 0 || covered.length === 0 || !canDamageModelTowerHit(tower, moveType)) {
       return { from: 0, to: -1, magnitude: 0 };
     }
     const chilledSpeed =
@@ -157,6 +171,7 @@ export function createRouteDamageLedger(
 
   return {
     geometry,
+    moveType,
     towers,
     add(tower: LedgerTower): number {
       towers.push(tower);

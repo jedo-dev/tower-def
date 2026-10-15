@@ -1,13 +1,16 @@
 import {
+  DEFAULT_TOWER_TARGET_SCOPE,
   EFFECT_IDS,
   RACE_IDS,
   RaceId,
   TOWER_ATTACK_KINDS,
+  TOWER_TARGET_SCOPES,
   TOWER_TYPE_IDS,
   TOWER_AURA_STACKING_RULES,
   type EffectId,
   type TowerAttackKind,
   type TowerAuraStacking,
+  type TowerTargetScope,
 } from '../../../../shared/types/content-ids';
 import {
   CONTENT_LORE_MAX_LENGTH,
@@ -72,6 +75,8 @@ export type TowerArchetypeDefinition = TowerCombatStats & {
   id: TowerTypeId;
   name: string;
   attackKind: TowerAttackKind;
+  /** Which creeps the archetype shoots: ground, air or both. */
+  allowedTargets: TowerTargetScope;
   description: string;
   onHitEffects: TowerOnHitEffect[];
   chain?: TowerChainDefinition;
@@ -127,6 +132,17 @@ function parseOptionalStat(
   }
 
   return readNumber(entry, key, location, TOWER_STAT_BOUNDS[key]);
+}
+
+/** `allowedTargets` of a tower or archetype entry; `both` when the content omits it. */
+function parseAllowedTargets(
+  entry: Record<string, unknown>,
+  location: ContentLocation,
+): TowerTargetScope {
+  if (entry.allowedTargets === undefined) {
+    return DEFAULT_TOWER_TARGET_SCOPE;
+  }
+  return readStringFrom(entry, 'allowedTargets', location, TOWER_TARGET_SCOPES);
 }
 
 function parseChain(
@@ -213,6 +229,7 @@ function parseTowerEntry(
     ...(entry.levels === undefined ? {} : { levels: parseLevels(entry, location) }),
     onHitEffects: parseOnHitEffects(entry, location),
     ...(sounds === undefined ? {} : { sounds }),
+    allowedTargets: parseAllowedTargets(entry, location),
     spriteKey: readString(entry, 'spriteKey', location),
     description: readString(entry, 'description', location),
     ...(lore === undefined ? {} : { lore }),
@@ -339,6 +356,7 @@ function parseArchetypeEntry(
     id,
     name: readString(entry, 'name', location),
     attackKind,
+    allowedTargets: parseAllowedTargets(entry, location),
     description: readString(entry, 'description', location),
     damage: readNumber(entry, 'damage', location, TOWER_STAT_BOUNDS.damage),
     range: readNumber(entry, 'range', location, TOWER_STAT_BOUNDS.range),

@@ -69,6 +69,27 @@ export const TOWER_AURA_STACKING_RULES: readonly TowerAuraStacking[] = [
   TowerAuraStacking.STACK,
 ] as const;
 
+/**
+ * Which creeps a tower may shoot at. Ground creeps walk the maze; air creeps
+ * fly the straight air route over it, so a tower that cannot hit air leaves
+ * them to the others. Absent in content it defaults to `both`.
+ */
+export const TowerTargetScope = {
+  GROUND: 'ground',
+  AIR: 'air',
+  BOTH: 'both',
+} as const;
+
+export type TowerTargetScope = (typeof TowerTargetScope)[keyof typeof TowerTargetScope];
+
+export const TOWER_TARGET_SCOPES: readonly TowerTargetScope[] = [
+  TowerTargetScope.GROUND,
+  TowerTargetScope.AIR,
+  TowerTargetScope.BOTH,
+] as const;
+
+export const DEFAULT_TOWER_TARGET_SCOPE: TowerTargetScope = TowerTargetScope.BOTH;
+
 export const CreepTypeId = {
   BASIC: 'basic',
 } as const;
@@ -89,6 +110,19 @@ export const UNIT_MOVE_TYPES: readonly UnitMoveType[] = [
   UnitMoveType.GROUND,
   UnitMoveType.AIR,
 ] as const;
+
+/** True when a tower with `scope` may shoot a creep that moves by `moveType`. */
+export function canTargetScopeHitMoveType(
+  scope: TowerTargetScope,
+  moveType: UnitMoveType,
+): boolean {
+  if (scope === TowerTargetScope.BOTH) {
+    return true;
+  }
+  return moveType === UnitMoveType.AIR
+    ? scope === TowerTargetScope.AIR
+    : scope === TowerTargetScope.GROUND;
+}
 
 /** Silhouette of a creature, used for hit feedback scale and future splash rules. */
 export const UnitSizeClass = {

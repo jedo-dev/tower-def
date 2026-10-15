@@ -1,5 +1,12 @@
 import { EFFECT_DEFINITIONS } from '../../../../shared/constants/effects';
-import { EffectKind, TowerAttackKind, TowerTypeId } from '../../../../shared/types/content-ids';
+import {
+  canTargetScopeHitMoveType,
+  EffectKind,
+  TowerAttackKind,
+  TowerTypeId,
+  type TowerTargetScope,
+  type UnitMoveType,
+} from '../../../../shared/types/content-ids';
 import type { TowerCombatStats, TowerOnHitEffect } from '../../../tower/model/types';
 import { getTowerArchetype } from '../../../tower/model/types';
 import {
@@ -17,7 +24,15 @@ const MS_PER_SECOND = 1000;
 export type DamageModelTower = {
   towerType: TowerTypeId;
   stats: TowerCombatStats;
+  /** Authored target scope; the archetype's when absent. */
+  allowedTargets?: TowerTargetScope;
 };
+
+/** Whether the tower can shoot creeps that move by `moveType` (its `allowedTargets`). */
+export function canDamageModelTowerHit(tower: DamageModelTower, moveType: UnitMoveType): boolean {
+  const scope = tower.allowedTargets ?? getTowerArchetype(tower.towerType).allowedTargets;
+  return canTargetScopeHitMoveType(scope, moveType);
+}
 
 function resolveOnHitEffects(tower: DamageModelTower): readonly TowerOnHitEffect[] {
   return tower.stats.onHitEffects ?? getTowerArchetype(tower.towerType).onHitEffects;

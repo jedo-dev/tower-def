@@ -12,6 +12,7 @@ import {
 const CELL = GRID_DIMENSIONS.cellSize;
 const SMALL_COLOR = 0x00aaff;
 const LARGE_COLOR = 0xffaa00;
+const AIR_COLOR = 0xccccff;
 const CONFIG: RoutePreviewConfig = {
   smallRouteColor: SMALL_COLOR,
   smallRouteAlpha: 1,
@@ -22,6 +23,11 @@ const CONFIG: RoutePreviewConfig = {
   largeRouteSpineWidthPx: 2,
   largeRouteSpineAlpha: 0.8,
   ghostAlphaFactor: 0.5,
+  airRouteColor: AIR_COLOR,
+  airRouteAlpha: 0.4,
+  airRouteWidthPx: 1,
+  airRouteDashPx: CELL,
+  airRouteGapPx: CELL,
 };
 
 const ROUTES: WaveRoutes = {
@@ -33,6 +39,10 @@ const ROUTES: WaveRoutes = {
   large: [
     { x: 0, y: 2 },
     { x: 1, y: 2 },
+  ],
+  air: [
+    { x: 0, y: 4 },
+    { x: 2, y: 4 },
   ],
 };
 
@@ -58,7 +68,12 @@ function setup() {
   return { graphics, state };
 }
 
-const VISIBLE: RoutePreviewFrame = { isVisible: true, current: ROUTES, projected: null };
+const VISIBLE: RoutePreviewFrame = {
+  isVisible: true,
+  current: ROUTES,
+  projected: null,
+  showsAirRoute: false,
+};
 
 describe('route preview renderer', () => {
   it('draws small routes as dots through cell centres', () => {
@@ -103,11 +118,29 @@ describe('route preview renderer', () => {
     expect(graphics.fillRect).toHaveBeenCalledTimes(6);
   });
 
+  it('draws the air line as dashes only when the frame shows it', () => {
+    const { graphics, state } = setup();
+
+    renderRoutePreview(state, VISIBLE, CONFIG);
+    expect(graphics.lineStyle).not.toHaveBeenCalledWith(1, AIR_COLOR, 0.4);
+
+    expect(renderRoutePreview(state, { ...VISIBLE, showsAirRoute: true }, CONFIG)).toBe(true);
+    expect(graphics.lineStyle).toHaveBeenCalledWith(1, AIR_COLOR, 0.4);
+    // (0,4) to (2,4) is two cells long: one dash, one gap, then the second dash.
+    expect(graphics.moveTo).toHaveBeenCalledWith(CELL / 2, 4.5 * CELL);
+    expect(graphics.lineTo).toHaveBeenCalledWith(1.5 * CELL, 4.5 * CELL);
+    expect(graphics.moveTo).not.toHaveBeenCalledWith(2.5 * CELL, 4.5 * CELL);
+  });
+
   it('draws the projection in full over faded current routes', () => {
     const { graphics, state } = setup();
-    const projected: WaveRoutes = { small: ROUTES.small, large: [{ x: 4, y: 4 }] };
+    const projected: WaveRoutes = { small: ROUTES.small, large: [{ x: 4, y: 4 }], air: [] };
 
-    renderRoutePreview(state, { isVisible: true, current: ROUTES, projected }, CONFIG);
+    renderRoutePreview(
+      state,
+      { isVisible: true, current: ROUTES, projected, showsAirRoute: false },
+      CONFIG,
+    );
 
     expect(graphics.fillStyle).toHaveBeenCalledWith(SMALL_COLOR, 0.5);
     expect(graphics.lineStyle).toHaveBeenCalledWith(2, LARGE_COLOR, 0.4);

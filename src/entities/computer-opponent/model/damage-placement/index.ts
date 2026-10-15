@@ -5,6 +5,7 @@ export {
 } from './constants';
 export { planRoundInvestments } from './planRoundInvestments';
 export { createRouteDamageLedger } from './routeDamageLedger';
+export { createDualRouteLedger } from './dualRouteLedger';
 export { createRouteGeometry } from './routeGeometry';
 export {
   collectInvestmentTypes,
@@ -13,7 +14,11 @@ export {
   toLedgerTowers,
   toRouteCells,
 } from './roundInvestmentInputs';
-export { computeSampleDamageRate, computeShotDps } from './towerDamageModel';
+export {
+  canDamageModelTowerHit,
+  computeSampleDamageRate,
+  computeShotDps,
+} from './towerDamageModel';
 
 export type {
   InvestmentTowerType,

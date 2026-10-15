@@ -11,6 +11,7 @@ import {
   RACE_IDS,
   RaceId,
   TOWER_TYPE_IDS,
+  TowerTargetScope,
   TowerTypeId,
 } from '../../../../shared/types/content-ids';
 import { BUILDABLE_TOWER_IDS } from '../towerIds';
@@ -57,6 +58,7 @@ describe('parseTowerContentFile', () => {
       name: 'Bone Archer Tower',
       faction: RaceId.UNDEAD,
       towerType: TowerTypeId.SINGLE,
+      allowedTargets: 'both',
       costGold: 50,
       damage: 22,
       range: 6.4,
@@ -340,6 +342,50 @@ describe('shipped tower content', () => {
   it('defines every archetype the game declares', () => {
     for (const archetypeId of TOWER_TYPE_IDS) {
       expect(TOWER_ARCHETYPE_DEFINITIONS[archetypeId].id, archetypeId).toBe(archetypeId);
+    }
+  });
+});
+
+describe('allowedTargets', () => {
+  it('defaults to both when the content omits it', () => {
+    const [tower] = parse(createFile([createTower()]));
+    expect(tower.allowedTargets).toBe(TowerTargetScope.BOTH);
+  });
+
+  it('reads an authored scope', () => {
+    const [tower] = parse(createFile([createTower({ allowedTargets: 'ground' })]));
+    expect(tower.allowedTargets).toBe(TowerTargetScope.GROUND);
+  });
+
+  it('rejects an unknown scope, naming the file and tower', () => {
+    expect(() => parse(createFile([createTower({ allowedTargets: 'sky' })]))).toThrow(
+      new RegExp(`${FILE} \\[undead_bone_archer_tower\\].*allowedTargets`),
+    );
+  });
+
+  it('is authored on every shipped archetype and mirrored by every race tower', () => {
+    for (const tower of buildableTowers) {
+      expect(tower.allowedTargets, tower.id).toBe(
+        TOWER_ARCHETYPE_DEFINITIONS[tower.towerType].allowedTargets,
+      );
+    }
+    // Area attacks stay on the ground; single-target attacks reach fliers too.
+    expect(TOWER_ARCHETYPE_DEFINITIONS.splash.allowedTargets).toBe(TowerTargetScope.GROUND);
+    expect(TOWER_ARCHETYPE_DEFINITIONS.chain.allowedTargets).toBe(TowerTargetScope.GROUND);
+    expect(TOWER_ARCHETYPE_DEFINITIONS.single.allowedTargets).toBe(TowerTargetScope.BOTH);
+    expect(TOWER_ARCHETYPE_DEFINITIONS.frost.allowedTargets).toBe(TowerTargetScope.BOTH);
+    expect(TOWER_ARCHETYPE_DEFINITIONS.poison.allowedTargets).toBe(TowerTargetScope.BOTH);
+  });
+
+  it('gives every race a damage tower that can shoot air', () => {
+    for (const race of RACE_IDS) {
+      const antiAir = buildableTowers.filter(
+        (tower) =>
+          tower.faction === race &&
+          tower.allowedTargets !== TowerTargetScope.GROUND &&
+          TOWER_ARCHETYPE_DEFINITIONS[tower.towerType].attackKind !== 'aura',
+      );
+      expect(antiAir.length, race).toBeGreaterThan(0);
     }
   });
 });

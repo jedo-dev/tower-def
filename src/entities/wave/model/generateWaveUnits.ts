@@ -1,5 +1,7 @@
+import { UnitMoveType } from '../../../shared/types/content-ids';
 import { UnitTier, type UnitConfig } from '../../unit';
 import {
+  WAVE_AIR_UNIT_BUDGET_MULTIPLIER,
   WAVE_BUDGET_CURVE,
   WAVE_TIER_UNLOCK_WAVE,
   WAVE_TIER_VALUE_BY_TIER,
@@ -24,8 +26,12 @@ export function getWaveUnitCap(waveNumber: number): number {
   return Math.min(max, Math.floor(capBase + capPerWave * waveNumber));
 }
 
-function getUnitValue(unit: UnitConfig): number {
-  return WAVE_TIER_VALUE_BY_TIER[unit.tier];
+/** Tier points a creature consumes; fliers cost more (`WAVE_AIR_UNIT_BUDGET_MULTIPLIER`). */
+export function getWaveUnitValue(unit: Pick<UnitConfig, 'tier' | 'moveType'>): number {
+  const tierValue = WAVE_TIER_VALUE_BY_TIER[unit.tier];
+  return unit.moveType === UnitMoveType.AIR
+    ? tierValue * WAVE_AIR_UNIT_BUDGET_MULTIPLIER
+    : tierValue;
 }
 
 function isTierUnlocked(unit: UnitConfig, waveNumber: number): boolean {
@@ -64,14 +70,14 @@ export function generateWaveUnits(input: GenerateWaveUnitsInput): UnitConfig[] {
   const units: UnitConfig[] = [];
 
   while (remainingBudget > 0 && units.length < unitCap) {
-    const affordable = unlocked.filter((unit) => getUnitValue(unit) <= remainingBudget);
+    const affordable = unlocked.filter((unit) => getWaveUnitValue(unit) <= remainingBudget);
     if (affordable.length === 0) {
       break;
     }
 
     const picked = pickUnitWithTierBias(affordable, random);
     units.push(picked);
-    remainingBudget -= getUnitValue(picked);
+    remainingBudget -= getWaveUnitValue(picked);
   }
 
   const fallbackPool = input.factionUnits.filter((unit) => unit.tier === UnitTier.TIER_1);
