@@ -57,6 +57,7 @@ function createPlayerRunState(): WaveRuntimeState {
     isWaveCompletionRewardGranted: false,
     nextWaveStartsAtMs: null,
     playerGold: 100,
+    waveKillBountyEarned: 0,
     isGameOver: false,
     currentWaveNumber: 1,
     lastPublishedAutoStartSecondsLeft: null,

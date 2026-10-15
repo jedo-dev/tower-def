@@ -6,9 +6,9 @@ import { RaceId } from '../../../shared/types/content-ids';
 import { EnemyFaction } from '../../../entities/enemy-faction';
 import { Difficulty } from '../../../entities/difficulty';
 import type { GameSetupConfig } from '../../../shared/config/game-setup';
-import { publishGameHudSnapshot } from '../../../shared/lib/game-bridge/bridge';
+import { onGameCommand, publishGameHudSnapshot } from '../../../shared/lib/game-bridge/bridge';
 import type { GameHudSnapshot } from '../../../shared/lib/game-bridge/types';
-import { HudPanel } from './HudPanel';
+import { BUILD_PHASE_ONLY_HINT, HudPanel } from './HudPanel';
 import styles from './HudPanel.module.css';
 import hudPanelCss from './HudPanel.module.css?raw';
 import { injectCssModule } from '../../../shared/test/injectCssModule';
@@ -120,6 +120,49 @@ describe('HudPanel build bar', () => {
 
     expect(within(buildBar).getByRole('button', { name: /Moonwell/ })).toBeDefined();
     expect(within(buildBar).queryByRole('button', { name: /Plague Tower/ })).toBeNull();
+    expect(consoleError).not.toHaveBeenCalled();
+  });
+
+  it('marks the tower buttons build-phase-only during a wave', () => {
+    publishGameHudSnapshot(createSnapshot({ gold: 1000, phase: 'wave', canStartWave: false }));
+    const selectTower = vi.fn();
+    const unsubscribe = onGameCommand('select-tower', selectTower);
+
+    render(<HudPanel setup={createSetup(RaceId.UNDEAD)} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Expand HUD' }));
+
+    const buildBar = screen.getByRole('group', { name: 'Buildable towers' });
+    const buttons = within(buildBar).getAllByRole('button');
+    expect(buttons.length).toBeGreaterThan(0);
+    for (const button of buttons) {
+      expect(button.getAttribute('aria-disabled')).toBe('true');
+      expect(button.getAttribute('title')).toBe(BUILD_PHASE_ONLY_HINT);
+      expect(button.classList.contains(styles.towerBtnLocked)).toBe(true);
+    }
+    expect(screen.getByRole('note').textContent).toBe(BUILD_PHASE_ONLY_HINT);
+
+    fireEvent.click(buttons[0]);
+    expect(selectTower).not.toHaveBeenCalled();
+    unsubscribe();
+    expect(consoleError).not.toHaveBeenCalled();
+  });
+
+  it('keeps the tower buttons live in the build phase', () => {
+    publishGameHudSnapshot(createSnapshot({ gold: 1000, phase: 'build' }));
+    const selectTower = vi.fn();
+    const unsubscribe = onGameCommand('select-tower', selectTower);
+
+    render(<HudPanel setup={createSetup(RaceId.UNDEAD)} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Expand HUD' }));
+
+    const buildBar = screen.getByRole('group', { name: 'Buildable towers' });
+    const [firstButton] = within(buildBar).getAllByRole('button');
+    expect(firstButton.getAttribute('aria-disabled')).toBeNull();
+    expect(screen.queryByRole('note')).toBeNull();
+
+    fireEvent.click(firstButton);
+    expect(selectTower).toHaveBeenCalledOnce();
+    unsubscribe();
     expect(consoleError).not.toHaveBeenCalled();
   });
 

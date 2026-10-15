@@ -8,8 +8,9 @@ import { createGridModel } from '../../../../shared/lib/grid/createGridModel';
 import { createDefaultEdgeEndpoints } from '../../../../shared/lib/grid/generateEdgeEndpoints';
 import { getFootprintCells } from '../../../../shared/lib/grid/footprint';
 import { getCellAt } from '../../../../shared/lib/grid/getCellAt';
-import { validateFootprintPlacementPath } from '../../../../shared/lib/pathfinding/validateFootprintPlacement';
+import { checkFootprintPlacementPath } from '../../../../shared/lib/pathfinding/validateFootprintPlacement';
 import {
+  diagnoseBuildAnchor,
   findPlacedTowerAnchorAt,
   isBuildAnchorValid,
   tryPlaceTowerAtHoveredCell,
@@ -38,8 +39,8 @@ const DEPS: BuildRuntimeDeps = {
   resolveTowerCost: () => TOWER_COST,
   toGridCellKey: (position) => `${position.x}:${position.y}`,
   toTowerId: (position) => `tower:${position.x}:${position.y}`,
-  validateFootprintPlacementPath: (grid, anchor, footprint) =>
-    validateFootprintPlacementPath(grid, anchor, footprint),
+  checkFootprintPlacementPath: (grid, anchor, footprint) =>
+    checkFootprintPlacementPath(grid, anchor, footprint),
   sellRefundRatio: 0.5,
 };
 
@@ -176,5 +177,108 @@ describe('player 2x2 tower building', () => {
     state.hoveredCell = { x: 2, y: 2 };
 
     expect(trySellTowerAtHoveredCell(state, DEPS).success).toBe(false);
+  });
+});
+
+describe('build rejection reasons', () => {
+  /** Walls off columns 8..9 except `gapRows` rows starting at row 10. */
+  function createWalledGrid(gapRows: number): GridModel {
+    const grid = createGridModel(createDefaultEdgeEndpoints());
+    for (const cell of grid.cells) {
+      if ((cell.x === 8 || cell.x === 9) && (cell.y < 10 || cell.y >= 10 + gapRows)) {
+        cell.isOccupied = true;
+        cell.isWalkable = false;
+      }
+    }
+    return grid;
+  }
+
+  it('reports occupied cells for an overlapping block', () => {
+    const state = createState();
+    place(state, { x: 6, y: 4 });
+
+    const result = place(state, { x: 7, y: 5 });
+
+    expect(result.success).toBe(false);
+    expect(result.rejectionReason).toBe('cells_occupied');
+    expect(result.anchor).toEqual({ x: 7, y: 5 });
+  });
+
+  it('reports occupied cells for a block off the grid or over an endpoint zone', () => {
+    const state = createState();
+    const { entrance } = createDefaultEdgeEndpoints();
+
+    expect(place(state, { x: -1, y: 3 }).rejectionReason).toBe('cells_occupied');
+    expect(place(state, { x: entrance.x + 1, y: entrance.y }).rejectionReason).toBe(
+      'cells_occupied',
+    );
+  });
+
+  it('reports missing gold before looking at the route', () => {
+    const state = createState();
+    state.playerGold = TOWER_COST - 1;
+
+    const result = place(state, { x: 6, y: 4 });
+
+    expect(result.rejectionReason).toBe('insufficient_gold');
+    expect(result.playerGold).toBe(TOWER_COST - 1);
+  });
+
+  it('reports a sealed route as blocked for small creeps', () => {
+    const state = createState(createWalledGrid(2));
+
+    expect(place(state, { x: 8, y: 10 }).rejectionReason).toBe('path_blocked_small');
+    expect(diagnoseBuildAnchor(state, DEPS, { x: 8, y: 10 }, state.gridModel!)).toBe(
+      'path_blocked_small',
+    );
+  });
+
+  it('reports a one-cell gap as blocked for large creeps only', () => {
+    const state = createState(createWalledGrid(3));
+
+    expect(place(state, { x: 8, y: 10 }).rejectionReason).toBe('path_blocked_large');
+    expect(isBuildAnchorValid(state, DEPS, { x: 8, y: 10 }, state.gridModel!)).toBe(false);
+  });
+
+  it('labels a refused phase through the scene-provided reason', () => {
+    const state = createState();
+    state.hoveredBuildAnchor = { x: 6, y: 4 };
+    const deps: BuildRuntimeDeps = {
+      ...DEPS,
+      canPerformPlace: () => false,
+      resolvePlaceRejection: () => 'not_build_phase',
+    };
+
+    const result = tryPlaceTowerAtHoveredCell(state, deps);
+
+    expect(result.rejectionReason).toBe('not_build_phase');
+    expect(result.anchor).toEqual({ x: 6, y: 4 });
+    expect(occupiedCellCount(state.gridModel!)).toBe(0);
+  });
+
+  it('stays silent for the input cooldown and for taps off the grid', () => {
+    const state = createState();
+    state.hoveredBuildAnchor = { x: 6, y: 4 };
+    const cooldownDeps: BuildRuntimeDeps = {
+      ...DEPS,
+      canPerformPlace: () => false,
+      resolvePlaceRejection: () => null,
+    };
+    expect(tryPlaceTowerAtHoveredCell(state, cooldownDeps).rejectionReason).toBeNull();
+
+    state.hoveredBuildAnchor = null;
+    const offGrid = tryPlaceTowerAtHoveredCell(state, DEPS);
+    expect(offGrid.rejectionReason).toBeNull();
+    expect(offGrid.anchor).toBeNull();
+  });
+
+  it('carries no reason on a successful build', () => {
+    const state = createState();
+
+    const result = place(state, { x: 6, y: 4 });
+
+    expect(result.success).toBe(true);
+    expect(result.rejectionReason).toBeNull();
+    expect(result.anchor).toEqual({ x: 6, y: 4 });
   });
 });

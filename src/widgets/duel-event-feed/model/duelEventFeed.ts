@@ -2,7 +2,7 @@ import type { GameEventMap } from '../../../shared/lib/game-bridge/types';
 
 export const DUEL_EVENT_FEED_LIMIT = 5;
 
-export type DuelFeedEntryKind = 'send' | 'income' | 'damage' | 'rejected';
+export type DuelFeedEntryKind = 'send' | 'income' | 'damage' | 'rejected' | 'summary';
 
 export type DuelFeedEntry = {
   id: number;
@@ -52,10 +52,42 @@ export function formatOpponentHpUpdated(
   return `Enemy ${payload.delta} HP → ${payload.hp}`;
 }
 
+/** Who stole and whose total follows, spelled out: "+1 HP → 14" read as either side's. */
 export function formatLivesStolen(payload: GameEventMap['lives-stolen']): string {
   return payload.thief === 'player'
-    ? `Your sends stole +${payload.lives} HP → ${payload.hp}`
-    : `Enemy sends stole +${payload.lives} HP → ${payload.hp}`;
+    ? `You stole ${payload.lives} HP (you now ${payload.hp})`
+    : `Enemy stole ${payload.lives} HP (enemy now ${payload.hp})`;
+}
+
+/** The player's round summary; send income bonuses are logged as they happen, not here. */
+export function formatRoundSettled(payload: GameEventMap['round-settled']): string {
+  const parts = [
+    `-${payload.livesLost} lives`,
+    `+${payload.bountyEarned} bounty`,
+    `+${payload.incomePaid} income`,
+  ];
+  return `Wave ${payload.round} settled: ${parts.join(', ')}`;
+}
+
+export function formatBuildRejected(payload: GameEventMap['build-rejected']): string {
+  switch (payload.reason) {
+    case 'cells_occupied':
+      return 'Build failed: cells occupied';
+    case 'insufficient_gold':
+      return 'Build failed: not enough gold';
+    case 'path_blocked_small':
+      return 'Build failed: blocks the path';
+    case 'path_blocked_large':
+      return 'Build failed: blocks the path for large creeps';
+    case 'not_build_phase':
+      return 'Build failed: wave in progress';
+    case 'match_over':
+      return 'Build failed: match is over';
+    case 'opponent_view':
+      return 'Build failed: switch to your field';
+    default:
+      return 'Build failed';
+  }
 }
 
 export function formatSendRejected(payload: GameEventMap['creep-send-rejected']): string {

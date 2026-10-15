@@ -1,10 +1,14 @@
 import { describe, expect, it } from 'vitest';
+import { TowerTypeId } from '../../../shared/types/content-ids';
+import type { BuildRejectionReason } from '../../../shared/lib/game-bridge/types';
 import {
   appendFeedEntry,
   DUEL_EVENT_FEED_LIMIT,
+  formatBuildRejected,
   formatIncomeUpdated,
   formatLivesStolen,
   formatOpponentHpUpdated,
+  formatRoundSettled,
   formatSendQueueUpdated,
   formatSendRejected,
   type DuelFeedEntry,
@@ -48,13 +52,40 @@ describe('duel event feed model', () => {
     expect(formatOpponentHpUpdated({ hp: 20, previousHp: 20, delta: 0 })).toBeNull();
   });
 
-  it('formats stolen lives per thief', () => {
-    expect(formatLivesStolen({ thief: 'player', lives: 2, hp: 18 })).toBe(
-      'Your sends stole +2 HP → 18',
+  it('formats stolen lives so the thief and whose total follows are unambiguous', () => {
+    expect(formatLivesStolen({ thief: 'player', lives: 1, hp: 14 })).toBe(
+      'You stole 1 HP (you now 14)',
     );
-    expect(formatLivesStolen({ thief: 'opponent', lives: 1, hp: 9 })).toBe(
-      'Enemy sends stole +1 HP → 9',
+    expect(formatLivesStolen({ thief: 'opponent', lives: 1, hp: 14 })).toBe(
+      'Enemy stole 1 HP (enemy now 14)',
     );
+  });
+
+  it('formats the player round summary with lives, bounty and income', () => {
+    expect(formatRoundSettled({ round: 7, livesLost: 3, bountyEarned: 40, incomePaid: 120 })).toBe(
+      'Wave 7 settled: -3 lives, +40 bounty, +120 income',
+    );
+    expect(formatRoundSettled({ round: 1, livesLost: 0, bountyEarned: 0, incomePaid: 0 })).toBe(
+      'Wave 1 settled: -0 lives, +0 bounty, +0 income',
+    );
+  });
+
+  it('formats every build rejection reason as a "Build failed" line', () => {
+    const anchor = { x: 4, y: 6 };
+    const towerType = TowerTypeId.SINGLE;
+    const lines: Record<BuildRejectionReason, string> = {
+      cells_occupied: 'Build failed: cells occupied',
+      insufficient_gold: 'Build failed: not enough gold',
+      path_blocked_small: 'Build failed: blocks the path',
+      path_blocked_large: 'Build failed: blocks the path for large creeps',
+      not_build_phase: 'Build failed: wave in progress',
+      match_over: 'Build failed: match is over',
+      opponent_view: 'Build failed: switch to your field',
+    };
+
+    for (const [reason, line] of Object.entries(lines) as [BuildRejectionReason, string][]) {
+      expect(formatBuildRejected({ reason, towerType, anchor })).toBe(line);
+    }
   });
 
   it('formats rejection reasons', () => {

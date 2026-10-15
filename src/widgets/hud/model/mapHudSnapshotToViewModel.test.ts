@@ -46,6 +46,11 @@ describe('mapHudSnapshotToViewModel', () => {
     expect(vm.isStartWaveDisabled).toBe(true);
   });
 
+  it('locks the build bar during a wave and frees it while building', () => {
+    expect(mapHudSnapshotToViewModel(createSnapshot({ phase: 'wave' })).isBuildLocked).toBe(true);
+    expect(mapHudSnapshotToViewModel(createSnapshot({ phase: 'build' })).isBuildLocked).toBe(false);
+  });
+
   it('marks start wave disabled when command is unavailable', () => {
     const vm = mapHudSnapshotToViewModel(createSnapshot({ phase: 'build', canStartWave: false }));
 

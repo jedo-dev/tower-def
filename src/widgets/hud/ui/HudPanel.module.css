@@ -282,6 +282,19 @@
   box-shadow: var(--focus-ring);
 }
 
+/* Wave phase: the roster stays readable and focusable but cannot be picked. */
+.towerBtnLocked,
+.towerBtnLocked:hover:not(:disabled) {
+  cursor: not-allowed;
+  filter: grayscale(0.6) brightness(0.6);
+}
+
+.buildPhaseHint {
+  font-size: var(--font-size-xs);
+  text-align: center;
+  color: var(--color-text-warning);
+}
+
 .towerBtnSelected {
   color: #fff4d6;
 }

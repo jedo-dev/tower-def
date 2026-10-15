@@ -67,7 +67,12 @@ function createPlayerCombatDeps(host: GameSceneWiringHost): CombatRuntimeDepende
     playSound: (soundId: SoundId) => host.getSoundManager()?.play(soundId),
     soundRouter: host.soundRouter,
     // The player's purse lives in the scene wallet; the same bounty rule applies.
-    awardKillBounty: () => updatePlayerGold(host, addKillBounty(host.runState.playerGold)),
+    awardKillBounty: () => {
+      const goldBefore = host.runState.playerGold;
+      const goldAfter = addKillBounty(goldBefore);
+      host.runState.waveKillBountyEarned += goldAfter - goldBefore;
+      updatePlayerGold(host, goldAfter);
+    },
     onHudChanged: () => host.publishHudSnapshot(),
   };
 }

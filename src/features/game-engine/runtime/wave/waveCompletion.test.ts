@@ -37,6 +37,7 @@ function createState(
     isWaveCompletionRewardGranted: false,
     nextWaveStartsAtMs: null,
     playerGold: STARTING_GOLD,
+    waveKillBountyEarned: 0,
     isGameOver: false,
     currentWaveNumber: 2,
     lastPublishedAutoStartSecondsLeft: null,

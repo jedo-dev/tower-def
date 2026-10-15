@@ -40,3 +40,8 @@
 .entryRejected {
   color: var(--color-text-warning);
 }
+
+.entrySummary {
+  color: #e6e9ef;
+  font-weight: 600;
+}

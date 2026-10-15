@@ -46,7 +46,7 @@ import {
   type EdgeEndpoints,
 } from '../../../shared/lib/grid/generateEdgeEndpoints';
 import type { SoundId } from '../../../shared/lib/sound-registry/audio.types';
-import { validateFootprintPlacementPath } from '../../../shared/lib/pathfinding/validateFootprintPlacement';
+import { checkFootprintPlacementPath } from '../../../shared/lib/pathfinding/validateFootprintPlacement';
 import {
   createUnitWalkAnimations,
   createTowerAnimations,
@@ -107,6 +107,7 @@ import {
 import {
   applyDuelRoundEnd as applyDuelRoundEndRuntime,
   publishRoundLifeEvents,
+  publishRoundSettled,
   type DuelMatchRuntimeState,
 } from '../runtime/duel/gameSceneDuelRuntime';
 import {
@@ -688,6 +689,12 @@ export class GameScene extends Phaser.Scene {
         this.canProcessUserAction() &&
         isWaveActionAllowed(this.wavePhaseState, 'place-tower') &&
         !this.isGameOver,
+      resolvePlaceRejection: () => {
+        if (this.activeBattlefieldView !== 'player') return 'opponent_view';
+        if (this.isGameOver) return 'match_over';
+        if (!isWaveActionAllowed(this.wavePhaseState, 'place-tower')) return 'not_build_phase';
+        return null;
+      },
       canPerformSell: () =>
         this.activeBattlefieldView === 'player' &&
         this.canProcessUserAction() &&
@@ -702,8 +709,8 @@ export class GameScene extends Phaser.Scene {
         resolveBuildableTowerConfig(this.selectedBuilderFactionId, towerType),
       toGridCellKey: (position) => toGridCellKey(position),
       toTowerId: (position) => toTowerId(position),
-      validateFootprintPlacementPath: (grid, anchor, footprint) =>
-        validateFootprintPlacementPath(grid, anchor, footprint),
+      checkFootprintPlacementPath: (grid, anchor, footprint) =>
+        checkFootprintPlacementPath(grid, anchor, footprint),
       sellRefundRatio: SELL_REFUND_RATIO,
     };
   }
@@ -953,6 +960,13 @@ export class GameScene extends Phaser.Scene {
     this.isGameOver = duelRuntimeState.isGameOver;
     this.runState.nextWaveStartsAtMs = duelRuntimeState.nextWaveStartsAtMs;
     publishRoundLifeEvents(previousOpponentHp, result);
+    publishRoundSettled(
+      {
+        round: this.runState.currentWaveNumber,
+        bountyEarned: this.runState.waveKillBountyEarned,
+      },
+      result,
+    );
     if (result.playerIncomePaid > 0) {
       this.playerGold += result.playerIncomePaid;
       this.registry.set('economy.gold', this.playerGold);
@@ -1141,6 +1155,7 @@ export class GameScene extends Phaser.Scene {
 
     // From here on this is the wave being fought; the HUD counts it as such.
     this.runState.currentWaveNumber += 1;
+    this.runState.waveKillBountyEarned = 0;
     this.registry.set('wave.number', this.runState.currentWaveNumber);
     this.runState.activeCreepRoutes = waveRoutes;
     // The path preview shows the single-cell route; large creeps may walk wider.

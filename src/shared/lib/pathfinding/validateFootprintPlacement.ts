@@ -59,6 +59,40 @@ export function projectFootprintPlacementRoutes(
   };
 }
 
+/**
+ * Path-wise verdict on a placement: open, cut off for one size class (a small
+ * block seals the large route too, so `blocked_for_small` wins), or an anchor
+ * no route can be searched from (off the grid, over the entrance or exit).
+ */
+export type FootprintPlacementPathCheck =
+  | 'open'
+  | 'blocked_for_small'
+  | 'blocked_for_large'
+  | 'invalid_anchor';
+
+export function checkFootprintPlacementPath(
+  grid: GridModel,
+  anchor: GridPoint,
+  footprint: Readonly<Footprint>,
+): FootprintPlacementPathCheck {
+  if (
+    !isFootprintInBounds(grid, anchor, footprint) ||
+    isCellInFootprint(grid.entrance, anchor, footprint) ||
+    isCellInFootprint(grid.exit, anchor, footprint)
+  ) {
+    return 'invalid_anchor';
+  }
+
+  const routes = findRoutesBySizeClass(
+    withFootprintOccupancy(grid, anchor, footprint, true),
+    grid.entrance,
+    grid.exit,
+  );
+  if (routes.small === null) return 'blocked_for_small';
+  if (routes.large === null) return 'blocked_for_large';
+  return 'open';
+}
+
 /** True when both creep size classes can still reach the exit with the footprint placed. */
 export function validateFootprintPlacementPath(
   grid: GridModel,

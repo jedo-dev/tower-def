@@ -2,6 +2,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { act, render, screen } from '@testing-library/react';
 import { publishGameEvent } from '../../../shared/lib/game-bridge/bridge';
+import { TowerTypeId } from '../../../shared/types/content-ids';
 import { DUEL_EVENT_FEED_LIMIT } from '../model/duelEventFeed';
 import { DuelEventFeed } from './DuelEventFeed';
 
@@ -28,6 +29,28 @@ describe('DuelEventFeed render', () => {
     expect(screen.getByRole('log')).toBeDefined();
     expect(screen.getByText('Your income +10 → 60')).toBeDefined();
     expect(screen.getByText('Enemy -3 HP → 17')).toBeDefined();
+    expect(consoleError).not.toHaveBeenCalled();
+  });
+
+  it('shows build rejections and the round summary from typed events', () => {
+    render(<DuelEventFeed />);
+
+    act(() => {
+      publishGameEvent('build-rejected', {
+        reason: 'path_blocked_small',
+        towerType: TowerTypeId.SINGLE,
+        anchor: { x: 8, y: 10 },
+      });
+      publishGameEvent('round-settled', {
+        round: 7,
+        livesLost: 3,
+        bountyEarned: 40,
+        incomePaid: 120,
+      });
+    });
+
+    expect(screen.getByText('Build failed: blocks the path')).toBeDefined();
+    expect(screen.getByText('Wave 7 settled: -3 lives, +40 bounty, +120 income')).toBeDefined();
     expect(consoleError).not.toHaveBeenCalled();
   });
 
