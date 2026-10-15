@@ -1,7 +1,10 @@
+/* Covers the whole game page (battlefield strip, feed and control panels)
+ * and sits above every battlefield overlay, so the title is never hidden
+ * behind the wave strip. */
 .backdrop {
   position: absolute;
   inset: 0;
-  z-index: 20;
+  z-index: var(--z-index-modal);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -13,6 +16,12 @@
   );
   backdrop-filter: blur(4px);
   animation: match-outcome-fade var(--duration-med) var(--ease-out);
+}
+
+/* The dialog takes focus programmatically on open; the ring belongs on its
+ * buttons, not on the backdrop. */
+.backdrop:focus {
+  outline: none;
 }
 
 .panel {

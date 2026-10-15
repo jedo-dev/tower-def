@@ -22,12 +22,14 @@ export function GamePage({ setup, onExit }: GamePageProps) {
           <DuelEventFeed />
           <GameCanvas setup={setup} />
           <TowerActionPanel />
-          <MatchOutcomeOverlay onExit={onExit} />
         </div>
         <div className="game-panels">
           <CreepSendPanel setup={setup} />
           <HudPanel setup={setup} />
         </div>
+        {/* Last child of the viewport: it covers both the battlefield and the
+            control strip, and the modal makes those two siblings inert. */}
+        <MatchOutcomeOverlay onExit={onExit} />
       </div>
     </main>
   );

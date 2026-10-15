@@ -5,7 +5,7 @@
   left: 8px;
   right: 8px;
   bottom: 8px;
-  z-index: 20;
+  z-index: var(--z-index-canvas-panel);
   display: flex;
   flex-direction: column;
   gap: var(--space-sm);

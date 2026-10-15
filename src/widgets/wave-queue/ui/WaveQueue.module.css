@@ -4,7 +4,7 @@
   top: var(--space-md);
   left: var(--space-md);
   right: var(--space-md);
-  z-index: 100;
+  z-index: var(--z-index-canvas-strip);
   display: flex;
   align-items: center;
   gap: var(--space-md);

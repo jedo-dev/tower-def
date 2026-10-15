@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { onGameCommand, publishGameHudSnapshot } from '../../../shared/lib/game-bridge/bridge';
 import type { GameHudSnapshot } from '../../../shared/lib/game-bridge/types';
 import { MatchOutcomeOverlay } from './MatchOutcomeOverlay';
@@ -161,5 +161,88 @@ describe('MatchOutcomeOverlay', () => {
     expect(onExit).toHaveBeenCalledOnce();
 
     unsubscribe();
+  });
+});
+
+describe('MatchOutcomeOverlay modal focus', () => {
+  const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+
+  afterEach(() => {
+    consoleError.mockClear();
+  });
+
+  function renderWithSiblings() {
+    return render(
+      <div>
+        <div data-testid="battlefield">
+          <button type="button">Start Wave</button>
+        </div>
+        <div data-testid="controls">
+          <button type="button">Send Skeleton</button>
+        </div>
+        <MatchOutcomeOverlay onExit={() => undefined} />
+      </div>,
+    );
+  }
+
+  it('moves focus into the dialog when the match ends', () => {
+    publishGameHudSnapshot(createSnapshot());
+
+    renderWithSiblings();
+
+    expect(document.activeElement).toBe(screen.getByRole('dialog'));
+    expect(consoleError).not.toHaveBeenCalled();
+  });
+
+  it('keeps Tab and Shift+Tab inside the dialog', () => {
+    publishGameHudSnapshot(createSnapshot());
+
+    renderWithSiblings();
+    const dialog = screen.getByRole('dialog');
+    const rematch = screen.getByRole('button', { name: 'Rematch' });
+    const backToMenu = screen.getByRole('button', { name: 'Back to menu' });
+
+    // From the dialog itself Tab lands on the first action.
+    fireEvent.keyDown(dialog, { key: 'Tab' });
+    expect(document.activeElement).toBe(rematch);
+
+    // Past the last action Tab wraps to the first.
+    backToMenu.focus();
+    fireEvent.keyDown(backToMenu, { key: 'Tab' });
+    expect(document.activeElement).toBe(rematch);
+
+    // Shift+Tab from the first action wraps to the last.
+    fireEvent.keyDown(rematch, { key: 'Tab', shiftKey: true });
+    expect(document.activeElement).toBe(backToMenu);
+    expect(consoleError).not.toHaveBeenCalled();
+  });
+
+  it('makes the covered page inert and wakes it up again when the match restarts', () => {
+    publishGameHudSnapshot(createSnapshot());
+    const outsideButton = document.createElement('button');
+    document.body.appendChild(outsideButton);
+    outsideButton.focus();
+
+    renderWithSiblings();
+
+    expect(screen.getByTestId('battlefield').hasAttribute('inert')).toBe(true);
+    expect(screen.getByTestId('controls').hasAttribute('inert')).toBe(true);
+    expect(screen.getByRole('dialog').hasAttribute('inert')).toBe(false);
+
+    act(() => {
+      publishGameHudSnapshot(
+        createSnapshot({
+          matchOutcome: { status: 'active', winner: null, reason: null },
+          phase: 'build',
+        }),
+      );
+    });
+
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(screen.getByTestId('battlefield').hasAttribute('inert')).toBe(false);
+    expect(screen.getByTestId('controls').hasAttribute('inert')).toBe(false);
+    expect(document.activeElement).toBe(outsideButton);
+    outsideButton.remove();
+    expect(consoleError).not.toHaveBeenCalled();
   });
 });

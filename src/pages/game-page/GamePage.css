@@ -14,6 +14,7 @@
  * border-image chrome plus stacked rows ate roughly half the screen.
  */
 .game-viewport {
+  position: relative; /* anchors the match outcome modal over the whole page */
   display: flex;
   flex-direction: column;
   gap: var(--space-sm);

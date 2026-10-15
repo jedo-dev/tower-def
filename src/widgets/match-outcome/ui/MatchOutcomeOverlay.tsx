@@ -1,7 +1,8 @@
-import { memo } from 'react';
+import { memo, useRef } from 'react';
 import styles from './MatchOutcomeOverlay.module.css';
 import { sendGameCommand } from '../../../shared/lib/game-bridge/bridge';
 import { useGameHudSnapshot } from '../../../shared/lib/game-bridge/useGameHudSnapshot';
+import { useModalFocus } from '../../../shared/lib/modal-focus';
 import { FantasyButton } from '../../../shared/ui/fantasy-button';
 import { mapMatchOutcomeToViewModel } from '../model/mapMatchOutcomeToViewModel';
 
@@ -18,6 +19,9 @@ const TONE_CLASS = {
 function MatchOutcomeOverlayComponent({ onExit }: MatchOutcomeOverlayProps) {
   const snapshot = useGameHudSnapshot();
   const viewModel = mapMatchOutcomeToViewModel(snapshot);
+  const dialogRef = useRef<HTMLDivElement | null>(null);
+  // Modal contract: take focus, trap Tab, make the covered page inert.
+  const modalFocus = useModalFocus(dialogRef, viewModel.isVisible);
 
   if (!viewModel.isVisible) {
     return null;
@@ -25,10 +29,13 @@ function MatchOutcomeOverlayComponent({ onExit }: MatchOutcomeOverlayProps) {
 
   return (
     <div
+      ref={dialogRef}
       className={styles.backdrop}
       role="dialog"
       aria-modal="true"
       aria-label={viewModel.ariaLabel}
+      tabIndex={-1}
+      onKeyDown={modalFocus.onKeyDown}
     >
       <div className={styles.panel}>
         <p className={`${styles.title} ${TONE_CLASS[viewModel.tone]}`}>{viewModel.title}</p>
