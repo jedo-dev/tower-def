@@ -38,6 +38,7 @@ export type WaveRuntimeState = {
   nextWaveStartsAtMs: number | null;
   playerGold: number;
   isGameOver: boolean;
+  /** Waves started so far: the wave being fought, or 0 before the first. */
   currentWaveNumber: number;
   lastPublishedAutoStartSecondsLeft: number | null;
 };
@@ -94,7 +95,7 @@ export function createPlayerWaveRuntimeState(
     nextWaveStartsAtMs: null,
     playerGold: initialResources.gold,
     isGameOver: false,
-    currentWaveNumber: 1,
+    currentWaveNumber: 0,
     lastPublishedAutoStartSecondsLeft: null,
   };
 }
@@ -205,7 +206,7 @@ export function resetRunToInitialState(state: WaveRuntimeState): void {
   state.playerGold = initialResources.gold;
   state.wavePhaseState = resetWavePhaseState();
   state.isGameOver = false;
-  state.currentWaveNumber = 1;
+  state.currentWaveNumber = 0;
   state.lastPublishedAutoStartSecondsLeft = null;
 }
 

@@ -12,6 +12,7 @@ import { GRID_DIMENSIONS } from '../../../shared/constants/grid';
 import { RaceId } from '../../../shared/types/content-ids';
 import type { GridPosition } from '../../../shared/types/pathfinding';
 import type {
+  GamePhase,
   HudFactionType,
   MatchOutcomeReason,
   MatchOutcomeStatus,
@@ -161,6 +162,16 @@ export function mapDuelEndReasonToOutcomeReason(
   endReason: DuelMatchEndReason | null,
 ): MatchOutcomeReason | null {
   return endReason === null ? null : MATCH_OUTCOME_REASON_BY_END_REASON[endReason];
+}
+
+/**
+ * The one wave number the HUD shows: the wave being fought (or the one that
+ * just ended the match), and the upcoming wave while building.
+ *
+ * @param wavesStarted waves started so far this match; 0 before the first.
+ */
+export function resolveHudWaveNumber(wavesStarted: number, phase: GamePhase): number {
+  return phase === 'build' ? wavesStarted + 1 : Math.max(1, wavesStarted);
 }
 
 export function toCellCenter(position: GridPosition): { x: number; y: number } {

@@ -8,6 +8,7 @@ import {
   buildHudWaveQueue,
   buildHudWaveQueueWithPending,
   mapDuelEndReasonToOutcomeReason,
+  resolveHudWaveNumber,
   resolveMatchOutcomeStatus,
 } from './gameScene.helpers';
 
@@ -108,5 +109,22 @@ describe('match outcome mapping', () => {
     expect(mapDuelEndReasonToOutcomeReason('fewer_leaks')).toBe('fewer-leaks');
     expect(mapDuelEndReasonToOutcomeReason('more_lives_before_wave')).toBe('more-lives');
     expect(mapDuelEndReasonToOutcomeReason('draw')).toBe('even');
+  });
+});
+
+describe('resolveHudWaveNumber', () => {
+  it('announces the upcoming wave while building', () => {
+    expect(resolveHudWaveNumber(0, 'build')).toBe(1);
+    expect(resolveHudWaveNumber(3, 'build')).toBe(4);
+  });
+
+  it('counts the wave being fought and the one that ended the match', () => {
+    expect(resolveHudWaveNumber(1, 'wave')).toBe(1);
+    expect(resolveHudWaveNumber(3, 'completed')).toBe(3);
+    expect(resolveHudWaveNumber(3, 'game-over')).toBe(3);
+  });
+
+  it('never shows wave 0 outside the build phase', () => {
+    expect(resolveHudWaveNumber(0, 'game-over')).toBe(1);
   });
 });

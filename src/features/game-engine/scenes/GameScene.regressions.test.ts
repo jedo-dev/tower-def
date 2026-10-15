@@ -1,7 +1,9 @@
 import { afterEach, beforeAll, describe, expect, it } from 'vitest';
+import { EnemyFaction } from '../../../entities/enemy-faction';
 import { TowerTypeId } from '../../../shared/types/content-ids';
 import {
   createGameSceneHarness,
+  HARNESS_DEFAULT_SETUP,
   preloadGameScene,
   type GameSceneHarness,
   type GameSceneHarnessOptions,
@@ -11,6 +13,7 @@ import {
 const MID_BOARD_ANCHOR = { x: 8, y: 14 };
 /** Longer than the scene's 160 ms action cooldown. */
 const ACTION_COOLDOWN_FRAMES = 12;
+const MAX_FRAMES_PER_ROUND = 6000;
 
 describe('GameScene regressions (QA audit tower-def-1p7)', () => {
   let harness: GameSceneHarness | null = null;
@@ -72,6 +75,44 @@ describe('GameScene regressions (QA audit tower-def-1p7)', () => {
       expect(game.inspect().playerField.towers).toHaveLength(1);
       expect(game.inspect().playerField.towers[0].entity.level).toBe(1);
       expect(game.inspect().playerGold).toBe(goldBefore);
+    });
+  });
+
+  describe('tower-def-1p7.6: one wave number across build, wave and outcome', () => {
+    it('counts the wave being fought, and the next one while building', async () => {
+      const game = await start();
+      expect(game.latestHud()).toMatchObject({ phase: 'build', waveNumber: 1 });
+
+      game.command('start-wave', undefined);
+      expect(game.latestHud()).toMatchObject({ phase: 'wave', waveNumber: 1 });
+      expect(game.inspect().waveNumber).toBe(1);
+
+      game.tickUntil(() => game.latestHud().phase === 'build', MAX_FRAMES_PER_ROUND);
+      expect(game.latestHud().waveNumber).toBe(2);
+
+      game.command('start-wave', undefined);
+      expect(game.latestHud()).toMatchObject({ phase: 'wave', waveNumber: 2 });
+    });
+
+    it('names the wave that ended the match in the outcome snapshot', async () => {
+      const game = await start({
+        setup: { ...HARNESS_DEFAULT_SETUP, enemyFaction: EnemyFaction.ORC },
+      });
+      let wavesStarted = 0;
+      game.tickUntil(() => {
+        if (game.latestHud().canStartWave) {
+          game.command('start-wave', undefined);
+          wavesStarted += 1;
+        }
+        return game.inspect().isGameOver;
+      }, MAX_FRAMES_PER_ROUND * 5);
+
+      expect(wavesStarted).toBeGreaterThan(0);
+      expect(game.latestHud()).toMatchObject({
+        phase: 'game-over',
+        waveNumber: wavesStarted,
+        matchOutcome: { status: 'player-lost' },
+      });
     });
   });
 });

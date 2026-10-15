@@ -95,6 +95,7 @@ export type GameSceneInspection = {
   pendingPlayerSpawns: readonly PendingWaveSpawn[];
   pendingOpponentSpawns: readonly PendingWaveSpawn[];
   wavePhaseState: WavePhaseState;
+  /** Waves started so far (the wave being fought); the HUD derives its own. */
   waveNumber: number;
   playerGold: number;
   isGameOver: boolean;
