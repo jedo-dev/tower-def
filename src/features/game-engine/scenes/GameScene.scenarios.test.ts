@@ -1,7 +1,10 @@
 import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { EnemyFaction } from '../../../entities/enemy-faction';
 import { getRaceRegistry } from '../../../entities/race-registry';
+import { GRID_DIMENSIONS } from '../../../shared/constants/grid';
 import { RaceId, TowerTypeId } from '../../../shared/types/content-ids';
+import type { GridCell, GridPoint } from '../../../shared/types/grid';
+import type { FakeGameObject } from '../test/fakePhaser';
 import {
   createGameSceneHarness,
   HARNESS_DEFAULT_SETUP,
@@ -107,6 +110,71 @@ describe('GameScene scenarios (headless harness)', () => {
       const { playerField, opponentField } = game.inspect();
       expect(playerField.towers.every((tower) => !tower.sprite.visible)).toBe(true);
       expect(opponentField.towers.every((tower) => tower.sprite.visible)).toBe(true);
+    });
+
+    it('leaves no trace of the opponent board after switching back mid-round', async () => {
+      const game = await start();
+      game.command('select-tower', { towerType: TowerTypeId.SINGLE });
+      game.clickBuildAnchor(MID_BOARD_ANCHOR);
+      game.command('start-wave', undefined);
+      game.tickUntil(() => game.inspect().opponentField.creeps.length > 0, MAX_FRAMES_PER_ROUND);
+
+      const toCellKeys = (points: readonly GridPoint[]) =>
+        new Set(points.map((point) => `${point.x}:${point.y}`));
+      const drawnPathCellKeys = () =>
+        toCellKeys(
+          game
+            .inspect()
+            .gridRenderer.terrainSprites.filter(
+              (sprite) => !(sprite as unknown as FakeGameObject).isDestroyed,
+            )
+            .filter((sprite) => sprite.texture.key.endsWith('/path.png'))
+            .map((sprite) => ({
+              x: sprite.getData('cellX') as number,
+              y: sprite.getData('cellY') as number,
+            })),
+        );
+      const drawnOccupiedCellKeys = () => {
+        const overlays = game
+          .createdObjects()
+          .filter((gameObject) => gameObject.kind === 'graphics' && !gameObject.isDestroyed);
+        return toCellKeys(
+          overlays
+            .flatMap((overlay) => overlay.fillRects)
+            .filter(
+              (rect) =>
+                rect.width === GRID_DIMENSIONS.cellSize &&
+                rect.height === GRID_DIMENSIONS.cellSize &&
+                rect.x % GRID_DIMENSIONS.cellSize === 0 &&
+                rect.y % GRID_DIMENSIONS.cellSize === 0,
+            )
+            .map((rect) => ({
+              x: rect.x / GRID_DIMENSIONS.cellSize,
+              y: rect.y / GRID_DIMENSIONS.cellSize,
+            })),
+        );
+      };
+      const occupiedCellKeys = (cells: readonly GridCell[]) =>
+        toCellKeys(cells.filter((cell) => cell.isOccupied));
+
+      const state = game.inspect();
+      const playerRoute = state.duelMatchState.player.battlefield.routes.small;
+      const opponentRoute = state.duelMatchState.opponent.battlefield.routes.small;
+      const playerCells = state.gridModel?.cells ?? [];
+      const opponentCells = state.duelMatchState.opponent.battlefield.grid.cells;
+      expect(playerRoute.length).toBeGreaterThan(0);
+      expect(toCellKeys(opponentRoute)).not.toEqual(toCellKeys(playerRoute));
+      expect(occupiedCellKeys(opponentCells)).not.toEqual(occupiedCellKeys(playerCells));
+
+      game.switchBattlefieldView('opponent');
+      game.tick();
+      expect(drawnPathCellKeys()).toEqual(toCellKeys(opponentRoute));
+      expect(drawnOccupiedCellKeys()).toEqual(occupiedCellKeys(opponentCells));
+
+      game.switchBattlefieldView('player');
+      game.tick();
+      expect(drawnPathCellKeys()).toEqual(toCellKeys(playerRoute));
+      expect(drawnOccupiedCellKeys()).toEqual(occupiedCellKeys(playerCells));
     });
   });
 

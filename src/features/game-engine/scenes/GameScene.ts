@@ -406,6 +406,7 @@ export class GameScene extends Phaser.Scene {
       isGameOver: this.isGameOver,
       activeBattlefieldView: this.activeBattlefieldView,
       gridModel: this.gridModel,
+      gridRenderer: this.gridRendererState,
     };
   }
 

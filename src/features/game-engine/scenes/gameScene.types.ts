@@ -8,6 +8,7 @@ import type { WavePhaseState } from '../../wave-phase';
 import type { BattlefieldView } from '../../../shared/lib/game-bridge/types';
 import type { GridModel } from '../../../shared/types/grid';
 import type { BattlefieldRenderState } from '../runtime/battlefield/battlefieldRenderState';
+import type { GridRendererState } from '../runtime/grid/gameSceneGridRenderer';
 
 export type CreepRenderState = {
   entity: CreepEntity;
@@ -99,4 +100,6 @@ export type GameSceneInspection = {
   isGameOver: boolean;
   activeBattlefieldView: BattlefieldView;
   gridModel: GridModel | null;
+  /** Terrain tiles and overlays as drawn for the field in view. */
+  gridRenderer: Readonly<GridRendererState>;
 };

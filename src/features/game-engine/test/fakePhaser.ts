@@ -85,6 +85,8 @@ export class FakeGameObject extends FakeEventEmitter {
   public tint = 0xffffff;
   public text = '';
   public currentAnimationKey: string | null = null;
+  /** Rectangles a Graphics object filled since its last clear(), in call order. */
+  public readonly fillRects: Array<{ x: number; y: number; width: number; height: number }> = [];
   public readonly texture: { key: string };
   private readonly dataByKey = new Map<string, unknown>();
 
@@ -168,6 +170,16 @@ export class FakeGameObject extends FakeEventEmitter {
 
   public getData(key: string): unknown {
     return this.dataByKey.get(key);
+  }
+
+  public fillRect(x: number, y: number, width: number, height: number): this {
+    this.fillRects.push({ x, y, width, height });
+    return this;
+  }
+
+  public clear(): this {
+    this.fillRects.length = 0;
+    return this;
   }
 
   public play(animationKey: string): this {
