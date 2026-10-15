@@ -147,6 +147,9 @@ export const ENDPOINT_ENTRANCE_MARKER_COLOR = 0x2ecc71;
 export const ENDPOINT_EXIT_MARKER_COLOR = 0xe74c3c;
 export const ENDPOINT_MARKER_FILL_ALPHA = 0.22;
 export const ENDPOINT_MARKER_LINE_WIDTH = 2;
+/** Tint over every cell a tower stands on, drawn on the grid overlay layer. */
+export const OCCUPIED_CELL_FILL_COLOR = 0x263347;
+export const OCCUPIED_CELL_FILL_ALPHA = 0.55;
 export const TOWER_RENDER_DEPTH = 40;
 export const CREEP_RENDER_DEPTH = 45;
 /**

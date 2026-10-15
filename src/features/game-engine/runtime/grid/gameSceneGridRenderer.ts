@@ -7,8 +7,13 @@ import {
   TILES,
 } from '../assets/terrainAssetRegistry';
 import type { GridCell, GridModel } from '../../../../shared/types/grid';
+import {
+  drawGridOccupancyOverlay,
+  type GridOccupancyOverlayConfig,
+  type GridOccupancyOverlayState,
+} from './gridOccupancyOverlay';
 
-export type GridRendererConfig = {
+export type GridRendererConfig = GridOccupancyOverlayConfig & {
   terrainRenderDepth: number;
   terrainBaseTileAlpha: number;
   terrainDecorationTileAlpha: number;
@@ -30,7 +35,7 @@ export type GridRendererConfig = {
   endpointMarkerLineWidth: number;
 };
 
-export type GridRendererState = {
+export type GridRendererState = GridOccupancyOverlayState & {
   gridGraphics: Phaser.GameObjects.Graphics | null;
   terrainSprites: Phaser.GameObjects.Image[];
   gridLabels: Phaser.GameObjects.Text[];
@@ -129,15 +134,6 @@ export function drawGridCell(
         }
       }
     }
-  }
-
-  if (!state.gridGraphics) {
-    return;
-  }
-
-  if (cell.isOccupied) {
-    state.gridGraphics.fillStyle(0x263347, 0.55);
-    state.gridGraphics.fillRect(x, y, GRID_DIMENSIONS.cellSize, GRID_DIMENSIONS.cellSize);
   }
 }
 
@@ -263,5 +259,6 @@ export function drawGrid(
   drawEndpointZone(state, deps, config, grid, 'exit');
 
   drawGridLines(state, config, grid);
+  drawGridOccupancyOverlay(state, deps.scene, config, grid.cells, gridOverlayRenderDepth);
   return grid;
 }

@@ -130,6 +130,10 @@ import {
   type GridRendererDeps,
   type GridRendererState,
 } from '../runtime/grid/gameSceneGridRenderer';
+import {
+  destroyGridOccupancyOverlay,
+  drawGridOccupancyOverlay,
+} from '../runtime/grid/gridOccupancyOverlay';
 import { refreshPathTiles, selectPlayerPathRoute } from '../runtime/grid/pathTiles';
 import {
   registerSceneAudioUnlock,
@@ -222,6 +226,7 @@ export class GameScene extends Phaser.Scene {
   private gridModel: GridModel | null = null;
   private readonly gridRendererState: GridRendererState = {
     gridGraphics: null,
+    occupancyGraphics: null,
     terrainSprites: [],
     gridLabels: [],
     endpointMarkers: [],
@@ -365,8 +370,10 @@ export class GameScene extends Phaser.Scene {
       this.arePathTilesStale = true;
       this.drawGridCell(cell);
     },
-    // Every build/sell ends here once its cells are redrawn: one path refresh per command.
+    // Every build/sell ends here once its cells are redrawn: one path refresh
+    // and one occupancy overlay redraw per command.
     updateBuildPreview: () => {
+      this.redrawOccupancyOverlay();
       this.refreshBuildPhasePathTiles();
       this.updateBuildPreview();
     },
@@ -720,6 +727,8 @@ export class GameScene extends Phaser.Scene {
       },
       GRID_PREVIEW_CONFIG,
     );
+    // The preview runtime re-dims the grid lines; keep the overlay in step.
+    this.syncOccupancyOverlayAlpha();
     updateBuildRoutePreview(
       this.routePreview,
       {
@@ -785,6 +794,16 @@ export class GameScene extends Phaser.Scene {
   private updateGridOverlayVisualState(): void {
     updateGridOverlayVisualStateRuntime(
       this.gridRendererState.gridGraphics,
+      this.canPerformBuildActions(),
+      GRID_PREVIEW_CONFIG,
+    );
+    this.syncOccupancyOverlayAlpha();
+  }
+
+  /** The occupancy overlay dims with the grid lines during waves. */
+  private syncOccupancyOverlayAlpha(): void {
+    updateGridOverlayVisualStateRuntime(
+      this.gridRendererState.occupancyGraphics,
       this.canPerformBuildActions(),
       GRID_PREVIEW_CONFIG,
     );
@@ -1283,6 +1302,22 @@ export class GameScene extends Phaser.Scene {
         cell,
       );
     }
+    this.redrawOccupancyOverlay();
+  }
+
+  private redrawOccupancyOverlay(): void {
+    if (!this.gridModel) {
+      return;
+    }
+
+    drawGridOccupancyOverlay(
+      this.gridRendererState,
+      this,
+      GRID_RENDERER_CONFIG,
+      this.getVisibleGridCells(),
+      GRID_OVERLAY_RENDER_DEPTH,
+    );
+    this.syncOccupancyOverlayAlpha();
   }
 
   private getVisibleBuilderFactionId(): RaceId {
@@ -1310,6 +1345,7 @@ export class GameScene extends Phaser.Scene {
     this.pathCellKeys.clear();
     this.gridRendererState.gridGraphics?.destroy();
     this.gridRendererState.gridGraphics = null;
+    destroyGridOccupancyOverlay(this.gridRendererState);
     clearTerrainSpritesRuntime(this.gridRendererState);
     clearGridLabelsRuntime(this.gridRendererState);
     this.runState.activeCreepRoutes = EMPTY_WAVE_ROUTES;
