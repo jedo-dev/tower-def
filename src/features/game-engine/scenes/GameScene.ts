@@ -593,6 +593,10 @@ export class GameScene extends Phaser.Scene {
         }
 
         this.activeBattlefieldView = payload.activeView;
+        if (payload.activeView !== 'player') {
+          // The opponent view is read-only: close the player's tower actions.
+          publishGameEvent('selected-tower', { tower: null });
+        }
         this.renderVisibleBattlefield();
         this.publishHudSnapshot();
       }),
