@@ -23,11 +23,14 @@
   overflow: hidden;
 }
 
-/* Battlefield: fills the leftover height; WaveQueue and DuelEventFeed
- * position themselves absolutely inside this box as canvas overlays. */
+/* Battlefield: fills the leftover height; WaveQueue and MatchControls
+ * position themselves absolutely inside this box as canvas overlays. The
+ * duel event feed is a sibling strip below it, never over the cells. */
 .game-canvas-area {
   position: relative;
-  flex: 1 1 auto;
+  /* Basis 0: the box is the leftover space, never the canvas's last size,
+   * so a stale Phaser canvas cannot push the panels off the page. */
+  flex: 1 1 0;
   min-height: 0;
   display: flex;
   border: 0;
@@ -38,16 +41,17 @@
     0 4px 14px rgba(0, 0, 0, 0.5);
 }
 
-/* Controls stay a strip: capped low enough that the battlefield always
- * keeps the majority of the viewport. The HUD shrinks into whatever is left
- * under the send panel and scrolls its expanded body internally; the strip
- * itself only scrolls as a last resort on very short viewports. */
+/* Controls stay a strip: capped low enough that the battlefield keeps at
+ * least ~450px (a 300px-wide board) on a 390x844 phone even with the build
+ * drawer open. The HUD scrolls its expanded body internally and the send
+ * panel folds to its header while the drawer is open; the strip itself only
+ * scrolls as a last resort on very short viewports. */
 .game-panels {
   flex: 0 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 0 2px 2px;
+  gap: var(--space-md);
+  padding: 0 2px;
   min-height: 0;
   max-height: var(--game-controls-max-height);
   overflow-y: auto;

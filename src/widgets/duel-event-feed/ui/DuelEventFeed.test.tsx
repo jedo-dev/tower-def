@@ -1,21 +1,39 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { act, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { publishGameEvent } from '../../../shared/lib/game-bridge/bridge';
 import { TowerTypeId } from '../../../shared/types/content-ids';
-import { DUEL_EVENT_FEED_LIMIT } from '../model/duelEventFeed';
-import { DuelEventFeed } from './DuelEventFeed';
+import { injectCssModule } from '../../../shared/test/injectCssModule';
+import { DUEL_EVENT_FEED_LIMIT, DUEL_EVENT_FEED_PREVIEW_LINES } from '../model/duelEventFeed';
+import { DUEL_EVENT_FEED_EMPTY_TEXT, DUEL_EVENT_FEED_LABEL, DuelEventFeed } from './DuelEventFeed';
+import styles from './DuelEventFeed.module.css';
+import duelEventFeedCss from './DuelEventFeed.module.css?raw';
+
+function publishIncomeBurst(count: number): void {
+  act(() => {
+    for (let index = 0; index < count; index += 1) {
+      publishGameEvent('income-updated', { owner: 'player', income: 60 + index, delta: 10 });
+    }
+  });
+}
 
 describe('DuelEventFeed render', () => {
   const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
 
   afterEach(() => {
+    cleanup();
     consoleError.mockClear();
   });
 
-  it('renders nothing until a duel event arrives', () => {
+  it('keeps the strip in the layout with a placeholder until a duel event arrives', () => {
     render(<DuelEventFeed />);
+    // The strip holds its place so the board does not resize on the first event.
+    expect(screen.getByRole('region', { name: DUEL_EVENT_FEED_LABEL })).toBeDefined();
+    expect(screen.getByText(DUEL_EVENT_FEED_EMPTY_TEXT)).toBeDefined();
     expect(screen.queryByRole('log')).toBeNull();
+    const toggle = screen.getByRole('button', { name: 'Show all duel events' });
+    expect((toggle as HTMLButtonElement).disabled).toBe(true);
+    expect(consoleError).not.toHaveBeenCalled();
   });
 
   it('appends entries from typed bridge events', () => {
@@ -54,16 +72,52 @@ describe('DuelEventFeed render', () => {
     expect(consoleError).not.toHaveBeenCalled();
   });
 
-  it('keeps the feed bounded and free of duplicate keys under a burst', () => {
+  it('previews the newest lines and expands to the bounded history under a burst', () => {
     render(<DuelEventFeed />);
 
-    act(() => {
-      for (let index = 0; index < DUEL_EVENT_FEED_LIMIT + 4; index += 1) {
-        publishGameEvent('income-updated', { owner: 'player', income: 60, delta: 10 });
-      }
-    });
+    publishIncomeBurst(DUEL_EVENT_FEED_LIMIT + 4);
+
+    const log = screen.getByRole('log');
+    expect(log.children).toHaveLength(DUEL_EVENT_FEED_PREVIEW_LINES);
+    // Newest last, oldest preview line first.
+    expect(log.lastElementChild?.textContent).toBe(
+      `Your income +10 → ${60 + DUEL_EVENT_FEED_LIMIT + 3}`,
+    );
+
+    const toggle = screen.getByRole('button', { name: 'Show all duel events' });
+    expect(toggle.getAttribute('aria-expanded')).toBe('false');
+    fireEvent.click(toggle);
 
     expect(screen.getByRole('log').children).toHaveLength(DUEL_EVENT_FEED_LIMIT);
+    const collapse = screen.getByRole('button', { name: 'Show latest duel events' });
+    expect(collapse.getAttribute('aria-expanded')).toBe('true');
+    fireEvent.click(collapse);
+    expect(screen.getByRole('log').children).toHaveLength(DUEL_EVENT_FEED_PREVIEW_LINES);
+    expect(consoleError).not.toHaveBeenCalled();
+  });
+
+  it('keeps the toggle idle while every entry already fits the preview', () => {
+    render(<DuelEventFeed />);
+    publishIncomeBurst(DUEL_EVENT_FEED_PREVIEW_LINES);
+
+    const toggle = screen.getByRole('button', { name: 'Show all duel events' });
+    expect((toggle as HTMLButtonElement).disabled).toBe(true);
+    expect(consoleError).not.toHaveBeenCalled();
+  });
+
+  it('draws the strip on an opaque backing in the flow, never over the board', () => {
+    const injected = injectCssModule(duelEventFeedCss, styles);
+    render(<DuelEventFeed />);
+
+    const strip = screen.getByRole('region', { name: DUEL_EVENT_FEED_LABEL });
+    const stripStyle = getComputedStyle(strip);
+    expect(stripStyle.position).not.toBe('absolute');
+    expect(stripStyle.background).toContain('var(--color-surface-feed)');
+    expect(stripStyle.minHeight).toBe('var(--touch-target-min)');
+
+    const toggle = screen.getByRole('button', { name: 'Show all duel events' });
+    expect(getComputedStyle(toggle).width).toBe('var(--touch-target-min)');
+    injected.remove();
     expect(consoleError).not.toHaveBeenCalled();
   });
 
@@ -80,6 +134,7 @@ describe('DuelEventFeed render', () => {
       publishGameEvent('match-started', { trigger: 'restart' });
     });
     expect(screen.queryByRole('log')).toBeNull();
+    expect(screen.getByText(DUEL_EVENT_FEED_EMPTY_TEXT)).toBeDefined();
 
     act(() => {
       publishGameEvent('income-updated', { owner: 'opponent', income: 55, delta: 5 });
@@ -98,6 +153,7 @@ describe('DuelEventFeed render', () => {
     });
 
     expect(screen.queryByRole('log')).toBeNull();
+    expect(screen.queryByRole('region', { name: DUEL_EVENT_FEED_LABEL })).toBeNull();
     expect(consoleError).not.toHaveBeenCalled();
   });
 });
