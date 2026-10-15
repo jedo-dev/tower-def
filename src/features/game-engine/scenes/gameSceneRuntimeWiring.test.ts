@@ -28,6 +28,7 @@ function createHost(): GameSceneWiringHost & { duelState: () => DuelMatchState }
       duelMatchState = state;
     },
     getComputerSendWaveUnits: () => [],
+    gameNowMs: () => 0,
     refreshBuildState: vi.fn(),
     publishHudSnapshot: vi.fn(),
     handleGameOverUpdated: vi.fn(),

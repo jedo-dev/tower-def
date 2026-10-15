@@ -29,6 +29,8 @@ const snapshot: GameHudSnapshot = {
   playerSendQueue: [],
   opponentSendQueue: [],
   pendingCreepCount: 0,
+  isPaused: false,
+  gameSpeed: 1,
 };
 
 vi.mock('../../../shared/lib/game-bridge/useGameHudSnapshot', () => ({

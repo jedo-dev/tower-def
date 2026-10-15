@@ -35,7 +35,9 @@ import {
 } from '../../../shared/lib/game-bridge/bridge';
 import type {
   BattlefieldView,
+  GameCommandMap,
   GameHudSnapshot,
+  GameSpeed,
   HudFactionType,
   MatchOutcomeReason,
   MatchOutcomeStatus,
@@ -161,6 +163,11 @@ import {
   updateAutoWaveCountdown as updateAutoWaveCountdownRuntime,
 } from '../runtime/wave/gameSceneWaveRuntime';
 import { resolveAutoStartSecondsLeft } from '../runtime/wave/autoStartCountdown';
+import { advanceGameClock, createGameClockState, isGameSpeed } from '../runtime/time/gameClock';
+import {
+  runGuardedEngineStep,
+  type EngineErrorReport,
+} from '../runtime/lifecycle/engineErrorGuard';
 import {
   clearFieldWaveSchedule,
   createOpponentFieldWaveState,
@@ -278,6 +285,10 @@ export class GameScene extends Phaser.Scene {
   };
   private devFpsReportElapsedMs = 0;
   private soundManager: GameAudioManager | null = null;
+  /** Simulation time: paused and sped up independently of Phaser's clock. */
+  private readonly gameClock = createGameClockState();
+  /** Set when a lifecycle step threw; the loop idles until a restart clears it. */
+  private hasEngineError = false;
 
   private get playerGold(): number {
     return this.runState.playerGold;
@@ -339,6 +350,7 @@ export class GameScene extends Phaser.Scene {
       this.duelMatchState = state;
     },
     getComputerSendWaveUnits: () => this.getComputerSendWaveUnits(),
+    gameNowMs: () => this.gameClock.nowMs,
     refreshBuildState: () => this.refreshBuildState(),
     publishHudSnapshot: () => this.publishHudSnapshot(),
     handleGameOverUpdated: (isGameOver) => this.handleGameOverUpdated(isGameOver),
@@ -421,12 +433,85 @@ export class GameScene extends Phaser.Scene {
   }
 
   public preload(): void {
-    this.soundManager = new GameAudioManager(this);
-    this.soundManager.preload();
-    preloadGameSceneAssets(this);
+    this.runGuarded('preload', () => {
+      this.soundManager = new GameAudioManager(this);
+      this.soundManager.preload();
+      preloadGameSceneAssets(this);
+    });
   }
 
   public create(): void {
+    this.runGuarded('create', () => this.createScene());
+  }
+
+  /**
+   * Phaser hands `update` real frame time; the simulation runs on the game
+   * clock instead, so a pause freezes it and 2x doubles every step: movement,
+   * combat, spawn timers and the auto-start countdown alike.
+   */
+  public update(_realTimeMs: number, realDeltaMs: number): void {
+    if (this.hasEngineError) {
+      return;
+    }
+    const simulationDeltaMs = advanceGameClock(this.gameClock, realDeltaMs);
+    if (simulationDeltaMs === 0) {
+      return;
+    }
+    this.runGuarded('update', () => this.stepSimulation(this.gameClock.nowMs, simulationDeltaMs));
+  }
+
+  /** The step a lifecycle guard wraps; a throw here pauses the engine. */
+  private runGuarded(phase: EngineErrorReport['phase'], run: () => void): void {
+    runGuardedEngineStep(phase, run, (report) => this.handleEngineError(report));
+  }
+
+  private handleEngineError(report: EngineErrorReport): void {
+    this.hasEngineError = true;
+    this.gameClock.isPaused = true;
+    this.applyClockToPhaserSystems();
+    publishGameEvent('engine-error', { phase: report.phase, message: report.message });
+    // The HUD should show the pause even if the snapshot itself is what broke.
+    try {
+      this.publishHudSnapshot();
+    } catch {
+      // Already reported; a second failure has nothing new to say.
+    }
+  }
+
+  private setPaused(isPaused: boolean): void {
+    if (this.gameClock.isPaused === isPaused) {
+      return;
+    }
+    this.gameClock.isPaused = isPaused;
+    this.applyClockToPhaserSystems();
+    this.publishHudSnapshot();
+  }
+
+  private setGameSpeed(speed: GameSpeed): void {
+    if (this.gameClock.speed === speed) {
+      return;
+    }
+    this.gameClock.speed = speed;
+    this.applyClockToPhaserSystems();
+    this.publishHudSnapshot();
+  }
+
+  /**
+   * Sprite animations and the few `delayedCall`s (build flash, sound caps)
+   * live on Phaser's own clocks; keep them in step with the game clock.
+   */
+  private applyClockToPhaserSystems(): void {
+    this.time.paused = this.gameClock.isPaused;
+    this.time.timeScale = this.gameClock.speed;
+    this.anims.globalTimeScale = this.gameClock.speed;
+    if (this.gameClock.isPaused) {
+      this.anims.pauseAll();
+    } else {
+      this.anims.resumeAll();
+    }
+  }
+
+  private createScene(): void {
     this.isSceneCleanedUp = false;
     startMissingArtReport();
     ensurePlaceholderTextures(this);
@@ -472,15 +557,15 @@ export class GameScene extends Phaser.Scene {
     this.events.once(Phaser.Scenes.Events.DESTROY, this.handleSceneShutdown, this);
   }
 
-  public update(_time: number, delta: number): void {
-    this.updateAutoWaveCountdown(_time);
+  private stepSimulation(nowMs: number, delta: number): void {
+    this.updateAutoWaveCountdown(nowMs);
 
     if (this.isGameOver) {
       return;
     }
 
-    processPendingWaveSpawns(this.runState, this.wiring.waveRuntimeDeps, _time);
-    processPendingWaveSpawns(this.opponentWave, this.wiring.waveRuntimeDeps, _time);
+    processPendingWaveSpawns(this.runState, this.wiring.waveRuntimeDeps, nowMs);
+    processPendingWaveSpawns(this.opponentWave, this.wiring.waveRuntimeDeps, nowMs);
     moveBattlefieldCreeps(this.wiring.playerBattlefieldContext, MOVEMENT_RUNTIME_CONFIG, delta);
     moveBattlefieldCreeps(this.wiring.opponentBattlefieldContext, MOVEMENT_RUNTIME_CONFIG, delta);
     updateBattlefieldTowerCombat(
@@ -520,7 +605,7 @@ export class GameScene extends Phaser.Scene {
       delta,
     );
     this.applyWaveCompletionRewardIfResolved();
-    this.tryStartNextWave(_time);
+    this.tryStartNextWave(nowMs);
     updateBattlefieldProjectiles(
       this.wiring.playerBattlefieldContext,
       COMBAT_RUNTIME_CONFIG,
@@ -555,17 +640,40 @@ export class GameScene extends Phaser.Scene {
     this.updatePerformanceTelemetry(delta);
   }
 
+  /** `onGameCommand` with every handler behind the command error guard. */
+  private onGuardedCommand<Name extends keyof GameCommandMap>(
+    command: Name,
+    handler: (payload: GameCommandMap[Name]) => void,
+  ): () => void {
+    return onGameCommand(command, (payload) => {
+      this.runGuarded('command', () => handler(payload));
+    });
+  }
+
   private registerBridgeCommandHandlers(): void {
+    const onCommand = this.onGuardedCommand.bind(this);
     this.teardownCallbacks.push(
-      onGameCommand('start-wave', () => {
+      onCommand('start-wave', () => {
         this.handleStartWaveCommand();
       }),
-      onGameCommand('select-tower', (payload) => {
+      onCommand('set-paused', (payload) => {
+        this.setPaused(payload.isPaused);
+      }),
+      onCommand('set-game-speed', (payload) => {
+        if (isGameSpeed(payload.speed)) {
+          this.setGameSpeed(payload.speed);
+        }
+      }),
+      onCommand('quit-match', () => {
+        // The page leaves on this command; freeze the field until it is torn down.
+        this.setPaused(true);
+      }),
+      onCommand('select-tower', (payload) => {
         this.selectedTowerType = payload.towerType;
         this.registry.set('ui.selectedTowerType', this.selectedTowerType ?? 'none');
         this.publishHudSnapshot();
       }),
-      onGameCommand('select-faction', (payload) => {
+      onCommand('select-faction', (payload) => {
         this.selectedFaction = payload.faction;
         if (this.canPerformBuildActions()) {
           this.duelMatchState = createInitialDuelMatchState(
@@ -579,16 +687,20 @@ export class GameScene extends Phaser.Scene {
         this.registry.set('wave.selectedFaction', this.selectedFaction);
         this.publishHudSnapshot();
       }),
-      onGameCommand('send-creep', (payload) => {
+      onCommand('send-creep', (payload) => {
         handleSendCreepCommand(this.sendCreepCommandDeps, payload.creepTypeId);
       }),
-      onGameCommand('upgrade-tower', (payload) => {
+      onCommand('upgrade-tower', (payload) => {
         handleUpgradeTowerCommand(this.towerCommandDeps, payload.towerId);
       }),
-      onGameCommand('sell-tower', (payload) => {
+      onCommand('sell-tower', (payload) => {
         handleSellTowerCommand(this.towerCommandDeps, payload.towerId);
       }),
-      onGameCommand('restart-match', () => {
+      onCommand('restart-match', () => {
+        // A restart is also the recover action after an engine error.
+        this.hasEngineError = false;
+        this.gameClock.isPaused = false;
+        this.applyClockToPhaserSystems();
         this.resetRunToInitialState();
       }),
       onGameEvent('battlefield-view-changed', (payload) => {
@@ -1215,7 +1327,7 @@ export class GameScene extends Phaser.Scene {
       sentUnits: this.duelMatchState.player.sendQueue.map((unitId) =>
         resolveUnitConfigById(unitId),
       ),
-      timing: resolveWaveSpawnTiming(this.time.now, WAVE_RUNTIME_CONFIG),
+      timing: resolveWaveSpawnTiming(this.gameClock.nowMs, WAVE_RUNTIME_CONFIG),
     });
     // The duel state mirrors the field; the old wave's creeps are gone.
     this.syncOpponentDuelCreepsFromField();
@@ -1262,7 +1374,7 @@ export class GameScene extends Phaser.Scene {
   private publishHudSnapshot(): void {
     const autoStartSecondsLeft =
       !this.isGameOver && this.canPerformBuildActions()
-        ? resolveAutoStartSecondsLeft(this.runState.nextWaveStartsAtMs, this.time.now)
+        ? resolveAutoStartSecondsLeft(this.runState.nextWaveStartsAtMs, this.gameClock.nowMs)
         : null;
 
     const snapshot: GameHudSnapshot = {
@@ -1293,6 +1405,8 @@ export class GameScene extends Phaser.Scene {
       pendingCreepCount:
         this.runState.pendingWaveSpawns.length +
         this.playerField.creeps.filter((c) => c.entity.status === 'alive').length,
+      isPaused: this.gameClock.isPaused,
+      gameSpeed: this.gameClock.speed,
     };
 
     publishGameHudSnapshot(snapshot);

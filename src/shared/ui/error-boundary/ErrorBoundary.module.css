@@ -28,7 +28,15 @@
   overflow-wrap: anywhere;
 }
 
-.recoverButton {
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-md);
+}
+
+.recoverButton,
+.secondaryButton {
   min-height: var(--touch-target-min);
   min-width: var(--touch-target-min);
   padding: 0 var(--space-xl);
@@ -39,4 +47,15 @@
   border: none;
   border-radius: var(--radius-sm);
   cursor: pointer;
+}
+
+.secondaryButton {
+  background: transparent;
+  border: 1px solid var(--glass-border-strong);
+}
+
+.recoverButton:focus-visible,
+.secondaryButton:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
 }

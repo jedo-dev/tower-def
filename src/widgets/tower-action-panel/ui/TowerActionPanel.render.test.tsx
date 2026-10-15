@@ -27,6 +27,8 @@ function createHudSnapshot(): GameHudSnapshot {
     playerSendQueue: [],
     opponentSendQueue: [],
     pendingCreepCount: 0,
+    isPaused: false,
+    gameSpeed: 1,
   };
 }
 

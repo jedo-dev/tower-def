@@ -1,0 +1,22 @@
+/* Covers the whole game page above every battlefield overlay, like the
+ * outcome modal; the shared error panel sits in the middle. */
+.backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: var(--z-index-modal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-xl);
+  background: var(--color-surface-overlay);
+  backdrop-filter: blur(4px);
+}
+
+.backdrop:focus {
+  outline: none;
+}
+
+.panel {
+  width: 100%;
+  max-width: 340px;
+}

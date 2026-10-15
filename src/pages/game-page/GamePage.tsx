@@ -1,11 +1,16 @@
+import { useEffect } from 'react';
 import { GameCanvas } from '../../widgets/game-canvas/ui/GameCanvas';
 import { CreepSendPanel } from '../../widgets/creep-send-panel';
 import { DuelEventFeed } from '../../widgets/duel-event-feed';
 import { HudPanel } from '../../widgets/hud/ui/HudPanel';
+import { MatchControls } from '../../widgets/match-controls';
 import { MatchOutcomeOverlay } from '../../widgets/match-outcome';
 import { TowerActionPanel } from '../../widgets/tower-action-panel';
 import { WaveQueue } from '../../widgets/wave-queue';
 import type { GameSetupConfig } from '../../shared/config/game-setup';
+import { onGameCommand } from '../../shared/lib/game-bridge/bridge';
+import { EngineErrorOverlay } from './ui/EngineErrorOverlay';
+import { useMatchUnloadGuard } from './ui/useMatchUnloadGuard';
 import './GamePage.css';
 
 export type GamePageProps = {
@@ -14,11 +19,18 @@ export type GamePageProps = {
 };
 
 export function GamePage({ setup, onExit }: GamePageProps) {
+  useMatchUnloadGuard();
+
+  // The confirmed quit is a typed command: the engine freezes the field and
+  // the page leaves. Unmounting the canvas destroys the game.
+  useEffect(() => onGameCommand('quit-match', () => onExit()), [onExit]);
+
   return (
     <main className="game-page">
       <div className="game-viewport">
         <div className="game-canvas-area">
           <WaveQueue />
+          <MatchControls />
           <DuelEventFeed />
           <GameCanvas setup={setup} />
           <TowerActionPanel />
@@ -27,9 +39,10 @@ export function GamePage({ setup, onExit }: GamePageProps) {
           <CreepSendPanel setup={setup} />
           <HudPanel setup={setup} />
         </div>
-        {/* Last child of the viewport: it covers both the battlefield and the
-            control strip, and the modal makes those two siblings inert. */}
+        {/* Last children of the viewport: they cover both the battlefield and
+            the control strip, and a modal makes the siblings inert. */}
         <MatchOutcomeOverlay onExit={onExit} />
+        <EngineErrorOverlay onExit={onExit} />
       </div>
     </main>
   );

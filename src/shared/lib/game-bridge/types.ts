@@ -14,6 +14,10 @@ export type MatchOutcomeStatus = 'active' | 'player-won' | 'player-lost' | 'draw
  */
 export type MatchOutcomeReason = 'knockout' | 'fewer-leaks' | 'more-lives' | 'even';
 export type DuelistSide = 'player' | 'opponent';
+/** Simulation speed multiplier the player can pick in the match. */
+export type GameSpeed = 1 | 2;
+/** Where in the scene lifecycle an engine error escaped. */
+export type EngineErrorPhase = 'boot' | 'preload' | 'create' | 'update' | 'command';
 export type CreepSendRejectionReason =
   | 'insufficient_gold'
   | 'invalid_creep'
@@ -110,6 +114,9 @@ export type GameHudSnapshot = {
   playerSendQueue: WaveQueueItem[];
   opponentSendQueue: WaveQueueItem[];
   pendingCreepCount: number;
+  /** The simulation is frozen (player pause or engine error); the HUD stays live. */
+  isPaused: boolean;
+  gameSpeed: GameSpeed;
 };
 
 export type GameCommandMap = {
@@ -121,6 +128,10 @@ export type GameCommandMap = {
   'sell-tower': { towerId: string };
   'switch-battlefield-view': { view: BattlefieldView };
   'restart-match': undefined;
+  'set-paused': { isPaused: boolean };
+  'set-game-speed': { speed: GameSpeed };
+  /** The player confirmed leaving the match; the game page returns to the menu. */
+  'quit-match': undefined;
 };
 
 export type GameEventMap = {
@@ -190,5 +201,13 @@ export type GameEventMap = {
     livesLost: number;
     bountyEarned: number;
     incomePaid: number;
+  };
+  /**
+   * An error escaped the scene lifecycle. The engine pauses itself; the game
+   * page shows a recover state (restart run / back to menu).
+   */
+  'engine-error': {
+    phase: EngineErrorPhase;
+    message: string;
   };
 };

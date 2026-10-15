@@ -1,0 +1,104 @@
+/* One row tucked under the wave strip on the right: four 44x44 targets that
+ * only shade the board's top edge (a column would sit over the lane exit). */
+.strip {
+  position: absolute;
+  top: calc(var(--space-md) + var(--wave-strip-height) + var(--space-xs));
+  right: var(--space-md);
+  z-index: var(--z-index-canvas-strip);
+  display: flex;
+  gap: var(--space-xs);
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--touch-target-min);
+  min-height: var(--touch-target-min);
+  padding: 0;
+  border: 1px solid var(--glass-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-overlay);
+  color: var(--color-text-primary);
+  font-family: var(--font-family-display);
+  font-size: var(--font-size-md);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  touch-action: manipulation;
+  box-shadow: var(--shadow-sm);
+}
+
+.button:hover {
+  filter: brightness(1.15);
+}
+
+.button:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.buttonActive {
+  border-color: var(--color-accent-gold);
+  color: var(--color-accent-gold);
+}
+
+.buttonQuit {
+  color: var(--color-text-danger);
+}
+
+/* Quit confirmation: the strip lives inside the battlefield box, so the
+ * backdrop is fixed to cover the whole page, HUD included. */
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-index-modal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-xl);
+  background: var(--color-surface-overlay);
+  backdrop-filter: blur(4px);
+}
+
+.backdrop:focus {
+  outline: none;
+}
+
+.dialog {
+  width: 100%;
+  max-width: 340px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-lg);
+  padding: var(--space-2xl) var(--space-xl);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-xl);
+  background: var(--glass-bg);
+  box-shadow: var(--shadow-lg), var(--shadow-inset-top);
+  text-align: center;
+}
+
+.dialogTitle {
+  margin: 0;
+  font-family: var(--font-family-display);
+  font-size: var(--font-size-xl);
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: var(--color-text-primary);
+}
+
+.dialogDetail {
+  margin: 0;
+  font-family: var(--font-family-ui);
+  font-size: var(--font-size-md);
+  color: var(--color-text-secondary);
+}
+
+.dialogActions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  width: 100%;
+}
