@@ -159,6 +159,7 @@ import {
   tryStartNextWave as tryStartNextWaveRuntime,
   updateAutoWaveCountdown as updateAutoWaveCountdownRuntime,
 } from '../runtime/wave/gameSceneWaveRuntime';
+import { resolveAutoStartSecondsLeft } from '../runtime/wave/autoStartCountdown';
 import {
   clearFieldWaveSchedule,
   createOpponentFieldWaveState,
@@ -1242,8 +1243,8 @@ export class GameScene extends Phaser.Scene {
 
   private publishHudSnapshot(): void {
     const autoStartSecondsLeft =
-      !this.isGameOver && this.canPerformBuildActions() && this.runState.nextWaveStartsAtMs !== null
-        ? Math.max(0, Math.ceil((this.runState.nextWaveStartsAtMs - this.time.now) / 1000))
+      !this.isGameOver && this.canPerformBuildActions()
+        ? resolveAutoStartSecondsLeft(this.runState.nextWaveStartsAtMs, this.time.now)
         : null;
 
     const snapshot: GameHudSnapshot = {

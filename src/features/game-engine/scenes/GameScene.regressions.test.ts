@@ -8,12 +8,14 @@ import {
   type GameSceneHarness,
   type GameSceneHarnessOptions,
 } from '../test/sceneHarness';
+import { AUTO_WAVE_START_DELAY_MS } from './gameScene.constants';
 
 /** A free 2x2 build spot in the middle of the 20x30 board. */
 const MID_BOARD_ANCHOR = { x: 8, y: 14 };
 /** Longer than the scene's 160 ms action cooldown. */
 const ACTION_COOLDOWN_FRAMES = 12;
 const MAX_FRAMES_PER_ROUND = 6000;
+const AUTO_START_SECONDS = AUTO_WAVE_START_DELAY_MS / 1000;
 
 describe('GameScene regressions (QA audit tower-def-1p7)', () => {
   let harness: GameSceneHarness | null = null;
@@ -75,6 +77,60 @@ describe('GameScene regressions (QA audit tower-def-1p7)', () => {
       expect(game.inspect().playerField.towers).toHaveLength(1);
       expect(game.inspect().playerField.towers[0].entity.level).toBe(1);
       expect(game.inspect().playerGold).toBe(goldBefore);
+    });
+  });
+
+  describe('tower-def-1p7.5: restart resets the phase timers from any phase', () => {
+    it('arms a full auto-start countdown when restarted mid-wave', async () => {
+      const game = await start();
+      expect(game.latestHud().autoStartSecondsLeft).toBe(AUTO_START_SECONDS);
+      game.tick(Math.round((AUTO_START_SECONDS - 4) * 60));
+      expect(game.latestHud().autoStartSecondsLeft).toBe(4);
+      game.command('start-wave', undefined);
+      game.tickUntil(() => game.inspect().playerField.creeps.length > 0, MAX_FRAMES_PER_ROUND);
+      expect(game.latestHud()).toMatchObject({ phase: 'wave', autoStartSecondsLeft: null });
+
+      game.command('restart-match', undefined);
+
+      expect(game.latestHud()).toMatchObject({
+        phase: 'build',
+        waveNumber: 1,
+        autoStartSecondsLeft: AUTO_START_SECONDS,
+      });
+      expect(game.inspect().playerField.creeps).toHaveLength(0);
+      expect(game.inspect().pendingPlayerSpawns).toHaveLength(0);
+      expect(game.inspect().pendingOpponentSpawns).toHaveLength(0);
+
+      // The old timers are gone: the countdown runs its full length from here.
+      game.tick(60 * 5);
+      expect(game.latestHud()).toMatchObject({
+        phase: 'build',
+        autoStartSecondsLeft: AUTO_START_SECONDS - 5,
+      });
+      game.tick(60 * 26);
+      expect(game.latestHud()).toMatchObject({ phase: 'wave', waveNumber: 1 });
+    });
+
+    it('arms a full auto-start countdown when restarted from the outcome overlay', async () => {
+      const game = await start({
+        setup: { ...HARNESS_DEFAULT_SETUP, enemyFaction: EnemyFaction.ORC },
+      });
+      game.tickUntil(() => {
+        if (game.latestHud().canStartWave) game.command('start-wave', undefined);
+        return game.inspect().isGameOver;
+      }, MAX_FRAMES_PER_ROUND * 5);
+
+      game.command('restart-match', undefined);
+
+      expect(game.latestHud()).toMatchObject({
+        phase: 'build',
+        waveNumber: 1,
+        canStartWave: true,
+        autoStartSecondsLeft: AUTO_START_SECONDS,
+        matchOutcome: { status: 'active', winner: null, reason: null },
+      });
+      game.tick(60);
+      expect(game.latestHud().autoStartSecondsLeft).toBe(AUTO_START_SECONDS - 1);
     });
   });
 

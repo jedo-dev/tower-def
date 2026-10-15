@@ -26,6 +26,7 @@ import type { GridPosition } from '../../../../shared/types/pathfinding';
 import type { SoundId } from '../../../../shared/lib/sound-registry/audio.types';
 import type { CreepRenderState, PendingWaveSpawn } from '../../scenes/gameScene.types';
 import { destroyCreepRenderState } from '../combat/creepEffectVisuals';
+import { resolveAutoStartSecondsLeft } from './autoStartCountdown';
 import { scheduleWaveSpawns } from './waveSpawnCore';
 import { isFieldWaveResolved, resolveWaveSpawnTiming } from './fieldWaveSpawns';
 
@@ -182,7 +183,7 @@ export function updateAutoWaveCountdown(
     return false;
   }
 
-  const nextSecondsLeft = Math.max(0, Math.ceil((state.nextWaveStartsAtMs - nowMs) / 1000));
+  const nextSecondsLeft = resolveAutoStartSecondsLeft(state.nextWaveStartsAtMs, nowMs);
   if (state.lastPublishedAutoStartSecondsLeft === nextSecondsLeft) return false;
 
   state.lastPublishedAutoStartSecondsLeft = nextSecondsLeft;
