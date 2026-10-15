@@ -18,6 +18,9 @@ import { FantasyButton } from '../../../shared/ui/fantasy-button';
 
 export type HudPanelProps = {
   setup: GameSetupConfig | null;
+  /** Controlled expand state; omitted, the panel keeps its own. */
+  isExpanded?: boolean;
+  onToggleExpanded?: (isExpanded: boolean) => void;
 };
 
 export const BUILD_PHASE_ONLY_HINT = 'Build phase only';
@@ -53,8 +56,17 @@ function joinClassNames(...classNames: (string | false)[]): string {
   return classNames.filter(Boolean).join(' ');
 }
 
-function HudPanelComponent({ setup }: HudPanelProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
+function HudPanelComponent({
+  setup,
+  isExpanded: controlledExpanded,
+  onToggleExpanded,
+}: HudPanelProps) {
+  const [internalExpanded, setInternalExpanded] = useState(false);
+  const isExpanded = controlledExpanded ?? internalExpanded;
+  const setIsExpanded = (next: boolean): void => {
+    setInternalExpanded(next);
+    onToggleExpanded?.(next);
+  };
   const snapshot = useGameHudSnapshot();
   const activeBattlefieldView = useBattlefieldView();
   const viewModel = mapHudSnapshotToViewModel(snapshot);
@@ -141,25 +153,8 @@ function HudPanelComponent({ setup }: HudPanelProps) {
         </div>
       </div>
 
-      <div
-        className={joinClassNames(styles.pressure, PRESSURE_LEVEL_CLASS[viewModel.pressure.level])}
-        role="status"
-        aria-label={viewModel.pressure.ariaLabel}
-      >
-        <span className={styles.pressureLabel}>{viewModel.pressure.label}</span>
-        <span className={styles.pressureDetail}>{viewModel.pressure.detail}</span>
-      </div>
-
-      <div className={styles.duelRow} role="status" aria-label={viewModel.duel.ariaLabel}>
-        <span className={styles.duelSide}>{viewModel.duel.playerLine}</span>
-        <span className={joinClassNames(styles.duelSide, styles.duelSideEnemy)}>
-          {viewModel.duel.opponentLine}
-        </span>
-      </div>
-
       {isExpanded && (
-        <div className={styles.expandedContent}>
-          <div className={`ui-heading ${styles.buildHeading}`}>Build</div>
+        <div className={styles.buildSection}>
           {isBuildLocked && (
             <div className={styles.buildPhaseHint} role="note">
               {BUILD_PHASE_ONLY_HINT}
@@ -180,7 +175,7 @@ function HudPanelComponent({ setup }: HudPanelProps) {
                 disabled={!option.isAffordable && !option.isSelected}
                 aria-disabled={isBuildLocked || undefined}
                 aria-label={option.ariaLabel}
-                title={isBuildLocked ? BUILD_PHASE_ONLY_HINT : undefined}
+                title={isBuildLocked ? BUILD_PHASE_ONLY_HINT : option.name}
                 onClick={() => {
                   if (isBuildLocked) return;
                   sendGameCommand('select-tower', {
@@ -201,55 +196,82 @@ function HudPanelComponent({ setup }: HudPanelProps) {
               </button>
             ))}
           </div>
-
-          <div className={styles.infoRow}>
-            <span className={styles.infoLabel}>Race:</span>
-            <span className={styles.infoValue}>{snapshot.builderFactionName}</span>
-            <span className={styles.infoLabel}>Enemy:</span>
-            <span className={styles.infoValue}>
-              {mapFactionToDisplayName(snapshot.selectedFaction)}
-            </span>
-            {setup?.difficulty && (
-              <>
-                <span className={styles.infoLabel}>Diff:</span>
-                <span className={joinClassNames(styles.infoValue, styles.infoValueDiff)}>
-                  {setup.difficulty}
-                </span>
-              </>
-            )}
-          </div>
-
-          <div className={styles.infoRow}>
-            <span className={styles.infoLabel}>Wave:</span>
-            <span className={styles.infoValue}>{snapshot.waveNumber}</span>
-            <span className={styles.infoLabel}>Phase:</span>
-            <span className={styles.infoValue}>{viewModel.phaseLabel}</span>
-          </div>
-
-          <div className={joinClassNames(styles.infoRow, styles.infoRowEnemy)}>
-            <span className={styles.infoLabel}>Enemy gold:</span>
-            <span className={styles.infoValue}>{snapshot.opponentGold}</span>
-            <span className={styles.infoLabel}>Enemy income:</span>
-            <span className={styles.infoValue}>{snapshot.opponentIncome}</span>
-            <span className={styles.infoLabel}>Enemy HP:</span>
-            <span className={styles.infoValue}>{snapshot.opponentLives}</span>
-            <span className={styles.infoLabel}>Enemy sends:</span>
-            <span className={styles.infoValue}>{snapshot.opponentSendQueue.length}</span>
-          </div>
-
-          {snapshot.matchOutcome.status !== 'active' && (
-            <div className={styles.infoRow} role="status">
-              <span className={styles.infoLabel}>Match:</span>
-              <span className={styles.infoValue}>{snapshot.matchOutcome.status}</span>
-            </div>
-          )}
-
-          <div className={styles.selectedInfo}>
-            <span className={styles.selectedLabel}>Selected:</span>
-            <span className={styles.selectedValue}>{viewModel.selectedTowerLabel}</span>
-          </div>
         </div>
       )}
+
+      {/* Status rows stay in view collapsed; expanded, they lead the scrolling
+          body so the tower cards above keep their place. */}
+      <div className={joinClassNames(styles.statusBody, isExpanded && styles.expandedContent)}>
+        <div
+          className={joinClassNames(
+            styles.pressure,
+            PRESSURE_LEVEL_CLASS[viewModel.pressure.level],
+          )}
+          role="status"
+          aria-label={viewModel.pressure.ariaLabel}
+        >
+          <span className={styles.pressureLabel}>{viewModel.pressure.label}</span>
+          <span className={styles.pressureDetail}>{viewModel.pressure.detail}</span>
+        </div>
+
+        <div className={styles.duelRow} role="status" aria-label={viewModel.duel.ariaLabel}>
+          <span className={styles.duelSide}>{viewModel.duel.playerLine}</span>
+          <span className={joinClassNames(styles.duelSide, styles.duelSideEnemy)}>
+            {viewModel.duel.opponentLine}
+          </span>
+        </div>
+
+        {isExpanded && (
+          <>
+            <div className={styles.infoRow}>
+              <span className={styles.infoLabel}>Race:</span>
+              <span className={styles.infoValue}>{snapshot.builderFactionName}</span>
+              <span className={styles.infoLabel}>Enemy:</span>
+              <span className={styles.infoValue}>
+                {mapFactionToDisplayName(snapshot.selectedFaction)}
+              </span>
+              {setup?.difficulty && (
+                <>
+                  <span className={styles.infoLabel}>Diff:</span>
+                  <span className={joinClassNames(styles.infoValue, styles.infoValueDiff)}>
+                    {setup.difficulty}
+                  </span>
+                </>
+              )}
+            </div>
+
+            <div className={styles.infoRow}>
+              <span className={styles.infoLabel}>Wave:</span>
+              <span className={styles.infoValue}>{snapshot.waveNumber}</span>
+              <span className={styles.infoLabel}>Phase:</span>
+              <span className={styles.infoValue}>{viewModel.phaseLabel}</span>
+            </div>
+
+            <div className={joinClassNames(styles.infoRow, styles.infoRowEnemy)}>
+              <span className={styles.infoLabel}>Enemy gold:</span>
+              <span className={styles.infoValue}>{snapshot.opponentGold}</span>
+              <span className={styles.infoLabel}>Enemy income:</span>
+              <span className={styles.infoValue}>{snapshot.opponentIncome}</span>
+              <span className={styles.infoLabel}>Enemy HP:</span>
+              <span className={styles.infoValue}>{snapshot.opponentLives}</span>
+              <span className={styles.infoLabel}>Enemy sends:</span>
+              <span className={styles.infoValue}>{snapshot.opponentSendQueue.length}</span>
+            </div>
+
+            {snapshot.matchOutcome.status !== 'active' && (
+              <div className={styles.infoRow} role="status">
+                <span className={styles.infoLabel}>Match:</span>
+                <span className={styles.infoValue}>{snapshot.matchOutcome.status}</span>
+              </div>
+            )}
+
+            <div className={styles.selectedInfo}>
+              <span className={styles.selectedLabel}>Selected:</span>
+              <span className={styles.selectedValue}>{viewModel.selectedTowerLabel}</span>
+            </div>
+          </>
+        )}
+      </div>
     </section>
   );
 }

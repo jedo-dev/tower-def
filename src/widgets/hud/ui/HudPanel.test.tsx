@@ -161,6 +161,8 @@ describe('HudPanel build bar', () => {
     const [firstButton] = within(buildBar).getAllByRole('button');
     expect(firstButton.getAttribute('aria-disabled')).toBeNull();
     expect(screen.queryByRole('note')).toBeNull();
+    // The card may wrap or clamp the name; the full name stays in the tooltip.
+    expect(firstButton.getAttribute('title')).toBe('Bone Archer Tower');
 
     fireEvent.click(firstButton);
     expect(selectTower).toHaveBeenCalledOnce();
@@ -230,7 +232,47 @@ describe('HudPanel viewport layout', () => {
     expect(expandedBody).not.toBeNull();
     const bodyStyle = getComputedStyle(expandedBody as HTMLElement);
     expect(bodyStyle.overflowY).toBe('auto');
-    expect(bodyStyle.minHeight).toBe('0px');
+    expect(bodyStyle.minHeight).toBe('var(--hud-status-min-height)');
+    // The tower cards sit above the scrolling body, so they never scroll away.
+    const buildBar = screen.getByRole('group', { name: 'Buildable towers' });
+    expect(expandedBody?.contains(buildBar)).toBe(false);
+    expect(expandedBody?.contains(screen.getByText('Enemy gold:'))).toBe(true);
+    expect(consoleError).not.toHaveBeenCalled();
+  });
+
+  it('reports expand toggles to the page when controlled', () => {
+    publishGameHudSnapshot(createSnapshot());
+    const onToggleExpanded = vi.fn();
+
+    const { rerender } = render(
+      <HudPanel setup={null} isExpanded={false} onToggleExpanded={onToggleExpanded} />,
+    );
+    expect(screen.queryByRole('group', { name: 'Buildable towers' })).toBeNull();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Expand HUD' }));
+    expect(onToggleExpanded).toHaveBeenCalledWith(true);
+    // Controlled: the page owns the state, so nothing opens until it re-renders.
+    expect(screen.queryByRole('group', { name: 'Buildable towers' })).toBeNull();
+
+    rerender(<HudPanel setup={null} isExpanded onToggleExpanded={onToggleExpanded} />);
+    expect(screen.getByRole('group', { name: 'Buildable towers' })).toBeDefined();
+    expect(screen.getByRole('button', { name: 'Collapse HUD' })).toBeDefined();
+    expect(consoleError).not.toHaveBeenCalled();
+  });
+
+  it('lays the tower cards out as a wrapping grid instead of a sideways scroller', () => {
+    injectedStyles = injectCssModule(hudPanelCss, styles);
+    publishGameHudSnapshot(createSnapshot());
+
+    render(<HudPanel setup={null} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Expand HUD' }));
+
+    const buildBar = screen.getByRole('group', { name: 'Buildable towers' });
+    const barStyle = getComputedStyle(buildBar);
+    expect(barStyle.display).toBe('grid');
+    expect(barStyle.overflowX).not.toBe('auto');
+    // Four cards of at least 68px fit the 308px inner width of a 360px phone.
+    expect(barStyle.gridTemplateColumns).toContain('minmax(68px, 1fr)');
     expect(consoleError).not.toHaveBeenCalled();
   });
 });

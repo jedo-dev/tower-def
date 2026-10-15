@@ -1,32 +1,59 @@
+/* Slim strip between the battlefield and the panels. Opaque backing: the
+ * lines no longer compete with grass, so every colour clears WCAG AA. */
 .feed {
-  position: absolute;
-  bottom: var(--space-md);
-  left: var(--space-md);
+  flex: 0 0 auto;
   display: flex;
-  flex-direction: column;
-  gap: var(--space-2xs);
-  max-width: 60vw;
-  pointer-events: none;
-  z-index: var(--z-index-canvas-feed);
+  align-items: stretch;
+  gap: var(--space-xs);
+  min-height: var(--touch-target-min);
+  padding: 0 0 0 var(--space-md);
+  border-radius: 6px;
+  background: var(--color-surface-feed);
+  /* The frame is an inset shadow, not a border: the strip stays exactly one
+   * touch target tall. */
+  box-shadow:
+    inset 0 0 0 1px rgba(120, 130, 150, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
-.entry {
+.entries,
+.empty {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0;
+  margin: 0;
+}
+
+/* Expanded: the whole bounded history, scrolling instead of growing past
+ * its cap so the battlefield keeps its share. */
+.feedExpanded .entries {
+  justify-content: flex-start;
+  max-height: var(--duel-feed-expanded-max-height);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+
+.entry,
+.empty {
   font-family: var(--font-family-ui);
   font-size: var(--font-size-xs);
-  line-height: 1.3;
-  color: rgba(230, 233, 239, 0.7);
-  background: transparent;
-  padding: 0 2px;
-  text-shadow:
-    0 1px 0 rgba(0, 0, 0, 0.95),
-    0 0 6px rgba(0, 0, 0, 0.9);
+  line-height: 1.2;
+  color: var(--color-text-secondary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
+.empty {
+  color: var(--color-text-muted);
+}
+
 .entry:last-child {
-  color: #e6e9ef;
+  color: var(--color-text-primary);
 }
 
 .entryDamage {
@@ -42,6 +69,54 @@
 }
 
 .entrySummary {
-  color: #e6e9ef;
+  color: var(--color-text-primary);
   font-weight: 600;
+}
+
+/* Expand toggle: a full 44px target on the right edge of the strip. */
+.toggle {
+  flex: 0 0 auto;
+  width: var(--touch-target-min);
+  min-height: var(--touch-target-min);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-left: 1px solid rgba(120, 130, 150, 0.25);
+  background: transparent;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.toggle:disabled {
+  cursor: default;
+  opacity: 0.35;
+}
+
+.toggle:hover:not(:disabled) {
+  filter: brightness(1.2);
+}
+
+.toggle:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.toggleIcon {
+  display: inline-block;
+  width: 22px;
+  height: 22px;
+  background: url('/assets/ui/kit/icon-chevron-up.png') center / 200% no-repeat;
+  transition: transform var(--duration-med) var(--ease-out);
+}
+
+.toggleIconDown {
+  transform: rotate(180deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toggleIcon {
+    transition: none;
+  }
 }

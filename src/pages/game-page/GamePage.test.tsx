@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { Difficulty } from '../../entities/difficulty';
 import type { GameSetupConfig } from '../../shared/config/game-setup';
 import {
@@ -103,6 +103,28 @@ describe('GamePage', () => {
     expect(screen.getByText('Main menu')).toBeDefined();
     expect(destroyGame).toHaveBeenCalledOnce();
     expect(destroyGame).toHaveBeenCalledWith(createdGames[0]);
+    expect(consoleError).not.toHaveBeenCalled();
+  });
+
+  it('keeps the duel event feed beside the board, not over it, and folds the send cards behind the build drawer', () => {
+    publishGameHudSnapshot(createActiveSnapshot());
+    render(<AppShell />);
+
+    const feed = screen.getByRole('region', { name: 'Duel events' });
+    const board = document.querySelector('.game-canvas-area');
+    expect(board).not.toBeNull();
+    expect(board?.contains(feed)).toBe(false);
+    expect(feed.parentElement?.className).toBe('game-viewport');
+
+    const sendPanel = screen.getByRole('region', { name: 'Creep sending panel' });
+    expect(within(sendPanel).getAllByRole('button').length).toBeGreaterThan(0);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Expand HUD' }));
+    expect(screen.getByRole('group', { name: 'Buildable towers' })).toBeDefined();
+    expect(within(sendPanel).queryAllByRole('button')).toHaveLength(0);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Collapse HUD' }));
+    expect(within(sendPanel).getAllByRole('button').length).toBeGreaterThan(0);
     expect(consoleError).not.toHaveBeenCalled();
   });
 

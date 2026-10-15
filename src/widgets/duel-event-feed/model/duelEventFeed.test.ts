@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { TowerTypeId } from '../../../shared/types/content-ids';
 import type { BuildRejectionReason } from '../../../shared/lib/game-bridge/types';
 import {
+  DUEL_EVENT_FEED_PREVIEW_LINES,
   appendFeedEntry,
+  selectPreviewEntries,
   DUEL_EVENT_FEED_LIMIT,
   formatBuildRejected,
   formatIncomeUpdated,
@@ -111,5 +113,18 @@ describe('duel event feed model', () => {
         sendLimit: 2,
       }),
     ).toBe('Send failed: 2 of this creep per wave');
+  });
+});
+
+describe('selectPreviewEntries', () => {
+  it('returns the newest lines, oldest first, and a copy when everything fits', () => {
+    const entries = [entry(1), entry(2), entry(3), entry(4), entry(5)];
+    expect(selectPreviewEntries(entries).map((item) => item.id)).toEqual(
+      [3, 4, 5].slice(3 - DUEL_EVENT_FEED_PREVIEW_LINES),
+    );
+    const short = [entry(1), entry(2)];
+    const preview = selectPreviewEntries(short);
+    expect(preview).toEqual(short);
+    expect(preview).not.toBe(short);
   });
 });

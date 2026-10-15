@@ -11,9 +11,13 @@ import {
   formatRoundSettled,
   formatSendQueueUpdated,
   formatSendRejected,
+  selectPreviewEntries,
   type DuelFeedEntry,
   type DuelFeedEntryKind,
 } from '../model/duelEventFeed';
+
+export const DUEL_EVENT_FEED_LABEL = 'Duel events';
+export const DUEL_EVENT_FEED_EMPTY_TEXT = 'No duel events yet';
 
 const ENTRY_KIND_CLASS: Record<DuelFeedEntryKind, string> = {
   send: '',
@@ -23,8 +27,14 @@ const ENTRY_KIND_CLASS: Record<DuelFeedEntryKind, string> = {
   summary: styles.entrySummary,
 };
 
+/**
+ * Event strip between the battlefield and the control panels: it never sits
+ * over board cells. Collapsed it shows the newest lines on a dark backing;
+ * the toggle opens the whole bounded history.
+ */
 function DuelEventFeedComponent() {
   const [entries, setEntries] = useState<DuelFeedEntry[]>([]);
+  const [isExpanded, setIsExpanded] = useState(false);
   const nextIdRef = useRef(1);
 
   useEffect(() => {
@@ -75,21 +85,42 @@ function DuelEventFeedComponent() {
     };
   }, []);
 
-  if (entries.length === 0) {
-    return null;
-  }
+  const visibleEntries = isExpanded ? entries : selectPreviewEntries(entries);
+  const canExpand = entries.length > visibleEntries.length || isExpanded;
 
   return (
-    <div className={styles.feed} role="log" aria-label="Duel events" aria-live="polite">
-      {entries.map((entry) => (
-        <div
-          key={entry.id}
-          className={`${styles.entry}${ENTRY_KIND_CLASS[entry.kind] ? ` ${ENTRY_KIND_CLASS[entry.kind]}` : ''}`}
-        >
-          {entry.text}
+    <section
+      className={`${styles.feed}${isExpanded ? ` ${styles.feedExpanded}` : ''}`}
+      aria-label={DUEL_EVENT_FEED_LABEL}
+    >
+      {entries.length === 0 ? (
+        <p className={styles.empty}>{DUEL_EVENT_FEED_EMPTY_TEXT}</p>
+      ) : (
+        <div className={styles.entries} role="log" aria-live="polite">
+          {visibleEntries.map((entry) => (
+            <div
+              key={entry.id}
+              className={`${styles.entry}${ENTRY_KIND_CLASS[entry.kind] ? ` ${ENTRY_KIND_CLASS[entry.kind]}` : ''}`}
+            >
+              {entry.text}
+            </div>
+          ))}
         </div>
-      ))}
-    </div>
+      )}
+      <button
+        type="button"
+        className={styles.toggle}
+        aria-label={isExpanded ? 'Show latest duel events' : 'Show all duel events'}
+        aria-expanded={isExpanded}
+        disabled={!canExpand}
+        onClick={() => setIsExpanded(!isExpanded)}
+      >
+        <span
+          className={`${styles.toggleIcon}${isExpanded ? ` ${styles.toggleIconDown}` : ''}`}
+          aria-hidden="true"
+        />
+      </button>
+    </section>
   );
 }
 
