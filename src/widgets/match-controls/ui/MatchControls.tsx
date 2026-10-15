@@ -44,6 +44,9 @@ function MatchControlsComponent() {
         case 'set-speed':
           sendGameCommand('set-game-speed', { speed: action.speed });
           return;
+        case 'zoom-board':
+          sendGameCommand('zoom-board', { action: action.action });
+          return;
         case 'request-quit':
           openQuitDialog();
           return;

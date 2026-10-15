@@ -9,7 +9,8 @@ export type MatchShortcutHandlers = {
 
 /**
  * Window-level keyboard map for the match controls: Space/P pause, 1/2 speed,
- * Escape asks to quit. Keys typed into a text field are left alone.
+ * +/- zoom the board and 0 resets it, Escape asks to quit. Keys typed into a
+ * text field are left alone.
  */
 export function useMatchKeyboardShortcuts({ onAction, isEnabled }: MatchShortcutHandlers): void {
   useEffect(() => {

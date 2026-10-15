@@ -1,50 +1,55 @@
 import type Phaser from 'phaser';
-import type { WorldPoint } from '../camera/cameraViewMapping';
-import type { PointerGridTarget } from '../grid/gameSceneGridPreviewRuntime';
+import type { ScreenPoint } from '../camera/cameraViewMapping';
+import { screenDistance, wheelDeltaToZoomMultiplier } from './boardGestures';
+import {
+  dispatchBoardTap,
+  syncHoveredCellFromPointer,
+  type InputControllerConfig,
+  type InputControllerDependencies,
+  type InputControllerState,
+} from './inputControllerCore';
+import { handleTouchDown, handleTouchMove, handleTouchUp } from './gameSceneTouchGestures';
 
-export type InputTouchGesture = {
-  startedAtMs: number;
-  startX: number;
-  startY: number;
-  soldByLongPress: boolean;
-};
+export {
+  canProcessUserAction,
+  createInputControllerState,
+  markUserActionProcessed,
+  syncHoveredCellFromPointer,
+  type BoardTapOutcome,
+  type InputControllerConfig,
+  type InputControllerDependencies,
+  type InputControllerState,
+} from './inputControllerCore';
 
-export type InputControllerState = {
-  activeTouchGesture: InputTouchGesture | null;
-  lastActionAtMs: number;
-};
+/**
+ * Board pointer input, shared by mouse and touch. Mouse: left click builds at
+ * once at fit zoom, or on release (unless it dragged) when zoomed in or with
+ * Shift held; middle button and those drags pan; wheel zooms at the cursor;
+ * right click sells. Touch is in gameSceneTouchGestures.
+ */
 
-export type InputControllerConfig = {
-  actionCooldownMs: number;
-  touchTapMinDurationMs: number;
-  touchTapMaxDurationMs: number;
-  touchTapMaxMovePx: number;
-  touchLongPressMinDurationMs: number;
-};
-
-export type InputControllerDependencies = {
-  nowMs: () => number;
-  /** World position under the pointer on screen now (camera and canvas aware). */
-  toPointerWorldPoint: (pointer: Phaser.Input.Pointer) => WorldPoint;
-  toPointerTarget: (worldX: number, worldY: number) => PointerGridTarget | null;
-  setHoveredTarget: (target: PointerGridTarget | null) => void;
-  clearHoveredCell: () => void;
-  updateHoveredCellDebugRegistry: () => void;
-  updateBuildPreview: () => void;
-  tryPlaceTowerAtHoveredCell: () => void;
-  trySellTowerAtHoveredCell: () => void;
-};
-
-export function canProcessUserAction(
+function handleMouseMove(
   state: InputControllerState,
-  nowMs: number,
-  cooldownMs: number,
-): boolean {
-  return nowMs - state.lastActionAtMs >= cooldownMs;
-}
+  deps: InputControllerDependencies,
+  config: InputControllerConfig,
+  pointer: Phaser.Input.Pointer,
+  screen: ScreenPoint,
+): void {
+  const drag = state.activeMouseDrag;
+  if (drag) {
+    if (!drag.isPanning && screenDistance(drag.start, screen) > config.panStartThresholdPx) {
+      drag.isPanning = true;
+    }
+    if (drag.isPanning) {
+      deps.panCameraBy({ x: screen.x - drag.last.x, y: screen.y - drag.last.y });
+      drag.last = screen;
+      return;
+    }
+    drag.last = screen;
+  }
 
-export function markUserActionProcessed(state: InputControllerState, nowMs: number): void {
-  state.lastActionAtMs = nowMs;
+  syncHoveredCellFromPointer(deps, pointer);
+  deps.updateBuildPreview();
 }
 
 export function handlePointerMove(
@@ -53,45 +58,12 @@ export function handlePointerMove(
   config: InputControllerConfig,
   pointer: Phaser.Input.Pointer,
 ): void {
-  const worldPoint = deps.toPointerWorldPoint(pointer);
-  deps.setHoveredTarget(deps.toPointerTarget(worldPoint.x, worldPoint.y));
-  deps.updateHoveredCellDebugRegistry();
-  deps.updateBuildPreview();
-
-  if (!pointer.primaryDown || !pointer.wasTouch || !state.activeTouchGesture) {
+  const screen = deps.toPointerScreenPoint(pointer);
+  if (pointer.wasTouch) {
+    handleTouchMove(state, deps, config, pointer, screen);
     return;
   }
-
-  const durationMs = deps.nowMs() - state.activeTouchGesture.startedAtMs;
-  const moveDistance = Math.hypot(
-    worldPoint.x - state.activeTouchGesture.startX,
-    worldPoint.y - state.activeTouchGesture.startY,
-  );
-  const isStillPressingCell = moveDistance <= config.touchTapMaxMovePx;
-
-  if (
-    !state.activeTouchGesture.soldByLongPress &&
-    isStillPressingCell &&
-    durationMs >= config.touchLongPressMinDurationMs
-  ) {
-    deps.trySellTowerAtHoveredCell();
-    state.activeTouchGesture.soldByLongPress = true;
-  }
-}
-
-/**
- * A plain touch tap emits no pointermove, so the hovered cell would stay stale
- * (or null) and the tap would land on the previous cell. Resync it from the
- * pointer before any down/up action.
- */
-export function syncHoveredCellFromPointer(
-  deps: InputControllerDependencies,
-  pointer: Phaser.Input.Pointer,
-): WorldPoint {
-  const worldPoint = deps.toPointerWorldPoint(pointer);
-  deps.setHoveredTarget(deps.toPointerTarget(worldPoint.x, worldPoint.y));
-  deps.updateHoveredCellDebugRegistry();
-  return worldPoint;
+  handleMouseMove(state, deps, config, pointer, screen);
 }
 
 export function handlePointerDown(
@@ -99,23 +71,38 @@ export function handlePointerDown(
   deps: InputControllerDependencies,
   pointer: Phaser.Input.Pointer,
 ): void {
-  const worldPoint = syncHoveredCellFromPointer(deps, pointer);
+  const screen = deps.toPointerScreenPoint(pointer);
   if (pointer.wasTouch) {
-    state.activeTouchGesture = {
-      startedAtMs: deps.nowMs(),
-      startX: worldPoint.x,
-      startY: worldPoint.y,
-      soldByLongPress: false,
+    handleTouchDown(state, deps, pointer, screen);
+    return;
+  }
+
+  if (pointer.button === 1) {
+    state.activeMouseDrag = {
+      start: screen,
+      last: screen,
+      isPanning: true,
+      placesOnRelease: false,
     };
     return;
   }
 
   if (pointer.button === 0) {
-    deps.tryPlaceTowerAtHoveredCell();
+    if (deps.isCameraZoomed() || deps.hasPanModifier(pointer)) {
+      state.activeMouseDrag = {
+        start: screen,
+        last: screen,
+        isPanning: false,
+        placesOnRelease: true,
+      };
+      return;
+    }
+    deps.onBoardTap(pointer);
     return;
   }
 
   if (pointer.button === 2) {
+    syncHoveredCellFromPointer(deps, pointer);
     deps.trySellTowerAtHoveredCell();
   }
 }
@@ -126,26 +113,33 @@ export function handlePointerUp(
   config: InputControllerConfig,
   pointer: Phaser.Input.Pointer,
 ): void {
-  if (!pointer.wasTouch || !state.activeTouchGesture) {
+  const screen = deps.toPointerScreenPoint(pointer);
+  if (pointer.wasTouch) {
+    handleTouchUp(state, deps, config, pointer, screen);
     return;
   }
 
-  const worldPoint = syncHoveredCellFromPointer(deps, pointer);
-  const durationMs = deps.nowMs() - state.activeTouchGesture.startedAtMs;
-  const moveDistance = Math.hypot(
-    worldPoint.x - state.activeTouchGesture.startX,
-    worldPoint.y - state.activeTouchGesture.startY,
-  );
-  const isTap =
-    durationMs >= config.touchTapMinDurationMs &&
-    durationMs <= config.touchTapMaxDurationMs &&
-    moveDistance <= config.touchTapMaxMovePx;
-
-  if (isTap && !state.activeTouchGesture.soldByLongPress) {
-    deps.tryPlaceTowerAtHoveredCell();
+  const drag = state.activeMouseDrag;
+  if (!drag) {
+    return;
   }
+  state.activeMouseDrag = null;
+  if (drag.placesOnRelease && !drag.isPanning) {
+    dispatchBoardTap(state, deps, config, pointer, screen);
+  }
+}
 
-  state.activeTouchGesture = null;
+/** Mouse wheel zooms around the cursor. */
+export function handleWheel(
+  deps: InputControllerDependencies,
+  config: InputControllerConfig,
+  pointer: Phaser.Input.Pointer,
+  deltaY: number,
+): void {
+  deps.zoomCameraByAt(
+    wheelDeltaToZoomMultiplier(deltaY, config.wheelZoomSensitivity),
+    deps.toPointerScreenPoint(pointer),
+  );
 }
 
 export function handleGameOut(
@@ -153,6 +147,9 @@ export function handleGameOut(
   deps: InputControllerDependencies,
 ): void {
   state.activeTouchGesture = null;
+  state.activePinch = null;
+  state.activeMouseDrag = null;
+  state.touchPointsById.clear();
   deps.clearHoveredCell();
   deps.updateHoveredCellDebugRegistry();
   deps.updateBuildPreview();

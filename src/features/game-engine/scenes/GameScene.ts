@@ -35,6 +35,7 @@ import {
 } from '../../../shared/lib/game-bridge/bridge';
 import type {
   BattlefieldView,
+  BoardZoomAction,
   GameCommandMap,
   GameHudSnapshot,
   GameSpeed,
@@ -81,8 +82,18 @@ import {
   updateBattlefieldTowerCombat,
 } from '../runtime/battlefield/battlefieldUpdateRuntime';
 import {
+  createBoardCameraState,
+  getBoardViewportCentre,
+  getBoardZoomFactor,
+  isBoardCameraZoomed,
+  panBoardCamera,
   registerResponsiveCamera,
+  resetBoardCamera,
+  resolvePointerScreenPoint,
   resolvePointerWorldPoint,
+  setBoardCameraZoomFactorAt,
+  zoomBoardCameraByAt,
+  type BoardCameraState,
 } from '../runtime/camera/gameSceneCameraRuntime';
 import {
   isBuildAnchorValid as isBuildAnchorValidRuntime,
@@ -144,12 +155,15 @@ import {
 } from '../runtime/input/gameSceneInputBindings';
 import {
   canProcessUserAction as canProcessUserActionRuntime,
+  createInputControllerState,
   handleGameOut as handleGameOutRuntime,
   handlePointerDown as handlePointerDownRuntime,
   handlePointerMove as handlePointerMoveRuntime,
   handlePointerUp as handlePointerUpRuntime,
+  handleWheel as handleWheelRuntime,
   syncHoveredCellFromPointer,
   markUserActionProcessed as markUserActionProcessedRuntime,
+  type BoardTapOutcome,
   type InputControllerDependencies,
   type InputControllerState,
 } from '../runtime/input/gameSceneInputController';
@@ -189,6 +203,7 @@ import type { GameSetupEndpoints } from '../../../shared/config/game-setup';
 import { GameAudioManager } from '../sound/GameAudioManager';
 import { createGameSoundRouter, type GameSoundRouter } from '../runtime/audio/gameSoundRouting';
 import {
+  BOARD_ZOOM_KEY_STEP_FACTOR,
   BUILD_PREVIEW_RENDER_DEPTH,
   ROUTE_PREVIEW_RENDER_DEPTH,
   DEFAULT_TOWER_COST,
@@ -279,10 +294,9 @@ export class GameScene extends Phaser.Scene {
   private baselineWaves: SharedBaselineWaveSource =
     createSharedBaselineWaveSource(DEFAULT_MAP_SEED);
   private mapEndpoints: EdgeEndpoints = { entrance: ENTRANCE_CELL, exit: EXIT_CELL };
-  private inputControllerState: InputControllerState = {
-    activeTouchGesture: null,
-    lastActionAtMs: Number.NEGATIVE_INFINITY,
-  };
+  private inputControllerState: InputControllerState = createInputControllerState();
+  /** Created with the scene systems: `scale` is not available in the constructor. */
+  private boardCamera: BoardCameraState | null = null;
   private devFpsReportElapsedMs = 0;
   private soundManager: GameAudioManager | null = null;
   /** Simulation time: paused and sped up independently of Phaser's clock. */
@@ -316,7 +330,9 @@ export class GameScene extends Phaser.Scene {
 
   private readonly inputControllerDeps: InputControllerDependencies = {
     nowMs: () => this.time.now,
-    toPointerWorldPoint: (pointer) => resolvePointerWorldPoint(this, pointer),
+    toPointerScreenPoint: (pointer) => resolvePointerScreenPoint(this, pointer),
+    toPointerWorldPoint: (pointer) =>
+      resolvePointerWorldPoint(this, this.getBoardCamera(), pointer),
     toPointerTarget: (worldX, worldY) => toPointerGridTarget(worldX, worldY),
     setHoveredTarget: (target) => {
       this.hoveredCell = target?.cell ?? null;
@@ -328,8 +344,21 @@ export class GameScene extends Phaser.Scene {
     },
     updateHoveredCellDebugRegistry: () => undefined,
     updateBuildPreview: () => this.updateBuildPreview(),
-    tryPlaceTowerAtHoveredCell: () => tryPlaceTowerAtHoveredCell(this.towerCommandDeps),
+    onBoardTap: (pointer) => this.handleBoardTap(pointer),
     trySellTowerAtHoveredCell: () => trySellTowerAtHoveredCell(this.towerCommandDeps),
+    isCameraZoomed: () => isBoardCameraZoomed(this.getBoardCamera()),
+    getCameraZoomFactor: () => getBoardZoomFactor(this.getBoardCamera()),
+    setCameraZoomFactorAt: (factor, focus) =>
+      setBoardCameraZoomFactorAt(this, this.getBoardCamera(), factor, focus),
+    zoomCameraByAt: (multiplier, focus) =>
+      zoomBoardCameraByAt(this, this.getBoardCamera(), multiplier, focus),
+    panCameraBy: (dragDelta) => panBoardCamera(this, this.getBoardCamera(), dragDelta),
+    resetCameraZoom: () => resetBoardCamera(this, this.getBoardCamera()),
+    hasPanModifier: (pointer) => {
+      // The harness emits plain pointer objects without a DOM event.
+      const event: { shiftKey?: boolean } | undefined = pointer.event;
+      return event?.shiftKey === true;
+    },
   };
 
   /** Tower and creature sounds, resolved through the race sound profiles. */
@@ -429,7 +458,16 @@ export class GameScene extends Phaser.Scene {
       activeBattlefieldView: this.activeBattlefieldView,
       gridModel: this.gridModel,
       gridRenderer: this.gridRendererState,
+      cameraView: this.getBoardCamera().view,
+      cameraZoomFactor: getBoardZoomFactor(this.getBoardCamera()),
     };
+  }
+
+  private getBoardCamera(): BoardCameraState {
+    if (!this.boardCamera) {
+      this.boardCamera = createBoardCameraState(this);
+    }
+    return this.boardCamera;
   }
 
   public preload(): void {
@@ -519,13 +557,17 @@ export class GameScene extends Phaser.Scene {
     this.cameras.main.setBackgroundColor('#1a1f2c');
     this.cameras.main.roundPixels = true;
     applyNearestNeighborFiltering(this);
-    this.teardownCallbacks.push(registerResponsiveCamera(this));
+    this.boardCamera = null;
+    this.teardownCallbacks.push(registerResponsiveCamera(this, this.getBoardCamera()));
     this.drawGrid();
+    // Phaser tracks one touch pointer by default; pinch needs a second one.
+    this.input.addPointer(1);
     this.teardownCallbacks.push(
       registerScenePointerHandlers(this, {
         onPointerMove: (pointer) => this.handlePointerMove(pointer),
         onPointerDown: (pointer) => this.handlePointerDown(pointer),
         onPointerUp: (pointer) => this.handlePointerUp(pointer),
+        onWheel: (pointer, deltaY) => this.handleWheel(pointer, deltaY),
         onGameOut: () => this.handleGameOut(),
       }),
     );
@@ -695,6 +737,9 @@ export class GameScene extends Phaser.Scene {
       }),
       onCommand('sell-tower', (payload) => {
         handleSellTowerCommand(this.towerCommandDeps, payload.towerId);
+      }),
+      onCommand('zoom-board', (payload) => {
+        this.handleZoomBoardCommand(payload.action);
       }),
       onCommand('restart-match', () => {
         // A restart is also the recover action after an engine error.
@@ -1206,37 +1251,49 @@ export class GameScene extends Phaser.Scene {
   }
 
   private handlePointerDown(pointer: Phaser.Input.Pointer): void {
-    syncHoveredCellFromPointer(this.inputControllerDeps, pointer);
-    if (trySelectTowerAtHoveredCell(this.towerCommandDeps)) {
-      return;
-    }
-
-    if (this.hoveredCell) {
-      publishGameEvent('selected-tower', { tower: null });
-    }
-
     handlePointerDownRuntime(this.inputControllerState, this.inputControllerDeps, pointer);
   }
 
   private handlePointerUp(pointer: Phaser.Input.Pointer): void {
-    if (pointer.wasTouch) {
-      syncHoveredCellFromPointer(this.inputControllerDeps, pointer);
-    }
-    if (pointer.wasTouch && trySelectTowerAtHoveredCell(this.towerCommandDeps)) {
-      this.inputControllerState.activeTouchGesture = null;
-      return;
-    }
-
-    if (pointer.wasTouch && this.hoveredCell) {
-      publishGameEvent('selected-tower', { tower: null });
-    }
-
     handlePointerUpRuntime(
       this.inputControllerState,
       this.inputControllerDeps,
       INPUT_CONTROLLER_CONFIG,
       pointer,
     );
+  }
+
+  private handleWheel(pointer: Phaser.Input.Pointer, deltaY: number): void {
+    handleWheelRuntime(this.inputControllerDeps, INPUT_CONTROLLER_CONFIG, pointer, deltaY);
+  }
+
+  private handleZoomBoardCommand(action: BoardZoomAction): void {
+    const camera = this.getBoardCamera();
+    if (action === 'reset') {
+      resetBoardCamera(this, camera);
+      return;
+    }
+    const multiplier =
+      action === 'in' ? BOARD_ZOOM_KEY_STEP_FACTOR : 1 / BOARD_ZOOM_KEY_STEP_FACTOR;
+    zoomBoardCameraByAt(this, camera, multiplier, getBoardViewportCentre(camera));
+  }
+
+  /**
+   * A tap or click that reached the board: a tower under it is selected,
+   * otherwise the selection closes and the tap goes to building.
+   */
+  private handleBoardTap(pointer: Phaser.Input.Pointer): BoardTapOutcome {
+    syncHoveredCellFromPointer(this.inputControllerDeps, pointer);
+    if (trySelectTowerAtHoveredCell(this.towerCommandDeps)) {
+      return 'selected-tower';
+    }
+    if (this.hoveredCell) {
+      publishGameEvent('selected-tower', { tower: null });
+    }
+
+    const isBuildTap = this.activeBattlefieldView === 'player' && this.canPerformBuildActions();
+    tryPlaceTowerAtHoveredCell(this.towerCommandDeps);
+    return isBuildTap ? 'build-tap' : 'board-tap';
   }
 
   private handleGameOut(): void {
@@ -1499,8 +1556,7 @@ export class GameScene extends Phaser.Scene {
     this.gridModel = null;
     this.runState.nextWaveStartsAtMs = null;
     this.placedTowerCostsByCellKey.clear();
-    this.inputControllerState.activeTouchGesture = null;
-    this.inputControllerState.lastActionAtMs = Number.NEGATIVE_INFINITY;
+    this.inputControllerState = createInputControllerState();
     this.devFpsReportElapsedMs = 0;
     this.runState.lastPublishedAutoStartSecondsLeft = null;
     this.soundManager?.destroy();

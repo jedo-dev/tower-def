@@ -8,6 +8,7 @@ import type { WavePhaseState } from '../../wave-phase';
 import type { BattlefieldView } from '../../../shared/lib/game-bridge/types';
 import type { GridModel } from '../../../shared/types/grid';
 import type { BattlefieldRenderState } from '../runtime/battlefield/battlefieldRenderState';
+import type { CameraView } from '../runtime/camera/cameraViewMapping';
 import type { GridRendererState } from '../runtime/grid/gameSceneGridRenderer';
 
 export type CreepRenderState = {
@@ -103,4 +104,8 @@ export type GameSceneInspection = {
   gridModel: GridModel | null;
   /** Terrain tiles and overlays as drawn for the field in view. */
   gridRenderer: Readonly<GridRendererState>;
+  /** The view the board is rendered with and pointers are mapped through. */
+  cameraView: CameraView;
+  /** Zoom relative to the fit zoom (1 = whole board). */
+  cameraZoomFactor: number;
 };
