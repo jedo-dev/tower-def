@@ -6,6 +6,7 @@ import {
 } from '../../../shared/lib/sound-registry/audio.constants';
 import {
   getAmbientUserScale,
+  getAudioSettings,
   getSfxUserScale,
   subscribeAudioSettings,
 } from '../../../shared/lib/audio/audioSettingsStore';
@@ -57,7 +58,7 @@ export class GameAudioManager {
     this.clipCache = clipCache;
     this.masterVolume = masterVolume;
     this.unsubscribeSettings = subscribeAudioSettings(() => {
-      this.applyUserVolumeToActiveAmbient();
+      this.applyUserVolumeToActiveSounds();
     });
   }
 
@@ -65,14 +66,20 @@ export class GameAudioManager {
     return category === SoundCategory.AMBIENT ? getAmbientUserScale() : getSfxUserScale();
   }
 
-  private applyUserVolumeToActiveAmbient(): void {
+  /**
+   * Re-applies slider changes to the ambient loop and, when the user mutes,
+   * silences every playing sound. Positional SFX keep their distance falloff
+   * while unmuted, so only the ambient category is rescaled live.
+   */
+  private applyUserVolumeToActiveSounds(): void {
+    const { isMuted } = getAudioSettings();
     for (const active of this.activeSounds) {
-      if (active.category !== SoundCategory.AMBIENT) {
+      if (!isMuted && active.category !== SoundCategory.AMBIENT) {
         continue;
       }
       const config = SOUND_REGISTRY[active.soundId];
       (active.sound as Phaser.Sound.WebAudioSound).setVolume(
-        config.volume * this.masterVolume * getAmbientUserScale(),
+        config.volume * this.masterVolume * this.getUserScaleByCategory(active.category),
       );
     }
   }

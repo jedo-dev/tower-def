@@ -14,10 +14,13 @@ import {
   type SoundId,
 } from '../shared/lib/sound-registry';
 import {
-  DEFAULT_AMBIENT_VOLUME,
-  DEFAULT_SFX_VOLUME,
+  getEffectiveAmbientVolume,
+  hydrateAudioSettings,
   setAudioSettings,
+  toggleAudioMuted,
 } from '../shared/lib/audio/audioSettingsStore';
+import { getBrowserAudioSettingsStorage } from '../shared/lib/audio/audioSettingsPersistence';
+import { useAudioSettings } from '../shared/lib/audio/useAudioSettings';
 import {
   createAmbientFader,
   type AmbientFader,
@@ -41,14 +44,17 @@ const MENU_ROUTES: ReadonlySet<AppRoute> = new Set<AppRoute>([
   'bestiary',
 ]);
 
+// Hydrate once per session, before the first render reads the store.
+hydrateAudioSettings(getBrowserAudioSettingsStorage());
+
 export function App() {
   const [route, setRoute] = useState<AppRoute>('start');
   const [gameSetup, setGameSetup] = useState<GameSetupConfig | null>(null);
-  const [sfxVolume, setSfxVolume] = useState(DEFAULT_SFX_VOLUME);
-  const [ambientVolume, setAmbientVolume] = useState(DEFAULT_AMBIENT_VOLUME);
+  const { sfxVolume, ambientVolume, isMuted } = useAudioSettings();
+  const effectiveSfxVolume = isMuted ? 0 : sfxVolume;
+  const effectiveAmbientVolume = isMuted ? 0 : ambientVolume;
   const ambientRef = useRef<FadeableAudio | null>(null);
   const ambientFaderRef = useRef<AmbientFader | null>(null);
-  const ambientVolumeRef = useRef(ambientVolume);
   const routeRef = useRef<AppRoute>('start');
   const isUiAudioUnlockedRef = useRef(false);
   const lastHoverAtMsRef = useRef(0);
@@ -61,9 +67,12 @@ export function App() {
       if (!(soundId in SOUND_CLIPS)) {
         return;
       }
-      playMenuClip(resolveSoundClipUrl(soundId), volume * sfxVolume);
+      if (effectiveSfxVolume <= 0) {
+        return;
+      }
+      playMenuClip(resolveSoundClipUrl(soundId), volume * effectiveSfxVolume);
     },
-    [sfxVolume],
+    [effectiveSfxVolume],
   );
 
   const handleNavigate = useCallback((newRoute: AppRoute) => {
@@ -88,13 +97,15 @@ export function App() {
   }, []);
 
   const handleSfxVolumeChange = useCallback((volume: number) => {
-    setSfxVolume(volume);
     setAudioSettings({ sfxVolume: volume });
   }, []);
 
   const handleAmbientVolumeChange = useCallback((volume: number) => {
-    setAmbientVolume(volume);
     setAudioSettings({ ambientVolume: volume });
+  }, []);
+
+  const handleMuteToggle = useCallback(() => {
+    toggleAudioMuted();
   }, []);
 
   useEffect(() => {
@@ -104,7 +115,7 @@ export function App() {
   useEffect(() => {
     prefetchMenuClips(MENU_CLIP_URLS);
     const ambient = getMenuAmbientAudio(resolveSoundClipUrl('ambient.map'));
-    ambient.volume = ambientVolumeRef.current;
+    ambient.volume = getEffectiveAmbientVolume();
     ambientRef.current = ambient;
     const ambientFader = createAmbientFader({ audio: ambient });
     ambientFaderRef.current = ambientFader;
@@ -137,12 +148,11 @@ export function App() {
   }, []);
 
   useEffect(() => {
-    ambientVolumeRef.current = ambientVolume;
     const ambient = ambientRef.current;
     if (ambient && !ambientFaderRef.current?.isFading()) {
-      ambient.volume = ambientVolume;
+      ambient.volume = effectiveAmbientVolume;
     }
-  }, [ambientVolume]);
+  }, [effectiveAmbientVolume]);
 
   useEffect(() => {
     const ambientFader = ambientFaderRef.current;
@@ -227,8 +237,10 @@ export function App() {
         onNavigate={handleNavigate}
         sfxVolume={sfxVolume}
         ambientVolume={ambientVolume}
+        isMuted={isMuted}
         onSfxVolumeChange={handleSfxVolumeChange}
         onAmbientVolumeChange={handleAmbientVolumeChange}
+        onMuteToggle={handleMuteToggle}
       />
     );
   }

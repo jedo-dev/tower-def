@@ -3,7 +3,7 @@
 // cancel) snaps the volume back to the configured target, so a route change
 // mid-fade cannot permanently lower the ambient loudness.
 
-import { getAudioSettings } from './audioSettingsStore';
+import { getEffectiveAmbientVolume } from './audioSettingsStore';
 
 export enum AmbientFadeConfig {
   FADE_OUT_DURATION_MS = 220,
@@ -49,7 +49,7 @@ const browserTimer: FadeTimer = {
 };
 
 function readConfiguredAmbientVolume(): number {
-  return getAudioSettings().ambientVolume;
+  return getEffectiveAmbientVolume();
 }
 
 /** Volume for a fade-out step: linear from `startVolume` to 0 over `totalSteps`. */

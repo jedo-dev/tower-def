@@ -7,20 +7,26 @@ function fillStyle(volume: number): CSSProperties {
   return { '--fill': `${Math.round(volume * 100)}%` } as CSSProperties;
 }
 
+export const MUTE_TOGGLE_LABEL = 'Mute all sound';
+
 export type SettingsPageProps = {
   onNavigate: (route: AppRoute) => void;
   sfxVolume: number;
   ambientVolume: number;
+  isMuted: boolean;
   onSfxVolumeChange: (volume: number) => void;
   onAmbientVolumeChange: (volume: number) => void;
+  onMuteToggle: () => void;
 };
 
 export function SettingsPage({
   onNavigate,
   sfxVolume,
   ambientVolume,
+  isMuted,
   onSfxVolumeChange,
   onAmbientVolumeChange,
+  onMuteToggle,
 }: SettingsPageProps) {
   return (
     <main className="settings-page">
@@ -35,10 +41,21 @@ export function SettingsPage({
           {'<'}
         </button>
         <h1 className="settings-title">Settings</h1>
-        <div style={{ width: 44 }} />
+        <button
+          type="button"
+          className="settings-mute-button"
+          onClick={onMuteToggle}
+          aria-label={MUTE_TOGGLE_LABEL}
+          aria-pressed={isMuted}
+          title={isMuted ? 'Unmute' : 'Mute'}
+        >
+          <span className="settings-mute-icon" aria-hidden>
+            {isMuted ? '\u{1F507}' : '\u{1F50A}'}
+          </span>
+        </button>
       </header>
 
-      <div className="settings-content">
+      <div className="settings-content" data-muted={isMuted || undefined}>
         <div className="settings-section">
           <label className="settings-label" htmlFor="sfx-volume">
             Sound Effects
@@ -72,6 +89,12 @@ export function SettingsPage({
           />
           <span className="settings-value">{Math.round(ambientVolume * 100)}%</span>
         </div>
+
+        {isMuted && (
+          <p className="settings-muted-note" role="status">
+            All sound is muted. Slider values are kept.
+          </p>
+        )}
       </div>
     </main>
   );

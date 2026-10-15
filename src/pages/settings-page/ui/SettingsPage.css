@@ -18,7 +18,8 @@
   margin-bottom: var(--space-2xl);
 }
 
-.settings-back-button {
+.settings-back-button,
+.settings-mute-button {
   width: var(--touch-target-min);
   height: var(--touch-target-min);
   display: inline-flex;
@@ -45,9 +46,38 @@
   color: var(--color-text-primary);
 }
 
-.settings-back-button:focus-visible {
+.settings-mute-button:hover {
+  border-color: var(--glass-border-strong);
+  color: var(--color-text-primary);
+}
+
+.settings-mute-button[aria-pressed='true'] {
+  border-color: var(--color-danger);
+  color: var(--color-danger);
+}
+
+.settings-mute-icon {
+  font-size: var(--font-size-lg);
+  line-height: 1;
+}
+
+.settings-back-button:focus-visible,
+.settings-mute-button:focus-visible {
   outline: none;
   box-shadow: var(--focus-ring);
+}
+
+.settings-content[data-muted] .settings-value {
+  color: var(--color-text-label);
+}
+
+.settings-muted-note {
+  margin: 0;
+  text-align: center;
+  font-family: var(--font-family-ui);
+  font-size: var(--font-size-sm);
+  letter-spacing: 0.08em;
+  color: var(--color-text-label);
 }
 
 .settings-title {
