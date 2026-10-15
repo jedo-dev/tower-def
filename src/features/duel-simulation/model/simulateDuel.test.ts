@@ -74,6 +74,18 @@ describe('features/duel-simulation/simulateDuel', () => {
     }
   });
 
+  it('plays the match on the configured baseline race, whatever the seats play', () => {
+    const result = simulateDuel({
+      ...CONFIG,
+      maxRounds: 1,
+      sideA: { difficulty: Difficulty.NORMAL, raceId: RaceId.ORC },
+      sideB: { difficulty: Difficulty.NORMAL, raceId: RaceId.ELF },
+      baselineRaceId: RaceId.HUMAN,
+    });
+
+    expect(result.finalState.baselineRaceId).toBe(RaceId.HUMAN);
+  });
+
   it('plays both sides with the same planner, so a mirror match is symmetric', () => {
     const side = { difficulty: Difficulty.NORMAL, raceId: RaceId.HUMAN };
     const result = simulateDuel({ ...CONFIG, sideA: side, sideB: side, maxRounds: 3 });
