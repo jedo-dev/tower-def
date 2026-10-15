@@ -159,6 +159,7 @@ export function simulateDuel(config: DuelSimulationConfig): DuelSimulationResult
   let state = createInitialDuelMatchState(config.sideA.raceId, config.sideB.raceId, {
     entrance,
     exit,
+    baselineRaceId: config.baselineRaceId,
   });
   const rounds: DuelRoundReport[] = [];
   let totalTicks = 0;

@@ -30,16 +30,16 @@ function findCheapestLaneWall(
 
 /**
  * The computer opponent's next wave against its defence, read off a match:
- * the shared baseline wave (drawn from the player's roster, as the runtime
- * does) plus the player's sends, against the towers on the opponent's field.
- * Ground creeps are measured along the route its maze makes today; air
+ * the shared baseline wave (drawn from the match's baseline roster, as the
+ * runtime does) plus the player's sends, against the towers on the opponent's
+ * field. Ground creeps are measured along the route its maze makes today; air
  * creeps along the straight air line, against the towers that can hit air.
  */
 export function assessDefence(matchState: DuelMatchState): DefenceAssessment {
   const { opponent, player } = matchState;
   const threat = estimateIncomingThreat({
     waveNumber: matchState.round,
-    baselineFactionUnits: getUnitsByFaction(player.raceId),
+    baselineFactionUnits: getUnitsByFaction(matchState.baselineRaceId),
     observedSends: player.sendQueue.map((unitId) => resolveUnitConfigById(unitId)),
     expectedSendGold: player.income * ENEMY_SEND_INCOME_SHARE,
     enemySendables: getRaceRegistry(player.raceId).sendableCreepIds.map((unitId) =>

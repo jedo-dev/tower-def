@@ -567,6 +567,7 @@ export class GameScene extends Phaser.Scene {
           this.duelMatchState = createInitialDuelMatchState(
             this.selectedBuilderFactionId,
             mapHudFactionToRaceId(this.selectedFaction),
+            { ...this.mapEndpoints, baselineRaceId: this.getBaselineRaceId() },
           );
           this.registry.set('economy.lives', this.duelMatchState.player.hp);
           publishPlayerSendLimits(this.duelMatchState, this.selectedBuilderFactionId);
@@ -853,7 +854,7 @@ export class GameScene extends Phaser.Scene {
     this.duelMatchState = createInitialDuelMatchState(
       this.selectedBuilderFactionId,
       mapHudFactionToRaceId(this.selectedFaction),
-      this.mapEndpoints,
+      { ...this.mapEndpoints, baselineRaceId: this.getBaselineRaceId() },
     );
     publishPlayerSendLimits(this.duelMatchState, this.selectedBuilderFactionId);
     // The scene wallet is the source of truth: seed it from the duel balance
@@ -1005,7 +1006,7 @@ export class GameScene extends Phaser.Scene {
       mapHudFactionToRaceId(this.selectedFaction),
       // Keep the map the match was set up with; rebuilding with defaults
       // would desync the grid from a generated dynamic layout.
-      this.mapEndpoints,
+      { ...this.mapEndpoints, baselineRaceId: this.getBaselineRaceId() },
     );
     publishPlayerSendLimits(this.duelMatchState, this.selectedBuilderFactionId);
     this.playerGold = this.duelMatchState.player.gold;
@@ -1030,8 +1031,13 @@ export class GameScene extends Phaser.Scene {
     publishGameEvent('selected-tower', { tower: null });
   }
 
+  /** The enemy faction chosen at setup: the roster the baseline wave rolls from. */
+  private getBaselineRaceId(): RaceId {
+    return mapHudFactionToRaceId(this.selectedFaction);
+  }
+
   private getSelectedFactionUnits(): UnitConfig[] {
-    return resolveFactionUnits(mapHudFactionToRaceId(this.selectedFaction));
+    return resolveFactionUnits(this.getBaselineRaceId());
   }
 
   /** The baseline waves and the computer's sends both draw from the enemy roster. */

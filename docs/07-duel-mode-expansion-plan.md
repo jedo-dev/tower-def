@@ -337,7 +337,7 @@ Orc, human and elf now field the undead roster shape: two tier-1 creatures, one 
 
 The new tier-1 creatures are **baseline-only**: they are not in `sendableCreepIds`, so every race still sends four creeps (undead keeps its two tier-1 sends and leaves the abomination out). With a second tier-1 send, the computer fills its income buys with it after the first type hits the per-type cap (6), so hard sent six archers and three wisps instead of three huntresses; on the elf pairs (classic, seeds 1-10) that took elf from 40% with the wisp baseline-only to 25% with it sendable, and the wisp's stats make no difference to that choice (the planner ranks income buys by tier, not by creature).
 
-**What the batch measures, and what it does not.** `sim:duel-batch` plays both fields against one baseline race (`--baseline-race`, default undead). The computer opponent, however, estimates the next baseline wave from the *other seat's* roster (`threat-budget/assessDefence.ts` reads `matchState.player.raceId`), which is right in the game (the baseline is the player's roster) and wrong in the simulator for every seat whose race is not the baseline race. Until this pass that error was small, because orc, human and elf stopped at tier 4; now every roster reaches tier 6 and the estimate is as heavy as the undead one. Check: with the estimate pinned to the undead roster, the old and the new rosters play seeds 1-10 on the classic map **identically** (same 60 results), so with the default baseline the new creatures change nothing but the opponent's expectations.
+**What the batch measures, and what it does not.** `sim:duel-batch` plays both fields against one baseline race (`--baseline-race`, default undead). The computer opponent, however, estimates the next baseline wave from the *other seat's* roster (`threat-budget/assessDefence.ts` reads `matchState.player.raceId`), which is right in the game (the baseline is the player's roster) and wrong in the simulator for every seat whose race is not the baseline race. Until this pass that error was small, because orc, human and elf stopped at tier 4; now every roster reaches tier 6 and the estimate is as heavy as the undead one. Check: with the estimate pinned to the undead roster, the old and the new rosters play seeds 1-10 on the classic map **identically** (same 60 results), so with the default baseline the new creatures change nothing but the opponent's expectations. (Fixed in "Baseline race on the match" below: the estimate now reads `DuelMatchState.baselineRaceId`.)
 
 Standard batch (hard vs hard, six race pairs, seeds 1-10, classic and seeded, baseline undead, 120 duels, 60 per race, a draw counting half):
 
@@ -361,7 +361,7 @@ Game-faithful batch, each race as the player with its own baseline against the o
 
 What the new tiers were for shows up here: orc, human and elf baselines now end matches in 25-30 rounds instead of 30-34, and the gold floating after round 15 drops from 165-766 to 94-206, because tier-5 and tier-6 creatures let the waves outgrow a full board the way the undead waves already did. The elf home loss is the known elf defence problem (poison and frost against fast unarmored waves, see "Normal race balance") made visible by waves that no longer plateau: in those duels the elf side builds more towers than its opponent (71 against 43 at round 20 on seed 1) and still leaks three to five creeps a round in the crush. Slowing the wisp and hippogryph (1.8 / 1.45) or armouring the druid and giant (4 heavy / 6) did not move it (0 of 10 against undead and orc either way), so the new creatures keep the undead-shaped numbers.
 
-Not reached: the 40-60% band per race. Follow-ups, as separate tasks: make the opponent estimate the baseline wave from the match's baseline race (store it on `DuelMatchState`; the game sets the player's race, the simulator its `--baseline-race`) so the batch measures waves instead of expectations, then re-run both tables; and a tower pass for the elf roster against fast unarmored waves.
+Not reached: the 40-60% band per race. Follow-ups, as separate tasks: make the opponent estimate the baseline wave from the match's baseline race (done in tower-def-02k.10, "Baseline race on the match" below, with both tables re-run), and a tower pass for the elf roster against fast unarmored waves.
 
 How to measure it: the standard batch as in "Race balance" above, plus `npm run sim:duel-batch -- --difficulties hard --pairs elf:undead,elf:orc,elf:human --seeds 1-10 --maps classic --baseline-race elf` for each race in the player seat.
 
@@ -426,6 +426,59 @@ an air creature's authored health is what makes a flier worth several walkers,
 and tiers 5-6 for orc, human and elf are being authored in parallel. Revisit
 `WAVE_AIR_UNIT_BUDGET_MULTIPLIER` and the air creatures' health together once
 those rosters land.
+
+### Baseline race on the match (tower-def-02k.10)
+
+`DuelMatchState.baselineRaceId` now names the roster the shared baseline wave
+is drawn from, and the computer's threat estimate (`threat-budget/assessDefence.ts`)
+reads it instead of `player.raceId`. The game sets it to the enemy faction
+chosen at setup, which is the roster `GameScene` actually rolls the baseline
+from (and also the opponent seat's race); `sim:duel` and `sim:duel-batch` set
+it from `--baseline-race`; `createInitialDuelMatchState` defaults it to the
+player's race for callers that pass none (the maze simulator, tests). So the
+batch now measures waves instead of expectations, and in the game the
+estimate matches the wave whenever the builder and the enemy faction differ.
+
+Standard batch (hard vs hard, six race pairs, seeds 1-10, classic and seeded,
+baseline undead, 120 duels, 60 per race, a draw counting half). "Before" is
+the same code with the estimate pinned to the player seat's roster, measured
+after the air pass above (so it is not the "Roster completion" table, which
+predates fliers):
+
+| Race | Before (classic / seeded) | After (classic / seeded) |
+| --- | --- | --- |
+| Undead | 79.2% (68 / 90) | 86.7% (87 / 87) |
+| Orc | 41.7% (65 / 18) | 39.2% (55 / 23) |
+| Human | 33.3% (33 / 33) | 15.0% (10 / 20) |
+| Elf | 45.8% (33 / 58) | 59.2% (48 / 70) |
+
+Pacing is unchanged: median 22-22.5 rounds (20-25) on the classic map and 25
+(19-29) on seeded maps, 12-13 towers at round 5, draws 8% to 5% on classic and
+3% on seeded, no round-cap hits.
+
+Game-faithful batch, each race in seat A with its own race as the baseline
+against the other three (hard vs hard, classic, seeds 1-10, 30 duels a row):
+
+| Player race | Before: wins / median rounds / unspent gold r16+ | After: wins / median rounds / unspent gold r16+ |
+| --- | --- | --- |
+| Undead | 20.5 of 30 / 23 / 73 | 26 of 30 / 23 / 74 |
+| Orc | 4 of 30 / 27 / 99 | 8.5 of 30 / 27 / 97 |
+| Human | 4.5 of 30 / 26.5 / 107 | 3 of 30 / 26 / 100 |
+| Elf | 4 of 30 / 27 / 143 | 17 of 30 / 27 / 169 |
+
+Reading: before the fix the seat whose race was not the baseline planned for
+its own roster, and orc, human and elf rosters carry one flier each against
+three in the undead one, so that seat under-built anti-air. With both seats
+now planning for the undead baseline, the races separate by how many
+archetypes they can point at the air, as the air pass found: elf (three) gains
+most, human (the archer alone) drops to 15%, and undead holds its home
+advantage. No content was tuned in this pass; the human anti-air gap and the
+`WAVE_AIR_UNIT_BUDGET_MULTIPLIER` revisit remain the follow-ups named above.
+
+How to measure it: the standard batch as in "Race balance", on `--maps classic`
+and `--maps seeded`, plus
+`npm run sim:duel-batch -- --difficulties hard --pairs <race>:<other>,... --seeds 1-10 --maps classic --baseline-race <race>`
+for each race in seat A.
 
 ## Suggested Improvements
 
