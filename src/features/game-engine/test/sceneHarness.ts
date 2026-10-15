@@ -54,6 +54,7 @@ export type RecordedGameEvent = {
 }[keyof GameEventMap];
 
 const GAME_EVENT_NAMES = Object.keys({
+  'match-started': true,
   'selected-tower': true,
   'battlefield-view-changed': true,
   'creep-send-rejected': true,

@@ -466,6 +466,7 @@ export class GameScene extends Phaser.Scene {
     // Draws the build-phase routes before the first pointer move.
     this.updateBuildPreview();
     this.publishHudSnapshot();
+    publishGameEvent('match-started', { trigger: 'setup' });
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, this.handleSceneShutdown, this);
     this.events.once(Phaser.Scenes.Events.DESTROY, this.handleSceneShutdown, this);
   }
@@ -1035,6 +1036,8 @@ export class GameScene extends Phaser.Scene {
 
     this.drawGrid();
     publishGameEvent('selected-tower', { tower: null });
+    // Last, so nothing the reset itself emitted outlives it in per-match UI.
+    publishGameEvent('match-started', { trigger: 'restart' });
   }
 
   /** The enemy faction chosen at setup: the roster the baseline wave rolls from. */

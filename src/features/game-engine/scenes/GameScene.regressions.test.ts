@@ -80,6 +80,26 @@ describe('GameScene regressions (QA audit tower-def-1p7)', () => {
     });
   });
 
+  describe('tower-def-1p7.4: a match start is announced to per-match UI', () => {
+    it('publishes match-started at scene start and last on a restart', async () => {
+      const game = await start();
+      expect(game.eventsOf('match-started')).toEqual([{ trigger: 'setup' }]);
+
+      game.command('start-wave', undefined);
+      game.tickUntil(() => game.latestHud().phase === 'build', MAX_FRAMES_PER_ROUND);
+      expect(
+        game.eventsOf('lives-stolen').length + game.eventsOf('income-updated').length,
+      ).toBeGreaterThan(0);
+
+      game.command('restart-match', undefined);
+
+      expect(game.events().at(-1)).toEqual({
+        name: 'match-started',
+        payload: { trigger: 'restart' },
+      });
+    });
+  });
+
   describe('tower-def-1p7.5: restart resets the phase timers from any phase', () => {
     it('arms a full auto-start countdown when restarted mid-wave', async () => {
       const game = await start();
