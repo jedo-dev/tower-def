@@ -10,7 +10,7 @@ import {
   clearGameSetupConfig,
   getGameHudSnapshot,
   onGameEvent,
-  requestBattlefieldView,
+  resetGameBridgeState,
   sendGameCommand,
   setGameSetupConfig,
   subscribeGameHudSnapshot,
@@ -212,8 +212,8 @@ export async function createGameSceneHarness(
       systems.events.emit('shutdown');
       stopRecording();
       clearGameSetupConfig();
-      // The bridge keeps the view across scenes; leave it where a new match starts.
-      requestBattlefieldView('player');
+      // The bridge is module-global; leave it where a new match starts.
+      resetGameBridgeState();
     },
   };
 }

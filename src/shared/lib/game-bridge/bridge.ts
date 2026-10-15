@@ -27,32 +27,53 @@ export function clearGameSetupConfig(): void {
   gameSetupConfig = null;
 }
 
-let snapshot: GameHudSnapshot = {
-  gold: 0,
-  income: 0,
-  lives: 0,
-  opponentGold: 0,
-  opponentIncome: 0,
-  opponentLives: 0,
-  matchOutcome: {
-    status: 'active',
-    winner: null,
-    reason: null,
-  },
-  builderFactionName: 'Undead',
-  waveNumber: 1,
-  phase: 'build',
-  canStartWave: false,
-  selectedTowerType: null,
-  selectedFaction: 'undead',
-  autoStartSecondsLeft: null,
-  waveQueue: [],
-  playerSendQueue: [],
-  opponentSendQueue: [],
-  pendingCreepCount: 0,
-};
+/** The neutral HUD state before a scene publishes: no match, nothing to act on. */
+export function createInitialGameHudSnapshot(): GameHudSnapshot {
+  return {
+    gold: 0,
+    income: 0,
+    lives: 0,
+    opponentGold: 0,
+    opponentIncome: 0,
+    opponentLives: 0,
+    matchOutcome: {
+      status: 'active',
+      winner: null,
+      reason: null,
+    },
+    builderFactionName: 'Undead',
+    waveNumber: 1,
+    phase: 'build',
+    canStartWave: false,
+    selectedTowerType: null,
+    selectedFaction: 'undead',
+    autoStartSecondsLeft: null,
+    waveQueue: [],
+    playerSendQueue: [],
+    opponentSendQueue: [],
+    pendingCreepCount: 0,
+  };
+}
+
+let snapshot: GameHudSnapshot = createInitialGameHudSnapshot();
 
 let activeBattlefieldView: BattlefieldView = 'player';
+
+/**
+ * Forgets the finished game's state. `Phaser.Game.destroy` is deferred, so
+ * without this the next game page mounts on the old match's snapshot (its
+ * outcome overlay, gold and view) until the new scene publishes.
+ */
+export function resetGameBridgeState(): void {
+  snapshot = createInitialGameHudSnapshot();
+  if (activeBattlefieldView !== 'player') {
+    activeBattlefieldView = 'player';
+    publishBattlefieldViewChanged('player', true);
+  }
+  snapshotEventTarget.dispatchEvent(new Event(SNAPSHOT_EVENT));
+  publishGameEvent('selected-tower', { tower: null });
+  publishGameEvent('opponent-field-creeps-updated', { remaining: 0 });
+}
 
 function isBattlefieldViewSwitchAllowed(
   view: BattlefieldView,
