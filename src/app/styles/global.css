@@ -140,6 +140,18 @@
   /* Sizing */
   --touch-target-min: 44px;
 
+  /* Game page layout: how much of the viewport the control strip and the
+   * HUD may claim, so the battlefield always keeps the rest. */
+  --game-controls-max-height: 62dvh;
+  --hud-panel-max-height: 50dvh;
+
+  /* Stacking order: battlefield overlays sit under floating panels, and
+   * modals (match outcome) cover everything on the page. */
+  --z-index-canvas-feed: 5;
+  --z-index-canvas-strip: 10;
+  --z-index-canvas-panel: 20;
+  --z-index-modal: 100;
+
   /* Safe areas */
   --safe-area-top: env(safe-area-inset-top, 0px);
   --safe-area-right: env(safe-area-inset-right, 0px);

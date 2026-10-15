@@ -9,6 +9,9 @@ import type { GameSetupConfig } from '../../../shared/config/game-setup';
 import { publishGameHudSnapshot } from '../../../shared/lib/game-bridge/bridge';
 import type { GameHudSnapshot } from '../../../shared/lib/game-bridge/types';
 import { HudPanel } from './HudPanel';
+import styles from './HudPanel.module.css';
+import hudPanelCss from './HudPanel.module.css?raw';
+import { injectCssModule } from '../../../shared/test/injectCssModule';
 
 function createSnapshot(overrides?: Partial<GameHudSnapshot>): GameHudSnapshot {
   return {
@@ -148,6 +151,41 @@ describe('HudPanel build bar', () => {
     expect(within(buildBar).getByText('70')).toBeDefined();
     expect(within(buildBar).getByTitle(/Slows/)).toBeDefined();
     expect(within(buildBar).getByTitle(/Boosts towers/)).toBeDefined();
+    expect(consoleError).not.toHaveBeenCalled();
+  });
+});
+
+describe('HudPanel viewport layout', () => {
+  const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+  let injectedStyles: { remove: () => void } | null = null;
+
+  afterEach(() => {
+    cleanup();
+    injectedStyles?.remove();
+    injectedStyles = null;
+    consoleError.mockClear();
+  });
+
+  it('caps the HUD at its viewport share and scrolls the expanded body, not the page', () => {
+    injectedStyles = injectCssModule(hudPanelCss, styles);
+    publishGameHudSnapshot(createSnapshot());
+
+    render(<HudPanel setup={null} />);
+    const hudRoot = screen.getByRole('region', { name: 'Game HUD' });
+    fireEvent.click(screen.getByRole('button', { name: 'Expand HUD' }));
+
+    // The root is capped by a viewport-relative token and may shrink inside
+    // the controls strip, but it must not clip (the expand tab hangs above it).
+    const rootStyle = getComputedStyle(hudRoot);
+    expect(rootStyle.maxHeight).toBe('var(--hud-panel-max-height)');
+    expect(rootStyle.minHeight).toBe('0px');
+    expect(rootStyle.overflowY).not.toBe('auto');
+
+    const expandedBody = screen.getByText('Enemy gold:').closest(`.${styles.expandedContent}`);
+    expect(expandedBody).not.toBeNull();
+    const bodyStyle = getComputedStyle(expandedBody as HTMLElement);
+    expect(bodyStyle.overflowY).toBe('auto');
+    expect(bodyStyle.minHeight).toBe('0px');
     expect(consoleError).not.toHaveBeenCalled();
   });
 });

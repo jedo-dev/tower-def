@@ -7,6 +7,12 @@
   margin-top: 10px; /* room for the tab above the frame */
   padding: 14px 16px 12px;
   color: var(--color-text-primary);
+  /* Never taller than its share of the viewport: the fixed rows stay put
+   * and the expanded body scrolls (see .expandedContent). The frame itself
+   * must not clip, or the tab above it would disappear. */
+  flex: 0 1 auto;
+  min-height: 0;
+  max-height: var(--hud-panel-max-height);
 }
 
 /* Expand tab centered on the top edge of the frame, chevron from the kit. */
@@ -217,8 +223,21 @@
   flex-direction: column;
   gap: 6px;
   margin-top: 2px;
-  padding-top: 6px;
+  padding: 6px 2px 2px;
   border-top: 1px solid rgba(150, 160, 180, 0.25);
+  /* The only part of the HUD that scrolls when the panel hits its cap. */
+  flex: 0 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Rows keep their natural height so the body scrolls instead of squashing
+ * the tower cards (the horizontally scrolling row would otherwise shrink). */
+.expandedContent > * {
+  flex-shrink: 0;
 }
 
 .buildHeading {

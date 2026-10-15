@@ -38,15 +38,17 @@
 }
 
 /* Controls stay a strip: capped low enough that the battlefield always
- * keeps the majority of the viewport, scrolling only when the HUD is
- * expanded and a tower is selected at the same time. */
+ * keeps the majority of the viewport. The HUD shrinks into whatever is left
+ * under the send panel and scrolls its expanded body internally; the strip
+ * itself only scrolls as a last resort on very short viewports. */
 .game-panels {
   flex: 0 0 auto;
   display: flex;
   flex-direction: column;
   gap: 10px;
   padding: 0 2px 2px;
-  max-height: 62dvh;
+  min-height: 0;
+  max-height: var(--game-controls-max-height);
   overflow-y: auto;
   overscroll-behavior: contain;
 }
