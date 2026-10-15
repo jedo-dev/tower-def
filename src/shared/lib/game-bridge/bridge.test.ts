@@ -68,6 +68,8 @@ function createTestHudSnapshot(overrides?: Partial<GameHudSnapshot>): GameHudSna
     playerSendQueue: [],
     opponentSendQueue: [],
     pendingCreepCount: 0,
+    isPaused: false,
+    gameSpeed: 1,
     ...overrides,
   };
 }

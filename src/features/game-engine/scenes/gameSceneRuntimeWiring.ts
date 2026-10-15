@@ -40,6 +40,8 @@ export type GameSceneWiringHost = {
   getDuelMatchState: () => DuelMatchState;
   setDuelMatchState: (state: DuelMatchState) => void;
   getComputerSendWaveUnits: () => UnitConfig[];
+  /** Simulation time (paused and sped up with the match), not Phaser's clock. */
+  gameNowMs: () => number;
   refreshBuildState: () => void;
   publishHudSnapshot: () => void;
   handleGameOverUpdated: (isGameOver: boolean) => void;
@@ -89,7 +91,7 @@ function createOpponentCombatDeps(host: GameSceneWiringHost): CombatRuntimeDepen
 
 function createWaveRuntimeDeps(host: GameSceneWiringHost): WaveRuntimeDependencies {
   return {
-    nowMs: () => host.scene.time.now,
+    nowMs: () => host.gameNowMs(),
     getAdditionalWaveUnits: () => host.getComputerSendWaveUnits(),
     getSpriteKeyByUnit: (unit) => getSpriteKeyByUnit(unit),
     getAnimationKeyByUnit: (unit) => getAnimationKeyByUnit(unit),

@@ -52,6 +52,8 @@ export function createInitialGameHudSnapshot(): GameHudSnapshot {
     playerSendQueue: [],
     opponentSendQueue: [],
     pendingCreepCount: 0,
+    isPaused: false,
+    gameSpeed: 1,
   };
 }
 

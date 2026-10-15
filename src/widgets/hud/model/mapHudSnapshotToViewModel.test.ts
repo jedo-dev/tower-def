@@ -29,6 +29,8 @@ function createSnapshot(overrides: Partial<GameHudSnapshot> = {}): GameHudSnapsh
     playerSendQueue: [],
     opponentSendQueue: [],
     pendingCreepCount: 0,
+    isPaused: false,
+    gameSpeed: 1,
     ...overrides,
   };
 }

@@ -16,6 +16,9 @@ type DelayedCall = { dueAtMs: number; callback: () => void };
 
 export class FakeClock {
   public now = 0;
+  /** Mirrors Phaser's Clock flags; the scene sets them with the game clock. */
+  public paused = false;
+  public timeScale = 1;
   private delayedCalls: DelayedCall[] = [];
 
   public delayedCall(delayMs: number, callback: () => void): { remove: () => void } {
@@ -133,6 +136,16 @@ class FakeTextureManager {
 
 class FakeAnimationManager {
   public readonly keys = new Set<string>();
+  public globalTimeScale = 1;
+  public isPaused = false;
+
+  public pauseAll(): void {
+    this.isPaused = true;
+  }
+
+  public resumeAll(): void {
+    this.isPaused = false;
+  }
 
   public exists(key: string): boolean {
     return this.keys.has(key);
