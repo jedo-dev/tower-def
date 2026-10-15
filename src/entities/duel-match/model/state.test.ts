@@ -36,6 +36,16 @@ describe('entities/duel-match/createInitialDuelMatchState', () => {
     expect(state.opponent.battlefield.grid.exit).toEqual(DEFAULT_EXIT);
   });
 
+  it('draws the baseline wave from the player race unless told otherwise', () => {
+    const defaulted = createInitialDuelMatchState(PLAYER_RACE, OPPONENT_RACE);
+    const explicit = createInitialDuelMatchState(PLAYER_RACE, OPPONENT_RACE, {
+      baselineRaceId: RaceId.ELF,
+    });
+
+    expect(defaulted.baselineRaceId).toBe(PLAYER_RACE);
+    expect(explicit.baselineRaceId).toBe(RaceId.ELF);
+  });
+
   it('honours custom entrance and exit positions', () => {
     const entrance = { x: 3, y: 0 };
     const exit = { x: 6, y: 14 };

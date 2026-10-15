@@ -16,6 +16,8 @@ export const DEFAULT_EXIT: GridPoint = DEFAULT_ENDPOINTS.exit;
 export type BattlefieldInitParams = {
   entrance?: GridPoint;
   exit?: GridPoint;
+  /** Roster of the shared baseline wave; defaults to the player's race. */
+  baselineRaceId?: RaceId;
 };
 
 function createDuelistState(raceId: RaceId, grid: GridModel, routes: WaveRoutes): DuelistState {
@@ -50,5 +52,6 @@ export function createInitialDuelMatchState(
     player: createDuelistState(playerRaceId, playerGrid, playerRoutes),
     opponent: createDuelistState(opponentRaceId, opponentGrid, opponentRoutes),
     baselineWaveId: '',
+    baselineRaceId: params?.baselineRaceId ?? playerRaceId,
   };
 }

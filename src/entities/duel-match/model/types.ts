@@ -24,6 +24,11 @@ export type DuelMatchState = {
   player: DuelistState;
   opponent: DuelistState;
   baselineWaveId: string;
+  /**
+   * Roster the shared baseline wave is drawn from. The game sets the enemy
+   * faction chosen at setup; the simulators set their `--baseline-race`.
+   */
+  baselineRaceId: RaceId;
 };
 
 export type DuelRoundStartResult = {
