@@ -480,6 +480,127 @@ and `--maps seeded`, plus
 `npm run sim:duel-batch -- --difficulties hard --pairs <race>:<other>,... --seeds 1-10 --maps classic --baseline-race <race>`
 for each race in seat A.
 
+### Air waves across races (tower-def-xwc.5)
+
+Diagnosis, from the per-round leak profile of the standard batch (hard vs
+hard, baseline undead, `DuelSideRoundReport.airLeaks`): on the classic map the
+air line is about 24 cells, a flier crosses it in about four seconds, and from
+the frost wyrm wave (16) on nearly every leak on every field was a flier, two
+or three a round. Ground leaks were zero for every race after round 5. So a
+duel was decided by how many fliers a kit lets through, and that came down to
+which helper archetypes besides the archer can touch the air line, measured
+in air leaks per match at equal gold: frost's chill (about nine fewer, since
+it stretches the four seconds for every tower on the line), the support aura
+(about five fewer) and poison (about four fewer). Undead (chill + aura) leaked
+about 16 a match, elf (chill + poison) and orc (chill) about 20, human (aura +
+poison, no chill) about 21; the gap compounds through the economy, because a
+side whose own estimate says "threatened" sends only its income floor.
+
+Two things in the computer opponent hid part of that picture and are fixed
+here, since the planner has to see what the content says before content can
+balance it:
+
+- **The computer built from the archetype, not from its race entry.** Its
+  towers carried the archetype's stats and no `allowedTargets`, and its
+  investment candidates were priced by race but scoped and statted by
+  archetype, so an authored per-race scope or stat was invisible to the
+  planner and to the computer's own towers (the player's towers already used
+  the authored numbers, `resolveTowerPlacementStats`). The computer now places
+  every tower through `computer-opponent/model/computerTowerEntity.ts` with
+  the race's `buildableTowerId`, `allowedTargets` and stats, prices and scopes
+  its candidates from `getRaceTowerConfig`, and reads an upgraded tower off
+  its race curve (`getTowerStatsForTowerLevel`).
+- **Poison was undervalued.** The damage model counted a poison tower's ticks
+  only while the creep stood in range, at half its stack cap
+  (`POISON_STACK_UPTIME` 0.5). A hit's ticks run their course wherever the
+  creep goes, and on the air line a flier is out of range after one or two
+  hits but carries the poison for four seconds, so the model saw about 18
+  damage of a 64-damage pass. With the poison races under-rating their own
+  air lane, elf (the race with the most anti-air archetypes) rated its board
+  lowest of all and stayed "threatened" all match. `POISON_STACK_UPTIME` is
+  now 1.
+
+Tried and rejected: per-race tower prices (a test keeps prices equal per
+archetype, and the archer price is a hair-trigger: 45 gold took human from 0%
+to 60% but put 16 towers on the field by round 5, 55 gold put undead at 0%);
+cheaper frost or support for a race (the planner trades archers for them and
+leaks more); the human cannon as flak (`both`; the computer builds no cannon
+on the air line, no change); weighting the air lane by relative instead of
+absolute shortfall in `computeAirThreatShare` (starved the opening maze,
+towers at round 5 fell to 9-10); air creature health (gargoyle 90, banshee
+125, wyrm 250: symmetric, only redistributed the same gap, and a lighter wyrm
+exposed human's late weakness further); one tier-1 send for undead (no
+effect); a slower hippogryph (no effect).
+
+Changes:
+
+| Lever | File | Old | New |
+| --- | --- | --- | --- |
+| Air unit budget multiplier | `entities/wave/model/waveBalance.ts` `WAVE_AIR_UNIT_BUDGET_MULTIPLIER` | 3 | 4 |
+| Chain target scope | `towers/archetypes.json`, `towers/orc.json` | `ground` | `both` (the WispTD table; arcs between fliers in a flock) |
+| Undead bone archer damage L1 / L2 / L3 | `towers/undead.json` (authored `levels`) | 20 / 30 / 40 (archetype) | 19 / 29 / 38 |
+| Orc spear watchtower damage L1 / L2 / L3 | `towers/orc.json` (authored `levels`) | 20 / 30 / 40 (archetype) | 21 / 31 / 42 |
+| Human guard archer damage L1 / L2 / L3 | `towers/human.json` (authored `levels`) | 20 / 30 / 40 (archetype) | 25 / 37 / 50 |
+| Elf moon archer | `towers/elf.json` | archetype | unchanged (20 / 30 / 40) |
+| Poison stack uptime in the damage model | `computer-opponent/model/damage-placement/constants.ts` `POISON_STACK_UPTIME` | 0.5 | 1 |
+
+Why these: the multiplier at 4 keeps fliers a threat (two or three a round
+from wave 16, as before) but no longer the whole wave, and brought the classic
+median from 22.5 to 25-26 rounds. Chain on both lanes gives orc, the only
+race with two ground-only damage towers, an area answer to a flock, and at
+the x4 budget the flocks are small enough that it no longer runs away with
+the match (xwc.4 saw 88% at x3). The archer is every race's anti-air
+workhorse, so its damage is the per-race dial: human, whose helpers are the
+weakest on the air line, hits hardest; undead, whose chill and aura stack,
+hits softest; one point of level-1 damage moves a race by 10-30 points, so
+the values are the integers that landed in band. Creature stats are untouched.
+
+Standard batch (hard vs hard, six race pairs, seeds 1-10, classic and seeded,
+baseline undead, 120 duels, 60 per race, a draw counting half):
+
+| Race | Before (classic / seeded) | After (classic / seeded) |
+| --- | --- | --- |
+| Undead | 86.7% (87 / 87) | 49.2% (37 / 62) |
+| Orc | 39.2% (55 / 23) | 49.2% (68 / 30) |
+| Human | 15.0% (10 / 20) | 50.0% (40 / 60) |
+| Elf | 59.2% (48 / 70) | 51.7% (55 / 48) |
+
+Pacing: median 25 rounds (21-29) on the classic map and 28 (22-33) on seeded
+maps (before: 22.5 and 25), 12-13 towers at round 5 per side (8-14), draws 7%
+on classic and 2% on seeded, no round-cap hits, unspent gold after round 15
+about 90 of 560 income on classic. The per-map split is wide for orc (68 /
+30) and undead (37 / 62): the air line on a seeded map runs corner to corner
+and a flock spreads out along it, which favours chill over arcs.
+
+Game-faithful batch, each race in seat A with its own race as the baseline
+against the other three (hard vs hard, classic, seeds 1-10, 30 duels a row):
+
+| Player race | Before: wins / median rounds / unspent gold r16+ | After: wins / median rounds / unspent gold r16+ |
+| --- | --- | --- |
+| Undead | 26 of 30 / 23 / 74 | 11 of 30 / 26 / 95 |
+| Orc | 8.5 of 30 / 27 / 97 | 7.5 of 30 / 28 / 118 |
+| Human | 3 of 30 / 26 / 100 | 17.5 of 30 / 28.5 / 131 |
+| Elf | 17 of 30 / 27 / 169 | 22 of 30 / 28.5 / 174 |
+
+Difficulty order spot-check, hard vs normal, seeds 1-3, classic, four race
+pairs four ways: hard won 44 of 48 (92%; 86% before).
+
+Known gaps: on its own baseline orc wins 25% (target about 30%) and elf 73%
+(target about 70%), and both are ground questions, not air ones. The orc
+baseline is bulky and armoured and leaks on the ground (25 leaks a match
+against undead, 3 of them fliers): poison ignores that armour and the aura
+multiplies a maze full of archers, and orc has neither. The elf baseline is
+fast and unarmoured, which chill and poison answer and human's archers alone
+do not (elf beats human 9 of 10 at home). Pushing the orc chain to 26 / 38 /
+52 lifted the orc row to 30% but took orc to 77% on the classic standard
+batch, so it stays at 24 / 35 / 48; a tower pass against each race's own
+ground roster is the follow-up.
+
+How to measure it: the standard batch as in "Race balance" on `--maps
+classic` and `--maps seeded`, the game-faithful rows as in "Baseline race on
+the match", and `npm run sim:duel-batch -- --seeds 1-3 --matchups hard:normal
+--maps classic` for the difficulty order.
+
 ## Suggested Improvements
 
 - Add difficulty presets for the computer opponent: relaxed, normal, aggressive.

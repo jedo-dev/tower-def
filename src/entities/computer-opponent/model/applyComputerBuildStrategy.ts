@@ -1,11 +1,14 @@
 import { addTower } from '../../duel-match/model/battlefieldOps';
 import type { BattlefieldState } from '../../duel-match/model/battlefield';
 import type { DuelMatchState } from '../../duel-match/model/types';
-import { getRaceRegistry } from '../../race-registry/model/registries';
-import { buildableTowers } from '../../tower/model/config/buildableTowers';
 import type { TowerEntity } from '../../tower/model/types';
-import { TOWER_BASE_LEVEL, TOWER_COMBAT_STATS_BY_TYPE } from '../../tower/model/types';
-import { canAffordUpgrade, getTowerStatsForLevel, getUpgradeCost } from '../../tower/model/upgrade';
+import {
+  canAffordUpgrade,
+  getTowerStatsForTowerLevel,
+  getUpgradeCost,
+} from '../../tower/model/upgrade';
+import { getTowerCostForType } from './buildSpendBudget';
+import { createComputerTowerEntity } from './computerTowerEntity';
 import type { TowerTypeId } from '../../../shared/types/content-ids';
 import type { GridPosition } from '../../../shared/types/pathfinding';
 import { findPathBfs } from '../../../shared/lib/pathfinding/hasPathBfs';
@@ -34,33 +37,19 @@ export type ApplyComputerBuildStrategyResult = {
   spentGold: number;
 };
 
-function getTowerCostForRace(
-  towerType: TowerTypeId,
-  raceId: DecisionContext['raceId'],
-): number | null {
-  const registry = getRaceRegistry(raceId);
-  for (const buildableTowerId of registry.buildableTowerIds) {
-    const config = buildableTowers.find((tower) => tower.id === buildableTowerId);
-    if (config?.towerType === towerType) {
-      return config.costGold;
-    }
-  }
-  return null;
-}
-
 function createComputerTower(
   towerType: TowerTypeId,
   position: GridPosition,
   cost: number,
+  raceId: DecisionContext['raceId'],
 ): TowerEntity {
-  return {
-    id: `computer:tower:${position.x}:${position.y}`,
-    position: { x: position.x, y: position.y },
+  return createComputerTowerEntity(
+    `computer:tower:${position.x}:${position.y}`,
+    towerType,
+    position,
     cost,
-    type: towerType,
-    level: TOWER_BASE_LEVEL,
-    combatStats: { ...TOWER_COMBAT_STATS_BY_TYPE[towerType] },
-  };
+    raceId,
+  );
 }
 
 function recalculateBattlefieldPath(battlefield: BattlefieldState): BattlefieldState {
@@ -77,7 +66,7 @@ function recalculateBattlefieldPath(battlefield: BattlefieldState): BattlefieldS
 
 function upgradeTower(tower: TowerEntity): TowerEntity | null {
   const nextLevel = tower.level + 1;
-  const nextStats = getTowerStatsForLevel(tower.type, nextLevel);
+  const nextStats = getTowerStatsForTowerLevel(tower, nextLevel);
   if (!nextStats) {
     return null;
   }
@@ -109,7 +98,7 @@ export function applyComputerBuildStrategy(
 
   for (const action of decision.actions) {
     if (action.kind === 'build') {
-      const cost = getTowerCostForRace(action.towerType, opponent.raceId);
+      const cost = getTowerCostForType(action.towerType, opponent.raceId);
       if (cost === null || cost > gold) {
         continue;
       }
@@ -120,7 +109,7 @@ export function applyComputerBuildStrategy(
         continue;
       }
 
-      const tower = createComputerTower(action.towerType, action.position, cost);
+      const tower = createComputerTower(action.towerType, action.position, cost, opponent.raceId);
       battlefield = addTower(battlefield, tower);
       battlefield = recalculateBattlefieldPath(battlefield);
       gold -= cost;

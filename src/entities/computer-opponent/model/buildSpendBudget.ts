@@ -1,7 +1,8 @@
-import type { RaceId, TowerTypeId } from '../../../shared/types/content-ids';
+import type { RaceId, TowerTargetScope, TowerTypeId } from '../../../shared/types/content-ids';
 import { Difficulty } from '../../difficulty/model/types';
 import { getRaceRegistry } from '../../race-registry/model/registries';
 import { buildableTowers } from '../../tower/model/config/buildableTowers';
+import { resolveTowerTargetScope, type BuildableTowerConfig } from '../../tower/model/types';
 
 export type SpendBudgetConfig = {
   maxSpendRatioPerRound: number;
@@ -64,16 +65,35 @@ export function computeSpendBudget(gold: number, difficulty: Difficulty): number
   return Math.min(ratioBudget, reserveBudget);
 }
 
-/** Build price of a tower type for a race; null when the race cannot build it. */
-export function getTowerCostForType(towerType: TowerTypeId, raceId: RaceId): number | null {
+/**
+ * The race's authored tower of `towerType` (the first in registry order);
+ * null when the race cannot build that archetype. Price and target scope are
+ * authored per race, so the opponent reads them here rather than off the
+ * archetype.
+ */
+export function getRaceTowerConfig(
+  towerType: TowerTypeId,
+  raceId: RaceId,
+): BuildableTowerConfig | null {
   const registry = getRaceRegistry(raceId);
   for (const buildableId of registry.buildableTowerIds) {
     const config = buildableTowers.find((tower) => tower.id === buildableId);
     if (config && config.towerType === towerType) {
-      return config.costGold;
+      return config;
     }
   }
   return null;
+}
+
+/** Build price of a tower type for a race; null when the race cannot build it. */
+export function getTowerCostForType(towerType: TowerTypeId, raceId: RaceId): number | null {
+  return getRaceTowerConfig(towerType, raceId)?.costGold ?? null;
+}
+
+/** Target scope of the race's tower of `towerType`: its authored one, the archetype's otherwise. */
+export function getRaceTowerTargetScope(towerType: TowerTypeId, raceId: RaceId): TowerTargetScope {
+  const authored = getRaceTowerConfig(towerType, raceId);
+  return authored ? authored.allowedTargets : resolveTowerTargetScope({ type: towerType });
 }
 
 /** Every tower type the race can build, in registry order, without repeats. */

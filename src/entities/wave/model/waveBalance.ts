@@ -29,7 +29,7 @@ export const WAVE_TIER_VALUE_BY_TIER: Readonly<Record<UnitTier, number>> = {
  * more of the wave budget keeps fliers a threat rather than the whole wave.
  * Tuned in tower-def-xwc.4 (docs/07, "Air creeps").
  */
-export const WAVE_AIR_UNIT_BUDGET_MULTIPLIER = 3;
+export const WAVE_AIR_UNIT_BUDGET_MULTIPLIER = 4;
 
 /**
  * First wave a tier may appear in. Early waves are fodder an opening defence

@@ -1,4 +1,4 @@
-import type { TowerTypeId } from '../../../../shared/types/content-ids';
+import type { TowerTargetScope, TowerTypeId } from '../../../../shared/types/content-ids';
 import type { GridPoint } from '../../../../shared/types/grid';
 import type { TowerCombatStats } from '../../../tower/model/types';
 import {
@@ -9,11 +9,15 @@ import {
 import type { LedgerTower, RouteDamageLedger } from './routeDamageLedger';
 import { computeShotDps } from './towerDamageModel';
 
-/** A tower type the opponent can build, priced for its race, with its level 1 stats. */
+/**
+ * A tower type the opponent can build, priced for its race, with its level 1
+ * stats and the race's authored target scope (the archetype's when absent).
+ */
 export type InvestmentTowerType = {
   towerType: TowerTypeId;
   cost: number;
   stats: TowerCombatStats;
+  allowedTargets?: TowerTargetScope;
 };
 
 /** An unbuilt maze plan block, in build order, with the route cells building it adds. */
@@ -66,7 +70,12 @@ type Option = { value: number; cost: number; apply: () => void };
 type BuildChoice = PlannedBuild & { ledgerIndex: number };
 
 function toLedgerTower(anchor: GridPoint, type: InvestmentTowerType): LedgerTower {
-  return { anchor, towerType: type.towerType, stats: type.stats };
+  return {
+    anchor,
+    towerType: type.towerType,
+    stats: type.stats,
+    ...(type.allowedTargets === undefined ? {} : { allowedTargets: type.allowedTargets }),
+  };
 }
 
 /**
