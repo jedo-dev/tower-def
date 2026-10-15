@@ -13,7 +13,7 @@ const STARTING_WALLET = 120;
 
 function createHost(): GameSceneWiringHost & { duelState: () => DuelMatchState } {
   let duelMatchState = createInitialDuelMatchState(RaceId.UNDEAD, RaceId.ORC);
-  const runState = { playerGold: STARTING_WALLET } as WaveRuntimeState;
+  const runState = { playerGold: STARTING_WALLET, waveKillBountyEarned: 0 } as WaveRuntimeState;
   const emptyField = { creeps: [], towers: [] } as unknown as BattlefieldRenderState;
 
   return {
@@ -45,6 +45,7 @@ describe('kill bounty wiring', () => {
     wiring.playerBattlefieldContext.combatDeps.awardKillBounty();
 
     expect(host.runState.playerGold).toBe(STARTING_WALLET + getKillBountyGold());
+    expect(host.runState.waveKillBountyEarned).toBe(getKillBountyGold());
     expect(host.duelState().opponent.gold).toBe(opponentGoldBefore);
   });
 
@@ -57,6 +58,7 @@ describe('kill bounty wiring', () => {
 
     expect(host.duelState().opponent.gold).toBe(opponentGoldBefore + getKillBountyGold());
     expect(host.runState.playerGold).toBe(STARTING_WALLET);
+    expect(host.runState.waveKillBountyEarned).toBe(0);
   });
 });
 

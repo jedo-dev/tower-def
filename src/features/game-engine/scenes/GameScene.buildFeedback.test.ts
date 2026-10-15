@@ -1,5 +1,7 @@
 import { afterEach, beforeAll, describe, expect, it } from 'vitest';
+import { getKillBountyGold } from '../../../entities/duel-match';
 import { EnemyFaction } from '../../../entities/enemy-faction';
+import { ECONOMY_BALANCE } from '../../../shared/constants/economy';
 import { TowerTypeId } from '../../../shared/types/content-ids';
 import type { GridPosition } from '../../../shared/types/pathfinding';
 import {
@@ -23,7 +25,7 @@ const FIXED_MAP_SETUP: GameSetupConfigLike = {
 
 type GameSetupConfigLike = NonNullable<GameSceneHarnessOptions['setup']>;
 
-describe('GameScene build feedback (tower-def-h28.4)', () => {
+describe('GameScene build feedback (tower-def-h28.4) and round summary (tower-def-h28.5)', () => {
   let harness: GameSceneHarness | null = null;
 
   const start = async (options?: GameSceneHarnessOptions): Promise<GameSceneHarness> => {
@@ -55,6 +57,19 @@ describe('GameScene build feedback (tower-def-h28.4)', () => {
   function clickAfterCooldown(game: GameSceneHarness, anchor: GridPosition): void {
     game.tick(ACTION_COOLDOWN_FRAMES);
     game.clickBuildAnchor(anchor);
+  }
+
+  /**
+   * A row of archers just above the fixed map's straight route (row 14): one
+   * archer gets two shots at a passing creep, six of them kill it.
+   */
+  function buildArcherRowAboveRoute(game: GameSceneHarness): void {
+    game.command('select-tower', { towerType: TowerTypeId.SINGLE });
+    for (let x = 2; x <= 12; x += 2) {
+      clickAfterCooldown(game, { x, y: 11 });
+    }
+    expect(game.inspect().playerField.towers).toHaveLength(6);
+    game.tick(ACTION_COOLDOWN_FRAMES);
   }
 
   describe('build-rejected is published once per refused tap, with the reason', () => {
@@ -183,6 +198,69 @@ describe('GameScene build feedback (tower-def-h28.4)', () => {
 
       expect(game.inspect().playerField.towers).toHaveLength(1);
       expect(game.eventsOf('build-rejected')).toEqual([]);
+    });
+  });
+
+  describe('round-settled summarises the player side once per round', () => {
+    it('reports the leaks as lives lost, no bounty and the income paid when nothing is built', async () => {
+      const game = await start();
+      const incomeBefore = game.latestHud().income;
+      const livesBefore = game.latestHud().lives;
+
+      game.command('start-wave', undefined);
+      game.tickUntil(() => game.latestHud().phase === 'build', MAX_FRAMES_PER_ROUND);
+
+      const leaked = game
+        .inspect()
+        .playerField.creeps.filter((creep) => creep.entity.status === 'escaped').length;
+      expect(leaked).toBeGreaterThan(0);
+      const summaries = game.eventsOf('round-settled');
+      expect(summaries).toHaveLength(1);
+      expect(summaries[0]).toMatchObject({ round: 1, livesLost: leaked, bountyEarned: 0 });
+      expect(summaries[0].incomePaid).toBeGreaterThanOrEqual(incomeBefore);
+      // The lives line matches the summary once life steal is added back.
+      const stolenByPlayer = game
+        .eventsOf('lives-stolen')
+        .filter((event) => event.thief === 'player')
+        .reduce((sum, event) => sum + event.lives, 0);
+      expect(game.latestHud().lives).toBe(livesBefore - summaries[0].livesLost + stolenByPlayer);
+    });
+
+    it('reports the kill bounty the towers earned and balances the purse', async () => {
+      const game = await start({ setup: FIXED_MAP_SETUP });
+      buildArcherRowAboveRoute(game);
+      const goldAtWaveStart = game.inspect().playerGold;
+
+      game.command('start-wave', undefined);
+      game.tickUntil(() => game.latestHud().phase === 'build', MAX_FRAMES_PER_ROUND);
+
+      const [summary, ...rest] = game.eventsOf('round-settled');
+      expect(rest).toEqual([]);
+      expect(summary.round).toBe(1);
+      expect(summary.bountyEarned).toBeGreaterThan(0);
+      expect(summary.bountyEarned % getKillBountyGold()).toBe(0);
+      expect(game.inspect().playerGold - goldAtWaveStart).toBe(
+        summary.bountyEarned + summary.incomePaid + ECONOMY_BALANCE.waveCompletionRewardGold,
+      );
+    });
+
+    it('starts the bounty count afresh each wave', async () => {
+      const game = await start({ setup: FIXED_MAP_SETUP });
+      buildArcherRowAboveRoute(game);
+      game.command('start-wave', undefined);
+      game.tickUntil(() => game.latestHud().phase === 'build', MAX_FRAMES_PER_ROUND);
+      const goldAtSecondWaveStart = game.inspect().playerGold;
+
+      game.command('start-wave', undefined);
+      game.tickUntil(() => game.latestHud().phase === 'build', MAX_FRAMES_PER_ROUND);
+
+      const summaries = game.eventsOf('round-settled');
+      expect(summaries.map((summary) => summary.round)).toEqual([1, 2]);
+      expect(game.inspect().playerGold - goldAtSecondWaveStart).toBe(
+        summaries[1].bountyEarned +
+          summaries[1].incomePaid +
+          ECONOMY_BALANCE.waveCompletionRewardGold,
+      );
     });
   });
 });

@@ -65,6 +65,7 @@ const GAME_EVENT_NAMES = Object.keys({
   'opponent-field-creeps-updated': true,
   'lives-stolen': true,
   'build-rejected': true,
+  'round-settled': true,
 } satisfies Record<keyof GameEventMap, true>) as Array<keyof GameEventMap>;
 
 export type GameSceneHarnessOptions = {

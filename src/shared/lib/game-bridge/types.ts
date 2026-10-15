@@ -180,4 +180,15 @@ export type GameEventMap = {
     towerType: HudTowerType;
     anchor: { x: number; y: number } | null;
   };
+  /**
+   * The player's side of a settled round: lives the leaks took (before any
+   * life steal), kill bounty the wave paid and the income paid for the next
+   * build phase (0 when the settle ended the match).
+   */
+  'round-settled': {
+    round: number;
+    livesLost: number;
+    bountyEarned: number;
+    incomePaid: number;
+  };
 };

@@ -82,6 +82,7 @@ describe('mixed wave on a board with a 1-cell gap', () => {
       isWaveCompletionRewardGranted: false,
       nextWaveStartsAtMs: null,
       playerGold: 100,
+      waveKillBountyEarned: 0,
       isGameOver: false,
       currentWaveNumber: 1,
       lastPublishedAutoStartSecondsLeft: null,

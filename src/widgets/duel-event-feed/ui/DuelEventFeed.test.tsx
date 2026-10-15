@@ -32,7 +32,7 @@ describe('DuelEventFeed render', () => {
     expect(consoleError).not.toHaveBeenCalled();
   });
 
-  it('shows build rejections from typed events', () => {
+  it('shows build rejections and the round summary from typed events', () => {
     render(<DuelEventFeed />);
 
     act(() => {
@@ -41,9 +41,16 @@ describe('DuelEventFeed render', () => {
         towerType: TowerTypeId.SINGLE,
         anchor: { x: 8, y: 10 },
       });
+      publishGameEvent('round-settled', {
+        round: 7,
+        livesLost: 3,
+        bountyEarned: 40,
+        incomePaid: 120,
+      });
     });
 
     expect(screen.getByText('Build failed: blocks the path')).toBeDefined();
+    expect(screen.getByText('Wave 7 settled: -3 lives, +40 bounty, +120 income')).toBeDefined();
     expect(consoleError).not.toHaveBeenCalled();
   });
 

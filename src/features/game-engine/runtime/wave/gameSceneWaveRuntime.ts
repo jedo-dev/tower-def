@@ -38,6 +38,8 @@ export type WaveRuntimeState = {
   isWaveCompletionRewardGranted: boolean;
   nextWaveStartsAtMs: number | null;
   playerGold: number;
+  /** Kill bounty the player's towers earned in the wave being fought; reset per wave. */
+  waveKillBountyEarned: number;
   isGameOver: boolean;
   /** Waves started so far: the wave being fought, or 0 before the first. */
   currentWaveNumber: number;
@@ -95,6 +97,7 @@ export function createPlayerWaveRuntimeState(
     isWaveCompletionRewardGranted: false,
     nextWaveStartsAtMs: null,
     playerGold: initialResources.gold,
+    waveKillBountyEarned: 0,
     isGameOver: false,
     currentWaveNumber: 0,
     lastPublishedAutoStartSecondsLeft: null,
@@ -205,6 +208,7 @@ export function resetRunToInitialState(state: WaveRuntimeState): void {
 
   const initialResources = createInitialPlayerResources();
   state.playerGold = initialResources.gold;
+  state.waveKillBountyEarned = 0;
   state.wavePhaseState = resetWavePhaseState();
   state.isGameOver = false;
   state.currentWaveNumber = 0;

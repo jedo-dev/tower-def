@@ -107,6 +107,7 @@ import {
 import {
   applyDuelRoundEnd as applyDuelRoundEndRuntime,
   publishRoundLifeEvents,
+  publishRoundSettled,
   type DuelMatchRuntimeState,
 } from '../runtime/duel/gameSceneDuelRuntime';
 import {
@@ -959,6 +960,13 @@ export class GameScene extends Phaser.Scene {
     this.isGameOver = duelRuntimeState.isGameOver;
     this.runState.nextWaveStartsAtMs = duelRuntimeState.nextWaveStartsAtMs;
     publishRoundLifeEvents(previousOpponentHp, result);
+    publishRoundSettled(
+      {
+        round: this.runState.currentWaveNumber,
+        bountyEarned: this.runState.waveKillBountyEarned,
+      },
+      result,
+    );
     if (result.playerIncomePaid > 0) {
       this.playerGold += result.playerIncomePaid;
       this.registry.set('economy.gold', this.playerGold);
@@ -1147,6 +1155,7 @@ export class GameScene extends Phaser.Scene {
 
     // From here on this is the wave being fought; the HUD counts it as such.
     this.runState.currentWaveNumber += 1;
+    this.runState.waveKillBountyEarned = 0;
     this.registry.set('wave.number', this.runState.currentWaveNumber);
     this.runState.activeCreepRoutes = waveRoutes;
     // The path preview shows the single-cell route; large creeps may walk wider.

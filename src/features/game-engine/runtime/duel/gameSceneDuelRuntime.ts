@@ -56,6 +56,30 @@ export function applyDuelRoundEnd(input: ApplyDuelRoundEndInput): ApplyDuelRound
   return result;
 }
 
+export type RoundSettledSummaryInput = {
+  /** The wave that was fought, as the HUD numbers it. */
+  round: number;
+  /** Kill bounty the player's towers earned during that wave. */
+  bountyEarned: number;
+};
+
+/**
+ * The player's one-line round summary. Lives lost are the leaks' toll before
+ * any life steal (which `publishRoundLifeEvents` reports on its own); income
+ * is the next build phase's payout, 0 when the round ended the match.
+ */
+export function publishRoundSettled(
+  summary: RoundSettledSummaryInput,
+  result: ApplyDuelRoundEndResult,
+): void {
+  publishGameEvent('round-settled', {
+    round: summary.round,
+    livesLost: result.playerHpLost,
+    bountyEarned: summary.bountyEarned,
+    incomePaid: result.playerIncomePaid,
+  });
+}
+
 /**
  * Tells the UI how the round moved both life totals: the opponent's net HP
  * change and any lives either side stole with its sends.

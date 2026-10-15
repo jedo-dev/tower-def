@@ -8,6 +8,7 @@ import {
   formatIncomeUpdated,
   formatLivesStolen,
   formatOpponentHpUpdated,
+  formatRoundSettled,
   formatSendQueueUpdated,
   formatSendRejected,
   type DuelFeedEntry,
@@ -51,12 +52,21 @@ describe('duel event feed model', () => {
     expect(formatOpponentHpUpdated({ hp: 20, previousHp: 20, delta: 0 })).toBeNull();
   });
 
-  it('formats stolen lives per thief', () => {
-    expect(formatLivesStolen({ thief: 'player', lives: 2, hp: 18 })).toBe(
-      'Your sends stole +2 HP → 18',
+  it('formats stolen lives so the thief and whose total follows are unambiguous', () => {
+    expect(formatLivesStolen({ thief: 'player', lives: 1, hp: 14 })).toBe(
+      'You stole 1 HP (you now 14)',
     );
-    expect(formatLivesStolen({ thief: 'opponent', lives: 1, hp: 9 })).toBe(
-      'Enemy sends stole +1 HP → 9',
+    expect(formatLivesStolen({ thief: 'opponent', lives: 1, hp: 14 })).toBe(
+      'Enemy stole 1 HP (enemy now 14)',
+    );
+  });
+
+  it('formats the player round summary with lives, bounty and income', () => {
+    expect(formatRoundSettled({ round: 7, livesLost: 3, bountyEarned: 40, incomePaid: 120 })).toBe(
+      'Wave 7 settled: -3 lives, +40 bounty, +120 income',
+    );
+    expect(formatRoundSettled({ round: 1, livesLost: 0, bountyEarned: 0, incomePaid: 0 })).toBe(
+      'Wave 1 settled: -0 lives, +0 bounty, +0 income',
     );
   });
 
