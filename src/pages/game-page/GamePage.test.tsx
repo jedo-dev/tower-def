@@ -1,9 +1,13 @@
 // @vitest-environment jsdom
 import { useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { Difficulty } from '../../entities/difficulty';
 import type { GameSetupConfig } from '../../shared/config/game-setup';
+import {
+  LANDSCAPE_LAYOUT_CLASS_NAME,
+  LANDSCAPE_LAYOUT_MEDIA_QUERY,
+} from '../../shared/constants/layout';
 import { publishGameHudSnapshot, resetGameBridgeState } from '../../shared/lib/game-bridge/bridge';
 import type { GameHudSnapshot } from '../../shared/lib/game-bridge/types';
 import { RaceId } from '../../shared/types/content-ids';
@@ -119,5 +123,48 @@ describe('GamePage', () => {
     const finishedUnload = new Event('beforeunload', { cancelable: true });
     window.dispatchEvent(finishedUnload);
     expect(finishedUnload.defaultPrevented).toBe(false);
+  });
+
+  it('switches to the landscape layout class without restarting the game', () => {
+    const listeners = new Set<(event: MediaQueryListEvent) => void>();
+    const mediaQueryList = {
+      matches: false,
+      media: LANDSCAPE_LAYOUT_MEDIA_QUERY,
+      addEventListener: (_type: 'change', listener: (event: MediaQueryListEvent) => void) => {
+        listeners.add(listener);
+      },
+      removeEventListener: (_type: 'change', listener: (event: MediaQueryListEvent) => void) => {
+        listeners.delete(listener);
+      },
+    };
+    vi.stubGlobal(
+      'matchMedia',
+      vi.fn(() => mediaQueryList as unknown as MediaQueryList),
+    );
+    const rotate = (matches: boolean) => {
+      mediaQueryList.matches = matches;
+      for (const listener of listeners) {
+        listener({ matches } as MediaQueryListEvent);
+      }
+    };
+
+    publishGameHudSnapshot(createActiveSnapshot());
+    render(<AppShell />);
+    const page = screen.getByRole('main');
+    expect(page.classList.contains(LANDSCAPE_LAYOUT_CLASS_NAME)).toBe(false);
+    expect(createdGames).toHaveLength(1);
+
+    act(() => rotate(true));
+    expect(page.classList.contains('game-page')).toBe(true);
+    expect(page.classList.contains(LANDSCAPE_LAYOUT_CLASS_NAME)).toBe(true);
+
+    act(() => rotate(false));
+    expect(page.classList.contains(LANDSCAPE_LAYOUT_CLASS_NAME)).toBe(false);
+
+    // The match keeps running: the same Phaser game, never destroyed or rebuilt.
+    expect(createdGames).toHaveLength(1);
+    expect(destroyGame).not.toHaveBeenCalled();
+    expect(consoleError).not.toHaveBeenCalled();
+    vi.unstubAllGlobals();
   });
 });

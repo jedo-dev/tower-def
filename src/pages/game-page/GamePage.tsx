@@ -8,7 +8,9 @@ import { MatchOutcomeOverlay } from '../../widgets/match-outcome';
 import { TowerActionPanel } from '../../widgets/tower-action-panel';
 import { WaveQueue } from '../../widgets/wave-queue';
 import type { GameSetupConfig } from '../../shared/config/game-setup';
+import { LANDSCAPE_LAYOUT_CLASS_NAME } from '../../shared/constants/layout';
 import { onGameCommand } from '../../shared/lib/game-bridge/bridge';
+import { useLandscapeLayout } from '../../shared/lib/viewport-layout';
 import { EngineErrorOverlay } from './ui/EngineErrorOverlay';
 import { useMatchUnloadGuard } from './ui/useMatchUnloadGuard';
 import './GamePage.css';
@@ -20,13 +22,17 @@ export type GamePageProps = {
 
 export function GamePage({ setup, onExit }: GamePageProps) {
   useMatchUnloadGuard();
+  // Landscape phones put the board beside the controls. The canvas keeps its
+  // Phaser game across the switch (same element, memoised widget); the engine
+  // re-fits the camera on the resulting resize.
+  const isLandscapeLayout = useLandscapeLayout();
 
   // The confirmed quit is a typed command: the engine freezes the field and
   // the page leaves. Unmounting the canvas destroys the game.
   useEffect(() => onGameCommand('quit-match', () => onExit()), [onExit]);
 
   return (
-    <main className="game-page">
+    <main className={isLandscapeLayout ? `game-page ${LANDSCAPE_LAYOUT_CLASS_NAME}` : 'game-page'}>
       <div className="game-viewport">
         <div className="game-canvas-area">
           <WaveQueue />

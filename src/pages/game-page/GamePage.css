@@ -53,3 +53,41 @@
   overflow-y: auto;
   overscroll-behavior: contain;
 }
+
+/*
+ * Landscape phones (the class comes from useLandscapeLayout, one breakpoint
+ * in shared/constants/layout): the board fills the height on the left and
+ * the send panel + HUD become a scrollable column on the right, so nothing
+ * runs off the bottom of a 360px-tall viewport. The canvas element is the
+ * same one as in portrait; only its box changes, and the engine re-fits the
+ * camera on the resize.
+ */
+.game-page--landscape {
+  max-width: none;
+}
+
+.game-page--landscape .game-viewport {
+  flex-direction: row;
+  align-items: stretch;
+}
+
+.game-page--landscape .game-canvas-area {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 100%;
+}
+
+.game-page--landscape .game-panels {
+  /* The column scrolls as a whole; the HUD no longer caps itself. */
+  --hud-panel-max-height: none;
+  flex: 0 0 clamp(300px, 44%, 400px);
+  height: 100%;
+  max-height: none;
+  padding: 2px;
+}
+
+/* The panels keep their natural height so the column scrolls, instead of
+ * squashing the HUD into its own inner scroller next to the board. */
+.game-page--landscape .game-panels > * {
+  flex-shrink: 0;
+}
