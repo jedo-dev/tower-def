@@ -201,7 +201,7 @@
       "id": "chain",
       "name": "Chain Lightning",
       "attackKind": "chain",
-      "allowedTargets": "ground",
+      "allowedTargets": "both",
       "damage": 24,
       "range": 6,
       "attackCooldownMs": 1000,

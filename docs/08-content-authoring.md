@@ -230,14 +230,32 @@ and the id. Today every race tower mirrors its archetype (a test enforces it):
 | `frost` | `both` | Single-target; the chill keeps fliers in range longer. |
 | `poison` | `both` | Single-target flask; ticks ignore armour. |
 | `splash` | `ground` | Area blast on the ground; a flier over it is untouched. |
-| `chain` | `ground` | Area arcs between ground creeps. |
+| `chain` | `both` | Lightning arcs between creeps on either lane; the orc answer to a flock of fliers (tower-def-xwc.5). |
 | `support` | `both` (omitted) | Has no attack; the scope is meaningless and left out. |
 
-The rule of thumb: area attacks stay on the ground, single-target attacks
-reach the air. Loaders expose the resolved value on `BuildableTowerConfig`
-and `TowerArchetypeDefinition` (`allowedTargets`), so a roster view can show
-"targets: ground / air / both". Targeting, splash and chain all consult it
-(`entities/tower/model/targeting.ts`, `canTowerTargetCreep`).
+The rule of thumb: the blast stays on the ground, everything that picks a
+target reaches the air. Loaders expose the resolved value on
+`BuildableTowerConfig` and `TowerArchetypeDefinition` (`allowedTargets`), so a
+roster view can show "targets: ground / air / both". Targeting, splash and
+chain all consult it (`entities/tower/model/targeting.ts`,
+`canTowerTargetCreep`). The computer opponent builds its towers from the race
+entry too (`computer-opponent/model/computerTowerEntity.ts`), so a race scope
+that differs from the archetype would reach both the field and the planner.
+
+## Per-race stats
+
+A race tower may author its own numbers for its archetype: `damage`, `range`,
+`attackCooldownMs` (and `splashRadius`, `onHitEffects`) on the entry, plus a
+`levels` curve. The placed tower fights with the entry's numbers
+(`resolveTowerPlacementStats`) and upgrades along its own `levels` when they
+are authored, the archetype curve otherwise, so **a tower whose base stats
+differ from the archetype must author all its `levels`**, or the first
+upgrade snaps it back to the archetype numbers. Prices stay equal per
+archetype across races (a test enforces it); the per-race dial is the stats.
+
+Today only the `single` archers differ, as the anti-air dial of
+tower-def-xwc.5 (docs/07, "Air waves across races"): undead 19 / 29 / 38,
+orc 21 / 31 / 42, human 25 / 37 / 50, elf on the archetype 20 / 30 / 40.
 
 ## Schema versions
 

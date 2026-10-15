@@ -369,9 +369,10 @@ describe('allowedTargets', () => {
         TOWER_ARCHETYPE_DEFINITIONS[tower.towerType].allowedTargets,
       );
     }
-    // Area attacks stay on the ground; single-target attacks reach fliers too.
+    // Splash stays on the ground; chain arcs reach fliers (tower-def-xwc.5), as do
+    // single-target attacks.
     expect(TOWER_ARCHETYPE_DEFINITIONS.splash.allowedTargets).toBe(TowerTargetScope.GROUND);
-    expect(TOWER_ARCHETYPE_DEFINITIONS.chain.allowedTargets).toBe(TowerTargetScope.GROUND);
+    expect(TOWER_ARCHETYPE_DEFINITIONS.chain.allowedTargets).toBe(TowerTargetScope.BOTH);
     expect(TOWER_ARCHETYPE_DEFINITIONS.single.allowedTargets).toBe(TowerTargetScope.BOTH);
     expect(TOWER_ARCHETYPE_DEFINITIONS.frost.allowedTargets).toBe(TowerTargetScope.BOTH);
     expect(TOWER_ARCHETYPE_DEFINITIONS.poison.allowedTargets).toBe(TowerTargetScope.BOTH);

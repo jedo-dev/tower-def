@@ -36,7 +36,7 @@ export const CREEPS_PER_ROUTE_SAMPLE =
 export const MAX_EXPECTED_SPLASH_TARGETS = 4;
 
 /** Share of its stack cap a poison tower keeps on the creep it is shooting, on average. */
-export const POISON_STACK_UPTIME = 0.5;
+export const POISON_STACK_UPTIME = 1;
 
 /**
  * Creeps arriving per second at the reference spacing. A frost tower chills

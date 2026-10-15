@@ -9,9 +9,14 @@
 
       "allowedTargets": "both",
       "costGold": 50,
-      "damage": 20,
+      "damage": 21,
       "range": 6,
       "attackCooldownMs": 800,
+      "levels": [
+        { "level": 1, "upgradeCostGold": 0, "damage": 21, "range": 6, "attackCooldownMs": 800 },
+        { "level": 2, "upgradeCostGold": 40, "damage": 31, "range": 6.4, "attackCooldownMs": 750 },
+        { "level": 3, "upgradeCostGold": 80, "damage": 42, "range": 6.8, "attackCooldownMs": 700 }
+      ],
       "spriteKey": "tower.orc.spear_watchtower",
       "description": "A rugged platform hurling heavy spears.",
       "lore": "Lashed logs, a platform and a pile of spears heavy enough to pin a kodo. The orc on top throws until he runs out of arms."
@@ -36,7 +41,7 @@
       "name": "Lightning Totem",
       "archetype": "chain",
 
-      "allowedTargets": "ground",
+      "allowedTargets": "both",
       "costGold": 85,
       "damage": 24,
       "range": 6,
