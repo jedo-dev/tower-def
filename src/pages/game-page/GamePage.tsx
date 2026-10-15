@@ -9,6 +9,7 @@ import { TowerActionPanel } from '../../widgets/tower-action-panel';
 import { WaveQueue } from '../../widgets/wave-queue';
 import type { GameSetupConfig } from '../../shared/config/game-setup';
 import { onGameCommand } from '../../shared/lib/game-bridge/bridge';
+import { EngineErrorOverlay } from './ui/EngineErrorOverlay';
 import { useMatchUnloadGuard } from './ui/useMatchUnloadGuard';
 import './GamePage.css';
 
@@ -41,6 +42,7 @@ export function GamePage({ setup, onExit }: GamePageProps) {
         {/* Last children of the viewport: they cover both the battlefield and
             the control strip, and a modal makes the siblings inert. */}
         <MatchOutcomeOverlay onExit={onExit} />
+        <EngineErrorOverlay onExit={onExit} />
       </div>
     </main>
   );
