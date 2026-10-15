@@ -234,3 +234,60 @@ describe('HudPanel viewport layout', () => {
     expect(consoleError).not.toHaveBeenCalled();
   });
 });
+
+describe('HudPanel touch targets', () => {
+  const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+  let injectedStyles: { remove: () => void } | null = null;
+
+  afterEach(() => {
+    cleanup();
+    injectedStyles?.remove();
+    injectedStyles = null;
+    consoleError.mockClear();
+  });
+
+  function describeControl(element: HTMLElement): string {
+    return element.getAttribute('aria-label') ?? element.textContent ?? '';
+  }
+
+  /** Height comes from the shared token; width is the token or a wider literal. */
+  function expectTouchTarget(element: HTMLElement, { checkWidth }: { checkWidth: boolean }): void {
+    const style = getComputedStyle(element);
+    expect(style.minHeight, describeControl(element)).toBe('var(--touch-target-min)');
+    if (!checkWidth) {
+      return;
+    }
+    const minWidth = style.minWidth;
+    const isTokenWidth = minWidth === 'var(--touch-target-min)';
+    expect(
+      isTokenWidth || Number.parseInt(minWidth, 10) >= 44,
+      `min-width ${minWidth} for ${describeControl(element)}`,
+    ).toBe(true);
+  }
+
+  it('sizes the expand tab and Start Wave to the shared touch target token', () => {
+    injectedStyles = injectCssModule(hudPanelCss, styles);
+    publishGameHudSnapshot(createSnapshot({ autoStartSecondsLeft: 12 }));
+
+    render(<HudPanel setup={null} />);
+
+    expectTouchTarget(screen.getByRole('button', { name: 'Expand HUD' }), { checkWidth: true });
+    // The label (wider than a target) sets the width; it must stay on one line.
+    const startWave = screen.getByRole('button', { name: 'Start Wave' });
+    expectTouchTarget(startWave, { checkWidth: false });
+    expect(getComputedStyle(startWave).whiteSpace).toBe('nowrap');
+    expect(consoleError).not.toHaveBeenCalled();
+  });
+
+  it('sizes the battlefield view toggle to the shared touch target token', () => {
+    injectedStyles = injectCssModule(hudPanelCss, styles);
+    publishGameHudSnapshot(createSnapshot({ phase: 'wave', canStartWave: false }));
+
+    render(<HudPanel setup={null} />);
+
+    expectTouchTarget(screen.getByRole('button', { name: 'Show opponent battlefield' }), {
+      checkWidth: true,
+    });
+    expect(consoleError).not.toHaveBeenCalled();
+  });
+});

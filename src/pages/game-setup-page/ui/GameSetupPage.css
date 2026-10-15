@@ -582,19 +582,6 @@
   gap: var(--space-lg);
 }
 
-.setup-endpoints-checkbox {
-  width: 20px;
-  height: 20px;
-  min-width: 20px;
-  accent-color: var(--color-accent-gold);
-  cursor: pointer;
-}
-
-.setup-endpoints-checkbox:focus-visible {
-  outline: none;
-  box-shadow: var(--focus-ring);
-}
-
 @media (max-width: 430px) {
   .setup-race-title {
     font-size: var(--font-size-md);

@@ -13,6 +13,7 @@ import { Difficulty, difficulties, DEFAULT_DIFFICULTY } from '../../../entities/
 import { getComputerDifficultyPreset } from '../../../entities/computer-opponent';
 import type { GameSetupConfig, AppRoute } from '../../../shared/config/game-setup';
 import { FACTION_THEME_COLOR_VARS } from '../../../shared/constants/theme';
+import { ToggleSwitch } from '../../../shared/ui/toggle-switch';
 import './GameSetupPage.css';
 
 type SetupStep = 'builder-race' | 'enemy-faction' | 'difficulty' | 'summary';
@@ -345,9 +346,7 @@ export function GameSetupPage({ onStartGame, onNavigate }: GameSetupPageProps) {
             <label className="setup-summary-block setup-endpoints-toggle">
               <span className="setup-summary-label">Dynamic Entrances</span>
               <span className="setup-endpoints-control">
-                <input
-                  type="checkbox"
-                  className="setup-endpoints-checkbox"
+                <ToggleSwitch
                   checked={useDynamicEndpoints}
                   onChange={(event) => setUseDynamicEndpoints(event.target.checked)}
                   aria-label="Randomize entrance and exit positions on map edges"

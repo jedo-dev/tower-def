@@ -15,27 +15,43 @@
   max-height: var(--hud-panel-max-height);
 }
 
-/* Expand tab centered on the top edge of the frame, chevron from the kit. */
+/* Expand tab centered on the top edge of the frame, chevron from the kit.
+ * The button is a full touch target; the visible 64x30 plate (::before) sits
+ * at its bottom edge so the extra hit area grows upward, into the gap above
+ * the frame, instead of over the resource row and Start Wave below it. */
 .toggle {
   position: absolute;
-  top: -18px;
+  top: calc(12px - var(--touch-target-min));
   left: 50%;
   width: 64px;
-  height: 30px;
+  min-width: var(--touch-target-min);
+  height: var(--touch-target-min);
+  min-height: var(--touch-target-min);
   transform: translateX(-50%);
   display: inline-flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
-  padding: 0;
+  padding: 0 0 4px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  touch-action: manipulation;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.7));
+  z-index: 2;
+}
+
+.toggle::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 30px;
   border: 0;
   border-image-source: url('/assets/ui/kit/slot-empty.png');
   border-image-slice: 14 fill;
   border-image-width: 10px;
   border-image-repeat: stretch;
-  background: transparent;
-  cursor: pointer;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.7));
-  z-index: 2;
 }
 
 .toggle:hover {
@@ -48,6 +64,7 @@
 }
 
 .toggleIcon {
+  position: relative;
   display: inline-block;
   width: 22px;
   height: 22px;
@@ -109,16 +126,21 @@
   text-shadow: 0 1px 0 rgba(0, 0, 0, 0.9);
 }
 
-.startBtn,
-.forceStartBtn {
+/* Both wave starters and the field toggle are full touch targets; `.panel`
+ * outranks the global compact button size. */
+.panel .startBtn,
+.panel .forceStartBtn {
   flex: 0 0 auto;
+  min-height: var(--touch-target-min);
+  white-space: nowrap;
 }
 
 .battlefieldViewBtn {
   display: inline-flex;
   align-items: center;
-  min-height: 36px;
-  min-width: 64px;
+  justify-content: center;
+  min-height: var(--touch-target-min);
+  min-width: 76px;
   padding: var(--space-xs) var(--space-lg);
   border: 1px solid rgba(150, 160, 180, 0.4);
   border-radius: 6px;

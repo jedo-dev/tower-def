@@ -1,0 +1,68 @@
+/* Iron toggle switch with a gold knob (docs/10, match summary). The input is
+ * the whole control: a 64px track at least one touch target tall, so the
+ * knob never has to be hit precisely. */
+.switch {
+  appearance: none;
+  -webkit-appearance: none;
+  position: relative;
+  flex: 0 0 auto;
+  width: 64px;
+  min-width: 64px;
+  height: var(--touch-target-min);
+  min-height: var(--touch-target-min);
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--glass-border-strong);
+  border-radius: var(--radius-pill);
+  background: linear-gradient(180deg, rgba(10, 14, 22, 0.95) 0%, rgba(40, 48, 64, 0.95) 100%);
+  box-shadow:
+    inset 0 2px 6px rgba(0, 0, 0, 0.8),
+    0 1px 0 rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: background var(--duration-med) var(--ease-out);
+}
+
+/* The knob: a gold disc that slides along the track. */
+.switch::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 5px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--gradient-gold);
+  box-shadow:
+    inset 0 -2px 3px rgba(0, 0, 0, 0.35),
+    0 2px 5px rgba(0, 0, 0, 0.7);
+  transform: translateY(-50%);
+  transition: transform var(--duration-med) var(--ease-out);
+}
+
+.switch:checked {
+  background: linear-gradient(180deg, rgba(74, 56, 20, 0.95) 0%, rgba(120, 92, 36, 0.95) 100%);
+  border-color: var(--color-accent-gold);
+}
+
+.switch:checked::before {
+  transform: translate(24px, -50%);
+}
+
+.switch:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.switch:disabled {
+  cursor: not-allowed;
+  filter: grayscale(0.6) brightness(0.65);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .switch,
+  .switch::before {
+    transition: none;
+  }
+}
