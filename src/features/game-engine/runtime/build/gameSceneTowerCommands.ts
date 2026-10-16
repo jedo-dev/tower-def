@@ -1,6 +1,6 @@
 import { recalculateTowerAuras, resolveTowerSellRefundRatio } from '../../../../entities/tower';
-import { TowerAttackKind, TowerTypeId } from '../../../../shared/types/content-ids';
-import { getTowerAttackKind, isTowerCoveringCell } from '../../../../entities/tower';
+import { TowerTypeId } from '../../../../shared/types/content-ids';
+import { isTowerCoveringCell } from '../../../../entities/tower';
 import { TOWER_FOOTPRINT } from '../../../../shared/constants/footprint';
 import { getFootprintCells } from '../../../../shared/lib/grid/footprint';
 import type Phaser from 'phaser';
@@ -26,8 +26,7 @@ import { TowerSoundSlot } from '../../../../shared/types/sound-ids';
 import type { GameSoundRouter } from '../audio/gameSoundRouting';
 import type { BattlefieldRenderState } from '../battlefield/battlefieldRenderState';
 import {
-  createPlacedArcherSprite,
-  createPlacedPlagueSprite,
+  createPlacedTowerSprite,
   playBoneArcherSellAnimation,
 } from '../battlefield/battlefieldSpriteFactory';
 import {
@@ -95,18 +94,16 @@ export function tryPlaceTowerAtHoveredCell(deps: TowerCommandDeps): void {
     return;
   }
 
-  const towerSprite =
-    getTowerAttackKind(result.towerType) === TowerAttackKind.SPLASH
-      ? createPlacedPlagueSprite(deps.scene, result.placedTower.position)
-      : createPlacedArcherSprite(
-          deps.scene,
-          result.placedTower.position,
-          deps.getBuilderFactionId(),
-        );
+  const { sprite, hasOwnArt } = createPlacedTowerSprite(
+    deps.scene,
+    result.placedTower,
+    deps.getBuilderFactionId(),
+  );
   deps.playerField.towers.push({
     entity: result.placedTower,
     runtime: createInitialTowerCombatRuntime(),
-    sprite: towerSprite,
+    sprite,
+    hasOwnArt,
   });
   refreshFieldAuras(deps.playerField);
   deps.onGoldUpdated(result.playerGold);

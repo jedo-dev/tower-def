@@ -1,8 +1,5 @@
 import { getTowerCenter } from '../../../entities/tower';
-import {
-  TOWER_BONE_ARCHER_EFFECT_FRAMES,
-  TOWER_SPRITE_KEYS,
-} from '../../../shared/constants/sprites';
+import { TOWER_SHEET_EFFECT_FRAMES, TOWER_SPRITE_KEYS } from '../../../shared/constants/sprites';
 import type { TowerTypeId } from '../../../shared/types/content-ids';
 import type { GridPosition } from '../../../shared/types/pathfinding';
 import type { BattlefieldRenderState } from '../runtime/battlefield/battlefieldRenderState';
@@ -38,8 +35,8 @@ export function referenceSpawnImpactEffect(
   towerType: TowerTypeId,
 ): void {
   const frame = isSplash
-    ? TOWER_BONE_ARCHER_EFFECT_FRAMES.attackEffect
-    : TOWER_BONE_ARCHER_EFFECT_FRAMES.projectile;
+    ? TOWER_SHEET_EFFECT_FRAMES.attackEffect
+    : TOWER_SHEET_EFFECT_FRAMES.projectile;
   const effect = deps.scene.add.sprite(x, y, spriteKey, frame);
   const size = isSplash
     ? config.projectileDisplaySizePx * 1.7
@@ -112,10 +109,10 @@ export function referenceSpawnProjectileFeedback(
     ),
   );
   const frame = isSplash
-    ? TOWER_BONE_ARCHER_EFFECT_FRAMES.projectile
+    ? TOWER_SHEET_EFFECT_FRAMES.projectile
     : config.archerProjectileVisualMode === 'projectile'
-      ? TOWER_BONE_ARCHER_EFFECT_FRAMES.projectile
-      : TOWER_BONE_ARCHER_EFFECT_FRAMES.attackEffect;
+      ? TOWER_SHEET_EFFECT_FRAMES.projectile
+      : TOWER_SHEET_EFFECT_FRAMES.attackEffect;
   const effectSpriteKey = isSplash
     ? TOWER_SPRITE_KEYS.UNDEAD_BONE_ARCHER
     : tower.sprite.texture.key;
@@ -137,6 +134,8 @@ export function referenceSpawnProjectileFeedback(
     sprite: projectile,
     towerType: tower.entity.type,
     effectSpriteKey,
+    // The reference predates per-tower sheets; scenarios run on borrowed art.
+    hasOwnArt: false,
     fromX: fromCenter.x,
     fromY: fromCenter.y,
     toX: toCenter.x,
@@ -186,6 +185,7 @@ export function referenceUpdateProjectiles(
       sprite: projectile.sprite,
       towerType: projectile.towerType,
       effectSpriteKey: projectile.effectSpriteKey,
+      hasOwnArt: projectile.hasOwnArt,
       fromX: projectile.fromX,
       fromY: projectile.fromY,
       toX: projectile.toX,

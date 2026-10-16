@@ -1,5 +1,10 @@
 import { TowerAttackKind, TowerTypeId } from '../../../../shared/types/content-ids';
-import { getTowerAttackKind, getTowerCenter } from '../../../../entities/tower';
+import {
+  getTowerAttackKind,
+  getTowerCenter,
+  resolveBuildableTowerById,
+  type TowerEntity,
+} from '../../../../entities/tower';
 import type Phaser from 'phaser';
 import type { DuelMatchState } from '../../../../entities/duel-match';
 import {
@@ -99,6 +104,73 @@ function toTowerSpriteCenter(anchor: GridPosition): { x: number; y: number } {
   return toCellCenter(getTowerCenter({ position: anchor }));
 }
 
+/** A placed tower's sprite, and whether it draws the tower's own sheet or borrowed art. */
+export type PlacedTowerSprite = {
+  sprite: Phaser.GameObjects.Sprite;
+  hasOwnArt: boolean;
+};
+
+type PlacedTowerSource = Pick<TowerEntity, 'type' | 'position' | 'buildableTowerId'>;
+
+function playBuildThenIdle(sprite: Phaser.GameObjects.Sprite, spriteKey: string): void {
+  const animationSet = getTowerAnimationSet(spriteKey);
+  sprite.play(animationSet.build);
+  sprite.once(`animationcomplete-${animationSet.build}`, () => {
+    if (!sprite.scene) {
+      return;
+    }
+    sprite.play(animationSet.idle);
+  });
+}
+
+function createOwnArtTowerSprite(
+  scene: Phaser.Scene,
+  position: GridPosition,
+  spriteKey: string,
+): Phaser.GameObjects.Sprite {
+  const center = toTowerSpriteCenter(position);
+  const sprite = scene.add.sprite(center.x, center.y, spriteKey, 0);
+  sprite.setDepth(resolveTowerRenderDepth(position));
+  sprite.setDisplaySize(
+    GRID_DIMENSIONS.cellSize * TOWER_VISUAL_SCALE_IN_CELLS,
+    GRID_DIMENSIONS.cellSize * TOWER_VISUAL_SCALE_IN_CELLS,
+  );
+  sprite.setOrigin(BONE_ARCHER_ORIGIN_X, BONE_ARCHER_ORIGIN_Y);
+  playBuildThenIdle(sprite, spriteKey);
+  return sprite;
+}
+
+/**
+ * The sprite of a placed tower: its own sheet when the art is loaded,
+ * otherwise the borrowed art of its attack kind (the plague sheet for splash,
+ * the race's archer for the rest). A tower without its own art is still
+ * reported to the missing-art list.
+ */
+export function createPlacedTowerSprite(
+  scene: Phaser.Scene,
+  tower: PlacedTowerSource,
+  raceId: RaceId,
+): PlacedTowerSprite {
+  const config =
+    tower.buildableTowerId === undefined ? null : resolveBuildableTowerById(tower.buildableTowerId);
+  if (config) {
+    if (scene.textures.exists(config.spriteKey)) {
+      return {
+        sprite: createOwnArtTowerSprite(scene, tower.position, config.spriteKey),
+        hasOwnArt: true,
+      };
+    }
+    // Only for the missing-art report; the borrowed art below is what gets drawn.
+    resolveSpriteKey(scene.textures, 'tower', config.spriteKey, { raceId, contentId: config.id });
+  }
+
+  const sprite =
+    getTowerAttackKind(tower.type) === TowerAttackKind.SPLASH
+      ? createPlacedPlagueSprite(scene, tower.position)
+      : createPlacedArcherSprite(scene, tower.position, raceId);
+  return { sprite, hasOwnArt: false };
+}
+
 export function createPlacedArcherSprite(
   scene: Phaser.Scene,
   position: GridPosition,
@@ -106,7 +178,6 @@ export function createPlacedArcherSprite(
 ): Phaser.GameObjects.Sprite {
   const center = toTowerSpriteCenter(position);
   const resolved = resolveArcherTowerSprite(scene, factionId);
-  const animationSet = getTowerAnimationSet(resolved.spriteKey);
   const sprite = scene.add.sprite(center.x, center.y, resolved.spriteKey, 0);
   if (resolved.isPlaceholder && resolved.placeholderTint !== undefined) {
     sprite.setTint(resolved.placeholderTint);
@@ -117,13 +188,7 @@ export function createPlacedArcherSprite(
     GRID_DIMENSIONS.cellSize * TOWER_VISUAL_SCALE_IN_CELLS,
   );
   sprite.setOrigin(BONE_ARCHER_ORIGIN_X, BONE_ARCHER_ORIGIN_Y);
-  sprite.play(animationSet.build);
-  sprite.once(`animationcomplete-${animationSet.build}`, () => {
-    if (!sprite.scene) {
-      return;
-    }
-    sprite.play(animationSet.idle);
-  });
+  playBuildThenIdle(sprite, resolved.spriteKey);
 
   return sprite;
 }
@@ -139,7 +204,6 @@ export function createPlacedPlagueSprite(
     PLAGUE_TOWER_CONFIG?.spriteKey ?? TOWER_SPRITE_KEYS.UNDEAD_BONE_ARCHER,
     { contentId: PLAGUE_TOWER_CONFIG?.id },
   );
-  const animationSet = getTowerAnimationSet(resolved.spriteKey);
   const sprite = scene.add.sprite(center.x, center.y, resolved.spriteKey, 0);
   sprite.setDepth(resolveTowerRenderDepth(position));
   sprite.setDisplaySize(
@@ -148,19 +212,14 @@ export function createPlacedPlagueSprite(
   );
   sprite.setOrigin(PLAGUE_TOWER_ORIGIN_X, PLAGUE_TOWER_ORIGIN_Y);
   sprite.setTint(0x44aa44);
-  sprite.play(animationSet.build);
-  sprite.once(`animationcomplete-${animationSet.build}`, () => {
-    if (!sprite.scene) {
-      return;
-    }
-    sprite.play(animationSet.idle);
-  });
+  playBuildThenIdle(sprite, resolved.spriteKey);
 
   return sprite;
 }
 
+/** Plays the sheet's attack, then back to idle: every tower with its own art, plus borrowed archers. */
 export function playArcherAttackAnimation(tower: TowerRenderState): void {
-  if (getTowerAttackKind(tower.entity.type) !== TowerAttackKind.SINGLE_TARGET) {
+  if (!tower.hasOwnArt && getTowerAttackKind(tower.entity.type) !== TowerAttackKind.SINGLE_TARGET) {
     return;
   }
 
@@ -194,7 +253,13 @@ export function playBoneArcherSellAnimation(tower: TowerRenderState): void {
   });
 }
 
+/** A splash tower with its own sheet animates; one on borrowed plague art flashes its tint. */
 export function playPlagueAttackAnimation(scene: Phaser.Scene, tower: TowerRenderState): void {
+  if (tower.hasOwnArt) {
+    playArcherAttackAnimation(tower);
+    return;
+  }
+
   if (getTowerAttackKind(tower.entity.type) !== TowerAttackKind.SPLASH) {
     return;
   }
@@ -226,15 +291,13 @@ export function rebuildOpponentBattlefieldRenderState(
 
   // Same aura rule as the player's field; copies keep the duel state untouched.
   battlefield.towers = createTowersWithAuras(opponent.battlefield.towers).map((tower) => {
-    const sprite =
-      getTowerAttackKind(tower.type) === TowerAttackKind.SPLASH
-        ? createPlacedPlagueSprite(scene, tower.position)
-        : createPlacedArcherSprite(scene, tower.position, opponent.raceId);
+    const { sprite, hasOwnArt } = createPlacedTowerSprite(scene, tower, opponent.raceId);
     sprite.setVisible(visible);
     return {
       entity: tower,
       runtime: createInitialTowerCombatRuntime(),
       sprite,
+      hasOwnArt,
     };
   });
 }

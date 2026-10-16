@@ -1,8 +1,4 @@
-import {
-  TOWER_SHEET_CONTRACT_FRAMES,
-  TOWER_SHEET_FRAME_LAYOUTS,
-  type TowerSheetFrameLayout,
-} from '../../../../shared/constants/sprites';
+import { resolveTowerSheetFrameLayout } from '../../../../shared/constants/sprites';
 
 /** Frames every tower animation plays; every list is non-empty and drawn. */
 export type TowerAnimationFrames = {
@@ -20,9 +16,7 @@ export type TowerAnimationFrames = {
  * which the placeholder draws in every slot.
  */
 export function resolveTowerAnimationFrames(spriteKey: string): TowerAnimationFrames {
-  const layout: TowerSheetFrameLayout =
-    TOWER_SHEET_FRAME_LAYOUTS[spriteKey as keyof typeof TOWER_SHEET_FRAME_LAYOUTS] ??
-    TOWER_SHEET_CONTRACT_FRAMES;
+  const layout = resolveTowerSheetFrameLayout(spriteKey);
 
   return {
     build: layout.build,

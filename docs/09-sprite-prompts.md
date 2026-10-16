@@ -62,17 +62,17 @@
 | Раса | Башня | Архетип | Ключ спрайта | Статус |
 | --- | --- | --- | --- | --- |
 | Нежить | Bone Archer Tower | single | `tower.undead.bone_archer` | есть (эталон стиля) |
-| Нежить | Plague Tower | splash | `tower.undead.plague` | **нужен** |
-| Нежить | Frost Wyrm Nest | frost | `tower.undead.frost_wyrm_nest` | **нужен** |
-| Нежить | Bone Obelisk | support | `tower.undead.bone_obelisk` | **нужен** |
-| Орки | Spear Watchtower | single | `tower.orc.spear_watchtower` | **нужен** |
-| Орки | Burning Pit | splash | `tower.orc.burning_pit` | **нужен** |
-| Орки | Lightning Totem | chain | `tower.orc.lightning_totem` | **нужен** |
-| Орки | Tar Pit | frost | `tower.orc.tar_pit` | **нужен** |
-| Люди | Guard Archer Tower | single | `tower.human.guard_archer` | **нужен** |
-| Люди | Cannon Bastion | splash | `tower.human.cannon_bastion` | **нужен** |
-| Люди | Alchemist Tower | poison | `tower.human.alchemist_tower` | **нужен** |
-| Люди | Guard Post | support | `tower.human.guard_post` | **нужен** |
+| Нежить | Plague Tower | splash | `tower.undead.plague` | есть |
+| Нежить | Frost Wyrm Nest | frost | `tower.undead.frost_wyrm_nest` | есть |
+| Нежить | Bone Obelisk | support | `tower.undead.bone_obelisk` | есть |
+| Орки | Spear Watchtower | single | `tower.orc.spear_watchtower` | есть |
+| Орки | Burning Pit | splash | `tower.orc.burning_pit` | есть |
+| Орки | Lightning Totem | chain | `tower.orc.lightning_totem` | есть |
+| Орки | Tar Pit | frost | `tower.orc.tar_pit` | есть |
+| Люди | Guard Archer Tower | single | `tower.human.guard_archer` | есть |
+| Люди | Cannon Bastion | splash | `tower.human.cannon_bastion` | есть |
+| Люди | Alchemist Tower | poison | `tower.human.alchemist_tower` | есть |
+| Люди | Guard Post | support | `tower.human.guard_post` | есть |
 | Эльфы | Moon Archer Tower | single | `tower.elf.moon_archer` | есть |
 | Эльфы | Wisp Bloom | splash | `tower.elf.wisp_bloom` | **нужен** |
 | Эльфы | Moonwell | frost | `tower.elf.moonwell` | **нужен** |
@@ -200,12 +200,13 @@ python tools/build-sprite-sheet.py raw.png public/assets/towers/orc_tar_pit.png 
 
 ### Башня
 
-1. Положить лист `300×180` в `public/assets/towers/<race>_<name>.png`.
-2. В `src/shared/constants/sprites.ts`: ключ в `TOWER_SPRITE_KEYS`, путь в
-   `TOWER_SPRITE_ASSETS`, пять ключей анимации в `TOWER_ANIMATION_KEYS`, набор в
-   `TOWER_ANIMATION_SETS`.
+1. Нарезать генерацию из `TOWER_SPRITE_PROMPTS.md` командой `python tools/split-tower-pair.py`
+   (две башни на картинку) — листы `300×180` лягут в `public/assets/towers/<race>_<name>.png`.
+2. В `src/shared/constants/sprites.ts` добавить ключ в `TOWER_SPRITE_KEYS`. Путь к листу и
+   ключи анимаций выводятся из ключа; `TOWER_SHEET_FRAME_LAYOUTS` нужен, только если лист
+   отступает от контракта слотов.
 3. Контент (`src/content/towers/<race>.json`) уже ссылается на этот ключ — править
-   нечего.
+   нечего. Движок рисует башню по её `buildableTowerId`, а не по типу атаки.
 
 ### Проверка
 

@@ -1,9 +1,6 @@
 import type Phaser from 'phaser';
 import { getTowerCenter } from '../../../../entities/tower';
-import {
-  TOWER_BONE_ARCHER_EFFECT_FRAMES,
-  TOWER_SPRITE_KEYS,
-} from '../../../../shared/constants/sprites';
+import { TOWER_SHEET_EFFECT_FRAMES, TOWER_SPRITE_KEYS } from '../../../../shared/constants/sprites';
 import { PROJECTILE_SPLASH_TINT } from '../../scenes/gameScene.constants';
 import type {
   CreepRenderState,
@@ -49,12 +46,12 @@ function createProjectileSprite(
   tower: TowerRenderState,
   effectSpriteKey: string,
   isSplash: boolean,
+  hasOwnArt: boolean,
 ): Phaser.GameObjects.Sprite {
-  const frame = isSplash
-    ? TOWER_BONE_ARCHER_EFFECT_FRAMES.projectile
-    : config.archerProjectileVisualMode === 'projectile'
-      ? TOWER_BONE_ARCHER_EFFECT_FRAMES.projectile
-      : TOWER_BONE_ARCHER_EFFECT_FRAMES.attackEffect;
+  const frame =
+    hasOwnArt || isSplash || config.archerProjectileVisualMode === 'projectile'
+      ? TOWER_SHEET_EFFECT_FRAMES.projectile
+      : TOWER_SHEET_EFFECT_FRAMES.attackEffect;
   const projectile = deps.scene.add.sprite(shotFromPx.x, shotFromPx.y, effectSpriteKey, frame);
   const displaySize = isSplash
     ? config.projectileDisplaySizePx * 1.6
@@ -63,7 +60,9 @@ function createProjectileSprite(
   projectile.setOrigin(0.5);
   projectile.setDepth(config.projectileRenderDepth);
 
-  const tint = resolveShotTint(tower.entity.type, isSplash, PROJECTILE_SPLASH_TINT);
+  const tint = hasOwnArt
+    ? undefined
+    : resolveShotTint(tower.entity.type, isSplash, PROJECTILE_SPLASH_TINT);
   if (tint !== undefined) {
     projectile.setTint(tint);
   }
@@ -85,10 +84,11 @@ export function spawnProjectileFeedback(
   shotToPx.x += targetOffsetPx;
   shotToPx.y += targetOffsetPx;
   const lifetimeMs = resolveProjectileLifetimeMs(tower, config);
-  const effectSpriteKey = isSplash
-    ? TOWER_SPRITE_KEYS.UNDEAD_BONE_ARCHER
-    : tower.sprite.texture.key;
-  const sprite = createProjectileSprite(deps, config, tower, effectSpriteKey, isSplash);
+  // A tower on its own sheet shoots its own shot; borrowed art shares the bone archer's, tinted.
+  const hasOwnArt = tower.hasOwnArt === true;
+  const effectSpriteKey =
+    isSplash && !hasOwnArt ? TOWER_SPRITE_KEYS.UNDEAD_BONE_ARCHER : tower.sprite.texture.key;
+  const sprite = createProjectileSprite(deps, config, tower, effectSpriteKey, isSplash, hasOwnArt);
 
   const record = takePooledRecord(projectilePool);
   if (record === undefined) {
@@ -96,6 +96,7 @@ export function spawnProjectileFeedback(
       sprite,
       towerType: tower.entity.type,
       effectSpriteKey,
+      hasOwnArt,
       fromX: shotFromPx.x,
       fromY: shotFromPx.y,
       toX: shotToPx.x,
@@ -110,6 +111,7 @@ export function spawnProjectileFeedback(
   record.sprite = sprite;
   record.towerType = tower.entity.type;
   record.effectSpriteKey = effectSpriteKey;
+  record.hasOwnArt = hasOwnArt;
   record.fromX = shotFromPx.x;
   record.fromY = shotFromPx.y;
   record.toX = shotToPx.x;
@@ -151,6 +153,7 @@ export function updateProjectiles(
         projectile.toY,
         projectile.isSplash,
         projectile.towerType,
+        projectile.hasOwnArt,
       );
       projectile.sprite.destroy();
       releasePooledRecord(projectilePool, projectile);

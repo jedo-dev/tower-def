@@ -98,18 +98,18 @@
 
 | Раса | Башня | Ключ спрайта | Файл листа | Арт | Промпт |
 |---|---|---|---|---|---|
-| Нежить | Bone Archer Tower | `tower.undead.bone_archer` | `undead_bone_archer.png` | **есть** (эталон) | Нежить 2, блок B (по желанию) |
-| Нежить | Plague Tower | `tower.undead.plague` | `undead_plague.png` | нет | Нежить 1, блок A |
-| Нежить | Frost Wyrm Nest | `tower.undead.frost_wyrm_nest` | `undead_frost_wyrm_nest.png` | нет | Нежить 1, блок B |
-| Нежить | Bone Obelisk | `tower.undead.bone_obelisk` | `undead_bone_obelisk.png` | нет | Нежить 2, блок A |
-| Орки | Spear Watchtower | `tower.orc.spear_watchtower` | `orc_spear_watchtower.png` | нет | Орки 1, блок A |
-| Орки | Tar Pit | `tower.orc.tar_pit` | `orc_tar_pit.png` | нет | Орки 1, блок B |
-| Орки | Lightning Totem | `tower.orc.lightning_totem` | `orc_lightning_totem.png` | нет | Орки 2, блок A |
-| Орки | Burning Pit | `tower.orc.burning_pit` | `orc_burning_pit.png` | нет | Орки 2, блок B |
-| Люди | Guard Archer Tower | `tower.human.guard_archer` | `human_guard_archer.png` | нет | Люди 1, блок A |
-| Люди | Cannon Bastion | `tower.human.cannon_bastion` | `human_cannon_bastion.png` | нет | Люди 1, блок B |
-| Люди | Alchemist Tower | `tower.human.alchemist_tower` | `human_alchemist_tower.png` | нет | Люди 2, блок A |
-| Люди | Guard Post | `tower.human.guard_post` | `human_guard_post.png` | нет | Люди 2, блок B |
+| Нежить | Bone Archer Tower | `tower.undead.bone_archer` | `undead_bone_archer.png` | **есть** (перерисована) | Нежить 2, блок B |
+| Нежить | Plague Tower | `tower.undead.plague` | `undead_plague.png` | **есть** | Нежить 1, блок A |
+| Нежить | Frost Wyrm Nest | `tower.undead.frost_wyrm_nest` | `undead_frost_wyrm_nest.png` | **есть** | Нежить 1, блок B |
+| Нежить | Bone Obelisk | `tower.undead.bone_obelisk` | `undead_bone_obelisk.png` | **есть** | Нежить 2, блок A |
+| Орки | Spear Watchtower | `tower.orc.spear_watchtower` | `orc_spear_watchtower.png` | **есть** | Орки 1, блок A |
+| Орки | Tar Pit | `tower.orc.tar_pit` | `orc_tar_pit.png` | **есть** | Орки 1, блок B |
+| Орки | Lightning Totem | `tower.orc.lightning_totem` | `orc_lightning_totem.png` | **есть** | Орки 2, блок A |
+| Орки | Burning Pit | `tower.orc.burning_pit` | `orc_burning_pit.png` | **есть** | Орки 2, блок B |
+| Люди | Guard Archer Tower | `tower.human.guard_archer` | `human_guard_archer.png` | **есть** | Люди 1, блок A |
+| Люди | Cannon Bastion | `tower.human.cannon_bastion` | `human_cannon_bastion.png` | **есть** | Люди 1, блок B |
+| Люди | Alchemist Tower | `tower.human.alchemist_tower` | `human_alchemist_tower.png` | **есть** | Люди 2, блок A |
+| Люди | Guard Post | `tower.human.guard_post` | `human_guard_post.png` | **есть** | Люди 2, блок B |
 | Эльфы | Thorn Spire | `tower.elf.thorn_spire` | `elf_thorn_spire.png` | нет | Эльфы 1, блок A |
 | Эльфы | Moonwell | `tower.elf.moonwell` | `elf_moonwell.png` | нет | Эльфы 1, блок B |
 | Эльфы | Wisp Bloom | `tower.elf.wisp_bloom` | `elf_wisp_bloom.png` | нет | Эльфы 2, блок A |
@@ -129,42 +129,31 @@
    прикладываете, она ничего не портит.
 3. Проверьте глазами: 6 рядов по 5 ячеек, текста нет, фон — ровная магента, пустые ячейки
    пустые (ряд 2 ячейка 4, ряд 3 ячейка 5, ряд 5 ячейка 4, ряд 6 ячейка 5).
-4. Разрежьте картинку пополам по высоте (верх — башня A, низ — башня B):
+4. Сохраните картинку в `assets-src/tower-sheets/<башня A>__<башня B без расы>.png` и
+   нарежьте её одной командой (имена — файлы листов из таблицы выше, без `.png`):
 
 ```bash
-python -c "from PIL import Image; im=Image.open('raw.png'); w,h=im.size; im.crop((0,0,w,h//2)).save('raw_a.png'); im.crop((0,h//2,w,h)).save('raw_b.png')"
+python tools/split-tower-pair.py assets-src/tower-sheets/orc_spear_watchtower__tar_pit.png orc_spear_watchtower orc_tar_pit --fill-b 0.68
 ```
 
-5. Каждую половину прогоните через нарезчик как обычный лист башни:
+   Скрипт сам находит 6 рядов по полосам магенты (модель не держит ровную высоту рядов),
+   относит каждое пятно к своей колонке (снаряд, вылетевший за границу кадра атаки, остаётся
+   у своей башни), раскладывает каждую башню в ровную сетку 5 × 3 и передаёт её в
+   `tools/build-sprite-sheet.py`. Готовые листы `300 × 180` ложатся в `public/assets/towers/`.
 
-```bash
-python tools/build-sprite-sheet.py raw_a.png public/assets/towers/undead_plague.png --grid 5x3 --cell 60
-```
-
-```bash
-python tools/build-sprite-sheet.py raw_b.png public/assets/towers/undead_frost_wyrm_nest.png --grid 5x3 --cell 60
-```
-
-Почему режем пополам, а не сразу `--grid 5x6`: нарезчик подбирает один масштаб на весь
-лист по самому высокому кадру. На целой картинке высокий обелиск сжал бы низкое гнездо;
-после разреза каждая башня масштабируется сама по себе, как эталонные листы.
-
-Подсказки по нарезчику:
+Подсказки по нарезке:
 
 - Если скрипт печатает `ужаты, чтобы влезть в ячейку: ...` — башня слишком широкая для
-  своего масштаба, и эти кадры уменьшены отдельно, то есть «дышат» в анимации. Для
-  низких широких башен (Tar Pit, Burning Pit, Frost Wyrm Nest, Cannon Bastion, Moonwell)
-  перезапустите с `--fill 0.7` (или ниже), пока строка не исчезнет.
-- Если модель нарисовала линию земли под башней — добавьте `--strip-ground`.
-- Если у фиолетовых деталей (эльфийские шипы, некротический пурпур) появились дыры —
-  нарезчик принял их за оттенок магенты; добавьте `--keep-key-hue`.
-- Если модель всё-таки вписала подписи — перегенерируйте, вырезать их скрипт не умеет.
+  своего масштаба. Понизьте `--fill-a` / `--fill-b` (по умолчанию 0.75; для низких широких
+  башен обычно 0.68–0.7), пока строка не исчезнет.
+- Любые другие флаги (`--strip-ground`, `--keep-key-hue`, `--tolerance 70`) передаются в
+  нарезчик для обеих башен.
+- Если модель вписала подписи — перегенерируйте, вырезать их скрипт не умеет.
 
-6. Подключение листа в игру (ключи в `src/shared/constants/sprites.ts`) — отдельная
-   работа, порядок описан в `docs/09-sprite-prompts.md`, раздел «Как подключить готовый
-   арт». Для перерисованной Bone Archer Tower там же сказано: сейчас грузится `.svg`
-   с легаси-раскладкой, при переходе на PNG надо поменять путь и убрать исключение
-   `hitReaction: [8]`.
+5. Подключение: ключ башни — одна строка в `TOWER_SPRITE_KEYS`
+   (`src/shared/constants/sprites.ts`). Путь к листу и ключи анимаций выводятся из ключа,
+   движок рисует башню её собственным листом (снаряд — кадр 12, попадание — кадр 13, без
+   тинта). Пока листа нет, башня берёт чужой арт своего типа атаки, как раньше.
 
 ---
 

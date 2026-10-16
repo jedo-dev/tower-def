@@ -30,9 +30,9 @@ describe('TowerIcon', () => {
   });
 
   it('falls back to the question chip while a tower has no art', () => {
-    render(<TowerIcon spriteKey="tower.undead.plague" label="Plague Tower" faction="undead" />);
+    render(<TowerIcon spriteKey="tower.elf.thorn_spire" label="Thorn Spire" faction="elf" />);
 
-    const icon = screen.getByRole('img', { name: 'Plague Tower: artwork pending' });
+    const icon = screen.getByRole('img', { name: 'Thorn Spire: artwork pending' });
 
     expect(icon.textContent).toBe(PLACEHOLDER_ICON_GLYPH);
   });

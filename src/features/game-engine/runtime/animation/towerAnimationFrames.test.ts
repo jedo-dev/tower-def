@@ -9,9 +9,14 @@ import {
   TOWER_SPRITE_KEYS,
 } from '../../../../shared/constants/sprites';
 
+/** Contract slots 8 and 14 hold nothing; every sheet cut by split-tower-pair.py leaves them transparent. */
+const CONTRACT_EMPTY_SLOTS = [8, 14] as const;
+
 /** Slots the shipped sheets leave transparent, read from the art itself. */
 const EMPTY_SLOTS_BY_SHEET: Record<string, readonly number[]> = {
-  [TOWER_SPRITE_KEYS.UNDEAD_BONE_ARCHER]: [9, 14],
+  ...Object.fromEntries(
+    Object.values(TOWER_SPRITE_KEYS).map((spriteKey) => [spriteKey, CONTRACT_EMPTY_SLOTS]),
+  ),
   [TOWER_SPRITE_KEYS.ELF_MOON_ARCHER]: [8, 9, 14],
 };
 
@@ -20,9 +25,9 @@ function allFrames(frames: TowerAnimationFrames): number[] {
 }
 
 describe('resolveTowerAnimationFrames', () => {
-  it('plays the bone archer hit reaction from slot 8, where the sheet draws it', () => {
+  it('plays the hit reaction of a contract sheet from slot 9', () => {
     expect(resolveTowerAnimationFrames(TOWER_SPRITE_KEYS.UNDEAD_BONE_ARCHER).hitReaction).toEqual([
-      8,
+      9,
     ]);
   });
 
@@ -81,7 +86,8 @@ describe('createTowerAnimations', () => {
   }
 
   it.each([
-    [TOWER_SPRITE_KEYS.UNDEAD_BONE_ARCHER, [8]],
+    [TOWER_SPRITE_KEYS.UNDEAD_BONE_ARCHER, [9]],
+    [TOWER_SPRITE_KEYS.ORC_TAR_PIT, [9]],
     [TOWER_SPRITE_KEYS.ELF_MOON_ARCHER, [3]],
     [PLACEHOLDER_TEXTURE_KEYS.TOWER, [9]],
   ])('builds the %s hit reaction from frames %j', (spriteKey, expectedFrames) => {

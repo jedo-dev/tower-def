@@ -2,25 +2,20 @@ import type Phaser from 'phaser';
 import { PLACEHOLDER_TEXTURE_KEYS } from '../assets/placeholderTexture';
 import {
   PLACEHOLDER_ANIMATION_KEYS,
-  TOWER_ANIMATION_SETS,
   TOWER_SPRITE_KEYS,
   UNIT_DIRECTIONAL_FRAME_COUNT,
   UNIT_SHEET_FRAMES_PER_ROW,
   UNIT_SHEET_ROWS,
   UNIT_SPRITE_KEYS,
   UnitAnimationKind,
+  isTowerSpriteKey,
+  toTowerAnimationSet,
   toUnitAnimationKey,
+  type TowerAnimationSet,
 } from '../../../../shared/constants/sprites';
 import { resolveTowerAnimationFrames } from './towerAnimationFrames';
 
-/** Animation keys a tower sheet must provide, real art or placeholder alike. */
-export type TowerAnimationSet = {
-  build: string;
-  idle: string;
-  attack: string;
-  hitReaction: string;
-  sell: string;
-};
+export type { TowerAnimationSet };
 
 const UNIT_WALK_FRAME_RATE = 8;
 const UNIT_DEATH_FRAME_RATE = 7;
@@ -149,9 +144,8 @@ export function getTowerAnimationSet(spriteKey: string): TowerAnimationSet {
     return PLACEHOLDER_TOWER_ANIMATION_SET;
   }
 
-  return (
-    TOWER_ANIMATION_SETS[spriteKey as keyof typeof TOWER_ANIMATION_SETS] ??
-    TOWER_ANIMATION_SETS[TOWER_SPRITE_KEYS.UNDEAD_BONE_ARCHER]
+  return toTowerAnimationSet(
+    isTowerSpriteKey(spriteKey) ? spriteKey : TOWER_SPRITE_KEYS.UNDEAD_BONE_ARCHER,
   );
 }
 

@@ -139,15 +139,30 @@ export function toUnitAnimationKey(spriteKey: string, kind: UnitAnimationKind): 
 
 export const TOWER_SPRITE_KEYS = {
   UNDEAD_BONE_ARCHER: 'tower.undead.bone_archer',
+  UNDEAD_PLAGUE: 'tower.undead.plague',
+  UNDEAD_FROST_WYRM_NEST: 'tower.undead.frost_wyrm_nest',
+  UNDEAD_BONE_OBELISK: 'tower.undead.bone_obelisk',
+  ORC_SPEAR_WATCHTOWER: 'tower.orc.spear_watchtower',
+  ORC_TAR_PIT: 'tower.orc.tar_pit',
+  ORC_LIGHTNING_TOTEM: 'tower.orc.lightning_totem',
+  ORC_BURNING_PIT: 'tower.orc.burning_pit',
+  HUMAN_GUARD_ARCHER: 'tower.human.guard_archer',
+  HUMAN_CANNON_BASTION: 'tower.human.cannon_bastion',
+  HUMAN_ALCHEMIST_TOWER: 'tower.human.alchemist_tower',
+  HUMAN_GUARD_POST: 'tower.human.guard_post',
   ELF_MOON_ARCHER: 'tower.elf.moon_archer',
 } as const;
 
 export type TowerSpriteKey = (typeof TOWER_SPRITE_KEYS)[keyof typeof TOWER_SPRITE_KEYS];
 
-export const TOWER_SPRITE_ASSETS: Record<TowerSpriteKey, string> = {
-  [TOWER_SPRITE_KEYS.UNDEAD_BONE_ARCHER]: '/assets/towers/undead_bone_archer.svg',
-  [TOWER_SPRITE_KEYS.ELF_MOON_ARCHER]: '/assets/towers/elf_moon_archer.png',
-};
+/** Sheets cut by tools/split-tower-pair.py are named after the key: `tower.orc.tar_pit` -> orc_tar_pit.png. */
+function toTowerSheetPath(spriteKey: TowerSpriteKey): string {
+  return `/assets/towers/${spriteKey.replace(/^tower\./, '').replace('.', '_')}.png`;
+}
+
+export const TOWER_SPRITE_ASSETS: Record<TowerSpriteKey, string> = Object.fromEntries(
+  Object.values(TOWER_SPRITE_KEYS).map((spriteKey) => [spriteKey, toTowerSheetPath(spriteKey)]),
+) as Record<TowerSpriteKey, string>;
 
 export const TOWER_SPRITE_SHEET_FRAME = {
   width: 60,
@@ -168,7 +183,7 @@ export type TowerSpriteSheet = {
   portraitFrame: number;
 };
 
-function isTowerSpriteKey(spriteKey: string): spriteKey is TowerSpriteKey {
+export function isTowerSpriteKey(spriteKey: string): spriteKey is TowerSpriteKey {
   return spriteKey in TOWER_SPRITE_ASSETS;
 }
 
@@ -182,22 +197,9 @@ export function tryResolveTowerSpriteSheet(spriteKey: string): TowerSpriteSheet 
     spriteKey,
     url: TOWER_SPRITE_ASSETS[spriteKey],
     layout: TOWER_SPRITE_SHEET_LAYOUT,
-    portraitFrame: TOWER_SHEET_FRAME_LAYOUTS[spriteKey].idle[0],
+    portraitFrame: resolveTowerSheetFrameLayout(spriteKey).idle[0],
   };
 }
-
-export const TOWER_ANIMATION_KEYS = {
-  UNDEAD_BONE_ARCHER_BUILD: 'tower.undead.bone_archer.build',
-  UNDEAD_BONE_ARCHER_IDLE: 'tower.undead.bone_archer.idle',
-  UNDEAD_BONE_ARCHER_ATTACK: 'tower.undead.bone_archer.attack',
-  UNDEAD_BONE_ARCHER_HIT_REACTION: 'tower.undead.bone_archer.hitReaction',
-  UNDEAD_BONE_ARCHER_SELL: 'tower.undead.bone_archer.sell',
-  ELF_MOON_ARCHER_BUILD: 'tower.elf.moon_archer.build',
-  ELF_MOON_ARCHER_IDLE: 'tower.elf.moon_archer.idle',
-  ELF_MOON_ARCHER_ATTACK: 'tower.elf.moon_archer.attack',
-  ELF_MOON_ARCHER_HIT_REACTION: 'tower.elf.moon_archer.hitReaction',
-  ELF_MOON_ARCHER_SELL: 'tower.elf.moon_archer.sell',
-} as const;
 
 /**
  * Frame slots a tower sheet draws its animations in. `hitReaction` is null
@@ -221,15 +223,21 @@ export const TOWER_SHEET_CONTRACT_FRAMES: TowerSheetFrameLayout = {
   sell: [10, 11],
 };
 
-/** Per-sheet deviations from the contract, checked against the shipped art. */
-export const TOWER_SHEET_FRAME_LAYOUTS: Record<TowerSpriteKey, TowerSheetFrameLayout> = {
-  // Legacy sheet: the hit-reaction pose sits in slot 8, slots 9 and 14 are empty.
-  [TOWER_SPRITE_KEYS.UNDEAD_BONE_ARCHER]: { ...TOWER_SHEET_CONTRACT_FRAMES, hitReaction: [8] },
+/** Per-sheet deviations from the contract, checked against the shipped art; the rest follow it. */
+export const TOWER_SHEET_FRAME_LAYOUTS: Partial<Record<TowerSpriteKey, TowerSheetFrameLayout>> = {
   // Slots 8, 9 and 14 are empty: no hit-reaction pose was drawn.
   [TOWER_SPRITE_KEYS.ELF_MOON_ARCHER]: { ...TOWER_SHEET_CONTRACT_FRAMES, hitReaction: null },
 };
 
-export const TOWER_BONE_ARCHER_EFFECT_FRAMES = {
+/** The frame layout of a tower sheet: its override, or the contract for every other key. */
+export function resolveTowerSheetFrameLayout(spriteKey: string): TowerSheetFrameLayout {
+  return isTowerSpriteKey(spriteKey)
+    ? (TOWER_SHEET_FRAME_LAYOUTS[spriteKey] ?? TOWER_SHEET_CONTRACT_FRAMES)
+    : TOWER_SHEET_CONTRACT_FRAMES;
+}
+
+/** Contract slots of the shot and its impact; no building is drawn in them. */
+export const TOWER_SHEET_EFFECT_FRAMES = {
   projectile: 12,
   attackEffect: 13,
 } as const;
@@ -242,19 +250,22 @@ export const PLACEHOLDER_ANIMATION_KEYS = {
   TOWER_SELL: 'placeholder.tower.sell',
 } as const;
 
-export const TOWER_ANIMATION_SETS = {
-  [TOWER_SPRITE_KEYS.UNDEAD_BONE_ARCHER]: {
-    build: TOWER_ANIMATION_KEYS.UNDEAD_BONE_ARCHER_BUILD,
-    idle: TOWER_ANIMATION_KEYS.UNDEAD_BONE_ARCHER_IDLE,
-    attack: TOWER_ANIMATION_KEYS.UNDEAD_BONE_ARCHER_ATTACK,
-    hitReaction: TOWER_ANIMATION_KEYS.UNDEAD_BONE_ARCHER_HIT_REACTION,
-    sell: TOWER_ANIMATION_KEYS.UNDEAD_BONE_ARCHER_SELL,
-  },
-  [TOWER_SPRITE_KEYS.ELF_MOON_ARCHER]: {
-    build: TOWER_ANIMATION_KEYS.ELF_MOON_ARCHER_BUILD,
-    idle: TOWER_ANIMATION_KEYS.ELF_MOON_ARCHER_IDLE,
-    attack: TOWER_ANIMATION_KEYS.ELF_MOON_ARCHER_ATTACK,
-    hitReaction: TOWER_ANIMATION_KEYS.ELF_MOON_ARCHER_HIT_REACTION,
-    sell: TOWER_ANIMATION_KEYS.ELF_MOON_ARCHER_SELL,
-  },
-} as const;
+/** Animation keys a tower sheet must provide, real art or placeholder alike. */
+export type TowerAnimationSet = {
+  build: string;
+  idle: string;
+  attack: string;
+  hitReaction: string;
+  sell: string;
+};
+
+/** Animation keys are derived from the sprite key, so a new tower sheet needs no new constant. */
+export function toTowerAnimationSet(spriteKey: string): TowerAnimationSet {
+  return {
+    build: `${spriteKey}.build`,
+    idle: `${spriteKey}.idle`,
+    attack: `${spriteKey}.attack`,
+    hitReaction: `${spriteKey}.hitReaction`,
+    sell: `${spriteKey}.sell`,
+  };
+}

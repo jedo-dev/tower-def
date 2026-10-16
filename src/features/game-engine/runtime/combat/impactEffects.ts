@@ -1,4 +1,4 @@
-import { TOWER_BONE_ARCHER_EFFECT_FRAMES } from '../../../../shared/constants/sprites';
+import { TOWER_SHEET_EFFECT_FRAMES } from '../../../../shared/constants/sprites';
 import type { TowerTypeId } from '../../../../shared/types/content-ids';
 import { IMPACT_EFFECT_SPLASH_TINT } from '../../scenes/gameScene.constants';
 import type { ImpactEffectState } from '../../scenes/gameScene.types';
@@ -29,10 +29,12 @@ export function spawnImpactEffect(
   y: number,
   isSplash: boolean,
   towerType: TowerTypeId,
+  hasOwnArt: boolean,
 ): void {
-  const frame = isSplash
-    ? TOWER_BONE_ARCHER_EFFECT_FRAMES.attackEffect
-    : TOWER_BONE_ARCHER_EFFECT_FRAMES.projectile;
+  const frame =
+    hasOwnArt || isSplash
+      ? TOWER_SHEET_EFFECT_FRAMES.attackEffect
+      : TOWER_SHEET_EFFECT_FRAMES.projectile;
   const effect = deps.scene.add.sprite(x, y, spriteKey, frame);
   const size = isSplash
     ? config.projectileDisplaySizePx * 1.7
@@ -41,7 +43,9 @@ export function spawnImpactEffect(
   effect.setOrigin(0.5);
   effect.setDepth(config.impactEffectRenderDepth);
 
-  const tint = resolveShotTint(towerType, isSplash, IMPACT_EFFECT_SPLASH_TINT);
+  const tint = hasOwnArt
+    ? undefined
+    : resolveShotTint(towerType, isSplash, IMPACT_EFFECT_SPLASH_TINT);
   if (tint !== undefined) {
     effect.setTint(tint);
   }

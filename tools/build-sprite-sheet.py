@@ -163,6 +163,9 @@ def main() -> None:
     parser.add_argument('--strip-ground', action='store_true',
                         help='erase a thin wide horizontal streak at the bottom of a cell, the ground line '
                              'models like to draw under the subject')
+    parser.add_argument('--keep-x', action='store_true',
+                        help='keep where each subject sits across its cell instead of centring it, so a '
+                             'tower does not jump sideways in the frame where its shot leaves it')
     parser.add_argument('--normalize-rows', default='',
                         help='rows that get their own scale, e.g. "0,1,2" for the three walk rows; '
                              'a row that is not listed inherits the scale of the nearest listed row above it. '
@@ -245,6 +248,11 @@ def main() -> None:
             subject.putalpha(alpha)
 
             offset_x = column_index * args.cell + (args.cell - width) // 2
+            if args.keep_x:
+                drawn_scale = width / (entry['bbox'][2] - entry['bbox'][0])
+                center_offset = entry['bbox'][0] - entry['image'].width / 2
+                offset_x = column_index * args.cell + round(args.cell / 2 + center_offset * drawn_scale)
+                offset_x = min(max(offset_x, column_index * args.cell), (column_index + 1) * args.cell - width)
             offset_y = (row_index + 1) * args.cell - args.margin_bottom - height
             sheet.alpha_composite(subject, (offset_x, max(row_index * args.cell, offset_y)))
             placed += 1

@@ -195,7 +195,17 @@ function spawnRandomFeedback(
     } else {
       const x = Math.floor(random() * 200);
       const y = Math.floor(random() * 200);
-      paths.spawnImpact(field, deps, config, 'impact', x, y, random() < 0.5, tower.entity.type);
+      paths.spawnImpact(
+        field,
+        deps,
+        config,
+        'impact',
+        x,
+        y,
+        random() < 0.5,
+        tower.entity.type,
+        false,
+      );
     }
   }
 }

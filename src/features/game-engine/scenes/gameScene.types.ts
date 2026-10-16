@@ -46,6 +46,8 @@ export type TowerRenderState = {
   entity: TowerEntity;
   runtime: TowerCombatRuntime;
   sprite: Phaser.GameObjects.Sprite;
+  /** The sprite draws the tower's own sheet; absent means borrowed art (tinted, shared shots). */
+  hasOwnArt?: boolean;
 };
 
 export type ProjectileState = {
@@ -53,6 +55,8 @@ export type ProjectileState = {
   /** Archetype that fired the shot, so the impact matches the projectile. */
   towerType: TowerTypeId;
   effectSpriteKey: string;
+  /** The shot and its impact come from the tower's own sheet, untinted. */
+  hasOwnArt: boolean;
   fromX: number;
   fromY: number;
   toX: number;
