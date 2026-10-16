@@ -9,6 +9,7 @@ import {
   type CombatTower,
   type TowerCombatHooks,
 } from './towerCombatTypes';
+import { getSharedChainTargetScratch, selectChainTargets } from './chainTargetSelection';
 import { strikeAndReport, strikeCreep } from './towerStrike';
 
 // Splash and chain attack shapes. `shotDamage` is the tower damage after
@@ -70,61 +71,6 @@ export function applySplashDamage<C extends CombatCreep, T extends CombatTower>(
   hooks.onDamageDealt(target.entity.position, Math.round(totalDamageDealt), 'hit');
 }
 
-/**
- * Picks the creeps an arc jumps to, among those the tower may hit. Selection
- * is by distance and then id, so a given battlefield state always produces
- * the same chain.
- */
-function selectChainTargets<C extends CombatCreep, T extends CombatTower>(
-  field: CombatField<C, T>,
-  hooks: TowerCombatHooks<C, T>,
-  tower: T,
-  from: C,
-  bounces: number,
-  bounceRangeCells: number,
-): C[] {
-  const visited = new Set<string>([from.entity.id]);
-  const chain: C[] = [];
-  let current = from;
-
-  for (let bounce = 0; bounce < bounces; bounce += 1) {
-    const currentCenter = hooks.toCellCenter(getCreepFootprintCenter(current.entity));
-    const rangePx = bounceRangeCells * GRID_DIMENSIONS.cellSize;
-
-    const next = field.creeps
-      .filter(
-        (creep) =>
-          creep.entity.status === 'alive' &&
-          !visited.has(creep.entity.id) &&
-          !isCreepHidden(creep.entity) &&
-          canTowerTargetCreep(tower.entity, creep.entity),
-      )
-      .map((creep) => {
-        const center = hooks.toCellCenter(getCreepFootprintCenter(creep.entity));
-        return {
-          creep,
-          distance: Math.hypot(center.x - currentCenter.x, center.y - currentCenter.y),
-        };
-      })
-      .filter((candidate) => candidate.distance <= rangePx)
-      .sort((left, right) =>
-        left.distance === right.distance
-          ? left.creep.entity.id.localeCompare(right.creep.entity.id)
-          : left.distance - right.distance,
-      )[0];
-
-    if (!next) {
-      break;
-    }
-
-    visited.add(next.creep.entity.id);
-    chain.push(next.creep);
-    current = next.creep;
-  }
-
-  return chain;
-}
-
 export function applyChainDamage<C extends CombatCreep, T extends CombatTower>(
   field: CombatField<C, T>,
   tower: T,
@@ -141,18 +87,24 @@ export function applyChainDamage<C extends CombatCreep, T extends CombatTower>(
     return;
   }
 
-  const chainTargets = selectChainTargets(
+  // Selection writes into a reused scratch buffer: a chain shot allocates nothing.
+  const scratch = getSharedChainTargetScratch();
+  const chainTargetCount = selectChainTargets(
     field,
     hooks,
     tower,
     target,
     chainShape.bounces,
     chainShape.bounceRangeCells,
+    scratch,
   );
 
   let arcDamage = shotDamage;
 
-  for (const creep of chainTargets) {
+  for (let index = 0; index < chainTargetCount; index += 1) {
+    // Slots hold creeps of this field (type C); clear each so dead creeps are not retained.
+    const creep = scratch.targets[index] as C;
+    scratch.targets[index] = undefined;
     arcDamage *= 1 - chainShape.damageFalloff;
     strikeAndReport(tower, creep, arcDamage, damageType, hooks);
   }
