@@ -3,11 +3,26 @@ import {
   resolveEffectDefinition,
   type EffectDefinition,
 } from '../../../shared/constants/effects';
-import { EffectId, EffectKind, EffectStackingRule } from '../../../shared/types/content-ids';
+import { DAMAGE_OVER_TIME_DAMAGE_TYPE } from '../../../shared/constants/damage';
+import {
+  DamageType,
+  EffectId,
+  EffectKind,
+  EffectStackingRule,
+} from '../../../shared/types/content-ids';
 import type { ActiveEffect, CreepEntity } from './types';
 
 const NO_EFFECTS: readonly ActiveEffect[] = [];
 const NO_EXPIRED: readonly EffectId[] = [];
+
+/** Raw tick damage per damage type, before armor; percent amounts are ‰ of maximum health. */
+export type EffectDamageByType = Readonly<Record<DamageType, number>>;
+
+const NO_EFFECT_DAMAGE: EffectDamageByType = {
+  [DamageType.PHYSICAL]: 0,
+  [DamageType.MAGICAL]: 0,
+  [DamageType.PERCENT]: 0,
+};
 
 export type ApplyEffectInput = {
   effectId: EffectId;
@@ -17,15 +32,34 @@ export type ApplyEffectInput = {
   durationMs?: number;
   /** Raises the stack cap for this application; never lowers the balance cap. */
   maxStacks?: number;
+  /** Damage over time only: the type its ticks deal; `DAMAGE_OVER_TIME_DAMAGE_TYPE` when absent. */
+  damageType?: DamageType;
 };
 
 export type CreepEffectTickResult = {
   /** Same reference as the input when nothing changed this frame. */
   creep: CreepEntity;
-  /** Damage the caller must apply; the helper never touches hit points. */
-  damage: number;
+  /**
+   * Damage the caller must apply, split by damage type so each part meets the
+   * matching armor (or none, for percent); the helper never touches hit points.
+   */
+  damageByType: EffectDamageByType;
   expired: readonly EffectId[];
 };
+
+/** Damage type the ticks of a running effect deal. */
+export function resolveActiveEffectDamageType(effect: ActiveEffect): DamageType {
+  return effect.damageType ?? DAMAGE_OVER_TIME_DAMAGE_TYPE;
+}
+
+/** Whether a tick result carries any damage at all. */
+export function hasEffectDamage(damageByType: EffectDamageByType): boolean {
+  return (
+    damageByType[DamageType.PHYSICAL] > 0 ||
+    damageByType[DamageType.MAGICAL] > 0 ||
+    damageByType[DamageType.PERCENT] > 0
+  );
+}
 
 export function getActiveEffects(creep: CreepEntity): readonly ActiveEffect[] {
   return creep.activeEffects ?? NO_EFFECTS;
@@ -43,7 +77,18 @@ function createEffect(definition: EffectDefinition, input: ApplyEffectInput): Ac
     stacks: 1,
     maxStacks: Math.max(definition.maxStacks, input.maxStacks ?? definition.maxStacks),
     nextTickInMs: definition.tickIntervalMs,
+    ...(input.damageType === undefined ? {} : { damageType: input.damageType }),
   };
+}
+
+/** The latest application decides the tick type, as it decides the remaining duration. */
+function withIncomingDamageType(effect: ActiveEffect, incoming: ActiveEffect): ActiveEffect {
+  if (effect.damageType === incoming.damageType) {
+    return effect;
+  }
+
+  const { damageType: _previous, ...rest } = effect;
+  return incoming.damageType === undefined ? rest : { ...rest, damageType: incoming.damageType };
 }
 
 function mergeEffect(
@@ -59,20 +104,26 @@ function mergeEffect(
       // lifts the ceiling instead of being ignored by the older stacks.
       const maxStacks = Math.max(existing.maxStacks, incoming.maxStacks);
 
-      return {
-        ...existing,
-        magnitude: Math.max(existing.magnitude, incoming.magnitude),
-        remainingMs: incoming.remainingMs,
-        maxStacks,
-        stacks: Math.min(existing.stacks + 1, maxStacks),
-      };
+      return withIncomingDamageType(
+        {
+          ...existing,
+          magnitude: Math.max(existing.magnitude, incoming.magnitude),
+          remainingMs: incoming.remainingMs,
+          maxStacks,
+          stacks: Math.min(existing.stacks + 1, maxStacks),
+        },
+        incoming,
+      );
     }
     case EffectStackingRule.REFRESH:
-      return {
-        ...existing,
-        magnitude: Math.max(existing.magnitude, incoming.magnitude),
-        remainingMs: incoming.remainingMs,
-      };
+      return withIncomingDamageType(
+        {
+          ...existing,
+          magnitude: Math.max(existing.magnitude, incoming.magnitude),
+          remainingMs: incoming.remainingMs,
+        },
+        incoming,
+      );
     case EffectStackingRule.STRONGEST:
       // A weaker application is dropped outright, so a cheap tower cannot
       // overwrite an upgraded one with a shorter, softer slow.
@@ -161,16 +212,29 @@ export function tickCreepEffects(creep: CreepEntity, deltaMs: number): CreepEffe
   const effects = getActiveEffects(creep);
 
   if (effects.length === 0 || deltaMs <= 0) {
-    return { creep, damage: 0, expired: NO_EXPIRED };
+    return { creep, damageByType: NO_EFFECT_DAMAGE, expired: NO_EXPIRED };
   }
 
   const surviving: ActiveEffect[] = [];
   let expired: EffectId[] | undefined;
-  let damage = 0;
+  let physicalDamage = 0;
+  let magicalDamage = 0;
+  let percentDamage = 0;
 
   for (const effect of effects) {
     const result = tickSingleEffect(effect, resolveEffectDefinition(effect.id), deltaMs);
-    damage += result.damage;
+
+    if (result.damage > 0) {
+      const damageType = resolveActiveEffectDamageType(effect);
+
+      if (damageType === DamageType.PHYSICAL) {
+        physicalDamage += result.damage;
+      } else if (damageType === DamageType.PERCENT) {
+        percentDamage += result.damage;
+      } else {
+        magicalDamage += result.damage;
+      }
+    }
 
     if (result.expired) {
       expired ??= [];
@@ -181,9 +245,17 @@ export function tickCreepEffects(creep: CreepEntity, deltaMs: number): CreepEffe
     surviving.push(result.effect);
   }
 
+  const hasDamage = physicalDamage > 0 || magicalDamage > 0 || percentDamage > 0;
+
   return {
     creep: { ...creep, activeEffects: surviving },
-    damage,
+    damageByType: hasDamage
+      ? {
+          [DamageType.PHYSICAL]: physicalDamage,
+          [DamageType.MAGICAL]: magicalDamage,
+          [DamageType.PERCENT]: percentDamage,
+        }
+      : NO_EFFECT_DAMAGE,
     expired: expired ?? NO_EXPIRED,
   };
 }

@@ -2,9 +2,11 @@ import {
   applyDamageToCreep,
   applyEffectToCreep,
   getCreepFootprintCenter,
+  hasEffectDamage,
   tickCreepEffects,
   type ApplyEffectInput,
   type CreepEntity,
+  type EffectDamageByType,
 } from '../../../../entities/creep';
 import {
   canTowerAttack,
@@ -20,9 +22,9 @@ import {
   type TowerCombatRuntime,
   type TowerEntity,
 } from '../../../../entities/tower';
-import { DAMAGE_OVER_TIME_DAMAGE_TYPE } from '../../../../shared/constants/damage';
 import { GRID_DIMENSIONS } from '../../../../shared/constants/grid';
 import {
+  DAMAGE_TYPES,
   TowerAttackKind,
   type DamageType,
   type EffectId,
@@ -106,6 +108,7 @@ function applyOnHitEffects<C extends CombatCreep, T extends CombatTower>(
         magnitude: effect.magnitude,
         durationMs: effect.durationMs,
         maxStacks: effect.maxStacks,
+        damageType: effect.damageType,
       },
       hooks,
     );
@@ -351,21 +354,43 @@ export function tickFieldCreepEffects<C extends CombatCreep, T extends CombatTow
     creep.entity = tickResult.creep;
     hooks.onEffectsTicked(creep);
 
-    if (tickResult.damage <= 0) {
+    if (!hasEffectDamage(tickResult.damageByType)) {
       continue;
     }
 
-    // Damage over time is magical: magical armor reduces it, negative magical armor amplifies it.
-    const damageResult = applyDamageToCreep(
-      creep.entity,
-      tickResult.damage,
-      DAMAGE_OVER_TIME_DAMAGE_TYPE,
-    );
-    creep.entity = damageResult.creep;
-    hooks.onDamageDealt(creep.entity.position, Math.round(damageResult.damageApplied), 'effect');
+    applyEffectTickDamage(creep, tickResult.damageByType, hooks);
+  }
+}
 
-    if (damageResult.killed) {
-      hooks.onCreepKilled(creep);
+/**
+ * Routes one tick of damage over time through the matching armor per type:
+ * magical ticks (the default) meet magical armor, percent ticks take ‰ of
+ * maximum health. One feedback number per tick; the kill pays out once.
+ */
+function applyEffectTickDamage<C extends CombatCreep, T extends CombatTower>(
+  creep: C,
+  damageByType: EffectDamageByType,
+  hooks: TowerCombatHooks<C, T>,
+): void {
+  let damageApplied = 0;
+  let killed = false;
+
+  for (const damageType of DAMAGE_TYPES) {
+    const rawDamage = damageByType[damageType];
+
+    if (rawDamage <= 0 || killed) {
+      continue;
     }
+
+    const damageResult = applyDamageToCreep(creep.entity, rawDamage, damageType);
+    creep.entity = damageResult.creep;
+    damageApplied += damageResult.damageApplied;
+    killed = damageResult.killed;
+  }
+
+  hooks.onDamageDealt(creep.entity.position, Math.round(damageApplied), 'effect');
+
+  if (killed) {
+    hooks.onCreepKilled(creep);
   }
 }

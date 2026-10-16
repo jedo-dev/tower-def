@@ -40,7 +40,7 @@
       "id": "orc_lightning_totem",
       "name": "Lightning Totem",
       "archetype": "chain",
-
+      "damageType": "magical",
       "allowedTargets": "both",
       "costGold": 85,
       "damage": 24,

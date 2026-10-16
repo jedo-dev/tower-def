@@ -2,6 +2,7 @@ import {
   DAMAGE_TYPES,
   DEFAULT_TOWER_TARGET_SCOPE,
   EFFECT_IDS,
+  EffectKind,
   TOWER_TARGET_SCOPES,
   TOWER_AURA_STACKING_RULES,
   type DamageType,
@@ -18,6 +19,7 @@ import {
   readStringFrom,
   type ContentLocation,
 } from '../../../../shared/lib/content/contentValidation';
+import { resolveEffectDefinition } from '../../../../shared/constants/effects';
 import type { TowerCombatStats, TowerOnHitEffect } from '../types';
 import {
   TOWER_AURA_BOUNDS,
@@ -69,6 +71,7 @@ export function parseOnHitEffects(
     assertKnownKeys(effect, TOWER_ON_HIT_EFFECT_KEYS, location);
 
     const effectId: EffectId = readStringFrom(effect, 'effectId', location, EFFECT_IDS);
+    const damageType = parseOnHitEffectDamageType(effect, effectId, location);
 
     return {
       effectId,
@@ -78,8 +81,32 @@ export function parseOnHitEffects(
         effect.durationMs === undefined ? undefined : readNumber(effect, 'durationMs', location),
       maxStacks:
         effect.maxStacks === undefined ? undefined : readNumber(effect, 'maxStacks', location),
+      ...(damageType === undefined ? {} : { damageType }),
     };
   });
+}
+
+/**
+ * `damageType` of an on-hit effect: only damage over time deals damage, so a
+ * type on a slow or an armor break is a mistake and fails on load.
+ */
+function parseOnHitEffectDamageType(
+  effect: Record<string, unknown>,
+  effectId: EffectId,
+  location: ContentLocation,
+): DamageType | undefined {
+  if (effect.damageType === undefined) {
+    return undefined;
+  }
+
+  if (resolveEffectDefinition(effectId).kind !== EffectKind.DAMAGE_OVER_TIME) {
+    throw new ContentValidationError(
+      location,
+      `effect "${effectId}" deals no damage over time and cannot declare a damageType`,
+    );
+  }
+
+  return readStringFrom(effect, 'damageType', location, DAMAGE_TYPES);
 }
 
 export function parseOptionalStat(

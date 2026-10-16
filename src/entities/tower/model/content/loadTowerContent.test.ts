@@ -7,6 +7,7 @@ import {
 import { buildableTowers } from '../config/buildableTowers';
 import { TOWER_ARCHETYPE_DEFINITIONS, TOWER_COMBAT_STATS_BY_TYPE } from '../types';
 import {
+  DamageType,
   EffectId,
   RACE_IDS,
   RaceId,
@@ -105,6 +106,38 @@ describe('parseTowerContentFile', () => {
     expect(tower.onHitEffects).toEqual([
       { effectId: EffectId.POISON, magnitude: 8, durationMs: 3000 },
     ]);
+  });
+
+  it('reads the damage type a damage-over-time effect declares', () => {
+    const [tower] = parse(
+      createFile([
+        createTower({
+          onHitEffects: [{ effectId: 'poison', magnitude: 7, damageType: 'percent' }],
+        }),
+      ]),
+    );
+
+    expect(tower.onHitEffects).toEqual([
+      { effectId: EffectId.POISON, magnitude: 7, damageType: DamageType.PERCENT },
+    ]);
+  });
+
+  it('rejects a damage type on an effect that deals no damage over time', () => {
+    expect(() =>
+      parse(
+        createFile([createTower({ onHitEffects: [{ effectId: 'chill', damageType: 'magical' }] })]),
+      ),
+    ).toThrow(
+      `${FILE} [undead_bone_archer_tower]: effect "chill" deals no damage over time and cannot declare a damageType`,
+    );
+  });
+
+  it('rejects an unknown damage type on an on-hit effect', () => {
+    expect(() =>
+      parse(
+        createFile([createTower({ onHitEffects: [{ effectId: 'poison', damageType: 'holy' }] })]),
+      ),
+    ).toThrow(`${FILE} [undead_bone_archer_tower]: "damageType" is not a known value: holy`);
   });
 
   it('rejects an unknown tower id', () => {

@@ -11,7 +11,12 @@ import {
   TOWER_COMBAT_STATS_BY_TYPE,
   type TowerEntity,
 } from '../../../../entities/tower';
-import { CreepTypeId, EffectId, TowerTypeId } from '../../../../shared/types/content-ids';
+import {
+  CreepTypeId,
+  DamageType,
+  EffectId,
+  TowerTypeId,
+} from '../../../../shared/types/content-ids';
 import type { BattlefieldRenderState } from '../battlefield/battlefieldRenderState';
 import type { CreepRenderState, TowerRenderState } from '../../scenes/gameScene.types';
 
@@ -196,7 +201,7 @@ describe('poison tower', () => {
 
     for (let frame = 0; frame < 250; frame += 1) {
       const result = tickCreepEffects(ticked, 16);
-      ticked = { ...result.creep, hp: result.creep.hp - result.damage };
+      ticked = { ...result.creep, hp: result.creep.hp - result.damageByType.magical };
     }
 
     expect(ticked.hp).toBeLessThan(hpAfterHit);
@@ -232,5 +237,38 @@ describe('poison tower', () => {
     expect(unwarded).toBeGreaterThan(0);
     expect(poisonTickLoss(20)).toBeLessThan(unwarded);
     expect(poisonTickLoss(-10)).toBeGreaterThan(unwarded);
+  });
+
+  it('deals percent poison as per mille of maximum health, whatever the armor', () => {
+    const poisonTickMs = 500;
+    const perMillePerTick = 7;
+    const maxHp = 1_000;
+
+    function percentTickLoss(magicalArmor: number): number {
+      const creep = spawnCreep();
+      creep.entity = applyEffectToCreep(
+        { ...creep.entity, hp: 600, maxHp, physicalArmor: 0, magicalArmor },
+        { effectId: EffectId.POISON, magnitude: perMillePerTick, damageType: DamageType.PERCENT },
+      );
+      const hpBefore = creep.entity.hp;
+      const hooks = {
+        toCellCenter: (position: { x: number; y: number }) => position,
+        onCreepHit: vi.fn(),
+        onTargetStruck: vi.fn(),
+        onDamageDealt: vi.fn(),
+        onEffectApplied: vi.fn(),
+        onEffectsTicked: vi.fn(),
+        onCreepKilled: vi.fn(),
+        onTowerFired: vi.fn(),
+      };
+
+      tickFieldCreepEffects({ creeps: [creep], towers: [] }, hooks, poisonTickMs);
+      return hpBefore - creep.entity.hp;
+    }
+
+    // 7 per mille of 1000 maximum health, not of the 600 left.
+    expect(percentTickLoss(0)).toBeCloseTo(7, 6);
+    expect(percentTickLoss(20)).toBeCloseTo(7, 6);
+    expect(percentTickLoss(-10)).toBeCloseTo(7, 6);
   });
 });

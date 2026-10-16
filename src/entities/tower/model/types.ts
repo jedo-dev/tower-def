@@ -40,6 +40,12 @@ export type TowerOnHitEffect = {
   durationMs?: number;
   /** Raises the stack cap for this tower; undefined keeps the balance cap. */
   maxStacks?: number;
+  /**
+   * Damage over time only: the type its ticks deal. Undefined keeps
+   * `DAMAGE_OVER_TIME_DAMAGE_TYPE` (magical); `percent` makes each tick
+   * `magnitude / 1000` of maximum health per stack.
+   */
+  damageType?: DamageType;
 };
 
 export type BuildableTowerConfig = {

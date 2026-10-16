@@ -1,4 +1,5 @@
 import type { UnitConfig } from '../../../entities/unit';
+import { describeArmor } from './combatTypeDisplay';
 import { getTierEconomy } from './tierEconomy';
 import type { CreepCardViewModel } from './types';
 
@@ -20,6 +21,8 @@ export function mapUnitToCreepCard(unit: UnitConfig): CreepCardViewModel {
     speed: unit.speed,
     physicalArmor: unit.physicalArmor,
     magicalArmor: unit.magicalArmor,
+    physicalArmorHint: describeArmor('physical', unit.physicalArmor),
+    magicalArmorHint: describeArmor('magical', unit.magicalArmor),
     sizeClass: unit.sizeClass,
     moveType: unit.moveType,
     rewardGold: unit.rewardGold,
