@@ -2,7 +2,6 @@ import Phaser from 'phaser';
 import {
   awardBonusGold,
   createInitialDuelMatchState,
-  recordTowerBranchChoice,
   reconcileBattlefieldsForNextRound,
   refreshOpponentRoutesForWaveStart,
   resolveQueuedSendUnits,
@@ -19,13 +18,8 @@ import {
   onGameEvent,
   publishGameEvent,
 } from '../../../shared/lib/game-bridge/bridge';
-import type {
-  BoardZoomAction,
-  GameCommandMap,
-  GameSpeed,
-} from '../../../shared/lib/game-bridge/types';
+import type { GameCommandMap, GameSpeed } from '../../../shared/lib/game-bridge/types';
 import { generateEdgeEndpoints } from '../../../shared/lib/grid/generateEdgeEndpoints';
-import type { SoundId } from '../../../shared/lib/sound-registry/audio.types';
 import {
   createUnitWalkAnimations,
   createTowerAnimations,
@@ -54,43 +48,25 @@ import {
   updateBattlefieldTowerCombat,
 } from '../runtime/battlefield/battlefieldUpdateRuntime';
 import {
-  getBoardViewportCentre,
   getBoardZoomFactor,
-  isBoardCameraZoomed,
-  panBoardCamera,
   registerResponsiveCamera,
-  resetBoardCamera,
-  resolvePointerScreenPoint,
-  resolvePointerWorldPoint,
-  setBoardCameraZoomFactorAt,
-  zoomBoardCameraByAt,
 } from '../runtime/camera/gameSceneCameraRuntime';
-import { resolvePlacementTap } from '../runtime/build/placementConfirmation';
 import {
   handleSellTowerCommand,
   handleUpgradeTowerCommand,
-  tryPlaceTowerAtHoveredCell,
-  trySelectTowerAtHoveredCell,
-  trySellTowerAtHoveredCell,
-  type TowerCommandDeps,
 } from '../runtime/build/gameSceneTowerCommands';
 import { handleChooseTowerBranchCommand } from '../runtime/build/towerBranchCommands';
 import {
   handleChooseCreatureBranchCommand,
   handleUpgradeCreatureCommand,
-  type CreatureTalentCommandDeps,
 } from '../runtime/duel/creatureTalentCommands';
 import {
   buildSentCreepOutcomes,
-  recordSentCreepDeath,
   resetSentCreepDeathTally,
 } from '../runtime/duel/sentCreepOutcomeTally';
 import { summarizeFieldLeaks } from '../runtime/duel/fieldLeakSettlement';
 import { applyComputerBuildPhaseStrategies } from '../runtime/duel/gameSceneComputerStrategy';
-import {
-  handleSendCreepCommand,
-  type SendCreepCommandDeps,
-} from '../runtime/duel/gameSceneSendCommand';
+import { handleSendCreepCommand } from '../runtime/duel/gameSceneSendCommand';
 import {
   publishPlayerSendLimits,
   resetSendQueuesForWaveStart,
@@ -101,7 +77,6 @@ import {
   publishRoundSettled,
   type DuelMatchRuntimeState,
 } from '../runtime/duel/gameSceneDuelRuntime';
-import { toPointerGridTarget } from '../runtime/grid/gameSceneGridPreviewRuntime';
 import {
   attachRoutePreviewGraphics,
   destroyRoutePreviewGraphics,
@@ -117,17 +92,7 @@ import {
   registerSceneAudioUnlock,
   registerScenePointerHandlers,
 } from '../runtime/input/gameSceneInputBindings';
-import {
-  createInputControllerState,
-  handleGameOut as handleGameOutRuntime,
-  handlePointerDown as handlePointerDownRuntime,
-  handlePointerMove as handlePointerMoveRuntime,
-  handlePointerUp as handlePointerUpRuntime,
-  handleWheel as handleWheelRuntime,
-  syncHoveredCellFromPointer,
-  type BoardTapOutcome,
-  type InputControllerDependencies,
-} from '../runtime/input/gameSceneInputController';
+import { createInputControllerState } from '../runtime/input/gameSceneInputController';
 import {
   applyWaveCompletionRewardIfResolved as applyWaveCompletionRewardIfResolvedRuntime,
   type WaveRuntimeState,
@@ -154,9 +119,7 @@ import {
   resolveBaselineWaveSeed,
 } from '../runtime/wave/sharedBaselineWave';
 import { GameAudioManager } from '../sound/GameAudioManager';
-import { createGameSoundRouter, type GameSoundRouter } from '../runtime/audio/gameSoundRouting';
 import {
-  BOARD_ZOOM_KEY_STEP_FACTOR,
   BUILD_PREVIEW_RENDER_DEPTH,
   ROUTE_PREVIEW_RENDER_DEPTH,
   DEV_FPS_REPORT_INTERVAL_MS,
@@ -172,15 +135,22 @@ import {
   mapDuelEndReasonToOutcomeReason,
   resolveMatchOutcomeStatus,
 } from './gameScene.helpers';
-import { createGameSceneRuntimeWiring } from './gameSceneRuntimeWiring';
 import {
   COMBAT_RUNTIME_CONFIG,
   GRID_RENDERER_CONFIG,
-  INPUT_CONTROLLER_CONFIG,
   MOVEMENT_RUNTIME_CONFIG,
   WAVE_RUNTIME_CONFIG,
 } from './gameScene.runtimeConfigs';
 import type { GameSceneInspection } from './gameScene.types';
+import { GameSceneContext } from './controllers/gameSceneContext';
+import {
+  handleGameOut,
+  handlePointerDown,
+  handlePointerMove,
+  handlePointerUp,
+  handleWheel,
+  handleZoomBoardCommand,
+} from './controllers/inputWiring';
 import {
   applyBattlefieldViewVisibility,
   handleBattlefieldViewChanged,
@@ -189,39 +159,32 @@ import {
   syncOpponentDuelCreepsFromField,
 } from './controllers/battlefieldViewController';
 import {
-  drawGridCell,
   getGridRendererDeps,
-  redrawOccupancyOverlay,
   redrawTerrainTiles,
   refreshBuildPhasePathTiles,
-  refreshBuildState,
   updateBuildPreview,
   updateGridOverlayVisualState,
 } from './controllers/boardRenderController';
-import {
-  getBuildRuntimeDeps,
-  getBuildRuntimeState,
-  markUserActionProcessed,
-} from './controllers/buildRuntimeAdapter';
 import { publishHudSnapshot } from './controllers/hudSnapshotPublisher';
-import { ensureBaseAmbientPlaying, handleGameOverUpdated } from './controllers/sceneAudio';
+import { ensureBaseAmbientPlaying } from './controllers/sceneAudio';
 import {
   canPerformBuildActions,
-  confirmsTouchPlacement,
   getBaselineRaceId,
   getBoardCamera,
-  getComputerSendWaveUnits,
   getSelectedFactionUnits,
   syncDuelPlayerGoldFromWallet,
   type GameSceneCore,
 } from './controllers/sceneQueries';
-import { createGameSceneState, type GameSceneState } from './controllers/gameSceneState';
+import { type GameSceneState } from './controllers/gameSceneState';
 
 export class GameScene extends Phaser.Scene {
   public static readonly KEY = 'GameScene';
   private static readonly OPPONENT_LEAK_HISTORY_LIMIT = 10;
-  private readonly state: GameSceneState = createGameSceneState();
-  private readonly core: GameSceneCore = { scene: this, state: this.state };
+  private readonly ctx = new GameSceneContext(this, {
+    handleStartWaveCommand: () => this.handleStartWaveCommand(),
+  });
+  private readonly state: GameSceneState = this.ctx.state;
+  private readonly core: GameSceneCore = this.ctx;
 
   /** Test seam (sceneHarness): the wave runtime state the wallet lives in. */
   private get runState(): WaveRuntimeState {
@@ -260,139 +223,6 @@ export class GameScene extends Phaser.Scene {
   private set isGameOver(nextIsGameOver: boolean) {
     this.state.runState.isGameOver = nextIsGameOver;
   }
-
-  private readonly inputControllerDeps: InputControllerDependencies = {
-    nowMs: () => this.time.now,
-    toPointerScreenPoint: (pointer) => resolvePointerScreenPoint(this, pointer),
-    toPointerWorldPoint: (pointer) =>
-      resolvePointerWorldPoint(this, getBoardCamera(this.core), pointer),
-    toPointerTarget: (worldX, worldY) => toPointerGridTarget(worldX, worldY),
-    setHoveredTarget: (target) => {
-      this.state.hoveredCell = target?.cell ?? null;
-      this.state.hoveredBuildAnchor = target?.buildAnchor ?? null;
-    },
-    clearHoveredCell: () => {
-      this.state.hoveredCell = null;
-      this.state.hoveredBuildAnchor = null;
-    },
-    updateHoveredCellDebugRegistry: () => undefined,
-    updateBuildPreview: () => updateBuildPreview(this.core),
-    onBoardTap: (pointer) => this.handleBoardTap(pointer),
-    trySellTowerAtHoveredCell: () => trySellTowerAtHoveredCell(this.towerCommandDeps),
-    isCameraZoomed: () => isBoardCameraZoomed(getBoardCamera(this.core)),
-    getCameraZoomFactor: () => getBoardZoomFactor(getBoardCamera(this.core)),
-    setCameraZoomFactorAt: (factor, focus) =>
-      setBoardCameraZoomFactorAt(this, getBoardCamera(this.core), factor, focus),
-    zoomCameraByAt: (multiplier, focus) =>
-      zoomBoardCameraByAt(this, getBoardCamera(this.core), multiplier, focus),
-    panCameraBy: (dragDelta) => panBoardCamera(this, getBoardCamera(this.core), dragDelta),
-    resetCameraZoom: () => resetBoardCamera(this, getBoardCamera(this.core)),
-    hasPanModifier: (pointer) => {
-      // The harness emits plain pointer objects without a DOM event.
-      const event: { shiftKey?: boolean } | undefined = pointer.event;
-      return event?.shiftKey === true;
-    },
-  };
-
-  /** Tower and creature sounds, resolved through the race sound profiles. */
-  private readonly soundRouter: GameSoundRouter = createGameSoundRouter(
-    (soundId) => this.state.soundManager?.play(soundId),
-    () => this.state.selectedBuilderFactionId,
-  );
-
-  private readonly wiring = createGameSceneRuntimeWiring({
-    scene: this,
-    runState: this.state.runState,
-    playerField: this.state.playerField,
-    opponentField: this.state.opponentField,
-    getSoundManager: () => this.state.soundManager,
-    soundRouter: this.soundRouter,
-    getDuelMatchState: () => this.state.duelMatchState,
-    setDuelMatchState: (state) => {
-      this.state.duelMatchState = state;
-    },
-    getComputerSendWaveUnits: () => getComputerSendWaveUnits(this.state),
-    gameNowMs: () => this.state.gameClock.nowMs,
-    refreshBuildState: () => refreshBuildState(this.core),
-    publishHudSnapshot: () => publishHudSnapshot(this.state),
-    handleGameOverUpdated: (isGameOver) => handleGameOverUpdated(this.core, isGameOver),
-    syncOpponentDuelCreepsFromField: () => syncOpponentDuelCreepsFromField(this.state),
-    recordSentCreepDeath: (field, creep) =>
-      recordSentCreepDeath(this.state.sentCreepDeaths, field, creep),
-  });
-
-  private readonly towerCommandDeps: TowerCommandDeps = {
-    scene: this,
-    playerField: this.state.playerField,
-    getBuildRuntimeState: () => getBuildRuntimeState(this.state),
-    getBuildRuntimeDeps: () => getBuildRuntimeDeps(this.core),
-    isPlayerViewActive: () => this.state.activeBattlefieldView === 'player',
-    canManageTowers: () => !this.isGameOver && canPerformBuildActions(this.state),
-    getHoveredCell: () => this.state.hoveredCell,
-    getGridModel: () => this.state.gridModel,
-    getBuilderFactionId: () => this.state.selectedBuilderFactionId,
-    getPlayerGold: () => this.playerGold,
-    getTowerBranchChoices: () => this.state.duelMatchState.player.towerBranchChoices,
-    onTowerBranchChosen: (buildableTowerId, branchId) => {
-      this.state.duelMatchState = recordTowerBranchChoice(
-        this.state.duelMatchState,
-        'player',
-        buildableTowerId,
-        branchId,
-      );
-    },
-    onGoldUpdated: (nextGold) => {
-      this.playerGold = nextGold;
-      this.registry.set('economy.gold', nextGold);
-    },
-    onRefundRecorded: (refundAmount) => {
-      this.registry.set('economy.lastSellRefund', refundAmount);
-    },
-    playSound: (soundId: SoundId) => this.state.soundManager?.play(soundId),
-    soundRouter: this.soundRouter,
-    markUserActionProcessed: () => markUserActionProcessed(this.core),
-    onHudChanged: () => publishHudSnapshot(this.state),
-    drawGridCell: (cell) => {
-      // Tower commands redraw exactly the cells whose occupancy they changed.
-      markRoutePreviewLayoutChanged(this.state.routePreview);
-      this.state.arePathTilesStale = true;
-      drawGridCell(this.core, cell);
-    },
-    // Every build/sell ends here once its cells are redrawn: one path refresh
-    // and one occupancy overlay redraw per command.
-    updateBuildPreview: () => {
-      redrawOccupancyOverlay(this.core);
-      refreshBuildPhasePathTiles(this.core);
-      updateBuildPreview(this.core);
-    },
-  };
-
-  private readonly sendCreepCommandDeps: SendCreepCommandDeps = {
-    syncDuelPlayerGoldFromWallet: () => syncDuelPlayerGoldFromWallet(this.state),
-    getDuelMatchState: () => this.state.duelMatchState,
-    setDuelMatchState: (state) => {
-      this.state.duelMatchState = state;
-    },
-    isMatchOver: () => this.isGameOver || this.state.matchOutcomeStatus !== 'active',
-    canPerformBuildActions: () => canPerformBuildActions(this.state),
-    getBuilderFactionId: () => this.state.selectedBuilderFactionId,
-    onGoldUpdated: (nextGold) => {
-      this.playerGold = nextGold;
-      this.registry.set('economy.gold', nextGold);
-    },
-    onHudChanged: () => publishHudSnapshot(this.state),
-  };
-
-  private readonly creatureTalentCommandDeps: CreatureTalentCommandDeps = {
-    getDuelMatchState: () => this.state.duelMatchState,
-    setDuelMatchState: (state) => {
-      this.state.duelMatchState = state;
-    },
-    isMatchOver: () => this.isGameOver || this.state.matchOutcomeStatus !== 'active',
-    getBuilderFactionId: () => this.state.selectedBuilderFactionId,
-    playSound: (soundId: SoundId) => this.state.soundManager?.play(soundId),
-    onHudChanged: () => publishHudSnapshot(this.state),
-  };
 
   constructor() {
     super(GameScene.KEY);
@@ -515,11 +345,11 @@ export class GameScene extends Phaser.Scene {
     this.input.addPointer(1);
     this.state.teardownCallbacks.push(
       registerScenePointerHandlers(this, {
-        onPointerMove: (pointer) => this.handlePointerMove(pointer),
-        onPointerDown: (pointer) => this.handlePointerDown(pointer),
-        onPointerUp: (pointer) => this.handlePointerUp(pointer),
-        onWheel: (pointer, deltaY) => this.handleWheel(pointer, deltaY),
-        onGameOut: () => this.handleGameOut(),
+        onPointerMove: (pointer) => handlePointerMove(this.ctx, pointer),
+        onPointerDown: (pointer) => handlePointerDown(this.ctx, pointer),
+        onPointerUp: (pointer) => handlePointerUp(this.ctx, pointer),
+        onWheel: (pointer, deltaY) => handleWheel(this.ctx, pointer, deltaY),
+        onGameOut: () => handleGameOut(this.ctx),
       }),
     );
     this.state.buildPreviewOverlay = this.add.graphics();
@@ -561,75 +391,83 @@ export class GameScene extends Phaser.Scene {
       return;
     }
 
-    processPendingWaveSpawns(this.state.runState, this.wiring.waveRuntimeDeps, nowMs);
-    processPendingWaveSpawns(this.state.opponentWave, this.wiring.waveRuntimeDeps, nowMs);
-    moveBattlefieldCreeps(this.wiring.playerBattlefieldContext, MOVEMENT_RUNTIME_CONFIG, delta);
-    moveBattlefieldCreeps(this.wiring.opponentBattlefieldContext, MOVEMENT_RUNTIME_CONFIG, delta);
+    processPendingWaveSpawns(this.state.runState, this.ctx.wiring.waveRuntimeDeps, nowMs);
+    processPendingWaveSpawns(this.state.opponentWave, this.ctx.wiring.waveRuntimeDeps, nowMs);
+    moveBattlefieldCreeps(this.ctx.wiring.playerBattlefieldContext, MOVEMENT_RUNTIME_CONFIG, delta);
+    moveBattlefieldCreeps(
+      this.ctx.wiring.opponentBattlefieldContext,
+      MOVEMENT_RUNTIME_CONFIG,
+      delta,
+    );
     updateBattlefieldTowerCombat(
-      this.wiring.playerBattlefieldContext,
+      this.ctx.wiring.playerBattlefieldContext,
       COMBAT_RUNTIME_CONFIG,
       delta,
     );
     updateBattlefieldTowerCombat(
-      this.wiring.opponentBattlefieldContext,
+      this.ctx.wiring.opponentBattlefieldContext,
       COMBAT_RUNTIME_CONFIG,
       delta,
     );
     updateBattlefieldCreepEffects(
-      this.wiring.playerBattlefieldContext,
+      this.ctx.wiring.playerBattlefieldContext,
       COMBAT_RUNTIME_CONFIG,
       delta,
     );
     updateBattlefieldCreepEffects(
-      this.wiring.opponentBattlefieldContext,
+      this.ctx.wiring.opponentBattlefieldContext,
       COMBAT_RUNTIME_CONFIG,
       delta,
     );
     updateBattlefieldCreepHitFeedback(
-      this.wiring.playerBattlefieldContext,
+      this.ctx.wiring.playerBattlefieldContext,
       COMBAT_RUNTIME_CONFIG,
       delta,
     );
     updateBattlefieldCreepHitFeedback(
-      this.wiring.opponentBattlefieldContext,
+      this.ctx.wiring.opponentBattlefieldContext,
       COMBAT_RUNTIME_CONFIG,
       delta,
     );
-    removeDeadBattlefieldCreeps(this.wiring.playerBattlefieldContext, COMBAT_RUNTIME_CONFIG, delta);
     removeDeadBattlefieldCreeps(
-      this.wiring.opponentBattlefieldContext,
+      this.ctx.wiring.playerBattlefieldContext,
+      COMBAT_RUNTIME_CONFIG,
+      delta,
+    );
+    removeDeadBattlefieldCreeps(
+      this.ctx.wiring.opponentBattlefieldContext,
       COMBAT_RUNTIME_CONFIG,
       delta,
     );
     this.applyWaveCompletionRewardIfResolved();
     this.tryStartNextWave(nowMs);
     updateBattlefieldProjectiles(
-      this.wiring.playerBattlefieldContext,
+      this.ctx.wiring.playerBattlefieldContext,
       COMBAT_RUNTIME_CONFIG,
       delta,
     );
     updateBattlefieldProjectiles(
-      this.wiring.opponentBattlefieldContext,
+      this.ctx.wiring.opponentBattlefieldContext,
       COMBAT_RUNTIME_CONFIG,
       delta,
     );
     updateBattlefieldImpactEffects(
-      this.wiring.playerBattlefieldContext,
+      this.ctx.wiring.playerBattlefieldContext,
       COMBAT_RUNTIME_CONFIG,
       delta,
     );
     updateBattlefieldImpactEffects(
-      this.wiring.opponentBattlefieldContext,
+      this.ctx.wiring.opponentBattlefieldContext,
       COMBAT_RUNTIME_CONFIG,
       delta,
     );
     updateBattlefieldDamageNumbers(
-      this.wiring.playerBattlefieldContext,
+      this.ctx.wiring.playerBattlefieldContext,
       COMBAT_RUNTIME_CONFIG,
       delta,
     );
     updateBattlefieldDamageNumbers(
-      this.wiring.opponentBattlefieldContext,
+      this.ctx.wiring.opponentBattlefieldContext,
       COMBAT_RUNTIME_CONFIG,
       delta,
     );
@@ -685,29 +523,33 @@ export class GameScene extends Phaser.Scene {
         publishHudSnapshot(this.state);
       }),
       onCommand('send-creep', (payload) => {
-        handleSendCreepCommand(this.sendCreepCommandDeps, payload.creepTypeId);
+        handleSendCreepCommand(this.ctx.sendCreepCommandDeps, payload.creepTypeId);
       }),
       onCommand('upgrade-tower', (payload) => {
-        handleUpgradeTowerCommand(this.towerCommandDeps, payload.towerId);
+        handleUpgradeTowerCommand(this.ctx.towerCommandDeps, payload.towerId);
       }),
       onCommand('choose-tower-branch', (payload) => {
-        handleChooseTowerBranchCommand(this.towerCommandDeps, payload.towerId, payload.branchId);
+        handleChooseTowerBranchCommand(
+          this.ctx.towerCommandDeps,
+          payload.towerId,
+          payload.branchId,
+        );
       }),
       onCommand('choose-creature-branch', (payload) => {
         handleChooseCreatureBranchCommand(
-          this.creatureTalentCommandDeps,
+          this.ctx.creatureTalentCommandDeps,
           payload.unitId,
           payload.branchId,
         );
       }),
       onCommand('upgrade-creature', (payload) => {
-        handleUpgradeCreatureCommand(this.creatureTalentCommandDeps, payload.unitId);
+        handleUpgradeCreatureCommand(this.ctx.creatureTalentCommandDeps, payload.unitId);
       }),
       onCommand('sell-tower', (payload) => {
-        handleSellTowerCommand(this.towerCommandDeps, payload.towerId);
+        handleSellTowerCommand(this.ctx.towerCommandDeps, payload.towerId);
       }),
       onCommand('zoom-board', (payload) => {
-        this.handleZoomBoardCommand(payload.action);
+        handleZoomBoardCommand(this.ctx, payload.action);
       }),
       onCommand('restart-match', () => {
         // A restart is also the recover action after an engine error.
@@ -743,7 +585,7 @@ export class GameScene extends Phaser.Scene {
     initializeWaveRuntimeModule(
       this.state.runState,
       WAVE_RUNTIME_CONFIG,
-      this.wiring.waveRuntimeDeps,
+      this.ctx.wiring.waveRuntimeDeps,
       grid,
     );
     destroyBattlefieldTowers(this.state.playerField);
@@ -809,7 +651,7 @@ export class GameScene extends Phaser.Scene {
     applyWaveCompletionRewardIfResolvedRuntime(
       this.state.runState,
       WAVE_RUNTIME_CONFIG,
-      this.wiring.waveRuntimeDeps,
+      this.ctx.wiring.waveRuntimeDeps,
       isFieldWaveResolved(this.state.opponentWave),
     );
     if (!wasWaveCompletionRewardGranted && this.state.runState.isWaveCompletionRewardGranted) {
@@ -851,7 +693,7 @@ export class GameScene extends Phaser.Scene {
     );
     const result = applyDuelRoundEndRuntime({
       state: duelRuntimeState,
-      deps: this.wiring.duelMatchRuntimeDeps,
+      deps: this.ctx.wiring.duelMatchRuntimeDeps,
       playerLeakedCreeps: leaks.playerLeakedLives,
       opponentLeakedCreeps: leaks.opponentLeakedLives,
       sentLeaks: leaks.sentLeaks,
@@ -982,110 +824,6 @@ export class GameScene extends Phaser.Scene {
     publishGameEvent('match-started', { trigger: 'restart' });
   }
 
-  private handlePointerMove(pointer: Phaser.Input.Pointer): void {
-    if (!pointer.wasTouch) {
-      // Back on a mouse: the preview follows the cursor again.
-      this.state.isLastPointerTouch = false;
-      this.state.pendingPlacementAnchor = null;
-    }
-    handlePointerMoveRuntime(
-      this.state.inputControllerState,
-      this.inputControllerDeps,
-      INPUT_CONTROLLER_CONFIG,
-      pointer,
-    );
-  }
-
-  private handlePointerDown(pointer: Phaser.Input.Pointer): void {
-    this.state.isLastPointerTouch = pointer.wasTouch;
-    handlePointerDownRuntime(this.state.inputControllerState, this.inputControllerDeps, pointer);
-  }
-
-  private handlePointerUp(pointer: Phaser.Input.Pointer): void {
-    handlePointerUpRuntime(
-      this.state.inputControllerState,
-      this.inputControllerDeps,
-      INPUT_CONTROLLER_CONFIG,
-      pointer,
-    );
-  }
-
-  private handleWheel(pointer: Phaser.Input.Pointer, deltaY: number): void {
-    handleWheelRuntime(this.inputControllerDeps, INPUT_CONTROLLER_CONFIG, pointer, deltaY);
-  }
-
-  private handleZoomBoardCommand(action: BoardZoomAction): void {
-    const camera = getBoardCamera(this.core);
-    if (action === 'reset') {
-      resetBoardCamera(this, camera);
-      return;
-    }
-    const multiplier =
-      action === 'in' ? BOARD_ZOOM_KEY_STEP_FACTOR : 1 / BOARD_ZOOM_KEY_STEP_FACTOR;
-    zoomBoardCameraByAt(this, camera, multiplier, getBoardViewportCentre(camera));
-  }
-
-  /**
-   * A tap or click that reached the board: a tower under it is selected,
-   * otherwise the selection closes and the tap goes to building.
-   */
-  private handleBoardTap(pointer: Phaser.Input.Pointer): BoardTapOutcome {
-    syncHoveredCellFromPointer(this.inputControllerDeps, pointer);
-    if (trySelectTowerAtHoveredCell(this.towerCommandDeps)) {
-      this.clearPendingPlacement();
-      return 'selected-tower';
-    }
-    if (this.state.hoveredCell) {
-      publishGameEvent('selected-tower', { tower: null });
-    }
-
-    const isBuildTap =
-      this.state.activeBattlefieldView === 'player' && canPerformBuildActions(this.state);
-    if (isBuildTap && confirmsTouchPlacement(this.state)) {
-      this.handleTwoTapPlacement();
-    } else {
-      this.state.pendingPlacementAnchor = null;
-      tryPlaceTowerAtHoveredCell(this.towerCommandDeps);
-    }
-    return isBuildTap ? 'build-tap' : 'board-tap';
-  }
-
-  private clearPendingPlacement(): void {
-    if (!this.state.pendingPlacementAnchor) {
-      return;
-    }
-    this.state.pendingPlacementAnchor = null;
-    updateBuildPreview(this.core);
-  }
-
-  /** First tap arms the hovered block; a second tap on it builds (a refusal keeps it armed). */
-  private handleTwoTapPlacement(): void {
-    if (!this.state.hoveredBuildAnchor) {
-      return;
-    }
-    const decision = resolvePlacementTap(
-      this.state.pendingPlacementAnchor,
-      this.state.hoveredBuildAnchor,
-    );
-    if (decision.kind === 'arm') {
-      this.state.pendingPlacementAnchor = decision.anchor;
-      this.state.soundManager?.play('ui.click');
-      updateBuildPreview(this.core);
-      return;
-    }
-
-    const towersBefore = this.state.playerField.towers.length;
-    tryPlaceTowerAtHoveredCell(this.towerCommandDeps);
-    if (this.state.playerField.towers.length > towersBefore) {
-      this.state.pendingPlacementAnchor = null;
-      updateBuildPreview(this.core);
-    }
-  }
-
-  private handleGameOut(): void {
-    handleGameOutRuntime(this.state.inputControllerState, this.inputControllerDeps);
-  }
-
   private handleStartWaveCommand(): void {
     if (this.isGameOver || !canPerformBuildActions(this.state)) {
       return;
@@ -1163,7 +901,7 @@ export class GameScene extends Phaser.Scene {
     spawnWaveCreepsRuntime(
       this.state.runState,
       WAVE_RUNTIME_CONFIG,
-      this.wiring.waveRuntimeDeps,
+      this.ctx.wiring.waveRuntimeDeps,
       baselineUnits,
     );
     scheduleOpponentFieldWave(this.state.opponentWave, {
