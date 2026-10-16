@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { RaceId } from '../../../../shared/types/content-ids';
+import { PERCENT_DAMAGE } from '../../../../shared/constants/damage';
+import { RaceId, UnitMoveType } from '../../../../shared/types/content-ids';
+import { getArmorDamageMultiplier } from '../../../creep/model/damage';
 import { getUnitsByFaction, resolveUnitConfigById } from '../../../unit/model/registry';
+import { UnitTier, type UnitConfig } from '../../../unit/model/types';
+import { NEUTRAL_DAMAGE_EFFICIENCY } from '../damage-profile';
 import { getWaveHealthMultiplier } from '../../../wave/model/waveHealth';
 import {
   BETWEEN_LANES_ANCHOR,
@@ -12,12 +16,24 @@ import {
 import { createRouteDamageLedger } from '../damage-placement/routeDamageLedger';
 import { createRouteGeometry } from '../damage-placement/routeGeometry';
 import { computeShotDps } from '../damage-placement/towerDamageModel';
-import { computeEffectiveHealth } from './effectiveHealth';
 import { estimateDefenceCapability } from './estimateDefenceCapability';
 import { estimateIncomingThreat, type IncomingThreatInput } from './estimateIncomingThreat';
 
 const ROSTER = getUnitsByFaction(RaceId.UNDEAD);
 const SENDABLES = ['undead_skeleton', 'undead_ghoul'] as const;
+
+/** A tier 1 ground creature with chosen health and armor (content armor is not the subject). */
+function armoredUnit(overrides: Partial<UnitConfig>): UnitConfig {
+  return {
+    ...resolveUnitConfigById('undead_skeleton'),
+    tier: UnitTier.TIER_1,
+    moveType: UnitMoveType.GROUND,
+    health: 100,
+    physicalArmor: 0,
+    magicalArmor: 0,
+    ...overrides,
+  };
+}
 
 function threatInput(overrides?: Partial<IncomingThreatInput>): IncomingThreatInput {
   return {
@@ -46,14 +62,13 @@ describe('entities/computer-opponent/threat-budget estimateIncomingThreat', () =
     expect(late.totalHealth).toBeGreaterThan(early.totalHealth);
   });
 
-  it('adds the creeps the other side has queued, armor included', () => {
+  it('adds the creeps the other side has queued, in hit points', () => {
     const fiend = resolveUnitConfigById('undead_crypt_fiend');
     const quiet = estimateIncomingThreat(threatInput());
     const sent = estimateIncomingThreat(threatInput({ observedSends: [fiend, fiend] }));
 
-    expect(computeEffectiveHealth(fiend)).toBeGreaterThan(fiend.health);
     expect(sent.sendHealth).toBeCloseTo(
-      2 * computeEffectiveHealth(fiend) * getWaveHealthMultiplier(threatInput().waveNumber),
+      2 * fiend.health * getWaveHealthMultiplier(threatInput().waveNumber),
     );
     expect(sent.totalHealth).toBeCloseTo(quiet.totalHealth + sent.sendHealth);
   });
@@ -63,8 +78,39 @@ describe('entities/computer-opponent/threat-budget estimateIncomingThreat', () =
     const early = estimateIncomingThreat(threatInput({ waveNumber: 1, observedSends: [fiend] }));
     const late = estimateIncomingThreat(threatInput({ waveNumber: 9, observedSends: [fiend] }));
 
-    expect(early.sendHealth).toBeCloseTo(computeEffectiveHealth(fiend));
+    expect(early.sendHealth).toBeCloseTo(fiend.health);
     expect(late.sendHealth).toBeCloseTo(early.sendHealth * getWaveHealthMultiplier(9));
+  });
+
+  it('reads the armor of the wave into what each damage type is worth', () => {
+    const plated = armoredUnit({ physicalArmor: 25, magicalArmor: 0 });
+    const warded = armoredUnit({ physicalArmor: 0, magicalArmor: 25 });
+    const platedWave = estimateIncomingThreat(
+      threatInput({ baselineFactionUnits: [plated], enemySendables: [plated] }),
+    );
+    const wardedWave = estimateIncomingThreat(
+      threatInput({ baselineFactionUnits: [warded], enemySendables: [warded] }),
+    );
+
+    expect(platedWave.groundEfficiency.physical).toBeCloseTo(getArmorDamageMultiplier(25));
+    expect(platedWave.groundEfficiency.magical).toBeCloseTo(1);
+    expect(wardedWave.groundEfficiency.magical).toBeCloseTo(getArmorDamageMultiplier(25));
+    expect(wardedWave.groundEfficiency.physical).toBeCloseTo(1);
+    // No fliers: the air lane stays neutral.
+    expect(platedWave.airEfficiency).toEqual(NEUTRAL_DAMAGE_EFFICIENCY);
+  });
+
+  it('values percent damage by the maximum health the wave spawns with', () => {
+    const small = armoredUnit({ health: 100 });
+    const big = armoredUnit({ health: 400 });
+    const percentOf = (unit: UnitConfig, waveNumber: number) =>
+      estimateIncomingThreat(
+        threatInput({ waveNumber, baselineFactionUnits: [unit], enemySendables: [unit] }),
+      ).groundEfficiency.percent;
+
+    expect(percentOf(big, 1)).toBeCloseTo(4 * percentOf(small, 1));
+    expect(percentOf(small, 1)).toBeCloseTo(100 / PERCENT_DAMAGE.healthShareDivisor);
+    expect(percentOf(small, 9)).toBeCloseTo(percentOf(small, 1) * getWaveHealthMultiplier(9));
   });
 
   it('expects sends from the other side income while its queue is empty', () => {

@@ -1,3 +1,4 @@
+import type { DamageTypeEfficiency } from '../damage-profile';
 import {
   ECONOMY_FLOOR_MIN_LIVES_SHARE,
   MAX_SEND_SHARE,
@@ -5,14 +6,22 @@ import {
   type ThreatBudgetTuning,
 } from './constants';
 
-/** One lane of the next wave against the towers that can shoot it. */
+/**
+ * One lane of the next wave against the towers that can shoot it. Health and
+ * damage are both in the lane's hit points: each tower's raw damage was
+ * multiplied by what its damage type is worth against the lane's armor, so
+ * `waveDamage / incomingHealth` is the sum over damage types of type damage
+ * over type-effective health (the wave's time-to-kill, inverted).
+ */
 export type DefenceLaneAssessment = {
-  /** Armor-adjusted health of the creeps on this lane. */
+  /** Hit points of the creeps on this lane. */
   incomingHealth: number;
-  /** Damage the standing towers deal to them along the lane's route. */
+  /** Armor-adjusted damage the standing towers deal to them along the lane's route. */
   waveDamage: number;
   /** Lane damage one more gold of towers adds; 0 when nothing can be built. */
   damagePerGold: number;
+  /** What each damage type is worth against this lane's creeps; neutral when absent. */
+  damageEfficiency?: DamageTypeEfficiency;
 };
 
 /**

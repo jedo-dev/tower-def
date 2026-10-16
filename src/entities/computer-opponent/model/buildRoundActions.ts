@@ -22,6 +22,7 @@ import {
   type PlannedUpgrade,
   type RouteDamageLedger,
 } from './damage-placement';
+import { NEUTRAL_DAMAGE_EFFICIENCY } from './damage-profile';
 import { resolveAirThreatShare } from './threat-budget/resolveAirThreatShare';
 import { DEFEND_REROUTE_PROBE_LIMIT, findBestScoredBuild } from './findBestScoredBuild';
 import { createMazeEvaluator } from './maze-evaluation';
@@ -99,7 +100,9 @@ function recordUpgrade(round: BuildRoundState, upgrade: PlannedUpgrade): void {
 /**
  * The damage ledger a round invests against: the planned ground route, and
  * when the next wave has fliers, the straight air line as a second lane
- * weighted by the share of the wave that flies.
+ * weighted by the share of the wave that flies. Each lane values tower damage
+ * against its own expected creeps' armor, so the damage type that counters
+ * the wave wins the blocks.
  */
 function createInvestmentLedger(
   round: BuildRoundState,
@@ -107,7 +110,12 @@ function createInvestmentLedger(
   plannedRoute: PlannedRoute,
 ): RouteDamageLedger {
   const towers: LedgerTower[] = toLedgerTowers(round.plannedTowers);
-  const ground = createRouteDamageLedger(plannedRoute.geometry, towers);
+  const ground = createRouteDamageLedger(
+    plannedRoute.geometry,
+    towers,
+    UnitMoveType.GROUND,
+    context.defence?.damageEfficiency ?? NEUTRAL_DAMAGE_EFFICIENCY,
+  );
   const airShare = resolveAirThreatShare(context);
   if (airShare <= 0) {
     return ground;
@@ -117,6 +125,7 @@ function createInvestmentLedger(
     createRouteGeometry(calculateAirRoute(entrance, exit)),
     towers,
     UnitMoveType.AIR,
+    context.defence?.air?.damageEfficiency ?? NEUTRAL_DAMAGE_EFFICIENCY,
   );
   return createDualRouteLedger(ground, air, airShare);
 }

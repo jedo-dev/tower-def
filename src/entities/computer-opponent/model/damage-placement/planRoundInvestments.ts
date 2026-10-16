@@ -1,4 +1,8 @@
-import type { TowerTargetScope, TowerTypeId } from '../../../../shared/types/content-ids';
+import type {
+  DamageType,
+  TowerTargetScope,
+  TowerTypeId,
+} from '../../../../shared/types/content-ids';
 import type { GridPoint } from '../../../../shared/types/grid';
 import type { TowerCombatStats } from '../../../tower/model/types';
 import {
@@ -7,7 +11,7 @@ import {
   ROUTE_GAIN_VALUE_WEIGHT,
 } from './constants';
 import type { LedgerTower, RouteDamageLedger } from './routeDamageLedger';
-import { computeShotDps } from './towerDamageModel';
+import { computeEffectiveShotDps } from './towerDamageModel';
 
 /**
  * A tower type the opponent can build, priced for its race, with its level 1
@@ -18,6 +22,8 @@ export type InvestmentTowerType = {
   cost: number;
   stats: TowerCombatStats;
   allowedTargets?: TowerTargetScope;
+  /** The race's authored damage type; the archetype's when absent. */
+  damageType?: DamageType;
 };
 
 /** An unbuilt maze plan block, in build order, with the route cells building it adds. */
@@ -75,6 +81,7 @@ function toLedgerTower(anchor: GridPoint, type: InvestmentTowerType): LedgerTowe
     towerType: type.towerType,
     stats: type.stats,
     ...(type.allowedTargets === undefined ? {} : { allowedTargets: type.allowedTargets }),
+    ...(type.damageType === undefined ? {} : { damageType: type.damageType }),
   };
 }
 
@@ -95,7 +102,7 @@ export function planRoundInvestments(input: RoundInvestmentInput): RoundInvestme
   const maxUpgrades = input.maxUpgrades ?? Infinity;
   const buildLimit = wall ? Math.min(input.maxBuilds, walls.length) : 0;
   const minRouteCellValue = wall
-    ? MIN_ROUTE_CELL_VALUE_IN_WALL_DPS * computeShotDps(wall.stats)
+    ? MIN_ROUTE_CELL_VALUE_IN_WALL_DPS * computeEffectiveShotDps(wall, ledger.efficiency)
     : 0;
   let remaining = input.budget;
 

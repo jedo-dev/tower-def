@@ -5,6 +5,7 @@ import {
   CREEP_CELLS_PER_SECOND_AT_UNIT_SPEED,
   REFERENCE_CREEP_SPEED,
 } from './constants';
+import { NEUTRAL_DAMAGE_EFFICIENCY, type DamageTypeEfficiency } from '../damage-profile';
 import type { RouteGeometry } from './routeGeometry';
 import {
   canDamageModelTowerHit,
@@ -29,11 +30,17 @@ export type LedgerTower = DamageModelTower & { anchor: GridPoint };
  * others: the slow stretches their time in range, the aura their fire rate.
  * A ledger values one lane: the creeps walking its route move by `moveType`,
  * so a tower whose `allowedTargets` cannot hit them contributes nothing here.
+ * Damage is counted in hit points of the lane's expected wave: each tower's
+ * raw damage times what its damage type is worth against that wave's armor
+ * (`efficiency`), so a magical tower facing plated creeps outvalues the same
+ * tower dealing physical damage.
  */
 export type RouteDamageLedger = {
   readonly geometry: RouteGeometry;
   /** Move type of the creeps on this lane (ground maze or air line). */
   readonly moveType: UnitMoveType;
+  /** What each damage type is worth against the lane's expected wave. */
+  readonly efficiency: DamageTypeEfficiency;
   readonly towers: readonly LedgerTower[];
   add(tower: LedgerTower): number;
   replace(index: number, tower: LedgerTower): void;
@@ -53,6 +60,7 @@ export function createRouteDamageLedger(
   geometry: RouteGeometry,
   initialTowers: readonly LedgerTower[] = [],
   moveType: UnitMoveType = UnitMoveType.GROUND,
+  efficiency: DamageTypeEfficiency = NEUTRAL_DAMAGE_EFFICIENCY,
 ): RouteDamageLedger {
   const towers: LedgerTower[] = [...initialTowers];
   const field = new Float64Array(geometry.length);
@@ -61,7 +69,7 @@ export function createRouteDamageLedger(
   /** Damage rate on this lane: zero for a tower that cannot shoot its creeps. */
   function sampleRate(tower: LedgerTower, sample: number): number {
     return canDamageModelTowerHit(tower, moveType)
-      ? computeSampleDamageRate(tower, geometry, sample)
+      ? computeSampleDamageRate(tower, geometry, sample, efficiency)
       : 0;
   }
 
@@ -172,6 +180,7 @@ export function createRouteDamageLedger(
   return {
     geometry,
     moveType,
+    efficiency,
     towers,
     add(tower: LedgerTower): number {
       towers.push(tower);

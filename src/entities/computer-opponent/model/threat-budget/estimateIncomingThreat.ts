@@ -4,8 +4,16 @@ import type { UnitConfig } from '../../../unit/model/types';
 import { generateWaveUnits } from '../../../wave/model/generateWaveUnits';
 import { getWaveHealthMultiplier } from '../../../wave/model/waveHealth';
 import { REFERENCE_CREEP_SPEED } from '../damage-placement/constants';
+import {
+  addArmorTallies,
+  EMPTY_ARMOR_TALLY,
+  scaleArmorTally,
+  tallyCreature,
+  toDamageTypeEfficiency,
+  type ArmorTally,
+  type DamageTypeEfficiency,
+} from '../damage-profile';
 import { BASELINE_ESTIMATE_RANDOM_ROLL } from './constants';
-import { computeEffectiveHealth } from './effectiveHealth';
 
 export type IncomingThreatInput = {
   waveNumber: number;
@@ -19,11 +27,15 @@ export type IncomingThreatInput = {
   enemySendables: readonly UnitConfig[];
 };
 
-/** The next wave on this side's field, armor-adjusted. */
+/**
+ * The next wave on this side's field. Health is plain hit points, grown to
+ * the wave number; armor lives in the per-lane damage efficiency, which a
+ * tower's raw damage is multiplied by to land in those hit points.
+ */
 export type IncomingThreat = {
   baselineHealth: number;
   sendHealth: number;
-  /** Armor-adjusted health of the whole wave: the damage it takes to stop it. */
+  /** Hit points of the whole wave. */
   totalHealth: number;
   creepCount: number;
   /** Mean creep speed over the wave, in speed points. */
@@ -33,58 +45,75 @@ export type IncomingThreat = {
   airCreepCount: number;
   /** Mean speed of the air creeps; the reference speed when none are expected. */
   airAverageSpeed: number;
+  /** What each damage type is worth against the ground creeps of the wave. */
+  groundEfficiency: DamageTypeEfficiency;
+  /** What each damage type is worth against the fliers; neutral when none are expected. */
+  airEfficiency: DamageTypeEfficiency;
 };
 
 type CreepGroup = {
-  health: number;
   count: number;
   speedSum: number;
-  airHealth: number;
   airCount: number;
   airSpeedSum: number;
+  ground: ArmorTally;
+  air: ArmorTally;
 };
 
 const EMPTY_GROUP: CreepGroup = {
-  health: 0,
   count: 0,
   speedSum: 0,
-  airHealth: 0,
   airCount: 0,
   airSpeedSum: 0,
+  ground: EMPTY_ARMOR_TALLY,
+  air: EMPTY_ARMOR_TALLY,
 };
 
-function sumUnits(units: readonly UnitConfig[]): CreepGroup {
+/** The units as they spawn in a wave whose health multiplier is `healthMultiplier`. */
+function sumUnits(units: readonly UnitConfig[], healthMultiplier: number): CreepGroup {
   return units.reduce<CreepGroup>((group, unit) => {
-    const health = computeEffectiveHealth(unit);
+    const tally = tallyCreature({
+      health: unit.health * healthMultiplier,
+      physicalArmor: unit.physicalArmor,
+      magicalArmor: unit.magicalArmor,
+    });
     const flies = unit.moveType === UnitMoveType.AIR;
     return {
-      health: group.health + health,
       count: group.count + 1,
       speedSum: group.speedSum + unit.speed,
-      airHealth: group.airHealth + (flies ? health : 0),
       airCount: group.airCount + (flies ? 1 : 0),
       airSpeedSum: group.airSpeedSum + (flies ? unit.speed : 0),
+      ground: flies ? group.ground : addArmorTallies(group.ground, tally),
+      air: flies ? addArmorTallies(group.air, tally) : group.air,
     };
   }, EMPTY_GROUP);
 }
 
+function groupHealth(group: CreepGroup): number {
+  return group.ground.health + group.air.health;
+}
+
 /** Creeps `gold` buys from `sendables` at their average price, health and speed. */
-function estimateSends(gold: number, sendables: readonly UnitConfig[]): CreepGroup {
+function estimateSends(
+  gold: number,
+  sendables: readonly UnitConfig[],
+  healthMultiplier: number,
+): CreepGroup {
   if (gold <= 0 || sendables.length === 0) {
     return EMPTY_GROUP;
   }
-  const roster = sumUnits(sendables);
+  const roster = sumUnits(sendables, healthMultiplier);
   const averageCost =
     sendables.reduce((sum, unit) => sum + getSendCostByTier(unit.tier), 0) / sendables.length;
   const count = gold / averageCost;
   const share = count / roster.count;
   return {
-    health: roster.health * share,
     count,
     speedSum: roster.speedSum * share,
-    airHealth: roster.airHealth * share,
     airCount: roster.airCount * share,
     airSpeedSum: roster.airSpeedSum * share,
+    ground: scaleArmorTally(roster.ground, share),
+    air: scaleArmorTally(roster.air, share),
   };
 }
 
@@ -93,24 +122,27 @@ function estimateSends(gold: number, sendables: readonly UnitConfig[]): CreepGro
  * draw) plus the other duelist's sends. A queue it has already filled is
  * taken as it is; an empty or small one is topped up to what its income
  * suggests, so the estimate never assumes a quiet round it cannot know about.
+ * Every creep is tallied at the health it spawns with (grown to the wave
+ * number), so percent damage is valued against its real maximum health.
  */
 export function estimateIncomingThreat(input: IncomingThreatInput): IncomingThreat {
+  const healthMultiplier = getWaveHealthMultiplier(input.waveNumber);
   const baseline = sumUnits(
     generateWaveUnits({
       waveNumber: input.waveNumber,
       factionUnits: [...input.baselineFactionUnits],
       random: () => BASELINE_ESTIMATE_RANDOM_ROLL,
     }),
+    healthMultiplier,
   );
-  const observed = sumUnits(input.observedSends);
-  const estimated = estimateSends(input.expectedSendGold, input.enemySendables);
-  const sends = observed.health >= estimated.health ? observed : estimated;
+  const observed = sumUnits(input.observedSends, healthMultiplier);
+  const estimated = estimateSends(input.expectedSendGold, input.enemySendables, healthMultiplier);
+  const sends = groupHealth(observed) >= groupHealth(estimated) ? observed : estimated;
   const creepCount = baseline.count + sends.count;
-  // Every creep of the wave spawns with its health grown to the wave number.
-  const healthMultiplier = getWaveHealthMultiplier(input.waveNumber);
-  const baselineHealth = baseline.health * healthMultiplier;
-  const sendHealth = sends.health * healthMultiplier;
+  const baselineHealth = groupHealth(baseline);
+  const sendHealth = groupHealth(sends);
   const airCreepCount = baseline.airCount + sends.airCount;
+  const air = addArmorTallies(baseline.air, sends.air);
 
   return {
     baselineHealth,
@@ -119,11 +151,13 @@ export function estimateIncomingThreat(input: IncomingThreatInput): IncomingThre
     creepCount,
     averageSpeed:
       creepCount > 0 ? (baseline.speedSum + sends.speedSum) / creepCount : REFERENCE_CREEP_SPEED,
-    airHealth: (baseline.airHealth + sends.airHealth) * healthMultiplier,
+    airHealth: air.health,
     airCreepCount,
     airAverageSpeed:
       airCreepCount > 0
         ? (baseline.airSpeedSum + sends.airSpeedSum) / airCreepCount
         : REFERENCE_CREEP_SPEED,
+    groundEfficiency: toDamageTypeEfficiency(addArmorTallies(baseline.ground, sends.ground)),
+    airEfficiency: toDamageTypeEfficiency(air),
   };
 }

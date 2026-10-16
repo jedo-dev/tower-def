@@ -7,25 +7,30 @@ import { getRaceTowerTypes } from '../buildSpendBudget';
 import {
   canDamageModelTowerHit,
   collectInvestmentTypes,
+  computeEffectiveShotDps,
   createRouteDamageLedger,
   createRouteGeometry,
-  computeShotDps,
   toLedgerTowers,
   type InvestmentTowerType,
 } from '../damage-placement';
+import type { DamageTypeEfficiency } from '../damage-profile';
 import { createMazeEvaluator } from '../maze-evaluation/createMazeEvaluator';
 import { ENEMY_SEND_INCOME_SHARE } from './constants';
 import { estimateDefenceCapability, type DefenceWallPrice } from './estimateDefenceCapability';
 import { estimateIncomingThreat } from './estimateIncomingThreat';
 import type { DefenceAssessment, DefenceLaneAssessment } from './splitThreatBudget';
 
-/** The cheapest buildable type that can shoot `moveType`, priced; null when there is none. */
+/**
+ * The cheapest buildable type that can shoot `moveType`, priced, its damage
+ * counted against the lane's armor; null when there is none.
+ */
 function findCheapestLaneWall(
   types: readonly InvestmentTowerType[],
   moveType: UnitMoveType,
+  efficiency: DamageTypeEfficiency,
 ): DefenceWallPrice | null {
   const wall = types.find((type) => canDamageModelTowerHit(type, moveType));
-  return wall ? { cost: wall.cost, shotDps: computeShotDps(wall.stats) } : null;
+  return wall ? { cost: wall.cost, shotDps: computeEffectiveShotDps(wall, efficiency) } : null;
 }
 
 /**
@@ -34,6 +39,7 @@ function findCheapestLaneWall(
  * runtime does) plus the player's sends, against the towers on the opponent's
  * field. Ground creeps are measured along the route its maze makes today; air
  * creeps along the straight air line, against the towers that can hit air.
+ * Each lane counts tower damage against its own creeps' armor, per damage type.
  */
 export function assessDefence(matchState: DuelMatchState): DefenceAssessment {
   const { opponent, player } = matchState;
@@ -54,15 +60,21 @@ export function assessDefence(matchState: DuelMatchState): DefenceAssessment {
 
   const groundCreepCount = threat.creepCount - threat.airCreepCount;
   const ground = estimateDefenceCapability({
-    ledger: createRouteDamageLedger(createRouteGeometry(routes.smallRoute), ledgerTowers),
+    ledger: createRouteDamageLedger(
+      createRouteGeometry(routes.smallRoute),
+      ledgerTowers,
+      UnitMoveType.GROUND,
+      threat.groundEfficiency,
+    ),
     creepCount: groundCreepCount,
     averageSpeed: threat.averageSpeed,
-    wall: findCheapestLaneWall(types, UnitMoveType.GROUND),
+    wall: findCheapestLaneWall(types, UnitMoveType.GROUND, threat.groundEfficiency),
   });
   const assessment: DefenceLaneAssessment = {
     incomingHealth: threat.totalHealth - threat.airHealth,
     waveDamage: ground.waveDamage,
     damagePerGold: ground.damagePerGold,
+    damageEfficiency: threat.groundEfficiency,
   };
 
   if (threat.airCreepCount <= 0) {
@@ -74,10 +86,11 @@ export function assessDefence(matchState: DuelMatchState): DefenceAssessment {
       createRouteGeometry(calculateAirRoute(grid.entrance, grid.exit)),
       ledgerTowers,
       UnitMoveType.AIR,
+      threat.airEfficiency,
     ),
     creepCount: threat.airCreepCount,
     averageSpeed: threat.airAverageSpeed,
-    wall: findCheapestLaneWall(types, UnitMoveType.AIR),
+    wall: findCheapestLaneWall(types, UnitMoveType.AIR, threat.airEfficiency),
   });
 
   return {
@@ -86,6 +99,7 @@ export function assessDefence(matchState: DuelMatchState): DefenceAssessment {
       incomingHealth: threat.airHealth,
       waveDamage: air.waveDamage,
       damagePerGold: air.damagePerGold,
+      damageEfficiency: threat.airEfficiency,
     },
   };
 }

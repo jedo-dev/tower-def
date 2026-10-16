@@ -1,9 +1,8 @@
-import { DAMAGE_OVER_TIME_DAMAGE_TYPE } from '../../../../shared/constants/damage';
-import { DamageType, TowerAttackKind } from '../../../../shared/types/content-ids';
+import { DAMAGE_TYPES, DamageType, TowerAttackKind } from '../../../../shared/types/content-ids';
 import { getTowerAttackKind } from '../../../tower/model/types';
 import { normalizeDamageMix, type DamageTypeMix } from '../damage-profile';
 import {
-  computeDamageOverTimeDps,
+  computeDamageOverTimeDpsByType,
   computeShotDps,
   resolveDamageModelDamageType,
   type DamageModelTower,
@@ -11,10 +10,11 @@ import {
 
 /**
  * The damage types a field of towers deals, as shares of its raw damage per
- * second: each tower's shots at their own type, damage over time as magical.
- * Route geometry is left out on purpose: a sender only needs to know which
- * armor the defence goes through, not how well it is placed. The even mix
- * when the field deals no damage (an empty field tells nothing).
+ * second: each tower's shots at their own type, damage over time at each
+ * effect's tick type. Route geometry is left out on purpose: a sender only
+ * needs to know which armor the defence goes through, not how well it is
+ * placed. The even mix when the field deals no damage (an empty field tells
+ * nothing).
  */
 export function computeDefenceDamageMix(towers: readonly DamageModelTower[]): DamageTypeMix {
   const rawDamage: Record<DamageType, number> = {
@@ -28,7 +28,10 @@ export function computeDefenceDamageMix(towers: readonly DamageModelTower[]): Da
       continue;
     }
     rawDamage[resolveDamageModelDamageType(tower)] += computeShotDps(tower.stats);
-    rawDamage[DAMAGE_OVER_TIME_DAMAGE_TYPE] += computeDamageOverTimeDps(tower);
+    const overTime = computeDamageOverTimeDpsByType(tower);
+    for (const damageType of DAMAGE_TYPES) {
+      rawDamage[damageType] += overTime[damageType];
+    }
   }
   return normalizeDamageMix(rawDamage);
 }

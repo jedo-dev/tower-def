@@ -21,6 +21,7 @@ export function createDualRouteLedger(
   return {
     geometry: ground.geometry,
     moveType: ground.moveType,
+    efficiency: ground.efficiency,
     towers: ground.towers,
     add(tower: LedgerTower): number {
       const index = ground.add(tower);

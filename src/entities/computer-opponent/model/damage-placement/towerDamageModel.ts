@@ -5,7 +5,7 @@ import {
   EffectKind,
   TowerAttackKind,
   TowerTypeId,
-  type DamageType,
+  DamageType,
   type TowerTargetScope,
   type UnitMoveType,
 } from '../../../../shared/types/content-ids';
@@ -64,8 +64,17 @@ export function computeEffectiveShotDps(
   return computeShotDps(tower.stats) * efficiency[resolveDamageModelDamageType(tower)];
 }
 
-/** Damage per second the tower's damage-over-time effects add on the creep it is shooting. */
-export function computeDamageOverTimeDps(tower: DamageModelTower): number {
+/**
+ * Damage per second the tower's damage-over-time effects add on the creep it
+ * is shooting, in hit points of the wave `efficiency` describes: each effect
+ * at its own tick type (`damageType`, magical when absent), so a percent
+ * poison is worth its ‰ of maximum health per stack and tick. With the
+ * neutral efficiency it is the raw tick damage per second.
+ */
+export function computeDamageOverTimeDps(
+  tower: DamageModelTower,
+  efficiency: DamageTypeEfficiency = NEUTRAL_DAMAGE_EFFICIENCY,
+): number {
   let dps = 0;
   for (const effect of resolveOnHitEffects(tower)) {
     const definition = EFFECT_DEFINITIONS[effect.effectId];
@@ -80,9 +89,37 @@ export function computeDamageOverTimeDps(tower: DamageModelTower): number {
       Math.max(1, durationMs / Math.max(1, tower.stats.attackCooldownMs)),
     );
     const perStackDps = (magnitude * MS_PER_SECOND) / definition.tickIntervalMs;
-    dps += perStackDps * Math.max(1, reachableStacks * POISON_STACK_UPTIME);
+    const tickType = effect.damageType ?? DAMAGE_OVER_TIME_DAMAGE_TYPE;
+    dps += perStackDps * Math.max(1, reachableStacks * POISON_STACK_UPTIME) * efficiency[tickType];
   }
   return dps;
+}
+
+const PERCENT_ONLY: DamageTypeEfficiency = {
+  [DamageType.PHYSICAL]: 0,
+  [DamageType.MAGICAL]: 0,
+  [DamageType.PERCENT]: 1,
+};
+const PHYSICAL_ONLY: DamageTypeEfficiency = {
+  [DamageType.PHYSICAL]: 1,
+  [DamageType.MAGICAL]: 0,
+  [DamageType.PERCENT]: 0,
+};
+const MAGICAL_ONLY: DamageTypeEfficiency = {
+  [DamageType.PHYSICAL]: 0,
+  [DamageType.MAGICAL]: 1,
+  [DamageType.PERCENT]: 0,
+};
+
+/** Raw damage-over-time damage per second of each tick type (percent in ‰ points). */
+export function computeDamageOverTimeDpsByType(
+  tower: DamageModelTower,
+): Readonly<Record<DamageType, number>> {
+  return {
+    [DamageType.PHYSICAL]: computeDamageOverTimeDps(tower, PHYSICAL_ONLY),
+    [DamageType.MAGICAL]: computeDamageOverTimeDps(tower, MAGICAL_ONLY),
+    [DamageType.PERCENT]: computeDamageOverTimeDps(tower, PERCENT_ONLY),
+  };
 }
 
 /** Slow the tower puts on what it hits (0..MAX_MODELLED_SLOW) and for how long. */
@@ -166,5 +203,5 @@ export function computeSampleDamageRate(
   const shots =
     computeEffectiveShotDps(tower, efficiency) *
     computeTargetsPerShot(tower, geometry, sampleIndex);
-  return shots + computeDamageOverTimeDps(tower) * efficiency[DAMAGE_OVER_TIME_DAMAGE_TYPE];
+  return shots + computeDamageOverTimeDps(tower, efficiency);
 }

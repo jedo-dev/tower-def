@@ -3,6 +3,10 @@ import { withFootprintOccupancy } from '../../../../shared/lib/grid/footprint';
 import type { RaceId, TowerTypeId } from '../../../../shared/types/content-ids';
 import type { GridModel, GridPoint } from '../../../../shared/types/grid';
 import type { TowerCombatStats, TowerEntity } from '../../../tower/model/types';
+import {
+  resolveBuildableTowerDamageType,
+  resolveTowerDamageType,
+} from '../../../tower/model/damageType';
 import { resolveTowerPlacementStats } from '../../../tower/model/placementStats';
 import { getTowerStatsForTowerLevel, getUpgradeCost } from '../../../tower/model/upgrade';
 import { getRaceTowerConfig } from '../buildSpendBudget';
@@ -78,6 +82,7 @@ export function toLedgerTowers(towers: readonly TowerEntity[]): LedgerTower[] {
     towerType: tower.type,
     stats: statsAtLevel(tower),
     ...(tower.allowedTargets === undefined ? {} : { allowedTargets: tower.allowedTargets }),
+    damageType: resolveTowerDamageType(tower),
   }));
 }
 
@@ -117,6 +122,7 @@ export function collectInvestmentTypes(
         cost: authored.costGold,
         stats: resolveTowerPlacementStats(towerType, authored),
         allowedTargets: authored.allowedTargets,
+        damageType: resolveBuildableTowerDamageType(authored),
       });
     }
   }

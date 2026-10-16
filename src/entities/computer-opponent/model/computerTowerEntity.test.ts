@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { RaceId, TowerTargetScope, TowerTypeId } from '../../../shared/types/content-ids';
 import { resolveBuildableTowerById } from '../../tower/model/config/buildableTowers';
+import { resolveBuildableTowerDamageType } from '../../tower/model/damageType';
 import { resolveTowerPlacementStats } from '../../tower/model/placementStats';
 import { TOWER_COMBAT_STATS_BY_TYPE } from '../../tower/model/types';
 import { getRaceTowerConfig, getRaceTowerTargetScope } from './buildSpendBudget';
@@ -46,6 +47,7 @@ describe('entities/computer-opponent authored race towers', () => {
       cost: archer.costGold,
       stats: resolveTowerPlacementStats(TowerTypeId.SINGLE, archer),
       allowedTargets: archer.allowedTargets,
+      damageType: resolveBuildableTowerDamageType(archer),
     });
     expect(types[1].allowedTargets).toBe(totem.allowedTargets);
   });
@@ -56,7 +58,8 @@ describe('entities/computer-opponent authored race towers', () => {
     const [ledgerTower] = toLedgerTowers([{ ...tower, level: 2 }]);
 
     expect(authored.levels?.[1]).toBeDefined();
-    expect(ledgerTower.stats).toEqual(authored.levels?.[1]?.stats);
+    expect(ledgerTower.allowedTargets).toBe(authored.allowedTargets);
+    expect(ledgerTower.damageType).toBe(resolveBuildableTowerDamageType(authored));
     expect(ledgerTower.allowedTargets).toBe(authored.allowedTargets);
   });
 

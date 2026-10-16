@@ -16,9 +16,12 @@ export {
 } from './roundInvestmentInputs';
 export {
   canDamageModelTowerHit,
+  computeEffectiveShotDps,
   computeSampleDamageRate,
   computeShotDps,
+  resolveDamageModelDamageType,
 } from './towerDamageModel';
+export { computeDefenceDamageMix } from './defenceDamageMix';
 
 export type {
   InvestmentTowerType,
