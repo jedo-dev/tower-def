@@ -347,7 +347,8 @@
   border: 0;
 }
 
-/* Primary CTA, same procedural language as FantasyButton. */
+/* Wizard CTA, same procedural language as FantasyButton: mossy green confirm
+ * by default, crimson for the final primary action. */
 .setup-next-button {
   position: relative;
   width: 100%;
@@ -356,9 +357,9 @@
   padding: 14px 20px;
   border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: var(--radius-lg);
-  background: var(--gradient-ember);
+  background: var(--gradient-action-confirm);
   box-shadow: var(--shadow-md), var(--shadow-inset-top);
-  color: #fff;
+  color: var(--color-action-label);
   font-family: var(--font-family-display);
   font-size: var(--font-size-xl);
   font-weight: 700;
@@ -388,7 +389,19 @@
   box-shadow:
     var(--shadow-lg),
     var(--shadow-inset-top),
-    0 0 28px var(--glow-ember);
+    0 0 28px var(--glow-action-confirm);
+}
+
+/* "Start Game": the one crimson primary action of the wizard. */
+.setup-next-button--primary {
+  background: var(--gradient-action-primary);
+}
+
+.setup-next-button--primary:hover {
+  box-shadow:
+    var(--shadow-lg),
+    var(--shadow-inset-top),
+    0 0 28px var(--glow-action-primary);
 }
 
 .setup-next-button:active {

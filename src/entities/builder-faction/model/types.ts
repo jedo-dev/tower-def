@@ -7,6 +7,7 @@ export type BuilderFactionConfig = {
   id: RaceId;
   name: string;
   description: string;
+  /** Accent as a theme token reference (`var(--color-faction-*)`), never raw hex. */
   themeColor: string;
   towerIds: BuildableTowerId[];
 };

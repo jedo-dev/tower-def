@@ -155,3 +155,20 @@ describe('GameSetupPage wizard consistency', () => {
     expect(consoleError).not.toHaveBeenCalled();
   });
 });
+
+describe('GameSetupPage action colours', () => {
+  it('confirms steps with the mossy green button and starts with the crimson one', () => {
+    renderPage();
+    const choose = screen.getByRole('button', { name: 'Choose' });
+    expect(choose.className).toBe('setup-next-button');
+    fireEvent.click(choose);
+    expect(screen.getByRole('button', { name: 'Continue' }).className).toBe('setup-next-button');
+    fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
+
+    expect(screen.getByRole('button', { name: 'Start Game' }).className).toContain(
+      'setup-next-button--primary',
+    );
+    expect(consoleError).not.toHaveBeenCalled();
+  });
+});

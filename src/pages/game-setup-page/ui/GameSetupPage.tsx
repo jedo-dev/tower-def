@@ -3,13 +3,12 @@ import { BuilderFaction, builderFactions } from '../../../entities/builder-facti
 import { EnemyFaction, enemyFactions } from '../../../entities/enemy-faction';
 import { Difficulty, difficulties } from '../../../entities/difficulty';
 import type { GameSetupConfig, AppRoute } from '../../../shared/config/game-setup';
-import { ToggleSwitch } from '../../../shared/ui/toggle-switch';
 import { DifficultyStep } from './DifficultyStep';
 import { EnemyFactionStep } from './EnemyFactionStep';
-import { getEnemyThemeColor } from './enemyThemeColor';
 import { readSetupSelection, rememberSetupSelection } from '../model/setupSelectionMemory';
 import type { SetupStep } from '../model/setupSteps';
 import { SetupProgress } from './SetupProgress';
+import { SummaryStep } from './SummaryStep';
 import './GameSetupPage.css';
 
 export type GameSetupPageProps = {
@@ -286,50 +285,14 @@ export function GameSetupPage({ onStartGame, onNavigate }: GameSetupPageProps) {
         )}
 
         {step === 'summary' && (
-          <div className="setup-summary">
-            <div className="setup-summary-block">
-              <span className="setup-summary-label">Builder Race</span>
-              <span
-                className="setup-summary-value"
-                style={{ '--theme': currentBuilderConfig.themeColor } as CSSProperties}
-              >
-                {currentBuilderConfig.name}
-              </span>
-            </div>
-            <div className="setup-summary-block">
-              <span className="setup-summary-label">Enemy Faction</span>
-              <span
-                className="setup-summary-value"
-                style={{ '--theme': getEnemyThemeColor(enemyFactionSelected) } as CSSProperties}
-              >
-                {currentEnemyConfig.name}
-              </span>
-            </div>
-            <div className="setup-summary-block">
-              <span className="setup-summary-label">Difficulty</span>
-              <span className="setup-summary-value setup-summary-value-diff">
-                {currentDifficultyConfig.name}
-              </span>
-            </div>
-            <div className="setup-summary-block">
-              <span className="setup-summary-label">Starter Tower</span>
-              <span className="setup-summary-value">{starterTowerName}</span>
-            </div>
-            <label className="setup-summary-block setup-endpoints-toggle">
-              <span className="setup-summary-label">Dynamic Entrances</span>
-              <span className="setup-endpoints-control">
-                <ToggleSwitch
-                  checked={useDynamicEndpoints}
-                  onChange={(event) => setUseDynamicEndpoints(event.target.checked)}
-                  aria-label="Randomize entrance and exit positions on map edges"
-                  data-sound="ui.build_select"
-                />
-                <span className="setup-summary-value">
-                  {useDynamicEndpoints ? 'Random edges' : 'Classic lane'}
-                </span>
-              </span>
-            </label>
-          </div>
+          <SummaryStep
+            builder={currentBuilderConfig}
+            enemy={currentEnemyConfig}
+            difficultyName={currentDifficultyConfig.name}
+            starterTowerName={starterTowerName}
+            useDynamicEndpoints={useDynamicEndpoints}
+            onDynamicEndpointsChange={setUseDynamicEndpoints}
+          />
         )}
       </div>
 
@@ -337,7 +300,7 @@ export function GameSetupPage({ onStartGame, onNavigate }: GameSetupPageProps) {
         <footer className="setup-footer">
           <button
             type="button"
-            className="setup-next-button"
+            className={`setup-next-button${step === 'summary' ? ' setup-next-button--primary' : ''}`}
             onClick={handleNext}
             data-sound="ui.success"
           >
