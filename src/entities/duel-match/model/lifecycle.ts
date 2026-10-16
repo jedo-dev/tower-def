@@ -1,6 +1,11 @@
 import type { UnitId, UnitTier } from '../../unit/model/types';
 import { DUEL_MATCH_BALANCE } from './balance';
-import { canAffordSend, getIncomeBonusByTier, getSendCostByTier } from './sendEconomy';
+import {
+  canAffordSend,
+  getIncomeBonusByTier,
+  getSendCostByTier,
+  resolveSendCost,
+} from './sendEconomy';
 import { checkSendLimits } from './sendLimits';
 import {
   accrueStolenLives,
@@ -15,7 +20,9 @@ import type {
   DuelRoundEndResult,
   DuelRoundStartResult,
   DuelSendCreepResult,
+  DuelSendOptions,
   DuelSide,
+  DuelistState,
 } from './types';
 
 export function generateBaselineWaveId(round: number): string {
@@ -180,14 +187,34 @@ export function settleRound(
   };
 }
 
+/** The send counters after one more send; untouched for units without `freeNthSend`. */
+function countSend(
+  duelist: DuelistState,
+  creepId: UnitId,
+  options: DuelSendOptions,
+): Pick<DuelistState, 'sendCountByUnit'> {
+  if (options.freeNthSend === undefined) {
+    return {};
+  }
+  const counts = duelist.sendCountByUnit ?? {};
+  return { sendCountByUnit: { ...counts, [creepId]: (counts[creepId] ?? 0) + 1 } };
+}
+
+/**
+ * The shared send rule for the player and the computer: limits, then gold.
+ * `options.freeNthSend` (the unit's ability, or its talent grade's) makes
+ * every Nth send of the unit by this side free.
+ */
 export function sendCreep(
   state: DuelMatchState,
   isPlayer: boolean,
   creepId: UnitId,
   tier: UnitTier,
+  options: DuelSendOptions = {},
 ): DuelSendCreepResult {
   const duelist = isPlayer ? state.player : state.opponent;
-  const cost = getSendCostByTier(tier);
+  const sentSoFar = duelist.sendCountByUnit?.[creepId] ?? 0;
+  const cost = resolveSendCost(getSendCostByTier(tier), options.freeNthSend, sentSoFar);
   const incomeBonus = getIncomeBonusByTier(tier);
 
   const limitCheck = checkSendLimits(duelist.sendQueue, creepId, tier);
@@ -195,12 +222,13 @@ export function sendCreep(
     return { state, sent: false, cost, incomeBonus, rejectionReason: limitCheck.reason };
   }
 
-  if (!canAffordSend(duelist.gold, tier)) {
+  if (duelist.gold < cost) {
     return { state, sent: false, cost, incomeBonus, rejectionReason: 'insufficient_gold' };
   }
 
   const updatedDuelist = {
     ...duelist,
+    ...countSend(duelist, creepId, options),
     gold: duelist.gold - cost,
     income: duelist.income + incomeBonus,
     sendQueue: [...duelist.sendQueue, creepId],

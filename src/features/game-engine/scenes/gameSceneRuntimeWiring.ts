@@ -1,5 +1,11 @@
 import type Phaser from 'phaser';
-import { addKillBounty, awardKillBounty, type DuelMatchState } from '../../../entities/duel-match';
+import {
+  addKillBounty,
+  awardKillBounty,
+  chargeGold,
+  chargeSideGold,
+  type DuelMatchState,
+} from '../../../entities/duel-match';
 import type { UnitConfig } from '../../../entities/unit';
 import type { SoundId } from '../../../shared/lib/sound-registry/audio.types';
 import type { GameAudioManager } from '../sound/GameAudioManager';
@@ -75,6 +81,8 @@ function createPlayerCombatDeps(host: GameSceneWiringHost): CombatRuntimeDepende
       host.runState.waveKillBountyEarned += goldAfter - goldBefore;
       updatePlayerGold(host, goldAfter);
     },
+    chargeKillPenalty: (penaltyGold) =>
+      updatePlayerGold(host, chargeGold(host.runState.playerGold, penaltyGold)),
     onHudChanged: () => host.publishHudSnapshot(),
   };
 }
@@ -90,6 +98,8 @@ function createOpponentCombatDeps(host: GameSceneWiringHost): CombatRuntimeDepen
     // Kills on the computer's own battlefield pay the computer.
     awardKillBounty: (bonusGold) =>
       host.setDuelMatchState(awardKillBounty(host.getDuelMatchState(), 'opponent', bonusGold)),
+    chargeKillPenalty: (penaltyGold) =>
+      host.setDuelMatchState(chargeSideGold(host.getDuelMatchState(), 'opponent', penaltyGold)),
     onHudChanged: () => host.publishHudSnapshot(),
   };
 }

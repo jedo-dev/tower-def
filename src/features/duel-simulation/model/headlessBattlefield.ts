@@ -1,5 +1,5 @@
-import type { CreepEntity, CreepSenderSide } from '../../../entities/creep';
-import type { BattlefieldState } from '../../../entities/duel-match';
+import { getCreepLeakLives, type CreepEntity, type CreepSenderSide } from '../../../entities/creep';
+import { getKillGoldPenalty, type BattlefieldState } from '../../../entities/duel-match';
 import {
   createInitialTowerCombatRuntime,
   createTowersWithAuras,
@@ -71,6 +71,14 @@ export type HeadlessBattlefield = {
   sentLeaks: number;
   /** Leaks of air creeps, which fly the straight air route over the maze. */
   airLeaks: number;
+  /** Lives the leaks take (`leakLivesTaken`, one per leak by default). */
+  leakedLives: number;
+  /** Lives the sent creeps' leaks take; what steals lives for the sender. */
+  sentLeakedLives: number;
+  /** Gold the sender earns from its leaked creeps (`leakGoldToSender`). */
+  leakGoldToSender: number;
+  /** Gold the defender loses for its kills (`killGoldPenaltyToDefender`). */
+  killGoldPenalty: number;
 };
 
 export type HeadlessWaveInput = {
@@ -108,6 +116,10 @@ export function createHeadlessBattlefield(input: HeadlessWaveInput): HeadlessBat
     leaks: 0,
     sentLeaks: 0,
     airLeaks: 0,
+    leakedLives: 0,
+    sentLeakedLives: 0,
+    leakGoldToSender: 0,
+    killGoldPenalty: 0,
   };
 }
 
@@ -137,8 +149,9 @@ function createHeadlessCombatHooks(
     onDamageDealt: noop,
     onEffectApplied: noop,
     onEffectsTicked: noop,
-    onCreepKilled: (_creep, killer) => {
+    onCreepKilled: (creep, killer) => {
       field.kills += 1;
+      field.killGoldPenalty += getKillGoldPenalty(creep.entity);
       if (killer) {
         field.killBonusGold += getTowerKillBonusGold(killer.entity);
       }
@@ -172,9 +185,13 @@ function markEscaped(field: HeadlessBattlefield, creep: HeadlessCreep): void {
     return;
   }
   creep.entity.status = 'escaped';
+  const lives = getCreepLeakLives(creep.entity);
   field.leaks += 1;
+  field.leakedLives += lives;
   if (creep.entity.sender !== undefined) {
     field.sentLeaks += 1;
+    field.sentLeakedLives += lives;
+    field.leakGoldToSender += creep.entity.abilities?.leakGoldToSender ?? 0;
   }
   if (creep.entity.moveType === UnitMoveType.AIR) {
     field.airLeaks += 1;

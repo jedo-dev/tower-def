@@ -43,7 +43,9 @@ export {
   canAffordSend,
   getIncomeBonusByTier,
   getSendCostByTier,
+  isFreeSend,
   lookupTierValue,
+  resolveSendCost,
 } from './model/sendEconomy';
 export { getSendTierDisplay, listSendTierDisplays } from './model/sendEconomyDisplay';
 export type { SendTierDisplay } from './model/sendEconomyDisplay';
@@ -62,6 +64,14 @@ export {
   awardKillBounty,
   getKillBountyGold,
 } from './model/killBounty';
+export {
+  chargeGold,
+  chargeSideGold,
+  countLeakedLives,
+  countLeakedSentLives,
+  getKillGoldPenalty,
+  sumLeakGoldToSender,
+} from './model/creatureEconomy';
 export {
   accrueStolenLives,
   countLeakedSentCreeps,
@@ -83,6 +93,7 @@ export type {
   DuelRoundNumber,
   DuelRoundStartResult,
   DuelSendCreepResult,
+  DuelSendOptions,
   DuelSendLimitRejectionReason,
   DuelSendRejectionReason,
   DuelSide,

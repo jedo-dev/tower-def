@@ -33,7 +33,9 @@ export function applyComputerSendStrategy(
 
   for (const action of decision.actions) {
     const unitConfig = resolveUnitConfigById(action.creepTypeId);
-    const result = sendCreep(state, false, action.creepTypeId, unitConfig.tier);
+    const result = sendCreep(state, false, action.creepTypeId, unitConfig.tier, {
+      freeNthSend: unitConfig.abilities?.freeNthSend,
+    });
 
     state = result.state;
 

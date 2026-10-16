@@ -7,7 +7,7 @@ import {
   type LeakHistoryEntry,
 } from '../../../entities/computer-opponent';
 import {
-  countLeakedSentCreeps,
+  awardBonusGold,
   createInitialDuelMatchState,
   recordTowerBranchChoice,
   reconcileBattlefieldsForNextRound,
@@ -113,6 +113,7 @@ import {
   type TowerCommandDeps,
 } from '../runtime/build/gameSceneTowerCommands';
 import { handleChooseTowerBranchCommand } from '../runtime/build/towerBranchCommands';
+import { summarizeFieldLeaks } from '../runtime/duel/fieldLeakSettlement';
 import { applyComputerBuildPhaseStrategies } from '../runtime/duel/gameSceneComputerStrategy';
 import {
   handleSendCreepCommand,
@@ -1138,22 +1139,20 @@ export class GameScene extends Phaser.Scene {
       isGameOver: this.isGameOver,
       nextWaveStartsAtMs: this.runState.nextWaveStartsAtMs,
     };
-    const playerLeakedCreeps = this.playerField.creeps.filter(
-      (creep) => creep.entity.status === 'escaped',
-    ).length;
     const opponentLeakedCreeps = this.opponentField.creeps.filter(
       (creep) => creep.entity.status === 'escaped',
     ).length;
     this.recordOpponentLeakHistory(this.duelMatchState.round, opponentLeakedCreeps);
+    const leaks = summarizeFieldLeaks(
+      this.playerField.creeps.map((c) => c.entity),
+      this.opponentField.creeps.map((c) => c.entity),
+    );
     const result = applyDuelRoundEndRuntime({
       state: duelRuntimeState,
       deps: this.wiring.duelMatchRuntimeDeps,
-      playerLeakedCreeps,
-      opponentLeakedCreeps,
-      sentLeaks: {
-        onPlayerField: countLeakedSentCreeps(this.playerField.creeps.map((c) => c.entity)),
-        onOpponentField: countLeakedSentCreeps(this.opponentField.creeps.map((c) => c.entity)),
-      },
+      playerLeakedCreeps: leaks.playerLeakedLives,
+      opponentLeakedCreeps: leaks.opponentLeakedLives,
+      sentLeaks: leaks.sentLeaks,
       towerIncome: {
         player: getTowersIncomePerRound(this.playerField.towers.map((tower) => tower.entity)),
         opponent: getTowersIncomePerRound(this.opponentField.towers.map((tower) => tower.entity)),
@@ -1161,7 +1160,15 @@ export class GameScene extends Phaser.Scene {
     });
 
     const previousOpponentHp = this.duelMatchState.opponent.hp;
-    this.duelMatchState = duelRuntimeState.duelMatchState;
+    this.duelMatchState = awardBonusGold(
+      duelRuntimeState.duelMatchState,
+      'opponent',
+      leaks.leakGoldToOpponent,
+    );
+    if (leaks.leakGoldToPlayer > 0) {
+      this.playerGold += leaks.leakGoldToPlayer;
+      this.registry.set('economy.gold', this.playerGold);
+    }
     this.wavePhaseState = duelRuntimeState.wavePhaseState;
     this.isGameOver = duelRuntimeState.isGameOver;
     this.runState.nextWaveStartsAtMs = duelRuntimeState.nextWaveStartsAtMs;

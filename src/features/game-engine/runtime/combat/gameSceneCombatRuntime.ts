@@ -5,6 +5,7 @@ import {
 } from '../../../../entities/tower';
 import Phaser from 'phaser';
 import { isCreepDead, type ApplyEffectInput } from '../../../../entities/creep';
+import { getKillGoldPenalty } from '../../../../entities/duel-match';
 import {
   TOWER_BONE_ARCHER_EFFECT_FRAMES,
   TOWER_SPRITE_KEYS,
@@ -81,6 +82,12 @@ export type CombatRuntimeDependencies = {
    * tower's aura kill bonus (`goldPerKill`); 0 or absent for most kills.
    */
   awardKillBounty: (bonusGold?: number) => void;
+  /**
+   * Charges the side that owns this battlefield a creature's kill penalty
+   * (`killGoldPenaltyToDefender`), never below 0 gold. Called only when the
+   * killed creature carries one.
+   */
+  chargeKillPenalty?: (penaltyGold: number) => void;
   onHudChanged: () => void;
 };
 
@@ -90,6 +97,10 @@ function handleCreepKill(
   killer: TowerRenderState | undefined,
 ): void {
   deps.awardKillBounty(killer ? getTowerKillBonusGold(killer.entity) : 0);
+  const penaltyGold = getKillGoldPenalty(creep.entity);
+  if (penaltyGold > 0) {
+    deps.chargeKillPenalty?.(penaltyGold);
+  }
   deps.soundRouter.playCreepSound(creep, CreepSoundSlot.DEATH);
   deps.playSound('economy.gold_gain');
   deps.onHudChanged();
@@ -255,6 +266,7 @@ function createRenderCombatHooks(
     },
     onEffectsTicked: (creep) => refreshCreepEffectVisuals(deps.scene, creep, config.creepBaseColor),
     onCreepKilled: (creep, killer) => handleCreepKill(deps, creep, killer),
+    onCreepRevived: (creep) => refreshCreepEffectVisuals(deps.scene, creep, config.creepBaseColor),
     onTowerFired: (tower, target, isSplashTower) => {
       if (isSplashTower) {
         deps.playSplashAttackAnimation(tower);

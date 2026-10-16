@@ -2,6 +2,7 @@ import { createMazeEvaluator } from '../../../entities/computer-opponent';
 import {
   awardBonusGold,
   awardKillBounty,
+  chargeSideGold,
   clearSendQueue,
   createInitialDuelMatchState,
   refreshBattlefieldRoutes,
@@ -108,6 +109,22 @@ function payKillBounties(state: DuelMatchState, side: DuelSide, kills: number): 
   return next;
 }
 
+/**
+ * Creature ability economy of one wave: each side pays its kill penalties
+ * (never below 0 gold) and earns the leak gold of its own sends, which leaked
+ * on the other field.
+ */
+function settleCreatureEconomy(
+  state: DuelMatchState,
+  fieldA: DuelFieldWaveResult,
+  fieldB: DuelFieldWaveResult,
+): DuelMatchState {
+  let next = chargeSideGold(state, 'player', fieldA.killGoldPenalty);
+  next = chargeSideGold(next, 'opponent', fieldB.killGoldPenalty);
+  next = awardBonusGold(next, 'opponent', fieldA.leakGoldToSender);
+  return awardBonusGold(next, 'player', fieldB.leakGoldToSender);
+}
+
 const WINNER_BY_SIDE: Readonly<Record<DuelSide, 'A' | 'B'>> = { player: 'A', opponent: 'B' };
 
 /**
@@ -189,10 +206,17 @@ export function simulateDuel(config: DuelSimulationConfig): DuelSimulationResult
     state = payKillBounties(state, 'opponent', wave.fieldB.kills);
     state = awardBonusGold(state, 'player', wave.fieldA.killBonusGold);
     state = awardBonusGold(state, 'opponent', wave.fieldB.killBonusGold);
-    const settlement = settleRound(state, wave.fieldA.leaks, wave.fieldB.leaks, wave.sentLeaks, {
-      player: getTowersIncomePerRound(state.player.battlefield.towers),
-      opponent: getTowersIncomePerRound(state.opponent.battlefield.towers),
-    });
+    state = settleCreatureEconomy(state, wave.fieldA, wave.fieldB);
+    const settlement = settleRound(
+      state,
+      wave.fieldA.leakedLives,
+      wave.fieldB.leakedLives,
+      wave.sentLeaks,
+      {
+        player: getTowersIncomePerRound(state.player.battlefield.towers),
+        opponent: getTowersIncomePerRound(state.opponent.battlefield.towers),
+      },
+    );
     state = settlement.state;
     isMatchOver = settlement.isMatchOver;
     if (isMatchOver) {
