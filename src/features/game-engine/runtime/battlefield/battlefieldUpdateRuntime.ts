@@ -82,7 +82,7 @@ export function removeDeadBattlefieldCreeps(
   config: CombatRuntimeConfig,
   deltaMs: number,
 ): void {
-  context.field.creeps = removeDeadCreepsFromActiveWave(
+  removeDeadCreepsFromActiveWave(
     context.field.creeps,
     deltaMs,
     config.creepDeathFadeDurationMs,

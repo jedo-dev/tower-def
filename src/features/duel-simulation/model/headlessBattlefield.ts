@@ -144,7 +144,7 @@ function createHeadlessCombatHooks(
   field: HeadlessBattlefield,
 ): TowerCombatHooks<HeadlessCreep, HeadlessTower> {
   return {
-    toCellCenter,
+    writeCellCenter,
     onCreepHit: noop,
     onTargetStruck: noop,
     onDamageDealt: noop,

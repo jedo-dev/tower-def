@@ -15,6 +15,7 @@ import {
   createFixtureTower,
   createRecordingHooks,
 } from '../../test/combatCoreFixtures';
+import { toCellCenterViaHooks } from '../../test/towerCombatReference';
 import {
   createChainTargetScratch,
   getSharedChainTargetScratch,
@@ -39,7 +40,7 @@ function referenceSelectChainTargets(
   const chain: CombatCreep[] = [];
   let current = from;
   for (let bounce = 0; bounce < bounces; bounce += 1) {
-    const currentCenter = hooks.toCellCenter(getCreepFootprintCenter(current.entity));
+    const currentCenter = toCellCenterViaHooks(hooks, getCreepFootprintCenter(current.entity));
     const rangePx = bounceRangeCells * GRID_DIMENSIONS.cellSize;
     const next = field.creeps
       .filter(
@@ -50,7 +51,7 @@ function referenceSelectChainTargets(
           canTowerTargetCreep(tower.entity, creep.entity),
       )
       .map((creep) => {
-        const center = hooks.toCellCenter(getCreepFootprintCenter(creep.entity));
+        const center = toCellCenterViaHooks(hooks, getCreepFootprintCenter(creep.entity));
         return {
           creep,
           distance: Math.hypot(center.x - currentCenter.x, center.y - currentCenter.y),

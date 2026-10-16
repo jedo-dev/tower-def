@@ -63,10 +63,10 @@ function createDeps(): CombatDeps & { sounds: string[] } {
     scene: {
       add: { text: vi.fn(() => createSpriteStub()), sprite: vi.fn(() => createSpriteStub()) },
     },
-    toCellCenter: (position: { x: number; y: number }) => ({
-      x: position.x * GRID_DIMENSIONS.cellSize,
-      y: position.y * GRID_DIMENSIONS.cellSize,
-    }),
+    writeCellCenter: (position: { x: number; y: number }, out: { x: number; y: number }) => {
+      out.x = position.x * GRID_DIMENSIONS.cellSize;
+      out.y = position.y * GRID_DIMENSIONS.cellSize;
+    },
     playArcherAttackAnimation: vi.fn(),
     playSplashAttackAnimation: vi.fn(),
     playSound: (soundId: string) => sounds.push(soundId),

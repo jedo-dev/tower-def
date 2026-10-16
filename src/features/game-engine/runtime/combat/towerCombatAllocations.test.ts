@@ -20,7 +20,11 @@ import {
   referenceResolveTowerAttacks,
   referenceSelectTowerTarget,
 } from '../../test/towerCombatReference';
-import { applySplashDamage, getSplashTargetBuffer } from './towerAreaAttacks';
+import {
+  applySplashDamage,
+  getSplashCenterScratch,
+  getSplashTargetBuffer,
+} from './towerAreaAttacks';
 import { getCreepEntitiesForTargetingBuffer, resolveTowerAttacks } from './towerCombatCore';
 import type { CombatCreep, CombatField, CombatTower, TowerCombatHooks } from './towerCombatTypes';
 import { getApplyEffectInput, toApplyEffectInput } from './towerStrike';
@@ -159,7 +163,10 @@ type EventLog = string[];
 /** Hooks that log every report, so the event order is compared too. */
 function createLoggingHooks(log: EventLog): TowerCombatHooks<CombatCreep, CombatTower> {
   return {
-    toCellCenter: (position) => ({ x: position.x * 16 + 8, y: position.y * 16 + 8 }),
+    writeCellCenter: (position, out) => {
+      out.x = position.x * 16 + 8;
+      out.y = position.y * 16 + 8;
+    },
     onCreepHit: (creep) => log.push(`hit ${creep.entity.id} ${creep.entity.hp}`),
     onTargetStruck: (tower) => log.push(`struck ${tower.entity.id}`),
     onDamageDealt: (position, damage, source) =>
@@ -362,5 +369,34 @@ describe('on-hit effect inputs built once per entry', () => {
 
     expect(getApplyEffectInput(effect)).toBe(input);
     expect(Object.isFrozen(input)).toBe(true);
+  });
+});
+
+describe('cell centres written into scratch points', () => {
+  it('measures splash and chain distances without a fresh point per creep', () => {
+    const outs = new Set<object>();
+    let writes = 0;
+    for (let seed = 1; seed <= 200; seed += 1) {
+      const { field, deltas } = createRandomBattle(seed);
+      const hooks = createLoggingHooks([]);
+      const countingHooks: TowerCombatHooks<CombatCreep, CombatTower> = {
+        ...hooks,
+        writeCellCenter: (position, out) => {
+          outs.add(out);
+          writes += 1;
+          hooks.writeCellCenter(position, out);
+        },
+      };
+      for (const deltaMs of deltas) {
+        resolveTowerAttacks(field, countingHooks, deltaMs);
+      }
+    }
+
+    // Splash tower centre, splash creep centre and the chain point: nothing else.
+    expect(writes).toBeGreaterThan(1_000);
+    expect(outs.size).toBeLessThanOrEqual(3);
+    for (const point of getSplashCenterScratch()) {
+      expect(outs.has(point)).toBe(true);
+    }
   });
 });

@@ -1,4 +1,4 @@
-import { getCreepFootprintCenter, isCreepHidden } from '../../../../entities/creep';
+import { isCreepHidden } from '../../../../entities/creep';
 import { canTowerTargetCreep, getTowerCenter, resolveTowerChain } from '../../../../entities/tower';
 import { GRID_DIMENSIONS } from '../../../../shared/constants/grid';
 import type { DamageType } from '../../../../shared/types/content-ids';
@@ -7,8 +7,10 @@ import {
   type CombatCreep,
   type CombatField,
   type CombatTower,
+  type PixelPoint,
   type TowerCombatHooks,
 } from './towerCombatTypes';
+import { writeCreepFootprintCenterPx } from './combatCellCenter';
 import { getSharedChainTargetScratch, selectChainTargets } from './chainTargetSelection';
 import { strikeAndReport, strikeCreep } from './towerStrike';
 
@@ -43,6 +45,20 @@ export function applySingleTargetDamage<C extends CombatCreep, T extends CombatT
 const splashTargets: (CombatCreep | undefined)[] = [];
 let splashTargetTop = 0;
 
+/**
+ * Pixel centres the blast measures from. Collection calls no hook but
+ * `writeCellCenter`, so a nested splash cannot run while these are in use.
+ */
+const splashTowerCenterPx: PixelPoint = { x: 0, y: 0 };
+const splashCreepCenterPx: PixelPoint = { x: 0, y: 0 };
+
+const splashCenterScratch: readonly PixelPoint[] = [splashTowerCenterPx, splashCreepCenterPx];
+
+/** The splash scratch points; exposed so tests can check reuse. */
+export function getSplashCenterScratch(): readonly PixelPoint[] {
+  return splashCenterScratch;
+}
+
 /** The module-wide splash target stack; exposed so tests can check reuse. */
 export function getSplashTargetBuffer(): readonly (CombatCreep | undefined)[] {
   return splashTargets;
@@ -52,7 +68,7 @@ function isInSplash<C extends CombatCreep, T extends CombatTower>(
   creep: C,
   tower: T,
   hooks: TowerCombatHooks<C, T>,
-  towerCenterPx: { x: number; y: number },
+  towerCenterPx: PixelPoint,
   splashRadiusPx: number,
 ): boolean {
   if (
@@ -62,7 +78,8 @@ function isInSplash<C extends CombatCreep, T extends CombatTower>(
   ) {
     return false;
   }
-  const creepCenter = hooks.toCellCenter(getCreepFootprintCenter(creep.entity));
+  const creepCenter = splashCreepCenterPx;
+  writeCreepFootprintCenterPx(hooks, creep.entity, creepCenter);
   const distance = Math.hypot(creepCenter.x - towerCenterPx.x, creepCenter.y - towerCenterPx.y);
   return distance <= splashRadiusPx;
 }
@@ -76,7 +93,8 @@ function collectSplashTargets<C extends CombatCreep, T extends CombatTower>(
 ): number {
   const splashRadius = tower.entity.combatStats.splashRadius ?? DEFAULT_SPLASH_RADIUS_CELLS;
   const splashRadiusPx = splashRadius * GRID_DIMENSIONS.cellSize;
-  const towerCenterPx = hooks.toCellCenter(getTowerCenter(tower.entity));
+  const towerCenterPx = splashTowerCenterPx;
+  hooks.writeCellCenter(getTowerCenter(tower.entity), towerCenterPx);
   let end = start;
 
   for (let index = 0; index < creeps.length; index += 1) {

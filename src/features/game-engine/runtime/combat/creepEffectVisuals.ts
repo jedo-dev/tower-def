@@ -1,6 +1,6 @@
 import type Phaser from 'phaser';
-import { getActiveEffects } from '../../../../entities/creep';
-import type { EffectId } from '../../../../shared/types/content-ids';
+import { getActiveEffects, type ActiveEffect } from '../../../../entities/creep';
+import { EFFECT_IDS, type EffectId } from '../../../../shared/types/content-ids';
 import {
   CREEP_EFFECT_PIP_FONT_SIZE_PX,
   CREEP_EFFECT_PIP_MIN_EFFECTS,
@@ -43,8 +43,29 @@ function toCssColor(tint: number): string {
   return `#${tint.toString(16).padStart(6, '0')}`;
 }
 
-function buildEffectSignature(effectIds: readonly EffectId[]): string {
-  return [...effectIds].sort().join(',');
+/**
+ * Each effect id owns one 8-bit digit of the signature (6 ids = 48 bits, inside
+ * the 53-bit safe integer range), so the sum counts every id separately: two
+ * effect lists share a signature exactly when they hold the same ids the same
+ * number of times, in any order. That is the multiset the old sorted, joined
+ * id string described. Stacks are left out on purpose: tint and pips depend
+ * only on which effects run, so a stack change must not trigger a repaint.
+ */
+const EFFECT_SIGNATURE_DIGIT_BASE = 256;
+const EFFECT_SIGNATURE_WEIGHTS = new Map<EffectId, number>(
+  EFFECT_IDS.map((effectId, index) => [effectId, EFFECT_SIGNATURE_DIGIT_BASE ** index]),
+);
+
+/** Signature of an effect list with no effects (and of a creep never painted). */
+export const EMPTY_EFFECT_SIGNATURE = 0;
+
+/** Allocation-free signature of the ids in `effects`; see `EFFECT_SIGNATURE_WEIGHTS`. */
+export function computeEffectSignature(effects: readonly ActiveEffect[]): number {
+  let signature = EMPTY_EFFECT_SIGNATURE;
+  for (let index = 0; index < effects.length; index += 1) {
+    signature += EFFECT_SIGNATURE_WEIGHTS.get(effects[index].id) ?? 0;
+  }
+  return signature;
 }
 
 export function syncCreepEffectPipPosition(creep: CreepRenderState): void {
@@ -70,9 +91,9 @@ export function refreshCreepEffectVisuals(
   fallbackTint: number,
 ): void {
   const effects = getActiveEffects(creep.entity);
-  const signature = buildEffectSignature(effects.map((effect) => effect.id));
+  const signature = computeEffectSignature(effects);
 
-  if (signature === (creep.effectVisualSignature ?? '')) {
+  if (signature === (creep.effectVisualSignature ?? EMPTY_EFFECT_SIGNATURE)) {
     return;
   }
 
