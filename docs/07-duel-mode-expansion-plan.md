@@ -811,7 +811,7 @@ effect or aura mechanic (`towerTalentContent.test.ts`).
 | --- | --- | --- |
 | Bone Archer / Bone Volley | every 3rd / 2nd shot hits two targets (5 / 6) | `extraTargets` 1 at `extraTargetDamageShare` 0.33 / 0.5 (the average) |
 | Plague Tower / Plague Cloud | poison cloud left on the ground, slowing at 6-7 | on-hit magical `poison` and `chill` on everything the blast hits |
-| Plague Tower / Corpse Blast | killed creeps explode for 20-50% of their max health, chaining | doc damage +10% (48 / 55 / 64 / 75) and radius +0.2; no death hook |
+| Plague Tower / Corpse Blast | killed creeps explode for 20-50% of their max health, chaining | doc damage +10% (48 / 55 / 64 / 75, 52 / 62 / 74 / 88 since tower-def-bge.6) and radius +0.2 (+0.4 since bge.6); no death hook |
 | Frost Wyrm Nest / Permafrost | slow 45-65% (doc steps over the shipped 0.55 would pass the floor) | chill 0.6 / 0.65 / 0.7 / 0.75 |
 | Frost Wyrm Nest / Permafrost | frozen fliers fall and become ground targets (7) | `airDamageMultiplier` 1.25 at grade 7 |
 | Frost Wyrm Nest / Wyrm Breath | cone of 30-60 degrees hitting everything in it | `pierceLine` 0.6 / 0.7 / 0.85 / 1 (the line to the target) |
@@ -827,7 +827,7 @@ effect or aura mechanic (`towerTalentContent.test.ts`).
 | Lightning Totem / both | per-grade jumps, falloff and jump range | authored on every grade, but combat still reads the archetype chain (3 jumps, 4 cells, -25%); live once combat reads the grade chain |
 | Lightning Totem / Thunder Strike | stun only on the first target (4) | the stun is on-hit, so every creep in the chain is stunned |
 | Lightning Totem / Thunder Strike | stunned creeps take +20% / +35% (6 / 7) | on-hit `vulnerability` lasting as long as the stun |
-| Tar Pit / Quagmire | tar puddle (radius 1.5-3) slows all inside, ground only | `extraTargets` 1-4 at 0.5 share carrying the chill; the pit still reaches fliers |
+| Tar Pit / Quagmire | tar puddle (radius 1.5-3) slows all inside, ground only | `extraTargets` 1-4 at 0.5 share carrying the chill (1 / 1 / 2 / 2 and a shorter, weaker chill since tower-def-bge.6); the pit still reaches fliers |
 | Tar Pit / Quagmire | large creeps stuck harder (-65% / -75%) | dropped: the chill is already at the 0.75 floor and there is no per-size slow |
 | Tar Pit / Sticky Tar | +20% physical and magical (6) | `vulnerability` with `damageKind` `all` (covers percent too); keeps the grade 3 chill |
 | Guard Archer / Crossbowmen | air priority (6) | none (no targeting priority field) |
@@ -843,10 +843,10 @@ effect or aura mechanic (`towerTalentContent.test.ts`).
 | Wisp Bloom / Wild Growth | targets air too (4) | `allowedTargets` is per tower: stays ground; +2 damage at grade 4 |
 | Wisp Bloom / Wild Growth | roots only at the blast centre (5-7) | on-hit `stun` on the whole blast |
 | Wisp Bloom / Wild Growth | fliers in the radius 20% slower (6), fliers pulled down (7) | dropped: the bloom cannot hit fliers |
-| Moonwell / Moonlight | no shots: 10-24 damage per second to every creep in radius 4-5.5 | the shot stays (damage 32-40); `volleyEveryMs` 1000 with `volleyDamageShare` set to the doc's pulse (0.31-0.6); the pulse reaches the tower range (6.8, kept to hold the grade 3 floor) and carries the chill |
+| Moonwell / Moonlight | no shots: 10-24 damage per second to every creep in radius 4-5.5 | the shot stays (damage 32-40); `volleyEveryMs` 1000 with `volleyDamageShare` set to the doc's pulse (0.31-0.6; 0.35-0.65 since tower-def-bge.6, with the chill held at the grade 3 0.48 or above); the pulse reaches the tower range (6.8, kept to hold the grade 3 floor) and carries the chill |
 | Moonwell / Moonlight | first entry freezes for 0.5 s (7) | chill `freezeAtStacks` 3, `freezeMs` 500 |
-| Moonwell / Living Water | neighbours' hits chill 10-25% | not grantable by an aura; folded into aura attack speed +5% / +8% / +15% / +22% (the doc's +10% / +15% at 6-7 plus a share) |
-| Thorn Spire / Thornbite | percent poison 5-12 per mille per second, up to 5 stacks | 9 / 10 / 12 / 14 per mille per tick, stacks 4 / 4 / 5 / 6 (damped: the ratio rule would reach about 29% of max health per second) |
+| Moonwell / Living Water | neighbours' hits chill 10-25% | not grantable by an aura; folded into aura attack speed +5% / +8% / +15% / +22% (the doc's +10% / +15% at 6-7 plus a share; +10% / +15% / +22% / +30% since tower-def-bge.6) |
+| Thorn Spire / Thornbite | percent poison 5-12 per mille per second, up to 5 stacks | 9 / 10 / 12 / 14 per mille per tick, stacks 4 / 4 / 5 / 6 (damped: the ratio rule would reach about 29% of max health per second; 10 / 12 / 14 / 16, stacks 4 / 5 / 5 / 6 since tower-def-bge.6) |
 | Thorn Spire / Thornbite | large creeps take x1.5 (7) | `largeTargetMultiplier` 1.5 (applies to hits, not to poison ticks) |
 | Thorn Spire / Grasping Vine | +20% / +35% damage while held (6 / 7) | on-hit `vulnerability` lasting as long as the stun |
 
@@ -921,6 +921,178 @@ Archers along Cursed Arrow (final board: one tower each at grades 4, 6 and
 7); normal picks Sticky Tar and Spear Throwers late and reaches grade 4 in
 the last round. Hard wins with 11 lives (9 without development). Balance is a
 later task.
+
+### Tower talents rebalance (tower-def-bge.6)
+
+First balance pass with branches and grades 4-7 in play (the computer
+develops them since tower-def-bge.5). Content only: branch grade stats in
+`src/content/towers/<race>.json`; the price ladder in
+`shared/constants/towerTalents.ts` is unchanged (120 + 150 / 200 / 260 / 340:
+a full grade-7 tower costs about 1,240 gold with its grades 1-3, some 20-25
+grade-1 towers, as docs/11 intends).
+
+**New batch metric.** `sim:duel-batch` now adds two columns, `end towers A/B`
+and `end grade A/B` (average towers and average top grade per seat at match
+end), an `end boards` line (winners against losers: average towers and top
+grade, the towers ratio, and how often the side with fewer towers and a
+higher top grade won), and a `development` block per race: sides at grade 4+
+by round 10 and 20 with the average top grade, then every branch pick and how
+often it was taken (`duelBatchDevelopment.ts`, `formatDuelBatchDevelopment.ts`).
+
+Same two tables as "Armor types rebalance": the standard batch (hard vs hard,
+six race pairs, seeds 1-10, classic and seeded maps, baseline undead, 60 duels
+per race, a draw counting half) and the game-faithful batch (each race in seat
+A with its own race as the baseline against the other three, hard vs hard,
+classic, seeds 1-10, 30 duels a row).
+
+**Diagnosis of the state after bge.5:**
+
+- **Orc ran away with both tables (90% / 87%)** on Quagmire: every orc side
+  took it, reached grade 7 by round 20 and chilled five creeps per shot at the
+  0.75 floor for 6 s.
+- **Two branches downgraded their tower and were picked anyway.** Grasping
+  Vine dropped the Thorn Spire's percent poison (8 per mille per tick, 4
+  stacks) and Acid dropped the Alchemist's poison (8, 5 stacks); Moonlight
+  cut the Moonwell's chill from 0.48 to 0.27 at grade 4. The computer picks by
+  the whole path's value, so elf and human sides paid for weaker towers: elf
+  sat at 26% on the standard table.
+- **Stuns could lock creeps in place.** A stun refreshes, so a stun at least
+  as long as the reload holds its target forever: Vine 800 ms on an 800 ms
+  reload (range 10), Wild Growth 800 ms on a 900 ms splash, Thunder Strike
+  700 ms on 800 ms across the chain.
+- **Undead developed one tower.** Every undead side climbs Permafrost to
+  grade 7 by round 19-20 and rarely another type, and Permafrost added chill
+  but almost no damage (33-40 against grade 3's 31).
+
+**Changes** (grades 4 / 5 / 6 / 7):
+
+| Branch | Lever | Old | New |
+| --- | --- | --- | --- |
+| Orc Tar Pit / Quagmire | chill / duration (ms) | 0.55, 0.65, 0.7, 0.75 / 3000-6000 | 0.55, 0.55, 0.55, 0.6 / 2000, 2500, 3000, 3000 |
+| same | `extraTargets` | 1 / 2 / 3 / 4 | 1 / 1 / 2 / 2 |
+| Elf Thorn Spire / Grasping Vine | percent poison | none | grade 3's carried: 8 per mille, 4 s, 4 stacks |
+| same | stun (ms) / vulnerability length | 300 / 500 / 600 / 800 | 300 / 400 / 500 / 600 |
+| Human Alchemist / Acid | poison | none | grade 3's carried: 8, 4 s, 5 stacks |
+| Elf Moonwell / Moonlight | chill / duration | 0.27, 0.41, 0.48, 0.62 / 1500 | 0.48, 0.48, 0.5, 0.55 / 2000 (grade 3 is 0.48 / 2000) |
+| same | `volleyDamageShare` | 0.31 / 0.41 / 0.5 / 0.6 | 0.35 / 0.45 / 0.55 / 0.65 |
+| Undead Frost Wyrm / Permafrost | damage | 33 / 35 / 37 / 40 | 40 / 48 / 56 / 66 |
+| Undead Frost Wyrm / Wyrm Breath | chill | 0.5 | 0.55 (grade 3's) |
+| Orc Lightning Totem / Thunder Strike | stun = vulnerability length (ms) | 300 / 400 / 500 / 700 | 200 / 250 / 300 / 350 |
+| Elf Wisp Bloom / Wild Growth | stun (ms, grades 5-7) | 400 / 600 / 800 | 250 / 300 / 350 |
+| Human Cannon / Grapeshot | stun (ms, grades 6-7) | 200 / 300 | 150 / 200 |
+
+Nudges for branches the computer never picked (none of them changed a score):
+
+| Branch | Lever | Old | New |
+| --- | --- | --- | --- |
+| Undead Bone Archer / Bone Volley | range; extra target share | 6.6-6.8; none at 4, 0.33 / 0.5 / 1 | 6.8 / 7 / 7.2 / 7.4; 0.33 / 0.5 / 0.75 / 1 |
+| Undead Plague / Corpse Blast | damage; radius | 48 / 55 / 64 / 75; 3.6-4 | 52 / 62 / 74 / 88; 3.8 / 4 / 4.2 / 4.4 |
+| Undead Frost Wyrm / Wyrm Breath | damage; range | 36 / 42 / 50 / 60; 6.8-7.6 | 40 / 48 / 56 / 66; 7.2 / 7.6 / 8 / 8.4 |
+| Undead Obelisk / Soul Harvest | pulse damage | 12 / 16 / 22 / 30 | 16 / 22 / 30 / 40 |
+| Orc Spear / Spear Throwers | damage; range; grade 4 reload; pierce | 44-52; 6.8-7; 550; - / - / 0.3 / 0.5 | 46 / 48 / 50 / 54; 7-7.6; 500; - / 0.2 / 0.35 / 0.5 |
+| Orc Burning Pit / Napalm | burn; range | 2.5 / 3.5 / 5 / 7; 5.8 | 4 / 5 / 6.5 / 8; 6-6.6 |
+| Orc Lightning Totem / Thunderstorm | damage; range | 46 / 50 / 53 / 59; 6.8 | 50 / 56 / 62 / 70; 7-7.6 |
+| Human Cannon / Siege Cannon | damage; reload; range | 40-54; 1200-1450; 5.8 | 44 / 50 / 58 / 68; 1100 / 1100 / 1150 / 1200; 6.2-7.4 |
+| Human Alchemist / Plague Flasks | `extraTargets` at 0.5 | - / - / 1 / 2 | 1 / 1 / 2 / 3 |
+| Human Guard Post / Treasury | aura attack speed / range | 0 / 0 | 0.34 / 1.4 (grade 3's, kept) |
+| Elf Moon Archer / Moonfall | range | 7.2-7.8 | 7.4 / 7.8 / 8.2 / 8.6 |
+| Elf Moonwell / Living Water | aura attack speed | 0.05 / 0.08 / 0.15 / 0.22 | 0.1 / 0.15 / 0.22 / 0.3 |
+| Elf Thorn Spire / Thornbite | per mille; stacks; range | 9 / 10 / 12 / 14; 4 / 4 / 5 / 6; 7-7.8 | 10 / 12 / 14 / 16; 4 / 5 / 5 / 6; 7.4-8.6 |
+
+Rule of thumb this pass settled on: a branch grade never falls below its
+grade 3 tower (carry the base effect forward), and a stun lasts at most about
+half the reload on a single target and less on splash or chain.
+
+**Standard batch:**
+
+| Race | Before (classic / seeded) | After (classic / seeded) |
+| --- | --- | --- |
+| Undead | 32.5% (30 / 35) | 53.3% (43 / 63) |
+| Orc | 90.0% (97 / 83) | 52.5% (62 / 43) |
+| Human | 51.7% (47 / 57) | 49.2% (43 / 55) |
+| Elf | 25.8% (27 / 25) | 45.0% (52 / 38) |
+
+Pacing: median 25 rounds (21-30) on the classic map and 29 (22-40) on seeded
+maps (before 25 and 29); towers at round 5 12/13 per side (8-15); draws 1 of
+60 per map (before 0 and 1); round-cap hits 0 and 1 of 60 (before 0 / 0).
+
+**Game-faithful batch:**
+
+| Player race | Before: wins / median rounds / round caps | After: wins / median rounds / round caps |
+| --- | --- | --- |
+| Undead | 9 of 30 / 25 / 0 | 13 of 30 / 26 / 0 |
+| Orc | 26 of 30 / 26.5 / 0 | 13 of 30 / 26.5 / 0 |
+| Human | 12.5 of 30 / 26 / 0 | 15 of 30 / 26 / 0 |
+| Elf | 8.5 of 30 / 38 / 7 | 15.5 of 30 / 40 / 22 |
+
+**Talents against mazing** (the `end boards` line, equal difficulty). Boards
+fill (64-70 towers a side at the end), so the late gold goes into grades and
+the winner is not the taller, smaller board: the winner's towers ratio is
+1.00-1.01 on both maps, its average top grade is at or below the loser's
+(classic 5.7 against 6.2, seeded 6.7 against 6.8), and the side with fewer
+towers and a higher top grade won 6 of the 25 decided duels where one side
+had that shape (classic 3 of 20, seeded 3 of 5; before 5 of 17 and 1 of 3).
+Across difficulties the better builder does develop more: hard against
+normal, that shape won 14 of 24.
+
+**When the computer develops** (standard batch, after; before in brackets):
+
+| Race | Grade 4+ by round 10 (classic / seeded) | Grade 4+ by round 20 | Average top grade at round 20 |
+| --- | --- | --- | --- |
+| Undead | 0 / 10 of 30 (0 / 6) | 30 / 30 of 30 (30 / 30) | 7.0 / 6.9 (7.0 / 6.9) |
+| Orc | 0 / 0 (0 / 0) | 7 / 17 (30 / 30) | 3.8 / 4.2 (6.8 / 6.6) |
+| Human | 0 / 0 (0 / 0) | 0 / 4 (0 / 4) | 2.5 / 3.1 (2.5 / 3.0) |
+| Elf | 0 / 0 (0 / 0) | 2 / 5 (18 / 17) | 3.1 / 3.2 (4.1 / 4.0) |
+
+Development starts after round 10 (undead's Permafrost on seeded maps around
+rounds 10-12 is the exception) and the first branch reaches grade 7 between
+rounds 19 and 27. Human towers are still at grade 2 at round 10 and the human
+computer develops mostly after round 20, at home by round 20 in 22 of 29
+sides. Branch picks over the eight after-runs (both standard maps and the
+four game-faithful rows): undead Permafrost always, Cursed Arrow and
+Necromancer's Whisper often, Corpse Blast sometimes, Bone Volley once; orc
+Heavy Spear, Sticky Tar and Thunder Strike, then Quagmire and Mortar,
+Thunderstorm rarely; human Headquarters, Archer Company, Acid and Grapeshot,
+Crossbowmen sometimes; elf Moonlight and Grasping Vine always, Sniper,
+Moonfall, Wild Growth and Spores.
+
+**Never picked, flagged:** Plague Cloud (lost its picks to Corpse Blast after
+the nudge), Wyrm Breath, Soul Harvest, Spear Throwers, Napalm, Siege Cannon,
+Plague Flasks, Treasury, Living Water and Thornbite. Each was nudged (table
+above) and none moved a score; the computer's branch valuation prefers range,
+control and armor effects, and the two economy branches (Soul Harvest,
+Treasury) pay back over five rounds, so they lose to defence once the board
+is full. A player can still pick them;
+the next step is a valuation look (fire rate, burn and percent poison against
+range and chill), not more content.
+
+**Difficulty order spot-check** (`--seeds 1-3 --matchups hard:normal --maps
+classic`): hard won 38/10/0, 79% (before this pass 36/12/0, 75%).
+
+**Tried and rejected:** Quagmire at chill 0.55-0.7 with up to 3 extra
+targets (orc still 73% on the classic map, seeds 1-5); Vine carrying half the
+grade 3 poison (4 per mille, 3 stacks) (no pacing gain, elf weaker); a Moonwell
+chill below grade 3 (0.4-0.58: elf 77% on the classic map, still weak at home);
+Permafrost freeze shortened to 600 / 800 ms (undead 13% on the classic map);
+trimming long branch ranges (Sniper to 10.4, Vine 9.2, Cursed Arrow 8.2,
+Crossbowmen 9.2, Permafrost 7.6) and capping branch splash radii at 4.2 to
+shorten elf-baseline duels: neither moved a single elf-baseline duel.
+
+**Known gap: elf-baseline duels hit the round cap** (game-faithful elf row:
+median 40, 22 of 30 at the cap; before 38 and 7 of 30, and 30 without
+talents in "Armor types rebalance"). The lives that decide a duel are lost to
+fliers: in every late round a diagnostic run looked at (undead, human and elf
+baselines, seeds 1-3), the leaks were air creeps on the straight air route.
+The elf roster has two fliers to the undead roster's three, and once both
+boards reach grade 7 (by about round 27) no elf wave leaks again, so neither
+range nor splash trims shorten those duels. It is a roster and wave lever
+(the elf air share, `WAVE_AIR_UNIT_BUDGET_MULTIPLIER` per roster, or elf wave
+health), outside a grade stat pass; the elf row itself is balanced (52%).
+
+How to measure it: the standard batch on `--maps classic` and `--maps
+seeded` (about 85 s each), the four game-faithful rows (about 45 s each, the
+elf row about 100 s) and the spot-check, one at a time. The `development`
+block and the `end boards` line print with every batch.
 
 ## Suggested Improvements
 

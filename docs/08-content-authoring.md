@@ -491,12 +491,13 @@ Every race tower entry declares exactly two branches:
     "name": "Bone Volley",
     "description": "Fires in bursts: modest arrows, many of them, and more of them strike a second creep.",
     "grades": [
-      { "level": 4, "damage": 42, "range": 6.6, "attackCooldownMs": 550 },
-      { "level": 5, "damage": 44, "range": 6.6, "attackCooldownMs": 400,
+      { "level": 4, "damage": 42, "range": 6.8, "attackCooldownMs": 550,
         "abilities": { "extraTargets": 1, "extraTargetDamageShare": 0.33 } },
-      { "level": 6, "damage": 46, "range": 6.8, "attackCooldownMs": 350,
+      { "level": 5, "damage": 44, "range": 7, "attackCooldownMs": 400,
         "abilities": { "extraTargets": 1, "extraTargetDamageShare": 0.5 } },
-      { "level": 7, "damage": 48, "range": 6.8, "attackCooldownMs": 300,
+      { "level": 6, "damage": 46, "range": 7.2, "attackCooldownMs": 350,
+        "abilities": { "extraTargets": 1, "extraTargetDamageShare": 0.75 } },
+      { "level": 7, "damage": 48, "range": 7.4, "attackCooldownMs": 300,
         "abilities": { "extraTargets": 1, "extraTargetDamageShare": 1 } }
     ]
   },
