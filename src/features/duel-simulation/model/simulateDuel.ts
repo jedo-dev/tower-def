@@ -63,6 +63,8 @@ export type DuelSideRoundReport = DuelFieldWaveResult & {
   towers: number;
   /** Highest grade among the side's towers (0 without towers). */
   topGrade: number;
+  /** Highest creature talent grade the side bought (0 before any). */
+  topCreatureGrade: number;
   routeCost: DuelRouteCost;
 };
 
@@ -165,6 +167,7 @@ function reportSide(duelist: DuelMatchState['player'], facts: SideRoundFacts): D
     upgradedCount: facts.upgradedCount,
     towers: duelist.battlefield.towers.length,
     topGrade: duelist.battlefield.towers.reduce((top, tower) => Math.max(top, tower.level), 0),
+    topCreatureGrade: Math.max(0, ...Object.values(duelist.creatureGrades).map(Number)),
     routeCost: measureRouteCost(duelist.battlefield),
   };
 }

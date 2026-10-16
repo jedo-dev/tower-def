@@ -3,7 +3,9 @@ import type { TowerTypeId } from '../../../shared/types/content-ids';
 import type { GridPosition } from '../../../shared/types/pathfinding';
 import type { Difficulty } from '../../difficulty/model/types';
 import type { TowerBranchChoices, TowerTalentBranchId } from '../../tower/model/talents';
+import type { CreatureTalentLedger } from '../../unit/model/talents';
 import type { UnitId } from '../../unit/model/types';
+import type { CreatureDevelopmentAction, DefenceProfile } from './creature-development';
 import type { DamageTypeMix } from './damage-profile';
 import type { DefenceAssessment } from './threat-budget/splitThreatBudget';
 
@@ -86,6 +88,13 @@ export type DecisionContext = {
    * physical/magical mix when omitted.
    */
   enemyDamageMix?: DamageTypeMix;
+  /**
+   * The other duelist's towers as damage shapes and effects, for valuing
+   * creature talents; an unknown single-target defence when omitted.
+   */
+  enemyDefenceProfile?: DefenceProfile;
+  /** This side's creature experience, picks and grades; none when omitted. */
+  creatureTalents?: CreatureTalentLedger;
 };
 
 export type BuildAction = {
@@ -120,6 +129,7 @@ export type ComputerAction =
   | UpgradeAction
   | ChooseBranchAction
   | SendCreepAction
+  | CreatureDevelopmentAction
   | SaveAction;
 
 export type DecisionOutput = {

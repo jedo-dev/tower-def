@@ -172,7 +172,7 @@ describe('GameScene creature talents (headless harness)', () => {
     expect(game.inspect().duelMatchState.player.creatureXpByTier).toEqual({ 1: 99 });
   });
 
-  it('accrues experience for the computer without spending it, and a restart clears both', async () => {
+  it('accrues experience for the computer, spends it by the rules, and a restart clears both', async () => {
     const game = await start();
     game.setPlayerCreatureXp(FULL_FIEND_XP);
     game.command('choose-creature-branch', { unitId: FIEND.id, branchId: FIEND_A.id });
@@ -188,9 +188,16 @@ describe('GameScene creature talents (headless harness)', () => {
       (sum: number, xp) => sum + (xp ?? 0),
       0,
     );
-    expect(opponentXp).toBeGreaterThan(0);
-    expect(opponent.creatureBranchChoices).toEqual({});
-    expect(opponent.creatureGrades).toEqual({});
+    // The computer develops its creatures (tower-def-716.5): what it earned is
+    // either still held or spent on a branch, never below zero.
+    const developed = Object.keys(opponent.creatureBranchChoices).length;
+    expect(opponentXp > 0 || developed > 0).toBe(true);
+    for (const xp of Object.values(opponent.creatureXpByTier)) {
+      expect(xp).toBeGreaterThanOrEqual(0);
+    }
+    for (const unitId of Object.keys(opponent.creatureGrades)) {
+      expect(opponent.creatureBranchChoices).toHaveProperty(unitId);
+    }
 
     game.command('restart-match', undefined);
 

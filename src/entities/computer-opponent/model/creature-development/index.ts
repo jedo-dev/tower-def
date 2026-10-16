@@ -11,6 +11,7 @@ export {
 export { computeCreatureValue } from './creatureValue';
 export { computeDefenceProfile, UNKNOWN_DEFENCE_PROFILE } from './defenceProfile';
 export { planCreatureDevelopment } from './planCreatureDevelopment';
+export { planContextDevelopment } from './planContextDevelopment';
 
 export type { CreatureBranchValue, CreatureValuationContext } from './branchValuation';
 export type { DamageShapeMix, DefenceProfile, EffectCoverage } from './defenceProfile';

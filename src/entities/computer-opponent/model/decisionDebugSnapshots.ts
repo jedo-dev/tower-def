@@ -6,6 +6,7 @@ import type {
   DecisionOutput,
 } from './types';
 import { StrategyIntent } from './types';
+import type { CreatureDevelopmentAction } from './creature-development';
 
 export const COMPUTER_DECISION_DEBUG_SNAPSHOT_LIMIT = 24;
 
@@ -32,6 +33,10 @@ function summarizeActions(actions: readonly ComputerAction[]): string {
           return `develop ${action.towerId} along ${action.branchId}`;
         case 'send_creep':
           return `send ${action.creepTypeId}`;
+        case 'choose_creature_branch':
+          return `develop ${action.unitId} along ${action.branchId}`;
+        case 'upgrade_creature':
+          return `grade ${action.unitId}`;
         case 'save':
           return 'save gold';
       }
@@ -44,7 +49,15 @@ function resolveDebugKind(actions: readonly ComputerAction[]): ComputerDecisionD
     return 'send';
   }
 
-  if (actions.some((action) => action.kind === 'upgrade' || action.kind === 'choose_branch')) {
+  if (
+    actions.some(
+      (action) =>
+        action.kind === 'upgrade' ||
+        action.kind === 'choose_branch' ||
+        action.kind === 'choose_creature_branch' ||
+        action.kind === 'upgrade_creature',
+    )
+  ) {
     return 'upgrade';
   }
 
@@ -119,12 +132,14 @@ export function createSendDecisionOutput(
   context: DecisionContext,
   output: {
     actions: readonly Extract<ComputerAction, { kind: 'send_creep' }>[];
+    developmentActions?: readonly CreatureDevelopmentAction[];
     reasoning: string;
   },
 ): DecisionOutput {
   return {
     intent: context.intent ?? StrategyIntent.PRESSURE,
-    actions: output.actions,
+    // Development first: a send spawns at the grade it was queued with.
+    actions: [...(output.developmentActions ?? []), ...output.actions],
     reasoning: output.reasoning,
     confidenceScore: output.actions.length > 0 ? 0.75 : 1,
   };
