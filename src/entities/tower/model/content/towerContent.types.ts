@@ -85,7 +85,9 @@ export type TowerTalentGradeContentEntry = {
   aura?: TowerAuraContentEntry;
   onHitEffects?: TowerOnHitEffectEntry[];
   /** Optional abilities of this grade; see docs/08 "Tower abilities". */
-  abilities?: Record<string, number>;
+  abilities?: Record<string, unknown>;
+  /** `ground`, `air` or `both`: overrides the tower's scope at this grade. */
+  allowedTargets?: string;
 };
 
 export type TowerTalentBranchContentEntry = {
@@ -139,7 +141,9 @@ export type TowerLevelContentEntry = {
   onHitEffects?: TowerOnHitEffectEntry[];
   aura?: TowerAuraContentEntry;
   /** Optional abilities of this level; see docs/08 "Tower abilities". */
-  abilities?: Record<string, number>;
+  abilities?: Record<string, unknown>;
+  /** `ground`, `air` or `both`: overrides the tower's scope at this level. */
+  allowedTargets?: string;
 };
 
 export type TowerArchetypeContentEntry = {
@@ -234,6 +238,7 @@ export const TOWER_LEVEL_KEYS: readonly (keyof TowerLevelContentEntry)[] = [
   'onHitEffects',
   'aura',
   'abilities',
+  'allowedTargets',
 ];
 
 export const TOWER_TALENT_BRANCH_KEYS: readonly (keyof TowerTalentBranchContentEntry)[] = [
@@ -253,6 +258,7 @@ export const TOWER_TALENT_GRADE_KEYS: readonly (keyof TowerTalentGradeContentEnt
   'aura',
   'onHitEffects',
   'abilities',
+  'allowedTargets',
 ];
 
 export const TOWER_LEVEL_BOUNDS = {

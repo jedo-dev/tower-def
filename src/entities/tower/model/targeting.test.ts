@@ -162,6 +162,19 @@ describe('tower target scope (allowedTargets)', () => {
     expect(canTowerTargetCreep(createTower({ allowedTargets: 'air' }), flier())).toBe(true);
   });
 
+  it('a level or grade scope overrides the tower and archetype scope (tower-def-bge.9)', () => {
+    const splashStats = TOWER_COMBAT_STATS_BY_TYPE.splash;
+    const mortar = createTower({
+      type: 'splash',
+      allowedTargets: 'ground',
+      combatStats: { ...splashStats, allowedTargets: 'both' },
+    });
+    expect(canTowerTargetCreep(mortar, flier())).toBe(true);
+    expect(selectTowerTarget(mortar, [flier({ position: { x: 6, y: 5 } })])?.id).toBe('creep:air');
+    const groundGrade = createTower({ combatStats: { ...splashStats, allowedTargets: 'ground' } });
+    expect(canTowerTargetCreep(groundGrade, flier())).toBe(false);
+  });
+
   it('prefers the creep closest to its exit, air first on a tie, then the nearest', () => {
     const archer = createTower();
     const ground = createCreep({

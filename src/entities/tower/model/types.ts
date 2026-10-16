@@ -105,6 +105,8 @@ export type TowerCombatStats = {
   chain?: TowerChainDefinition;
   /** Optional abilities of this level (crit, extra targets, volley...); see `TowerAbilities`. */
   abilities?: TowerAbilities;
+  /** Target scope of this level or grade; absent means the tower's own scope. */
+  allowedTargets?: TowerTargetScope;
 };
 
 /**
@@ -157,14 +159,23 @@ export function getTowerOnHitEffects(towerType: TowerTypeId): readonly TowerOnHi
   return TOWER_ARCHETYPE_DEFINITIONS[towerType].onHitEffects;
 }
 
+/** What resolving a tower's target scope reads; `combatStats` carries a grade's override. */
+export type TowerTargetScopeRef = Pick<TowerEntity, 'type' | 'allowedTargets'> & {
+  combatStats?: Pick<TowerCombatStats, 'allowedTargets'>;
+};
+
 /**
- * Which creeps a tower shoots: the authored tower's own scope when it was
- * built from content, the archetype's otherwise (computer towers, tests).
+ * Which creeps a tower shoots: the scope its current level or talent grade
+ * authors first (tower-def-bge.9), then the authored tower's own scope when
+ * it was built from content, the archetype's otherwise (computer towers,
+ * tests).
  */
-export function resolveTowerTargetScope(
-  tower: Pick<TowerEntity, 'type' | 'allowedTargets'>,
-): TowerTargetScope {
-  return tower.allowedTargets ?? TOWER_ARCHETYPE_DEFINITIONS[tower.type].allowedTargets;
+export function resolveTowerTargetScope(tower: TowerTargetScopeRef): TowerTargetScope {
+  return (
+    tower.combatStats?.allowedTargets ??
+    tower.allowedTargets ??
+    TOWER_ARCHETYPE_DEFINITIONS[tower.type].allowedTargets
+  );
 }
 
 export const TOWER_BASE_LEVEL = 1;

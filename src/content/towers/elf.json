@@ -6,7 +6,6 @@
       "id": "elf_moon_archer_tower",
       "name": "Moon Archer Tower",
       "archetype": "single",
-
       "allowedTargets": "both",
       "costGold": 50,
       "damage": 20,
@@ -142,10 +141,11 @@
           "grades": [
             {
               "level": 4,
-              "damage": 46,
+              "damage": 44,
               "range": 5.8,
               "attackCooldownMs": 1100,
-              "splashRadius": 3.4
+              "splashRadius": 3.4,
+              "allowedTargets": "both"
             },
             {
               "level": 5,
@@ -153,7 +153,8 @@
               "range": 5.8,
               "attackCooldownMs": 1050,
               "splashRadius": 3.6,
-              "onHitEffects": [{ "effectId": "stun", "durationMs": 250 }]
+              "onHitEffects": [{ "effectId": "stun", "durationMs": 250 }],
+              "allowedTargets": "both"
             },
             {
               "level": 6,
@@ -161,7 +162,8 @@
               "range": 5.8,
               "attackCooldownMs": 1000,
               "splashRadius": 3.8,
-              "onHitEffects": [{ "effectId": "stun", "durationMs": 300 }]
+              "onHitEffects": [{ "effectId": "stun", "durationMs": 300 }],
+              "allowedTargets": "both"
             },
             {
               "level": 7,
@@ -169,7 +171,8 @@
               "range": 5.8,
               "attackCooldownMs": 900,
               "splashRadius": 4,
-              "onHitEffects": [{ "effectId": "stun", "durationMs": 350 }]
+              "onHitEffects": [{ "effectId": "stun", "durationMs": 350 }],
+              "allowedTargets": "both"
             }
           ]
         }
@@ -179,19 +182,12 @@
       "id": "elf_moonwell",
       "name": "Moonwell",
       "archetype": "frost",
-
       "allowedTargets": "both",
       "costGold": 70,
       "damage": 19,
       "range": 6,
       "attackCooldownMs": 900,
-      "onHitEffects": [
-        {
-          "effectId": "chill",
-          "magnitude": 0.28,
-          "durationMs": 2000
-        }
-      ],
+      "onHitEffects": [{ "effectId": "chill", "magnitude": 0.28, "durationMs": 2000 }],
       "levels": [
         {
           "level": 1,

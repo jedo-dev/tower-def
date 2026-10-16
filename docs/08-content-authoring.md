@@ -576,7 +576,16 @@ and the id. Today every race tower mirrors its archetype (a test enforces it):
 | `support` | `both` (omitted) | Has no attack; the scope is meaningless and left out. |
 
 The rule of thumb: the blast stays on the ground, everything that picks a
-target reaches the air. Loaders expose the resolved value on
+target reaches the air.
+
+**Per-grade scope** (tower-def-bge.9). A `levels[]` entry or a talent grade
+may declare its own `allowedTargets` (same three values, validated the same
+way); absent means the tower's scope. Targeting, splash, chain and the
+computer's damage model read the resolved level first
+(`resolveTowerTargetScope`: level or grade, then the tower, then the
+archetype). The Mortar and Wild Growth branches reach fliers from grade 4
+this way. A grade replaces the stats like any level, so a branch that keeps
+the wider scope repeats it on every grade. Loaders expose the resolved value on
 `BuildableTowerConfig` and `TowerArchetypeDefinition` (`allowedTargets`), so a
 roster view can show "targets: ground / air / both". Targeting, splash and
 chain all consult it (`entities/tower/model/targeting.ts`,
@@ -673,6 +682,7 @@ Every race tower entry declares exactly two branches:
 | `grades` | Exactly levels 4, 5, 6, 7 in that order. |
 | grade `damage`, `range`, `attackCooldownMs` | Required, same bounds as a level. |
 | grade `splashRadius`, `onHitEffects`, `aura`, `chain` | Optional, same shapes as on a level or archetype. |
+| grade `allowedTargets` | Optional `ground`, `air` or `both`: the scope at that grade (see "Target scope"). |
 | grade `abilities` | Optional typed abilities object, same fields as a level's `abilities` (see "Tower abilities" above); unknown keys fail on load. |
 
 A grade replaces the tower's stats like a level does: anything the grade does

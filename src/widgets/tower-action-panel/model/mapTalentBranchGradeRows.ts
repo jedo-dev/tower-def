@@ -112,6 +112,7 @@ export function describeGradeSpecial(
     (line) => `${line.label} ${line.value}`,
   );
   const phrases = [
+    ...(grade.allowedTargets === undefined ? [] : [`Targets ${grade.allowedTargets}`]),
     ...describeTowerAbilities(grade.abilities),
     ...effectPhrases,
     ...describeChainChange(towerType, grade),

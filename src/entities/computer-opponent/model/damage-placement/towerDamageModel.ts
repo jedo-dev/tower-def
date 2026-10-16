@@ -50,9 +50,15 @@ export function resolveDamageModelDamageType(tower: DamageModelTower): DamageTyp
   return tower.damageType ?? getTowerArchetype(tower.towerType).damageType;
 }
 
-/** Whether the tower can shoot creeps that move by `moveType` (its `allowedTargets`). */
+/**
+ * Whether the tower can shoot creeps that move by `moveType`: its level's or
+ * grade's `allowedTargets` first, then its own, then the archetype's.
+ */
 export function canDamageModelTowerHit(tower: DamageModelTower, moveType: UnitMoveType): boolean {
-  const scope = tower.allowedTargets ?? getTowerArchetype(tower.towerType).allowedTargets;
+  const scope =
+    tower.stats.allowedTargets ??
+    tower.allowedTargets ??
+    getTowerArchetype(tower.towerType).allowedTargets;
   return canTargetScopeHitMoveType(scope, moveType);
 }
 

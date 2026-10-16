@@ -1,6 +1,7 @@
 import type { TowerOnHitEffect } from './types';
 import type { TowerAuraDefinition, TowerChainDefinition } from './content/loadTowerContent';
 import type { TowerAbilities } from './abilities';
+import type { TowerTargetScope } from '../../../shared/types/content-ids';
 
 /**
  * Upgrade curves live in `src/content/towers/archetypes.json`, one per
@@ -25,6 +26,12 @@ export type TowerLevelStats = {
    * `TowerAbilities` and docs/08 "Tower abilities".
    */
   abilities?: TowerAbilities;
+  /**
+   * Target scope of this level or talent grade (e.g. a mortar grade that
+   * reaches fliers); absent means the tower's own scope. See
+   * `resolveTowerTargetScope`.
+   */
+  allowedTargets?: TowerTargetScope;
 };
 
 export type TowerUpgradeLevel = {

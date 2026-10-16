@@ -2,7 +2,7 @@ import { getCreepFootprintCenterOffsetInCells, isCreepAlive, isCreepHidden } fro
 import type { CreepEntity } from '../../creep';
 import { canTargetScopeHitMoveType, UnitMoveType } from '../../../shared/types/content-ids';
 import { getTowerCenter } from './footprint';
-import { resolveTowerTargetScope, type TowerEntity } from './types';
+import { resolveTowerTargetScope, type TowerEntity, type TowerTargetScopeRef } from './types';
 
 /** Measured between the centres of the tower's and the creep's footprints. */
 export function getTowerCreepDistanceInCells(tower: TowerEntity, creep: CreepEntity): number {
@@ -20,7 +20,7 @@ function getRemainingDistanceToExit(creep: CreepEntity): number {
 
 /** Whether the tower's target scope (`allowedTargets`) lets it shoot this creep. */
 export function canTowerTargetCreep(
-  tower: Pick<TowerEntity, 'type' | 'allowedTargets'>,
+  tower: TowerTargetScopeRef,
   creep: Pick<CreepEntity, 'moveType'>,
 ): boolean {
   return canTargetScopeHitMoveType(resolveTowerTargetScope(tower), creep.moveType);

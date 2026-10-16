@@ -822,7 +822,7 @@ effect or aura mechanic (`towerTalentContent.test.ts`).
 | Spear Watchtower / Spear Throwers | the spear passes into the second creep for 50% (6) | `pierceLine` 0.3 (every creep on the line, at a lower share); 0.5 at 7 as the doc says |
 | Spear Watchtower / Heavy Spear | ignores 5-20 physical armor | on-hit physical `armor_break` 5-20 for 1 s (a debuff other towers also profit from) |
 | Burning Pit / Napalm | burning creeps run 10% slower (7) | on-hit `chill` 0.1 |
-| Burning Pit / Mortar | targets air too (4) | `allowedTargets` is per tower: stays ground; damage +10% over the doc (55 / 68 / 86 / 110) |
+| Burning Pit / Mortar | targets air too (4) | **restored** (tower-def-bge.9): grade `allowedTargets` `both` on grades 4-7, damage back to the doc's 50 / 62 / 78 / 100 |
 | Burning Pit / Mortar | knocks small creeps back a cell (7) | on-hit `stun` 300 ms |
 | Lightning Totem / Thunderstorm | 8 jumps (7) | 6, the `TOWER_CHAIN_BOUNDS` maximum |
 | Lightning Totem / both | per-grade jumps, falloff and jump range | authored on every grade, but combat still reads the archetype chain (3 jumps, 4 cells, -25%); live once combat reads the grade chain |
@@ -841,9 +841,9 @@ effect or aura mechanic (`towerTalentContent.test.ts`).
 | Guard Post / Headquarters | +5% crit to every neighbour (7) | physical damage bonus 0.25 instead of 0.20 |
 | Moon Archer / Sniper | sees the whole row or column (7) | range +1 (13.2 cells) |
 | Wisp Bloom / Spores | spore zone on the ground | on-hit `chill` (and magical `poison` at 6-7) on everything the blast hits |
-| Wisp Bloom / Wild Growth | targets air too (4) | `allowedTargets` is per tower: stays ground; +2 damage at grade 4 |
+| Wisp Bloom / Wild Growth | targets air too (4) | **restored** (tower-def-bge.9): grade `allowedTargets` `both` on grades 4-7, grade 4 damage back to the doc's 44 |
 | Wisp Bloom / Wild Growth | roots only at the blast centre (5-7) | on-hit `stun` on the whole blast |
-| Wisp Bloom / Wild Growth | fliers in the radius 20% slower (6), fliers pulled down (7) | dropped: the bloom cannot hit fliers |
+| Wisp Bloom / Wild Growth | fliers in the radius 20% slower (6) | dropped: since tower-def-bge.9 the blast reaches fliers and roots (stuns) them like ground creeps |
 | Moonwell / Moonlight | no shots: 10-24 damage per second to every creep in radius 4-5.5 | the shot stays (damage 32-40); `volleyEveryMs` 1000 with `volleyDamageShare` set to the doc's pulse (0.31-0.6; 0.35-0.65 since tower-def-bge.6, with the chill held at the grade 3 0.48 or above); the pulse reaches the tower range (6.8, kept to hold the grade 3 floor) and carries the chill |
 | Moonwell / Moonlight | first entry freezes for 0.5 s (7) | chill `freezeAtStacks` 3, `freezeMs` 500 |
 | Moonwell / Living Water | neighbours' hits chill 10-25% | not grantable by an aura; folded into aura attack speed +5% / +8% / +15% / +22% (the doc's +10% / +15% at 6-7 plus a share; +10% / +15% / +22% / +30% since tower-def-bge.6) |

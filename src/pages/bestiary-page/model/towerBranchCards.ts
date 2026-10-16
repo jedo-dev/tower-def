@@ -94,6 +94,9 @@ function describeChain(chain: TowerChainStats): string {
 export function describeGradeSpecial(stats: TowerLevelStats): string {
   const parts: string[] = [];
 
+  if (stats.allowedTargets !== undefined) {
+    parts.push(`targets ${stats.allowedTargets}`);
+  }
   if (stats.splashRadius !== undefined) {
     parts.push(`splash ${formatCells(stats.splashRadius)}`);
   }
