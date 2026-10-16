@@ -4,6 +4,7 @@ import { RaceId, UnitMoveType } from '../../../shared/types/content-ids';
 import { Difficulty } from '../../difficulty/model/types';
 import { createInitialDuelMatchState } from '../../duel-match';
 import { getUnitsByFaction, resolveUnitConfigById } from '../../unit/model/registry';
+import { computeExpectedWaveHealth } from '../../wave/model/expectedWaveHealth';
 import { WAVE_TIER_UNLOCK_WAVE } from '../../wave/model/waveBalance';
 import {
   ledgerTower,
@@ -67,6 +68,44 @@ describe('entities/computer-opponent air lane: incoming threat', () => {
     });
     expect(threat.airCreepCount).toBe(1);
     expect(threat.airAverageSpeed).toBe(gargoyle.speed);
+  });
+});
+
+describe('entities/computer-opponent air lane: expected flier share', () => {
+  it('expects no fliers before the first one unlocks', () => {
+    expect(threatAt(1).expectedAirHealthShare).toBe(0);
+  });
+
+  it('reads the baseline over every roll, not off the one typical draw', () => {
+    for (let waveNumber = GARGOYLE_WAVE; waveNumber <= GARGOYLE_WAVE + 12; waveNumber += 1) {
+      const expected = computeExpectedWaveHealth(waveNumber, UNDEAD_ROSTER);
+      expect(threatAt(waveNumber).expectedAirHealthShare, `wave ${waveNumber}`).toBeCloseTo(
+        expected.airHealth / expected.totalHealth,
+        10,
+      );
+      expect(threatAt(waveNumber).expectedAirHealthShare).toBeGreaterThan(0);
+    }
+  });
+
+  it('adds the fliers the other side has queued', () => {
+    const gargoyle = resolveUnitConfigById('undead_gargoyle');
+    const quiet = estimateIncomingThreat({
+      waveNumber: GARGOYLE_WAVE,
+      baselineFactionUnits: ORC_ROSTER,
+      observedSends: [],
+      expectedSendGold: 0,
+      enemySendables: [],
+    });
+    const sent = estimateIncomingThreat({
+      waveNumber: GARGOYLE_WAVE,
+      baselineFactionUnits: ORC_ROSTER,
+      observedSends: [gargoyle, gargoyle],
+      expectedSendGold: 0,
+      enemySendables: [],
+    });
+    expect(quiet.expectedAirHealthShare).toBe(0);
+    expect(sent.expectedAirHealthShare).toBeGreaterThan(0);
+    expect(sent.expectedAirHealthShare).toBeLessThan(1);
   });
 });
 
@@ -166,5 +205,7 @@ describe('entities/computer-opponent air lane: defence assessment', () => {
     // No towers yet: no damage on either lane, but anti-air can be priced.
     expect(flanked.air?.waveDamage).toBe(0);
     expect(flanked.air?.damagePerGold).toBeGreaterThan(0);
+    expect(flanked.expectedAirHealthShare).toBeGreaterThan(0);
+    expect(assessDefence(late(orc)).expectedAirHealthShare).toBe(0);
   });
 });

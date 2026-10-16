@@ -34,16 +34,27 @@ export function getWaveUnitValue(unit: Pick<UnitConfig, 'tier' | 'moveType'>): n
     : tierValue;
 }
 
-function isTierUnlocked(unit: UnitConfig, waveNumber: number): boolean {
+export function isTierUnlocked(unit: UnitConfig, waveNumber: number): boolean {
   return WAVE_TIER_UNLOCK_WAVE[unit.tier] <= waveNumber;
 }
 
-function pickUnitWithTierBias(candidates: UnitConfig[], random: () => number): UnitConfig {
+export type WeightedWaveUnit = { unit: UnitConfig; weight: number };
+
+/**
+ * The pick weights of one draw among `candidates`: highest tier first, the
+ * first gets `candidates.length`, the last 1. A draw picks a unit with
+ * probability weight over the total weight.
+ */
+export function getTierBiasWeights(candidates: readonly UnitConfig[]): WeightedWaveUnit[] {
   const sorted = [...candidates].sort((left, right) => right.tier - left.tier);
-  const weighted = sorted.map((unit, index) => ({
+  return sorted.map((unit, index) => ({
     unit,
     weight: sorted.length - index,
   }));
+}
+
+function pickUnitWithTierBias(candidates: UnitConfig[], random: () => number): UnitConfig {
+  const weighted = getTierBiasWeights(candidates);
   const totalWeight = weighted.reduce((sum, item) => sum + item.weight, 0);
   const roll = random() * totalWeight;
   let cumulative = 0;
@@ -56,6 +67,11 @@ function pickUnitWithTierBias(candidates: UnitConfig[], random: () => number): U
   }
 
   return weighted[weighted.length - 1].unit;
+}
+
+/** The creature that pads a wave up to its minimum count: the first tier 1, else the first unit. */
+export function getWaveFallbackUnit(factionUnits: readonly UnitConfig[]): UnitConfig {
+  return factionUnits.find((unit) => unit.tier === UnitTier.TIER_1) ?? factionUnits[0];
 }
 
 export function generateWaveUnits(input: GenerateWaveUnitsInput): UnitConfig[] {
@@ -80,8 +96,7 @@ export function generateWaveUnits(input: GenerateWaveUnitsInput): UnitConfig[] {
     remainingBudget -= getWaveUnitValue(picked);
   }
 
-  const fallbackPool = input.factionUnits.filter((unit) => unit.tier === UnitTier.TIER_1);
-  const fallbackUnit = fallbackPool[0] ?? input.factionUnits[0];
+  const fallbackUnit = getWaveFallbackUnit(input.factionUnits);
 
   while (units.length < WAVE_UNIT_COUNT_BOUNDS.min) {
     units.push(fallbackUnit);

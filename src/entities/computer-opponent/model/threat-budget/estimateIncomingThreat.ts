@@ -1,6 +1,7 @@
 import { UnitMoveType } from '../../../../shared/types/content-ids';
 import { getSendCostByTier } from '../../../duel-match/model/sendEconomy';
 import type { UnitConfig } from '../../../unit/model/types';
+import { computeExpectedWaveHealth } from '../../../wave/model/expectedWaveHealth';
 import { generateWaveUnits } from '../../../wave/model/generateWaveUnits';
 import { getWaveHealthMultiplier } from '../../../wave/model/waveHealth';
 import { REFERENCE_CREEP_SPEED } from '../damage-placement/constants';
@@ -45,6 +46,13 @@ export type IncomingThreat = {
   airCreepCount: number;
   /** Mean speed of the air creeps; the reference speed when none are expected. */
   airAverageSpeed: number;
+  /**
+   * Expected share of the wave's hit points that flies (0..1): the baseline
+   * roster's flier share over every roll of the wave (not the one typical
+   * draw above), plus the fliers among the sends. What the air lane weighs
+   * when a tower or a talent branch is valued on both lanes.
+   */
+  expectedAirHealthShare: number;
   /** What each damage type is worth against the ground creeps of the wave. */
   groundEfficiency: DamageTypeEfficiency;
   /** What each damage type is worth against the fliers; neutral when none are expected. */
@@ -143,6 +151,9 @@ export function estimateIncomingThreat(input: IncomingThreatInput): IncomingThre
   const sendHealth = groupHealth(sends);
   const airCreepCount = baseline.airCount + sends.airCount;
   const air = addArmorTallies(baseline.air, sends.air);
+  const expectedBaseline = computeExpectedWaveHealth(input.waveNumber, input.baselineFactionUnits);
+  const expectedTotal = expectedBaseline.totalHealth * healthMultiplier + sendHealth;
+  const expectedAir = expectedBaseline.airHealth * healthMultiplier + sends.air.health;
 
   return {
     baselineHealth,
@@ -157,6 +168,7 @@ export function estimateIncomingThreat(input: IncomingThreatInput): IncomingThre
       airCreepCount > 0
         ? (baseline.airSpeedSum + sends.airSpeedSum) / airCreepCount
         : REFERENCE_CREEP_SPEED,
+    expectedAirHealthShare: expectedTotal > 0 ? expectedAir / expectedTotal : 0,
     groundEfficiency: toDamageTypeEfficiency(addArmorTallies(baseline.ground, sends.ground)),
     airEfficiency: toDamageTypeEfficiency(air),
   };

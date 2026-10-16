@@ -18,7 +18,7 @@ import { createMazeEvaluator } from '../maze-evaluation/createMazeEvaluator';
 import { ENEMY_SEND_INCOME_SHARE } from './constants';
 import { estimateDefenceCapability, type DefenceWallPrice } from './estimateDefenceCapability';
 import { estimateIncomingThreat } from './estimateIncomingThreat';
-import type { DefenceAssessment, DefenceLaneAssessment } from './splitThreatBudget';
+import type { DefenceAssessment } from './splitThreatBudget';
 
 /**
  * The cheapest buildable type that can shoot `moveType`, priced, its damage
@@ -70,11 +70,12 @@ export function assessDefence(matchState: DuelMatchState): DefenceAssessment {
     averageSpeed: threat.averageSpeed,
     wall: findCheapestLaneWall(types, UnitMoveType.GROUND, threat.groundEfficiency),
   });
-  const assessment: DefenceLaneAssessment = {
+  const assessment: DefenceAssessment = {
     incomingHealth: threat.totalHealth - threat.airHealth,
     waveDamage: ground.waveDamage,
     damagePerGold: ground.damagePerGold,
     damageEfficiency: threat.groundEfficiency,
+    expectedAirHealthShare: threat.expectedAirHealthShare,
   };
 
   if (threat.airCreepCount <= 0) {

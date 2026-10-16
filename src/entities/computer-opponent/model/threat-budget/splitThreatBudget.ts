@@ -32,6 +32,12 @@ export type DefenceLaneAssessment = {
 export type DefenceAssessment = DefenceLaneAssessment & {
   /** The air part of the wave; absent when no air creep is expected. */
   air?: DefenceLaneAssessment;
+  /**
+   * Expected share of the wave's hit points that flies, over every roll of the
+   * baseline plus the sends (see `IncomingThreat.expectedAirHealthShare`);
+   * absent counts as 0.
+   */
+  expectedAirHealthShare?: number;
 };
 
 export type ThreatBudgetInput = {

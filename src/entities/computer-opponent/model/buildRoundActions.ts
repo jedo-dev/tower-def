@@ -24,7 +24,7 @@ import {
   type RouteDamageLedger,
 } from './damage-placement';
 import { NEUTRAL_DAMAGE_EFFICIENCY } from './damage-profile';
-import { resolveAirThreatShare } from './threat-budget/resolveAirThreatShare';
+import { resolveAirLaneWeight } from './threat-budget/resolveAirThreatShare';
 import { DEFEND_REROUTE_PROBE_LIMIT, findBestScoredBuild } from './findBestScoredBuild';
 import { createMazeEvaluator } from './maze-evaluation';
 import { createMazePlanPriority, selectPlanBuilds } from './maze-planning';
@@ -41,8 +41,10 @@ import { StrategyIntent } from './types';
 
 /**
  * The damage ledger a round invests against: the planned ground route, and
- * when the next wave has fliers, the straight air line as a second lane
- * weighted by the share of the wave that flies. Each lane values tower damage
+ * when fliers are expected, the straight air line as a second lane weighted
+ * by `resolveAirLaneWeight` (the air share of the defence spend, at least the
+ * fliers' expected threat share). Talent branches are valued on this same
+ * ledger, so placement and development weigh the air alike. Each lane values tower damage
  * against its own expected creeps' armor, so the damage type that counters
  * the wave wins the blocks.
  */
@@ -58,7 +60,7 @@ function createInvestmentLedger(
     UnitMoveType.GROUND,
     context.defence?.damageEfficiency ?? NEUTRAL_DAMAGE_EFFICIENCY,
   );
-  const airShare = resolveAirThreatShare(context);
+  const airShare = resolveAirLaneWeight(context);
   if (airShare <= 0) {
     return ground;
   }
