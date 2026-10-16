@@ -10,16 +10,16 @@ import { useGameHudSnapshot } from '../../../shared/lib/game-bridge/useGameHudSn
 import {
   canAffordUpgrade,
   getSellValue,
-  getTowerStatsForLevel,
+  getTowerStatsForCurveLevel,
   getUpgradeCost,
   isMaxLevel,
 } from '../../../entities/tower';
-import {
-  mapTowerEffectsToLines,
-  mapTowerEffectUpgradeDeltas,
-} from '../model/mapTowerEffectsToLines';
+import { mapTowerEffectsToLines } from '../model/mapTowerEffectsToLines';
+import { mapTowerNextLevelPreview } from '../model/mapTowerNextLevelPreview';
+import { mapTowerStatsToLines } from '../model/mapTowerStatsToLines';
 import type { HudTowerType } from '../../../shared/lib/game-bridge/types';
 import { PlaceholderIcon } from '../../../shared/ui/placeholder-icon';
+import { NextLevelPreview } from './NextLevelPreview';
 
 const TOWER_DISPLAY_NAMES: Record<HudTowerType, string> = {
   [TowerTypeId.SINGLE]: 'Archer Tower',
@@ -42,7 +42,7 @@ function TowerActionPanelComponent() {
     return null;
   }
 
-  const { id, type, name, level, cost, combatStats } = selectedTower;
+  const { id, type, name, buildableTowerId, level, cost, combatStats } = selectedTower;
   const towerName = name ?? formatTowerType(type);
   const upgradeCost = getUpgradeCost(type, level);
   const maxed = isMaxLevel(type, level);
@@ -51,10 +51,17 @@ function TowerActionPanelComponent() {
 
   const canUpgrade = upgradeCheck.allowed;
   const effectLines = mapTowerEffectsToLines(type, combatStats);
-  const nextLevelStats = maxed ? null : getTowerStatsForLevel(type, level + 1);
-  const upgradeDeltas = nextLevelStats
-    ? mapTowerEffectUpgradeDeltas(type, combatStats, nextLevelStats)
-    : [];
+  const statLines = mapTowerStatsToLines(combatStats);
+  // Deltas compare two levels of the curve the tower upgrades along (its
+  // authored one, else the archetype's), not the live stats an aura buffs.
+  const currentLevelStats =
+    getTowerStatsForCurveLevel(type, buildableTowerId, level) ?? combatStats;
+  const nextLevelStats = maxed
+    ? null
+    : getTowerStatsForCurveLevel(type, buildableTowerId, level + 1);
+  const nextLevelPreview = nextLevelStats
+    ? mapTowerNextLevelPreview(type, currentLevelStats, nextLevelStats, level + 1)
+    : null;
 
   function handleUpgrade(): void {
     sendGameCommand('upgrade-tower', { towerId: id });
@@ -84,20 +91,17 @@ function TowerActionPanelComponent() {
         </button>
       </div>
 
-      <div className={styles.stats}>
-        <span className={styles.statLabel}>DMG:</span>
-        <span className={styles.statValue}>{combatStats.damage}</span>
-        <span className={styles.statLabel}>RNG:</span>
-        <span className={styles.statValue}>{combatStats.range.toFixed(1)}</span>
-        <span className={styles.statLabel}>SPD:</span>
-        <span className={styles.statValue}>{combatStats.attackCooldownMs}ms</span>
-        {combatStats.splashRadius !== undefined && (
-          <>
-            <span className={styles.statLabel}>AOE:</span>
-            <span className={styles.statValue}>{combatStats.splashRadius.toFixed(1)}</span>
-          </>
-        )}
-      </div>
+      <dl className={styles.stats}>
+        {statLines.map((stat) => (
+          <div key={stat.key} className={styles.stat}>
+            <dt className={styles.statLabel} title={stat.name}>
+              <span aria-hidden="true">{stat.shortLabel}</span>
+              <span className={styles.visuallyHidden}>{stat.name}</span>
+            </dt>
+            <dd className={styles.statValue}>{stat.value}</dd>
+          </div>
+        ))}
+      </dl>
 
       {effectLines.length > 0 && (
         <ul className={styles.effects} aria-label="Tower effects">
@@ -110,16 +114,7 @@ function TowerActionPanelComponent() {
         </ul>
       )}
 
-      {upgradeDeltas.length > 0 && (
-        <ul className={styles.effects} aria-label="Next level effects">
-          {upgradeDeltas.map((line) => (
-            <li key={`next-${line.key}`} className={styles.effectRow}>
-              <span className={styles.effectLabel}>NEXT</span>
-              <span className={styles.effectValue}>{`${line.label} ${line.value}`}</span>
-            </li>
-          ))}
-        </ul>
-      )}
+      {nextLevelPreview && <NextLevelPreview preview={nextLevelPreview} />}
 
       <div className={styles.buttons}>
         {maxed ? (

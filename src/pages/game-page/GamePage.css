@@ -23,9 +23,9 @@
   overflow: hidden;
 }
 
-/* Battlefield: fills the leftover height; WaveQueue and MatchControls
- * position themselves absolutely inside this box as canvas overlays. The
- * duel event feed is a sibling strip below it, never over the cells. */
+/* Battlefield: fills the leftover height; WaveQueue positions itself
+ * absolutely inside this box as a canvas overlay. The duel event feed and
+ * the match controls share a sibling strip below it, never over the cells. */
 .game-canvas-area {
   position: relative;
   /* Basis 0: the box is the leftover space, never the canvas's last size,
@@ -39,6 +39,21 @@
   box-shadow:
     inset 0 0 0 1px rgba(0, 0, 0, 0.6),
     0 4px 14px rgba(0, 0, 0, 0.5);
+}
+
+/* Feed + pause/speed/quit: one touch-target-tall row in portrait. The feed
+ * takes the leftover width; the controls keep their natural size. */
+.game-feed-row {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-xs);
+  min-width: 0;
+}
+
+.game-feed-row > :first-child {
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 /* Controls stay a strip: capped low enough that the battlefield keeps at
@@ -88,6 +103,20 @@
   height: 100%;
   max-height: none;
   padding: 2px;
+}
+
+/* Landscape: the strip is a narrow column between the board and the panels;
+ * the controls wrap into a block on top and the feed fills the rest. */
+.game-page--landscape .game-feed-row {
+  flex: 0 0 var(--game-feed-landscape-width);
+  flex-direction: column;
+  align-items: stretch;
+  height: 100%;
+}
+
+.game-page--landscape .game-feed-row > :first-child {
+  flex: 1 1 0;
+  min-height: 0;
 }
 
 /* The panels keep their natural height so the column scrolls, instead of

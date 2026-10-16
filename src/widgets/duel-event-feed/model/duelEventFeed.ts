@@ -38,9 +38,11 @@ export function formatSendQueueUpdated(payload: GameEventMap['send-queue-updated
   if (payload.queue.length === 0) {
     return null;
   }
+  // The computer's queue only changes at wave start, where the same step
+  // sends it: it is "sending this wave", never a queue waiting in the HUD.
   return payload.owner === 'player'
     ? `You queued a send (${payload.queue.length} total)`
-    : `Enemy queued a send (${payload.queue.length} total)`;
+    : `Enemy sends ${payload.queue.length} this wave`;
 }
 
 export function formatIncomeUpdated(payload: GameEventMap['income-updated']): string | null {

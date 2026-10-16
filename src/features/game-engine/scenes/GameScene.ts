@@ -219,6 +219,7 @@ import {
 import {
   buildHudSendQueue,
   buildHudWaveQueueWithPending,
+  resolveHudOpponentSends,
   mapEnemyFactionToHudFaction,
   mapHudFactionToRaceId,
   mapRaceIdToHudFaction,
@@ -289,6 +290,8 @@ export class GameScene extends Phaser.Scene {
     RaceId.UNDEAD,
   );
   private opponentLeakHistory: LeakHistoryEntry[] = [];
+  /** The computer's sends for the running wave; its live queue is drained at wave start. */
+  private opponentSendsThisWave: readonly string[] = [];
   private readonly computerDecisionRecorder = createComputerDecisionDebugRecorder();
   private readonly computerMazePlanMemory = createComputerMazePlanMemory();
   private matchOutcomeStatus: MatchOutcomeStatus = 'active';
@@ -1184,6 +1187,7 @@ export class GameScene extends Phaser.Scene {
 
   private resetRunToInitialState(): void {
     this.opponentLeakHistory = [];
+    this.opponentSendsThisWave = [];
     this.computerDecisionRecorder.clear();
     this.computerMazePlanMemory.plan = null;
     destroyBattlefieldCreeps(this.playerField);
@@ -1400,6 +1404,7 @@ export class GameScene extends Phaser.Scene {
       debugRecorder: this.computerDecisionRecorder,
       setRegistryValue: (key, value) => this.registry.set(key, value),
     });
+    this.opponentSendsThisWave = [...this.duelMatchState.opponent.sendQueue];
     this.duelMatchState = refreshOpponentRoutesForWaveStart(this.duelMatchState);
     this.duelMatchState = reconcileBattlefieldsForNextRound(this.duelMatchState);
     this.syncOpponentBattlefieldRenderStateFromDuel();
@@ -1522,7 +1527,13 @@ export class GameScene extends Phaser.Scene {
         this.runState.pendingWaveSpawns,
       ),
       playerSendQueue: buildHudSendQueue(this.duelMatchState.player.sendQueue),
-      opponentSendQueue: buildHudSendQueue(this.duelMatchState.opponent.sendQueue),
+      opponentSendQueue: buildHudSendQueue(
+        resolveHudOpponentSends(
+          this.wavePhaseState.phase,
+          this.duelMatchState.opponent.sendQueue,
+          this.opponentSendsThisWave,
+        ),
+      ),
       pendingCreepCount:
         this.runState.pendingWaveSpawns.length +
         this.playerField.creeps.filter((c) => c.entity.status === 'alive').length,

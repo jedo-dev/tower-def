@@ -308,8 +308,8 @@
 }
 
 .towerBtn:focus-visible {
-  outline: none;
-  box-shadow: var(--focus-ring);
+  outline: var(--focus-ring-outline);
+  outline-offset: var(--focus-ring-outline-offset);
 }
 
 /* Wave phase: the roster stays readable and focusable but cannot be picked. */

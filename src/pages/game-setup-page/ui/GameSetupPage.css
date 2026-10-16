@@ -325,7 +325,30 @@
   color: var(--color-accent-gold);
 }
 
-/* Primary CTA, same procedural language as FantasyButton. */
+/* Carousel position ("1 / 4"); the step dashes in the top bar stay step progress. */
+.setup-race-counter {
+  margin: var(--space-md) 0 0;
+  font-family: var(--font-family-stats);
+  font-size: var(--font-size-xs);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.12em;
+  color: var(--color-text-label);
+}
+
+.setup-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Wizard CTA, same procedural language as FantasyButton: mossy green confirm
+ * by default, crimson for the final primary action. */
 .setup-next-button {
   position: relative;
   width: 100%;
@@ -334,9 +357,9 @@
   padding: 14px 20px;
   border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: var(--radius-lg);
-  background: var(--gradient-ember);
+  background: var(--gradient-action-confirm);
   box-shadow: var(--shadow-md), var(--shadow-inset-top);
-  color: #fff;
+  color: var(--color-action-label);
   font-family: var(--font-family-display);
   font-size: var(--font-size-xl);
   font-weight: 700;
@@ -366,7 +389,19 @@
   box-shadow:
     var(--shadow-lg),
     var(--shadow-inset-top),
-    0 0 28px var(--glow-ember);
+    0 0 28px var(--glow-action-confirm);
+}
+
+/* "Start Game": the one crimson primary action of the wizard. */
+.setup-next-button--primary {
+  background: var(--gradient-action-primary);
+}
+
+.setup-next-button--primary:hover {
+  box-shadow:
+    var(--shadow-lg),
+    var(--shadow-inset-top),
+    0 0 28px var(--glow-action-primary);
 }
 
 .setup-next-button:active {
@@ -428,8 +463,8 @@
 }
 
 .setup-card:focus-visible {
-  outline: none;
-  box-shadow: var(--focus-ring);
+  outline: var(--focus-ring-outline);
+  outline-offset: var(--focus-ring-outline-offset);
 }
 
 .setup-card-selected {
@@ -502,8 +537,8 @@
 }
 
 .setup-difficulty-btn:focus-visible {
-  outline: none;
-  box-shadow: var(--focus-ring);
+  outline: var(--focus-ring-outline);
+  outline-offset: var(--focus-ring-outline-offset);
 }
 
 .setup-difficulty-btn-selected {

@@ -71,11 +71,37 @@
   --color-pressure-medium: #ffb15f;
   --color-pressure-high: #ff7b6b;
 
-  /* Faction theme colors */
-  --color-faction-undead: #5c8cff;
-  --color-faction-orc: #d97b39;
-  --color-faction-human: #5e94d6;
-  --color-faction-elf: #6bbf89;
+  /* Faction accents (docs/10): undead sickly green, orc blood red-orange,
+   * human royal blue, elf violet. Each clears AA (4.5:1) on the app surface
+   * and the glass panels; see app/styles/themeContrast.test.ts. */
+  --color-faction-undead: #8fd14f;
+  --color-faction-orc: #ec7048;
+  --color-faction-human: #6b9df5;
+  --color-faction-elf: #a98cf5;
+
+  /* Action buttons (docs/10): crimson for the primary action, mossy green
+   * for confirm. The label clears AA (4.5:1) on every gradient stop. */
+  --color-action-label: #fff4d6;
+  --color-action-primary-top: #b8322b;
+  --color-action-primary: #8a1a1a;
+  --color-action-primary-bottom: #5e0f0f;
+  --color-action-confirm-top: #527a30;
+  --color-action-confirm: #3f6124;
+  --color-action-confirm-bottom: #2a4318;
+  --gradient-action-primary: linear-gradient(
+    165deg,
+    var(--color-action-primary-top) 0%,
+    var(--color-action-primary) 52%,
+    var(--color-action-primary-bottom) 100%
+  );
+  --gradient-action-confirm: linear-gradient(
+    165deg,
+    var(--color-action-confirm-top) 0%,
+    var(--color-action-confirm) 52%,
+    var(--color-action-confirm-bottom) 100%
+  );
+  --glow-action-primary: rgba(184, 50, 43, 0.5);
+  --glow-action-confirm: rgba(111, 154, 69, 0.45);
 
   /* Surfaces and borders */
   --color-surface-app: #12151d;
@@ -138,6 +164,11 @@
 
   /* Focus ring used by every procedural control */
   --focus-ring: 0 0 0 2px rgba(10, 15, 25, 0.95), 0 0 0 4px var(--color-accent-gold);
+  /* Kit controls paint their chrome with border-image (glow outset included),
+   * which covers a box-shadow ring, and selected slots already use a gold
+   * box-shadow. They take the outline ring instead: outlines paint on top. */
+  --focus-ring-outline: 2px solid var(--color-accent-gold);
+  --focus-ring-outline-offset: 2px;
 
   /* Sizing */
   --touch-target-min: 44px;
@@ -153,9 +184,9 @@
   --hud-status-min-height: 56px;
   /* The expanded duel event history scrolls past this height. */
   --duel-feed-expanded-max-height: 96px;
-  /* The wave queue strip over the battlefield (40px row + 8px padding each
-   * side); the match controls column starts under it. */
-  --wave-strip-height: 56px;
+  /* Landscape: the duel feed + match controls column between the board and
+   * the panels (two 44px controls per row at the floor). */
+  --game-feed-landscape-width: clamp(100px, 18vw, 196px);
 
   /* Stacking order: battlefield overlays sit under floating panels, and
    * modals (match outcome) cover everything on the page. */

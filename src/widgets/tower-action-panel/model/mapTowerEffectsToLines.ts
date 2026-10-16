@@ -79,11 +79,13 @@ export function mapTowerEffectsToLines(
     });
   }
 
-  if (archetype.aura) {
+  // The aura grows with the level: read the level's own before the base.
+  const aura = stats.aura ?? archetype.aura;
+  if (aura) {
     lines.push({
       key: 'aura',
       label: 'AURA',
-      value: `+${formatPercent(archetype.aura.attackSpeedBonus)} speed, +${archetype.aura.rangeBonus.toFixed(1)} range`,
+      value: `+${formatPercent(aura.attackSpeedBonus)} speed, +${aura.rangeBonus.toFixed(1)} range, ${aura.radiusCells} cells`,
     });
   }
 

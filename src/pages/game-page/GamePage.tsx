@@ -39,12 +39,15 @@ export function GamePage({ setup, onExit }: GamePageProps) {
       <div className="game-viewport">
         <div className="game-canvas-area">
           <WaveQueue />
-          <MatchControls />
           <GameCanvas setup={setup} />
           <TowerActionPanel />
         </div>
-        {/* Between the board and the panels: never over board cells. */}
-        <DuelEventFeed />
+        {/* Between the board and the panels: never over board cells. The
+            match controls share the strip so they never cover cells either. */}
+        <div className="game-feed-row">
+          <DuelEventFeed />
+          <MatchControls />
+        </div>
         <div className="game-panels">
           <CreepSendPanel setup={setup} isCompact={isHudExpanded} />
           <HudPanel setup={setup} isExpanded={isHudExpanded} onToggleExpanded={setIsHudExpanded} />

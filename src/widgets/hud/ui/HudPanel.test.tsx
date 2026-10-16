@@ -170,6 +170,38 @@ describe('HudPanel build bar', () => {
     expect(consoleError).not.toHaveBeenCalled();
   });
 
+  it('exposes the picked tower as a pressed toggle, not only a CSS class', () => {
+    const [pickedTower] = getBuildableTowersByFaction(RaceId.UNDEAD);
+    publishGameHudSnapshot(
+      createSnapshot({ gold: 1000, selectedTowerType: pickedTower.towerType }),
+    );
+
+    render(<HudPanel setup={createSetup(RaceId.UNDEAD)} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Expand HUD' }));
+
+    const buildBar = screen.getByRole('group', { name: 'Buildable towers' });
+    const buttons = within(buildBar).getAllByRole('button');
+    const pressed = buttons.filter((button) => button.getAttribute('aria-pressed') === 'true');
+    expect(pressed.length).toBeGreaterThan(0);
+    expect(pressed[0].getAttribute('aria-label')).toContain(pickedTower.name);
+    for (const button of buttons) {
+      expect(['true', 'false']).toContain(button.getAttribute('aria-pressed'));
+    }
+    expect(consoleError).not.toHaveBeenCalled();
+  });
+
+  it('names the difficulty the way the race and enemy are named', () => {
+    publishGameHudSnapshot(createSnapshot());
+
+    render(<HudPanel setup={createSetup(RaceId.UNDEAD)} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Expand HUD' }));
+
+    // Display name ("Normal"), never the raw config id ("normal").
+    expect(screen.getByText('Normal')).toBeDefined();
+    expect(screen.queryByText(Difficulty.NORMAL)).toBeNull();
+    expect(consoleError).not.toHaveBeenCalled();
+  });
+
   it('disables a tower the player cannot afford', () => {
     publishGameHudSnapshot(createSnapshot({ gold: 0 }));
 

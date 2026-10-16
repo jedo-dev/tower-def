@@ -200,4 +200,16 @@ describe('MatchControls', () => {
     });
     injected.remove();
   });
+
+  it('lays out in flow, never as an absolute overlay over the board', () => {
+    const injected = injectCssModule(matchControlsCss, styles);
+    render(<MatchControls />);
+
+    const style = getComputedStyle(screen.getByRole('group', { name: 'Match controls' }));
+    expect(style.position).not.toBe('absolute');
+    expect(style.position).not.toBe('fixed');
+    expect(style.display).toBe('flex');
+    expect(consoleError).not.toHaveBeenCalled();
+    injected.remove();
+  });
 });

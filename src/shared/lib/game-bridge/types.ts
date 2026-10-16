@@ -77,6 +77,8 @@ export type SelectedTowerSnapshot = {
   type: HudTowerType;
   /** Authored tower name, e.g. "Frost Wyrm Nest"; absent falls back to the archetype. */
   name?: string;
+  /** Authored tower id; its level curve drives upgrades. Absent: the archetype curve. */
+  buildableTowerId?: string;
   level: number;
   position: { x: number; y: number };
   cost: number;
@@ -112,6 +114,11 @@ export type GameHudSnapshot = {
   autoStartSecondsLeft: number | null;
   waveQueue: WaveQueueItem[];
   playerSendQueue: WaveQueueItem[];
+  /**
+   * The computer's sends: during a wave, the ones it made for this wave (now
+   * incoming on the player's field); in the build phase, any queued for the
+   * next wave. The computer decides at wave start, so that queue is usually empty.
+   */
   opponentSendQueue: WaveQueueItem[];
   pendingCreepCount: number;
   /** The simulation is frozen (player pause or engine error); the HUD stays live. */

@@ -1,11 +1,10 @@
-/* One row tucked under the wave strip on the right: four 44x44 targets that
- * only shade the board's top edge (a column would sit over the lane exit). */
+/* In-flow row of four 44x44 targets beside the duel feed: the page lays it
+ * out next to the board, never over board cells. Wraps when the strip is a
+ * narrow landscape column. */
 .strip {
-  position: absolute;
-  top: calc(var(--space-md) + var(--wave-strip-height) + var(--space-xs));
-  right: var(--space-md);
-  z-index: var(--z-index-canvas-strip);
+  flex: 0 0 auto;
   display: flex;
+  flex-wrap: wrap;
   gap: var(--space-xs);
 }
 
@@ -47,7 +46,7 @@
   color: var(--color-text-danger);
 }
 
-/* Quit confirmation: the strip lives inside the battlefield box, so the
+/* Quit confirmation: the strip sits in the feed row, so the
  * backdrop is fixed to cover the whole page, HUD included. */
 .backdrop {
   position: fixed;

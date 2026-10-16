@@ -15,6 +15,7 @@ import type { HudFactionType } from '../../../shared/lib/game-bridge/types';
 import type { GameSetupConfig } from '../../../shared/config/game-setup';
 import { PlaceholderIcon } from '../../../shared/ui/placeholder-icon';
 import { FantasyButton } from '../../../shared/ui/fantasy-button';
+import { getDifficultyConfig } from '../../../entities/difficulty';
 
 export type HudPanelProps = {
   setup: GameSetupConfig | null;
@@ -174,6 +175,7 @@ function HudPanelComponent({
                 )}
                 disabled={!option.isAffordable && !option.isSelected}
                 aria-disabled={isBuildLocked || undefined}
+                aria-pressed={option.isSelected}
                 aria-label={option.ariaLabel}
                 title={isBuildLocked ? BUILD_PHASE_ONLY_HINT : option.name}
                 onClick={() => {
@@ -234,7 +236,7 @@ function HudPanelComponent({
                 <>
                   <span className={styles.infoLabel}>Diff:</span>
                   <span className={joinClassNames(styles.infoValue, styles.infoValueDiff)}>
-                    {setup.difficulty}
+                    {getDifficultyConfig(setup.difficulty).name}
                   </span>
                 </>
               )}

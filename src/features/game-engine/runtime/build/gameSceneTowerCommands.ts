@@ -70,7 +70,7 @@ function toSelectedTowerSnapshot(
   return {
     id: tower.entity.id,
     type: tower.entity.type,
-    ...(authoredTower ? { name: authoredTower.name } : {}),
+    ...(authoredTower ? { name: authoredTower.name, buildableTowerId: authoredTower.id } : {}),
     level: tower.entity.level,
     position: { x: tower.entity.position.x, y: tower.entity.position.y },
     cost: tower.entity.cost,
