@@ -11,6 +11,7 @@ import { getIncomeBonusByTier, getSendCostByTier } from '../../../entities/duel-
 import { resolveUnitConfigById } from '../../../entities/unit';
 import type { UnitId } from '../../../entities/unit';
 import type { FactionThemeName } from '../../../shared/constants/theme';
+import { mapCreatureTalentState, type CreatureTalentViewModel } from './mapCreatureTalentState';
 
 export type CreepSendButtonViewModel = {
   creepTypeId: UnitId;
@@ -26,6 +27,9 @@ export type CreepSendButtonViewModel = {
   isDisabled: boolean;
   disabledReason: string | null;
   ariaLabel: string;
+  /** Hover hint of the send chip: branch, grade and experience. */
+  tooltip: string;
+  talent: CreatureTalentViewModel;
 };
 
 export type CreepSendPanelViewModel = {
@@ -40,6 +44,17 @@ export type CreepSendPanelViewModel = {
   waveCapacitySummary: string | null;
   waveCapacityAriaLabel: string | null;
   buttons: CreepSendButtonViewModel[];
+  /** Some creature can choose a branch or buy a grade right now. */
+  hasAffordableTalent: boolean;
+  /** Unspent experience of each tier the roster sends, lowest tier first. */
+  xpByTier: CreatureTierXpViewModel[];
+};
+
+export type CreatureTierXpViewModel = {
+  tier: number;
+  xp: number;
+  label: string;
+  ariaLabel: string;
 };
 
 function resolveBuilderRace(setup: GameSetupConfig | null): RaceId {
@@ -84,6 +99,24 @@ function resolveDisabledReason(
   return null;
 }
 
+function summarizeXpByTier(buttons: CreepSendButtonViewModel[]): CreatureTierXpViewModel[] {
+  const tiers = [...new Set(buttons.map((button) => button.tier))].sort((a, b) => a - b);
+  return tiers.map((tier) => {
+    const xp = buttons.find((button) => button.tier === tier)?.talent.xp ?? 0;
+    return { tier, xp, label: `T${tier} ${xp} XP`, ariaLabel: `Tier ${tier}: ${xp} XP` };
+  });
+}
+
+/** "Grade 2 of 4, Skeleton I. 8 of 12 XP" for the send chip's label and tooltip. */
+export function describeTalentForLabel(talent: CreatureTalentViewModel): string {
+  const branch = talent.chosenBranch
+    ? `Grade ${talent.grade} of ${talent.maxGrade}, ${talent.chosenBranch.name}`
+    : 'No branch';
+  const target = talent.action.cost;
+  const xp = target === null ? `${talent.xp} XP` : `${talent.xp} of ${target} XP`;
+  return `${branch}. ${xp}`;
+}
+
 export function mapCreepSendPanelToViewModel(
   snapshot: GameHudSnapshot,
   setup: GameSetupConfig | null,
@@ -108,6 +141,8 @@ export function mapCreepSendPanelToViewModel(
       cost,
     );
     const remainingSuffix = unitLimit ? `, ${unitLimit.remaining} of ${unitLimit.cap} left` : '';
+    const talent = mapCreatureTalentState(unit, snapshot);
+    const talentSuffix = describeTalentForLabel(talent);
 
     return {
       creepTypeId,
@@ -122,8 +157,10 @@ export function mapCreepSendPanelToViewModel(
       isDisabled: disabledReason !== null,
       disabledReason,
       ariaLabel: disabledReason
-        ? `Cannot send ${unit.name}: ${disabledReason}`
-        : `Send ${unit.name} for ${cost} gold and gain ${incomeGain} income${remainingSuffix}`,
+        ? `Cannot send ${unit.name}: ${disabledReason}. ${talentSuffix}`
+        : `Send ${unit.name} for ${cost} gold and gain ${incomeGain} income${remainingSuffix}. ${talentSuffix}`,
+      tooltip: `${unit.name}: ${talentSuffix}`,
+      talent,
     };
   });
 
@@ -142,5 +179,7 @@ export function mapCreepSendPanelToViewModel(
       ? `${sendLimits.waveSendsRemaining} of ${sendLimits.waveSendCap} sends left this wave`
       : null,
     buttons,
+    hasAffordableTalent: buttons.some((button) => button.talent.action.isAffordable),
+    xpByTier: summarizeXpByTier(buttons),
   };
 }

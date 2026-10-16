@@ -1,0 +1,55 @@
+/* Talent overlay of a creature card: corners and bottom edge, never in the flow. */
+.glyph {
+  position: absolute;
+  top: var(--space-2xs);
+  left: var(--space-2xs);
+  min-width: 16px;
+  height: 16px;
+}
+
+.grade {
+  position: absolute;
+  top: var(--space-2xs);
+  right: var(--space-2xs);
+  padding: 1px var(--space-2xs);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-overlay);
+  font-family: var(--font-family-stats);
+  font-size: var(--font-size-2xs);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+  color: var(--color-accent-gold);
+}
+
+/* Experience of the creature's tier toward its next purchase. */
+.xpTrack {
+  position: absolute;
+  right: var(--space-sm);
+  bottom: var(--space-2xs);
+  left: var(--space-sm);
+  height: 3px;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-overlay);
+}
+
+.xpFill {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--color-text-success);
+  transform-origin: left center;
+  transition: transform var(--duration-fast) var(--ease-out);
+}
+
+.xpFill[data-full] {
+  background: var(--color-accent-gold);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .xpFill {
+    transition: none;
+  }
+}

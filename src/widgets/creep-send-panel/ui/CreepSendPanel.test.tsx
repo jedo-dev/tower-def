@@ -116,7 +116,7 @@ describe('CreepSendPanel send limits', () => {
       },
     ]);
 
-    const grunt = screen.getByRole('button', { name: 'Cannot send Grunt: send limit reached' });
+    const grunt = screen.getByRole('button', { name: /^Cannot send Grunt: send limit reached/ });
     expect((grunt as HTMLButtonElement).disabled).toBe(true);
   });
 
@@ -134,8 +134,8 @@ describe('CreepSendPanel send limits', () => {
       },
     ]);
 
-    const buttons = screen.getAllByRole('button');
-    expect(buttons.length).toBeGreaterThan(0);
+    const buttons = screen.getAllByRole('button', { name: /send/i });
+    expect(buttons.length).toBe(4);
     expect(buttons.every((button) => (button as HTMLButtonElement).disabled)).toBe(true);
     expect(screen.getByLabelText('0 of 12 sends left this wave')).toBeDefined();
   });

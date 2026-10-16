@@ -1,12 +1,11 @@
-import { memo } from 'react';
+import { memo, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react';
 import styles from './CreepSendPanel.module.css';
-import { sendGameCommand } from '../../../shared/lib/game-bridge/bridge';
 import { useGameHudSnapshot } from '../../../shared/lib/game-bridge/useGameHudSnapshot';
 import { usePlayerSendLimits } from '../../../shared/lib/game-bridge/useSendLimits';
 import type { GameSetupConfig } from '../../../shared/config/game-setup';
 import { mapCreepSendPanelToViewModel } from '../model/mapCreepSendPanelToViewModel';
-import type { UnitId } from '../../../entities/unit';
-import { UnitIcon } from '../../../shared/ui/unit-icon';
+import { CreepDevelopCard } from './CreepDevelopCard';
+import { CreepSendCard } from './CreepSendCard';
 
 export type CreepSendPanelProps = {
   setup: GameSetupConfig | null;
@@ -14,13 +13,24 @@ export type CreepSendPanelProps = {
   isCompact?: boolean;
 };
 
+/**
+ * The creature cards work in one of two modes. Send (default): a tap queues
+ * a send. Develop: a tap opens the branch chooser or buys the next grade.
+ * One header toggle switches them, so a send tap can never spend experience
+ * and the cards keep their full size as touch targets.
+ */
 function CreepSendPanelComponent({ setup, isCompact = false }: CreepSendPanelProps) {
   const snapshot = useGameHudSnapshot();
   const sendLimits = usePlayerSendLimits();
   const viewModel = mapCreepSendPanelToViewModel(snapshot, setup, sendLimits);
+  const [isDevelopMode, setIsDevelopMode] = useState(false);
+  const isDeveloping = isDevelopMode && !isCompact;
 
-  function handleSend(creepTypeId: UnitId): void {
-    sendGameCommand('send-creep', { creepTypeId });
+  function handleKeyDown(event: ReactKeyboardEvent<HTMLElement>): void {
+    if (event.key === 'Escape' && isDeveloping) {
+      event.preventDefault();
+      setIsDevelopMode(false);
+    }
   }
 
   return (
@@ -28,11 +38,34 @@ function CreepSendPanelComponent({ setup, isCompact = false }: CreepSendPanelPro
       className={`ui-panel ${styles.panel}${isCompact ? ` ${styles.panelCompact}` : ''}`}
       data-creep-send-panel="true"
       data-compact={isCompact || undefined}
+      data-mode={isDeveloping ? 'develop' : 'send'}
       aria-label="Creep sending panel"
+      onKeyDown={handleKeyDown}
     >
       <div className={styles.header}>
-        <span className={`ui-heading ${styles.title}`}>Send {viewModel.raceName}</span>
+        <span className={`ui-heading ${styles.title}`}>
+          {isDeveloping ? 'Develop' : 'Send'} {viewModel.raceName}
+        </span>
         {!isCompact && (
+          <button
+            type="button"
+            className={`${styles.modeToggle}${isDeveloping ? ` ${styles.modeToggleOn}` : ''}`}
+            aria-pressed={isDeveloping}
+            aria-label={
+              viewModel.hasAffordableTalent
+                ? 'Develop creatures, upgrades available'
+                : 'Develop creatures'
+            }
+            data-sound={isDeveloping ? 'ui.close' : 'ui.open'}
+            onClick={() => setIsDevelopMode((current) => !current)}
+          >
+            <span>{isDeveloping ? 'Done' : 'Develop'}</span>
+            {viewModel.hasAffordableTalent && !isDeveloping && (
+              <span className={styles.modeToggleDot} aria-hidden="true" />
+            )}
+          </button>
+        )}
+        {!isCompact && !isDeveloping && (
           <span className={styles.queue} aria-live="polite">
             {viewModel.isBattleActive ? (
               <span className={`ui-chip ${styles.phaseNote}`}>Locked in battle</span>
@@ -50,6 +83,20 @@ function CreepSendPanelComponent({ setup, isCompact = false }: CreepSendPanelPro
             )}
           </span>
         )}
+        {isDeveloping && (
+          <ul className={styles.queue} aria-label="Creature experience by tier">
+            {viewModel.xpByTier.map((tierXp) => (
+              <li
+                key={tierXp.tier}
+                className={`ui-chip ${styles.capacity} ${styles.tierXp}`}
+                aria-label={tierXp.ariaLabel}
+                data-tier-xp={tierXp.tier}
+              >
+                {tierXp.label}
+              </li>
+            ))}
+          </ul>
+        )}
         <span
           className={styles.meta}
           aria-label={`Gold ${viewModel.gold}, income ${viewModel.income}`}
@@ -63,39 +110,21 @@ function CreepSendPanelComponent({ setup, isCompact = false }: CreepSendPanelPro
 
       {!isCompact && (
         <div className={styles.buttons}>
-          {viewModel.buttons.map((button) => (
-            <button
-              key={button.creepTypeId}
-              type="button"
-              className={`ui-slot ${styles.button}`}
-              disabled={button.isDisabled}
-              aria-label={button.ariaLabel}
-              onClick={() => handleSend(button.creepTypeId)}
-            >
-              <UnitIcon
-                unitId={button.creepTypeId}
-                label={button.name}
+          {viewModel.buttons.map((creature) =>
+            isDeveloping ? (
+              <CreepDevelopCard
+                key={creature.creepTypeId}
+                creature={creature}
                 faction={viewModel.faction}
-                className={styles.buttonIcon}
               />
-              <span className={styles.buttonName}>{button.name}</span>
-              <span className={styles.buttonStats} aria-hidden="true">
-                <span>T{button.tier}</span>
-                <span className={styles.buttonCost}>${button.cost}</span>
-                <span className={styles.buttonIncome}>+{button.incomeGain}</span>
-                {button.remainingOfType !== null && (
-                  <span className={styles.buttonRemaining} data-send-remaining="true">
-                    {button.remainingOfType}/{button.typeCap}
-                  </span>
-                )}
-              </span>
-              {button.disabledReason && (
-                <span className={styles.buttonReason} aria-hidden="true">
-                  {button.disabledReason}
-                </span>
-              )}
-            </button>
-          ))}
+            ) : (
+              <CreepSendCard
+                key={creature.creepTypeId}
+                creature={creature}
+                faction={viewModel.faction}
+              />
+            ),
+          )}
         </div>
       )}
     </section>

@@ -18,7 +18,7 @@
   grid-template-columns: minmax(0, 1fr) auto;
   grid-template-areas:
     'title meta'
-    'queue queue';
+    'queue toggle';
   align-items: center;
   gap: var(--space-2xs) var(--space-sm);
 }
@@ -26,8 +26,8 @@
 /* Wide enough for heading, both chips and gold/income on one line. */
 @container send-panel (min-width: 520px) {
   .header {
-    grid-template-columns: auto minmax(0, 1fr) auto;
-    grid-template-areas: 'title queue meta';
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
+    grid-template-areas: 'title queue toggle meta';
   }
 }
 
@@ -73,7 +73,65 @@
 }
 
 .panelCompact .header {
+  grid-template-columns: minmax(0, 1fr) auto;
   grid-template-areas: 'title meta';
+}
+
+/*
+ * Send / Develop switch. Drawn 28px tall so the header grows by a few pixels
+ * only; the ::before pad lifts the hit area to 44px over the heading and
+ * gold row above it, which take no taps (never over the creature cards).
+ */
+.modeToggle {
+  grid-area: toggle;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  min-width: var(--touch-target-min);
+  height: 28px;
+  padding: 0 var(--space-md);
+  border: 1px solid var(--glow-emerald);
+  border-radius: var(--radius-pill);
+  background: var(--glass-bg-soft);
+  color: var(--color-text-success);
+  cursor: pointer;
+  font-family: var(--font-family-display);
+  font-size: var(--font-size-2xs);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  touch-action: manipulation;
+}
+
+.modeToggle::before {
+  content: '';
+  position: absolute;
+  inset: calc(28px - var(--touch-target-min)) 0 0;
+}
+
+.modeToggle:hover,
+.modeToggle:focus-visible {
+  filter: brightness(1.18);
+}
+
+.modeToggle:focus-visible {
+  outline: var(--focus-ring-outline);
+  outline-offset: var(--focus-ring-outline-offset);
+}
+
+.modeToggleOn {
+  border-color: transparent;
+  background: var(--gradient-emerald);
+  color: var(--color-surface-app);
+}
+
+/* Something can be developed now. */
+.modeToggleDot {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-pill);
+  background: var(--color-accent-gold);
 }
 
 /* One row of cards; each shrinks equally so five creeps fit at 480px. */
@@ -83,6 +141,7 @@
 }
 
 .button {
+  position: relative;
   flex: 1 1 0;
   min-width: 0;
   display: flex;
@@ -90,7 +149,8 @@
   align-items: center;
   gap: 3px;
   min-height: var(--touch-target-min);
-  padding: 6px 2px 4px;
+  /* The bottom padding holds the experience bar (CreatureTalentMarks). */
+  padding: 6px 2px 8px;
   color: var(--color-text-primary);
   cursor: pointer;
   font: inherit;
@@ -205,6 +265,17 @@
 
 .capacity {
   font-variant-numeric: tabular-nums;
+}
+
+/* Develop mode: the status row lists each tier's experience instead. */
+ul.queue {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tierXp {
+  color: var(--color-text-success);
 }
 
 .phaseNote {
