@@ -1,11 +1,4 @@
-import { TowerTypeId } from '../../../shared/types/content-ids';
 import Phaser from 'phaser';
-import { DEFAULT_BUILDER_FACTION } from '../../../entities/builder-faction';
-import {
-  createComputerDecisionDebugRecorder,
-  createComputerMazePlanMemory,
-  type LeakHistoryEntry,
-} from '../../../entities/computer-opponent';
 import {
   awardBonusGold,
   createInitialDuelMatchState,
@@ -16,7 +9,6 @@ import {
   startRound,
   type DuelMatchState,
 } from '../../../entities/duel-match';
-import { DEFAULT_DIFFICULTY, type Difficulty } from '../../../entities/difficulty';
 import type { UnitConfig } from '../../../entities/unit';
 import { getTowersIncomePerRound, resolveTowerSellRefundRatio } from '../../../entities/tower';
 import { calculateWaveRoutes, EMPTY_WAVE_ROUTES, hasWaveRoute } from '../../../entities/wave';
@@ -38,20 +30,13 @@ import {
   publishGameHudSnapshot,
 } from '../../../shared/lib/game-bridge/bridge';
 import type {
-  BattlefieldView,
   BoardZoomAction,
   GameCommandMap,
   GameHudSnapshot,
   GameSpeed,
-  HudFactionType,
-  MatchOutcomeReason,
-  MatchOutcomeStatus,
 } from '../../../shared/lib/game-bridge/types';
 import { createGridModel } from '../../../shared/lib/grid/createGridModel';
-import {
-  generateEdgeEndpoints,
-  type EdgeEndpoints,
-} from '../../../shared/lib/grid/generateEdgeEndpoints';
+import { generateEdgeEndpoints } from '../../../shared/lib/grid/generateEdgeEndpoints';
 import type { SoundId } from '../../../shared/lib/sound-registry/audio.types';
 import { checkFootprintPlacementPath } from '../../../shared/lib/pathfinding/validateFootprintPlacement';
 import {
@@ -65,14 +50,12 @@ import {
 import { ensurePlaceholderTextures } from '../runtime/assets/placeholderTexture';
 import { startMissingArtReport, stopMissingArtReport } from '../runtime/assets/missingArtReport';
 import {
-  createBattlefieldRenderState,
   destroyBattlefieldCreeps,
   destroyBattlefieldImpactEffects,
   destroyBattlefieldProjectiles,
   destroyBattlefieldRenderState,
   destroyBattlefieldTowers,
   setBattlefieldRenderStateVisible,
-  type BattlefieldRenderState,
 } from '../runtime/battlefield/battlefieldRenderState';
 import { rebuildOpponentBattlefieldRenderState } from '../runtime/battlefield/battlefieldSpriteFactory';
 import {
@@ -121,7 +104,6 @@ import {
 } from '../runtime/duel/creatureTalentCommands';
 import {
   buildSentCreepOutcomes,
-  createSentCreepDeathTally,
   recordSentCreepDeath,
   resetSentCreepDeathTally,
 } from '../runtime/duel/sentCreepOutcomeTally';
@@ -148,7 +130,6 @@ import {
 } from '../runtime/grid/gameSceneGridPreviewRuntime';
 import {
   attachRoutePreviewGraphics,
-  createBuildRoutePreviewRuntime,
   destroyRoutePreviewGraphics,
   getBuildRoutePreviewCurrentRoutes,
   markRoutePreviewLayoutChanged,
@@ -160,7 +141,6 @@ import {
   drawGridCell as drawGridCellRuntime,
   drawGrid as drawGridRuntime,
   type GridRendererDeps,
-  type GridRendererState,
 } from '../runtime/grid/gameSceneGridRenderer';
 import {
   destroyGridOccupancyOverlay,
@@ -183,11 +163,10 @@ import {
   markUserActionProcessed as markUserActionProcessedRuntime,
   type BoardTapOutcome,
   type InputControllerDependencies,
-  type InputControllerState,
 } from '../runtime/input/gameSceneInputController';
 import {
   applyWaveCompletionRewardIfResolved as applyWaveCompletionRewardIfResolvedRuntime,
-  createPlayerWaveRuntimeState,
+  type WaveRuntimeState,
   initializeWaveRuntime as initializeWaveRuntimeModule,
   resetRunToInitialState as resetRunToInitialStateRuntime,
   spawnWaveCreeps as spawnWaveCreepsRuntime,
@@ -195,29 +174,23 @@ import {
   updateAutoWaveCountdown as updateAutoWaveCountdownRuntime,
 } from '../runtime/wave/gameSceneWaveRuntime';
 import { resolveAutoStartSecondsLeft } from '../runtime/wave/autoStartCountdown';
-import { advanceGameClock, createGameClockState, isGameSpeed } from '../runtime/time/gameClock';
+import { advanceGameClock, isGameSpeed } from '../runtime/time/gameClock';
 import {
   runGuardedEngineStep,
   type EngineErrorReport,
 } from '../runtime/lifecycle/engineErrorGuard';
 import {
   clearFieldWaveSchedule,
-  createOpponentFieldWaveState,
   isFieldWaveResolved,
   processPendingWaveSpawns,
   resolveWaveSpawnTiming,
   scheduleOpponentFieldWave,
 } from '../runtime/wave/fieldWaveSpawns';
-import {
-  countFieldRemainingCreeps,
-  createOpponentFieldCreepsPublisher,
-} from '../runtime/wave/opponentFieldCreepsPublisher';
+import { countFieldRemainingCreeps } from '../runtime/wave/opponentFieldCreepsPublisher';
 import {
   createSharedBaselineWaveSource,
   resolveBaselineWaveSeed,
-  type SharedBaselineWaveSource,
 } from '../runtime/wave/sharedBaselineWave';
-import type { GameSetupEndpoints } from '../../../shared/config/game-setup';
 import { GameAudioManager } from '../sound/GameAudioManager';
 import { createGameSoundRouter, type GameSoundRouter } from '../runtime/audio/gameSoundRouting';
 import {
@@ -260,99 +233,49 @@ import {
   WAVE_RUNTIME_CONFIG,
 } from './gameScene.runtimeConfigs';
 import type { GameSceneInspection } from './gameScene.types';
+import { createGameSceneState, type GameSceneState } from './controllers/gameSceneState';
 
 export class GameScene extends Phaser.Scene {
   public static readonly KEY = 'GameScene';
   private static readonly OPPONENT_LEAK_HISTORY_LIMIT = 10;
-  private isSceneCleanedUp = false;
-  private hoveredCell: GridPosition | null = null;
-  private hoveredBuildAnchor: GridPosition | null = null;
-  /** Block armed by a first touch tap; the preview stays on it until it is built or moved. */
-  private pendingPlacementAnchor: GridPosition | null = null;
-  /** Input modality from the pointer event type: finger or mouse/pen. */
-  private isLastPointerTouch = false;
-  private gridModel: GridModel | null = null;
-  private readonly gridRendererState: GridRendererState = {
-    gridGraphics: null,
-    occupancyGraphics: null,
-    terrainSprites: [],
-    gridLabels: [],
-    endpointMarkers: [],
-  };
-  private buildPreviewOverlay: Phaser.GameObjects.Graphics | null = null;
-  private readonly routePreview = createBuildRoutePreviewRuntime();
-  private pathCellKeys = new Set<string>();
-  /** A build or sell changed the board since the path tiles were last drawn. */
-  private arePathTilesStale = false;
-  private placedTowerCostsByCellKey = new Map<string, number>();
-  private readonly playerField: BattlefieldRenderState = createBattlefieldRenderState();
-  private readonly opponentField: BattlefieldRenderState = createBattlefieldRenderState();
-  // Long-lived state owned by the wave/movement runtime modules; the player
-  // creep list is shared with playerField (see createPlayerWaveRuntimeState).
-  private readonly runState = createPlayerWaveRuntimeState(this.playerField);
-  // The computer field's spawn schedule; its creep list is opponentField's.
-  private readonly opponentWave = createOpponentFieldWaveState(this.opponentField);
-  // Lets the HUD say the round still waits on the computer's field.
-  private readonly opponentFieldCreepsPublisher = createOpponentFieldCreepsPublisher((remaining) =>
-    publishGameEvent('opponent-field-creeps-updated', { remaining }),
-  );
-  private readonly teardownCallbacks: Array<() => void> = [];
-  private selectedTowerType: TowerTypeId | null = null;
-  private selectedBuilderFactionId = DEFAULT_BUILDER_FACTION;
-  private selectedFaction: HudFactionType = 'undead';
-  private selectedDifficulty: Difficulty = DEFAULT_DIFFICULTY;
-  private duelMatchState: DuelMatchState = createInitialDuelMatchState(
-    RaceId.UNDEAD,
-    RaceId.UNDEAD,
-  );
-  private opponentLeakHistory: LeakHistoryEntry[] = [];
-  /** Sent creeps that died this wave, by field; read by the round settle. */
-  private readonly sentCreepDeaths = createSentCreepDeathTally();
-  /** The computer's sends for the running wave; its live queue is drained at wave start. */
-  private opponentSendsThisWave: readonly string[] = [];
-  private readonly computerDecisionRecorder = createComputerDecisionDebugRecorder();
-  private readonly computerMazePlanMemory = createComputerMazePlanMemory();
-  private matchOutcomeStatus: MatchOutcomeStatus = 'active';
-  private matchWinner: HudFactionType | null = null;
-  private matchOutcomeReason: MatchOutcomeReason | null = null;
-  private activeBattlefieldView: BattlefieldView = 'player';
-  private mapSeed = DEFAULT_MAP_SEED;
-  private setupEndpoints: GameSetupEndpoints | undefined;
-  private baselineWaves: SharedBaselineWaveSource =
-    createSharedBaselineWaveSource(DEFAULT_MAP_SEED);
-  private mapEndpoints: EdgeEndpoints = { entrance: ENTRANCE_CELL, exit: EXIT_CELL };
-  private inputControllerState: InputControllerState = createInputControllerState();
-  /** Created with the scene systems: `scale` is not available in the constructor. */
-  private boardCamera: BoardCameraState | null = null;
-  private devFpsReportElapsedMs = 0;
-  private soundManager: GameAudioManager | null = null;
-  /** Simulation time: paused and sped up independently of Phaser's clock. */
-  private readonly gameClock = createGameClockState();
-  /** Set when a lifecycle step threw; the loop idles until a restart clears it. */
-  private hasEngineError = false;
+  private readonly state: GameSceneState = createGameSceneState();
+
+  /** Test seam (sceneHarness): the wave runtime state the wallet lives in. */
+  private get runState(): WaveRuntimeState {
+    return this.state.runState;
+  }
+
+  /** Test seam (sceneHarness): the live duel match state. */
+  private get duelMatchState(): DuelMatchState {
+    return this.state.duelMatchState;
+  }
+
+  private set duelMatchState(state: DuelMatchState) {
+    this.state.duelMatchState = state;
+  }
 
   private get playerGold(): number {
-    return this.runState.playerGold;
+    return this.state.runState.playerGold;
   }
 
   private set playerGold(nextGold: number) {
-    this.runState.playerGold = nextGold;
+    this.state.runState.playerGold = nextGold;
   }
 
   private get wavePhaseState(): WavePhaseState {
-    return this.runState.wavePhaseState;
+    return this.state.runState.wavePhaseState;
   }
 
   private set wavePhaseState(nextPhase: WavePhaseState) {
-    this.runState.wavePhaseState = nextPhase;
+    this.state.runState.wavePhaseState = nextPhase;
   }
 
   private get isGameOver(): boolean {
-    return this.runState.isGameOver;
+    return this.state.runState.isGameOver;
   }
 
   private set isGameOver(nextIsGameOver: boolean) {
-    this.runState.isGameOver = nextIsGameOver;
+    this.state.runState.isGameOver = nextIsGameOver;
   }
 
   private readonly inputControllerDeps: InputControllerDependencies = {
@@ -362,12 +285,12 @@ export class GameScene extends Phaser.Scene {
       resolvePointerWorldPoint(this, this.getBoardCamera(), pointer),
     toPointerTarget: (worldX, worldY) => toPointerGridTarget(worldX, worldY),
     setHoveredTarget: (target) => {
-      this.hoveredCell = target?.cell ?? null;
-      this.hoveredBuildAnchor = target?.buildAnchor ?? null;
+      this.state.hoveredCell = target?.cell ?? null;
+      this.state.hoveredBuildAnchor = target?.buildAnchor ?? null;
     },
     clearHoveredCell: () => {
-      this.hoveredCell = null;
-      this.hoveredBuildAnchor = null;
+      this.state.hoveredCell = null;
+      this.state.hoveredBuildAnchor = null;
     },
     updateHoveredCellDebugRegistry: () => undefined,
     updateBuildPreview: () => this.updateBuildPreview(),
@@ -390,46 +313,46 @@ export class GameScene extends Phaser.Scene {
 
   /** Tower and creature sounds, resolved through the race sound profiles. */
   private readonly soundRouter: GameSoundRouter = createGameSoundRouter(
-    (soundId) => this.soundManager?.play(soundId),
-    () => this.selectedBuilderFactionId,
+    (soundId) => this.state.soundManager?.play(soundId),
+    () => this.state.selectedBuilderFactionId,
   );
 
   private readonly wiring = createGameSceneRuntimeWiring({
     scene: this,
-    runState: this.runState,
-    playerField: this.playerField,
-    opponentField: this.opponentField,
-    getSoundManager: () => this.soundManager,
+    runState: this.state.runState,
+    playerField: this.state.playerField,
+    opponentField: this.state.opponentField,
+    getSoundManager: () => this.state.soundManager,
     soundRouter: this.soundRouter,
-    getDuelMatchState: () => this.duelMatchState,
+    getDuelMatchState: () => this.state.duelMatchState,
     setDuelMatchState: (state) => {
-      this.duelMatchState = state;
+      this.state.duelMatchState = state;
     },
     getComputerSendWaveUnits: () => this.getComputerSendWaveUnits(),
-    gameNowMs: () => this.gameClock.nowMs,
+    gameNowMs: () => this.state.gameClock.nowMs,
     refreshBuildState: () => this.refreshBuildState(),
     publishHudSnapshot: () => this.publishHudSnapshot(),
     handleGameOverUpdated: (isGameOver) => this.handleGameOverUpdated(isGameOver),
     syncOpponentDuelCreepsFromField: () => this.syncOpponentDuelCreepsFromField(),
     recordSentCreepDeath: (field, creep) =>
-      recordSentCreepDeath(this.sentCreepDeaths, field, creep),
+      recordSentCreepDeath(this.state.sentCreepDeaths, field, creep),
   });
 
   private readonly towerCommandDeps: TowerCommandDeps = {
     scene: this,
-    playerField: this.playerField,
+    playerField: this.state.playerField,
     getBuildRuntimeState: () => this.getBuildRuntimeState(),
     getBuildRuntimeDeps: () => this.getBuildRuntimeDeps(),
-    isPlayerViewActive: () => this.activeBattlefieldView === 'player',
+    isPlayerViewActive: () => this.state.activeBattlefieldView === 'player',
     canManageTowers: () => !this.isGameOver && this.canPerformBuildActions(),
-    getHoveredCell: () => this.hoveredCell,
-    getGridModel: () => this.gridModel,
-    getBuilderFactionId: () => this.selectedBuilderFactionId,
+    getHoveredCell: () => this.state.hoveredCell,
+    getGridModel: () => this.state.gridModel,
+    getBuilderFactionId: () => this.state.selectedBuilderFactionId,
     getPlayerGold: () => this.playerGold,
-    getTowerBranchChoices: () => this.duelMatchState.player.towerBranchChoices,
+    getTowerBranchChoices: () => this.state.duelMatchState.player.towerBranchChoices,
     onTowerBranchChosen: (buildableTowerId, branchId) => {
-      this.duelMatchState = recordTowerBranchChoice(
-        this.duelMatchState,
+      this.state.duelMatchState = recordTowerBranchChoice(
+        this.state.duelMatchState,
         'player',
         buildableTowerId,
         branchId,
@@ -442,14 +365,14 @@ export class GameScene extends Phaser.Scene {
     onRefundRecorded: (refundAmount) => {
       this.registry.set('economy.lastSellRefund', refundAmount);
     },
-    playSound: (soundId: SoundId) => this.soundManager?.play(soundId),
+    playSound: (soundId: SoundId) => this.state.soundManager?.play(soundId),
     soundRouter: this.soundRouter,
     markUserActionProcessed: () => this.markUserActionProcessed(),
     onHudChanged: () => this.publishHudSnapshot(),
     drawGridCell: (cell) => {
       // Tower commands redraw exactly the cells whose occupancy they changed.
-      markRoutePreviewLayoutChanged(this.routePreview);
-      this.arePathTilesStale = true;
+      markRoutePreviewLayoutChanged(this.state.routePreview);
+      this.state.arePathTilesStale = true;
       this.drawGridCell(cell);
     },
     // Every build/sell ends here once its cells are redrawn: one path refresh
@@ -463,13 +386,13 @@ export class GameScene extends Phaser.Scene {
 
   private readonly sendCreepCommandDeps: SendCreepCommandDeps = {
     syncDuelPlayerGoldFromWallet: () => this.syncDuelPlayerGoldFromWallet(),
-    getDuelMatchState: () => this.duelMatchState,
+    getDuelMatchState: () => this.state.duelMatchState,
     setDuelMatchState: (state) => {
-      this.duelMatchState = state;
+      this.state.duelMatchState = state;
     },
-    isMatchOver: () => this.isGameOver || this.matchOutcomeStatus !== 'active',
+    isMatchOver: () => this.isGameOver || this.state.matchOutcomeStatus !== 'active',
     canPerformBuildActions: () => this.canPerformBuildActions(),
-    getBuilderFactionId: () => this.selectedBuilderFactionId,
+    getBuilderFactionId: () => this.state.selectedBuilderFactionId,
     onGoldUpdated: (nextGold) => {
       this.playerGold = nextGold;
       this.registry.set('economy.gold', nextGold);
@@ -478,13 +401,13 @@ export class GameScene extends Phaser.Scene {
   };
 
   private readonly creatureTalentCommandDeps: CreatureTalentCommandDeps = {
-    getDuelMatchState: () => this.duelMatchState,
+    getDuelMatchState: () => this.state.duelMatchState,
     setDuelMatchState: (state) => {
-      this.duelMatchState = state;
+      this.state.duelMatchState = state;
     },
-    isMatchOver: () => this.isGameOver || this.matchOutcomeStatus !== 'active',
-    getBuilderFactionId: () => this.selectedBuilderFactionId,
-    playSound: (soundId: SoundId) => this.soundManager?.play(soundId),
+    isMatchOver: () => this.isGameOver || this.state.matchOutcomeStatus !== 'active',
+    getBuilderFactionId: () => this.state.selectedBuilderFactionId,
+    playSound: (soundId: SoundId) => this.state.soundManager?.play(soundId),
     onHudChanged: () => this.publishHudSnapshot(),
   };
 
@@ -496,47 +419,47 @@ export class GameScene extends Phaser.Scene {
   public inspectRuntimeState(): GameSceneInspection {
     return {
       duelMatchState: this.duelMatchState,
-      playerField: this.playerField,
-      opponentField: this.opponentField,
+      playerField: this.state.playerField,
+      opponentField: this.state.opponentField,
       pendingPlayerSpawns: this.runState.pendingWaveSpawns,
-      pendingOpponentSpawns: this.opponentWave.pendingWaveSpawns,
+      pendingOpponentSpawns: this.state.opponentWave.pendingWaveSpawns,
       wavePhaseState: this.wavePhaseState,
       waveNumber: this.runState.currentWaveNumber,
       playerGold: this.playerGold,
       isGameOver: this.isGameOver,
-      activeBattlefieldView: this.activeBattlefieldView,
-      gridModel: this.gridModel,
-      gridRenderer: this.gridRendererState,
+      activeBattlefieldView: this.state.activeBattlefieldView,
+      gridModel: this.state.gridModel,
+      gridRenderer: this.state.gridRendererState,
       cameraView: this.getBoardCamera().view,
       cameraZoomFactor: getBoardZoomFactor(this.getBoardCamera()),
-      pendingPlacementAnchor: this.pendingPlacementAnchor,
+      pendingPlacementAnchor: this.state.pendingPlacementAnchor,
     };
   }
 
   /** The block the preview shows: the armed one on touch, else the hovered one. */
   private getPreviewAnchor(): GridPosition | null {
     return resolvePreviewAnchor({
-      pendingAnchor: this.pendingPlacementAnchor,
-      hoveredAnchor: this.hoveredBuildAnchor,
+      pendingAnchor: this.state.pendingPlacementAnchor,
+      hoveredAnchor: this.state.hoveredBuildAnchor,
       confirmsTouchPlacement: this.confirmsTouchPlacement(),
     });
   }
 
   private confirmsTouchPlacement(): boolean {
-    return this.isLastPointerTouch && getControlSettings().confirmPlacementWithSecondTap;
+    return this.state.isLastPointerTouch && getControlSettings().confirmPlacementWithSecondTap;
   }
 
   private getBoardCamera(): BoardCameraState {
-    if (!this.boardCamera) {
-      this.boardCamera = createBoardCameraState(this);
+    if (!this.state.boardCamera) {
+      this.state.boardCamera = createBoardCameraState(this);
     }
-    return this.boardCamera;
+    return this.state.boardCamera;
   }
 
   public preload(): void {
     this.runGuarded('preload', () => {
-      this.soundManager = new GameAudioManager(this);
-      this.soundManager.preload();
+      this.state.soundManager = new GameAudioManager(this);
+      this.state.soundManager.preload();
       preloadGameSceneAssets(this);
     });
   }
@@ -551,14 +474,16 @@ export class GameScene extends Phaser.Scene {
    * combat, spawn timers and the auto-start countdown alike.
    */
   public update(_realTimeMs: number, realDeltaMs: number): void {
-    if (this.hasEngineError) {
+    if (this.state.hasEngineError) {
       return;
     }
-    const simulationDeltaMs = advanceGameClock(this.gameClock, realDeltaMs);
+    const simulationDeltaMs = advanceGameClock(this.state.gameClock, realDeltaMs);
     if (simulationDeltaMs === 0) {
       return;
     }
-    this.runGuarded('update', () => this.stepSimulation(this.gameClock.nowMs, simulationDeltaMs));
+    this.runGuarded('update', () =>
+      this.stepSimulation(this.state.gameClock.nowMs, simulationDeltaMs),
+    );
   }
 
   /** The step a lifecycle guard wraps; a throw here pauses the engine. */
@@ -567,8 +492,8 @@ export class GameScene extends Phaser.Scene {
   }
 
   private handleEngineError(report: EngineErrorReport): void {
-    this.hasEngineError = true;
-    this.gameClock.isPaused = true;
+    this.state.hasEngineError = true;
+    this.state.gameClock.isPaused = true;
     this.applyClockToPhaserSystems();
     publishGameEvent('engine-error', { phase: report.phase, message: report.message });
     // The HUD should show the pause even if the snapshot itself is what broke.
@@ -580,19 +505,19 @@ export class GameScene extends Phaser.Scene {
   }
 
   private setPaused(isPaused: boolean): void {
-    if (this.gameClock.isPaused === isPaused) {
+    if (this.state.gameClock.isPaused === isPaused) {
       return;
     }
-    this.gameClock.isPaused = isPaused;
+    this.state.gameClock.isPaused = isPaused;
     this.applyClockToPhaserSystems();
     this.publishHudSnapshot();
   }
 
   private setGameSpeed(speed: GameSpeed): void {
-    if (this.gameClock.speed === speed) {
+    if (this.state.gameClock.speed === speed) {
       return;
     }
-    this.gameClock.speed = speed;
+    this.state.gameClock.speed = speed;
     this.applyClockToPhaserSystems();
     this.publishHudSnapshot();
   }
@@ -602,10 +527,10 @@ export class GameScene extends Phaser.Scene {
    * live on Phaser's own clocks; keep them in step with the game clock.
    */
   private applyClockToPhaserSystems(): void {
-    this.time.paused = this.gameClock.isPaused;
-    this.time.timeScale = this.gameClock.speed;
-    this.anims.globalTimeScale = this.gameClock.speed;
-    if (this.gameClock.isPaused) {
+    this.time.paused = this.state.gameClock.isPaused;
+    this.time.timeScale = this.state.gameClock.speed;
+    this.anims.globalTimeScale = this.state.gameClock.speed;
+    if (this.state.gameClock.isPaused) {
       this.anims.pauseAll();
     } else {
       this.anims.resumeAll();
@@ -613,19 +538,19 @@ export class GameScene extends Phaser.Scene {
   }
 
   private createScene(): void {
-    this.isSceneCleanedUp = false;
+    this.state.isSceneCleanedUp = false;
     startMissingArtReport();
     ensurePlaceholderTextures(this);
     this.loadSetupConfig();
     this.cameras.main.setBackgroundColor('#1a1f2c');
     this.cameras.main.roundPixels = true;
     applyNearestNeighborFiltering(this);
-    this.boardCamera = null;
-    this.teardownCallbacks.push(registerResponsiveCamera(this, this.getBoardCamera()));
+    this.state.boardCamera = null;
+    this.state.teardownCallbacks.push(registerResponsiveCamera(this, this.getBoardCamera()));
     this.drawGrid();
     // Phaser tracks one touch pointer by default; pinch needs a second one.
     this.input.addPointer(1);
-    this.teardownCallbacks.push(
+    this.state.teardownCallbacks.push(
       registerScenePointerHandlers(this, {
         onPointerMove: (pointer) => this.handlePointerMove(pointer),
         onPointerDown: (pointer) => this.handlePointerDown(pointer),
@@ -634,14 +559,18 @@ export class GameScene extends Phaser.Scene {
         onGameOut: () => this.handleGameOut(),
       }),
     );
-    this.buildPreviewOverlay = this.add.graphics();
-    this.buildPreviewOverlay.setDepth(BUILD_PREVIEW_RENDER_DEPTH);
-    attachRoutePreviewGraphics(this.routePreview, this.add.graphics(), ROUTE_PREVIEW_RENDER_DEPTH);
+    this.state.buildPreviewOverlay = this.add.graphics();
+    this.state.buildPreviewOverlay.setDepth(BUILD_PREVIEW_RENDER_DEPTH);
+    attachRoutePreviewGraphics(
+      this.state.routePreview,
+      this.add.graphics(),
+      ROUTE_PREVIEW_RENDER_DEPTH,
+    );
     this.input.mouse?.disableContextMenu();
-    this.teardownCallbacks.push(
+    this.state.teardownCallbacks.push(
       registerSceneAudioUnlock(
         this,
-        () => this.soundManager,
+        () => this.state.soundManager,
         () => this.ensureBaseAmbientPlaying(),
       ),
     );
@@ -649,7 +578,7 @@ export class GameScene extends Phaser.Scene {
     createTowerAnimations(this);
     this.registerBridgeCommandHandlers();
     this.registry.set('economy.gold', this.playerGold);
-    this.registry.set('economy.lives', this.duelMatchState.player.hp);
+    this.registry.set('economy.lives', this.state.duelMatchState.player.hp);
     this.registry.set('phase.build.active', this.canPerformBuildActions());
     this.registry.set('phase.game.over', this.isGameOver);
     this.registry.set('economy.earlyWaveStartBonus.granted', false);
@@ -669,8 +598,8 @@ export class GameScene extends Phaser.Scene {
       return;
     }
 
-    processPendingWaveSpawns(this.runState, this.wiring.waveRuntimeDeps, nowMs);
-    processPendingWaveSpawns(this.opponentWave, this.wiring.waveRuntimeDeps, nowMs);
+    processPendingWaveSpawns(this.state.runState, this.wiring.waveRuntimeDeps, nowMs);
+    processPendingWaveSpawns(this.state.opponentWave, this.wiring.waveRuntimeDeps, nowMs);
     moveBattlefieldCreeps(this.wiring.playerBattlefieldContext, MOVEMENT_RUNTIME_CONFIG, delta);
     moveBattlefieldCreeps(this.wiring.opponentBattlefieldContext, MOVEMENT_RUNTIME_CONFIG, delta);
     updateBattlefieldTowerCombat(
@@ -757,7 +686,7 @@ export class GameScene extends Phaser.Scene {
 
   private registerBridgeCommandHandlers(): void {
     const onCommand = this.onGuardedCommand.bind(this);
-    this.teardownCallbacks.push(
+    this.state.teardownCallbacks.push(
       onCommand('start-wave', () => {
         this.handleStartWaveCommand();
       }),
@@ -774,22 +703,22 @@ export class GameScene extends Phaser.Scene {
         this.setPaused(true);
       }),
       onCommand('select-tower', (payload) => {
-        this.selectedTowerType = payload.towerType;
-        this.registry.set('ui.selectedTowerType', this.selectedTowerType ?? 'none');
+        this.state.selectedTowerType = payload.towerType;
+        this.registry.set('ui.selectedTowerType', this.state.selectedTowerType ?? 'none');
         this.publishHudSnapshot();
       }),
       onCommand('select-faction', (payload) => {
-        this.selectedFaction = payload.faction;
+        this.state.selectedFaction = payload.faction;
         if (this.canPerformBuildActions()) {
-          this.duelMatchState = createInitialDuelMatchState(
-            this.selectedBuilderFactionId,
-            mapHudFactionToRaceId(this.selectedFaction),
-            { ...this.mapEndpoints, baselineRaceId: this.getBaselineRaceId() },
+          this.state.duelMatchState = createInitialDuelMatchState(
+            this.state.selectedBuilderFactionId,
+            mapHudFactionToRaceId(this.state.selectedFaction),
+            { ...this.state.mapEndpoints, baselineRaceId: this.getBaselineRaceId() },
           );
-          this.registry.set('economy.lives', this.duelMatchState.player.hp);
-          publishPlayerSendLimits(this.duelMatchState, this.selectedBuilderFactionId);
+          this.registry.set('economy.lives', this.state.duelMatchState.player.hp);
+          publishPlayerSendLimits(this.state.duelMatchState, this.state.selectedBuilderFactionId);
         }
-        this.registry.set('wave.selectedFaction', this.selectedFaction);
+        this.registry.set('wave.selectedFaction', this.state.selectedFaction);
         this.publishHudSnapshot();
       }),
       onCommand('send-creep', (payload) => {
@@ -819,8 +748,8 @@ export class GameScene extends Phaser.Scene {
       }),
       onCommand('restart-match', () => {
         // A restart is also the recover action after an engine error.
-        this.hasEngineError = false;
-        this.gameClock.isPaused = false;
+        this.state.hasEngineError = false;
+        this.state.gameClock.isPaused = false;
         this.applyClockToPhaserSystems();
         this.resetRunToInitialState();
       }),
@@ -829,11 +758,11 @@ export class GameScene extends Phaser.Scene {
           return;
         }
 
-        this.activeBattlefieldView = payload.activeView;
+        this.state.activeBattlefieldView = payload.activeView;
         if (payload.activeView !== 'player') {
           // The opponent view is read-only: close the player's tower actions.
           publishGameEvent('selected-tower', { tower: null });
-          this.pendingPlacementAnchor = null;
+          this.state.pendingPlacementAnchor = null;
         }
         this.renderVisibleBattlefield();
         this.publishHudSnapshot();
@@ -843,36 +772,36 @@ export class GameScene extends Phaser.Scene {
 
   private drawGrid(): void {
     const grid = drawGridRuntime(
-      this.gridRendererState,
+      this.state.gridRendererState,
       this.getGridRendererDeps(),
       GRID_RENDERER_CONFIG,
       GRID_OVERLAY_RENDER_DEPTH,
     );
-    this.gridModel = grid;
+    this.state.gridModel = grid;
     this.updateGridOverlayVisualState();
     this.initializeWaveRuntime(grid);
     // A fresh board: show its path from match start, not only after the
     // first build or wave start.
-    markRoutePreviewLayoutChanged(this.routePreview);
-    this.arePathTilesStale = true;
+    markRoutePreviewLayoutChanged(this.state.routePreview);
+    this.state.arePathTilesStale = true;
     this.refreshBuildPhasePathTiles();
   }
 
   private initializeWaveRuntime(grid: GridModel): void {
     initializeWaveRuntimeModule(
-      this.runState,
+      this.state.runState,
       WAVE_RUNTIME_CONFIG,
       this.wiring.waveRuntimeDeps,
       grid,
     );
-    destroyBattlefieldTowers(this.playerField);
-    destroyBattlefieldRenderState(this.opponentField);
-    clearFieldWaveSchedule(this.opponentWave);
+    destroyBattlefieldTowers(this.state.playerField);
+    destroyBattlefieldRenderState(this.state.opponentField);
+    clearFieldWaveSchedule(this.state.opponentWave);
   }
 
   private ensureBaseAmbientPlaying(): void {
-    if (!this.soundManager?.isPlaying('ambient.map')) {
-      this.soundManager?.play('ambient.map');
+    if (!this.state.soundManager?.isPlaying('ambient.map')) {
+      this.state.soundManager?.play('ambient.map');
     }
   }
 
@@ -880,7 +809,7 @@ export class GameScene extends Phaser.Scene {
     this.isGameOver = isGameOver;
     this.registry.set('phase.game.over', isGameOver);
     if (isGameOver) {
-      this.soundManager?.stopSound('ambient.tension');
+      this.state.soundManager?.stopSound('ambient.tension');
       this.ensureBaseAmbientPlaying();
     }
   }
@@ -894,13 +823,13 @@ export class GameScene extends Phaser.Scene {
   // Mirrors the opponent Phaser render state back into the duel match state,
   // so round resolution and computer decisions observe up-to-date creeps.
   private syncOpponentDuelCreepsFromField(): void {
-    this.duelMatchState = {
-      ...this.duelMatchState,
+    this.state.duelMatchState = {
+      ...this.state.duelMatchState,
       opponent: {
-        ...this.duelMatchState.opponent,
+        ...this.state.duelMatchState.opponent,
         battlefield: {
-          ...this.duelMatchState.opponent.battlefield,
-          creeps: this.opponentField.creeps.map((creep) => ({ ...creep.entity })),
+          ...this.state.duelMatchState.opponent.battlefield,
+          creeps: this.state.opponentField.creeps.map((creep) => ({ ...creep.entity })),
         },
       },
     };
@@ -908,46 +837,51 @@ export class GameScene extends Phaser.Scene {
 
   private getBuildRuntimeState(): BuildRuntimeState {
     return {
-      gridModel: this.gridModel,
-      hoveredCell: this.hoveredCell,
-      hoveredBuildAnchor: this.hoveredBuildAnchor,
+      gridModel: this.state.gridModel,
+      hoveredCell: this.state.hoveredCell,
+      hoveredBuildAnchor: this.state.hoveredBuildAnchor,
       playerGold: this.playerGold,
-      placedTowerCostsByCellKey: this.placedTowerCostsByCellKey,
+      placedTowerCostsByCellKey: this.state.placedTowerCostsByCellKey,
     };
   }
 
   private getBuildRuntimeDeps(): BuildRuntimeDeps {
     return {
       canPerformPlace: () =>
-        this.activeBattlefieldView === 'player' &&
+        this.state.activeBattlefieldView === 'player' &&
         this.canProcessUserAction() &&
         isWaveActionAllowed(this.wavePhaseState, 'place-tower') &&
         !this.isGameOver,
       resolvePlaceRejection: () => {
-        if (this.activeBattlefieldView !== 'player') return 'opponent_view';
+        if (this.state.activeBattlefieldView !== 'player') return 'opponent_view';
         if (this.isGameOver) return 'match_over';
         if (!isWaveActionAllowed(this.wavePhaseState, 'place-tower')) return 'not_build_phase';
         return null;
       },
       canPerformSell: () =>
-        this.activeBattlefieldView === 'player' &&
+        this.state.activeBattlefieldView === 'player' &&
         this.canProcessUserAction() &&
         isWaveActionAllowed(this.wavePhaseState, 'sell-tower') &&
         !this.isGameOver,
-      selectedTowerType: this.selectedTowerType,
+      selectedTowerType: this.state.selectedTowerType,
       resolveTowerCost: (towerType) => {
-        const towerConfig = resolveBuildableTowerConfig(this.selectedBuilderFactionId, towerType);
+        const towerConfig = resolveBuildableTowerConfig(
+          this.state.selectedBuilderFactionId,
+          towerType,
+        );
         return towerConfig?.costGold ?? DEFAULT_TOWER_COST;
       },
       resolveBuildableTower: (towerType) =>
-        resolveBuildableTowerConfig(this.selectedBuilderFactionId, towerType),
+        resolveBuildableTowerConfig(this.state.selectedBuilderFactionId, towerType),
       toGridCellKey: (position) => toGridCellKey(position),
       toTowerId: (position) => toTowerId(position),
       checkFootprintPlacementPath: (grid, anchor, footprint) =>
         checkFootprintPlacementPath(grid, anchor, footprint),
       sellRefundRatio: SELL_REFUND_RATIO,
       resolveSellRefundRatio: (towerId) => {
-        const tower = this.playerField.towers.find((candidate) => candidate.entity.id === towerId);
+        const tower = this.state.playerField.towers.find(
+          (candidate) => candidate.entity.id === towerId,
+        );
         return tower
           ? resolveTowerSellRefundRatio(tower.entity, SELL_REFUND_RATIO)
           : SELL_REFUND_RATIO;
@@ -959,12 +893,12 @@ export class GameScene extends Phaser.Scene {
     return {
       scene: this,
       selectedBuilderFactionId: this.getVisibleBuilderFactionId(),
-      pathCellKeys: this.pathCellKeys,
-      mapSeed: this.mapSeed,
+      pathCellKeys: this.state.pathCellKeys,
+      mapSeed: this.state.mapSeed,
       createGridModel: () =>
         createGridModel({
-          entrance: this.mapEndpoints.entrance,
-          exit: this.mapEndpoints.exit,
+          entrance: this.state.mapEndpoints.entrance,
+          exit: this.state.mapEndpoints.exit,
         }),
     };
   }
@@ -972,12 +906,12 @@ export class GameScene extends Phaser.Scene {
   private updateBuildPreview(): void {
     const isHoveredAnchorValid = updateBuildPreviewRuntime(
       {
-        overlay: this.buildPreviewOverlay,
-        gridGraphics: this.gridRendererState.gridGraphics,
-        gridModel: this.gridModel,
+        overlay: this.state.buildPreviewOverlay,
+        gridGraphics: this.state.gridRendererState.gridGraphics,
+        gridModel: this.state.gridModel,
         hoveredBuildAnchor: this.getPreviewAnchor(),
         canPerformBuildActions: this.canPerformBuildActions(),
-        selectedTowerRangeCells: resolveTowerRangeCells(this.selectedTowerType),
+        selectedTowerRangeCells: resolveTowerRangeCells(this.state.selectedTowerType),
         isBuildAnchorValid: (anchor, grid) => this.isBuildAnchorValid(anchor, grid),
       },
       GRID_PREVIEW_CONFIG,
@@ -985,9 +919,9 @@ export class GameScene extends Phaser.Scene {
     // The preview runtime re-dims the grid lines; keep the overlay in step.
     this.syncOccupancyOverlayAlpha();
     updateBuildRoutePreview(
-      this.routePreview,
+      this.state.routePreview,
       {
-        grid: this.gridModel,
+        grid: this.state.gridModel,
         isBuildPhase: this.canPerformBuildActions(),
         hoveredAnchor: this.getPreviewAnchor(),
         isHoveredAnchorValid,
@@ -1012,16 +946,16 @@ export class GameScene extends Phaser.Scene {
    * Outside the build phase the tiles follow the wave's routes (wave start).
    */
   private refreshBuildPhasePathTiles(): void {
-    if (!this.arePathTilesStale || !this.gridModel || !this.canPerformBuildActions()) {
+    if (!this.state.arePathTilesStale || !this.state.gridModel || !this.canPerformBuildActions()) {
       return;
     }
-    this.arePathTilesStale = false;
+    this.state.arePathTilesStale = false;
     refreshPathTiles(
-      this.gridModel.cells,
-      this.pathCellKeys,
+      this.state.gridModel.cells,
+      this.state.pathCellKeys,
       this.getPlayerPathRoute(),
       (nextPathCellKeys) => {
-        this.pathCellKeys = nextPathCellKeys;
+        this.state.pathCellKeys = nextPathCellKeys;
       },
       (cell) => this.drawGridCell(cell),
     );
@@ -1029,17 +963,17 @@ export class GameScene extends Phaser.Scene {
 
   /** Shares the route preview's memoised search while building. */
   private getPlayerPathRoute(): readonly GridPoint[] {
-    const grid = this.gridModel;
+    const grid = this.state.gridModel;
     return selectPlayerPathRoute(
       grid !== null && !this.isGameOver && canPerformBuildActionsByPhase(this.wavePhaseState),
-      () => (grid ? getBuildRoutePreviewCurrentRoutes(this.routePreview, grid).small : []),
-      this.runState.activeCreepRoutes.small,
+      () => (grid ? getBuildRoutePreviewCurrentRoutes(this.state.routePreview, grid).small : []),
+      this.state.runState.activeCreepRoutes.small,
     );
   }
 
   private drawGridCell(cell: GridCell): void {
     drawGridCellRuntime(
-      this.gridRendererState,
+      this.state.gridRendererState,
       this.getGridRendererDeps(),
       GRID_RENDERER_CONFIG,
       cell,
@@ -1048,7 +982,7 @@ export class GameScene extends Phaser.Scene {
 
   private updateGridOverlayVisualState(): void {
     updateGridOverlayVisualStateRuntime(
-      this.gridRendererState.gridGraphics,
+      this.state.gridRendererState.gridGraphics,
       this.canPerformBuildActions(),
       GRID_PREVIEW_CONFIG,
     );
@@ -1058,7 +992,7 @@ export class GameScene extends Phaser.Scene {
   /** The occupancy overlay dims with the grid lines during waves. */
   private syncOccupancyOverlayAlpha(): void {
     updateGridOverlayVisualStateRuntime(
-      this.gridRendererState.occupancyGraphics,
+      this.state.gridRendererState.occupancyGraphics,
       this.canPerformBuildActions(),
       GRID_PREVIEW_CONFIG,
     );
@@ -1069,7 +1003,7 @@ export class GameScene extends Phaser.Scene {
       return false;
     }
 
-    if (this.activeBattlefieldView !== 'player') {
+    if (this.state.activeBattlefieldView !== 'player') {
       return false;
     }
 
@@ -1077,112 +1011,112 @@ export class GameScene extends Phaser.Scene {
   }
 
   private syncDuelPlayerGoldFromWallet(): void {
-    if (this.duelMatchState.player.gold === this.playerGold) {
+    if (this.state.duelMatchState.player.gold === this.playerGold) {
       return;
     }
-    this.duelMatchState = {
-      ...this.duelMatchState,
-      player: { ...this.duelMatchState.player, gold: this.playerGold },
+    this.state.duelMatchState = {
+      ...this.state.duelMatchState,
+      player: { ...this.state.duelMatchState.player, gold: this.playerGold },
     };
   }
 
   private loadSetupConfig(): void {
     const setupConfig = getGameSetupConfig();
     if (setupConfig) {
-      this.selectedBuilderFactionId = setupConfig.builderFaction;
-      this.selectedFaction = mapEnemyFactionToHudFaction(setupConfig.enemyFaction);
-      this.selectedDifficulty = setupConfig.difficulty;
+      this.state.selectedBuilderFactionId = setupConfig.builderFaction;
+      this.state.selectedFaction = mapEnemyFactionToHudFaction(setupConfig.enemyFaction);
+      this.state.selectedDifficulty = setupConfig.difficulty;
       this.registry.set('game.setup', setupConfig);
     }
 
-    this.setupEndpoints = setupConfig?.endpoints;
+    this.state.setupEndpoints = setupConfig?.endpoints;
     this.resetBaselineWaves();
     if (setupConfig?.endpoints?.mode === 'dynamic') {
-      this.mapSeed = setupConfig.endpoints.seed;
-      this.mapEndpoints = generateEdgeEndpoints(setupConfig.endpoints.seed);
+      this.state.mapSeed = setupConfig.endpoints.seed;
+      this.state.mapEndpoints = generateEdgeEndpoints(setupConfig.endpoints.seed);
     } else {
-      this.mapSeed = DEFAULT_MAP_SEED;
-      this.mapEndpoints = { entrance: ENTRANCE_CELL, exit: EXIT_CELL };
+      this.state.mapSeed = DEFAULT_MAP_SEED;
+      this.state.mapEndpoints = { entrance: ENTRANCE_CELL, exit: EXIT_CELL };
     }
 
-    this.duelMatchState = createInitialDuelMatchState(
-      this.selectedBuilderFactionId,
-      mapHudFactionToRaceId(this.selectedFaction),
-      { ...this.mapEndpoints, baselineRaceId: this.getBaselineRaceId() },
+    this.state.duelMatchState = createInitialDuelMatchState(
+      this.state.selectedBuilderFactionId,
+      mapHudFactionToRaceId(this.state.selectedFaction),
+      { ...this.state.mapEndpoints, baselineRaceId: this.getBaselineRaceId() },
     );
-    publishPlayerSendLimits(this.duelMatchState, this.selectedBuilderFactionId);
+    publishPlayerSendLimits(this.state.duelMatchState, this.state.selectedBuilderFactionId);
     // The scene wallet is the source of truth: seed it from the duel balance
     // table so both sides start level. Difficulty never tilts the purse.
-    this.playerGold = this.duelMatchState.player.gold;
+    this.playerGold = this.state.duelMatchState.player.gold;
     this.registry.set('economy.gold', this.playerGold);
-    this.registry.set('economy.lives', this.duelMatchState.player.hp);
-    this.opponentLeakHistory = [];
-    this.computerDecisionRecorder.clear();
-    this.computerMazePlanMemory.plan = null;
+    this.registry.set('economy.lives', this.state.duelMatchState.player.hp);
+    this.state.opponentLeakHistory = [];
+    this.state.computerDecisionRecorder.clear();
+    this.state.computerMazePlanMemory.plan = null;
   }
 
   /** Restarts the match's baseline stream; a fixed map rolls a fresh seed. */
   private resetBaselineWaves(): void {
-    this.baselineWaves = createSharedBaselineWaveSource(
-      resolveBaselineWaveSeed(this.setupEndpoints, Math.random),
+    this.state.baselineWaves = createSharedBaselineWaveSource(
+      resolveBaselineWaveSeed(this.state.setupEndpoints, Math.random),
     );
   }
 
   private updatePerformanceTelemetry(deltaMs: number): void {
-    this.devFpsReportElapsedMs += deltaMs;
+    this.state.devFpsReportElapsedMs += deltaMs;
 
-    if (this.devFpsReportElapsedMs < DEV_FPS_REPORT_INTERVAL_MS) {
+    if (this.state.devFpsReportElapsedMs < DEV_FPS_REPORT_INTERVAL_MS) {
       return;
     }
 
-    this.devFpsReportElapsedMs = 0;
+    this.state.devFpsReportElapsedMs = 0;
     this.registry.set('performance.fps', Math.round(this.game.loop.actualFps));
   }
 
   private applyWaveCompletionRewardIfResolved(): void {
-    const wasWaveCompletionRewardGranted = this.runState.isWaveCompletionRewardGranted;
+    const wasWaveCompletionRewardGranted = this.state.runState.isWaveCompletionRewardGranted;
     applyWaveCompletionRewardIfResolvedRuntime(
-      this.runState,
+      this.state.runState,
       WAVE_RUNTIME_CONFIG,
       this.wiring.waveRuntimeDeps,
-      isFieldWaveResolved(this.opponentWave),
+      isFieldWaveResolved(this.state.opponentWave),
     );
-    if (!wasWaveCompletionRewardGranted && this.runState.isWaveCompletionRewardGranted) {
+    if (!wasWaveCompletionRewardGranted && this.state.runState.isWaveCompletionRewardGranted) {
       this.applyDuelRoundEndFromResolvedWave();
     }
     if (this.canPerformBuildActions()) {
       // Send queues must NOT be cleared here: this runs every frame of the
       // build phase, which is exactly when the player queues sends. They are
       // consumed and cleared at wave start instead.
-      if (this.duelMatchState.phase !== 'build') {
-        this.duelMatchState = { ...this.duelMatchState, phase: 'build' };
+      if (this.state.duelMatchState.phase !== 'build') {
+        this.state.duelMatchState = { ...this.state.duelMatchState, phase: 'build' };
       }
-      this.soundManager?.stopSound('ambient.tension');
+      this.state.soundManager?.stopSound('ambient.tension');
       this.ensureBaseAmbientPlaying();
     }
   }
 
   private recordOpponentLeakHistory(round: number, leakedCount: number): void {
-    this.opponentLeakHistory.push({ round, leakedCount });
-    if (this.opponentLeakHistory.length > GameScene.OPPONENT_LEAK_HISTORY_LIMIT) {
-      this.opponentLeakHistory.shift();
+    this.state.opponentLeakHistory.push({ round, leakedCount });
+    if (this.state.opponentLeakHistory.length > GameScene.OPPONENT_LEAK_HISTORY_LIMIT) {
+      this.state.opponentLeakHistory.shift();
     }
   }
 
   private applyDuelRoundEndFromResolvedWave(): void {
     const duelRuntimeState: DuelMatchRuntimeState = {
-      duelMatchState: this.duelMatchState,
+      duelMatchState: this.state.duelMatchState,
       wavePhaseState: this.wavePhaseState,
       isGameOver: this.isGameOver,
-      nextWaveStartsAtMs: this.runState.nextWaveStartsAtMs,
+      nextWaveStartsAtMs: this.state.runState.nextWaveStartsAtMs,
     };
-    const opponentLeakedCreeps = this.opponentField.creeps.filter(
+    const opponentLeakedCreeps = this.state.opponentField.creeps.filter(
       (creep) => creep.entity.status === 'escaped',
     ).length;
-    this.recordOpponentLeakHistory(this.duelMatchState.round, opponentLeakedCreeps);
+    this.recordOpponentLeakHistory(this.state.duelMatchState.round, opponentLeakedCreeps);
     const leaks = summarizeFieldLeaks(
-      this.playerField.creeps.map((c) => c.entity),
-      this.opponentField.creeps.map((c) => c.entity),
+      this.state.playerField.creeps.map((c) => c.entity),
+      this.state.opponentField.creeps.map((c) => c.entity),
     );
     const result = applyDuelRoundEndRuntime({
       state: duelRuntimeState,
@@ -1191,18 +1125,20 @@ export class GameScene extends Phaser.Scene {
       opponentLeakedCreeps: leaks.opponentLeakedLives,
       sentLeaks: leaks.sentLeaks,
       towerIncome: {
-        player: getTowersIncomePerRound(this.playerField.towers.map((tower) => tower.entity)),
-        opponent: getTowersIncomePerRound(this.opponentField.towers.map((tower) => tower.entity)),
+        player: getTowersIncomePerRound(this.state.playerField.towers.map((tower) => tower.entity)),
+        opponent: getTowersIncomePerRound(
+          this.state.opponentField.towers.map((tower) => tower.entity),
+        ),
       },
       sentOutcomes: buildSentCreepOutcomes(
-        this.sentCreepDeaths,
-        this.playerField.creeps.map((creep) => creep.entity),
-        this.opponentField.creeps.map((creep) => creep.entity),
+        this.state.sentCreepDeaths,
+        this.state.playerField.creeps.map((creep) => creep.entity),
+        this.state.opponentField.creeps.map((creep) => creep.entity),
       ),
     });
 
-    const previousOpponentHp = this.duelMatchState.opponent.hp;
-    this.duelMatchState = awardBonusGold(
+    const previousOpponentHp = this.state.duelMatchState.opponent.hp;
+    this.state.duelMatchState = awardBonusGold(
       duelRuntimeState.duelMatchState,
       'opponent',
       leaks.leakGoldToOpponent,
@@ -1213,12 +1149,12 @@ export class GameScene extends Phaser.Scene {
     }
     this.wavePhaseState = duelRuntimeState.wavePhaseState;
     this.isGameOver = duelRuntimeState.isGameOver;
-    this.runState.nextWaveStartsAtMs = duelRuntimeState.nextWaveStartsAtMs;
+    this.state.runState.nextWaveStartsAtMs = duelRuntimeState.nextWaveStartsAtMs;
     publishRoundLifeEvents(previousOpponentHp, result);
     publishRoundSettled(
       {
-        round: this.runState.currentWaveNumber,
-        bountyEarned: this.runState.waveKillBountyEarned,
+        round: this.state.runState.currentWaveNumber,
+        bountyEarned: this.state.runState.waveKillBountyEarned,
       },
       result,
     );
@@ -1227,12 +1163,15 @@ export class GameScene extends Phaser.Scene {
       this.registry.set('economy.gold', this.playerGold);
     }
     this.syncDuelPlayerGoldFromWallet();
-    this.matchWinner = result.winner === null ? null : mapRaceIdToHudFaction(result.winner);
-    this.matchOutcomeStatus = resolveMatchOutcomeStatus(result.isMatchOver, result.winningSide);
-    this.matchOutcomeReason = mapDuelEndReasonToOutcomeReason(result.endReason);
-    this.registry.set('duel.match.outcome', this.matchOutcomeStatus);
-    if (this.matchWinner !== null) {
-      this.registry.set('duel.match.winner', this.matchWinner);
+    this.state.matchWinner = result.winner === null ? null : mapRaceIdToHudFaction(result.winner);
+    this.state.matchOutcomeStatus = resolveMatchOutcomeStatus(
+      result.isMatchOver,
+      result.winningSide,
+    );
+    this.state.matchOutcomeReason = mapDuelEndReasonToOutcomeReason(result.endReason);
+    this.registry.set('duel.match.outcome', this.state.matchOutcomeStatus);
+    if (this.state.matchWinner !== null) {
+      this.registry.set('duel.match.winner', this.state.matchWinner);
     } else {
       this.registry.remove('duel.match.winner');
     }
@@ -1241,7 +1180,7 @@ export class GameScene extends Phaser.Scene {
 
   private updateAutoWaveCountdown(nowMs: number): void {
     const changed = updateAutoWaveCountdownRuntime(
-      this.runState,
+      this.state.runState,
       nowMs,
       this.canPerformBuildActions(),
     );
@@ -1251,59 +1190,59 @@ export class GameScene extends Phaser.Scene {
   }
 
   private tryStartNextWave(nowMs: number): void {
-    if (!tryStartNextWaveRuntime(this.runState, nowMs)) return;
-    if (!this.gridModel) {
-      this.runState.nextWaveStartsAtMs = null;
+    if (!tryStartNextWaveRuntime(this.state.runState, nowMs)) return;
+    if (!this.state.gridModel) {
+      this.state.runState.nextWaveStartsAtMs = null;
       return;
     }
     this.startNextWaveFromBuildState();
   }
 
   private resetRunToInitialState(): void {
-    this.opponentLeakHistory = [];
-    this.opponentSendsThisWave = [];
-    resetSentCreepDeathTally(this.sentCreepDeaths);
-    this.computerDecisionRecorder.clear();
-    this.computerMazePlanMemory.plan = null;
-    destroyBattlefieldCreeps(this.playerField);
-    destroyBattlefieldRenderState(this.opponentField);
-    clearFieldWaveSchedule(this.opponentWave);
-    destroyBattlefieldProjectiles(this.playerField);
-    destroyBattlefieldImpactEffects(this.playerField);
-    destroyBattlefieldTowers(this.playerField);
-    this.placedTowerCostsByCellKey.clear();
-    this.hoveredCell = null;
-    this.hoveredBuildAnchor = null;
-    this.pendingPlacementAnchor = null;
-    this.buildPreviewOverlay?.clear();
-    markRoutePreviewLayoutChanged(this.routePreview);
-    this.pathCellKeys.clear();
-    resetRunToInitialStateRuntime(this.runState);
+    this.state.opponentLeakHistory = [];
+    this.state.opponentSendsThisWave = [];
+    resetSentCreepDeathTally(this.state.sentCreepDeaths);
+    this.state.computerDecisionRecorder.clear();
+    this.state.computerMazePlanMemory.plan = null;
+    destroyBattlefieldCreeps(this.state.playerField);
+    destroyBattlefieldRenderState(this.state.opponentField);
+    clearFieldWaveSchedule(this.state.opponentWave);
+    destroyBattlefieldProjectiles(this.state.playerField);
+    destroyBattlefieldImpactEffects(this.state.playerField);
+    destroyBattlefieldTowers(this.state.playerField);
+    this.state.placedTowerCostsByCellKey.clear();
+    this.state.hoveredCell = null;
+    this.state.hoveredBuildAnchor = null;
+    this.state.pendingPlacementAnchor = null;
+    this.state.buildPreviewOverlay?.clear();
+    markRoutePreviewLayoutChanged(this.state.routePreview);
+    this.state.pathCellKeys.clear();
+    resetRunToInitialStateRuntime(this.state.runState);
     this.resetBaselineWaves();
-    this.duelMatchState = createInitialDuelMatchState(
-      this.selectedBuilderFactionId,
-      mapHudFactionToRaceId(this.selectedFaction),
+    this.state.duelMatchState = createInitialDuelMatchState(
+      this.state.selectedBuilderFactionId,
+      mapHudFactionToRaceId(this.state.selectedFaction),
       // Keep the map the match was set up with; rebuilding with defaults
       // would desync the grid from a generated dynamic layout.
-      { ...this.mapEndpoints, baselineRaceId: this.getBaselineRaceId() },
+      { ...this.state.mapEndpoints, baselineRaceId: this.getBaselineRaceId() },
     );
-    publishPlayerSendLimits(this.duelMatchState, this.selectedBuilderFactionId);
-    this.playerGold = this.duelMatchState.player.gold;
-    this.matchOutcomeStatus = 'active';
-    this.matchWinner = null;
-    this.matchOutcomeReason = null;
+    publishPlayerSendLimits(this.state.duelMatchState, this.state.selectedBuilderFactionId);
+    this.playerGold = this.state.duelMatchState.player.gold;
+    this.state.matchOutcomeStatus = 'active';
+    this.state.matchWinner = null;
+    this.state.matchOutcomeReason = null;
     this.registry.remove('duel.match.winner');
-    this.registry.set('duel.match.outcome', this.matchOutcomeStatus);
+    this.registry.set('duel.match.outcome', this.state.matchOutcomeStatus);
 
     this.registry.set('economy.gold', this.playerGold);
-    this.registry.set('economy.lives', this.duelMatchState.player.hp);
+    this.registry.set('economy.lives', this.state.duelMatchState.player.hp);
     this.registry.set('phase.game.over', this.isGameOver);
     this.registry.set('phase.build.active', this.canPerformBuildActions());
-    this.registry.set('wave.number', this.runState.currentWaveNumber);
+    this.registry.set('wave.number', this.state.runState.currentWaveNumber);
     this.registry.remove('wave.escapedCreeps');
     this.registry.remove('economy.lastSellRefund');
     this.publishHudSnapshot();
-    this.soundManager?.stopSound('ambient.tension');
+    this.state.soundManager?.stopSound('ambient.tension');
     this.ensureBaseAmbientPlaying();
 
     this.drawGrid();
@@ -1314,7 +1253,7 @@ export class GameScene extends Phaser.Scene {
 
   /** The enemy faction chosen at setup: the roster the baseline wave rolls from. */
   private getBaselineRaceId(): RaceId {
-    return mapHudFactionToRaceId(this.selectedFaction);
+    return mapHudFactionToRaceId(this.state.selectedFaction);
   }
 
   private getSelectedFactionUnits(): UnitConfig[] {
@@ -1327,17 +1266,17 @@ export class GameScene extends Phaser.Scene {
   }
 
   private getComputerSendWaveUnits(): UnitConfig[] {
-    return resolveQueuedSendUnits(this.duelMatchState.opponent);
+    return resolveQueuedSendUnits(this.state.duelMatchState.opponent);
   }
 
   private handlePointerMove(pointer: Phaser.Input.Pointer): void {
     if (!pointer.wasTouch) {
       // Back on a mouse: the preview follows the cursor again.
-      this.isLastPointerTouch = false;
-      this.pendingPlacementAnchor = null;
+      this.state.isLastPointerTouch = false;
+      this.state.pendingPlacementAnchor = null;
     }
     handlePointerMoveRuntime(
-      this.inputControllerState,
+      this.state.inputControllerState,
       this.inputControllerDeps,
       INPUT_CONTROLLER_CONFIG,
       pointer,
@@ -1346,24 +1285,24 @@ export class GameScene extends Phaser.Scene {
 
   private canProcessUserAction(): boolean {
     return canProcessUserActionRuntime(
-      this.inputControllerState,
+      this.state.inputControllerState,
       this.time.now,
       INPUT_CONTROLLER_CONFIG.actionCooldownMs,
     );
   }
 
   private markUserActionProcessed(): void {
-    markUserActionProcessedRuntime(this.inputControllerState, this.time.now);
+    markUserActionProcessedRuntime(this.state.inputControllerState, this.time.now);
   }
 
   private handlePointerDown(pointer: Phaser.Input.Pointer): void {
-    this.isLastPointerTouch = pointer.wasTouch;
-    handlePointerDownRuntime(this.inputControllerState, this.inputControllerDeps, pointer);
+    this.state.isLastPointerTouch = pointer.wasTouch;
+    handlePointerDownRuntime(this.state.inputControllerState, this.inputControllerDeps, pointer);
   }
 
   private handlePointerUp(pointer: Phaser.Input.Pointer): void {
     handlePointerUpRuntime(
-      this.inputControllerState,
+      this.state.inputControllerState,
       this.inputControllerDeps,
       INPUT_CONTROLLER_CONFIG,
       pointer,
@@ -1395,113 +1334,117 @@ export class GameScene extends Phaser.Scene {
       this.clearPendingPlacement();
       return 'selected-tower';
     }
-    if (this.hoveredCell) {
+    if (this.state.hoveredCell) {
       publishGameEvent('selected-tower', { tower: null });
     }
 
-    const isBuildTap = this.activeBattlefieldView === 'player' && this.canPerformBuildActions();
+    const isBuildTap =
+      this.state.activeBattlefieldView === 'player' && this.canPerformBuildActions();
     if (isBuildTap && this.confirmsTouchPlacement()) {
       this.handleTwoTapPlacement();
     } else {
-      this.pendingPlacementAnchor = null;
+      this.state.pendingPlacementAnchor = null;
       tryPlaceTowerAtHoveredCell(this.towerCommandDeps);
     }
     return isBuildTap ? 'build-tap' : 'board-tap';
   }
 
   private clearPendingPlacement(): void {
-    if (!this.pendingPlacementAnchor) {
+    if (!this.state.pendingPlacementAnchor) {
       return;
     }
-    this.pendingPlacementAnchor = null;
+    this.state.pendingPlacementAnchor = null;
     this.updateBuildPreview();
   }
 
   /** First tap arms the hovered block; a second tap on it builds (a refusal keeps it armed). */
   private handleTwoTapPlacement(): void {
-    if (!this.hoveredBuildAnchor) {
+    if (!this.state.hoveredBuildAnchor) {
       return;
     }
-    const decision = resolvePlacementTap(this.pendingPlacementAnchor, this.hoveredBuildAnchor);
+    const decision = resolvePlacementTap(
+      this.state.pendingPlacementAnchor,
+      this.state.hoveredBuildAnchor,
+    );
     if (decision.kind === 'arm') {
-      this.pendingPlacementAnchor = decision.anchor;
-      this.soundManager?.play('ui.click');
+      this.state.pendingPlacementAnchor = decision.anchor;
+      this.state.soundManager?.play('ui.click');
       this.updateBuildPreview();
       return;
     }
 
-    const towersBefore = this.playerField.towers.length;
+    const towersBefore = this.state.playerField.towers.length;
     tryPlaceTowerAtHoveredCell(this.towerCommandDeps);
-    if (this.playerField.towers.length > towersBefore) {
-      this.pendingPlacementAnchor = null;
+    if (this.state.playerField.towers.length > towersBefore) {
+      this.state.pendingPlacementAnchor = null;
       this.updateBuildPreview();
     }
   }
 
   private handleGameOut(): void {
-    handleGameOutRuntime(this.inputControllerState, this.inputControllerDeps);
+    handleGameOutRuntime(this.state.inputControllerState, this.inputControllerDeps);
   }
 
   private handleStartWaveCommand(): void {
     if (this.isGameOver || !this.canPerformBuildActions()) {
       return;
     }
-    this.soundManager?.play('ui.wave_start');
+    this.state.soundManager?.play('ui.wave_start');
 
-    this.runState.nextWaveStartsAtMs = null;
+    this.state.runState.nextWaveStartsAtMs = null;
     this.startNextWaveFromBuildState();
   }
 
   private startNextWaveFromBuildState(): void {
-    if (!this.gridModel) {
+    if (!this.state.gridModel) {
       return;
     }
 
-    const waveRoutes = calculateWaveRoutes(this.gridModel);
+    const waveRoutes = calculateWaveRoutes(this.state.gridModel);
     if (!hasWaveRoute(waveRoutes)) {
-      this.runState.nextWaveStartsAtMs = null;
+      this.state.runState.nextWaveStartsAtMs = null;
       this.publishHudSnapshot();
       return;
     }
 
     // From here on this is the wave being fought; the HUD counts it as such.
-    this.runState.currentWaveNumber += 1;
-    this.runState.waveKillBountyEarned = 0;
-    resetSentCreepDeathTally(this.sentCreepDeaths);
-    this.registry.set('wave.number', this.runState.currentWaveNumber);
-    this.runState.activeCreepRoutes = waveRoutes;
+    this.state.runState.currentWaveNumber += 1;
+    this.state.runState.waveKillBountyEarned = 0;
+    resetSentCreepDeathTally(this.state.sentCreepDeaths);
+    this.registry.set('wave.number', this.state.runState.currentWaveNumber);
+    this.state.runState.activeCreepRoutes = waveRoutes;
     // The path preview shows the single-cell route; large creeps may walk wider.
-    this.pathCellKeys = new Set(waveRoutes.small.map((cell) => `${cell.x}:${cell.y}`));
+    this.state.pathCellKeys = new Set(waveRoutes.small.map((cell) => `${cell.x}:${cell.y}`));
     this.redrawTerrainTiles();
-    this.duelMatchState = applyComputerBuildPhaseStrategies(this.duelMatchState, {
-      difficulty: this.selectedDifficulty,
-      leakHistory: this.opponentLeakHistory,
-      mazePlanMemory: this.computerMazePlanMemory,
-      debugRecorder: this.computerDecisionRecorder,
+    this.state.duelMatchState = applyComputerBuildPhaseStrategies(this.state.duelMatchState, {
+      difficulty: this.state.selectedDifficulty,
+      leakHistory: this.state.opponentLeakHistory,
+      mazePlanMemory: this.state.computerMazePlanMemory,
+      debugRecorder: this.state.computerDecisionRecorder,
       setRegistryValue: (key, value) => this.registry.set(key, value),
     });
-    this.opponentSendsThisWave = [...this.duelMatchState.opponent.sendQueue];
-    this.duelMatchState = refreshOpponentRoutesForWaveStart(this.duelMatchState);
-    this.duelMatchState = reconcileBattlefieldsForNextRound(this.duelMatchState);
+    this.state.opponentSendsThisWave = [...this.state.duelMatchState.opponent.sendQueue];
+    this.state.duelMatchState = refreshOpponentRoutesForWaveStart(this.state.duelMatchState);
+    this.state.duelMatchState = reconcileBattlefieldsForNextRound(this.state.duelMatchState);
     this.syncOpponentBattlefieldRenderStateFromDuel();
     this.scheduleWaveOnBothFields();
     // Queues have now been routed onto battlefields and spawned as creeps.
-    this.duelMatchState = resetSendQueuesForWaveStart(
-      this.duelMatchState,
-      this.selectedBuilderFactionId,
+    this.state.duelMatchState = resetSendQueuesForWaveStart(
+      this.state.duelMatchState,
+      this.state.selectedBuilderFactionId,
     );
-    this.duelMatchState = startRound(this.duelMatchState).state;
+    this.state.duelMatchState = startRound(this.state.duelMatchState).state;
     this.wavePhaseState = startNextWaveCycle(this.wavePhaseState);
     this.ensureBaseAmbientPlaying();
-    if (!this.soundManager?.isPlaying('ambient.tension')) {
-      this.soundManager?.play('ambient.tension');
+    if (!this.state.soundManager?.isPlaying('ambient.tension')) {
+      this.state.soundManager?.play('ambient.tension');
     }
-    this.pendingPlacementAnchor = null;
+    this.state.pendingPlacementAnchor = null;
     this.registry.set('phase.build.active', this.canPerformBuildActions());
     this.updateGridOverlayVisualState();
     this.updateBuildPreview();
-    this.runState.isWaveCompletionRewardGranted = false;
-    this.runState.nextWaveStartsAtMs = null;
+    this.state.runState.isWaveCompletionRewardGranted = false;
+    this.state.runState.nextWaveStartsAtMs = null;
     this.renderVisibleBattlefield();
     this.publishHudSnapshot();
   }
@@ -1511,38 +1454,38 @@ export class GameScene extends Phaser.Scene {
    * sends, released on the same timing from this frame.
    */
   private scheduleWaveOnBothFields(): void {
-    const waveNumber = this.runState.currentWaveNumber;
-    const baselineUnits = this.baselineWaves.rollNextWave(
+    const waveNumber = this.state.runState.currentWaveNumber;
+    const baselineUnits = this.state.baselineWaves.rollNextWave(
       waveNumber,
       this.getSelectedFactionUnits(),
     );
     spawnWaveCreepsRuntime(
-      this.runState,
+      this.state.runState,
       WAVE_RUNTIME_CONFIG,
       this.wiring.waveRuntimeDeps,
       baselineUnits,
     );
-    scheduleOpponentFieldWave(this.opponentWave, {
-      routes: this.duelMatchState.opponent.battlefield.routes,
+    scheduleOpponentFieldWave(this.state.opponentWave, {
+      routes: this.state.duelMatchState.opponent.battlefield.routes,
       waveNumber,
       baselineUnits,
       // Each send spawns at the creature grade it was sent with.
-      sentUnits: resolveQueuedSendUnits(this.duelMatchState.player),
-      timing: resolveWaveSpawnTiming(this.gameClock.nowMs, WAVE_RUNTIME_CONFIG),
+      sentUnits: resolveQueuedSendUnits(this.state.duelMatchState.player),
+      timing: resolveWaveSpawnTiming(this.state.gameClock.nowMs, WAVE_RUNTIME_CONFIG),
     });
     // The duel state mirrors the field; the old wave's creeps are gone.
     this.syncOpponentDuelCreepsFromField();
   }
 
   private renderVisibleBattlefield(): void {
-    const showOpponent = this.activeBattlefieldView === 'opponent';
+    const showOpponent = this.state.activeBattlefieldView === 'opponent';
     // The opponent field is built once per wave; rebuilding it on every view
     // toggle would drop escaped creeps (losing their leak damage) and reset
     // tower cooldowns, granting a free volley per toggle.
     if (
       showOpponent &&
-      this.opponentField.creeps.length === 0 &&
-      this.opponentField.towers.length === 0
+      this.state.opponentField.creeps.length === 0 &&
+      this.state.opponentField.towers.length === 0
     ) {
       this.syncOpponentBattlefieldRenderStateFromDuel();
     }
@@ -1550,82 +1493,88 @@ export class GameScene extends Phaser.Scene {
     this.applyBattlefieldViewVisibility();
 
     const visiblePath = showOpponent
-      ? this.duelMatchState.opponent.battlefield.routes.small
+      ? this.state.duelMatchState.opponent.battlefield.routes.small
       : this.getPlayerPathRoute();
-    if (!showOpponent) this.arePathTilesStale = false;
-    this.pathCellKeys = new Set(visiblePath.map((cell) => `${cell.x}:${cell.y}`));
+    if (!showOpponent) this.state.arePathTilesStale = false;
+    this.state.pathCellKeys = new Set(visiblePath.map((cell) => `${cell.x}:${cell.y}`));
     this.redrawTerrainTiles();
   }
 
   private applyBattlefieldViewVisibility(): void {
-    const showOpponent = this.activeBattlefieldView === 'opponent';
-    setBattlefieldRenderStateVisible(this.playerField, !showOpponent);
-    setBattlefieldRenderStateVisible(this.opponentField, showOpponent);
+    const showOpponent = this.state.activeBattlefieldView === 'opponent';
+    setBattlefieldRenderStateVisible(this.state.playerField, !showOpponent);
+    setBattlefieldRenderStateVisible(this.state.opponentField, showOpponent);
   }
 
   private syncOpponentBattlefieldRenderStateFromDuel(): void {
     rebuildOpponentBattlefieldRenderState(
       this,
-      this.opponentField,
-      this.duelMatchState.opponent,
-      this.activeBattlefieldView === 'opponent',
+      this.state.opponentField,
+      this.state.duelMatchState.opponent,
+      this.state.activeBattlefieldView === 'opponent',
     );
   }
 
   private publishHudSnapshot(): void {
     const autoStartSecondsLeft =
       !this.isGameOver && this.canPerformBuildActions()
-        ? resolveAutoStartSecondsLeft(this.runState.nextWaveStartsAtMs, this.gameClock.nowMs)
+        ? resolveAutoStartSecondsLeft(
+            this.state.runState.nextWaveStartsAtMs,
+            this.state.gameClock.nowMs,
+          )
         : null;
 
     const snapshot: GameHudSnapshot = {
       gold: this.playerGold,
-      income: this.duelMatchState.player.income,
-      lives: this.duelMatchState.player.hp,
-      opponentGold: this.duelMatchState.opponent.gold,
-      opponentIncome: this.duelMatchState.opponent.income,
-      opponentLives: this.duelMatchState.opponent.hp,
+      income: this.state.duelMatchState.player.income,
+      lives: this.state.duelMatchState.player.hp,
+      opponentGold: this.state.duelMatchState.opponent.gold,
+      opponentIncome: this.state.duelMatchState.opponent.income,
+      opponentLives: this.state.duelMatchState.opponent.hp,
       matchOutcome: {
-        status: this.matchOutcomeStatus,
-        winner: this.matchWinner,
-        reason: this.matchOutcomeReason,
+        status: this.state.matchOutcomeStatus,
+        winner: this.state.matchWinner,
+        reason: this.state.matchOutcomeReason,
       },
-      builderFactionName: resolveBuilderFaction(this.selectedBuilderFactionId).name,
-      waveNumber: resolveHudWaveNumber(this.runState.currentWaveNumber, this.wavePhaseState.phase),
+      builderFactionName: resolveBuilderFaction(this.state.selectedBuilderFactionId).name,
+      waveNumber: resolveHudWaveNumber(
+        this.state.runState.currentWaveNumber,
+        this.wavePhaseState.phase,
+      ),
       phase: this.wavePhaseState.phase,
       canStartWave: !this.isGameOver && this.canPerformBuildActions(),
-      selectedTowerType: this.selectedTowerType,
-      selectedFaction: this.selectedFaction,
+      selectedTowerType: this.state.selectedTowerType,
+      selectedFaction: this.state.selectedFaction,
       autoStartSecondsLeft,
       waveQueue: buildHudWaveQueueWithPending(
-        this.playerField.creeps,
-        this.runState.pendingWaveSpawns,
+        this.state.playerField.creeps,
+        this.state.runState.pendingWaveSpawns,
       ),
-      playerSendQueue: buildHudSendQueue(this.duelMatchState.player.sendQueue),
+      playerSendQueue: buildHudSendQueue(this.state.duelMatchState.player.sendQueue),
       opponentSendQueue: buildHudSendQueue(
         resolveHudOpponentSends(
           this.wavePhaseState.phase,
-          this.duelMatchState.opponent.sendQueue,
-          this.opponentSendsThisWave,
+          this.state.duelMatchState.opponent.sendQueue,
+          this.state.opponentSendsThisWave,
         ),
       ),
       pendingCreepCount:
-        this.runState.pendingWaveSpawns.length +
-        this.playerField.creeps.filter((c) => c.entity.status === 'alive').length,
-      isPaused: this.gameClock.isPaused,
-      gameSpeed: this.gameClock.speed,
-      towerBranchChoices: { ...this.duelMatchState.player.towerBranchChoices },
-      creatureXpByTier: { ...this.duelMatchState.player.creatureXpByTier },
-      creatureBranchChoices: { ...this.duelMatchState.player.creatureBranchChoices },
-      creatureGrades: { ...this.duelMatchState.player.creatureGrades },
+        this.state.runState.pendingWaveSpawns.length +
+        this.state.playerField.creeps.filter((c) => c.entity.status === 'alive').length,
+      isPaused: this.state.gameClock.isPaused,
+      gameSpeed: this.state.gameClock.speed,
+      towerBranchChoices: { ...this.state.duelMatchState.player.towerBranchChoices },
+      creatureXpByTier: { ...this.state.duelMatchState.player.creatureXpByTier },
+      creatureBranchChoices: { ...this.state.duelMatchState.player.creatureBranchChoices },
+      creatureGrades: { ...this.state.duelMatchState.player.creatureGrades },
     };
 
     publishGameHudSnapshot(snapshot);
     // Every kill, leak, wave start and restart ends here; publishes on change only.
-    this.opponentFieldCreepsPublisher.update(
+    this.state.opponentFieldCreepsPublisher.update(
       countFieldRemainingCreeps(
-        this.opponentField.creeps,
-        this.opponentWave.pendingWaveSpawns.length,
+        this.state.opponentField.creeps,
+        this.state.opponentWave.pendingWaveSpawns.length,
       ),
     );
   }
@@ -1638,21 +1587,21 @@ export class GameScene extends Phaser.Scene {
    * ground while the player's own tower bases showed through.
    */
   private getVisibleGridCells(): readonly GridCell[] {
-    if (this.activeBattlefieldView === 'opponent') {
-      return this.duelMatchState.opponent.battlefield.grid.cells;
+    if (this.state.activeBattlefieldView === 'opponent') {
+      return this.state.duelMatchState.opponent.battlefield.grid.cells;
     }
 
-    return this.gridModel?.cells ?? [];
+    return this.state.gridModel?.cells ?? [];
   }
 
   private redrawTerrainTiles(): void {
-    if (!this.gridModel) {
+    if (!this.state.gridModel) {
       return;
     }
 
     for (const cell of this.getVisibleGridCells()) {
       drawGridCellRuntime(
-        this.gridRendererState,
+        this.state.gridRendererState,
         this.getGridRendererDeps(),
         GRID_RENDERER_CONFIG,
         cell,
@@ -1662,12 +1611,12 @@ export class GameScene extends Phaser.Scene {
   }
 
   private redrawOccupancyOverlay(): void {
-    if (!this.gridModel) {
+    if (!this.state.gridModel) {
       return;
     }
 
     drawGridOccupancyOverlay(
-      this.gridRendererState,
+      this.state.gridRendererState,
       this,
       GRID_RENDERER_CONFIG,
       this.getVisibleGridCells(),
@@ -1677,46 +1626,46 @@ export class GameScene extends Phaser.Scene {
   }
 
   private getVisibleBuilderFactionId(): RaceId {
-    return this.activeBattlefieldView === 'opponent'
-      ? this.duelMatchState.opponent.raceId
-      : this.selectedBuilderFactionId;
+    return this.state.activeBattlefieldView === 'opponent'
+      ? this.state.duelMatchState.opponent.raceId
+      : this.state.selectedBuilderFactionId;
   }
 
   private handleSceneShutdown(): void {
-    if (this.isSceneCleanedUp) {
+    if (this.state.isSceneCleanedUp) {
       return;
     }
 
-    this.isSceneCleanedUp = true;
+    this.state.isSceneCleanedUp = true;
 
     stopMissingArtReport();
-    this.teardownCallbacks.forEach((teardown) => teardown());
-    this.teardownCallbacks.length = 0;
+    this.state.teardownCallbacks.forEach((teardown) => teardown());
+    this.state.teardownCallbacks.length = 0;
 
-    destroyBattlefieldRenderState(this.playerField);
-    destroyBattlefieldRenderState(this.opponentField);
-    this.buildPreviewOverlay?.destroy();
-    this.buildPreviewOverlay = null;
-    destroyRoutePreviewGraphics(this.routePreview);
-    this.pathCellKeys.clear();
-    this.gridRendererState.gridGraphics?.destroy();
-    this.gridRendererState.gridGraphics = null;
-    destroyGridOccupancyOverlay(this.gridRendererState);
-    clearTerrainSpritesRuntime(this.gridRendererState);
-    clearGridLabelsRuntime(this.gridRendererState);
-    this.runState.activeCreepRoutes = EMPTY_WAVE_ROUTES;
-    this.runState.pendingWaveSpawns = [];
-    clearFieldWaveSchedule(this.opponentWave);
-    this.gridModel = null;
-    this.runState.nextWaveStartsAtMs = null;
-    this.placedTowerCostsByCellKey.clear();
-    this.inputControllerState = createInputControllerState();
-    this.devFpsReportElapsedMs = 0;
-    this.runState.lastPublishedAutoStartSecondsLeft = null;
-    this.soundManager?.destroy();
-    this.soundManager = null;
-    this.hoveredCell = null;
-    this.hoveredBuildAnchor = null;
-    this.pendingPlacementAnchor = null;
+    destroyBattlefieldRenderState(this.state.playerField);
+    destroyBattlefieldRenderState(this.state.opponentField);
+    this.state.buildPreviewOverlay?.destroy();
+    this.state.buildPreviewOverlay = null;
+    destroyRoutePreviewGraphics(this.state.routePreview);
+    this.state.pathCellKeys.clear();
+    this.state.gridRendererState.gridGraphics?.destroy();
+    this.state.gridRendererState.gridGraphics = null;
+    destroyGridOccupancyOverlay(this.state.gridRendererState);
+    clearTerrainSpritesRuntime(this.state.gridRendererState);
+    clearGridLabelsRuntime(this.state.gridRendererState);
+    this.state.runState.activeCreepRoutes = EMPTY_WAVE_ROUTES;
+    this.state.runState.pendingWaveSpawns = [];
+    clearFieldWaveSchedule(this.state.opponentWave);
+    this.state.gridModel = null;
+    this.state.runState.nextWaveStartsAtMs = null;
+    this.state.placedTowerCostsByCellKey.clear();
+    this.state.inputControllerState = createInputControllerState();
+    this.state.devFpsReportElapsedMs = 0;
+    this.state.runState.lastPublishedAutoStartSecondsLeft = null;
+    this.state.soundManager?.destroy();
+    this.state.soundManager = null;
+    this.state.hoveredCell = null;
+    this.state.hoveredBuildAnchor = null;
+    this.state.pendingPlacementAnchor = null;
   }
 }
