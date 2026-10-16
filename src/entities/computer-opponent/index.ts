@@ -38,6 +38,7 @@ export type {
   SendCreepAction,
   ThreatAssessment,
   UpgradeAction,
+  ChooseBranchAction,
 } from './model/types';
 
 export type { ComputerDecisionDebugRecorder } from './model/decisionDebugSnapshots';

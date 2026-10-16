@@ -1,11 +1,13 @@
-import { TOWER_FOOTPRINT } from '../../../shared/constants/footprint';
-import { withFootprintOccupancy } from '../../../shared/lib/grid/footprint';
-import { UnitMoveType, type RaceId, type TowerTypeId } from '../../../shared/types/content-ids';
+import { UnitMoveType } from '../../../shared/types/content-ids';
 import { calculateAirRoute } from '../../../shared/lib/pathfinding/airRoute';
-import type { GridModel } from '../../../shared/types/grid';
 import type { GridPosition } from '../../../shared/types/pathfinding';
-import type { TowerEntity } from '../../tower/model/types';
-import { createComputerTowerEntity } from './computerTowerEntity';
+import { TowerTalentRule } from '../../../shared/constants/towerTalents';
+import {
+  collectBranchCandidates,
+  TALENT_VALUATION_BY_DIFFICULTY,
+  TalentValuation,
+} from './talent-development';
+import { recordBranch, recordBuild, recordUpgrade, type BuildRoundState } from './buildRoundState';
 import { getTowerCostForType } from './buildSpendBudget';
 import {
   collectInvestmentTypes,
@@ -19,7 +21,6 @@ import {
   toRouteCells,
   type LedgerTower,
   type PlannedRoute,
-  type PlannedUpgrade,
   type RouteDamageLedger,
 } from './damage-placement';
 import { NEUTRAL_DAMAGE_EFFICIENCY } from './damage-profile';
@@ -33,69 +34,10 @@ import {
   MAZE_PLACEMENT_WEIGHTS,
   type PlacementWeights,
 } from './scoreTowerPlacement';
-import type { ComputerAction, DecisionContext } from './types';
+import type { DecisionContext } from './types';
+
+export type { BuildRoundState } from './buildRoundState';
 import { StrategyIntent } from './types';
-
-/** Running state of one build phase while its actions are chosen. */
-export type BuildRoundState = {
-  actions: ComputerAction[];
-  reasoning: string[];
-  remainingBudget: number;
-  buildCount: number;
-  /** Towers on the field plus the ones chosen this round. */
-  plannedTowers: TowerEntity[];
-  plannedPositions: GridPosition[];
-  /** Grid with this round's chosen blocks walled off. */
-  grid: GridModel;
-  /** Route-search cells expanded so far this decision. */
-  expandedNodeCount: number;
-};
-
-function createPlannedTower(
-  towerType: TowerTypeId,
-  position: GridPosition,
-  cost: number,
-  raceId: RaceId,
-): TowerEntity {
-  return createComputerTowerEntity(
-    `planned:tower:${position.x}:${position.y}`,
-    towerType,
-    position,
-    cost,
-    raceId,
-  );
-}
-
-function recordBuild(
-  round: BuildRoundState,
-  raceId: RaceId,
-  towerType: TowerTypeId,
-  position: GridPosition,
-  cost: number,
-  note: string,
-): void {
-  round.actions.push({ kind: 'build', towerType, position });
-  round.plannedPositions.push(position);
-  round.plannedTowers.push(createPlannedTower(towerType, position, cost, raceId));
-  round.grid = withFootprintOccupancy(round.grid, position, TOWER_FOOTPRINT, true);
-  round.remainingBudget -= cost;
-  round.buildCount += 1;
-  round.reasoning.push(
-    `Building ${towerType} at (${position.x},${position.y}) for ${cost} gold, ${note}`,
-  );
-}
-
-function recordUpgrade(round: BuildRoundState, upgrade: PlannedUpgrade): void {
-  round.actions.push({ kind: 'upgrade', towerId: upgrade.towerId });
-  // Later passes this round see the new level: its next upgrade, not this one again.
-  round.plannedTowers = round.plannedTowers.map((tower) =>
-    tower.id === upgrade.towerId ? { ...tower, level: tower.level + 1 } : tower,
-  );
-  round.remainingBudget -= upgrade.cost;
-  round.reasoning.push(
-    `Upgrading tower ${upgrade.towerId} for ${upgrade.cost} gold, +${upgrade.value.toFixed(0)} route damage`,
-  );
-}
 
 /**
  * The damage ledger a round invests against: the planned ground route, and
@@ -109,7 +51,7 @@ function createInvestmentLedger(
   context: DecisionContext,
   plannedRoute: PlannedRoute,
 ): RouteDamageLedger {
-  const towers: LedgerTower[] = toLedgerTowers(round.plannedTowers);
+  const towers: LedgerTower[] = toLedgerTowers(round.plannedTowers, round.towerBranchChoices);
   const ground = createRouteDamageLedger(
     plannedRoute.geometry,
     towers,
@@ -156,8 +98,21 @@ export function investInPlan(
     (type) => type.cost <= round.remainingBudget,
   );
   const wall = types[0] ?? null;
-  const upgrades = collectUpgradeCandidates(round.plannedTowers, context.upgradeableTowerIds);
-  if (!wall && upgrades.length === 0) {
+  const upgrades = collectUpgradeCandidates(
+    round.plannedTowers,
+    [...context.upgradeableTowerIds, ...round.unlockedTowerIds],
+    round.towerBranchChoices,
+  );
+  const valuation = TALENT_VALUATION_BY_DIFFICULTY[context.difficulty];
+  const mayDevelop =
+    valuation !== TalentValuation.NONE &&
+    round.plannedTowers.some(
+      (tower) =>
+        tower.level === TowerTalentRule.BRANCH_UNLOCK_GRADE &&
+        tower.buildableTowerId !== undefined &&
+        round.towerBranchChoices[tower.buildableTowerId] === undefined,
+    );
+  if (!wall && upgrades.length === 0 && !mayDevelop) {
     return false;
   }
 
@@ -179,8 +134,15 @@ export function investInPlan(
       plannedRoute.averageGainPerBlock,
     ),
   }));
+  const ledger = createInvestmentLedger(round, context, plannedRoute);
+  const branches = collectBranchCandidates({
+    towers: round.plannedTowers,
+    ledger,
+    choices: round.towerBranchChoices,
+    valuation,
+  });
   const investment = planRoundInvestments({
-    ledger: createInvestmentLedger(round, context, plannedRoute),
+    ledger,
     wall,
     damageTypes: types.slice(1),
     walls,
@@ -188,6 +150,7 @@ export function investInPlan(
     budget: round.remainingBudget,
     maxBuilds: count,
     maxUpgrades: options.maxUpgrades,
+    branches,
   });
 
   for (const build of investment.builds) {
@@ -195,6 +158,7 @@ export function investInPlan(
     const note = `${kind} of the plan, +${build.routeGain.toFixed(1)} route cells`;
     recordBuild(round, context.raceId, build.towerType, build.anchor, build.cost, note);
   }
+  investment.branches.forEach((branch) => recordBranch(round, branch));
   investment.upgrades.forEach((upgrade) => recordUpgrade(round, upgrade));
   return (selection?.anchors.length ?? 0) < count;
 }

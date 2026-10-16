@@ -8,6 +8,7 @@ import type { DuelMatchState, DuelistState } from '../../duel-match/model/types'
 import { computeDefenceDamageMix, toLedgerTowers } from './damage-placement';
 import { assessDefence } from './threat-budget/assessDefence';
 import type { TowerEntity } from '../../tower/model/types';
+import type { TowerBranchChoices } from '../../tower/model/talents';
 import { canAffordUpgrade } from '../../tower/model/upgrade';
 import { getRaceRegistry } from '../../race-registry/model/registries';
 import { buildableTowers } from '../../tower/model/config/buildableTowers';
@@ -67,11 +68,15 @@ function computeAffordableTowers(gold: number, raceId: RaceId): TowerTypeId[] {
   return affordable;
 }
 
-function computeUpgradeableTowers(towers: readonly TowerEntity[], gold: number): string[] {
+function computeUpgradeableTowers(
+  towers: readonly TowerEntity[],
+  gold: number,
+  choices: TowerBranchChoices,
+): string[] {
   const upgradeable: string[] = [];
 
   for (const tower of towers) {
-    const check = canAffordUpgrade(tower, tower.level, gold);
+    const check = canAffordUpgrade(tower, tower.level, gold, choices);
     if (check.allowed) {
       upgradeable.push(tower.id);
     }
@@ -125,11 +130,18 @@ export function buildDecisionContext(input: OpponentSnapshotInput): DecisionCont
     threat: computeThreat(opponent),
     leakHistory,
     affordableTowers: computeAffordableTowers(opponent.gold, opponent.raceId),
-    upgradeableTowerIds: computeUpgradeableTowers(opponent.battlefield.towers, opponent.gold),
+    upgradeableTowerIds: computeUpgradeableTowers(
+      opponent.battlefield.towers,
+      opponent.gold,
+      opponent.towerBranchChoices,
+    ),
+    towerBranchChoices: opponent.towerBranchChoices,
     availableBuildPositions: computeAvailableBuildPositions(opponent, opponent.raceId),
     enemy: computeEnemySnapshot(matchState.player),
     queuedSends: opponent.sendQueue,
     defence: assessDefence(matchState),
-    enemyDamageMix: computeDefenceDamageMix(toLedgerTowers(matchState.player.battlefield.towers)),
+    enemyDamageMix: computeDefenceDamageMix(
+      toLedgerTowers(matchState.player.battlefield.towers, matchState.player.towerBranchChoices),
+    ),
   };
 }

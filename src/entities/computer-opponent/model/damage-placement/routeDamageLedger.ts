@@ -7,12 +7,16 @@ import {
 } from './constants';
 import { NEUTRAL_DAMAGE_EFFICIENCY, type DamageTypeEfficiency } from '../damage-profile';
 import type { RouteGeometry } from './routeGeometry';
+import { computeDefenceAmplification } from './abilityDamageModel';
 import {
   canDamageModelTowerHit,
   computeAura,
+  computeAuraBoostFor,
   computeChill,
   computeSampleDamageRate,
   computeShotDps,
+  resolveDamageModelDamageType,
+  resolveOnHitEffects,
   type DamageModelTower,
 } from './towerDamageModel';
 
@@ -69,7 +73,7 @@ export function createRouteDamageLedger(
   /** Damage rate on this lane: zero for a tower that cannot shoot its creeps. */
   function sampleRate(tower: LedgerTower, sample: number): number {
     return canDamageModelTowerHit(tower, moveType)
-      ? computeSampleDamageRate(tower, geometry, sample, efficiency)
+      ? computeSampleDamageRate(tower, geometry, sample, efficiency, moveType)
       : 0;
   }
 
@@ -81,17 +85,21 @@ export function createRouteDamageLedger(
     return total;
   }
 
-  /** Strongest aura on `anchor`, from every support except `excludeIndex` and `selfIndex`. */
-  function auraBoostAt(anchor: GridPoint, excludeIndex: number, selfIndex: number): number {
+  /** Strongest aura on `target`, from every support except `excludeIndex` and `selfIndex`. */
+  function auraBoostAt(target: LedgerTower, excludeIndex: number, selfIndex: number): number {
     let boost = 0;
     towers.forEach((support, index) => {
       if (index === excludeIndex || index === selfIndex) {
         return;
       }
-      const aura = computeAura(support);
-      const distance = Math.hypot(support.anchor.x - anchor.x, support.anchor.y - anchor.y);
-      if (aura.bonus > boost && distance <= aura.radius) {
-        boost = aura.bonus;
+      const radius = computeAura(support).radius;
+      const distance = Math.hypot(
+        support.anchor.x - target.anchor.x,
+        support.anchor.y - target.anchor.y,
+      );
+      const bonus = distance <= radius ? computeAuraBoostFor(support, target) : 0;
+      if (bonus > boost) {
+        boost = bonus;
       }
     });
     return boost;
@@ -103,7 +111,7 @@ export function createRouteDamageLedger(
     }
     field.fill(0);
     towers.forEach((tower, index) => {
-      const boost = 1 + auraBoostAt(tower.anchor, NO_INDEX, index);
+      const boost = 1 + auraBoostAt(tower, NO_INDEX, index);
       for (const sample of geometry.coveredSamples(tower.anchor, tower.stats.range)) {
         field[sample] += sampleRate(tower, sample) * boost;
       }
@@ -159,7 +167,7 @@ export function createRouteDamageLedger(
 
   function supportBonus(tower: LedgerTower, excludeIndex: number): number {
     const aura = computeAura(tower);
-    if (aura.bonus <= 0) {
+    if (aura.radius <= 0) {
       return 0;
     }
     let bonus = 0;
@@ -171,10 +179,70 @@ export function createRouteDamageLedger(
       if (index === excludeIndex || distance > aura.radius) {
         return;
       }
-      const current = auraBoostAt(neighbour.anchor, excludeIndex, index);
-      bonus += Math.max(0, aura.bonus - current) * directSamples(neighbour);
+      const offered = computeAuraBoostFor(tower, neighbour);
+      const current = auraBoostAt(neighbour, excludeIndex, index);
+      bonus += Math.max(0, offered - current) * directSamples(neighbour);
     });
     return bonus;
+  }
+
+  /** Samples a tower's hits stay amplified: its reach plus how far creeps walk meanwhile. */
+  function amplifyWindow(tower: LedgerTower): { from: number; to: number; gain: number } {
+    const amplification = computeDefenceAmplification(
+      resolveOnHitEffects(tower),
+      resolveDamageModelDamageType(tower),
+      tower.stats.attackCooldownMs,
+      efficiency,
+    );
+    const covered = geometry.coveredSamples(tower.anchor, tower.stats.range);
+    if (
+      amplification.fieldGain <= 0 ||
+      covered.length === 0 ||
+      !canDamageModelTowerHit(tower, moveType)
+    ) {
+      return { from: 0, to: -1, gain: 0 };
+    }
+    const speed = CREEP_CELLS_PER_SECOND_AT_UNIT_SPEED * REFERENCE_CREEP_SPEED;
+    const tail = Math.ceil((amplification.durationMs / MS_PER_SECOND) * speed);
+    const to = Math.min(geometry.length - 1, covered[covered.length - 1] + tail);
+    return { from: covered[0], to, gain: amplification.fieldGain };
+  }
+
+  /**
+   * Vulnerability and armor break: the tower's own damage on the creeps it
+   * marks, plus the share of the others' damage on the samples it keeps
+   * marked, over what a stronger mark of another tower already adds there.
+   */
+  function amplifyBonus(tower: LedgerTower, excludeIndex: number, boost: number): number {
+    const own = computeDefenceAmplification(
+      resolveOnHitEffects(tower),
+      resolveDamageModelDamageType(tower),
+      tower.stats.attackCooldownMs,
+      efficiency,
+    ).ownGain;
+    const ownBonus = own > 0 ? directSamples(tower) * boost * own : 0;
+    const window = amplifyWindow(tower);
+    if (window.gain <= 0) {
+      return ownBonus;
+    }
+    refreshField();
+    const existing = new Float64Array(geometry.length);
+    towers.forEach((other, index) => {
+      if (index === excludeIndex) {
+        return;
+      }
+      const otherWindow = amplifyWindow(other);
+      for (let sample = otherWindow.from; sample <= otherWindow.to; sample += 1) {
+        existing[sample] = Math.max(existing[sample], otherWindow.gain);
+      }
+    });
+    const shotsPerSecond = (computeShotDps(tower.stats) / Math.max(1, tower.stats.damage)) * boost;
+    const markedShare = Math.min(1, shotsPerSecond / CREEP_ARRIVALS_PER_SECOND);
+    let bonus = 0;
+    for (let sample = window.from; sample <= window.to; sample += 1) {
+      bonus += field[sample] * Math.max(0, window.gain - existing[sample]);
+    }
+    return ownBonus + bonus * markedShare;
   }
 
   return {
@@ -192,10 +260,11 @@ export function createRouteDamageLedger(
       isFieldStale = true;
     },
     contributionOf(tower: LedgerTower, excludeIndex: number = NO_INDEX): number {
-      const boost = 1 + auraBoostAt(tower.anchor, excludeIndex, NO_INDEX);
+      const boost = 1 + auraBoostAt(tower, excludeIndex, NO_INDEX);
       return (
         directSamples(tower) * boost +
         frostBonus(tower, excludeIndex, boost) +
+        amplifyBonus(tower, excludeIndex, boost) +
         supportBonus(tower, excludeIndex)
       );
     },

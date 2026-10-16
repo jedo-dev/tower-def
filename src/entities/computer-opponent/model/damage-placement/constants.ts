@@ -60,3 +60,25 @@ export const MIN_ROUTE_CELL_VALUE_IN_WALL_DPS = 1;
 
 /** Below this value per gold an investment is not worth making at all. */
 export const MIN_INVESTMENT_VALUE_PER_GOLD = 1e-6;
+
+/**
+ * Talent abilities (docs/08 "Tower abilities") as the damage model values
+ * them. The model has no creature list per wave, so the hits that depend on
+ * who is hit are valued at a fixed share of hits.
+ */
+export const ABILITY_VALUATION = {
+  /** Share of a tower's hits that land on a creep still at full health. */
+  fullHealthHitShare: 0.25,
+  /** Share of a tower's hits that land on a `large` creep. */
+  largeTargetHitShare: 0.2,
+  /** Route reach, in cells, of a piercing shot around its target. */
+  pierceLineReachCells: 2,
+  /** Most creeps a volley or extra-target shot is expected to reach at once. */
+  maxExpectedVolleyTargets: 6,
+  /**
+   * Share of the field's damage a typed vulnerability or a one-armor break
+   * amplifies: the field mixes damage types, so a scope that covers only one
+   * of physical / magical reaches about half of it.
+   */
+  singleTypeFieldShare: 0.5,
+} as const;

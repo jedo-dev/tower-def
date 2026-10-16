@@ -2,6 +2,7 @@ import { addTower } from '../../duel-match/model/battlefieldOps';
 import type { BattlefieldState } from '../../duel-match/model/battlefield';
 import type { DuelMatchState } from '../../duel-match/model/types';
 import type { TowerEntity } from '../../tower/model/types';
+import { canChooseBranch, chooseBranch, type TowerBranchChoices } from '../../tower/model/talents';
 import {
   canAffordUpgrade,
   getTowerStatsForTowerLevel,
@@ -34,6 +35,8 @@ export type ApplyComputerBuildStrategyResult = {
   mazePlan: MazePlan | null;
   builtCount: number;
   upgradedCount: number;
+  /** Talent branches picked this phase. */
+  chosenBranchCount: number;
   spentGold: number;
 };
 
@@ -64,9 +67,10 @@ function recalculateBattlefieldPath(battlefield: BattlefieldState): BattlefieldS
   };
 }
 
-function upgradeTower(tower: TowerEntity): TowerEntity | null {
+/** The tower one grade up, past grade 3 along its side's chosen branch (as the player's upgrade). */
+function upgradeTower(tower: TowerEntity, choices: TowerBranchChoices): TowerEntity | null {
   const nextLevel = tower.level + 1;
-  const nextStats = getTowerStatsForTowerLevel(tower, nextLevel);
+  const nextStats = getTowerStatsForTowerLevel(tower, nextLevel, choices);
   if (!nextStats) {
     return null;
   }
@@ -75,6 +79,7 @@ function upgradeTower(tower: TowerEntity): TowerEntity | null {
     ...tower,
     level: nextLevel,
     combatStats: { ...nextStats },
+    ...(tower.baseCombatStats === undefined ? {} : { baseCombatStats: { ...nextStats } }),
   };
 }
 
@@ -92,8 +97,10 @@ export function applyComputerBuildStrategy(
   });
   let battlefield = opponent.battlefield;
   let gold = opponent.gold;
+  let choices = opponent.towerBranchChoices;
   let builtCount = 0;
   let upgradedCount = 0;
+  let chosenBranchCount = 0;
   let spentGold = 0;
 
   for (const action of decision.actions) {
@@ -118,18 +125,39 @@ export function applyComputerBuildStrategy(
       continue;
     }
 
+    if (action.kind === 'choose_branch') {
+      // The same rule the player's develop command runs: grade 3, no pick yet, gold in hand.
+      const targetTower = battlefield.towers.find((tower) => tower.id === action.towerId);
+      const buildableTowerId = targetTower?.buildableTowerId;
+      if (!targetTower || buildableTowerId === undefined) {
+        continue;
+      }
+      const check = canChooseBranch(targetTower, action.branchId, choices, gold);
+      if (!check.allowed) {
+        continue;
+      }
+      choices = chooseBranch(choices, buildableTowerId, action.branchId);
+      gold -= check.cost;
+      spentGold += check.cost;
+      chosenBranchCount += 1;
+      continue;
+    }
+
     if (action.kind === 'upgrade') {
       const targetTower = battlefield.towers.find((tower) => tower.id === action.towerId);
       if (!targetTower) {
         continue;
       }
 
-      const upgradeCost = getUpgradeCost(targetTower, targetTower.level);
-      if (upgradeCost === null || !canAffordUpgrade(targetTower, targetTower.level, gold).allowed) {
+      const upgradeCost = getUpgradeCost(targetTower, targetTower.level, choices);
+      if (
+        upgradeCost === null ||
+        !canAffordUpgrade(targetTower, targetTower.level, gold, choices).allowed
+      ) {
         continue;
       }
 
-      const upgradedTower = upgradeTower(targetTower);
+      const upgradedTower = upgradeTower(targetTower, choices);
       if (!upgradedTower) {
         continue;
       }
@@ -153,11 +181,13 @@ export function applyComputerBuildStrategy(
         ...opponent,
         gold,
         battlefield,
+        towerBranchChoices: choices,
       },
     },
     decision,
     builtCount,
     upgradedCount,
+    chosenBranchCount,
     spentGold,
     mazePlan: decision.mazePlan,
   };

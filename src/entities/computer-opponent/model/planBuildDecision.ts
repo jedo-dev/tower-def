@@ -1,6 +1,7 @@
 import type { GridModel } from '../../../shared/types/grid';
 import type { GridPosition } from '../../../shared/types/pathfinding';
 import type { TowerEntity } from '../../tower/model/types';
+import { NO_TOWER_BRANCH_CHOICES } from '../../tower/model/talents';
 import {
   computeSpendBudget,
   getCheapestTowerCost,
@@ -168,6 +169,8 @@ export function planBuildDecision(input: BuildPlannerInput): BuildDecisionOutput
     plannedPositions: [],
     grid: input.grid,
     expandedNodeCount: planUpdate.expandedNodeCount,
+    towerBranchChoices: context.towerBranchChoices ?? NO_TOWER_BRANCH_CHOICES,
+    unlockedTowerIds: [],
   };
 
   const maxBuilds = SPEND_BUDGET_BY_DIFFICULTY[context.difficulty].maxBuildActionsPerRound;

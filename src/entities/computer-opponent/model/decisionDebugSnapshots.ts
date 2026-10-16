@@ -28,6 +28,8 @@ function summarizeActions(actions: readonly ComputerAction[]): string {
           return `build ${action.towerType} at ${action.position.x},${action.position.y}`;
         case 'upgrade':
           return `upgrade ${action.towerId}`;
+        case 'choose_branch':
+          return `develop ${action.towerId} along ${action.branchId}`;
         case 'send_creep':
           return `send ${action.creepTypeId}`;
         case 'save':
@@ -42,7 +44,7 @@ function resolveDebugKind(actions: readonly ComputerAction[]): ComputerDecisionD
     return 'send';
   }
 
-  if (actions.some((action) => action.kind === 'upgrade')) {
+  if (actions.some((action) => action.kind === 'upgrade' || action.kind === 'choose_branch')) {
     return 'upgrade';
   }
 
