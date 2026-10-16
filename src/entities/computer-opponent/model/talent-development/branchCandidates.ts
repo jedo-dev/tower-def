@@ -8,6 +8,7 @@ import type { BuildableTowerId } from '../../../tower/model/towerIds';
 import type { TowerEntity } from '../../../tower/model/types';
 import type { BranchCandidate, UpgradeCandidate } from '../damage-placement/planRoundInvestments';
 import type { RouteDamageLedger } from '../damage-placement/routeDamageLedger';
+import { computeBoardValuePerGold, hasEconomyGrades } from './boardValuePerGold';
 import { selectBestBranch } from './branchValuation';
 import { TalentValuation } from './constants';
 
@@ -77,13 +78,24 @@ export function collectBranchCandidates(input: BranchCandidateInput): BranchCand
   }
 
   const candidates: BranchCandidate[] = [];
+  let boardValuePerGold: number | null = null;
   for (const buildableTowerId of collectUndevelopedTypes(towers, choices)) {
     const leadIndex = findLeadIndex(towers, ledger, buildableTowerId);
     const branches = getTowerTalentBranches(buildableTowerId);
+    const valuePerGold = branches.some((branch) => hasEconomyGrades(branch.grades))
+      ? (boardValuePerGold ??= computeBoardValuePerGold(towers, ledger, choices))
+      : 0;
     const best =
       leadIndex < 0
         ? null
-        : selectBestBranch(ledger, leadIndex, branches, valuation, TowerTalentPricing.BRANCH_COST);
+        : selectBestBranch(
+            ledger,
+            leadIndex,
+            branches,
+            valuation,
+            TowerTalentPricing.BRANCH_COST,
+            valuePerGold,
+          );
     const branch = branches.find((candidate) => candidate.id === best?.branchId);
     const firstGrade = branch?.grades[0];
     const topGrade = branch?.grades[branch.grades.length - 1];
@@ -113,7 +125,7 @@ export function collectBranchCandidates(input: BranchCandidateInput): BranchCand
       branchId: best.branchId,
       towerId: towers[leadIndex].id,
       cost: TowerTalentPricing.BRANCH_COST,
-      value: best.topGradeGain * (best.pathCost / best.effectiveCost),
+      value: best.topGradeGain,
       pathCost: best.pathCost,
       gradeUpgrades,
     });

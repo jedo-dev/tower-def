@@ -4,7 +4,6 @@ import type { DamageModelStats } from '../damage-placement/towerDamageModel';
 import {
   TALENT_ECONOMY_PAYBACK_ROUNDS,
   TALENT_EXPECTED_AURA_KILLS_PER_ROUND,
-  TALENT_MIN_EFFECTIVE_COST_SHARE,
   TalentValuation,
 } from './constants';
 
@@ -13,14 +12,15 @@ export type BranchPath = { id: string; grades: readonly TowerUpgradeLevel[] };
 
 export type BranchValue = {
   branchId: string;
-  /** Route value the tower gains from grade 3 to the top grade (ledger units). */
+  /**
+   * Route value the tower gains from grade 3 to the top grade (ledger units),
+   * its economy's gold included at the board's value per gold.
+   */
   topGradeGain: number;
-  /** Mean route value gain over grades 4-7, per gold of the effective path price. */
+  /** Mean value gain over grades 4-7, per gold of the path price. */
   score: number;
   /** Branch price plus every grade's price. */
   pathCost: number;
-  /** `pathCost` less the gold the branch's economy pays back, floored. */
-  effectiveCost: number;
 };
 
 /**
@@ -72,9 +72,11 @@ function gradeGains(
 
 /**
  * What developing the tower at `ledgerIndex` along `branch` is worth: the
- * route value its grades add against the ledger's wave, per gold of the whole
- * path (the branch price and every grade), economy paid back over
- * `TALENT_ECONOMY_PAYBACK_ROUNDS`. Deterministic: same ledger, same value.
+ * route value its grades add against the ledger's wave, plus the gold their
+ * economy pays over `TALENT_ECONOMY_PAYBACK_ROUNDS` at `valuePerGold` (the
+ * route value a gold buys on this board, see `computeBoardValuePerGold`), per
+ * gold of the whole path (the branch price and every grade). Deterministic:
+ * same ledger, same value.
  */
 export function valueBranchPath(
   ledger: RouteDamageLedger,
@@ -82,33 +84,31 @@ export function valueBranchPath(
   branch: BranchPath,
   valuation: TalentValuation,
   branchCost: number,
+  valuePerGold = 0,
 ): BranchValue {
-  const gains =
-    valuation === TalentValuation.NONE
-      ? []
-      : gradeGains(ledger, ledgerIndex, branch.grades, valuation);
   const pathCost =
     branchCost + branch.grades.reduce((sum, grade) => sum + grade.upgradeCostGold, 0);
+  if (valuation === TalentValuation.NONE) {
+    return { branchId: branch.id, topGradeGain: 0, score: 0, pathCost };
+  }
   const currentEconomy = economyGold(ledger.towers[ledgerIndex].stats);
-  const paidBack =
-    branch.grades.reduce(
-      (sum, grade) => sum + Math.max(0, economyGold(grade.stats) - currentEconomy),
-      0,
-    ) / Math.max(1, branch.grades.length);
-  const effectiveCost = Math.max(pathCost * TALENT_MIN_EFFECTIVE_COST_SHARE, pathCost - paidBack);
+  const gains = gradeGains(ledger, ledgerIndex, branch.grades, valuation).map(
+    (gain, step) =>
+      gain + Math.max(0, economyGold(branch.grades[step].stats) - currentEconomy) * valuePerGold,
+  );
   const meanGain = gains.length > 0 ? gains.reduce((sum, gain) => sum + gain, 0) / gains.length : 0;
 
   return {
     branchId: branch.id,
     topGradeGain: gains.length > 0 ? gains[gains.length - 1] : 0,
-    score: effectiveCost > 0 ? meanGain / effectiveCost : 0,
+    score: pathCost > 0 ? meanGain / pathCost : 0,
     pathCost,
-    effectiveCost,
   };
 }
 
 /**
- * The branch worth more per gold for the tower at `ledgerIndex`; ties keep
+ * The branch worth more per gold for the tower at `ledgerIndex` (economy
+ * valued at `valuePerGold`); ties keep
  * the authored order. Null when no branch adds value (or valuation is none).
  */
 export function selectBestBranch(
@@ -117,13 +117,14 @@ export function selectBestBranch(
   branches: readonly BranchPath[],
   valuation: TalentValuation,
   branchCost: number,
+  valuePerGold = 0,
 ): BranchValue | null {
   if (valuation === TalentValuation.NONE) {
     return null;
   }
   let best: BranchValue | null = null;
   for (const branch of branches) {
-    const value = valueBranchPath(ledger, ledgerIndex, branch, valuation, branchCost);
+    const value = valueBranchPath(ledger, ledgerIndex, branch, valuation, branchCost, valuePerGold);
     if (value.score > 0 && (best === null || value.score > best.score)) {
       best = value;
     }

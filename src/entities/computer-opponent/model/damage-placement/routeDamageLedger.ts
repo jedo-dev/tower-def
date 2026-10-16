@@ -3,6 +3,7 @@ import { UnitMoveType } from '../../../../shared/types/content-ids';
 import {
   CREEP_ARRIVALS_PER_SECOND,
   CREEP_CELLS_PER_SECOND_AT_UNIT_SPEED,
+  MAX_SLOW_TIME_GAIN,
   REFERENCE_CREEP_SPEED,
 } from './constants';
 import { NEUTRAL_DAMAGE_EFFICIENCY, type DamageTypeEfficiency } from '../damage-profile';
@@ -19,6 +20,7 @@ import {
   resolveOnHitEffects,
   type DamageModelTower,
 } from './towerDamageModel';
+import { computeCreepsStruckPerShot } from './shotReach';
 
 const MS_PER_SECOND = 1000;
 
@@ -56,8 +58,9 @@ export type RouteDamageLedger = {
 
 const NO_INDEX = -1;
 
+/** Extra time a slowed creep spends in reach, capped at `MAX_SLOW_TIME_GAIN`. */
 function slowTimeGain(slow: number): number {
-  return slow > 0 ? 1 / (1 - slow) - 1 : 0;
+  return slow > 0 ? Math.min(MAX_SLOW_TIME_GAIN, 1 / (1 - slow) - 1) : 0;
 }
 
 export function createRouteDamageLedger(
@@ -148,6 +151,23 @@ export function createRouteDamageLedger(
     return { from: covered[0], to, magnitude: chill.magnitude };
   }
 
+  /**
+   * Share of the wave a tower's on-hit effect reaches at least once: creeps
+   * struck per second (every creep a shot strikes, averaged over its reach)
+   * spread over the creeps arriving per second, `1 - e^(-struck / arrivals)`,
+   * since strikes fall again on creeps already struck.
+   */
+  function struckShare(tower: LedgerTower, boost: number): number {
+    const covered = geometry.coveredSamples(tower.anchor, tower.stats.range);
+    let struck = 0;
+    for (const sample of covered) {
+      struck += computeCreepsStruckPerShot(tower, geometry, sample);
+    }
+    const perShot = covered.length > 0 ? struck / covered.length : 1;
+    const shotsPerSecond = (computeShotDps(tower.stats) / Math.max(1, tower.stats.damage)) * boost;
+    return 1 - Math.exp((-shotsPerSecond * perShot) / CREEP_ARRIVALS_PER_SECOND);
+  }
+
   function frostBonus(tower: LedgerTower, excludeIndex: number, boost: number): number {
     const window = chillWindow(tower);
     if (window.magnitude <= 0) {
@@ -155,8 +175,7 @@ export function createRouteDamageLedger(
     }
     refreshField();
     const slow = slowBySample(excludeIndex);
-    const shotsPerSecond = (computeShotDps(tower.stats) / Math.max(1, tower.stats.damage)) * boost;
-    const chilledShare = Math.min(1, shotsPerSecond / CREEP_ARRIVALS_PER_SECOND);
+    const chilledShare = struckShare(tower, boost);
     const gain = slowTimeGain(window.magnitude);
     let bonus = 0;
     for (let sample = window.from; sample <= window.to; sample += 1) {
@@ -236,8 +255,7 @@ export function createRouteDamageLedger(
         existing[sample] = Math.max(existing[sample], otherWindow.gain);
       }
     });
-    const shotsPerSecond = (computeShotDps(tower.stats) / Math.max(1, tower.stats.damage)) * boost;
-    const markedShare = Math.min(1, shotsPerSecond / CREEP_ARRIVALS_PER_SECOND);
+    const markedShare = struckShare(tower, boost);
     let bonus = 0;
     for (let sample = window.from; sample <= window.to; sample += 1) {
       bonus += field[sample] * Math.max(0, window.gain - existing[sample]);

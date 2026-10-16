@@ -2,6 +2,7 @@ import { DAMAGE_OVER_TIME_DAMAGE_TYPE } from '../../../../shared/constants/damag
 import { EFFECT_DEFINITIONS } from '../../../../shared/constants/effects';
 import {
   canTargetScopeHitMoveType,
+  EffectId,
   EffectKind,
   TowerAttackKind,
   TowerTypeId,
@@ -17,16 +18,16 @@ import { getTowerArchetype } from '../../../tower/model/types';
 import { NEUTRAL_DAMAGE_EFFICIENCY, type DamageTypeEfficiency } from '../damage-profile';
 import {
   computeCritFactor,
-  computeExtraHitShare,
   computeFreezeAdjustedSlow,
+  computeStunAdjustedSlow,
   computeTargetMultiplierFactor,
   computeVolleyDps,
 } from './abilityDamageModel';
-import { MAX_EXPECTED_SPLASH_TARGETS, POISON_STACK_UPTIME } from './constants';
-import { expectedCreepsAround } from './routeDensity';
+import { POISON_STACK_UPTIME } from './constants';
+import { computeCreepsStruckPerShot, computeTargetsPerShot } from './shotReach';
 import type { RouteGeometry } from './routeGeometry';
 
-/** Slow beyond this is a stun, which the model does not try to value. */
+/** Strongest chill the model values: the runtime floor on a chilled creep's speed. */
 const MAX_MODELLED_SLOW = 0.75;
 /** A chill that freezes stops creeps part of the time: valued up to this mean slow. */
 const MAX_MODELLED_FREEZE_SLOW = 0.85;
@@ -134,13 +135,23 @@ export function computeDamageOverTimeDpsByType(
   };
 }
 
-/** Slow the tower puts on what it hits (0..MAX_MODELLED_SLOW) and for how long. */
+/**
+ * Mean slow the tower puts on what it hits (0..MAX_MODELLED_FREEZE_SLOW) and
+ * for how long: its strongest chill (a freeze counted as a full stop for the
+ * frozen share of the time), then a stun as the share of each reload it holds
+ * the creep (`computeStunAdjustedSlow`), never as a chill of its magnitude.
+ */
 export function computeChill(tower: DamageModelTower): { magnitude: number; durationMs: number } {
   let magnitude = 0;
   let durationMs = 0;
+  let stunMs = 0;
   for (const effect of resolveOnHitEffects(tower)) {
     const definition = EFFECT_DEFINITIONS[effect.effectId];
     if (definition.kind !== EffectKind.MOVEMENT) {
+      continue;
+    }
+    if (effect.effectId === EffectId.STUN) {
+      stunMs = Math.max(stunMs, effect.durationMs ?? definition.durationMs);
       continue;
     }
     const slow = Math.min(
@@ -156,7 +167,16 @@ export function computeChill(tower: DamageModelTower): { magnitude: number; dura
       durationMs = effect.durationMs ?? definition.durationMs;
     }
   }
-  return { magnitude, durationMs };
+  if (stunMs <= 0) {
+    return { magnitude, durationMs };
+  }
+  return {
+    magnitude: Math.min(
+      MAX_MODELLED_FREEZE_SLOW,
+      computeStunAdjustedSlow(magnitude, stunMs, tower.stats.attackCooldownMs),
+    ),
+    durationMs: Math.max(durationMs, stunMs),
+  };
 }
 
 /** Attack speed bonus and radius of the tower's aura; zero when it projects none. */
@@ -190,45 +210,14 @@ export function computeAuraBoostFor(
   return aura.attackSpeedBonus + (coversNeighbour ? damageBonus : 0);
 }
 
-/** Creeps one shot is expected to damage when its target stands at `sampleIndex`. */
-export function computeTargetsPerShot(
-  tower: DamageModelTower,
-  geometry: RouteGeometry,
-  sampleIndex: number,
-): number {
-  const archetype = getTowerArchetype(tower.towerType);
-
-  if (archetype.attackKind === TowerAttackKind.SPLASH) {
-    const radius = tower.stats.splashRadius ?? archetype.splashRadius ?? 0;
-    return Math.min(
-      MAX_EXPECTED_SPLASH_TARGETS,
-      expectedCreepsAround(geometry, sampleIndex, radius),
-    );
-  }
-
-  const chain = tower.stats.chain ?? archetype.chain;
-  if (archetype.attackKind === TowerAttackKind.CHAIN && chain) {
-    const { bounces, bounceRangeCells, damageFalloff } = chain;
-    const available = expectedCreepsAround(geometry, sampleIndex, bounceRangeCells);
-    let targets = 1;
-    let arcShare = 1;
-    for (let bounce = 1; bounce <= bounces; bounce += 1) {
-      arcShare *= 1 - damageFalloff;
-      targets += Math.min(1, Math.max(0, available - bounce)) * arcShare;
-    }
-    return targets;
-  }
-
-  return 1 + computeExtraHitShare(tower.stats.abilities, tower.stats.range, geometry, sampleIndex);
-}
-
 /**
  * Damage per second the tower deals while its target stands at `sampleIndex`,
  * summed over every creep the shot reaches, in hit points of the wave
  * `efficiency` describes: shots count at their own damage type (with their
  * crits and the target multipliers of a `moveType` lane), volleys hit the
- * creeps around the target, damage over time counts at its tick type. Auras
- * deal none of their own, but a support tower's volley does.
+ * creeps around the target, damage over time counts at its tick type on every
+ * creep the shot strikes. Auras deal none of their own, but a support tower's
+ * volley does.
  */
 export function computeSampleDamageRate(
   tower: DamageModelTower,
@@ -249,5 +238,8 @@ export function computeSampleDamageRate(
     computeCritFactor(tower.stats.abilities) *
     hitFactor *
     computeTargetsPerShot(tower, geometry, sampleIndex);
-  return shots + volley + computeDamageOverTimeDps(tower, efficiency);
+  const damageOverTime =
+    computeDamageOverTimeDps(tower, efficiency) *
+    computeCreepsStruckPerShot(tower, geometry, sampleIndex);
+  return shots + volley + damageOverTime;
 }

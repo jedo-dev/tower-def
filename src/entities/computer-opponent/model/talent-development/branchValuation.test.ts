@@ -23,7 +23,7 @@ import {
   type DamageTypeEfficiency,
 } from '../damage-profile';
 import { selectBestBranch, valueBranchPath, type BranchPath } from './branchValuation';
-import { TalentValuation } from './constants';
+import { TALENT_ECONOMY_PAYBACK_ROUNDS, TalentValuation } from './constants';
 
 // Fixture waves and branches: the shipped rosters and talents are not the subject.
 const PLATED: ArmoredHealth = { health: 300, physicalArmor: 50, magicalArmor: 0 };
@@ -121,11 +121,10 @@ describe('entities/computer-opponent/talent-development branch valuation', () =>
     );
 
     expect(value.pathCost).toBe(TowerTalentPricing.BRANCH_COST + gradeTotal);
-    expect(value.effectiveCost).toBe(value.pathCost);
     expect(value.topGradeGain).toBeGreaterThan(0);
   });
 
-  it('counts an economy aura as gold back on the path price', () => {
+  it('values an economy aura as the gold it pays at the board value per gold', () => {
     const economy: BranchPath = {
       id: 'fixture_economy',
       grades: SHARP.grades.map((grade) => ({
@@ -143,10 +142,44 @@ describe('entities/computer-opponent/talent-development branch valuation', () =>
       })),
     };
     const ledger = ledgerAgainst(WARDED);
-    const plain = valueBranchPath(ledger, 0, SHARP, TalentValuation.FULL, 120);
-    const paying = valueBranchPath(ledger, 0, economy, TalentValuation.FULL, 120);
+    const plain = valueBranchPath(ledger, 0, SHARP, TalentValuation.FULL, 120, 2);
+    const unpriced = valueBranchPath(ledger, 0, economy, TalentValuation.FULL, 120, 0);
+    const paying = valueBranchPath(ledger, 0, economy, TalentValuation.FULL, 120, 2);
+    const goldOverHorizon = 20 * TALENT_ECONOMY_PAYBACK_ROUNDS;
 
-    expect(paying.effectiveCost).toBeLessThan(plain.effectiveCost);
+    expect(unpriced.topGradeGain).toBeCloseTo(plain.topGradeGain);
+    expect(paying.topGradeGain).toBeCloseTo(plain.topGradeGain + goldOverHorizon * 2);
+    expect(paying.score).toBeGreaterThan(plain.score);
+    expect(paying.pathCost).toBe(plain.pathCost);
+  });
+
+  it('lets an economy branch with no route gain outrank one that adds little', () => {
+    const treasury: BranchPath = {
+      id: 'fixture_treasury',
+      grades: SHARP.grades.map((grade) => ({
+        ...grade,
+        stats: {
+          ...GRADE_THREE,
+          aura: {
+            radiusCells: 3,
+            attackSpeedBonus: 0,
+            rangeBonus: 0,
+            stacking: TowerAuraStacking.STRONGEST,
+            goldPerKill: 4,
+            incomePerRound: 15,
+          },
+        },
+      })),
+    };
+    const ledger = ledgerAgainst(WARDED);
+    const branches = [SHARP, treasury];
+
+    expect(selectBestBranch(ledger, 0, branches, TalentValuation.FULL, 120, 0)?.branchId).toBe(
+      SHARP.id,
+    );
+    expect(selectBestBranch(ledger, 0, branches, TalentValuation.FULL, 120, 50)?.branchId).toBe(
+      treasury.id,
+    );
   });
 
   it('is deterministic', () => {
