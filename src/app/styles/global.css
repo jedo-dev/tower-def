@@ -153,9 +153,9 @@
   --hud-status-min-height: 56px;
   /* The expanded duel event history scrolls past this height. */
   --duel-feed-expanded-max-height: 96px;
-  /* The wave queue strip over the battlefield (40px row + 8px padding each
-   * side); the match controls column starts under it. */
-  --wave-strip-height: 56px;
+  /* Landscape: the duel feed + match controls column between the board and
+   * the panels (two 44px controls per row at the floor). */
+  --game-feed-landscape-width: clamp(100px, 18vw, 196px);
 
   /* Stacking order: battlefield overlays sit under floating panels, and
    * modals (match outcome) cover everything on the page. */

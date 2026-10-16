@@ -114,7 +114,9 @@ describe('GamePage', () => {
     const board = document.querySelector('.game-canvas-area');
     expect(board).not.toBeNull();
     expect(board?.contains(feed)).toBe(false);
-    expect(feed.parentElement?.className).toBe('game-viewport');
+    const feedRow = feed.parentElement;
+    expect(feedRow?.className).toBe('game-feed-row');
+    expect(feedRow?.parentElement?.className).toBe('game-viewport');
 
     const sendPanel = screen.getByRole('region', { name: 'Creep sending panel' });
     expect(within(sendPanel).getAllByRole('button').length).toBeGreaterThan(0);
@@ -125,6 +127,25 @@ describe('GamePage', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Collapse HUD' }));
     expect(within(sendPanel).getAllByRole('button').length).toBeGreaterThan(0);
+    expect(consoleError).not.toHaveBeenCalled();
+  });
+
+  it('puts the match controls in the feed strip beside the board, never over its cells', () => {
+    publishGameHudSnapshot(createActiveSnapshot());
+    render(<AppShell />);
+
+    const controls = screen.getByRole('group', { name: 'Match controls' });
+    const board = document.querySelector('.game-canvas-area');
+    expect(board).not.toBeNull();
+    expect(board?.contains(controls)).toBe(false);
+    const feedRow = controls.parentElement;
+    expect(feedRow?.className).toBe('game-feed-row');
+    expect(feedRow?.contains(screen.getByRole('region', { name: 'Duel events' }))).toBe(true);
+    // Board first, then the strip, then the panels: document order is layout order.
+    const viewportChildren = Array.from(feedRow?.parentElement?.children ?? []);
+    expect(viewportChildren.indexOf(feedRow as Element)).toBe(
+      viewportChildren.indexOf(board as Element) + 1,
+    );
     expect(consoleError).not.toHaveBeenCalled();
   });
 
