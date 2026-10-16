@@ -38,6 +38,8 @@ export type UnitContentEntry = {
   lore?: string;
   moveType?: string;
   sizeClass?: string;
+  /** Optional creature abilities, validated by `parseUnitAbilities`. */
+  abilities?: unknown;
 };
 
 export type UnitTraits = {
@@ -105,6 +107,7 @@ export const UNIT_CONTENT_OPTIONAL_KEYS: readonly (keyof UnitContentEntry)[] = [
   'lore',
   'moveType',
   'sizeClass',
+  'abilities',
 ];
 
 export const UNIT_CONTENT_FILE_KEYS: readonly (keyof UnitContentFile)[] = [

@@ -11,6 +11,7 @@ import {
   type DamageScope,
   type DamageType,
 } from '../../../shared/types/content-ids';
+import { resistEffectInput } from './effectResistance';
 import { getActiveEffects } from './effectTicks';
 import type { ActiveEffect, CreepEntity } from './types';
 
@@ -201,7 +202,17 @@ function applyEffectInstance(creep: CreepEntity, input: ApplyEffectInput): Creep
  * changed effect list is always a fresh array, so render state can keep the
  * previous entity around for comparison.
  */
-export function applyEffectToCreep(creep: CreepEntity, input: ApplyEffectInput): CreepEntity {
+export function applyEffectToCreep(
+  creep: CreepEntity,
+  authoredInput: ApplyEffectInput,
+): CreepEntity {
+  // The creature's effect resistance weakens (or blocks) the application.
+  const input = resistEffectInput(creep, authoredInput);
+
+  if (input === undefined) {
+    return creep;
+  }
+
   const applied = applyEffectInstance(creep, input);
 
   if (input.freezeAtStacks === undefined || input.effectId !== EffectId.CHILL) {

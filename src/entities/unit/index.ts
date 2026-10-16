@@ -16,3 +16,5 @@ export {
   resolveUnitConfigById,
   tryResolveUnitConfigById,
 } from './model/registry';
+export type { CreatureAbilities } from '../../shared/types/creatureAbilities';
+export { parseCreatureAbilities, parseUnitAbilities } from './model/content/unitAbilityFields';

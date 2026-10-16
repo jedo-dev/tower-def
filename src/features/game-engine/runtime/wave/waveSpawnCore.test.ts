@@ -50,4 +50,43 @@ describe('features/game-engine/runtime/wave/waveSpawnCore', () => {
     expect(creep.remainingRouteDistance).toBe(1);
     expect(creep.sender).toBeUndefined();
   });
+
+  it('copies the creature abilities and starts their counters', () => {
+    const unit: UnitConfig = {
+      ...units[0],
+      abilities: {
+        startInvisibleMs: 1500,
+        shieldHp: 30,
+        speedBoostLastRouteShare: { routeShare: 0.25, speedMultiplier: 2 },
+      },
+    };
+    const [spawn] = scheduleWaveSpawns([unit], [], 'opponent', {
+      firstSpawnAtMs: 0,
+      spawnIntervalMs: 0,
+    });
+    const route = [
+      { x: 0, y: 0 },
+      { x: 1, y: 0 },
+      { x: 2, y: 0 },
+    ];
+    const creep = createWaveCreepEntity(spawn, 1, route, 'basic');
+
+    expect(creep.abilities).toBe(unit.abilities);
+    expect(creep.invisibleRemainingMs).toBe(1500);
+    expect(creep.shieldHp).toBe(30);
+    expect(creep.msSinceDamage).toBe(0);
+    expect(creep.routeDistanceAtSpawn).toBe(2);
+  });
+
+  it('adds nothing to a creature without abilities', () => {
+    const [spawn] = scheduleWaveSpawns([units[0]], [], 'opponent', {
+      firstSpawnAtMs: 0,
+      spawnIntervalMs: 0,
+    });
+    const creep = createWaveCreepEntity(spawn, 1, [{ x: 0, y: 0 }], 'basic');
+
+    expect(creep).not.toHaveProperty('abilities');
+    expect(creep).not.toHaveProperty('shieldHp');
+    expect(creep).not.toHaveProperty('invisibleRemainingMs');
+  });
 });

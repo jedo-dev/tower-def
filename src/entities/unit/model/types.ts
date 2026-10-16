@@ -1,5 +1,6 @@
 import type { UnitMoveType, UnitSizeClass } from '../../../shared/types/content-ids';
 import { RaceId } from '../../../shared/types/content-ids';
+import type { CreatureAbilities } from '../../../shared/types/creatureAbilities';
 
 export { RaceId as Faction };
 
@@ -83,4 +84,9 @@ export type UnitConfig = {
   /** Resolved traits: content may omit them, the loader fills the defaults. */
   moveType: UnitMoveType;
   sizeClass: UnitSizeClass;
+  /**
+   * Optional creature abilities (tower-def-716.2); absent means none. Copied
+   * onto the creep at spawn. See docs/08, "Creature abilities".
+   */
+  abilities?: CreatureAbilities;
 };

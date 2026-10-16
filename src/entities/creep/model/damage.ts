@@ -9,6 +9,12 @@ import {
   EffectId,
   damageScopeCovers,
 } from '../../../shared/types/content-ids';
+import type { CreatureDamageShape } from '../../../shared/types/creatureAbilities';
+import {
+  getShieldAbsorbedDamage,
+  getIncomingDamageMultiplier,
+  reviveForSecondLife,
+} from './abilityDamage';
 import { getActiveEffects } from './effectTicks';
 import { isCreepAlive, setCreepLifeState } from './lifeState';
 import type { CreepEntity } from './types';
@@ -17,6 +23,8 @@ export type ApplyCreepDamageResult = {
   creep: CreepEntity;
   damageApplied: number;
   killed: boolean;
+  /** The hit was lethal but the creep used its `secondLife`; no kill was scored. */
+  revived?: boolean;
 };
 
 /** The two armors a creep carries; percent damage reads neither. */
@@ -166,46 +174,51 @@ export function resolveIncomingDamage(
   );
 }
 
+/**
+ * One hit or damage-over-time tick on a creep. `shape` says how the damage
+ * arrived, for the creature's `incomingDamageMultipliers`; callers that omit
+ * it get no shape multiplier. After armor and vulnerability, a shield absorbs
+ * first; a lethal hit on a creep with an unused `secondLife` revives it
+ * instead (`revived`, not `killed`).
+ */
 export function applyDamageToCreep(
   creep: CreepEntity,
   incomingDamage: number,
   damageType: DamageType,
+  shape?: CreatureDamageShape,
 ): ApplyCreepDamageResult {
   if (!isCreepAlive(creep)) {
-    return {
-      creep,
-      damageApplied: 0,
-      killed: false,
-    };
+    return { creep, damageApplied: 0, killed: false };
   }
 
-  const normalizedDamage = Math.max(0, resolveIncomingDamage(creep, incomingDamage, damageType));
+  const normalizedDamage =
+    Math.max(0, resolveIncomingDamage(creep, incomingDamage, damageType)) *
+    getIncomingDamageMultiplier(creep, damageType, shape);
 
   if (normalizedDamage === 0) {
-    return {
-      creep,
-      damageApplied: 0,
-      killed: false,
-    };
+    return { creep, damageApplied: 0, killed: false };
   }
 
-  const nextHp = Math.max(0, creep.hp - normalizedDamage);
-  const damagedCreep: CreepEntity = {
-    ...creep,
-    hp: nextHp,
-  };
+  const absorbed = getShieldAbsorbedDamage(creep, normalizedDamage);
+  const damageToHealth = normalizedDamage - absorbed;
+  const nextHp = Math.max(0, creep.hp - damageToHealth);
+  const damageApplied = Math.min(damageToHealth, creep.hp);
+  const damagedCreep: CreepEntity = { ...creep, hp: nextHp };
+
+  // Any damage restarts the recharge timer of a creep with a shield ability.
+  if (creep.abilities?.shieldHp !== undefined) {
+    damagedCreep.shieldHp = (creep.shieldHp ?? 0) - absorbed;
+    damagedCreep.msSinceDamage = 0;
+  }
 
   if (nextHp > 0) {
-    return {
-      creep: damagedCreep,
-      damageApplied: Math.min(normalizedDamage, creep.hp),
-      killed: false,
-    };
+    return { creep: damagedCreep, damageApplied, killed: false };
   }
 
-  return {
-    creep: setCreepLifeState(damagedCreep, 'dead'),
-    damageApplied: Math.min(normalizedDamage, creep.hp),
-    killed: true,
-  };
+  const revived = reviveForSecondLife(damagedCreep);
+  if (revived) {
+    return { creep: revived, damageApplied, killed: false, revived: true };
+  }
+
+  return { creep: setCreepLifeState(damagedCreep, 'dead'), damageApplied, killed: true };
 }

@@ -8,6 +8,7 @@ import {
   type DamageType,
   type EffectId,
 } from '../../../shared/types/content-ids';
+import type { CreatureAbilities } from '../../../shared/types/creatureAbilities';
 
 export type CreepId = string;
 
@@ -103,4 +104,25 @@ export type CreepEntity = CreepCombatTraits & {
   activeEffects?: ActiveEffect[];
   /** Set only on creeps a duel side sent; absent on baseline wave creeps. */
   sender?: CreepSenderSide;
+  /** The creature's abilities, copied at spawn; absent means none. */
+  abilities?: CreatureAbilities;
+} & CreepAbilityRuntime;
+
+/**
+ * Per-creep counters behind the creature abilities. Spawn sets the ones its
+ * abilities need; every field is absent on a creep without abilities.
+ */
+export type CreepAbilityRuntime = {
+  /** Single-target shots aimed at the creep so far (`dodgeEveryNthShot`). */
+  shotsAimedAt?: number;
+  /** Ms of spawn invisibility left (`startInvisibleMs`); untargetable while above 0. */
+  invisibleRemainingMs?: number;
+  /** Shield left (`shieldHp`). */
+  shieldHp?: number;
+  /** Ms since the creep last took damage, for `shieldRechargeMs`. */
+  msSinceDamage?: number;
+  /** The creep already used its `secondLife`. */
+  isOnSecondLife?: boolean;
+  /** Route length in cells when it spawned, for `speedBoostLastRouteShare`. */
+  routeDistanceAtSpawn?: number;
 };

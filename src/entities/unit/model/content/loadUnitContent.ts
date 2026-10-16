@@ -30,6 +30,7 @@ import {
   type UnitTraits,
 } from './unitContent.types';
 import { assertUnitSchemaVersion } from './assertUnitSchemaVersion';
+import { parseUnitAbilities } from './unitAbilityFields';
 
 export type UnitContentSource = {
   /** Authored file path, used verbatim in validation errors. */
@@ -70,6 +71,8 @@ function parseUnitEntry(
     throw new ContentValidationError(location, `id does not belong to race ${race}`);
   }
 
+  const abilities = parseUnitAbilities(entry, location);
+
   return {
     id,
     name: readString(entry, 'name', location),
@@ -95,6 +98,7 @@ function parseUnitEntry(
     description: readOptionalString(entry, 'description', location),
     lore: readOptionalBoundedString(entry, 'lore', location, CONTENT_LORE_MAX_LENGTH),
     ...parseTraits(entry, location),
+    ...(abilities === undefined ? {} : { abilities }),
   };
 }
 
