@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
+  getConeHalfAngleCosine,
   isCriticalShot,
+  isInCone,
   isPointOnPierceLine,
   resolveShotDamageMultiplier,
   resolveTargetDamageMultiplier,
@@ -83,5 +85,21 @@ describe('isPointOnPierceLine', () => {
   it('treats a zero-length line as its end point', () => {
     expect(isPointOnPierceLine(from, from, { x: 0.4, y: 0 })).toBe(true);
     expect(isPointOnPierceLine(from, from, { x: 1, y: 0 })).toBe(false);
+  });
+});
+
+describe('isInCone', () => {
+  const cos60 = getConeHalfAngleCosine(60);
+
+  it('accepts points within half the opening of the axis and rejects the rest', () => {
+    expect(isInCone(1, 0, 3, 1, cos60)).toBe(true);
+    expect(isInCone(1, 0, 1, 1, cos60)).toBe(false);
+    expect(isInCone(1, 0, -1, 0, cos60)).toBe(false);
+  });
+
+  it('counts the apex as inside and opens to the front half at 180 degrees', () => {
+    expect(isInCone(1, 0, 0, 0, cos60)).toBe(true);
+    expect(isInCone(1, 0, 0.01, 1, getConeHalfAngleCosine(180))).toBe(true);
+    expect(isInCone(1, 0, -0.1, 1, getConeHalfAngleCosine(180))).toBe(false);
   });
 });

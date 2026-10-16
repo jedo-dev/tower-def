@@ -10,10 +10,15 @@ import {
 import { TowerAttackKind, type DamageType } from '../../../../shared/types/content-ids';
 import { applyChainDamage, applySingleTargetDamage, applySplashDamage } from './towerAreaAttacks';
 import type { CombatCreep, CombatField, CombatTower, TowerCombatHooks } from './towerCombatTypes';
-import { applyExtraTargets, applyPierceLine, resolveTowerVolley } from './towerShotAbilities';
+import {
+  applyCone,
+  applyExtraTargets,
+  applyPierceLine,
+  resolveTowerVolley,
+} from './towerShotAbilities';
 
 // Renderer-free core of tower combat: targeting, single/splash/chain damage,
-// optional abilities (crit, extra targets, piercing line, volley), on-hit
+// optional abilities (crit, extra targets, piercing line, cone, volley), on-hit
 // status effects and damage over time. The Phaser combat runtime and the
 // headless duel simulation both run these; everything visual or audible (hit
 // flash, projectiles, damage numbers, sounds) goes through the hooks.
@@ -85,6 +90,10 @@ function applySingleTargetShot<C extends CombatCreep, T extends CombatTower>(
 
   if (abilities.pierceLine !== undefined) {
     applyPierceLine(field, tower, target, shotDamage, damageType, hooks, abilities.pierceLine);
+  }
+
+  if (abilities.coneDegrees !== undefined) {
+    applyCone(field, tower, target, shotDamage, damageType, hooks, abilities.coneDegrees);
   }
 }
 

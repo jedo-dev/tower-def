@@ -24,6 +24,7 @@ export const TOWER_ABILITY_KEYS: readonly TowerAbilityKey[] = [
   'minRangeCells',
   'volleyEveryMs',
   'volleyDamageShare',
+  'coneDegrees',
 ];
 
 /** Abilities read as whole numbers. */
@@ -45,6 +46,7 @@ export const TOWER_ABILITY_BOUNDS: Record<TowerAbilityKey, NumericBound> = {
   minRangeCells: { min: 0, max: 12 },
   volleyEveryMs: { min: 500, max: 60_000 },
   volleyDamageShare: { min: 0, max: 5 },
+  coneDegrees: { min: 10, max: 180 },
 };
 
 export type TowerAuraExtensionNumberKey =

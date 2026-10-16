@@ -40,6 +40,9 @@ function describeAbilities(abilities: TowerAbilities): string[] {
   if (abilities.pierceLine !== undefined) {
     parts.push(`pierces the line at ${formatPercent(abilities.pierceLine)}`);
   }
+  if (abilities.coneDegrees !== undefined) {
+    parts.push(`hits all in a ${abilities.coneDegrees}° cone`);
+  }
   if (abilities.airDamageMultiplier !== undefined) {
     parts.push(`${formatMultiplier(abilities.airDamageMultiplier)} vs air`);
   }

@@ -23,6 +23,7 @@ import {
   computeVolleyDps,
 } from './abilityDamageModel';
 import { MAX_EXPECTED_SPLASH_TARGETS, POISON_STACK_UPTIME } from './constants';
+import { computeConeExtraHitShare } from './deferredMechanicsValue';
 import { expectedCreepsAround } from './routeDensity';
 import type { RouteGeometry } from './routeGeometry';
 
@@ -225,7 +226,12 @@ export function computeTargetsPerShot(
     return targets;
   }
 
-  return 1 + computeExtraHitShare(tower.stats.abilities, tower.stats.range, geometry, sampleIndex);
+  const { abilities, range } = tower.stats;
+  return (
+    1 +
+    computeExtraHitShare(abilities, range, geometry, sampleIndex) +
+    computeConeExtraHitShare(abilities, range, geometry, sampleIndex)
+  );
 }
 
 /**

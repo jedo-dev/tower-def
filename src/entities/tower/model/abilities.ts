@@ -34,6 +34,11 @@ export type TowerAbilities = {
   volleyEveryMs?: number;
   /** Share of the tower's damage a volley deals; 1 when omitted. */
   volleyDamageShare?: number;
+  /**
+   * A single-target shot also hits every other valid creep in range inside a
+   * cone of this many degrees toward the target, at full damage (Wyrm Breath).
+   */
+  coneDegrees?: number;
 };
 
 type TargetedCreep = Pick<CreepEntity, 'moveType' | 'sizeClass' | 'hp' | 'maxHp'>;
@@ -87,6 +92,34 @@ export function resolveShotDamageMultiplier(
     return 1;
   }
   return abilities?.critMultiplier ?? 1;
+}
+
+const DEGREES_PER_HALF_TURN = 180;
+
+/** Cosine of half a cone's opening; compare it with `isInCone` per creep. */
+export function getConeHalfAngleCosine(coneDegrees: number): number {
+  return Math.cos(((coneDegrees / 2) * Math.PI) / DEGREES_PER_HALF_TURN);
+}
+
+/**
+ * Whether the point (`offsetX`, `offsetY` from the cone apex) lies inside the
+ * cone that opens toward (`axisX`, `axisY`) with the given half-angle cosine.
+ * Plain numbers, so a cone shot allocates nothing per creep. The apex itself
+ * counts as inside.
+ */
+export function isInCone(
+  axisX: number,
+  axisY: number,
+  offsetX: number,
+  offsetY: number,
+  halfAngleCosine: number,
+): boolean {
+  const axisLength = Math.hypot(axisX, axisY);
+  const offsetLength = Math.hypot(offsetX, offsetY);
+  if (axisLength === 0 || offsetLength === 0) {
+    return true;
+  }
+  return (axisX * offsetX + axisY * offsetY) / (axisLength * offsetLength) >= halfAngleCosine;
 }
 
 /**

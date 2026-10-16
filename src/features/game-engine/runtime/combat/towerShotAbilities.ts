@@ -1,6 +1,11 @@
-import { getCreepFootprintCenter } from '../../../../entities/creep';
 import {
+  getCreepFootprintCenter,
+  getCreepFootprintCenterOffsetInCells,
+} from '../../../../entities/creep';
+import {
+  getConeHalfAngleCosine,
   getTowerCenter,
+  isInCone,
   getTowerCreepDistanceInCells,
   isCreepTargetableByTower,
   isPointOnPierceLine,
@@ -96,6 +101,39 @@ export function applyPierceLine<C extends CombatCreep, T extends CombatTower>(
     }
     if (isPointOnPierceLine(from, to, getCreepFootprintCenter(creep.entity))) {
       strikeAndReport(tower, creep, shotDamage * share, damageType, hooks);
+    }
+  }
+}
+
+/**
+ * Wyrm Breath: hits every other valid creep in range whose footprint centre
+ * lies inside the `coneDegrees` cone from the tower centre toward the primary
+ * target, at full shot damage. Field order, so the hits are deterministic.
+ */
+export function applyCone<C extends CombatCreep, T extends CombatTower>(
+  field: CombatField<C, T>,
+  tower: T,
+  primary: C,
+  shotDamage: number,
+  damageType: DamageType,
+  hooks: TowerCombatHooks<C, T>,
+  coneDegrees: number,
+): void {
+  const apex = getTowerCenter(tower.entity);
+  const primaryOffset = getCreepFootprintCenterOffsetInCells(primary.entity.sizeClass);
+  const axisX = primary.entity.position.x + primaryOffset - apex.x;
+  const axisY = primary.entity.position.y + primaryOffset - apex.y;
+  const halfAngleCosine = getConeHalfAngleCosine(coneDegrees);
+
+  for (const creep of field.creeps) {
+    if (creep === primary || !isCreepTargetableByTower(tower.entity, creep.entity)) {
+      continue;
+    }
+    const offset = getCreepFootprintCenterOffsetInCells(creep.entity.sizeClass);
+    const offsetX = creep.entity.position.x + offset - apex.x;
+    const offsetY = creep.entity.position.y + offset - apex.y;
+    if (isInCone(axisX, axisY, offsetX, offsetY, halfAngleCosine)) {
+      strikeAndReport(tower, creep, shotDamage, damageType, hooks);
     }
   }
 }

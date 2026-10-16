@@ -509,11 +509,12 @@ brings the next level's object (or none).
 | `minRangeCells` | 0-12, below `range` | Targeting ignores creeps closer than this (mortar dead zone). |
 | `volleyEveryMs` | 500-60000 | Every this many ms the tower hits every valid creep in range once, besides its normal attack (support towers too). A ready volley waits for a target; a new tower starts ready. |
 | `volleyDamageShare` | 0-5 | Share of the tower's damage a volley deals; 1 when omitted. Needs `volleyEveryMs`. |
+| `coneDegrees` | 10-180 | A single-target shot also hits every other valid creep in range whose footprint centre lies inside a cone of this opening from the tower centre toward the target, at full damage (tower-def-bge.9, Wyrm Breath). Field order, deterministic. |
 
 Target multipliers multiply together and apply to every hit of the tower
 (primary, splash, arcs, extra, pierce, volley), before armor and
 vulnerability. A single-target shot is any attack that is neither splash nor
-chain; `extraTargets` and `pierceLine` only widen those.
+chain; `extraTargets`, `pierceLine` and `coneDegrees` only widen those.
 
 On-hit effect fields (in `onHitEffects[]` entries, at any level):
 

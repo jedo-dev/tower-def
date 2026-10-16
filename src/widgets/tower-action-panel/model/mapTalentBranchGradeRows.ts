@@ -62,6 +62,9 @@ export function describeTowerAbilities(abilities: TowerAbilities | undefined): s
   if (abilities.pierceLine !== undefined) {
     phrases.push(`Pierce ${formatPercent(abilities.pierceLine)}`);
   }
+  if (abilities.coneDegrees !== undefined) {
+    phrases.push(`Cone ${abilities.coneDegrees}°`);
+  }
   if (abilities.airDamageMultiplier !== undefined) {
     phrases.push(`${formatMultiplier(abilities.airDamageMultiplier)} vs air`);
   }

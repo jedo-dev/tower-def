@@ -6,7 +6,6 @@
       "id": "undead_bone_archer_tower",
       "name": "Bone Archer Tower",
       "archetype": "single",
-
       "allowedTargets": "both",
       "costGold": 50,
       "damage": 20,
@@ -208,13 +207,7 @@
               "attackCooldownMs": 1100,
               "splashRadius": 3.8
             },
-            {
-              "level": 5,
-              "damage": 62,
-              "range": 5.8,
-              "attackCooldownMs": 1050,
-              "splashRadius": 4
-            },
+            { "level": 5, "damage": 62, "range": 5.8, "attackCooldownMs": 1050, "splashRadius": 4 },
             {
               "level": 6,
               "damage": 74,
@@ -231,19 +224,12 @@
       "id": "undead_frost_wyrm_nest",
       "name": "Frost Wyrm Nest",
       "archetype": "frost",
-
       "allowedTargets": "both",
       "costGold": 70,
       "damage": 20,
       "range": 6,
       "attackCooldownMs": 900,
-      "onHitEffects": [
-        {
-          "effectId": "chill",
-          "magnitude": 0.35,
-          "durationMs": 2000
-        }
-      ],
+      "onHitEffects": [{ "effectId": "chill", "magnitude": 0.35, "durationMs": 2000 }],
       "levels": [
         {
           "level": 1,
@@ -337,7 +323,7 @@
               "range": 7.2,
               "attackCooldownMs": 800,
               "onHitEffects": [{ "effectId": "chill", "magnitude": 0.55, "durationMs": 2000 }],
-              "abilities": { "pierceLine": 0.6 }
+              "abilities": { "coneDegrees": 30 }
             },
             {
               "level": 5,
@@ -345,7 +331,7 @@
               "range": 7.6,
               "attackCooldownMs": 800,
               "onHitEffects": [{ "effectId": "chill", "magnitude": 0.55, "durationMs": 2000 }],
-              "abilities": { "pierceLine": 0.7 }
+              "abilities": { "coneDegrees": 40 }
             },
             {
               "level": 6,
@@ -361,7 +347,7 @@
                   "damageKind": "all"
                 }
               ],
-              "abilities": { "pierceLine": 0.85 }
+              "abilities": { "coneDegrees": 50 }
             },
             {
               "level": 7,
@@ -377,7 +363,7 @@
                   "damageKind": "all"
                 }
               ],
-              "abilities": { "pierceLine": 1 }
+              "abilities": { "coneDegrees": 60 }
             }
           ]
         }

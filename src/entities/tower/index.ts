@@ -32,6 +32,8 @@ export {
 } from './model/targeting';
 export {
   isCriticalShot,
+  getConeHalfAngleCosine,
+  isInCone,
   isPointOnPierceLine,
   resolveShotDamageMultiplier,
   resolveTargetDamageMultiplier,

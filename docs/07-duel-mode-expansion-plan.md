@@ -815,7 +815,7 @@ effect or aura mechanic (`towerTalentContent.test.ts`).
 | Plague Tower / Corpse Blast | killed creeps explode for 20-50% of their max health, chaining | doc damage +10% (48 / 55 / 64 / 75, 52 / 62 / 74 / 88 since tower-def-bge.6) and radius +0.2 (+0.4 since bge.6); no death hook |
 | Frost Wyrm Nest / Permafrost | slow 45-65% (doc steps over the shipped 0.55 would pass the floor) | chill 0.6 / 0.65 / 0.7 / 0.75 |
 | Frost Wyrm Nest / Permafrost | frozen fliers fall and become ground targets (7) | `airDamageMultiplier` 1.25 at grade 7 |
-| Frost Wyrm Nest / Wyrm Breath | cone of 30-60 degrees hitting everything in it | `pierceLine` 0.6 / 0.7 / 0.85 / 1 (the line to the target) |
+| Frost Wyrm Nest / Wyrm Breath | cone of 30-60 degrees hitting everything in it | **restored** (tower-def-bge.9): `coneDegrees` 30 / 40 / 50 / 60, full damage to every valid creep in range inside the cone |
 | Frost Wyrm Nest / Wyrm Breath | frozen creeps take +25% / +50% (6 / 7) | on-hit `vulnerability` (all types, 2 s) on every breath target |
 | Bone Obelisk / Necromancer's Whisper | two obelisk auras stack at half (7) | magical damage bonus 0.25 instead of 0.20 |
 | Bone Obelisk / Soul Harvest | single-target percent hits of 8-22 per mille | magical `volleyEveryMs` pulse (12 / 16 / 22 / 30) at every creep in reach (5-6 cells): the damage type is per tower, not per grade; keeps the grade 3 speed aura |
@@ -875,6 +875,7 @@ expected wave, never a roll:
 | `critEveryNthShot` / `critMultiplier` | shot damage times `1 + (multiplier - 1) / N` |
 | `extraTargets` (+ share) | up to N more creeps of those the route packs within the tower's range, at their share |
 | `pierceLine` | its share on the creeps within 2 cells of the target on the route |
+| `coneDegrees` (tower-def-bge.9, `deferredMechanicsValue.ts`) | `coneDegrees / 360` of the other creeps the route packs within range, at full damage |
 | `volleyEveryMs` (+ share) | `damage * share / interval` on the creeps in range around the target (at most 6); support towers too |
 | `airDamageMultiplier` / `groundDamageMultiplier` | in full on the lane whose creeps fly / walk (the ledger knows its lane) |
 | `largeTargetMultiplier` / `fullHealthBonusMultiplier` | on 20% / 25% of hits |
