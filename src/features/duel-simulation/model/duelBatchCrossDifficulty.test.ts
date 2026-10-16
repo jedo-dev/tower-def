@@ -2,11 +2,23 @@ import { describe, expect, it } from 'vitest';
 import { Difficulty } from '../../../entities/difficulty';
 import { RaceId } from '../../../shared/types/content-ids';
 import { createSeedRange, summarizeBatch, type DuelMatchSummary } from './duelBatch';
+import type { DuelSideDevelopment } from './duelBatchDevelopment';
 import {
   createCrossDifficultyMatchups,
   summarizeCrossDifficulty,
 } from './duelBatchCrossDifficulty';
 import { parseDuelBatchArgs } from './parseDuelBatchArgs';
+
+function side(raceId: RaceId): DuelSideDevelopment {
+  return {
+    raceId,
+    endTowers: 20,
+    endTopGrade: 3,
+    topGradeAtEarlyRound: 3,
+    topGradeAtLateRound: 3,
+    branchIds: [],
+  };
+}
 
 function summary(winner: DuelMatchSummary['winner'], rounds: number): DuelMatchSummary {
   return {
@@ -16,6 +28,10 @@ function summary(winner: DuelMatchSummary['winner'], rounds: number): DuelMatchS
     lateUnspent: { unspentGold: 0, income: 0, sideRounds: 0 },
     winner,
     endReason: 'lives',
+    development: {
+      a: side(RaceId.UNDEAD),
+      b: side(RaceId.ORC),
+    },
   };
 }
 

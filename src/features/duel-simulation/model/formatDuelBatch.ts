@@ -6,6 +6,12 @@ import {
   type DuelBatchResult,
   type DuelBatchStats,
 } from './duelBatch';
+import {
+  formatEndBoardLine,
+  formatEndTopGrade,
+  formatEndTowers,
+  formatRaceDevelopment,
+} from './formatDuelBatchDevelopment';
 import { summarizeCrossDifficulty, type CrossDifficultyStats } from './duelBatchCrossDifficulty';
 
 const PERCENT = 100;
@@ -20,6 +26,8 @@ const HEADER_CELLS = [
   'draw %',
   'round cap %',
   `unspent/income r${DuelBatchDefaults.LATE_GAME_AFTER_ROUND + 1}+`,
+  'end towers A/B',
+  'end grade A/B',
 ];
 
 function formatMatchup(matchup: DuelBatchMatchup): string {
@@ -59,6 +67,8 @@ function formatStatsCells(label: string, stats: DuelBatchStats): string[] {
     formatShare(stats.draws, stats.matches),
     formatShare(stats.roundCaps, stats.matches),
     formatLateUnspent(stats),
+    formatEndTowers(stats.endBoards),
+    formatEndTopGrade(stats.endBoards),
   ];
 }
 
@@ -134,6 +144,9 @@ export function formatDuelBatch(result: DuelBatchResult): string {
       `baseline ${baselineRaceId}`,
     ...padRows(rows),
     ...formatCrossDifficulty(result),
+    '',
+    formatEndBoardLine(result.overall.endBoards),
+    ...formatRaceDevelopment(result.development),
     '',
     ...result.matchups.map(formatMatchLine),
   ].join('\n');

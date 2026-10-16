@@ -8,6 +8,14 @@ import {
   type DuelSimulationSide,
 } from './duelSimulationConfig';
 import {
+  summarizeDevelopment,
+  summarizeEndBoards,
+  summarizeRaceDevelopment,
+  type DuelMatchDevelopment,
+  type EndBoardStats,
+  type RaceDevelopmentStats,
+} from './duelBatchDevelopment';
+import {
   simulateDuel,
   type DuelEndReason,
   type DuelSimulationResult,
@@ -59,6 +67,8 @@ export type DuelMatchSummary = {
   lateUnspent: UnspentGoldTally;
   winner: DuelWinner;
   endReason: DuelEndReason;
+  /** Boards at match end, top grades at the checkpoint rounds, branch picks. */
+  development: DuelMatchDevelopment;
 };
 
 /** Average unspent gold and income per side-round. */
@@ -91,6 +101,8 @@ export type DuelBatchStats = {
   roundCaps: number;
   /** Late-game unspent gold against income; null when no match got that far. */
   lateUnspent: UnspentGoldStats | null;
+  /** Towers and top grade at match end; null for an empty batch. */
+  endBoards: EndBoardStats | null;
 };
 
 export type DuelBatchMatchupResult = {
@@ -104,6 +116,8 @@ export type DuelBatchResult = {
   config: DuelBatchConfig;
   matchups: DuelBatchMatchupResult[];
   overall: DuelBatchStats;
+  /** Per race over the whole batch. */
+  development: RaceDevelopmentStats[];
 };
 
 export const DEFAULT_DUEL_BATCH_RACE_PAIRS: readonly (readonly [RaceId, RaceId])[] = [
@@ -166,6 +180,7 @@ export function summarizeDuel(result: DuelSimulationResult): DuelMatchSummary {
     lateUnspent: tallyLateUnspent(result),
     winner: result.winner,
     endReason: result.endReason,
+    development: summarizeDevelopment(result),
   };
 }
 
@@ -226,6 +241,7 @@ export function summarizeBatch(summaries: readonly DuelMatchSummary[]): DuelBatc
     draws: countWhere(summaries, (summary) => summary.winner === null),
     roundCaps: countWhere(summaries, (summary) => summary.endReason === 'max_rounds'),
     lateUnspent: summarizeLateUnspent(summaries),
+    endBoards: summarizeEndBoards(summaries),
   };
 }
 
@@ -256,9 +272,11 @@ export function runDuelBatch(config: DuelBatchConfig): DuelBatchResult {
       return { matchup, map, summaries, stats: summarizeBatch(summaries) };
     }),
   );
+  const summaries = matchups.flatMap((result) => result.summaries);
   return {
     config,
     matchups,
-    overall: summarizeBatch(matchups.flatMap((result) => result.summaries)),
+    overall: summarizeBatch(summaries),
+    development: summarizeRaceDevelopment(summaries),
   };
 }

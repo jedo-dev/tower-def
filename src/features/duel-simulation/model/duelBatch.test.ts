@@ -11,11 +11,23 @@ import {
   type DuelBatchConfig,
   type DuelMatchSummary,
 } from './duelBatch';
+import type { DuelSideDevelopment } from './duelBatchDevelopment';
 import { formatDuelBatch } from './formatDuelBatch';
 import { parseDuelBatchArgs } from './parseDuelBatchArgs';
 
 /** Full batch runs several duels; under full-suite load it can exceed the 5s default. */
 const BATCH_RUN_TIMEOUT_MS = 30_000;
+
+function side(raceId: RaceId): DuelSideDevelopment {
+  return {
+    raceId,
+    endTowers: 20,
+    endTopGrade: 3,
+    topGradeAtEarlyRound: 3,
+    topGradeAtLateRound: 3,
+    branchIds: [],
+  };
+}
 
 function summary(overrides: Partial<DuelMatchSummary>): DuelMatchSummary {
   return {
@@ -25,6 +37,10 @@ function summary(overrides: Partial<DuelMatchSummary>): DuelMatchSummary {
     lateUnspent: { unspentGold: 0, income: 0, sideRounds: 0 },
     winner: 'A',
     endReason: 'lives',
+    development: {
+      a: side(RaceId.UNDEAD),
+      b: side(RaceId.ORC),
+    },
     ...overrides,
   };
 }
@@ -61,7 +77,7 @@ describe('features/duel-simulation/duelBatch', () => {
       summary({ rounds: 4, winner: null, checkpointTowers: null }),
     ]);
 
-    expect(stats).toEqual({
+    expect(stats).toMatchObject({
       matches: 4,
       medianRounds: 20,
       minRounds: 4,
@@ -107,6 +123,9 @@ describe('features/duel-simulation/duelBatch', () => {
       expect(report).toMatch(/seeded UNDEAD NORMAL vs ORC NORMAL +\| 2/);
       expect(report).toContain('overall');
       expect(report).toContain('unspent/income r16+');
+      expect(report).toContain('end towers A/B');
+      expect(report).toContain('end boards (');
+      expect(report).toMatch(/ {2}UNDEAD \(4 sides\): r10 /);
       expect(report).toMatch(/classic UNDEAD NORMAL vs ORC NORMAL: 1:\d+[AB=] 2:\d+[AB=]/);
       expect(formatDuelBatch(runDuelBatch(config))).toBe(report);
     },

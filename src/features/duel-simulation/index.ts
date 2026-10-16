@@ -47,6 +47,19 @@ export {
   summarizeCrossDifficulty,
 } from './model/duelBatchCrossDifficulty';
 export type { CrossDifficultyStats, DifficultyMatchup } from './model/duelBatchCrossDifficulty';
+export {
+  DuelDevelopmentDefaults,
+  summarizeDevelopment,
+  summarizeEndBoards,
+  summarizeRaceDevelopment,
+} from './model/duelBatchDevelopment';
+export type {
+  DevelopmentMatch,
+  DuelMatchDevelopment,
+  DuelSideDevelopment,
+  EndBoardStats,
+  RaceDevelopmentStats,
+} from './model/duelBatchDevelopment';
 export { formatDuelBatch } from './model/formatDuelBatch';
 export { DUEL_BATCH_USAGE, parseDuelBatchArgs } from './model/parseDuelBatchArgs';
 export type { DuelBatchArgsResult } from './model/parseDuelBatchArgs';
