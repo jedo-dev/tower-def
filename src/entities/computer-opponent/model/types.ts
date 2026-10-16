@@ -2,6 +2,7 @@ import type { RaceId } from '../../../shared/types/content-ids';
 import type { TowerTypeId } from '../../../shared/types/content-ids';
 import type { GridPosition } from '../../../shared/types/pathfinding';
 import type { Difficulty } from '../../difficulty/model/types';
+import type { TowerBranchChoices, TowerTalentBranchId } from '../../tower/model/talents';
 import type { UnitId } from '../../unit/model/types';
 import type { DamageTypeMix } from './damage-profile';
 import type { DefenceAssessment } from './threat-budget/splitThreatBudget';
@@ -64,7 +65,10 @@ export type DecisionContext = {
   threat: ThreatAssessment;
   leakHistory: readonly LeakHistoryEntry[];
   affordableTowers: readonly TowerTypeId[];
+  /** Towers whose next grade this side can afford now, past grade 3 along its chosen branch. */
   upgradeableTowerIds: readonly string[];
+  /** This side's talent picks; none when omitted (`NO_TOWER_BRANCH_CHOICES`). */
+  towerBranchChoices?: TowerBranchChoices;
   availableBuildPositions: readonly GridPosition[];
   enemy?: EnemySnapshot;
   intent?: StrategyIntent;
@@ -95,6 +99,13 @@ export type UpgradeAction = {
   towerId: string;
 };
 
+/** Picks a talent branch for the type of a grade-3 tower (`canChooseBranch` rules). */
+export type ChooseBranchAction = {
+  kind: 'choose_branch';
+  towerId: string;
+  branchId: TowerTalentBranchId;
+};
+
 export type SendCreepAction = {
   kind: 'send_creep';
   creepTypeId: UnitId;
@@ -104,7 +115,12 @@ export type SaveAction = {
   kind: 'save';
 };
 
-export type ComputerAction = BuildAction | UpgradeAction | SendCreepAction | SaveAction;
+export type ComputerAction =
+  | BuildAction
+  | UpgradeAction
+  | ChooseBranchAction
+  | SendCreepAction
+  | SaveAction;
 
 export type DecisionOutput = {
   intent: StrategyIntent;

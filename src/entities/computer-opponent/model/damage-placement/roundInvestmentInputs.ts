@@ -8,7 +8,13 @@ import {
   resolveTowerDamageType,
 } from '../../../tower/model/damageType';
 import { resolveTowerPlacementStats } from '../../../tower/model/placementStats';
-import { getTowerStatsForTowerLevel, getUpgradeCost } from '../../../tower/model/upgrade';
+import { NO_TOWER_BRANCH_CHOICES, type TowerBranchChoices } from '../../../tower/model/talents';
+import {
+  getTowerStatsForTowerLevel,
+  getUpgradeCost,
+  resolveTowerUpgradeConfig,
+} from '../../../tower/model/upgrade';
+import { TowerTalentRule } from '../../../../shared/constants/towerTalents';
 import { getRaceTowerConfig } from '../buildSpendBudget';
 import { MAZE_ROUTE_GAIN_WEIGHTS } from '../maze-evaluation/constants';
 import { createMazeEvaluator } from '../maze-evaluation/createMazeEvaluator';
@@ -69,37 +75,74 @@ export function createPlannedRoute(grid: GridModel, unbuilt: readonly GridPoint[
   };
 }
 
-/** The tower's own stats at its level (its race's authored curve when it has one), before auras. */
-function statsAtLevel(tower: TowerEntity): TowerCombatStats {
+/**
+ * The tower's own stats at its level (its race's authored curve when it has
+ * one, grades 4-7 from its side's chosen branch), before auras.
+ */
+function statsAtLevel(tower: TowerEntity, choices: TowerBranchChoices): TowerCombatStats {
   return (
-    getTowerStatsForTowerLevel(tower, tower.level) ?? tower.baseCombatStats ?? tower.combatStats
+    getTowerStatsForTowerLevel(tower, tower.level, choices) ??
+    tower.baseCombatStats ??
+    tower.combatStats
   );
 }
 
-export function toLedgerTowers(towers: readonly TowerEntity[]): LedgerTower[] {
+export function toLedgerTowers(
+  towers: readonly TowerEntity[],
+  choices: TowerBranchChoices = NO_TOWER_BRANCH_CHOICES,
+): LedgerTower[] {
   return towers.map((tower) => ({
     anchor: tower.position,
     towerType: tower.type,
-    stats: statsAtLevel(tower),
+    stats: statsAtLevel(tower, choices),
     ...(tower.allowedTargets === undefined ? {} : { allowedTargets: tower.allowedTargets }),
     damageType: resolveTowerDamageType(tower),
   }));
 }
 
-/** Upgrades the opponent can afford, indexed into a ledger made from `towers`. */
+/** The rest of the tower's chosen branch: its top grade and the gold up to it. */
+function branchPath(
+  tower: TowerEntity,
+  choices: TowerBranchChoices,
+): UpgradeCandidate['path'] | undefined {
+  const levels = resolveTowerUpgradeConfig(tower, choices).levels;
+  const top = levels[levels.length - 1];
+  const remaining = levels.filter((level) => level.level > tower.level);
+  if (!top || remaining.length === 0) {
+    return undefined;
+  }
+  return {
+    topStats: top.stats,
+    cost: remaining.reduce((sum, level) => sum + level.upgradeCostGold, 0),
+  };
+}
+
+/**
+ * Upgrades the opponent can afford, indexed into a ledger made from `towers`;
+ * past grade 3 only along the branch `choices` holds for the tower's type.
+ */
 export function collectUpgradeCandidates(
   towers: readonly TowerEntity[],
   upgradeableTowerIds: readonly string[],
+  choices: TowerBranchChoices = NO_TOWER_BRANCH_CHOICES,
 ): UpgradeCandidate[] {
   const candidates: UpgradeCandidate[] = [];
   towers.forEach((tower, ledgerIndex) => {
     if (!upgradeableTowerIds.includes(tower.id)) {
       return;
     }
-    const cost = getUpgradeCost(tower, tower.level);
-    const nextStats = getTowerStatsForTowerLevel(tower, tower.level + 1);
+    const cost = getUpgradeCost(tower, tower.level, choices);
+    const nextStats = getTowerStatsForTowerLevel(tower, tower.level + 1, choices);
     if (cost !== null && cost > 0 && nextStats) {
-      candidates.push({ towerId: tower.id, ledgerIndex, cost, nextStats });
+      const path =
+        tower.level >= TowerTalentRule.BRANCH_UNLOCK_GRADE ? branchPath(tower, choices) : undefined;
+      candidates.push({
+        towerId: tower.id,
+        ledgerIndex,
+        cost,
+        nextStats,
+        ...(path ? { path } : {}),
+      });
     }
   });
   return candidates;

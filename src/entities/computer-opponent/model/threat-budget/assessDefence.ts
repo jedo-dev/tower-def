@@ -55,7 +55,7 @@ export function assessDefence(matchState: DuelMatchState): DefenceAssessment {
 
   const { grid, towers } = opponent.battlefield;
   const { routes } = createMazeEvaluator(grid, grid.entrance, grid.exit);
-  const ledgerTowers = toLedgerTowers(towers);
+  const ledgerTowers = toLedgerTowers(towers, opponent.towerBranchChoices);
   const types = collectInvestmentTypes(getRaceTowerTypes(opponent.raceId), opponent.raceId);
 
   const groundCreepCount = threat.creepCount - threat.airCreepCount;

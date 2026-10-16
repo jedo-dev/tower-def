@@ -25,7 +25,9 @@ export { computeArmorCounterFactor } from './armorCounterFactor';
 export { computeDefenceDamageMix } from './defenceDamageMix';
 
 export type {
+  BranchCandidate,
   InvestmentTowerType,
+  PlannedBranch,
   PlannedBuild,
   PlannedUpgrade,
   PlanWallCandidate,
