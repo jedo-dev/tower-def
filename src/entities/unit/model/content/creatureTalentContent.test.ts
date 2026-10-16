@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { CREATURE_TALENT_GRADE_LEVELS } from '../../../../shared/constants/creatureTalents';
 import { getAllUnitConfigs } from '../registry';
+import type { CreatureTalentBranchDefinition } from './creatureTalentContent';
 import { parseUnitContentFile } from './loadUnitContent';
 import { createTalentBranches, createTalentGradesFixture } from './fixtures/talentBranchFixture';
 
@@ -176,4 +177,35 @@ describe('shipped creature talent branches', () => {
       }
     }
   });
+
+  it('give the two branches of every creature different ability fields (tower-def-716.3)', () => {
+    for (const unit of getAllUnitConfigs()) {
+      const [first, second] = unit.talentBranches.map(listBranchAbilityFields);
+      expect(first, unit.id).not.toEqual(second);
+    }
+  });
+
+  it('keep graded armor within the authored ceiling of 25', () => {
+    for (const unit of getAllUnitConfigs()) {
+      for (const branch of unit.talentBranches) {
+        for (const grade of branch.grades) {
+          expect(Math.max(grade.physicalArmor, grade.magicalArmor), branch.id).toBeLessThanOrEqual(
+            AUTHORED_ARMOR_CEILING,
+          );
+        }
+      }
+    }
+  });
 });
+
+const AUTHORED_ARMOR_CEILING = 25;
+
+function listBranchAbilityFields(branch: CreatureTalentBranchDefinition): string[] {
+  const fields = new Set<string>();
+  for (const grade of branch.grades) {
+    for (const field of Object.keys(grade.abilities ?? {})) {
+      fields.add(field);
+    }
+  }
+  return [...fields].sort();
+}
