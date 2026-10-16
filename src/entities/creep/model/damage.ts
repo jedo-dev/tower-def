@@ -74,6 +74,41 @@ export function calculateMitigatedDamage(rawDamage: number, armor: number): numb
   return rawDamage * getArmorDamageMultiplier(armor);
 }
 
+/** Percent damage: `rawDamage / PERCENT_DAMAGE.healthShareDivisor` of maximum health, armor ignored. */
+export function calculatePercentDamage(rawDamage: number, maxHp: number): number {
+  if (rawDamage <= 0) {
+    return 0;
+  }
+
+  return (rawDamage / PERCENT_DAMAGE.healthShareDivisor) * maxHp;
+}
+
+/** What one hit reads off its target: both armors and the health it spawned with. */
+export type DamageTargetProfile = {
+  physicalArmor: number;
+  magicalArmor: number;
+  maxHp: number;
+};
+
+/**
+ * Damage a hit of `damageType` deals to a target with these armors and maximum
+ * health: the rule combat applies, for estimates that have no creep entity
+ * (the computer opponent reasons about creatures before they spawn).
+ */
+export function calculateDamageAgainst(
+  rawDamage: number,
+  damageType: DamageType,
+  target: DamageTargetProfile,
+): number {
+  if (damageType === DamageType.PERCENT) {
+    return calculatePercentDamage(rawDamage, target.maxHp);
+  }
+
+  const armor = damageType === DamageType.PHYSICAL ? target.physicalArmor : target.magicalArmor;
+
+  return calculateMitigatedDamage(rawDamage, armor);
+}
+
 /**
  * Damage a hit of `damageType` deals to the creep before hit points are
  * touched: physical and magical hits are mitigated by the matching armor,
@@ -90,8 +125,7 @@ export function resolveIncomingDamage(
   }
 
   if (damageType === DamageType.PERCENT) {
-    const maxHp = creep.maxHp ?? creep.hp;
-    return (incomingDamage / PERCENT_DAMAGE.healthShareDivisor) * maxHp;
+    return calculatePercentDamage(incomingDamage, creep.maxHp ?? creep.hp);
   }
 
   const armorKind = damageType === DamageType.PHYSICAL ? ArmorKind.PHYSICAL : ArmorKind.MAGICAL;

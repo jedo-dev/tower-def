@@ -1,14 +1,17 @@
+import { DAMAGE_OVER_TIME_DAMAGE_TYPE } from '../../../../shared/constants/damage';
 import { EFFECT_DEFINITIONS } from '../../../../shared/constants/effects';
 import {
   canTargetScopeHitMoveType,
   EffectKind,
   TowerAttackKind,
   TowerTypeId,
+  type DamageType,
   type TowerTargetScope,
   type UnitMoveType,
 } from '../../../../shared/types/content-ids';
 import type { TowerCombatStats, TowerOnHitEffect } from '../../../tower/model/types';
 import { getTowerArchetype } from '../../../tower/model/types';
+import { NEUTRAL_DAMAGE_EFFICIENCY, type DamageTypeEfficiency } from '../damage-profile';
 import {
   CREEPS_PER_ROUTE_SAMPLE,
   MAX_EXPECTED_SPLASH_TARGETS,
@@ -26,7 +29,14 @@ export type DamageModelTower = {
   stats: TowerCombatStats;
   /** Authored target scope; the archetype's when absent. */
   allowedTargets?: TowerTargetScope;
+  /** Authored damage type of its shots; the archetype's when absent. */
+  damageType?: DamageType;
 };
+
+/** Damage type of the tower's own shots: the authored one, the archetype's otherwise. */
+export function resolveDamageModelDamageType(tower: DamageModelTower): DamageType {
+  return tower.damageType ?? getTowerArchetype(tower.towerType).damageType;
+}
 
 /** Whether the tower can shoot creeps that move by `moveType` (its `allowedTargets`). */
 export function canDamageModelTowerHit(tower: DamageModelTower, moveType: UnitMoveType): boolean {
@@ -41,6 +51,17 @@ function resolveOnHitEffects(tower: DamageModelTower): readonly TowerOnHitEffect
 /** Raw damage per second of the tower's own shots, before targets and armor. */
 export function computeShotDps(stats: TowerCombatStats): number {
   return stats.attackCooldownMs > 0 ? (stats.damage * MS_PER_SECOND) / stats.attackCooldownMs : 0;
+}
+
+/**
+ * Shot damage per second against a wave, in its hit points: raw shot damage
+ * times what the shot's damage type is worth against the wave's armor.
+ */
+export function computeEffectiveShotDps(
+  tower: DamageModelTower,
+  efficiency: DamageTypeEfficiency,
+): number {
+  return computeShotDps(tower.stats) * efficiency[resolveDamageModelDamageType(tower)];
 }
 
 /** Damage per second the tower's damage-over-time effects add on the creep it is shooting. */
@@ -129,16 +150,21 @@ export function computeTargetsPerShot(
 
 /**
  * Damage per second the tower deals while its target stands at `sampleIndex`,
- * summed over every creep the shot reaches. Auras deal none of their own.
+ * summed over every creep the shot reaches, in hit points of the wave
+ * `efficiency` describes: shots count at their own damage type, damage over
+ * time as magical (`DAMAGE_OVER_TIME_DAMAGE_TYPE`). Auras deal none of their own.
  */
 export function computeSampleDamageRate(
   tower: DamageModelTower,
   geometry: RouteGeometry,
   sampleIndex: number,
+  efficiency: DamageTypeEfficiency = NEUTRAL_DAMAGE_EFFICIENCY,
 ): number {
   if (getTowerArchetype(tower.towerType).attackKind === TowerAttackKind.AURA) {
     return 0;
   }
-  const shots = computeShotDps(tower.stats) * computeTargetsPerShot(tower, geometry, sampleIndex);
-  return shots + computeDamageOverTimeDps(tower);
+  const shots =
+    computeEffectiveShotDps(tower, efficiency) *
+    computeTargetsPerShot(tower, geometry, sampleIndex);
+  return shots + computeDamageOverTimeDps(tower) * efficiency[DAMAGE_OVER_TIME_DAMAGE_TYPE];
 }
