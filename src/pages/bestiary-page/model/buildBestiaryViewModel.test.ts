@@ -166,6 +166,16 @@ describe('tower cards', () => {
     // The undead archer authors its own curve (tower-def-xwc.5): the card shows it.
     expect(card.levels[1].summary).toBe('30 dmg, 6.2 range, 0.8s');
   });
+
+  it('names both talent branches the tower opens at grade 3', () => {
+    const tower = resolveBuildableTowerById('undead_bone_archer_tower');
+    const card = mapTowerToTowerCard(tower);
+
+    expect(card.talentBranches).toEqual(
+      tower.talentBranches.map((branch) => ({ id: branch.id, name: branch.name })),
+    );
+    expect(card.talentBranches).toHaveLength(2);
+  });
 });
 
 describe('buildBestiaryViewModel', () => {

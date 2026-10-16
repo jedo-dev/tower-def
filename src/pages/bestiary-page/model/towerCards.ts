@@ -163,6 +163,7 @@ export function mapTowerToTowerCard(tower: BuildableTowerConfig): TowerCardViewM
     cooldownMs: tower.attackCooldownMs,
     specials: mapSpecials(tower, archetype),
     levels: mapLevels(tower, archetype),
+    talentBranches: tower.talentBranches.map((branch) => ({ id: branch.id, name: branch.name })),
     description: tower.description,
     lore: readLore(tower),
   };

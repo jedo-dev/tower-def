@@ -187,3 +187,31 @@ negative armor a symmetric, bounded effect, and is the formula combat and the
 computer opponent's effective-health estimate already shared. Explicit damage
 types replace the special `ignoreArmor` path, so every source of damage goes
 through one rule.
+
+## Decision 014: Tower talents are authored branches on one price ladder
+
+Every race tower authors two talent branches (tower content schema 4). At
+grade 3 a side picks one branch per race tower for the whole match, which
+locks the other and extends the upgrade curve to grade 7 for every tower of
+that type. Grades are authored as full stat rows (like levels), plus an open
+`abilities` map for the combat mechanics that land separately. Grade prices
+and the branch price are not authored: `TowerTalentPricing` (branch 120,
+grades 150 / 200 / 260 / 340) fills them on load and content that declares a
+grade price fails.
+
+Cost, maximum level, stats, the NEXT preview and the sell value all read one
+resolved curve (`resolveTowerUpgradeConfig`: authored or archetype levels 1-3,
+then the chosen branch), replacing the archetype-only cost and cap lookups
+that disagreed with authored curves (tower-def-pzb).
+
+Reason:
+
+A pick per type (not per tower) is the Warcraft 3 TD convention the design doc
+asks for and keeps the decision strategic: it commits a whole maze, not one
+square. Full stat rows keep grades readable next to the design tables and
+reuse the level parser, so a grade can change splash, effects or aura without
+a modifier language. One ladder instead of per-branch prices makes the
+"a grade 7 tower costs as much as twenty grade 1 towers" trade-off a single
+balance dial; authoring prices per branch would invite 128 numbers drifting
+apart. A curve capped at 3 until a branch is chosen means no code path needs
+to know about talents to stay correct: the cap simply moves.

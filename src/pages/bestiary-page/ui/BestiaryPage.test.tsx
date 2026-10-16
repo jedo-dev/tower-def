@@ -108,6 +108,11 @@ describe('BestiaryPage', () => {
     expect(specials.getByText('35% slower for 2.0s')).toBeDefined();
     const levels = within(card.getByRole('list', { name: 'Upgrade levels' }));
     expect(levels.getAllByRole('listitem')).toHaveLength(3);
+    const branches = within(card.getByRole('list', { name: 'Talent branches' }));
+    expect(branches.getAllByRole('listitem').map((item) => item.textContent)).toEqual(
+      frostNest.talentBranches.map((branch) => branch.name),
+    );
+    expect(consoleError).not.toHaveBeenCalled();
   });
 
   it('shows the damage type of a tower with a decorative glyph and a tooltip', () => {
