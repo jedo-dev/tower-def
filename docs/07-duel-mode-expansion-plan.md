@@ -236,6 +236,7 @@ Difficulty changes only how well the computer decides; stats, gold, income and l
 | Defence margins: threatened / comfortable | `threat-budget/constants.ts` | 1.8 / 3.2 | 1.6 / 2.8 | 1.5 / 2.5 | 1.4 / 2.3 |
 | Leak reaction delay (build phases) | `decisionMistakes.ts` | 1 (new) | 0 | 0 | 0 |
 | Talent valuation (tower-def-bge.5) | `talent-development/constants.ts` | none (never develops) | coarse | full | full |
+| Creature valuation (tower-def-716.5) | `creature-development/constants.ts` | none (never spends XP) | coarse (stats only) | full | full |
 
 What separates the steps:
 
@@ -1238,6 +1239,72 @@ silencing or slowing the towers that shoot it.
 
 The orc peon, human peasant and elf wisp are baseline-only (not sendable), so
 their branches, leak gold included, only matter once they become sendable.
+
+### AI creature development (tower-def-716.5)
+
+The computer spends the creature experience it earns through the same rules
+as the player (`entities/unit/model/talents.ts`, wrapped per side by
+`recordCreatureBranchChoice` / `recordCreatureUpgrade`). The model lives in
+`entities/computer-opponent/model/creature-development/`; tuning in
+`CREATURE_VALUATION`.
+
+**Defender profile** (`computeDefenceProfile`, `DecisionContext.
+enemyDefenceProfile`). The player's towers (aura towers skipped) as shares of
+raw damage per second: by damage type (`computeDefenceDamageMix`), by shape
+(single, splash, chain from the tower's attack kind; dot from its poison and
+burn ticks), the share dealt by towers that apply each effect (chill, stun,
+poison, burn, armor break, vulnerability) and the chilling towers' mean slow.
+An empty field reads as single-target physical/magical alike with no effects.
+
+**Creature value** (`computeCreatureValue`): pressure per gold of one send at
+a grade, an expectation, never a roll:
+
+```txt
+landed    = health x wave growth + shield x (1 + refills) + regen x exposure + secondLife share x health
+rawPool   = landed x (armored health / health) / damageFactor
+damageFactor = (single x m.single x (1 - 1/dodgeN) + splash x m.splash + chain x m.chain
+               + dot x m.dot x poison/burn resistance) x percent multiplier
+               x vulnerability and armor break, by coverage x their resistance
+exposure  = 40 cells / (speed x 5 cells/s) x route-end and low-health boosts / (1 - mean slow)
+mean slow = chill slow x chill coverage x 0.5 x chill resistance + stun coverage x 0.5 x stun resistance
+value     = rawPool x (reference exposure / targetable exposure) x (1 + (lives - 1) x 0.25)
+            / max(0.25 x price, price x (1 - 1/freeNth) - leakGold x 0.25 - killPenalty x 0.75)
+```
+
+Armor goes through `calculateDamageAgainst` (via `computeMixedEffectiveHealth`),
+so plated creatures gain against archers and nothing against casters;
+`startInvisibleMs` removes its seconds from the targetable exposure; a
+regeneration paused by poison counts half when the field poisons.
+
+**Branch choice** (`valueCreatureBranch`): `gain[g] = value(grade g) -
+value(base)` for g = 1..4, `score = mean(gain) / path XP` (branch plus grades
+1-4: 62 x tier); the better score is picked. Against four physical archers
+the Grunt takes Shieldbearer (armor and dodge), against magical splash the
+Militia takes Torches (splash multiplier), against frost towers the
+Hippogryph takes Whirlwind (chill resistance), Rider against archers.
+
+**Spending** (`planCreatureDevelopment`, called by `planSendCreeps` once the
+sends are chosen, in every build phase, even when no gold goes to sends). The
+sendable creatures rank by how many of this phase's sends (queued and
+planned) they are, then a started branch before a new one, then branch score,
+tier and id; each gets its best branch when it has none and then grades in
+order while its tier's experience pays. Every step runs through
+`chooseCreatureBranch` / `upgradeCreature`, so experience never goes negative.
+The steps come out as `choose_creature_branch` / `upgrade_creature` actions
+(`SendPlannerOutput.developmentActions`, listed first in the recorded
+decision) and `applyComputerSendStrategy` applies them before queuing the
+sends, so those sends snapshot the new grade. Send candidates are valued at
+the side's current grade (`SendValuation.creatureTalents`).
+
+**Difficulty.** Easy never spends (`CreatureValuation.NONE`). Normal values
+each grade's health, speed and armors only, blind to its abilities. Hard and
+nightmare value everything.
+
+**Spot check** (`npm run sim:duel -- --seed 1`, undead hard vs orc normal;
+the round line now reports `cg`, the top creature grade per side): both sides
+reach creature grade 1 by round 2-4, grade 2 by rounds 13 (orc) and 18
+(undead), and undead grade 3 in round 24. Hard wins with 12 lives (11
+before). Balance is a later task.
 
 
 ## Suggested Improvements
