@@ -19,7 +19,20 @@ export {
   createInitialTowerCombatRuntime,
   tickTowerCooldown,
 } from './model/cooldown';
-export { canTowerTargetCreep, getCreepsInTowerRange, selectTowerTarget } from './model/targeting';
+export {
+  canTowerTargetCreep,
+  getCreepsInTowerRange,
+  getTowerCreepDistanceInCells,
+  isCreepTargetableByTower,
+  selectTowerTarget,
+} from './model/targeting';
+export {
+  isCriticalShot,
+  isPointOnPierceLine,
+  resolveShotDamageMultiplier,
+  resolveTargetDamageMultiplier,
+} from './model/abilities';
+export type { TowerAbilities } from './model/abilities';
 export { getTowerCenter, isTowerCoveringCell } from './model/footprint';
 export {
   applyAuraBonusToStats,

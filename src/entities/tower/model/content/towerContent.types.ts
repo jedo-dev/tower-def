@@ -30,6 +30,14 @@ export type TowerOnHitEffectEntry = {
   maxStacks?: number;
   /** Damage-over-time effects only: `physical`, `magical` or `percent`; magical when absent. */
   damageType?: string;
+  /** Armor break only: `physical`, `magical` or `both`; `both` when absent. */
+  armorKind?: string;
+  /** Vulnerability only: `physical`, `magical`, `percent` or `all`; `all` when absent. */
+  damageKind?: string;
+  /** Chill only: every this-many-th chilling hit freezes the creep (a stun). */
+  freezeAtStacks?: number;
+  /** Chill only, with `freezeAtStacks`: freeze duration in ms; stun balance duration when absent. */
+  freezeMs?: number;
 };
 
 export type TowerContentEntry = {
@@ -77,6 +85,16 @@ export type TowerAuraContentEntry = {
   rangeBonus: number;
   /** How two overlapping auras combine. */
   stacking: string;
+  /** Share of damage added to towers in radius, 0.1 meaning +10%. */
+  damagePercentBonus?: number;
+  /** `physical`, `magical`, `percent` or `all`: which towers the damage bonus reaches. */
+  damageBonusType?: string;
+  /** Extra gold per kill landed by a tower in radius. */
+  goldPerKill?: number;
+  /** Gold added to the owner's income every round while this tower stands. */
+  incomePerRound?: number;
+  /** Share added to the sell refund ratio of towers in radius. */
+  sellRefundBonus?: number;
 };
 
 export type TowerLevelContentEntry = {
@@ -88,6 +106,8 @@ export type TowerLevelContentEntry = {
   splashRadius?: number;
   onHitEffects?: TowerOnHitEffectEntry[];
   aura?: TowerAuraContentEntry;
+  /** Optional abilities of this level; see docs/08 "Tower abilities". */
+  abilities?: Record<string, number>;
 };
 
 export type TowerArchetypeContentEntry = {
@@ -137,6 +157,10 @@ export const TOWER_ON_HIT_EFFECT_KEYS: readonly (keyof TowerOnHitEffectEntry)[] 
   'durationMs',
   'maxStacks',
   'damageType',
+  'armorKind',
+  'damageKind',
+  'freezeAtStacks',
+  'freezeMs',
 ];
 
 export const TOWER_CONTENT_REQUIRED_KEYS: readonly (keyof TowerContentEntry)[] = [
@@ -176,6 +200,7 @@ export const TOWER_LEVEL_KEYS: readonly (keyof TowerLevelContentEntry)[] = [
   'splashRadius',
   'onHitEffects',
   'aura',
+  'abilities',
 ];
 
 export const TOWER_LEVEL_BOUNDS = {
@@ -213,6 +238,11 @@ export const TOWER_AURA_KEYS: readonly (keyof TowerAuraContentEntry)[] = [
   'attackSpeedBonus',
   'rangeBonus',
   'stacking',
+  'damagePercentBonus',
+  'damageBonusType',
+  'goldPerKill',
+  'incomePerRound',
+  'sellRefundBonus',
 ];
 
 export const TOWER_AURA_BOUNDS = {

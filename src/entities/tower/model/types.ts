@@ -2,6 +2,8 @@ import towerArchetypeContent from '../../../content/towers/archetypes.json';
 import type { GridPosition } from '../../../shared/types/pathfinding';
 import type { TowerTypeUpgradeConfig } from './upgradeConfig';
 import type {
+  ArmorKind,
+  DamageScope,
   DamageType,
   EffectId,
   RaceId,
@@ -17,6 +19,8 @@ import {
   type TowerLevelDefinition,
 } from './content/loadTowerContent';
 import type { BuildableTowerId } from './towerIds';
+import type { TowerAbilities } from './abilities';
+import type { TowerAuraBonus } from './auras';
 
 export type { TowerLevelStats, TowerUpgradeLevel, TowerTypeUpgradeConfig } from './upgradeConfig';
 export { TowerUpgradeBalance } from './upgradeConfig';
@@ -46,6 +50,14 @@ export type TowerOnHitEffect = {
    * `magnitude / 1000` of maximum health per stack.
    */
   damageType?: DamageType;
+  /** Armor break only: which armor it lowers; the definition's (`both`) when absent. */
+  armorKind?: ArmorKind;
+  /** Vulnerability only: which hits it amplifies; `all` when absent. */
+  damageKind?: DamageScope;
+  /** Chill only: every this-many-th chilling hit on a creep freezes it (a stun). */
+  freezeAtStacks?: number;
+  /** Chill only: how long a freeze lasts; the stun balance duration when absent. */
+  freezeMs?: number;
 };
 
 export type BuildableTowerConfig = {
@@ -82,6 +94,8 @@ export type TowerCombatStats = {
   onHitEffects?: TowerOnHitEffect[];
   /** Aura projected at this level; only support archetypes have one. */
   aura?: TowerAuraDefinition;
+  /** Optional abilities of this level (crit, extra targets, volley...); see `TowerAbilities`. */
+  abilities?: TowerAbilities;
 };
 
 /**
@@ -147,5 +161,5 @@ export type TowerEntity = {
   combatStats: TowerCombatStats;
   /** Stats of its own level, before any aura; set when auras are recalculated. */
   baseCombatStats?: TowerCombatStats;
-  auraBonus?: { attackSpeedBonus: number; rangeBonus: number };
+  auraBonus?: TowerAuraBonus;
 };

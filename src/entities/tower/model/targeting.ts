@@ -5,7 +5,7 @@ import { getTowerCenter } from './footprint';
 import { resolveTowerTargetScope, type TowerEntity } from './types';
 
 /** Measured between the centres of the tower's and the creep's footprints. */
-function getDistanceInCells(tower: TowerEntity, creep: CreepEntity): number {
+export function getTowerCreepDistanceInCells(tower: TowerEntity, creep: CreepEntity): number {
   const center = getTowerCenter(tower);
   const creepCenterOffset = getCreepFootprintCenterOffsetInCells(creep.sizeClass);
   const dx = creep.position.x + creepCenterOffset - center.x;
@@ -26,15 +26,24 @@ export function canTowerTargetCreep(
   return canTargetScopeHitMoveType(resolveTowerTargetScope(tower), creep.moveType);
 }
 
+/**
+ * Whether the tower may shoot this creep right now: alive, inside its target
+ * scope, within `range` and not closer than an authored `minRangeCells`.
+ */
+export function isCreepTargetableByTower(tower: TowerEntity, creep: CreepEntity): boolean {
+  if (!isCreepAlive(creep) || !canTowerTargetCreep(tower, creep)) {
+    return false;
+  }
+
+  const distance = getTowerCreepDistanceInCells(tower, creep);
+  const minRange = tower.combatStats.abilities?.minRangeCells ?? 0;
+
+  return distance <= tower.combatStats.range && distance >= minRange;
+}
+
 /** Alive creeps in range that the tower is allowed to shoot. */
 export function getCreepsInTowerRange(tower: TowerEntity, creeps: CreepEntity[]): CreepEntity[] {
-  return creeps.filter((creep) => {
-    if (!isCreepAlive(creep) || !canTowerTargetCreep(tower, creep)) {
-      return false;
-    }
-
-    return getDistanceInCells(tower, creep) <= tower.combatStats.range;
-  });
+  return creeps.filter((creep) => isCreepTargetableByTower(tower, creep));
 }
 
 /**
@@ -70,8 +79,8 @@ export function selectTowerTarget(tower: TowerEntity, creeps: CreepEntity[]): Cr
       return candidateFlies ? candidate : best;
     }
 
-    const bestDistance = getDistanceInCells(tower, best);
-    const candidateDistance = getDistanceInCells(tower, candidate);
+    const bestDistance = getTowerCreepDistanceInCells(tower, best);
+    const candidateDistance = getTowerCreepDistanceInCells(tower, candidate);
     return candidateDistance < bestDistance ? candidate : best;
   });
 }

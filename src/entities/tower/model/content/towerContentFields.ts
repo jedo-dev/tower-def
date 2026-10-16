@@ -5,6 +5,7 @@ import {
   EffectKind,
   TOWER_TARGET_SCOPES,
   TOWER_AURA_STACKING_RULES,
+  type DamageScope,
   type DamageType,
   type EffectId,
   type TowerAuraStacking,
@@ -31,6 +32,11 @@ import {
   TOWER_ON_HIT_EFFECT_KEYS,
   TOWER_STAT_BOUNDS,
 } from './towerContent.types';
+import {
+  parseAbilities,
+  parseAuraExtensions,
+  parseOnHitEffectExtensions,
+} from './towerAbilityFields';
 
 /**
  * Field parsers shared by race tower entries and archetype entries. Each reads
@@ -48,6 +54,16 @@ export type TowerAuraDefinition = {
   attackSpeedBonus: number;
   rangeBonus: number;
   stacking: TowerAuraStacking;
+  /** Share of damage added to towers in radius whose damage type `damageBonusType` covers. */
+  damagePercentBonus?: number;
+  /** Which towers the damage bonus reaches, by damage type; `all` when absent. */
+  damageBonusType?: DamageScope;
+  /** Extra gold the owner gets per kill landed by a tower in radius. */
+  goldPerKill?: number;
+  /** Gold added to the owner's income payout every round while this tower stands. */
+  incomePerRound?: number;
+  /** Share added to the sell refund ratio of towers in radius. */
+  sellRefundBonus?: number;
 };
 
 export type TowerLevelDefinition = {
@@ -82,6 +98,7 @@ export function parseOnHitEffects(
       maxStacks:
         effect.maxStacks === undefined ? undefined : readNumber(effect, 'maxStacks', location),
       ...(damageType === undefined ? {} : { damageType }),
+      ...parseOnHitEffectExtensions(effect, effectId, location),
     };
   });
 }
@@ -176,6 +193,7 @@ export function parseAura(
     ),
     rangeBonus: readNumber(aura, 'rangeBonus', location, TOWER_AURA_BOUNDS.rangeBonus),
     stacking: readStringFrom(aura, 'stacking', location, TOWER_AURA_STACKING_RULES),
+    ...parseAuraExtensions(aura, location),
   };
 }
 
@@ -216,6 +234,8 @@ export function parseLevels(
     const splashRadius = parseOptionalStat(level, 'splashRadius', location);
     const aura = parseAura(level, location);
     const onHitEffects = parseOnHitEffects(level, location);
+    const range = readNumber(level, 'range', location, TOWER_STAT_BOUNDS.range);
+    const abilities = parseAbilities(level, location, range);
 
     return {
       level: declaredLevel,
@@ -227,7 +247,7 @@ export function parseLevels(
       ),
       stats: {
         damage: readNumber(level, 'damage', location, TOWER_STAT_BOUNDS.damage),
-        range: readNumber(level, 'range', location, TOWER_STAT_BOUNDS.range),
+        range,
         attackCooldownMs: readNumber(
           level,
           'attackCooldownMs',
@@ -237,6 +257,7 @@ export function parseLevels(
         ...(splashRadius === undefined ? {} : { splashRadius }),
         ...(onHitEffects.length === 0 ? {} : { onHitEffects }),
         ...(aura === undefined ? {} : { aura }),
+        ...(abilities === undefined ? {} : { abilities }),
       },
     };
   });

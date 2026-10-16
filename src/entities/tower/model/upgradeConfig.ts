@@ -1,5 +1,6 @@
 import type { TowerOnHitEffect } from './types';
 import type { TowerAuraDefinition } from './content/loadTowerContent';
+import type { TowerAbilities } from './abilities';
 
 /**
  * Upgrade curves live in `src/content/towers/archetypes.json`, one per
@@ -16,6 +17,12 @@ export type TowerLevelStats = {
   onHitEffects?: TowerOnHitEffect[];
   /** Aura this level projects; only support archetypes declare one. */
   aura?: TowerAuraDefinition;
+  /**
+   * Optional abilities of this level, authored under `abilities` on any
+   * `levels[]` entry (and reusable by talent grade objects); see
+   * `TowerAbilities` and docs/08 "Tower abilities".
+   */
+  abilities?: TowerAbilities;
 };
 
 export type TowerUpgradeLevel = {

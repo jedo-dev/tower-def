@@ -1,0 +1,15 @@
+/**
+ * Balance constants behind the optional tower abilities (talent grades,
+ * tower-def-bge.2). The per-tower numbers are authored in content under a
+ * level's `abilities` object; these are the shared rules and defaults.
+ */
+export const TOWER_ABILITY_BALANCE = {
+  /** A creep is on a piercing shot's line when its centre is this close to the segment, in cells. */
+  pierceLineHalfWidthCells: 0.5,
+  /** Share of a shot's damage each extra target takes when `extraTargetDamageShare` is omitted. */
+  defaultExtraTargetDamageShare: 1,
+  /** Share of the tower's damage a volley deals when `volleyDamageShare` is omitted. */
+  defaultVolleyDamageShare: 1,
+  /** Ceiling on a tower's sell refund ratio after aura bonuses. */
+  maxSellRefundRatio: 1,
+} as const;

@@ -2,6 +2,10 @@ import type { TowerEntity } from './types';
 
 export type TowerCombatRuntime = {
   attackCooldownRemainingMs: number;
+  /** Shots fired so far; kept only by towers with `critEveryNthShot`. */
+  shotCount?: number;
+  /** Time until the next volley; kept only by towers with `volleyEveryMs`. Absent means ready. */
+  volleyCooldownRemainingMs?: number;
 };
 
 export function createInitialTowerCombatRuntime(): TowerCombatRuntime {
