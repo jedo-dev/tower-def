@@ -14,6 +14,7 @@ import {
 } from '../../../shared/types/content-ids';
 import { resistEffectInput } from './effectResistance';
 import { getActiveEffects } from './effectTicks';
+import { groundCreep } from './grounding';
 import type { ActiveEffect, CreepEntity } from './types';
 
 export {
@@ -46,6 +47,8 @@ export type ApplyEffectInput = {
    */
   freezeAtStacks?: number;
   freezeMs?: number;
+  /** Chill only, with `freezeAtStacks`: a freeze also grounds a flier for this long. */
+  freezeGroundsFliersMs?: number;
 };
 
 export function findActiveEffect(creep: CreepEntity, effectId: EffectId): ActiveEffect | undefined {
@@ -176,10 +179,15 @@ function applyFreezeCharge(
   }
 
   const reset = replaceEffect(creep, chill, { ...chill, freezeCharge: 0 });
-  return applyEffectToCreep(reset, {
+  const frozen = applyEffectToCreep(reset, {
     effectId: EffectId.STUN,
     ...(input.freezeMs === undefined ? {} : { durationMs: input.freezeMs }),
   });
+  if (input.freezeGroundsFliersMs !== undefined && frozen !== reset) {
+    // `frozen` is a fresh entity (the stun changed it), so writing it is safe.
+    groundCreep(frozen, input.freezeGroundsFliersMs);
+  }
+  return frozen;
 }
 
 function applyEffectInstance(creep: CreepEntity, input: ApplyEffectInput): CreepEntity {

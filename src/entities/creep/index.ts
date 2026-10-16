@@ -48,3 +48,4 @@ export {
 } from './model/abilities';
 export { getIncomingDamageMultiplier } from './model/abilityDamage';
 export { queueCreepKnockback, takePendingKnockbackCells } from './model/knockback';
+export { groundCreep, isCreepGrounded, tickCreepGrounding } from './model/grounding';

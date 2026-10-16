@@ -814,7 +814,7 @@ effect or aura mechanic (`towerTalentContent.test.ts`).
 | Plague Tower / Plague Cloud | poison cloud left on the ground, slowing at 6-7 | on-hit magical `poison` and `chill` on everything the blast hits |
 | Plague Tower / Corpse Blast | killed creeps explode for 20-50% of their max health, chaining | doc damage +10% (48 / 55 / 64 / 75, 52 / 62 / 74 / 88 since tower-def-bge.6) and radius +0.2 (+0.4 since bge.6); no death hook |
 | Frost Wyrm Nest / Permafrost | slow 45-65% (doc steps over the shipped 0.55 would pass the floor) | chill 0.6 / 0.65 / 0.7 / 0.75 |
-| Frost Wyrm Nest / Permafrost | frozen fliers fall and become ground targets (7) | `airDamageMultiplier` 1.25 at grade 7 |
+| Frost Wyrm Nest / Permafrost | frozen fliers fall and become ground targets (7) | **restored** (tower-def-bge.9): chill `groundsFliersMs` 1200 (the freeze length); the `airDamageMultiplier` is gone |
 | Frost Wyrm Nest / Wyrm Breath | cone of 30-60 degrees hitting everything in it | **restored** (tower-def-bge.9): `coneDegrees` 30 / 40 / 50 / 60, full damage to every valid creep in range inside the cone |
 | Frost Wyrm Nest / Wyrm Breath | frozen creeps take +25% / +50% (6 / 7) | on-hit `vulnerability` (all types, 2 s) on every breath target |
 | Bone Obelisk / Necromancer's Whisper | two obelisk auras stack at half (7) | magical damage bonus 0.25 instead of 0.20 |
@@ -843,6 +843,7 @@ effect or aura mechanic (`towerTalentContent.test.ts`).
 | Wisp Bloom / Spores | spore zone on the ground | on-hit `chill` (and magical `poison` at 6-7) on everything the blast hits |
 | Wisp Bloom / Wild Growth | targets air too (4) | **restored** (tower-def-bge.9): grade `allowedTargets` `both` on grades 4-7, grade 4 damage back to the doc's 44 |
 | Wisp Bloom / Wild Growth | roots only at the blast centre (5-7) | on-hit `stun` on the whole blast |
+| Wisp Bloom / Wild Growth | fliers pulled down for 1 s (7) | **restored** (tower-def-bge.9): `groundsFliersMs` 1000 (the blast reaches fliers since grade 4) |
 | Wisp Bloom / Wild Growth | fliers in the radius 20% slower (6) | dropped: since tower-def-bge.9 the blast reaches fliers and roots (stuns) them like ground creeps |
 | Moonwell / Moonlight | no shots: 10-24 damage per second to every creep in radius 4-5.5 | the shot stays (damage 32-40); `volleyEveryMs` 1000 with `volleyDamageShare` set to the doc's pulse (0.31-0.6; 0.35-0.65 since tower-def-bge.6, with the chill held at the grade 3 0.48 or above); the pulse reaches the tower range (6.8, kept to hold the grade 3 floor) and carries the chill |
 | Moonwell / Moonlight | first entry freezes for 0.5 s (7) | chill `freezeAtStacks` 3, `freezeMs` 500 |
@@ -876,7 +877,7 @@ expected wave, never a roll:
 | `extraTargets` (+ share) | up to N more creeps of those the route packs within the tower's range, at their share |
 | `pierceLine` | its share on the creeps within 2 cells of the target on the route |
 | `coneDegrees` (tower-def-bge.9, `deferredMechanicsValue.ts`) | `coneDegrees / 360` of the other creeps the route packs within range, at full damage |
-| `knockbackCells` (tower-def-bge.9) | not valued (0): a conservative floor, like a stun |
+| `knockbackCells`, `groundsFliersMs`, chill `groundsFliersMs` (tower-def-bge.9) | not valued (0): a conservative floor, like a stun |
 | `volleyEveryMs` (+ share) | `damage * share / interval` on the creeps in range around the target (at most 6); support towers too |
 | `airDamageMultiplier` / `groundDamageMultiplier` | in full on the lane whose creeps fly / walk (the ledger knows its lane) |
 | `largeTargetMultiplier` / `fullHealthBonusMultiplier` | on 20% / 25% of hits |

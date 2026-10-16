@@ -151,7 +151,7 @@ export function parseOnHitEffectMaxStacks(
 
 type OnHitEffectExtensions = Pick<
   TowerOnHitEffect,
-  'armorKind' | 'damageKind' | 'freezeAtStacks' | 'freezeMs'
+  'armorKind' | 'damageKind' | 'freezeAtStacks' | 'freezeMs' | 'groundsFliersMs'
 >;
 
 function assertEffectField(
@@ -175,7 +175,7 @@ function assertEffectField(
 
 /**
  * Effect-specific on-hit fields: `armorKind` (armor break), `damageKind`
- * (vulnerability), `freezeAtStacks` + `freezeMs` (chill).
+ * (vulnerability), `freezeAtStacks` + `freezeMs` + `groundsFliersMs` (chill).
  */
 export function parseOnHitEffectExtensions(
   effect: Record<string, unknown>,
@@ -207,6 +207,18 @@ export function parseOnHitEffectExtensions(
       throw new ContentValidationError(location, 'chill "freezeMs" needs "freezeAtStacks"');
     }
     extensions.freezeMs = readNumber(effect, 'freezeMs', location, TOWER_FREEZE_BOUNDS.freezeMs);
+  }
+
+  if (assertEffectField(effect, 'groundsFliersMs', effectId, EffectId.CHILL, location)) {
+    if (extensions.freezeAtStacks === undefined) {
+      throw new ContentValidationError(location, 'chill "groundsFliersMs" needs "freezeAtStacks"');
+    }
+    extensions.groundsFliersMs = readNumber(
+      effect,
+      'groundsFliersMs',
+      location,
+      TOWER_FREEZE_BOUNDS.groundsFliersMs,
+    );
   }
 
   return extensions;

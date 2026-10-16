@@ -26,6 +26,7 @@ export const TOWER_ABILITY_KEYS: readonly TowerAbilityKey[] = [
   'volleyDamageShare',
   'coneDegrees',
   'knockbackCells',
+  'groundsFliersMs',
 ];
 
 /** Abilities read as whole numbers. */
@@ -49,6 +50,7 @@ export const TOWER_ABILITY_BOUNDS: Record<TowerAbilityKey, NumericBound> = {
   volleyDamageShare: { min: 0, max: 5 },
   coneDegrees: { min: 10, max: 180 },
   knockbackCells: { min: 0.1, max: 3 },
+  groundsFliersMs: { min: 100, max: 10_000 },
 };
 
 export type TowerAuraExtensionNumberKey =
@@ -85,4 +87,5 @@ export const TOWER_STACK_BOUNDS = {
 export const TOWER_FREEZE_BOUNDS = {
   freezeAtStacks: { min: 2, max: 20 },
   freezeMs: { min: 100, max: 10_000 },
+  groundsFliersMs: { min: 100, max: 10_000 },
 } as const;

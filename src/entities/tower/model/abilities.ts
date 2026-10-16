@@ -44,6 +44,8 @@ export type TowerAbilities = {
    * route (large creeps stand firm); movement applies it on its next step.
    */
   knockbackCells?: number;
+  /** Each hit pulls a flier down: it counts as a ground creep for this many ms. */
+  groundsFliersMs?: number;
 };
 
 type TargetedCreep = Pick<CreepEntity, 'moveType' | 'sizeClass' | 'hp' | 'maxHp'>;

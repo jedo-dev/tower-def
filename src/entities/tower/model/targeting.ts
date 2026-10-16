@@ -1,4 +1,9 @@
-import { getCreepFootprintCenterOffsetInCells, isCreepAlive, isCreepHidden } from '../../creep';
+import {
+  getCreepFootprintCenterOffsetInCells,
+  isCreepAlive,
+  isCreepGrounded,
+  isCreepHidden,
+} from '../../creep';
 import type { CreepEntity } from '../../creep';
 import { canTargetScopeHitMoveType, UnitMoveType } from '../../../shared/types/content-ids';
 import { getTowerCenter } from './footprint';
@@ -18,12 +23,20 @@ function getRemainingDistanceToExit(creep: CreepEntity): number {
   return creep.remainingRouteDistance ?? Number.POSITIVE_INFINITY;
 }
 
-/** Whether the tower's target scope (`allowedTargets`) lets it shoot this creep. */
+/**
+ * Whether the tower's target scope (`allowedTargets`) lets it shoot this
+ * creep. A grounded flier (tower-def-bge.9) is in reach of both ground and air
+ * scopes while it is down.
+ */
 export function canTowerTargetCreep(
   tower: TowerTargetScopeRef,
-  creep: Pick<CreepEntity, 'moveType'>,
+  creep: Pick<CreepEntity, 'moveType' | 'groundedRemainingMs'>,
 ): boolean {
-  return canTargetScopeHitMoveType(resolveTowerTargetScope(tower), creep.moveType);
+  const scope = resolveTowerTargetScope(tower);
+  return (
+    canTargetScopeHitMoveType(scope, creep.moveType) ||
+    (isCreepGrounded(creep) && canTargetScopeHitMoveType(scope, UnitMoveType.GROUND))
+  );
 }
 
 /**

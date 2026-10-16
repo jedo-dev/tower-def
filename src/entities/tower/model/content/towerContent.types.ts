@@ -43,6 +43,8 @@ export type TowerOnHitEffectEntry = {
   freezeAtStacks?: number;
   /** Chill only, with `freezeAtStacks`: freeze duration in ms; stun balance duration when absent. */
   freezeMs?: number;
+  /** Chill only, with `freezeAtStacks`: a freeze grounds a flier for this many ms. */
+  groundsFliersMs?: number;
 };
 
 export type TowerContentEntry = {
@@ -197,6 +199,7 @@ export const TOWER_ON_HIT_EFFECT_KEYS: readonly (keyof TowerOnHitEffectEntry)[] 
   'damageKind',
   'freezeAtStacks',
   'freezeMs',
+  'groundsFliersMs',
 ];
 
 export const TOWER_CONTENT_REQUIRED_KEYS: readonly (keyof TowerContentEntry)[] = [

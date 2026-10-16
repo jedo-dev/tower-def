@@ -15,6 +15,38 @@ function expectRejection(abilities: Record<string, unknown>, message: RegExp) {
   expect(() => parseAbilities(abilities)).toThrow(message);
 }
 
+describe('knockbackCells and groundsFliersMs', () => {
+  it('reads both and rejects them out of bounds', () => {
+    expect(parseAbilities({ knockbackCells: 1, groundsFliersMs: 1_000 })).toEqual({
+      knockbackCells: 1,
+      groundsFliersMs: 1_000,
+    });
+    expectRejection({ knockbackCells: 4 }, /knockbackCells/);
+    expectRejection({ groundsFliersMs: 50 }, /groundsFliersMs/);
+  });
+});
+
+describe('chill groundsFliersMs', () => {
+  function parseEffect(effect: Record<string, unknown>) {
+    return parseLevelStats(
+      { damage: 30, range: 7, attackCooldownMs: 800, onHitEffects: [effect] },
+      LOCATION,
+    ).onHitEffects?.[0];
+  }
+
+  it('reads it on a freezing chill', () => {
+    const effect = { effectId: 'chill', freezeAtStacks: 3, freezeMs: 1200, groundsFliersMs: 1200 };
+    expect(parseEffect(effect)?.groundsFliersMs).toBe(1200);
+  });
+
+  it('needs freezeAtStacks and is chill only', () => {
+    expect(() => parseEffect({ effectId: 'chill', groundsFliersMs: 1000 })).toThrow(
+      /needs "freezeAtStacks"/,
+    );
+    expect(() => parseEffect({ effectId: 'stun', groundsFliersMs: 1000 })).toThrow(/only "chill"/);
+  });
+});
+
 describe('coneDegrees', () => {
   it('reads a cone opening in degrees', () => {
     expect(parseAbilities({ coneDegrees: 45 })).toEqual({ coneDegrees: 45 });

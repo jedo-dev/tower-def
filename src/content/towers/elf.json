@@ -172,7 +172,8 @@
               "attackCooldownMs": 900,
               "splashRadius": 4,
               "onHitEffects": [{ "effectId": "stun", "durationMs": 350 }],
-              "allowedTargets": "both"
+              "allowedTargets": "both",
+              "abilities": { "groundsFliersMs": 1000 }
             }
           ]
         }

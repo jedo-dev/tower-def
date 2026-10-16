@@ -60,6 +60,8 @@ export type TowerOnHitEffect = {
   freezeAtStacks?: number;
   /** Chill only: how long a freeze lasts; the stun balance duration when absent. */
   freezeMs?: number;
+  /** Chill only, with `freezeAtStacks`: a freeze grounds a flier for this many ms. */
+  groundsFliersMs?: number;
 };
 
 export type BuildableTowerConfig = {

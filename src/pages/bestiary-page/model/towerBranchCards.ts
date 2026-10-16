@@ -46,6 +46,9 @@ function describeAbilities(abilities: TowerAbilities): string[] {
   if (abilities.knockbackCells !== undefined) {
     parts.push(`knocks small and medium back ${formatCells(abilities.knockbackCells)}`);
   }
+  if (abilities.groundsFliersMs !== undefined) {
+    parts.push(`pulls fliers down for ${formatSeconds(abilities.groundsFliersMs)}`);
+  }
   if (abilities.airDamageMultiplier !== undefined) {
     parts.push(`${formatMultiplier(abilities.airDamageMultiplier)} vs air`);
   }

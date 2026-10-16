@@ -136,4 +136,10 @@ export type CreepAbilityRuntime = {
    * route and clears it. Absent means none.
    */
   pendingKnockbackCells?: number;
+  /**
+   * Ms a flier stays pulled down to the ground (tower-def-bge.9): targetable
+   * by ground-only towers while above 0, still on its air route. Absent means
+   * never grounded.
+   */
+  groundedRemainingMs?: number;
 };

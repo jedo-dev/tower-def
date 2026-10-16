@@ -510,6 +510,7 @@ brings the next level's object (or none).
 | `volleyEveryMs` | 500-60000 | Every this many ms the tower hits every valid creep in range once, besides its normal attack (support towers too). A ready volley waits for a target; a new tower starts ready. |
 | `volleyDamageShare` | 0-5 | Share of the tower's damage a volley deals; 1 when omitted. Needs `volleyEveryMs`. |
 | `knockbackCells` | 0.1-3 | Every hit pushes a small or medium creep this many cells back along its own route (air creeps along the air line); large creeps stand firm. The push is queued on the creep (`pendingKnockbackCells`, the strongest of the frame's pushes) and the movement step walks it back, never past the route start, raising its remaining route distance (tower-def-bge.9, Mortar, Grapeshot). |
+| `groundsFliersMs` | 100-10000 | Every hit pulls a flier down for this many ms: it keeps flying its air route but counts as a ground creep for targeting (ground-only towers, splash and chain may hit it) until the timer runs out; a longer running timer is kept (tower-def-bge.9, Wild Growth). |
 | `coneDegrees` | 10-180 | A single-target shot also hits every other valid creep in range whose footprint centre lies inside a cone of this opening from the tower centre toward the target, at full damage (tower-def-bge.9, Wyrm Breath). Field order, deterministic. |
 
 Target multipliers multiply together and apply to every hit of the tower
@@ -525,6 +526,7 @@ On-hit effect fields (in `onHitEffects[]` entries, at any level):
 | `damageKind` | `vulnerability` only: `physical`, `magical`, `percent` or `all` (default). | `magnitude` is the added share (default 0.15), refreshed, not stacked. |
 | `freezeAtStacks` | `chill` only, whole 2-20. | Every Nth chilling hit on a creep (counted while its chill runs, weaker chills included) freezes it: a `stun`. |
 | `freezeMs` | `chill` only, with `freezeAtStacks`, 100-10000 ms. | Freeze length; the stun balance duration when omitted. |
+| `groundsFliersMs` | `chill` only, with `freezeAtStacks`, 100-10000 ms. | A freeze also grounds a flier for this long (see the ability of the same name); a freeze the creature resists grounds nothing (tower-def-bge.9, Permafrost). |
 | `damageType` | `poison` and `burn`. | See "Damage over time type". |
 | `maxStacks` | Stacking effects only (`poison`, `burn`, `armor_break`), whole 1-10. | The stack cap of this tower's application, below or above the balance default (3); 1 means it does not stack. The balance cap when omitted. A running instance keeps the highest cap among the towers feeding it. |
 

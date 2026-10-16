@@ -68,6 +68,10 @@ export function describeTowerAbilities(abilities: TowerAbilities | undefined): s
   if (abilities.knockbackCells !== undefined) {
     phrases.push(`Knockback ${abilities.knockbackCells}`);
   }
+  if (abilities.groundsFliersMs !== undefined) {
+    const seconds = (abilities.groundsFliersMs / MILLISECONDS_PER_SECOND).toFixed(1);
+    phrases.push(`Grounds fliers ${seconds}s`);
+  }
   if (abilities.airDamageMultiplier !== undefined) {
     phrases.push(`${formatMultiplier(abilities.airDamageMultiplier)} vs air`);
   }

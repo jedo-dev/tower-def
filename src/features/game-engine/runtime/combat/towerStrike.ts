@@ -1,6 +1,7 @@
 import {
   applyDamageToCreep,
   applyEffectToCreep,
+  groundCreep,
   queueCreepKnockback,
   type ApplyEffectInput,
 } from '../../../../entities/creep';
@@ -50,6 +51,9 @@ export function toApplyEffectInput(effect: TowerOnHitEffect): ApplyEffectInput {
     ...(effect.damageKind === undefined ? {} : { damageScope: effect.damageKind }),
     ...(effect.freezeAtStacks === undefined ? {} : { freezeAtStacks: effect.freezeAtStacks }),
     ...(effect.freezeMs === undefined ? {} : { freezeMs: effect.freezeMs }),
+    ...(effect.groundsFliersMs === undefined
+      ? {}
+      : { freezeGroundsFliersMs: effect.groundsFliersMs }),
   };
 }
 
@@ -133,6 +137,9 @@ export function strikeCreep<C extends CombatCreep, T extends CombatTower>(
   applyOnHitEffects(tower, creep, hooks);
   if (abilities?.knockbackCells !== undefined) {
     queueCreepKnockback(creep.entity, abilities.knockbackCells);
+  }
+  if (abilities?.groundsFliersMs !== undefined) {
+    groundCreep(creep.entity, abilities.groundsFliersMs);
   }
   hooks.onCreepHit(creep);
   return { damageApplied: damageResult.damageApplied, killed: damageResult.killed };

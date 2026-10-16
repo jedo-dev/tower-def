@@ -2,6 +2,7 @@ import {
   applyDamageToCreep,
   hasEffectDamage,
   tickCreepAbilities,
+  tickCreepGrounding,
   tickCreepEffects,
   type EffectDamageByType,
 } from '../../../../entities/creep';
@@ -26,6 +27,9 @@ export function tickFieldCreepEffects<C extends CombatCreep, T extends CombatTow
     }
 
     tickCreepAbilities(creep.entity, deltaMs);
+    if (creep.entity.groundedRemainingMs !== undefined) {
+      tickCreepGrounding(creep.entity, deltaMs);
+    }
     const tickResult = tickCreepEffects(creep.entity, deltaMs);
 
     if (tickResult.creep === creep.entity) {

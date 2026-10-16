@@ -305,10 +305,10 @@
                   "magnitude": 0.75,
                   "durationMs": 4000,
                   "freezeAtStacks": 3,
-                  "freezeMs": 1200
+                  "freezeMs": 1200,
+                  "groundsFliersMs": 1200
                 }
-              ],
-              "abilities": { "airDamageMultiplier": 1.25 }
+              ]
             }
           ]
         },
