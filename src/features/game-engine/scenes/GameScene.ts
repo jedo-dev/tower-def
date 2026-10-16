@@ -101,7 +101,7 @@ import {
   type BuildRuntimeDeps,
   type BuildRuntimeState,
 } from '../runtime/build/gameSceneBuildRuntime';
-import { resolvePlacementTap } from '../runtime/build/placementConfirmation';
+import { resolvePlacementTap, resolvePreviewAnchor } from '../runtime/build/placementConfirmation';
 import {
   handleSellTowerCommand,
   handleUpgradeTowerCommand,
@@ -252,6 +252,8 @@ export class GameScene extends Phaser.Scene {
   private hoveredBuildAnchor: GridPosition | null = null;
   /** Block armed by a first touch tap; the preview stays on it until it is built or moved. */
   private pendingPlacementAnchor: GridPosition | null = null;
+  /** Input modality from the pointer event type: finger or mouse/pen. */
+  private isLastPointerTouch = false;
   private gridModel: GridModel | null = null;
   private readonly gridRendererState: GridRendererState = {
     gridGraphics: null,
@@ -470,7 +472,15 @@ export class GameScene extends Phaser.Scene {
 
   /** The block the preview shows: the armed one on touch, else the hovered one. */
   private getPreviewAnchor(): GridPosition | null {
-    return this.pendingPlacementAnchor ?? this.hoveredBuildAnchor;
+    return resolvePreviewAnchor({
+      pendingAnchor: this.pendingPlacementAnchor,
+      hoveredAnchor: this.hoveredBuildAnchor,
+      confirmsTouchPlacement: this.confirmsTouchPlacement(),
+    });
+  }
+
+  private confirmsTouchPlacement(): boolean {
+    return this.isLastPointerTouch && getControlSettings().confirmPlacementWithSecondTap;
   }
 
   private getBoardCamera(): BoardCameraState {
@@ -1242,8 +1252,9 @@ export class GameScene extends Phaser.Scene {
   }
 
   private handlePointerMove(pointer: Phaser.Input.Pointer): void {
-    if (!pointer.wasTouch && this.pendingPlacementAnchor) {
+    if (!pointer.wasTouch) {
       // Back on a mouse: the preview follows the cursor again.
+      this.isLastPointerTouch = false;
       this.pendingPlacementAnchor = null;
     }
     handlePointerMoveRuntime(
@@ -1267,6 +1278,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   private handlePointerDown(pointer: Phaser.Input.Pointer): void {
+    this.isLastPointerTouch = pointer.wasTouch;
     handlePointerDownRuntime(this.inputControllerState, this.inputControllerDeps, pointer);
   }
 
@@ -1301,6 +1313,7 @@ export class GameScene extends Phaser.Scene {
   private handleBoardTap(pointer: Phaser.Input.Pointer): BoardTapOutcome {
     syncHoveredCellFromPointer(this.inputControllerDeps, pointer);
     if (trySelectTowerAtHoveredCell(this.towerCommandDeps)) {
+      this.clearPendingPlacement();
       return 'selected-tower';
     }
     if (this.hoveredCell) {
@@ -1308,15 +1321,21 @@ export class GameScene extends Phaser.Scene {
     }
 
     const isBuildTap = this.activeBattlefieldView === 'player' && this.canPerformBuildActions();
-    const confirmsWithSecondTap =
-      pointer.wasTouch && getControlSettings().confirmPlacementWithSecondTap;
-    if (isBuildTap && confirmsWithSecondTap) {
+    if (isBuildTap && this.confirmsTouchPlacement()) {
       this.handleTwoTapPlacement();
     } else {
       this.pendingPlacementAnchor = null;
       tryPlaceTowerAtHoveredCell(this.towerCommandDeps);
     }
     return isBuildTap ? 'build-tap' : 'board-tap';
+  }
+
+  private clearPendingPlacement(): void {
+    if (!this.pendingPlacementAnchor) {
+      return;
+    }
+    this.pendingPlacementAnchor = null;
+    this.updateBuildPreview();
   }
 
   /** First tap arms the hovered block; a second tap on it builds (a refusal keeps it armed). */

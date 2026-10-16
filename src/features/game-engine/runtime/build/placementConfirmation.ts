@@ -23,3 +23,22 @@ export function resolvePlacementTap(
   }
   return { kind: 'arm', anchor: tappedAnchor };
 }
+
+export type PreviewAnchorInput = {
+  pendingAnchor: GridPosition | null;
+  hoveredAnchor: GridPosition | null;
+  /** The last pointer was a finger and the second-tap confirmation is on. */
+  confirmsTouchPlacement: boolean;
+};
+
+/**
+ * The block the build preview shows. In touch confirmation mode only the armed
+ * block is previewed, so a finished build or a lifted finger leaves no stale
+ * preview behind; otherwise the armed block wins over the hovered one.
+ */
+export function resolvePreviewAnchor(input: PreviewAnchorInput): GridPosition | null {
+  if (input.pendingAnchor) {
+    return input.pendingAnchor;
+  }
+  return input.confirmsTouchPlacement ? null : input.hoveredAnchor;
+}

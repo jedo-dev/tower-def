@@ -68,6 +68,8 @@ describe('GameScene two-tap placement confirmation (tower-def-d9f.2)', () => {
 
       expect(towerAnchors(game)).toEqual([FIRST_ANCHOR]);
       expect(game.inspect().pendingPlacementAnchor).toBeNull();
+      // No stale preview is left on the new tower under the lifted finger.
+      expect(previewBlock(game)).toBeNull();
     });
 
     it('moves the preview when the second tap lands elsewhere', async () => {
@@ -115,6 +117,22 @@ describe('GameScene two-tap placement confirmation (tower-def-d9f.2)', () => {
 
       game.tick(ACTION_COOLDOWN_FRAMES);
       game.touchTapAt(game.anchorScreenPoint(FIRST_ANCHOR));
+      expect(towerAnchors(game)).toEqual([FIRST_ANCHOR]);
+    });
+
+    it('drops the armed block when a tap selects a built tower', async () => {
+      const game = await start();
+      game.touchTapAt(game.anchorScreenPoint(FIRST_ANCHOR));
+      game.tick(ACTION_COOLDOWN_FRAMES);
+      game.touchTapAt(game.anchorScreenPoint(FIRST_ANCHOR));
+      game.tick(ACTION_COOLDOWN_FRAMES);
+      game.touchTapAt(game.anchorScreenPoint(SECOND_ANCHOR));
+      expect(game.inspect().pendingPlacementAnchor).toEqual(SECOND_ANCHOR);
+
+      game.tick(ACTION_COOLDOWN_FRAMES);
+      game.touchTapAt(game.anchorScreenPoint(FIRST_ANCHOR));
+
+      expect(game.inspect().pendingPlacementAnchor).toBeNull();
       expect(towerAnchors(game)).toEqual([FIRST_ANCHOR]);
     });
   });

@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react';
 import type { AppRoute } from '../../../shared/config/game-setup';
+import { ToggleSwitch } from '../../../shared/ui/toggle-switch';
 import './SettingsPage.css';
 
 // Drives the filled part of the range track (WebKit has no native progress).
@@ -105,14 +106,11 @@ export function SettingsPage({
           <label className="settings-label" htmlFor="confirm-placement">
             {CONFIRM_PLACEMENT_LABEL}
           </label>
-          <input
+          <ToggleSwitch
             id="confirm-placement"
-            type="checkbox"
-            role="switch"
-            className="settings-switch"
             checked={confirmPlacementWithSecondTap}
             aria-checked={confirmPlacementWithSecondTap}
-            onChange={(e) => onConfirmPlacementChange(e.target.checked)}
+            onChange={(event) => onConfirmPlacementChange(event.target.checked)}
           />
           <p className="settings-hint">
             On touch, the first tap previews the tower and a second tap on the same spot builds it.

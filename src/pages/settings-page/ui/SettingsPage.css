@@ -128,28 +128,10 @@
   color: var(--color-accent-gold);
 }
 
-/* On/off switch row: a native checkbox at the 44px touch target. */
-.settings-section-toggle {
-  grid-template-columns: 1fr var(--touch-target-min);
-}
-
+/* On/off switch row: the shared toggle switch is the 44px touch target. */
 .settings-section-toggle .settings-label {
   text-transform: none;
   letter-spacing: 0.02em;
-}
-
-.settings-switch {
-  width: var(--touch-target-min);
-  height: var(--touch-target-min);
-  margin: 0;
-  cursor: pointer;
-  accent-color: var(--color-accent-gold);
-}
-
-.settings-switch:focus-visible {
-  outline: none;
-  box-shadow: var(--focus-ring);
-  border-radius: var(--radius-md);
 }
 
 .settings-hint {
