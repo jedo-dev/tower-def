@@ -152,7 +152,7 @@ describe('TowerActionPanel next level preview', () => {
   });
 
   it('reads an authored tower from its own curve, the one its upgrade follows', () => {
-    const authoredId = 'undead_bone_archer_tower';
+    const authoredId = 'human_guard_archer_tower';
     const current = getTowerStatsForCurveLevel(TowerTypeId.SINGLE, authoredId, 1)!;
     const next = getTowerStatsForCurveLevel(TowerTypeId.SINGLE, authoredId, 2)!;
     // The authored curve differs from the archetype one, so the source matters.
