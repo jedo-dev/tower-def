@@ -52,6 +52,25 @@ export function toApplyEffectInput(effect: TowerOnHitEffect): ApplyEffectInput {
   };
 }
 
+/**
+ * Effect inputs per authored on-hit entry, built once instead of on every hit.
+ * Entries are parsed content (or archetype constants) that nothing mutates,
+ * and `applyEffectToCreep` only reads its input (a resisted application
+ * spreads a copy), so one frozen input per entry is safe to share. Weak keys
+ * let an entry dropped by a content reload take its input with it.
+ */
+const effectInputByOnHitEffect = new WeakMap<TowerOnHitEffect, Readonly<ApplyEffectInput>>();
+
+/** `toApplyEffectInput`, memoised per entry so a hit allocates no effect input. */
+export function getApplyEffectInput(effect: TowerOnHitEffect): Readonly<ApplyEffectInput> {
+  let input = effectInputByOnHitEffect.get(effect);
+  if (input === undefined) {
+    input = Object.freeze(toApplyEffectInput(effect));
+    effectInputByOnHitEffect.set(effect, input);
+  }
+  return input;
+}
+
 function applyOnHitEffects<C extends CombatCreep, T extends CombatTower>(
   tower: T,
   creep: C,
@@ -64,8 +83,8 @@ function applyOnHitEffects<C extends CombatCreep, T extends CombatTower>(
     return;
   }
 
-  for (const effect of onHitEffects) {
-    applyTowerEffect(creep, toApplyEffectInput(effect), hooks);
+  for (let index = 0; index < onHitEffects.length; index += 1) {
+    applyTowerEffect(creep, getApplyEffectInput(onHitEffects[index]), hooks);
   }
 }
 

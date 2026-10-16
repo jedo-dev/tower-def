@@ -1,11 +1,11 @@
+import type { CreepEntity } from '../../../../entities/creep';
 import {
   canTowerAttack,
-  consumeTowerAttack,
   getTowerAttackKind,
   resolveShotDamageMultiplier,
   resolveTowerDamageType,
   selectTowerTarget,
-  tickTowerCooldown,
+  type TowerCombatRuntime,
 } from '../../../../entities/tower';
 import { TowerAttackKind, type DamageType } from '../../../../shared/types/content-ids';
 import { applyChainDamage, applySingleTargetDamage, applySplashDamage } from './towerAreaAttacks';
@@ -41,7 +41,8 @@ function takeShotDamageMultiplier(tower: CombatTower): number {
   }
 
   const shotNumber = (tower.runtime.shotCount ?? 0) + 1;
-  tower.runtime = { ...tower.runtime, shotCount: shotNumber };
+  // In place: the runtime belongs to this tower alone (see tickCooldownInPlace).
+  tower.runtime.shotCount = shotNumber;
   return resolveShotDamageMultiplier(abilities, shotNumber);
 }
 
@@ -87,6 +88,61 @@ function applySingleTargetShot<C extends CombatCreep, T extends CombatTower>(
   }
 }
 
+/**
+ * Per-frame working memory: the creep entities towers pick targets from. It
+ * is filled once at the start of a frame, so every tower in that frame sees
+ * the same snapshot (hits replace `creep.entity` with a new object and never
+ * touch the snapshot), exactly as the old per-frame `map` copy did. The array
+ * is reused; it only reallocates when the field outgrows it. Slots past the
+ * current frame's creep count are cut off, so at most one frame's entities
+ * stay referenced between frames.
+ */
+const creepEntitiesForTargeting: CreepEntity[] = [];
+
+/** The module-wide targeting snapshot buffer; exposed so tests can check reuse. */
+export function getCreepEntitiesForTargetingBuffer(): readonly CreepEntity[] {
+  return creepEntitiesForTargeting;
+}
+
+function snapshotCreepEntitiesForTargeting(creeps: readonly CombatCreep[]): CreepEntity[] {
+  const entities = creepEntitiesForTargeting;
+  const count = creeps.length;
+  for (let index = 0; index < count; index += 1) {
+    entities[index] = creeps[index].entity;
+  }
+  if (entities.length > count) {
+    entities.length = count;
+  }
+  return entities;
+}
+
+/**
+ * `tickTowerCooldown` without the copy. Mutating is safe because each
+ * `TowerCombatRuntime` is created per tower (`createInitialTowerCombatRuntime`)
+ * and only ever read through `tower.runtime`: no other system keeps a
+ * reference to it or compares it by identity.
+ */
+function tickCooldownInPlace(runtime: TowerCombatRuntime, deltaMs: number): void {
+  if (deltaMs <= 0) {
+    return;
+  }
+  runtime.attackCooldownRemainingMs = Math.max(0, runtime.attackCooldownRemainingMs - deltaMs);
+}
+
+/** `consumeTowerAttack` without the copy; see `tickCooldownInPlace` for why it is safe. */
+function consumeAttackInPlace(tower: CombatTower): void {
+  tower.runtime.attackCooldownRemainingMs = tower.entity.combatStats.attackCooldownMs;
+}
+
+function findCreepById<C extends CombatCreep>(creeps: readonly C[], id: string): C | undefined {
+  for (let index = 0; index < creeps.length; index += 1) {
+    if (creeps[index].entity.id === id) {
+      return creeps[index];
+    }
+  }
+  return undefined;
+}
+
 /** Ticks every tower's cooldown and lets each ready tower attack its target. */
 export function resolveTowerAttacks<C extends CombatCreep, T extends CombatTower>(
   field: CombatField<C, T>,
@@ -97,9 +153,10 @@ export function resolveTowerAttacks<C extends CombatCreep, T extends CombatTower
     return;
   }
 
-  const creepsForTargeting = field.creeps.map((creep) => creep.entity);
+  const creepsForTargeting = snapshotCreepEntitiesForTargeting(field.creeps);
 
-  for (const tower of field.towers) {
+  for (let towerIndex = 0; towerIndex < field.towers.length; towerIndex += 1) {
+    const tower = field.towers[towerIndex];
     const attackKind = getTowerAttackKind(tower.entity.type);
 
     if (tower.entity.combatStats.abilities?.volleyEveryMs !== undefined) {
@@ -111,7 +168,7 @@ export function resolveTowerAttacks<C extends CombatCreep, T extends CombatTower
       continue;
     }
 
-    tower.runtime = tickTowerCooldown(tower.runtime, deltaMs);
+    tickCooldownInPlace(tower.runtime, deltaMs);
 
     if (!canTowerAttack(tower.entity, tower.runtime)) {
       continue;
@@ -123,7 +180,7 @@ export function resolveTowerAttacks<C extends CombatCreep, T extends CombatTower
       continue;
     }
 
-    const target = field.creeps.find((creep) => creep.entity.id === targetCreep.id);
+    const target = findCreepById(field.creeps, targetCreep.id);
 
     if (!target) {
       continue;
@@ -144,7 +201,7 @@ export function resolveTowerAttacks<C extends CombatCreep, T extends CombatTower
       applySingleTargetShot(field, tower, target, shotDamage, damageType, hooks);
     }
 
-    tower.runtime = consumeTowerAttack(tower.entity, tower.runtime);
+    consumeAttackInPlace(tower);
     hooks.onTowerFired(tower, target, isSplashTower);
   }
 }
