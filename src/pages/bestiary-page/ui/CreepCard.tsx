@@ -1,5 +1,6 @@
 import type { FactionThemeName } from '../../../shared/constants/theme';
 import { UnitIcon } from '../../../shared/ui/unit-icon';
+import { ARMOR_SHORT_LABELS } from '../model/combatTypeDisplay';
 import type { CreepCardViewModel } from '../model/types';
 import { StatGrid, type StatCell } from './StatGrid';
 import styles from './BestiaryPage.module.css';
@@ -17,8 +18,18 @@ function creepStats(creep: CreepCardViewModel): StatCell[] {
   return [
     { key: 'health', label: 'HP (wave 1)', value: String(creep.health) },
     { key: 'speed', label: 'Speed', value: String(creep.speed) },
-    { key: 'physical-armor', label: 'Phys. armor', value: String(creep.physicalArmor) },
-    { key: 'magical-armor', label: 'Mag. armor', value: String(creep.magicalArmor) },
+    {
+      key: 'physical-armor',
+      label: ARMOR_SHORT_LABELS.physical,
+      value: String(creep.physicalArmor),
+      hint: creep.physicalArmorHint,
+    },
+    {
+      key: 'magical-armor',
+      label: ARMOR_SHORT_LABELS.magical,
+      value: String(creep.magicalArmor),
+      hint: creep.magicalArmorHint,
+    },
     { key: 'size', label: 'Size', value: capitalize(creep.sizeClass) },
     { key: 'move', label: 'Moves', value: capitalize(creep.moveType) },
     { key: 'reward', label: 'Kill reward', value: `${creep.rewardGold}g`, tone: 'gold' },

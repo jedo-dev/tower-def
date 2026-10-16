@@ -66,6 +66,12 @@ describe('BestiaryPage', () => {
     expect(card.getByText('Mag. armor').nextElementSibling?.textContent).toBe(
       String(skeleton.magicalArmor),
     );
+    expect(card.getByText('Phys. armor').parentElement?.getAttribute('title')).toMatch(
+      new RegExp(`^Physical armor ${skeleton.physicalArmor}: physical hits land for \\d+%\\.$`),
+    );
+    expect(card.getByText('Mag. armor').parentElement?.getAttribute('title')).toMatch(
+      new RegExp(`^Magical armor ${skeleton.magicalArmor}: magical hits`),
+    );
     expect(card.getByText('Size').nextElementSibling?.textContent).toBe('Small');
     expect(card.getByText('Moves').nextElementSibling?.textContent).toBe('Ground');
     expect(card.getByText('Kill reward').nextElementSibling?.textContent).toBe(
@@ -102,6 +108,21 @@ describe('BestiaryPage', () => {
     expect(specials.getByText('35% slower for 2.0s')).toBeDefined();
     const levels = within(card.getByRole('list', { name: 'Upgrade levels' }));
     expect(levels.getAllByRole('listitem')).toHaveLength(3);
+  });
+
+  it('shows the damage type of a tower with a decorative glyph and a tooltip', () => {
+    render(<BestiaryPage onNavigate={() => undefined} />);
+    const frostNest = resolveBuildableTowerById('undead_frost_wyrm_nest');
+
+    const card = within(screen.getByRole('article', { name: frostNest.name }));
+    const value = card.getByText('Type').nextElementSibling;
+
+    expect(value?.textContent).toBe('✦ Magical');
+    expect(value?.querySelector('[aria-hidden="true"]')?.textContent).toBe('✦ ');
+    expect(card.getByText('Type').parentElement?.getAttribute('title')).toBe(
+      'Magical damage: reduced by magical armor.',
+    );
+    expect(consoleError).not.toHaveBeenCalled();
   });
 
   it('renders lore when the content carries it', () => {

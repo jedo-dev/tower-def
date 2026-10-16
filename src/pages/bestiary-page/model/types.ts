@@ -1,4 +1,4 @@
-import type { RaceId } from '../../../shared/types/content-ids';
+import type { DamageType, RaceId } from '../../../shared/types/content-ids';
 import type { FactionThemeName } from '../../../shared/constants/theme';
 import type { UnitId, UnitTier } from '../../../entities/unit';
 import type { BuildableTowerId } from '../../../entities/tower';
@@ -22,6 +22,10 @@ export type CreepCardViewModel = {
   speed: number;
   physicalArmor: number;
   magicalArmor: number;
+  /** Tooltip for the physical armor stat: how hard physical hits land. */
+  physicalArmorHint: string;
+  /** Tooltip for the magical armor stat: how hard magical hits land. */
+  magicalArmorHint: string;
   sizeClass: string;
   moveType: string;
   rewardGold: number;
@@ -43,6 +47,14 @@ export type TowerLevelViewModel = {
   summary: string;
 };
 
+/** The damage type a tower deals, with a glyph, a short label and a tooltip. */
+export type DamageTypeViewModel = {
+  type: DamageType;
+  glyph: string;
+  label: string;
+  hint: string;
+};
+
 export type TowerCardViewModel = {
   id: BuildableTowerId;
   name: string;
@@ -50,6 +62,9 @@ export type TowerCardViewModel = {
   archetypeName: string;
   cost: number;
   damage: number;
+  /** `damage` as the card shows it: a number, or a share of max HP for percent towers. */
+  damageLabel: string;
+  damageType: DamageTypeViewModel;
   rangeCells: number;
   cooldownMs: number;
   specials: TowerSpecialViewModel[];

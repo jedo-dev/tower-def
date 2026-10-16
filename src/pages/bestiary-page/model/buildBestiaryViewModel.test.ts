@@ -3,7 +3,7 @@ import { buildBestiaryViewModel } from './buildBestiaryViewModel';
 import { getTierEconomy } from './tierEconomy';
 import { mapUnitToCreepCard, mapUnitsToCreepCards } from './creepCards';
 import { mapTowerToTowerCard } from './towerCards';
-import { RACE_IDS, RaceId } from '../../../shared/types/content-ids';
+import { DamageType, RACE_IDS, RaceId } from '../../../shared/types/content-ids';
 import { FACTION_THEME_COLOR_VARS } from '../../../shared/constants/theme';
 import {
   SEND_CREEP_COST_BY_TIER,
@@ -53,6 +53,16 @@ describe('creep cards', () => {
       economy: getTierEconomy(UnitTier.TIER_1),
     });
     expect(card.description).toBe(skeleton.description ?? null);
+  });
+
+  it('explains both armors with how hard the matching hits land', () => {
+    const banshee = mapUnitToCreepCard(resolveUnitConfigById('undead_banshee'));
+
+    // Banshee: -5 physical, 14 magical (docs/08 "Race armor profiles").
+    expect(banshee.physicalArmorHint).toBe('Physical armor -5: physical hits land for 123%.');
+    expect(banshee.magicalArmorHint).toBe(
+      'Magical armor 14: magical hits and damage over time land for 54%.',
+    );
   });
 
   it('sorts creeps by tier and keeps the authored order within a tier', () => {
@@ -111,6 +121,40 @@ describe('tower cards', () => {
         value: '+18% attack speed, +0.8 range within 5 cells',
       },
     ]);
+  });
+
+  it('shows the damage type a tower deals, with a glyph, a label and a tooltip', () => {
+    expect(
+      mapTowerToTowerCard(resolveBuildableTowerById('orc_spear_watchtower')).damageType,
+    ).toEqual({
+      type: DamageType.PHYSICAL,
+      glyph: '⚔',
+      label: 'Physical',
+      hint: 'Physical damage: reduced by physical armor.',
+    });
+    // A race override wins over the archetype: the chain archetype is physical.
+    expect(
+      mapTowerToTowerCard(resolveBuildableTowerById('orc_lightning_totem')).damageType,
+    ).toMatchObject({ type: DamageType.MAGICAL, glyph: '✦', label: 'Magical' });
+  });
+
+  it('shows percent damage as a share of maximum health', () => {
+    const card = mapTowerToTowerCard(resolveBuildableTowerById('elf_thorn_spire'));
+
+    expect(card.damageType).toMatchObject({
+      type: DamageType.PERCENT,
+      glyph: '%',
+      label: 'Percent',
+    });
+    expect(card.damageLabel).toBe('0.6% max HP');
+    expect(card.specials).toEqual([
+      {
+        key: 'poison',
+        label: 'Poison',
+        value: '1.2% max HP/s for 4.0s, up to 3 stacks',
+      },
+    ]);
+    expect(card.levels[2].summary).toMatch(/^0\.8% max HP, 6\.8 range/);
   });
 
   it('summarises every upgrade level, the build level without an upgrade cost', () => {

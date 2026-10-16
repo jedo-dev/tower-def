@@ -1,12 +1,14 @@
 import {
   getTowerArchetype,
+  resolveBuildableTowerDamageType,
   type BuildableTowerConfig,
   type TowerArchetypeDefinition,
   type TowerOnHitEffect,
   type TowerUpgradeLevel,
 } from '../../../entities/tower';
 import { resolveEffectDefinition } from '../../../shared/constants/effects';
-import { EffectId } from '../../../shared/types/content-ids';
+import { DamageType, EffectId } from '../../../shared/types/content-ids';
+import { describeDamageType, formatPercentOfMaxHealth } from './combatTypeDisplay';
 import { readLore } from './creepCards';
 import type { TowerCardViewModel, TowerLevelViewModel, TowerSpecialViewModel } from './types';
 
@@ -52,11 +54,15 @@ function describeOnHitEffect(effect: TowerOnHitEffect): TowerSpecialViewModel {
           : magnitude;
       const label = effect.effectId === EffectId.POISON ? 'Poison' : 'Burn';
       const stacks = maxStacks > 1 ? `, up to ${maxStacks} stacks` : '';
+      const rate =
+        effect.damageType === DamageType.PERCENT
+          ? `${formatPercentOfMaxHealth(perSecond)}/s`
+          : `${Math.round(perSecond)} dmg/s`;
 
       return {
         key: effect.effectId,
         label,
-        value: `${Math.round(perSecond)} dmg/s for ${formatSeconds(durationMs)}${stacks}`,
+        value: `${rate} for ${formatSeconds(durationMs)}${stacks}`,
       };
     }
   }
@@ -97,9 +103,15 @@ function mapSpecials(
   return specials;
 }
 
-function summarizeLevel(level: TowerUpgradeLevel): string {
+/** Hit damage as a player reads it: points, or a share of max HP for percent towers. */
+function formatHitDamage(damage: number, damageType: DamageType): string {
+  return damageType === DamageType.PERCENT ? formatPercentOfMaxHealth(damage) : String(damage);
+}
+
+function summarizeLevel(level: TowerUpgradeLevel, damageType: DamageType): string {
+  const damage = formatHitDamage(level.stats.damage, damageType);
   const parts = [
-    `${level.stats.damage} dmg`,
+    damageType === DamageType.PERCENT ? damage : `${damage} dmg`,
     `${Number(level.stats.range.toFixed(1))} range`,
     formatSeconds(level.stats.attackCooldownMs),
   ];
@@ -125,16 +137,18 @@ function mapLevels(
   archetype: TowerArchetypeDefinition,
 ): TowerLevelViewModel[] {
   const levels = tower.levels && tower.levels.length > 0 ? tower.levels : archetype.levels;
+  const damageType = resolveBuildableTowerDamageType(tower);
 
   return levels.map((level) => ({
     level: level.level,
     upgradeCost: level.level === 1 ? null : level.upgradeCostGold,
-    summary: summarizeLevel(level),
+    summary: summarizeLevel(level, damageType),
   }));
 }
 
 export function mapTowerToTowerCard(tower: BuildableTowerConfig): TowerCardViewModel {
   const archetype = getTowerArchetype(tower.towerType);
+  const damageType = resolveBuildableTowerDamageType(tower);
 
   return {
     id: tower.id,
@@ -143,6 +157,8 @@ export function mapTowerToTowerCard(tower: BuildableTowerConfig): TowerCardViewM
     archetypeName: archetype.name,
     cost: tower.costGold,
     damage: tower.damage,
+    damageLabel: formatHitDamage(tower.damage, damageType),
+    damageType: describeDamageType(damageType),
     rangeCells: tower.range,
     cooldownMs: tower.attackCooldownMs,
     specials: mapSpecials(tower, archetype),

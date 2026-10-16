@@ -5,6 +5,10 @@ export type StatCell = {
   label: string;
   value: string;
   tone?: 'gold' | 'success';
+  /** Tooltip explaining the stat, e.g. how hard hits land against an armor. */
+  hint?: string;
+  /** Decorative symbol shown before the value; hidden from assistive tech. */
+  glyph?: string;
 };
 
 const TONE_CLASS: Record<NonNullable<StatCell['tone']>, string> = {
@@ -17,9 +21,10 @@ export function StatGrid({ cells }: { cells: readonly StatCell[] }) {
   return (
     <dl className={styles.statGrid}>
       {cells.map((cell) => (
-        <div key={cell.key} className={styles.stat}>
+        <div key={cell.key} className={styles.stat} title={cell.hint}>
           <dt className={styles.statLabel}>{cell.label}</dt>
           <dd className={`${styles.statValue}${cell.tone ? ` ${TONE_CLASS[cell.tone]}` : ''}`}>
+            {cell.glyph && <span aria-hidden="true">{`${cell.glyph} `}</span>}
             {cell.value}
           </dd>
         </div>

@@ -14,7 +14,14 @@ const MILLISECONDS_PER_SECOND = 1000;
 function towerStats(tower: TowerCardViewModel): StatCell[] {
   return [
     { key: 'cost', label: 'Cost', value: `${tower.cost}g`, tone: 'gold' },
-    { key: 'damage', label: 'Damage', value: String(tower.damage) },
+    { key: 'damage', label: 'Damage', value: tower.damageLabel },
+    {
+      key: 'damage-type',
+      label: 'Type',
+      value: tower.damageType.label,
+      glyph: tower.damageType.glyph,
+      hint: tower.damageType.hint,
+    },
     { key: 'range', label: 'Range', value: `${tower.rangeCells} cells` },
     {
       key: 'cooldown',
