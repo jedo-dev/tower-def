@@ -145,6 +145,20 @@ describe('GameScene board camera: pinch zoom and pan (tower-def-d9f.1)', () => {
       expect(zoomFactor(game)).toBeCloseTo(1);
     });
 
+    it('reads a press that jitters under the movement threshold as a tap, not a pan', async () => {
+      const game = await start();
+      game.command('select-tower', { towerType: TowerTypeId.SINGLE });
+      game.command('zoom-board', { action: 'in' });
+      game.command('zoom-board', { action: 'in' });
+      const before = game.cameraView();
+      const spot = game.anchorScreenPoint(MID_BOARD_ANCHOR);
+
+      game.dragTouch(spot, { x: spot.x + 6, y: spot.y + 5 });
+
+      expect(game.cameraView()).toEqual(before);
+      expect(game.inspect().pendingPlacementAnchor).toEqual(MID_BOARD_ANCHOR);
+    });
+
     it('keeps the zoom when a double tap is two build taps', async () => {
       const game = await start();
       game.command('select-tower', { towerType: TowerTypeId.SINGLE });
@@ -175,6 +189,19 @@ describe('GameScene board camera: pinch zoom and pan (tower-def-d9f.1)', () => {
       expect(game.inspect().playerField.towers.map((tower) => tower.entity.position)).toEqual([
         MID_BOARD_ANCHOR,
       ]);
+    });
+
+    it('resets the zoom on a double click that reaches the board outside building', async () => {
+      const game = await start();
+      game.wheelAt(VIEWPORT_CENTRE, -500);
+      game.command('start-wave', undefined);
+      const spot = { x: 200, y: 420 };
+
+      game.clickAt(spot);
+      expect(zoomFactor(game)).toBeGreaterThan(1);
+      game.clickAt(spot);
+
+      expect(zoomFactor(game)).toBeCloseTo(1);
     });
 
     it('pans with the middle button or Shift held and never builds from those', async () => {

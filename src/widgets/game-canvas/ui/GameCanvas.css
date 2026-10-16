@@ -13,4 +13,6 @@
   border-radius: 6px;
   overflow: hidden;
   background: var(--color-surface-canvas);
+  /* The board owns pinch, pan and double tap; keep browser zoom/scroll off it. */
+  touch-action: none;
 }
