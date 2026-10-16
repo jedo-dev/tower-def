@@ -180,6 +180,15 @@ function createDuelMatchRuntimeDeps(host: GameSceneWiringHost): DuelMatchRuntime
  * scene lifetime.
  */
 export function createGameSceneRuntimeWiring(host: GameSceneWiringHost): GameSceneRuntimeWiring {
+  // One live view of the computer's field, read every frame without allocating.
+  const opponentMovementState: MovementRuntimeState = {
+    get activeCreeps() {
+      return host.opponentField.creeps;
+    },
+    get activeCreepRoutes() {
+      return host.getDuelMatchState().opponent.battlefield.routes;
+    },
+  };
   return {
     waveRuntimeDeps: createWaveRuntimeDeps(host),
     duelMatchRuntimeDeps: createDuelMatchRuntimeDeps(host),
@@ -194,10 +203,7 @@ export function createGameSceneRuntimeWiring(host: GameSceneWiringHost): GameSce
       field: host.opponentField,
       combatDeps: createOpponentCombatDeps(host),
       movementDeps: createOpponentMovementDeps(host),
-      getMovementState: (): MovementRuntimeState => ({
-        activeCreeps: host.opponentField.creeps,
-        activeCreepRoutes: host.getDuelMatchState().opponent.battlefield.routes,
-      }),
+      getMovementState: () => opponentMovementState,
       afterFieldMutated: () => host.syncOpponentDuelCreepsFromField(),
     },
   };
