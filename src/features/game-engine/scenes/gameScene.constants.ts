@@ -90,6 +90,7 @@ export const CREEP_EFFECT_TINTS: Record<EffectId, number> = {
   [EffectId.POISON]: 0x7ee081,
   [EffectId.CHILL]: 0x6fb7ff,
   [EffectId.ARMOR_BREAK]: 0xd9a3ff,
+  [EffectId.VULNERABILITY]: 0xff6f91,
 };
 
 /** First match wins when a creep carries several effects at once. */
@@ -99,6 +100,7 @@ export const CREEP_EFFECT_TINT_PRIORITY: readonly EffectId[] = [
   EffectId.POISON,
   EffectId.CHILL,
   EffectId.ARMOR_BREAK,
+  EffectId.VULNERABILITY,
 ];
 
 /** Below this, the tint alone tells the story and no pips are drawn. */

@@ -1,28 +1,28 @@
 import {
-  EFFECT_BALANCE,
+  resolveEffectArmorKind,
+  resolveEffectDamageScope,
   resolveEffectDefinition,
   type EffectDefinition,
 } from '../../../shared/constants/effects';
-import { DAMAGE_OVER_TIME_DAMAGE_TYPE } from '../../../shared/constants/damage';
 import {
-  DamageType,
   EffectId,
-  EffectKind,
   EffectStackingRule,
+  type ArmorKind,
+  type DamageScope,
+  type DamageType,
 } from '../../../shared/types/content-ids';
+import { getActiveEffects } from './effectTicks';
 import type { ActiveEffect, CreepEntity } from './types';
 
-const NO_EFFECTS: readonly ActiveEffect[] = [];
-const NO_EXPIRED: readonly EffectId[] = [];
-
-/** Raw tick damage per damage type, before armor; percent amounts are ‰ of maximum health. */
-export type EffectDamageByType = Readonly<Record<DamageType, number>>;
-
-const NO_EFFECT_DAMAGE: EffectDamageByType = {
-  [DamageType.PHYSICAL]: 0,
-  [DamageType.MAGICAL]: 0,
-  [DamageType.PERCENT]: 0,
-};
+export {
+  getActiveEffects,
+  hasEffectDamage,
+  resolveActiveEffectDamageType,
+  tickCreepEffects,
+  type CreepEffectTickResult,
+  type EffectDamageByType,
+} from './effectTicks';
+export { getEffectiveSpeedMultiplier } from './effectSpeed';
 
 export type ApplyEffectInput = {
   effectId: EffectId;
@@ -34,39 +34,39 @@ export type ApplyEffectInput = {
   maxStacks?: number;
   /** Damage over time only: the type its ticks deal; `DAMAGE_OVER_TIME_DAMAGE_TYPE` when absent. */
   damageType?: DamageType;
-};
-
-export type CreepEffectTickResult = {
-  /** Same reference as the input when nothing changed this frame. */
-  creep: CreepEntity;
+  /** Armor break only: which armor it lowers; the definition's (`both`) when absent. */
+  armorKind?: ArmorKind;
+  /** Vulnerability only: which hits it amplifies; the definition's (`all`) when absent. */
+  damageScope?: DamageScope;
   /**
-   * Damage the caller must apply, split by damage type so each part meets the
-   * matching armor (or none, for percent); the helper never touches hit points.
+   * Chill only: every `freezeAtStacks`-th chilling hit on the creep (counted
+   * while the chill runs) freezes it - a stun of `freezeMs`.
    */
-  damageByType: EffectDamageByType;
-  expired: readonly EffectId[];
+  freezeAtStacks?: number;
+  freezeMs?: number;
 };
-
-/** Damage type the ticks of a running effect deal. */
-export function resolveActiveEffectDamageType(effect: ActiveEffect): DamageType {
-  return effect.damageType ?? DAMAGE_OVER_TIME_DAMAGE_TYPE;
-}
-
-/** Whether a tick result carries any damage at all. */
-export function hasEffectDamage(damageByType: EffectDamageByType): boolean {
-  return (
-    damageByType[DamageType.PHYSICAL] > 0 ||
-    damageByType[DamageType.MAGICAL] > 0 ||
-    damageByType[DamageType.PERCENT] > 0
-  );
-}
-
-export function getActiveEffects(creep: CreepEntity): readonly ActiveEffect[] {
-  return creep.activeEffects ?? NO_EFFECTS;
-}
 
 export function findActiveEffect(creep: CreepEntity, effectId: EffectId): ActiveEffect | undefined {
   return getActiveEffects(creep).find((effect) => effect.id === effectId);
+}
+
+/**
+ * Whether a running effect is the instance an application merges into: the
+ * same id and, for armor break and vulnerability, the same armor or damage
+ * scope (a physical and a magical break run side by side).
+ */
+function isSameEffectInstance(effect: ActiveEffect, input: ApplyEffectInput): boolean {
+  if (effect.id !== input.effectId) {
+    return false;
+  }
+
+  const definitionArmor = resolveEffectArmorKind(effect.id);
+  const definitionScope = resolveEffectDamageScope(effect.id);
+
+  return (
+    (effect.armorKind ?? definitionArmor) === (input.armorKind ?? definitionArmor) &&
+    (effect.damageScope ?? definitionScope) === (input.damageScope ?? definitionScope)
+  );
 }
 
 function createEffect(definition: EffectDefinition, input: ApplyEffectInput): ActiveEffect {
@@ -78,6 +78,8 @@ function createEffect(definition: EffectDefinition, input: ApplyEffectInput): Ac
     maxStacks: Math.max(definition.maxStacks, input.maxStacks ?? definition.maxStacks),
     nextTickInMs: definition.tickIntervalMs,
     ...(input.damageType === undefined ? {} : { damageType: input.damageType }),
+    ...(input.armorKind === undefined ? {} : { armorKind: input.armorKind }),
+    ...(input.damageScope === undefined ? {} : { damageScope: input.damageScope }),
   };
 }
 
@@ -127,19 +129,60 @@ function mergeEffect(
     case EffectStackingRule.STRONGEST:
       // A weaker application is dropped outright, so a cheap tower cannot
       // overwrite an upgraded one with a shorter, softer slow.
-      return incoming.magnitude > existing.magnitude ? incoming : undefined;
+      return incoming.magnitude > existing.magnitude
+        ? withFreezeCharge(incoming, existing.freezeCharge)
+        : undefined;
   }
 }
 
+function withFreezeCharge(effect: ActiveEffect, freezeCharge: number | undefined): ActiveEffect {
+  return freezeCharge === undefined ? effect : { ...effect, freezeCharge };
+}
+
+function replaceEffect(
+  creep: CreepEntity,
+  previous: ActiveEffect,
+  next: ActiveEffect,
+): CreepEntity {
+  return {
+    ...creep,
+    activeEffects: getActiveEffects(creep).map((effect) => (effect === previous ? next : effect)),
+  };
+}
+
 /**
- * Returns the creep carrying the effect. The input creep is never mutated: a
- * changed effect list is always a fresh array, so render state can keep the
- * previous entity around for comparison.
+ * Counts one freezing hit on the chill instance the application landed on;
+ * the `freezeAtStacks`-th one resets the count and stuns for `freezeMs`.
+ * A weaker chill that changed nothing still counts.
  */
-export function applyEffectToCreep(creep: CreepEntity, input: ApplyEffectInput): CreepEntity {
+function applyFreezeCharge(
+  creep: CreepEntity,
+  input: ApplyEffectInput,
+  freezeAtStacks: number,
+): CreepEntity {
+  const chill = getActiveEffects(creep).find((effect) => isSameEffectInstance(effect, input));
+
+  if (!chill) {
+    return creep;
+  }
+
+  const charge = (chill.freezeCharge ?? 0) + 1;
+
+  if (charge < freezeAtStacks) {
+    return replaceEffect(creep, chill, { ...chill, freezeCharge: charge });
+  }
+
+  const reset = replaceEffect(creep, chill, { ...chill, freezeCharge: 0 });
+  return applyEffectToCreep(reset, {
+    effectId: EffectId.STUN,
+    ...(input.freezeMs === undefined ? {} : { durationMs: input.freezeMs }),
+  });
+}
+
+function applyEffectInstance(creep: CreepEntity, input: ApplyEffectInput): CreepEntity {
   const definition = resolveEffectDefinition(input.effectId);
   const effects = getActiveEffects(creep);
-  const existing = effects.find((effect) => effect.id === input.effectId);
+  const existing = effects.find((effect) => isSameEffectInstance(effect, input));
 
   if (!existing) {
     return {
@@ -150,14 +193,22 @@ export function applyEffectToCreep(creep: CreepEntity, input: ApplyEffectInput):
 
   const merged = mergeEffect(existing, definition, input);
 
-  if (!merged) {
-    return creep;
+  return merged ? replaceEffect(creep, existing, merged) : creep;
+}
+
+/**
+ * Returns the creep carrying the effect. The input creep is never mutated: a
+ * changed effect list is always a fresh array, so render state can keep the
+ * previous entity around for comparison.
+ */
+export function applyEffectToCreep(creep: CreepEntity, input: ApplyEffectInput): CreepEntity {
+  const applied = applyEffectInstance(creep, input);
+
+  if (input.freezeAtStacks === undefined || input.effectId !== EffectId.CHILL) {
+    return applied;
   }
 
-  return {
-    ...creep,
-    activeEffects: effects.map((effect) => (effect.id === input.effectId ? merged : effect)),
-  };
+  return applyFreezeCharge(applied, input, input.freezeAtStacks);
 }
 
 export function removeEffectFromCreep(creep: CreepEntity, effectId: EffectId): CreepEntity {
@@ -171,126 +222,4 @@ export function removeEffectFromCreep(creep: CreepEntity, effectId: EffectId): C
     ...creep,
     activeEffects: effects.filter((effect) => effect.id !== effectId),
   };
-}
-
-function tickSingleEffect(
-  effect: ActiveEffect,
-  definition: EffectDefinition,
-  deltaMs: number,
-): { effect: ActiveEffect; damage: number; expired: boolean } {
-  const aliveMs = Math.min(deltaMs, effect.remainingMs);
-  let damage = 0;
-  let nextTickInMs = effect.nextTickInMs;
-
-  if (definition.tickIntervalMs > 0) {
-    let remainingWindowMs = aliveMs;
-
-    while (remainingWindowMs >= nextTickInMs) {
-      remainingWindowMs -= nextTickInMs;
-      damage += effect.magnitude * effect.stacks;
-      nextTickInMs = definition.tickIntervalMs;
-    }
-
-    nextTickInMs -= remainingWindowMs;
-  }
-
-  const remainingMs = effect.remainingMs - deltaMs;
-
-  return {
-    effect: { ...effect, remainingMs, nextTickInMs },
-    damage,
-    expired: remainingMs <= 0,
-  };
-}
-
-/**
- * Advances every effect on the creep by `deltaMs`. Damage over time is
- * reported, never applied: the caller routes it through the normal damage path
- * so kill rewards and feedback stay in one place.
- */
-export function tickCreepEffects(creep: CreepEntity, deltaMs: number): CreepEffectTickResult {
-  const effects = getActiveEffects(creep);
-
-  if (effects.length === 0 || deltaMs <= 0) {
-    return { creep, damageByType: NO_EFFECT_DAMAGE, expired: NO_EXPIRED };
-  }
-
-  const surviving: ActiveEffect[] = [];
-  let expired: EffectId[] | undefined;
-  let physicalDamage = 0;
-  let magicalDamage = 0;
-  let percentDamage = 0;
-
-  for (const effect of effects) {
-    const result = tickSingleEffect(effect, resolveEffectDefinition(effect.id), deltaMs);
-
-    if (result.damage > 0) {
-      const damageType = resolveActiveEffectDamageType(effect);
-
-      if (damageType === DamageType.PHYSICAL) {
-        physicalDamage += result.damage;
-      } else if (damageType === DamageType.PERCENT) {
-        percentDamage += result.damage;
-      } else {
-        magicalDamage += result.damage;
-      }
-    }
-
-    if (result.expired) {
-      expired ??= [];
-      expired.push(effect.id);
-      continue;
-    }
-
-    surviving.push(result.effect);
-  }
-
-  const hasDamage = physicalDamage > 0 || magicalDamage > 0 || percentDamage > 0;
-
-  return {
-    creep: { ...creep, activeEffects: surviving },
-    damageByType: hasDamage
-      ? {
-          [DamageType.PHYSICAL]: physicalDamage,
-          [DamageType.MAGICAL]: magicalDamage,
-          [DamageType.PERCENT]: percentDamage,
-        }
-      : NO_EFFECT_DAMAGE,
-    expired: expired ?? NO_EXPIRED,
-  };
-}
-
-/**
- * Speed scale from movement effects. Slows do not add up - the strongest one
- * wins - and no slow can take a creep below the balance floor, but a stun
- * stops it outright.
- */
-export function getEffectiveSpeedMultiplier(creep: CreepEntity): number {
-  const effects = getActiveEffects(creep);
-
-  if (effects.length === 0) {
-    return 1;
-  }
-
-  let strongestSlow = 0;
-
-  for (const effect of effects) {
-    if (resolveEffectDefinition(effect.id).kind !== EffectKind.MOVEMENT) {
-      continue;
-    }
-
-    const slow = effect.magnitude * effect.stacks;
-
-    if (slow >= 1) {
-      return 0;
-    }
-
-    strongestSlow = Math.max(strongestSlow, slow);
-  }
-
-  if (strongestSlow === 0) {
-    return 1;
-  }
-
-  return Math.max(EFFECT_BALANCE.minimumSpeedMultiplier, 1 - strongestSlow);
 }

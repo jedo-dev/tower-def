@@ -26,6 +26,7 @@ export {
   calculateMitigatedDamage,
   getArmorDamageMultiplier,
   getEffectiveArmor,
+  getVulnerabilityMultiplier,
   resolveIncomingDamage,
   type CreepArmorKind,
 } from './model/damage';

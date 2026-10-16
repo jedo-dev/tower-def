@@ -1,5 +1,6 @@
 import {
   ArmorKind,
+  DamageScope,
   EFFECT_IDS,
   EffectId,
   EffectKind,
@@ -18,7 +19,8 @@ export type EffectDefinition = {
    * Meaning depends on the kind:
    * - movement: fraction of speed removed (0.35 means 35% slower), 1 stops the creep
    * - damage-over-time: damage dealt per tick, per stack
-   * - defense: armor points removed, per stack
+   * - defense: armor points removed, per stack (armor break), or the share
+   *   of incoming damage added, per stack (vulnerability, 0.2 = +20%)
    */
   magnitude: number;
   durationMs: number;
@@ -31,6 +33,11 @@ export type EffectDefinition = {
    * see `resolveEffectArmorKind`.
    */
   armorKind?: ArmorKind;
+  /**
+   * Vulnerability only: which hits it amplifies. Absent means every type; see
+   * `resolveEffectDamageScope`. A tower's on-hit entry may narrow it.
+   */
+  damageScope?: DamageScope;
 };
 
 export const EFFECT_DEFINITIONS: Record<EffectId, EffectDefinition> = {
@@ -59,8 +66,9 @@ export const EFFECT_DEFINITIONS: Record<EffectId, EffectDefinition> = {
     magnitude: 14,
     durationMs: 2_000,
     tickIntervalMs: 500,
-    maxStacks: 1,
-    stackingRule: EffectStackingRule.REFRESH,
+    // Stacks like poison (tower-def-bge.2); a talent grade raises the cap.
+    maxStacks: 3,
+    stackingRule: EffectStackingRule.STACK,
   },
   [EffectId.STUN]: {
     id: EffectId.STUN,
@@ -81,6 +89,16 @@ export const EFFECT_DEFINITIONS: Record<EffectId, EffectDefinition> = {
     stackingRule: EffectStackingRule.STACK,
     armorKind: ArmorKind.BOTH,
   },
+  [EffectId.VULNERABILITY]: {
+    id: EffectId.VULNERABILITY,
+    kind: EffectKind.DEFENSE,
+    magnitude: 0.15,
+    durationMs: 3_000,
+    tickIntervalMs: 0,
+    maxStacks: 1,
+    stackingRule: EffectStackingRule.REFRESH,
+    damageScope: DamageScope.ALL,
+  },
 };
 
 export const EFFECT_BALANCE = {
@@ -96,6 +114,11 @@ export const EFFECT_BALANCE = {
 /** Armor a defense effect lowers; `both` unless the definition narrows it. */
 export function resolveEffectArmorKind(effectId: EffectId): ArmorKind {
   return EFFECT_DEFINITIONS[effectId].armorKind ?? ArmorKind.BOTH;
+}
+
+/** Hits a vulnerability amplifies; every type unless the definition narrows it. */
+export function resolveEffectDamageScope(effectId: EffectId): DamageScope {
+  return EFFECT_DEFINITIONS[effectId].damageScope ?? DamageScope.ALL;
 }
 
 export function resolveEffectDefinition(effectId: EffectId): EffectDefinition {

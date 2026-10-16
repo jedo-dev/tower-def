@@ -167,6 +167,37 @@ export const ArmorKind = {
 
 export type ArmorKind = (typeof ArmorKind)[keyof typeof ArmorKind];
 
+export const ARMOR_KINDS: readonly ArmorKind[] = [
+  ArmorKind.PHYSICAL,
+  ArmorKind.MAGICAL,
+  ArmorKind.BOTH,
+] as const;
+
+/**
+ * Which hits a damage-changing effect (vulnerability) or bonus (an aura's
+ * damage bonus) touches: one damage type, or every type with `all`.
+ */
+export const DamageScope = {
+  PHYSICAL: 'physical',
+  MAGICAL: 'magical',
+  PERCENT: 'percent',
+  ALL: 'all',
+} as const;
+
+export type DamageScope = (typeof DamageScope)[keyof typeof DamageScope];
+
+export const DAMAGE_SCOPES: readonly DamageScope[] = [
+  DamageScope.PHYSICAL,
+  DamageScope.MAGICAL,
+  DamageScope.PERCENT,
+  DamageScope.ALL,
+] as const;
+
+/** Whether a `scope` covers hits of `damageType`. */
+export function damageScopeCovers(scope: DamageScope, damageType: DamageType): boolean {
+  return scope === DamageScope.ALL || scope === damageType;
+}
+
 /** Timed effects a tower can put on a creep. */
 export const EffectId = {
   CHILL: 'chill',
@@ -174,6 +205,7 @@ export const EffectId = {
   BURN: 'burn',
   STUN: 'stun',
   ARMOR_BREAK: 'armor_break',
+  VULNERABILITY: 'vulnerability',
 } as const;
 
 export type EffectId = (typeof EffectId)[keyof typeof EffectId];
@@ -184,6 +216,7 @@ export const EFFECT_IDS: readonly EffectId[] = [
   EffectId.BURN,
   EffectId.STUN,
   EffectId.ARMOR_BREAK,
+  EffectId.VULNERABILITY,
 ] as const;
 
 /** What part of the creep an effect acts on. */

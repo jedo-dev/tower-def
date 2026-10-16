@@ -1,7 +1,15 @@
 import { ARMOR_BOUNDS, DAMAGE_MITIGATION, PERCENT_DAMAGE } from '../../../shared/constants/damage';
-import { resolveEffectArmorKind } from '../../../shared/constants/effects';
-import { ArmorKind, DamageType, EffectId } from '../../../shared/types/content-ids';
-import { getActiveEffects } from './effects';
+import {
+  resolveEffectArmorKind,
+  resolveEffectDamageScope,
+} from '../../../shared/constants/effects';
+import {
+  ArmorKind,
+  DamageType,
+  EffectId,
+  damageScopeCovers,
+} from '../../../shared/types/content-ids';
+import { getActiveEffects } from './effectTicks';
 import { isCreepAlive, setCreepLifeState } from './lifeState';
 import type { CreepEntity } from './types';
 
@@ -40,12 +48,33 @@ export function getEffectiveArmor(creep: CreepEntity, kind: CreepArmorKind): num
       continue;
     }
 
-    if (armorKindCovers(resolveEffectArmorKind(effect.id), kind)) {
+    if (armorKindCovers(effect.armorKind ?? resolveEffectArmorKind(effect.id), kind)) {
       armorBreak += effect.magnitude * effect.stacks;
     }
   }
 
   return clampArmor(readAuthoredArmor(creep, kind) - armorBreak);
+}
+
+/**
+ * Scale on incoming damage of `damageType` from every vulnerability running
+ * on the creep whose scope covers that type: `1 + sum(magnitude * stacks)`.
+ * Applied after armor, to hits and damage-over-time ticks alike.
+ */
+export function getVulnerabilityMultiplier(creep: CreepEntity, damageType: DamageType): number {
+  let bonus = 0;
+
+  for (const effect of getActiveEffects(creep)) {
+    if (effect.id !== EffectId.VULNERABILITY) {
+      continue;
+    }
+
+    if (damageScopeCovers(effect.damageScope ?? resolveEffectDamageScope(effect.id), damageType)) {
+      bonus += effect.magnitude * effect.stacks;
+    }
+  }
+
+  return 1 + bonus;
 }
 
 /**
@@ -113,7 +142,7 @@ export function calculateDamageAgainst(
  * Damage a hit of `damageType` deals to the creep before hit points are
  * touched: physical and magical hits are mitigated by the matching armor,
  * percent hits take `damage / PERCENT_DAMAGE.healthShareDivisor` of maximum
- * health and ignore armor.
+ * health and ignore armor. Vulnerabilities then scale the result.
  */
 export function resolveIncomingDamage(
   creep: CreepEntity,
@@ -124,13 +153,17 @@ export function resolveIncomingDamage(
     return 0;
   }
 
+  const vulnerability = getVulnerabilityMultiplier(creep, damageType);
+
   if (damageType === DamageType.PERCENT) {
-    return calculatePercentDamage(incomingDamage, creep.maxHp ?? creep.hp);
+    return calculatePercentDamage(incomingDamage, creep.maxHp ?? creep.hp) * vulnerability;
   }
 
   const armorKind = damageType === DamageType.PHYSICAL ? ArmorKind.PHYSICAL : ArmorKind.MAGICAL;
 
-  return calculateMitigatedDamage(incomingDamage, getEffectiveArmor(creep, armorKind));
+  return (
+    calculateMitigatedDamage(incomingDamage, getEffectiveArmor(creep, armorKind)) * vulnerability
+  );
 }
 
 export function applyDamageToCreep(

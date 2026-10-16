@@ -32,6 +32,7 @@ const EFFECT_HINTS: Record<EffectId, string> = {
   [EffectId.BURN]: 'Burns',
   [EffectId.STUN]: 'Stuns',
   [EffectId.ARMOR_BREAK]: 'Breaks armor',
+  [EffectId.VULNERABILITY]: 'Exposes',
 };
 
 function resolveEffectHint(towerType: TowerTypeId): string {

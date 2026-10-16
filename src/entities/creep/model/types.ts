@@ -2,7 +2,9 @@ import type { GridPosition } from '../../../shared/types/pathfinding';
 import {
   UnitMoveType,
   UnitSizeClass,
+  type ArmorKind,
   type CreepTypeId,
+  type DamageScope,
   type DamageType,
   type EffectId,
 } from '../../../shared/types/content-ids';
@@ -54,6 +56,22 @@ export type ActiveEffect = {
    * applied it. Absent means `DAMAGE_OVER_TIME_DAMAGE_TYPE`.
    */
   damageType?: DamageType;
+  /**
+   * Armor break only: the armor this instance lowers, set by the tower that
+   * applied it. Absent means the definition's (`both`). Breaks of different
+   * kinds run side by side as separate instances.
+   */
+  armorKind?: ArmorKind;
+  /**
+   * Vulnerability only: the hits this instance amplifies. Absent means the
+   * definition's (`all`). Different scopes run side by side.
+   */
+  damageScope?: DamageScope;
+  /**
+   * Chill only: freezing hits landed since the last freeze, counted when a
+   * tower's chill declares `freezeAtStacks`. Absent means none.
+   */
+  freezeCharge?: number;
 };
 
 /** The duel side that bought and sent a creep; baseline wave creeps have none. */

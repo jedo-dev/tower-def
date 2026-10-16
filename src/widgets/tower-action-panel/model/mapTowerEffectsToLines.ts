@@ -48,6 +48,12 @@ function describeOnHitEffect(effect: TowerOnHitEffect): TowerEffectLine {
         label: 'ARMOR',
         value: `-${magnitude} / ${formatSeconds(durationMs)}`,
       };
+    case EffectId.VULNERABILITY:
+      return {
+        key: effect.effectId,
+        label: 'EXPOSE',
+        value: `+${formatPercent(magnitude)} / ${formatSeconds(durationMs)}`,
+      };
     default: {
       const perSecond =
         definition.tickIntervalMs > 0

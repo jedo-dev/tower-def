@@ -81,14 +81,14 @@ describe('applyEffectToCreep', () => {
     expect(effect?.remainingMs).toBe(POISON.durationMs - 100);
   });
 
-  it('refreshes a burn instead of stacking it', () => {
+  it('stacks a burn like poison, refreshing its duration', () => {
     let creep = applyEffectToCreep(createCreep(), { effectId: EffectId.BURN });
     creep = tickCreepEffects(creep, 800).creep;
     creep = applyEffectToCreep(creep, { effectId: EffectId.BURN });
 
     const effect = findActiveEffect(creep, EffectId.BURN);
 
-    expect(effect?.stacks).toBe(1);
+    expect(effect?.stacks).toBe(2);
     expect(effect?.remainingMs).toBe(BURN.durationMs);
   });
 
