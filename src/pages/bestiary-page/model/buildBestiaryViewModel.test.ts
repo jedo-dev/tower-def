@@ -164,7 +164,7 @@ describe('tower cards', () => {
     expect(card.levels[0].upgradeCost).toBeNull();
     expect(card.levels[1].upgradeCost).toBe(40);
     // The undead archer authors its own curve (tower-def-xwc.5): the card shows it.
-    expect(card.levels[1].summary).toBe('29 dmg, 6.4 range, 0.8s');
+    expect(card.levels[1].summary).toBe('30 dmg, 6.2 range, 0.8s');
   });
 });
 

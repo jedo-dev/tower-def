@@ -9,13 +9,14 @@ import { Difficulty } from '../../difficulty/model/types';
 import { createInitialDuelMatchState, payIncome, type DuelMatchState } from '../../duel-match';
 import { applyComputerBuildStrategy } from './applyComputerBuildStrategy';
 import { buildDecisionContext } from './buildDecisionContext';
-import { getTowerCostForType } from './buildSpendBudget';
+import { getRaceTowerConfig, getTowerCostForType } from './buildSpendBudget';
 import { createPathProbe } from './createPathProbe';
 import { DEFEND_REROUTE_PROBE_LIMIT, findBestScoredBuild } from './findBestScoredBuild';
 import { createMazeEvaluator } from './maze-evaluation';
 import { createMazePlanPriority, type MazePlan, type MazePlanPriority } from './maze-planning';
 import type { BuildDecisionOutput } from './planBuildDecision';
-import { DEFENSE_PLACEMENT_WEIGHTS, scoreAllPlacements } from './scoreTowerPlacement';
+import { DEFENSE_PLACEMENT_WEIGHTS, scoreTowerPlacement } from './scoreTowerPlacement';
+import { resolveTowerPlacementStats } from '../../tower/model/placementStats';
 import { resolveDamageTypeFactor } from './damageTypeFactor';
 import { resolveAirThreatShare } from './threat-budget/resolveAirThreatShare';
 import type { BuildAction, DecisionContext } from './types';
@@ -35,6 +36,12 @@ const SEEDS: readonly (number | null)[] = [null, 1, 2, 3, 4, 5];
 const ROUNDS = 12;
 /** Route cells a defender's maze must have grown by over `ROUNDS` defending rounds. */
 const MIN_DEFENDING_ROUTE_GROWTH = 20;
+/**
+ * Maze-plan walls a defender must still place over `ROUNDS` defending rounds;
+ * a frozen maze places none. Seed 1 places 11 since the shorter undead archer
+ * (tower-def-6nf.4) sends more of its gold to coverage towers off the plan.
+ */
+const MIN_DEFENDING_PLAN_BUILDS = 10;
 
 type PlayedRound = {
   state: DuelMatchState;
@@ -90,18 +97,27 @@ function findBestBuildByFullProbe(
     if (cost === null || cost <= 0 || cost > context.gold) {
       continue;
     }
-    const top = scoreAllPlacements({
-      grid,
-      towerType,
-      positions: context.availableBuildPositions,
-      existingTowers: towers,
-      path: pathProbe.basePath,
-      pathProbe,
-      mazePlan,
-      weights: DEFENSE_PLACEMENT_WEIGHTS,
-      airPath,
-      airThreatShare,
-    }).find((score) => score.isValid);
+    // Scored with the race's own stats and scope, as the production search does.
+    const authored = getRaceTowerConfig(towerType, context.raceId);
+    const top = context.availableBuildPositions
+      .map((position) =>
+        scoreTowerPlacement({
+          grid,
+          position,
+          towerType,
+          existingTowers: towers,
+          path: pathProbe.basePath,
+          pathProbe,
+          mazePlan,
+          weights: DEFENSE_PLACEMENT_WEIGHTS,
+          airPath,
+          airThreatShare,
+          allowedTargets: authored?.allowedTargets,
+          combatStats: authored ? resolveTowerPlacementStats(towerType, authored) : undefined,
+        }),
+      )
+      .sort((a, b) => b.totalScore - a.totalScore)
+      .find((score) => score.isValid);
     // The production search weighs each type by how its damage meets the wave's armor.
     const valuePerGold =
       ((top?.totalScore ?? 0) * resolveDamageTypeFactor(context, towerType, airThreatShare)) / cost;
@@ -173,7 +189,7 @@ describe('entities/computer-opponent/planBuildDecision defending', () => {
       const endCost = createPathProbe(last).baseCost;
 
       // A leak no longer freezes the maze for the whole leak window.
-      expect(planBuilds.length, `seed ${seed}`).toBeGreaterThan(ROUNDS);
+      expect(planBuilds.length, `seed ${seed}`).toBeGreaterThanOrEqual(MIN_DEFENDING_PLAN_BUILDS);
       expect(endCost - startCost, `seed ${seed}`).toBeGreaterThan(MIN_DEFENDING_ROUTE_GROWTH);
     }
   });

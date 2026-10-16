@@ -10,8 +10,13 @@
       "allowedTargets": "both",
       "costGold": 50,
       "damage": 20,
-      "range": 6,
+      "range": 6.2,
       "attackCooldownMs": 800,
+      "levels": [
+        { "level": 1, "upgradeCostGold": 0, "damage": 20, "range": 6.2, "attackCooldownMs": 800 },
+        { "level": 2, "upgradeCostGold": 40, "damage": 30, "range": 6.6, "attackCooldownMs": 750 },
+        { "level": 3, "upgradeCostGold": 80, "damage": 40, "range": 7, "attackCooldownMs": 700 }
+      ],
       "spriteKey": "tower.elf.moon_archer",
       "description": "Moonlit archers strike swiftly from sacred boughs.",
       "lore": "A platform grown, not built, in the crown of an elder tree. Its archers draw by moonlight and release in silence."
@@ -44,8 +49,34 @@
       "onHitEffects": [
         {
           "effectId": "chill",
-          "magnitude": 0.35,
+          "magnitude": 0.28,
           "durationMs": 2000
+        }
+      ],
+      "levels": [
+        {
+          "level": 1,
+          "upgradeCostGold": 0,
+          "damage": 19,
+          "range": 6,
+          "attackCooldownMs": 900,
+          "onHitEffects": [{ "effectId": "chill", "magnitude": 0.28, "durationMs": 2000 }]
+        },
+        {
+          "level": 2,
+          "upgradeCostGold": 45,
+          "damage": 25,
+          "range": 6.4,
+          "attackCooldownMs": 850,
+          "onHitEffects": [{ "effectId": "chill", "magnitude": 0.38, "durationMs": 2000 }]
+        },
+        {
+          "level": 3,
+          "upgradeCostGold": 90,
+          "damage": 31,
+          "range": 6.8,
+          "attackCooldownMs": 800,
+          "onHitEffects": [{ "effectId": "chill", "magnitude": 0.48, "durationMs": 2000 }]
         }
       ],
       "spriteKey": "tower.elf.moonwell",
@@ -115,7 +146,7 @@
               "effectId": "poison",
               "magnitude": 8,
               "durationMs": 4000,
-              "maxStacks": 5,
+              "maxStacks": 4,
               "damageType": "percent"
             }
           ]

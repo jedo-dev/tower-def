@@ -207,7 +207,7 @@
       "attackKind": "chain",
       "damageType": "physical",
       "allowedTargets": "both",
-      "damage": 24,
+      "damage": 22,
       "range": 6,
       "attackCooldownMs": 1000,
       "chain": {
@@ -219,21 +219,21 @@
         {
           "level": 1,
           "upgradeCostGold": 0,
-          "damage": 24,
+          "damage": 22,
           "range": 6,
           "attackCooldownMs": 1000
         },
         {
           "level": 2,
           "upgradeCostGold": 55,
-          "damage": 35,
+          "damage": 32,
           "range": 6.4,
           "attackCooldownMs": 950
         },
         {
           "level": 3,
           "upgradeCostGold": 105,
-          "damage": 48,
+          "damage": 44,
           "range": 6.8,
           "attackCooldownMs": 900
         }

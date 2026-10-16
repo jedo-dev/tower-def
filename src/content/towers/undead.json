@@ -9,13 +9,13 @@
 
       "allowedTargets": "both",
       "costGold": 50,
-      "damage": 19,
-      "range": 6,
+      "damage": 20,
+      "range": 5.7,
       "attackCooldownMs": 800,
       "levels": [
-        { "level": 1, "upgradeCostGold": 0, "damage": 19, "range": 6, "attackCooldownMs": 800 },
-        { "level": 2, "upgradeCostGold": 40, "damage": 29, "range": 6.4, "attackCooldownMs": 750 },
-        { "level": 3, "upgradeCostGold": 80, "damage": 38, "range": 6.8, "attackCooldownMs": 700 }
+        { "level": 1, "upgradeCostGold": 0, "damage": 20, "range": 5.7, "attackCooldownMs": 800 },
+        { "level": 2, "upgradeCostGold": 40, "damage": 30, "range": 6.2, "attackCooldownMs": 750 },
+        { "level": 3, "upgradeCostGold": 80, "damage": 40, "range": 6.6, "attackCooldownMs": 700 }
       ],
       "spriteKey": "tower.undead.bone_archer",
       "description": "Necromantic archer nest built from cursed remains.",
@@ -43,7 +43,7 @@
 
       "allowedTargets": "both",
       "costGold": 70,
-      "damage": 19,
+      "damage": 20,
       "range": 6,
       "attackCooldownMs": 900,
       "onHitEffects": [
@@ -51,6 +51,32 @@
           "effectId": "chill",
           "magnitude": 0.35,
           "durationMs": 2000
+        }
+      ],
+      "levels": [
+        {
+          "level": 1,
+          "upgradeCostGold": 0,
+          "damage": 20,
+          "range": 6,
+          "attackCooldownMs": 900,
+          "onHitEffects": [{ "effectId": "chill", "magnitude": 0.35, "durationMs": 2000 }]
+        },
+        {
+          "level": 2,
+          "upgradeCostGold": 45,
+          "damage": 25,
+          "range": 6.4,
+          "attackCooldownMs": 850,
+          "onHitEffects": [{ "effectId": "chill", "magnitude": 0.45, "durationMs": 2000 }]
+        },
+        {
+          "level": 3,
+          "upgradeCostGold": 90,
+          "damage": 31,
+          "range": 6.8,
+          "attackCooldownMs": 800,
+          "onHitEffects": [{ "effectId": "chill", "magnitude": 0.55, "durationMs": 2000 }]
         }
       ],
       "spriteKey": "tower.undead.frost_wyrm_nest",

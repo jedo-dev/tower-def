@@ -43,7 +43,7 @@
       "damageType": "magical",
       "allowedTargets": "both",
       "costGold": 85,
-      "damage": 24,
+      "damage": 22,
       "range": 6,
       "attackCooldownMs": 1000,
       "spriteKey": "tower.orc.lightning_totem",
