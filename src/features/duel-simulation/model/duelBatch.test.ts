@@ -14,6 +14,9 @@ import {
 import { formatDuelBatch } from './formatDuelBatch';
 import { parseDuelBatchArgs } from './parseDuelBatchArgs';
 
+/** Full batch runs several duels; under full-suite load it can exceed the 5s default. */
+const BATCH_RUN_TIMEOUT_MS = 30_000;
+
 function summary(overrides: Partial<DuelMatchSummary>): DuelMatchSummary {
   return {
     seed: 1,
@@ -83,28 +86,32 @@ describe('features/duel-simulation/duelBatch', () => {
     expect(stats.lateUnspent).toEqual({ averageUnspentGold: 400 / 6, averageIncome: 1600 / 6 });
   });
 
-  it('plays every matchup on every map and seed and prints one row each plus the matches', () => {
-    const config: DuelBatchConfig = {
-      ...DEFAULT_DUEL_BATCH_CONFIG,
-      seeds: createSeedRange(1, 2),
-      maps: ['classic', 'seeded'],
-      maxRounds: 6,
-      matchups: createEqualMatchups([Difficulty.NORMAL], [[RaceId.UNDEAD, RaceId.ORC]]),
-    };
-    const result = runDuelBatch(config);
-    const report = formatDuelBatch(result);
+  it(
+    'plays every matchup on every map and seed and prints one row each plus the matches',
+    () => {
+      const config: DuelBatchConfig = {
+        ...DEFAULT_DUEL_BATCH_CONFIG,
+        seeds: createSeedRange(1, 2),
+        maps: ['classic', 'seeded'],
+        maxRounds: 6,
+        matchups: createEqualMatchups([Difficulty.NORMAL], [[RaceId.UNDEAD, RaceId.ORC]]),
+      };
+      const result = runDuelBatch(config);
+      const report = formatDuelBatch(result);
 
-    expect(result.matchups.map((matchup) => matchup.map)).toEqual(['classic', 'seeded']);
-    expect(result.matchups[0].summaries.map((match) => match.seed)).toEqual([1, 2]);
-    expect(result.overall.matches).toBe(4);
-    expect(report).toContain('maps classic,seeded');
-    expect(report).toContain('classic UNDEAD NORMAL vs ORC NORMAL | 2');
-    expect(report).toMatch(/seeded UNDEAD NORMAL vs ORC NORMAL +\| 2/);
-    expect(report).toContain('overall');
-    expect(report).toContain('unspent/income r16+');
-    expect(report).toMatch(/classic UNDEAD NORMAL vs ORC NORMAL: 1:\d+[AB=] 2:\d+[AB=]/);
-    expect(formatDuelBatch(runDuelBatch(config))).toBe(report);
-  });
+      expect(result.matchups.map((matchup) => matchup.map)).toEqual(['classic', 'seeded']);
+      expect(result.matchups[0].summaries.map((match) => match.seed)).toEqual([1, 2]);
+      expect(result.overall.matches).toBe(4);
+      expect(report).toContain('maps classic,seeded');
+      expect(report).toContain('classic UNDEAD NORMAL vs ORC NORMAL | 2');
+      expect(report).toMatch(/seeded UNDEAD NORMAL vs ORC NORMAL +\| 2/);
+      expect(report).toContain('overall');
+      expect(report).toContain('unspent/income r16+');
+      expect(report).toMatch(/classic UNDEAD NORMAL vs ORC NORMAL: 1:\d+[AB=] 2:\d+[AB=]/);
+      expect(formatDuelBatch(runDuelBatch(config))).toBe(report);
+    },
+    BATCH_RUN_TIMEOUT_MS,
+  );
 });
 
 describe('features/duel-simulation/parseDuelBatchArgs', () => {
