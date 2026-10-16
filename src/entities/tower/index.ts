@@ -54,12 +54,29 @@ export {
   getTowerStatsForTowerLevel,
   getTowerStatsForCurveLevel,
   resolveTowerUpgradeConfig,
+  toTowerUpgradeCurveRef,
   getUpgradeCost,
   isMaxLevel,
   createTowerLevel,
   INITIAL_TOWER_LEVEL,
 } from './model/upgrade';
-export type { UpgradeCheckResult } from './model/upgrade';
+export type { TowerUpgradeCurveRef, UpgradeCheckResult } from './model/upgrade';
+export {
+  canChooseBranch,
+  chooseBranch,
+  getChosenBranchId,
+  getTowerTalentBranches,
+  NO_TOWER_BRANCH_CHOICES,
+  resolveChosenBranch,
+} from './model/talents';
+export type {
+  BranchChoiceCheck,
+  BranchChoiceRejectionReason,
+  TowerBranchChoices,
+  TowerTalentBranchId,
+  TowerTalentRef,
+} from './model/talents';
+export type { TowerTalentBranchDefinition } from './model/content/towerTalentContent';
 export { resolveTowerPlacementStats } from './model/placementStats';
 export { resolveBuildableTowerDamageType, resolveTowerDamageType } from './model/damageType';
 export type {

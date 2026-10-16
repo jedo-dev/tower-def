@@ -68,6 +68,18 @@ export function TowerCard({ tower, faction }: TowerCardProps) {
           </li>
         ))}
       </ol>
+      {tower.talentBranches.length > 0 && (
+        <div className={styles.branches}>
+          <span className={styles.branchesLabel}>Grade 3 talents, choose one</span>
+          <ul className={styles.branchList} aria-label="Talent branches">
+            {tower.talentBranches.map((branch) => (
+              <li key={branch.id} className={styles.branch}>
+                {branch.name}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
       <p className={styles.cardDescription}>{tower.description}</p>
       {tower.lore && <p className={styles.cardLore}>{tower.lore}</p>}
     </article>

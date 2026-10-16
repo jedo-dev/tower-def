@@ -3,6 +3,10 @@ import { loadTowerArchetypeContent, parseTowerContentFile } from './content/load
 import { buildableTowers } from './config/buildableTowers';
 import { resolveBuildableTowerDamageType, resolveTowerDamageType } from './damageType';
 import { TOWER_ARCHETYPE_DEFINITIONS, TOWER_COMBAT_STATS_BY_TYPE, type TowerEntity } from './types';
+import {
+  createBaseLevelsFixture,
+  createTalentBranchesFixture,
+} from './content/fixtures/talentBranchFixture';
 import { DamageType, TOWER_TYPE_IDS, TowerTypeId } from '../../../shared/types/content-ids';
 
 const FILE = 'content/towers/undead.json';
@@ -10,7 +14,7 @@ const ARCHETYPE_FILE = 'content/towers/archetypes.json';
 
 function createTowerFile(towerOverrides: Record<string, unknown> = {}) {
   return {
-    schemaVersion: 3,
+    schemaVersion: 4,
     race: 'UNDEAD',
     towers: [
       {
@@ -23,6 +27,7 @@ function createTowerFile(towerOverrides: Record<string, unknown> = {}) {
         attackCooldownMs: 800,
         spriteKey: 'tower.undead.bone_archer',
         description: 'Necromantic archer nest built from cursed remains.',
+        talentBranches: createTalentBranchesFixture('undead_bone_archer_tower'),
         ...towerOverrides,
       },
     ],
@@ -38,7 +43,7 @@ function createArchetypeFile(archetypeOverrides: Record<string, unknown> = {}) {
     damage: 20,
     range: 6,
     attackCooldownMs: 800,
-    levels: [{ level: 1, upgradeCostGold: 0, damage: 20, range: 6, attackCooldownMs: 800 }],
+    levels: createBaseLevelsFixture(),
     description: 'Single target.',
     ...archetypeOverrides,
   };
@@ -49,7 +54,7 @@ function createArchetypeFile(archetypeOverrides: Record<string, unknown> = {}) {
     }
   }
 
-  return { schemaVersion: 3, archetypes: [archetype] };
+  return { schemaVersion: 4, archetypes: [archetype] };
 }
 
 function createTowerEntity(overrides: Partial<TowerEntity> = {}): TowerEntity {

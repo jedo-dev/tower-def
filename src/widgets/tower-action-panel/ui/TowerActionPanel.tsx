@@ -13,6 +13,7 @@ import {
   getTowerStatsForCurveLevel,
   getUpgradeCost,
   isMaxLevel,
+  toTowerUpgradeCurveRef,
 } from '../../../entities/tower';
 import { mapTowerEffectsToLines } from '../model/mapTowerEffectsToLines';
 import { mapTowerNextLevelPreview } from '../model/mapTowerNextLevelPreview';
@@ -44,10 +45,14 @@ function TowerActionPanelComponent() {
 
   const { id, type, name, buildableTowerId, level, cost, combatStats } = selectedTower;
   const towerName = name ?? formatTowerType(type);
-  const upgradeCost = getUpgradeCost(type, level);
-  const maxed = isMaxLevel(type, level);
-  const upgradeCheck = canAffordUpgrade(type, level, snapshot.gold);
-  const sellValue = getSellValue(type, level, cost);
+  // Cost, cap, sell value and preview all follow the tower's resolved curve:
+  // its authored levels 1-3, then the branch its type took (grades 4-7).
+  const curve = toTowerUpgradeCurveRef(type, buildableTowerId);
+  const choices = snapshot.towerBranchChoices;
+  const upgradeCost = getUpgradeCost(curve, level, choices);
+  const maxed = isMaxLevel(curve, level, choices);
+  const upgradeCheck = canAffordUpgrade(curve, level, snapshot.gold, choices);
+  const sellValue = getSellValue(curve, level, cost, choices);
 
   const canUpgrade = upgradeCheck.allowed;
   const effectLines = mapTowerEffectsToLines(type, combatStats);
@@ -55,10 +60,10 @@ function TowerActionPanelComponent() {
   // Deltas compare two levels of the curve the tower upgrades along (its
   // authored one, else the archetype's), not the live stats an aura buffs.
   const currentLevelStats =
-    getTowerStatsForCurveLevel(type, buildableTowerId, level) ?? combatStats;
+    getTowerStatsForCurveLevel(type, buildableTowerId, level, choices) ?? combatStats;
   const nextLevelStats = maxed
     ? null
-    : getTowerStatsForCurveLevel(type, buildableTowerId, level + 1);
+    : getTowerStatsForCurveLevel(type, buildableTowerId, level + 1, choices);
   const nextLevelPreview = nextLevelStats
     ? mapTowerNextLevelPreview(type, currentLevelStats, nextLevelStats, level + 1)
     : null;

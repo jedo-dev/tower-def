@@ -273,7 +273,7 @@ in `docs/07-duel-mode-expansion-plan.md` (Duel Balance).
 
 Tower stats live in `src/content/towers/<race>.json` (the buildable roster of
 each race) and `src/content/towers/archetypes.json` (base stats and upgrade
-curves). Both files carry `schemaVersion` 3 (`TOWER_CONTENT_SCHEMA_VERSION` in
+curves). Both files carry `schemaVersion` 4 (`TOWER_CONTENT_SCHEMA_VERSION` in
 `src/entities/tower/model/content/towerContent.types.ts`).
 
 ## Tower fields
@@ -456,17 +456,94 @@ next step up there but not in the game.
 | --- | --- |
 | 1 | Retired. Distances in coarse 32px cells (10x15 grid). |
 | 2 | Retired. Distances in fine 16px cells: every version 1 distance doubled. |
-| 3 | Current. Every archetype declares a `damageType`; a race tower may override it. |
+| 3 | Retired. Every archetype declares a `damageType`; a race tower may override it. |
+| 4 | Current. Every race tower declares two `talentBranches` (grades 4-7); see "Tower talents". |
 
 A version 1 file fails on load with the file and its first entity id, e.g.
 `content/towers/human.json [human_guard_archer_tower]: schemaVersion 1 measures
 distances in coarse 32px cells; ...`. To migrate one, double every field in
-the cell column above, add a `damageType` to every archetype and set
-`schemaVersion` to 3. A version 2 file fails the same way
-(`schemaVersion 2 has no damage types; ...`): add the archetype `damageType`
-and set `schemaVersion` to 3. Schema bounds
+the cell column above, add a `damageType` to every archetype, add
+`talentBranches` to every race tower and set `schemaVersion` to 4. A version 2
+file fails the same way (`schemaVersion 2 has no damage types; ...`): add the
+archetype `damageType`, the race tower `talentBranches` and set
+`schemaVersion` to 4. A version 3 file fails with `schemaVersion 3 has no
+talent branches; ...`: add `talentBranches` to every race tower (the archetype
+file only changes its version) and set `schemaVersion` to 4. Schema bounds
 (`TOWER_STAT_BOUNDS`, `TOWER_AURA_BOUNDS`, `TOWER_CHAIN_BOUNDS`) are expressed
 in fine-grid cells too.
+
+## Tower talents
+
+Design source: `docs/11-tower-talents-ru.md` ("Общие правила"). A tower is
+built and upgraded through grades 1-3 as before. At grade 3 its **type** (the
+race tower: each race builds one tower per archetype) opens two branches.
+Choosing one costs gold, locks the other branch for that type for the rest of
+the match and unlocks grades 4-7 for every tower of the type, including towers
+built later. The pick is per side and per match: round settles keep it, a
+restart or a new setup starts with none.
+
+Every race tower entry declares exactly two branches:
+
+```json
+"talentBranches": [
+  {
+    "id": "undead_bone_archer_tower_volley",
+    "name": "Bone Volley",
+    "description": "Fires in bursts: modest hits, many of them.",
+    "grades": [
+      { "level": 4, "damage": 40, "range": 6.8, "attackCooldownMs": 600 },
+      { "level": 5, "damage": 42, "range": 6.8, "attackCooldownMs": 480 },
+      { "level": 6, "damage": 44, "range": 7, "attackCooldownMs": 400 },
+      { "level": 7, "damage": 46, "range": 7, "attackCooldownMs": 320 }
+    ]
+  },
+  { "id": "undead_bone_archer_tower_cursed", "...": "..." }
+]
+```
+
+| Field | Rule |
+| --- | --- |
+| `id` | Starts with the tower id and `_`; the two ids differ. Errors name `file [towerId/branchId]`. |
+| `name`, `description` | Non-empty; shown by the develop chooser and the bestiary. |
+| `grades` | Exactly levels 4, 5, 6, 7 in that order. |
+| grade `damage`, `range`, `attackCooldownMs` | Required, same bounds as a level. |
+| grade `splashRadius`, `onHitEffects`, `aura`, `chain` | Optional, same shapes as on a level or archetype. |
+| grade `abilities` | Optional typed abilities object, same fields as a level's `abilities` (see "Tower abilities" above); unknown keys fail on load. |
+
+A grade replaces the tower's stats like a level does: anything the grade does
+not declare (splash, effects, aura) is absent at that grade, so carry the
+grade 3 values forward explicitly. Combat still reads the chain shape of the
+archetype; per-grade `chain` and `abilities` take effect as the combat
+mechanics land.
+
+**Price ladder.** Grades never declare `upgradeCostGold` (the key is rejected):
+the loader fills it from `TowerTalentPricing` in
+`src/shared/constants/towerTalents.ts`, one ladder for every tower so a
+balance pass tunes one table:
+
+| Step | Branch | 4 | 5 | 6 | 7 |
+| --- | --- | --- | --- | --- | --- |
+| Gold | 120 | 150 | 200 | 260 | 340 |
+
+The branch price is paid once per type and is not part of a tower's sell
+value; bought grades are.
+
+**Base curves end at grade 3.** A `levels` curve (race tower or archetype)
+must list exactly levels 1-3; branches add the rest.
+
+**Rules** (`src/entities/tower/model/talents.ts`): `canChooseBranch` refuses
+with `unknown_branch`, `already_chosen` (the type already has a branch, either
+one), `not_grade_3` or `not_enough_gold`; `chooseBranch` records the pick in a
+`TowerBranchChoices` record (race tower id to branch id). The upgrade helpers
+(`resolveTowerUpgradeConfig`, `getUpgradeCost`, `isMaxLevel`,
+`canAffordUpgrade`, `getTowerStatsForTowerLevel`, `getSellValue`) take the
+choices and read one resolved curve: levels 1-3 from the tower's authored
+curve (or its archetype's), 4-7 from the chosen branch. The curve tops out at
+3 without a branch and at 7 with one.
+
+The shipped branches are placeholders (`<Tower> I` / `<Tower> II`: +8% damage
+and +0.2 range per grade over grade 3); authoring them from docs/11 is
+tower-def-bge.3.
 
 ---
 

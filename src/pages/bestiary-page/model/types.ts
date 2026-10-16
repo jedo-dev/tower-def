@@ -55,6 +55,12 @@ export type DamageTypeViewModel = {
   hint: string;
 };
 
+/** A talent branch the tower opens at grade 3; grade tables come with the authored branches. */
+export type TowerBranchViewModel = {
+  id: string;
+  name: string;
+};
+
 export type TowerCardViewModel = {
   id: BuildableTowerId;
   name: string;
@@ -69,6 +75,8 @@ export type TowerCardViewModel = {
   cooldownMs: number;
   specials: TowerSpecialViewModel[];
   levels: TowerLevelViewModel[];
+  /** The two branches; choosing one locks the other for the match. */
+  talentBranches: TowerBranchViewModel[];
   description: string;
   lore: string | null;
 };

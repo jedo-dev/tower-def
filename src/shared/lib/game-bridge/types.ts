@@ -72,6 +72,15 @@ export type SelectedTowerOnHitEffect = {
   maxStacks?: number;
 };
 
+/** One talent branch of the selected tower's type, as the develop chooser shows it. */
+export type TowerBranchOptionSnapshot = {
+  id: string;
+  name: string;
+  description: string;
+  /** This branch is the one chosen for the type; the other is then locked for the match. */
+  isChosen: boolean;
+};
+
 export type SelectedTowerSnapshot = {
   id: string;
   type: HudTowerType;
@@ -90,6 +99,10 @@ export type SelectedTowerSnapshot = {
     /** Effects the tower applies at its current level, aura included. */
     onHitEffects?: SelectedTowerOnHitEffect[];
   };
+  /** Both talent branches of the tower's type; empty for a tower built without content. */
+  availableBranches: TowerBranchOptionSnapshot[];
+  /** Branch chosen for the tower's type this match; `null` while the choice is open. */
+  chosenBranchId: string | null;
 };
 
 export type GameHudSnapshot = {
@@ -124,6 +137,11 @@ export type GameHudSnapshot = {
   /** The simulation is frozen (player pause or engine error); the HUD stays live. */
   isPaused: boolean;
   gameSpeed: GameSpeed;
+  /**
+   * The player's talent picks this match, race tower id to branch id. A type
+   * missing here has no branch yet; restart and faction change clear it.
+   */
+  towerBranchChoices: Readonly<Record<string, string>>;
 };
 
 export type BoardZoomAction = 'in' | 'out' | 'reset';
@@ -134,6 +152,8 @@ export type GameCommandMap = {
   'select-faction': { faction: HudFactionType };
   'send-creep': { creepTypeId: string };
   'upgrade-tower': { towerId: string };
+  /** Choose a talent branch for the type of this grade-3 tower; locks the other branch. */
+  'choose-tower-branch': { towerId: string; branchId: string };
   'sell-tower': { towerId: string };
   'switch-battlefield-view': { view: BattlefieldView };
   'restart-match': undefined;

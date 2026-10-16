@@ -88,6 +88,8 @@ export type GameSceneHarness = {
   /** Ticks until `predicate` holds; throws after `maxFrames`. Returns the frames run. */
   tickUntil: (predicate: () => boolean, maxFrames: number, deltaMs?: number) => number;
   command: <Name extends keyof GameCommandMap>(name: Name, payload: GameCommandMap[Name]) => void;
+  /** Sets the player's wallet, for scenarios that need more gold than a match opens with. */
+  setPlayerGold: (gold: number) => void;
   switchBattlefieldView: (view: BattlefieldView) => void;
   /** Left mouse click on the tile that anchors a tower footprint at `anchor`. */
   clickBuildAnchor: (anchor: GridPosition) => void;
@@ -175,6 +177,10 @@ export async function createGameSceneHarness(
       throw new Error(`Condition not reached within ${maxFrames} frames`);
     },
     command: (name, payload) => sendGameCommand(name, payload),
+    setPlayerGold: (gold) => {
+      // Test-only seam: the wallet is private run state with no gameplay setter.
+      (scene as unknown as { runState: { playerGold: number } }).runState.playerGold = gold;
+    },
     switchBattlefieldView: (view) => sendGameCommand('switch-battlefield-view', { view }),
     clickBuildAnchor: (anchor) => pointers.clickAt(toAnchorScreenPoint(systems, anchor)),
     anchorScreenPoint: (anchor) => toAnchorScreenPoint(systems, anchor),

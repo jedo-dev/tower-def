@@ -40,6 +40,8 @@ function createTestTowerSnapshot(
       range: 3,
       attackCooldownMs: 800,
     },
+    availableBranches: [],
+    chosenBranchId: null,
     ...overrides,
   };
 }
@@ -70,6 +72,7 @@ function createTestHudSnapshot(overrides?: Partial<GameHudSnapshot>): GameHudSna
     pendingCreepCount: 0,
     isPaused: false,
     gameSpeed: 1,
+    towerBranchChoices: {},
     ...overrides,
   };
 }

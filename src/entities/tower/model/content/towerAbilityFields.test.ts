@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { parseTowerContentFile } from './loadTowerContent';
 import { TOWER_CONTENT_SCHEMA_VERSION } from './towerContent.types';
+import { createTalentBranchesFixture } from './fixtures/talentBranchFixture';
 import {
   ArmorKind,
   DamageScope,
@@ -38,7 +39,12 @@ function towerWith(levelOverrides: AuthoredEntry, towerOverrides: AuthoredEntry 
         attackCooldownMs: 800,
         spriteKey: 'tower.undead.bone_archer',
         description: 'Archer nest.',
-        levels: [level(levelOverrides)],
+        levels: [
+          level(levelOverrides),
+          level({ level: 2, upgradeCostGold: 40, damage: 30 }),
+          level({ level: 3, upgradeCostGold: 80, damage: 40 }),
+        ],
+        talentBranches: createTalentBranchesFixture('undead_bone_archer_tower'),
         ...towerOverrides,
       },
     ],

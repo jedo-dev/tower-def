@@ -22,25 +22,25 @@ describe('tower upgrade level boundaries', () => {
     for (const towerType of TOWER_TYPE_IDS) {
       const config = TOWER_UPGRADE_CONFIG[towerType];
 
-      expect(isMaxLevel(towerType, config.maxLevel), towerType).toBe(true);
-      expect(isMaxLevel(towerType, config.maxLevel - 1), towerType).toBe(false);
-      expect(isMaxLevel(towerType, config.maxLevel + 1), towerType).toBe(true);
+      expect(isMaxLevel({ type: towerType }, config.maxLevel), towerType).toBe(true);
+      expect(isMaxLevel({ type: towerType }, config.maxLevel - 1), towerType).toBe(false);
+      expect(isMaxLevel({ type: towerType }, config.maxLevel + 1), towerType).toBe(true);
     }
   });
 });
 
 describe('tower upgrade cost resolution', () => {
   it('points at the cost of the next level', () => {
-    expect(getUpgradeCost(TowerTypeId.SINGLE, 1)).toBe(LEVEL_2_COST);
-    expect(getUpgradeCost(TowerTypeId.SINGLE, 2)).toBe(LEVEL_3_COST);
+    expect(getUpgradeCost({ type: TowerTypeId.SINGLE }, 1)).toBe(LEVEL_2_COST);
+    expect(getUpgradeCost({ type: TowerTypeId.SINGLE }, 2)).toBe(LEVEL_3_COST);
   });
 
   it('returns null at max level', () => {
-    expect(getUpgradeCost(TowerTypeId.SINGLE, MAX_LEVEL)).toBeNull();
+    expect(getUpgradeCost({ type: TowerTypeId.SINGLE }, MAX_LEVEL)).toBeNull();
   });
 
   it('prices every archetype independently', () => {
-    const costs = TOWER_TYPE_IDS.map((towerType) => getUpgradeCost(towerType, 1));
+    const costs = TOWER_TYPE_IDS.map((towerType) => getUpgradeCost({ type: towerType }, 1));
 
     expect(costs.every((cost) => cost !== null && cost > 0)).toBe(true);
     expect(new Set(costs).size).toBeGreaterThan(1);
@@ -49,18 +49,18 @@ describe('tower upgrade cost resolution', () => {
 
 describe('tower upgrade affordability', () => {
   it('allows an upgrade the player can pay for', () => {
-    expect(canAffordUpgrade(TowerTypeId.SINGLE, 1, LEVEL_2_COST).allowed).toBe(true);
+    expect(canAffordUpgrade({ type: TowerTypeId.SINGLE }, 1, LEVEL_2_COST).allowed).toBe(true);
   });
 
   it('rejects an upgrade one gold short', () => {
-    const result = canAffordUpgrade(TowerTypeId.SINGLE, 1, LEVEL_2_COST - 1);
+    const result = canAffordUpgrade({ type: TowerTypeId.SINGLE }, 1, LEVEL_2_COST - 1);
 
     expect(result.allowed).toBe(false);
     expect(result.reason).toBe('insufficient_gold');
   });
 
   it('rejects an upgrade at max level regardless of gold', () => {
-    const result = canAffordUpgrade(TowerTypeId.SINGLE, MAX_LEVEL, 9_999);
+    const result = canAffordUpgrade({ type: TowerTypeId.SINGLE }, MAX_LEVEL, 9_999);
 
     expect(result.allowed).toBe(false);
     expect(result.reason).toBe('max_level');
@@ -116,17 +116,19 @@ describe('tower stats per level', () => {
 
 describe('tower investment and sell value', () => {
   it('adds up what the player paid to reach a level', () => {
-    expect(getTotalInvestedGold(TowerTypeId.SINGLE, 1)).toBe(0);
-    expect(getTotalInvestedGold(TowerTypeId.SINGLE, 2)).toBe(LEVEL_2_COST);
-    expect(getTotalInvestedGold(TowerTypeId.SINGLE, 3)).toBe(LEVEL_2_COST + LEVEL_3_COST);
+    expect(getTotalInvestedGold({ type: TowerTypeId.SINGLE }, 1)).toBe(0);
+    expect(getTotalInvestedGold({ type: TowerTypeId.SINGLE }, 2)).toBe(LEVEL_2_COST);
+    expect(getTotalInvestedGold({ type: TowerTypeId.SINGLE }, 3)).toBe(LEVEL_2_COST + LEVEL_3_COST);
   });
 
   it('refunds the sell ratio of everything invested', () => {
     const buildCost = 50;
     const ratio = ECONOMY_BALANCE.towerSellRatio;
 
-    expect(getSellValue(TowerTypeId.SINGLE, 1, buildCost)).toBe(Math.floor(buildCost * ratio));
-    expect(getSellValue(TowerTypeId.SINGLE, 3, buildCost)).toBe(
+    expect(getSellValue({ type: TowerTypeId.SINGLE }, 1, buildCost)).toBe(
+      Math.floor(buildCost * ratio),
+    );
+    expect(getSellValue({ type: TowerTypeId.SINGLE }, 3, buildCost)).toBe(
       Math.floor((buildCost + LEVEL_2_COST + LEVEL_3_COST) * ratio),
     );
   });

@@ -127,7 +127,7 @@ describe('upgrading an authored tower', () => {
   it('follows the archetype curve when the tower declares none', () => {
     const tower = createPlacedTower('orc_tar_pit');
 
-    expect(resolveTowerUpgradeConfig(tower)).toBe(TOWER_UPGRADE_CONFIG[tower.type]);
+    expect(resolveTowerUpgradeConfig(tower)).toEqual(TOWER_UPGRADE_CONFIG[tower.type]);
     expect(getTowerStatsForTowerLevel(tower, 2)).toEqual(
       TOWER_UPGRADE_CONFIG[tower.type].levels[1].stats,
     );
@@ -150,7 +150,7 @@ describe('upgrading an authored tower', () => {
 
     // A tower with no id can never override, which is what keeps the fallback
     // honest for towers placed before this data existed.
-    expect(resolveTowerUpgradeConfig(authoredCurve)).toBe(TOWER_UPGRADE_CONFIG[tower.type]);
+    expect(resolveTowerUpgradeConfig(authoredCurve)).toEqual(TOWER_UPGRADE_CONFIG[tower.type]);
   });
 });
 

@@ -166,7 +166,7 @@ describe('entities/computer-opponent/applyComputerBuildStrategy', () => {
       upgradeableTowerIds: towers.map((tower) => tower.id),
       availableBuildPositions: [],
     });
-    const expectedUpgradeCost = getUpgradeCost(TowerTypeId.SINGLE, TOWER_BASE_LEVEL);
+    const expectedUpgradeCost = getUpgradeCost({ type: TowerTypeId.SINGLE }, TOWER_BASE_LEVEL);
 
     const result = applyComputerBuildStrategy({ state, context });
 

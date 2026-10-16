@@ -6,7 +6,12 @@ import {
   getSellValue,
   getUpgradeCost,
   isMaxLevel,
+  toTowerUpgradeCurveRef,
 } from '../../../entities/tower';
+
+function curveOf(snapshot: SelectedTowerSnapshot) {
+  return toTowerUpgradeCurveRef(snapshot.type, snapshot.buildableTowerId);
+}
 
 function createTestSnapshot(overrides?: Partial<SelectedTowerSnapshot>): SelectedTowerSnapshot {
   return {
@@ -20,6 +25,8 @@ function createTestSnapshot(overrides?: Partial<SelectedTowerSnapshot>): Selecte
       range: 3,
       attackCooldownMs: 800,
     },
+    availableBranches: [],
+    chosenBranchId: null,
     ...overrides,
   };
 }
@@ -30,7 +37,7 @@ describe('tower action panel bridge commands', () => {
     const unsubscribe = onGameCommand('upgrade-tower', handler);
 
     const snapshot = createTestSnapshot();
-    const upgradeCost = getUpgradeCost(snapshot.type, snapshot.level);
+    const upgradeCost = getUpgradeCost(curveOf(snapshot), snapshot.level);
 
     expect(upgradeCost).toBeGreaterThan(0);
 
@@ -42,7 +49,7 @@ describe('tower action panel bridge commands', () => {
     const unsubscribe = onGameCommand('sell-tower', handler);
 
     const snapshot = createTestSnapshot();
-    const sellValue = getSellValue(snapshot.type, snapshot.level, snapshot.cost);
+    const sellValue = getSellValue(curveOf(snapshot), snapshot.level, snapshot.cost);
 
     expect(sellValue).toBeGreaterThan(0);
 
@@ -63,32 +70,32 @@ describe('tower action panel bridge commands', () => {
 describe('tower action panel upgrade logic', () => {
   it('level 1 archer can be upgraded', () => {
     const snapshot = createTestSnapshot({ type: 'single', level: 1 });
-    expect(isMaxLevel(snapshot.type, snapshot.level)).toBe(false);
-    expect(getUpgradeCost(snapshot.type, snapshot.level)).toBe(40);
+    expect(isMaxLevel(curveOf(snapshot), snapshot.level)).toBe(false);
+    expect(getUpgradeCost(curveOf(snapshot), snapshot.level)).toBe(40);
   });
 
   it('max level archer cannot be upgraded', () => {
     const snapshot = createTestSnapshot({ type: 'single', level: 3 });
-    expect(isMaxLevel(snapshot.type, snapshot.level)).toBe(true);
-    expect(getUpgradeCost(snapshot.type, snapshot.level)).toBeNull();
+    expect(isMaxLevel(curveOf(snapshot), snapshot.level)).toBe(true);
+    expect(getUpgradeCost(curveOf(snapshot), snapshot.level)).toBeNull();
   });
 
   it('upgrade is allowed when gold is sufficient', () => {
     const snapshot = createTestSnapshot({ type: 'single', level: 1 });
-    const result = canAffordUpgrade(snapshot.type, snapshot.level, 100);
+    const result = canAffordUpgrade(curveOf(snapshot), snapshot.level, 100);
     expect(result.allowed).toBe(true);
   });
 
   it('upgrade is rejected when gold is insufficient', () => {
     const snapshot = createTestSnapshot({ type: 'single', level: 1 });
-    const result = canAffordUpgrade(snapshot.type, snapshot.level, 10);
+    const result = canAffordUpgrade(curveOf(snapshot), snapshot.level, 10);
     expect(result.allowed).toBe(false);
     expect(result.reason).toBe('insufficient_gold');
   });
 
   it('upgrade is rejected at max level', () => {
     const snapshot = createTestSnapshot({ type: 'single', level: 3 });
-    const result = canAffordUpgrade(snapshot.type, snapshot.level, 1000);
+    const result = canAffordUpgrade(curveOf(snapshot), snapshot.level, 1000);
     expect(result.allowed).toBe(false);
     expect(result.reason).toBe('max_level');
   });
@@ -97,13 +104,13 @@ describe('tower action panel upgrade logic', () => {
 describe('tower action panel sell logic', () => {
   it('level 1 sell value is 50% of build cost', () => {
     const snapshot = createTestSnapshot({ type: 'single', level: 1, cost: 50 });
-    expect(getSellValue(snapshot.type, snapshot.level, snapshot.cost)).toBe(25);
+    expect(getSellValue(curveOf(snapshot), snapshot.level, snapshot.cost)).toBe(25);
   });
 
   it('level 2 sell value includes upgrade cost', () => {
     const snapshot = createTestSnapshot({ type: 'single', level: 2, cost: 50 });
     const totalInvested = 50 + 40;
-    expect(getSellValue(snapshot.type, snapshot.level, snapshot.cost)).toBe(
+    expect(getSellValue(curveOf(snapshot), snapshot.level, snapshot.cost)).toBe(
       Math.floor(totalInvested * 0.5),
     );
   });
@@ -111,7 +118,7 @@ describe('tower action panel sell logic', () => {
   it('level 3 sell value includes all costs', () => {
     const snapshot = createTestSnapshot({ type: 'single', level: 3, cost: 50 });
     const totalInvested = 50 + 40 + 80;
-    expect(getSellValue(snapshot.type, snapshot.level, snapshot.cost)).toBe(
+    expect(getSellValue(curveOf(snapshot), snapshot.level, snapshot.cost)).toBe(
       Math.floor(totalInvested * 0.5),
     );
   });
@@ -119,7 +126,7 @@ describe('tower action panel sell logic', () => {
   it('splash tower sell value works correctly', () => {
     const snapshot = createTestSnapshot({ type: 'splash', level: 2, cost: 75 });
     const totalInvested = 75 + 40;
-    expect(getSellValue(snapshot.type, snapshot.level, snapshot.cost)).toBe(
+    expect(getSellValue(curveOf(snapshot), snapshot.level, snapshot.cost)).toBe(
       Math.floor(totalInvested * 0.5),
     );
   });

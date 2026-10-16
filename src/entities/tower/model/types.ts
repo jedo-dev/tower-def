@@ -17,6 +17,7 @@ import {
   type TowerArchetypeDefinition,
   type TowerAuraDefinition,
   type TowerLevelDefinition,
+  type TowerTalentBranchDefinition,
 } from './content/loadTowerContent';
 import type { BuildableTowerId } from './towerIds';
 import type { TowerAbilities } from './abilities';
@@ -83,6 +84,8 @@ export type BuildableTowerConfig = {
   description: string;
   /** Bestiary flavour text, one or two sentences in the race's voice. */
   lore?: string;
+  /** The two talent branches that extend the curve past grade 3; see `talents.ts`. */
+  talentBranches: readonly TowerTalentBranchDefinition[];
 };
 
 export type TowerCombatStats = {

@@ -71,7 +71,7 @@ function computeUpgradeableTowers(towers: readonly TowerEntity[], gold: number):
   const upgradeable: string[] = [];
 
   for (const tower of towers) {
-    const check = canAffordUpgrade(tower.type, tower.level, gold);
+    const check = canAffordUpgrade(tower, tower.level, gold);
     if (check.allowed) {
       upgradeable.push(tower.id);
     }

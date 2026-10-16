@@ -124,11 +124,8 @@ export function applyComputerBuildStrategy(
         continue;
       }
 
-      const upgradeCost = getUpgradeCost(targetTower.type, targetTower.level);
-      if (
-        upgradeCost === null ||
-        !canAffordUpgrade(targetTower.type, targetTower.level, gold).allowed
-      ) {
+      const upgradeCost = getUpgradeCost(targetTower, targetTower.level);
+      if (upgradeCost === null || !canAffordUpgrade(targetTower, targetTower.level, gold).allowed) {
         continue;
       }
 

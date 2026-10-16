@@ -8,8 +8,9 @@ import {
   canAffordUpgrade,
   createInitialTowerCombatRuntime,
   getTowerStatsForTowerLevel,
-  tryResolveBuildableTowerById,
   getUpgradeCost,
+  type BuildableTowerId,
+  type TowerBranchChoices,
 } from '../../../../entities/tower';
 import { spendGold } from '../../../../entities/player-resources';
 import type { GridCell, GridModel } from '../../../../shared/types/grid';
@@ -17,10 +18,8 @@ import type { GridPosition } from '../../../../shared/types/pathfinding';
 import { getCellAt } from '../../../../shared/lib/grid/getCellAt';
 import type { RaceId } from '../../../../shared/types/content-ids';
 import { publishGameEvent } from '../../../../shared/lib/game-bridge/bridge';
-import type {
-  BuildRejectionReason,
-  SelectedTowerSnapshot,
-} from '../../../../shared/lib/game-bridge/types';
+import type { BuildRejectionReason } from '../../../../shared/lib/game-bridge/types';
+import { toSelectedTowerSnapshot } from './selectedTowerSnapshot';
 import { SELL_REFUND_RATIO } from '../../scenes/gameScene.constants';
 import type { SoundId } from '../../../../shared/lib/sound-registry/audio.types';
 import { TowerSoundSlot } from '../../../../shared/types/sound-ids';
@@ -49,6 +48,10 @@ export type TowerCommandDeps = {
   getGridModel: () => GridModel | null;
   getBuilderFactionId: () => RaceId;
   getPlayerGold: () => number;
+  /** The player's talent picks; grades 4-7 follow them. */
+  getTowerBranchChoices: () => TowerBranchChoices;
+  /** Stores a talent pick in the match state; the gold is charged separately. */
+  onTowerBranchChosen: (buildableTowerId: BuildableTowerId, branchId: string) => void;
   onGoldUpdated: (nextGold: number) => void;
   onRefundRecorded: (refundAmount: number) => void;
   playSound: (soundId: SoundId) => void;
@@ -59,29 +62,6 @@ export type TowerCommandDeps = {
   drawGridCell: (cell: GridCell) => void;
   updateBuildPreview: () => void;
 };
-
-function toSelectedTowerSnapshot(
-  tower: BattlefieldRenderState['towers'][number],
-): SelectedTowerSnapshot {
-  const authoredTower = tower.entity.buildableTowerId
-    ? tryResolveBuildableTowerById(tower.entity.buildableTowerId)
-    : undefined;
-
-  return {
-    id: tower.entity.id,
-    type: tower.entity.type,
-    ...(authoredTower ? { name: authoredTower.name, buildableTowerId: authoredTower.id } : {}),
-    level: tower.entity.level,
-    position: { x: tower.entity.position.x, y: tower.entity.position.y },
-    cost: tower.entity.cost,
-    combatStats: {
-      ...tower.entity.combatStats,
-      ...(tower.entity.combatStats.onHitEffects
-        ? { onHitEffects: tower.entity.combatStats.onHitEffects.map((effect) => ({ ...effect })) }
-        : {}),
-    },
-  };
-}
 
 function rejectBuild(
   deps: TowerCommandDeps,
@@ -198,7 +178,9 @@ export function trySelectTowerAtHoveredCell(deps: TowerCommandDeps): boolean {
     return false;
   }
 
-  publishGameEvent('selected-tower', { tower: toSelectedTowerSnapshot(tower) });
+  publishGameEvent('selected-tower', {
+    tower: toSelectedTowerSnapshot(tower.entity, deps.getTowerBranchChoices()),
+  });
   deps.playSound('ui.click');
   return true;
 }
@@ -214,19 +196,20 @@ export function handleUpgradeTowerCommand(deps: TowerCommandDeps, towerId: strin
   }
 
   const { entity } = tower;
-  const upgradeCheck = canAffordUpgrade(entity.type, entity.level, deps.getPlayerGold());
+  const choices = deps.getTowerBranchChoices();
+  const upgradeCheck = canAffordUpgrade(entity, entity.level, deps.getPlayerGold(), choices);
   if (!upgradeCheck.allowed) {
     deps.playSound('ui.error');
     return;
   }
 
-  const upgradeCost = getUpgradeCost(entity.type, entity.level);
+  const upgradeCost = getUpgradeCost(entity, entity.level, choices);
   if (upgradeCost === null || upgradeCost <= 0) {
     return;
   }
 
   const nextLevel = entity.level + 1;
-  const nextStats = getTowerStatsForTowerLevel(entity, nextLevel);
+  const nextStats = getTowerStatsForTowerLevel(entity, nextLevel, choices);
   if (!nextStats) {
     return;
   }
@@ -246,7 +229,7 @@ export function handleUpgradeTowerCommand(deps: TowerCommandDeps, towerId: strin
   deps.playSound('economy.gold_spent');
   deps.onHudChanged();
 
-  publishGameEvent('selected-tower', { tower: toSelectedTowerSnapshot(tower) });
+  publishGameEvent('selected-tower', { tower: toSelectedTowerSnapshot(entity, choices) });
 }
 
 /** Frees every cell of the sold tower block and forgets what it cost. */

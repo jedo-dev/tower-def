@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { parseTowerContentFile } from './loadTowerContent';
+import { createTalentBranchesFixture } from './fixtures/talentBranchFixture';
 
 const FILE = 'content/towers/undead.json';
 
@@ -7,7 +8,7 @@ function parseWithSounds(sounds: unknown) {
   return parseTowerContentFile({
     file: FILE,
     data: {
-      schemaVersion: 3,
+      schemaVersion: 4,
       race: 'UNDEAD',
       towers: [
         {
@@ -20,6 +21,7 @@ function parseWithSounds(sounds: unknown) {
           attackCooldownMs: 800,
           spriteKey: 'tower.undead.bone_archer',
           description: 'Necromantic archer nest built from cursed remains.',
+          talentBranches: createTalentBranchesFixture('undead_bone_archer_tower'),
           ...(sounds === undefined ? {} : { sounds }),
         },
       ],

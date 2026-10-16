@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 4,
   "race": "ELF",
   "towers": [
     {
@@ -19,7 +19,31 @@
       ],
       "spriteKey": "tower.elf.moon_archer",
       "description": "Moonlit archers strike swiftly from sacred boughs.",
-      "lore": "A platform grown, not built, in the crown of an elder tree. Its archers draw by moonlight and release in silence."
+      "lore": "A platform grown, not built, in the crown of an elder tree. Its archers draw by moonlight and release in silence.",
+      "talentBranches": [
+        {
+          "id": "elf_moon_archer_tower_branch_i",
+          "name": "Moon Archer Tower I",
+          "description": "Placeholder branch: each grade adds 8% damage and 0.2 range.",
+          "grades": [
+            { "level": 4, "damage": 43, "range": 7.2, "attackCooldownMs": 700 },
+            { "level": 5, "damage": 46, "range": 7.4, "attackCooldownMs": 700 },
+            { "level": 6, "damage": 50, "range": 7.6, "attackCooldownMs": 700 },
+            { "level": 7, "damage": 53, "range": 7.8, "attackCooldownMs": 700 }
+          ]
+        },
+        {
+          "id": "elf_moon_archer_tower_branch_ii",
+          "name": "Moon Archer Tower II",
+          "description": "Placeholder branch: each grade adds 8% damage and 0.2 range.",
+          "grades": [
+            { "level": 4, "damage": 43, "range": 7.2, "attackCooldownMs": 700 },
+            { "level": 5, "damage": 46, "range": 7.4, "attackCooldownMs": 700 },
+            { "level": 6, "damage": 50, "range": 7.6, "attackCooldownMs": 700 },
+            { "level": 7, "damage": 53, "range": 7.8, "attackCooldownMs": 700 }
+          ]
+        }
+      ]
     },
     {
       "id": "elf_wisp_bloom",
@@ -34,7 +58,67 @@
       "splashRadius": 3,
       "spriteKey": "tower.elf.wisp_bloom",
       "description": "A bloom of wisps that bursts over anything close.",
-      "lore": "Wisps gathered into one bright flower of the grove. When it opens, everything near it is briefly, brilliantly gone."
+      "lore": "Wisps gathered into one bright flower of the grove. When it opens, everything near it is briefly, brilliantly gone.",
+      "talentBranches": [
+        {
+          "id": "elf_wisp_bloom_branch_i",
+          "name": "Wisp Bloom I",
+          "description": "Placeholder branch: each grade adds 8% damage and 0.2 range.",
+          "grades": [
+            { "level": 4, "damage": 41, "range": 6, "attackCooldownMs": 1100, "splashRadius": 3.4 },
+            {
+              "level": 5,
+              "damage": 44,
+              "range": 6.2,
+              "attackCooldownMs": 1100,
+              "splashRadius": 3.4
+            },
+            {
+              "level": 6,
+              "damage": 47,
+              "range": 6.4,
+              "attackCooldownMs": 1100,
+              "splashRadius": 3.4
+            },
+            {
+              "level": 7,
+              "damage": 50,
+              "range": 6.6,
+              "attackCooldownMs": 1100,
+              "splashRadius": 3.4
+            }
+          ]
+        },
+        {
+          "id": "elf_wisp_bloom_branch_ii",
+          "name": "Wisp Bloom II",
+          "description": "Placeholder branch: each grade adds 8% damage and 0.2 range.",
+          "grades": [
+            { "level": 4, "damage": 41, "range": 6, "attackCooldownMs": 1100, "splashRadius": 3.4 },
+            {
+              "level": 5,
+              "damage": 44,
+              "range": 6.2,
+              "attackCooldownMs": 1100,
+              "splashRadius": 3.4
+            },
+            {
+              "level": 6,
+              "damage": 47,
+              "range": 6.4,
+              "attackCooldownMs": 1100,
+              "splashRadius": 3.4
+            },
+            {
+              "level": 7,
+              "damage": 50,
+              "range": 6.6,
+              "attackCooldownMs": 1100,
+              "splashRadius": 3.4
+            }
+          ]
+        }
+      ]
     },
     {
       "id": "elf_moonwell",
@@ -81,7 +165,79 @@
       ],
       "spriteKey": "tower.elf.moonwell",
       "description": "Cold moonlight pools over the path and slows it.",
-      "lore": "Still water that remembers the moon. The path that crosses it grows heavy with the cold of a long night."
+      "lore": "Still water that remembers the moon. The path that crosses it grows heavy with the cold of a long night.",
+      "talentBranches": [
+        {
+          "id": "elf_moonwell_branch_i",
+          "name": "Moonwell I",
+          "description": "Placeholder branch: each grade adds 8% damage and 0.2 range.",
+          "grades": [
+            {
+              "level": 4,
+              "damage": 33,
+              "range": 7,
+              "attackCooldownMs": 800,
+              "onHitEffects": [{ "effectId": "chill", "magnitude": 0.48, "durationMs": 2000 }]
+            },
+            {
+              "level": 5,
+              "damage": 36,
+              "range": 7.2,
+              "attackCooldownMs": 800,
+              "onHitEffects": [{ "effectId": "chill", "magnitude": 0.48, "durationMs": 2000 }]
+            },
+            {
+              "level": 6,
+              "damage": 38,
+              "range": 7.4,
+              "attackCooldownMs": 800,
+              "onHitEffects": [{ "effectId": "chill", "magnitude": 0.48, "durationMs": 2000 }]
+            },
+            {
+              "level": 7,
+              "damage": 41,
+              "range": 7.6,
+              "attackCooldownMs": 800,
+              "onHitEffects": [{ "effectId": "chill", "magnitude": 0.48, "durationMs": 2000 }]
+            }
+          ]
+        },
+        {
+          "id": "elf_moonwell_branch_ii",
+          "name": "Moonwell II",
+          "description": "Placeholder branch: each grade adds 8% damage and 0.2 range.",
+          "grades": [
+            {
+              "level": 4,
+              "damage": 33,
+              "range": 7,
+              "attackCooldownMs": 800,
+              "onHitEffects": [{ "effectId": "chill", "magnitude": 0.48, "durationMs": 2000 }]
+            },
+            {
+              "level": 5,
+              "damage": 36,
+              "range": 7.2,
+              "attackCooldownMs": 800,
+              "onHitEffects": [{ "effectId": "chill", "magnitude": 0.48, "durationMs": 2000 }]
+            },
+            {
+              "level": 6,
+              "damage": 38,
+              "range": 7.4,
+              "attackCooldownMs": 800,
+              "onHitEffects": [{ "effectId": "chill", "magnitude": 0.48, "durationMs": 2000 }]
+            },
+            {
+              "level": 7,
+              "damage": 41,
+              "range": 7.6,
+              "attackCooldownMs": 800,
+              "onHitEffects": [{ "effectId": "chill", "magnitude": 0.48, "durationMs": 2000 }]
+            }
+          ]
+        }
+      ]
     },
     {
       "id": "elf_thorn_spire",
@@ -154,7 +310,143 @@
       ],
       "spriteKey": "tower.elf.thorn_spire",
       "description": "Barbed thorns that keep working long after the hit.",
-      "lore": "The forest's own answer to trespass, a spire of barbed vine. The thorns stay in the wound and keep working."
+      "lore": "The forest's own answer to trespass, a spire of barbed vine. The thorns stay in the wound and keep working.",
+      "talentBranches": [
+        {
+          "id": "elf_thorn_spire_branch_i",
+          "name": "Thorn Spire I",
+          "description": "Placeholder branch: each grade adds 8% damage and 0.2 range.",
+          "grades": [
+            {
+              "level": 4,
+              "damage": 9,
+              "range": 7,
+              "attackCooldownMs": 900,
+              "onHitEffects": [
+                {
+                  "effectId": "poison",
+                  "magnitude": 8,
+                  "durationMs": 4000,
+                  "maxStacks": 4,
+                  "damageType": "percent"
+                }
+              ]
+            },
+            {
+              "level": 5,
+              "damage": 9,
+              "range": 7.2,
+              "attackCooldownMs": 900,
+              "onHitEffects": [
+                {
+                  "effectId": "poison",
+                  "magnitude": 8,
+                  "durationMs": 4000,
+                  "maxStacks": 4,
+                  "damageType": "percent"
+                }
+              ]
+            },
+            {
+              "level": 6,
+              "damage": 10,
+              "range": 7.4,
+              "attackCooldownMs": 900,
+              "onHitEffects": [
+                {
+                  "effectId": "poison",
+                  "magnitude": 8,
+                  "durationMs": 4000,
+                  "maxStacks": 4,
+                  "damageType": "percent"
+                }
+              ]
+            },
+            {
+              "level": 7,
+              "damage": 11,
+              "range": 7.6,
+              "attackCooldownMs": 900,
+              "onHitEffects": [
+                {
+                  "effectId": "poison",
+                  "magnitude": 8,
+                  "durationMs": 4000,
+                  "maxStacks": 4,
+                  "damageType": "percent"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "elf_thorn_spire_branch_ii",
+          "name": "Thorn Spire II",
+          "description": "Placeholder branch: each grade adds 8% damage and 0.2 range.",
+          "grades": [
+            {
+              "level": 4,
+              "damage": 9,
+              "range": 7,
+              "attackCooldownMs": 900,
+              "onHitEffects": [
+                {
+                  "effectId": "poison",
+                  "magnitude": 8,
+                  "durationMs": 4000,
+                  "maxStacks": 4,
+                  "damageType": "percent"
+                }
+              ]
+            },
+            {
+              "level": 5,
+              "damage": 9,
+              "range": 7.2,
+              "attackCooldownMs": 900,
+              "onHitEffects": [
+                {
+                  "effectId": "poison",
+                  "magnitude": 8,
+                  "durationMs": 4000,
+                  "maxStacks": 4,
+                  "damageType": "percent"
+                }
+              ]
+            },
+            {
+              "level": 6,
+              "damage": 10,
+              "range": 7.4,
+              "attackCooldownMs": 900,
+              "onHitEffects": [
+                {
+                  "effectId": "poison",
+                  "magnitude": 8,
+                  "durationMs": 4000,
+                  "maxStacks": 4,
+                  "damageType": "percent"
+                }
+              ]
+            },
+            {
+              "level": 7,
+              "damage": 11,
+              "range": 7.6,
+              "attackCooldownMs": 900,
+              "onHitEffects": [
+                {
+                  "effectId": "poison",
+                  "magnitude": 8,
+                  "durationMs": 4000,
+                  "maxStacks": 4,
+                  "damageType": "percent"
+                }
+              ]
+            }
+          ]
+        }
+      ]
     }
   ]
 }

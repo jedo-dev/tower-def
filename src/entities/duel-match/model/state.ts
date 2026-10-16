@@ -4,6 +4,7 @@ import type { WaveRoutes } from '../../../shared/lib/pathfinding/waveRoutes';
 import { createGridModel } from '../../../shared/lib/grid/createGridModel';
 import { createDefaultEdgeEndpoints } from '../../../shared/lib/grid/generateEdgeEndpoints';
 import { calculateWaveRoutes } from '../../wave/model/calculateWavePath';
+import { NO_TOWER_BRANCH_CHOICES } from '../../tower/model/talents';
 import { DUEL_MATCH_BALANCE } from './balance';
 import { createBattlefieldState } from './battlefieldOps';
 import type { DuelMatchState, DuelistState } from './types';
@@ -29,6 +30,7 @@ function createDuelistState(raceId: RaceId, grid: GridModel, routes: WaveRoutes)
     sendQueue: [],
     battlefield: createBattlefieldState(grid, routes),
     lifeStealRemainder: 0,
+    towerBranchChoices: NO_TOWER_BRANCH_CHOICES,
   };
 }
 

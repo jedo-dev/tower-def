@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 4,
   "race": "UNDEAD",
   "towers": [
     {
@@ -19,7 +19,31 @@
       ],
       "spriteKey": "tower.undead.bone_archer",
       "description": "Necromantic archer nest built from cursed remains.",
-      "lore": "Archers who died at their posts and were not relieved. The bowstrings are sinew; the arrows do not care who they were."
+      "lore": "Archers who died at their posts and were not relieved. The bowstrings are sinew; the arrows do not care who they were.",
+      "talentBranches": [
+        {
+          "id": "undead_bone_archer_tower_branch_i",
+          "name": "Bone Archer Tower I",
+          "description": "Placeholder branch: each grade adds 8% damage and 0.2 range.",
+          "grades": [
+            { "level": 4, "damage": 43, "range": 6.8, "attackCooldownMs": 700 },
+            { "level": 5, "damage": 46, "range": 7, "attackCooldownMs": 700 },
+            { "level": 6, "damage": 50, "range": 7.2, "attackCooldownMs": 700 },
+            { "level": 7, "damage": 53, "range": 7.4, "attackCooldownMs": 700 }
+          ]
+        },
+        {
+          "id": "undead_bone_archer_tower_branch_ii",
+          "name": "Bone Archer Tower II",
+          "description": "Placeholder branch: each grade adds 8% damage and 0.2 range.",
+          "grades": [
+            { "level": 4, "damage": 43, "range": 6.8, "attackCooldownMs": 700 },
+            { "level": 5, "damage": 46, "range": 7, "attackCooldownMs": 700 },
+            { "level": 6, "damage": 50, "range": 7.2, "attackCooldownMs": 700 },
+            { "level": 7, "damage": 53, "range": 7.4, "attackCooldownMs": 700 }
+          ]
+        }
+      ]
     },
     {
       "id": "undead_plague_tower",
@@ -34,7 +58,67 @@
       "splashRadius": 3,
       "spriteKey": "tower.undead.plague",
       "description": "Launches toxic clouds that burst over everything nearby.",
-      "lore": "A cauldron of the last plague, kept warm. Each burst is a village that will never need burying."
+      "lore": "A cauldron of the last plague, kept warm. Each burst is a village that will never need burying.",
+      "talentBranches": [
+        {
+          "id": "undead_plague_tower_branch_i",
+          "name": "Plague Tower I",
+          "description": "Placeholder branch: each grade adds 8% damage and 0.2 range.",
+          "grades": [
+            { "level": 4, "damage": 41, "range": 6, "attackCooldownMs": 1100, "splashRadius": 3.4 },
+            {
+              "level": 5,
+              "damage": 44,
+              "range": 6.2,
+              "attackCooldownMs": 1100,
+              "splashRadius": 3.4
+            },
+            {
+              "level": 6,
+              "damage": 47,
+              "range": 6.4,
+              "attackCooldownMs": 1100,
+              "splashRadius": 3.4
+            },
+            {
+              "level": 7,
+              "damage": 50,
+              "range": 6.6,
+              "attackCooldownMs": 1100,
+              "splashRadius": 3.4
+            }
+          ]
+        },
+        {
+          "id": "undead_plague_tower_branch_ii",
+          "name": "Plague Tower II",
+          "description": "Placeholder branch: each grade adds 8% damage and 0.2 range.",
+          "grades": [
+            { "level": 4, "damage": 41, "range": 6, "attackCooldownMs": 1100, "splashRadius": 3.4 },
+            {
+              "level": 5,
+              "damage": 44,
+              "range": 6.2,
+              "attackCooldownMs": 1100,
+              "splashRadius": 3.4
+            },
+            {
+              "level": 6,
+              "damage": 47,
+              "range": 6.4,
+              "attackCooldownMs": 1100,
+              "splashRadius": 3.4
+            },
+            {
+              "level": 7,
+              "damage": 50,
+              "range": 6.6,
+              "attackCooldownMs": 1100,
+              "splashRadius": 3.4
+            }
+          ]
+        }
+      ]
     },
     {
       "id": "undead_frost_wyrm_nest",
@@ -81,7 +165,79 @@
       ],
       "spriteKey": "tower.undead.frost_wyrm_nest",
       "description": "A wyrm hatchling breathes killing cold over the path.",
-      "lore": "The hatchling was dead before it hatched. It breathes the grave's cold and the path slows to listen."
+      "lore": "The hatchling was dead before it hatched. It breathes the grave's cold and the path slows to listen.",
+      "talentBranches": [
+        {
+          "id": "undead_frost_wyrm_nest_branch_i",
+          "name": "Frost Wyrm Nest I",
+          "description": "Placeholder branch: each grade adds 8% damage and 0.2 range.",
+          "grades": [
+            {
+              "level": 4,
+              "damage": 33,
+              "range": 7,
+              "attackCooldownMs": 800,
+              "onHitEffects": [{ "effectId": "chill", "magnitude": 0.55, "durationMs": 2000 }]
+            },
+            {
+              "level": 5,
+              "damage": 36,
+              "range": 7.2,
+              "attackCooldownMs": 800,
+              "onHitEffects": [{ "effectId": "chill", "magnitude": 0.55, "durationMs": 2000 }]
+            },
+            {
+              "level": 6,
+              "damage": 38,
+              "range": 7.4,
+              "attackCooldownMs": 800,
+              "onHitEffects": [{ "effectId": "chill", "magnitude": 0.55, "durationMs": 2000 }]
+            },
+            {
+              "level": 7,
+              "damage": 41,
+              "range": 7.6,
+              "attackCooldownMs": 800,
+              "onHitEffects": [{ "effectId": "chill", "magnitude": 0.55, "durationMs": 2000 }]
+            }
+          ]
+        },
+        {
+          "id": "undead_frost_wyrm_nest_branch_ii",
+          "name": "Frost Wyrm Nest II",
+          "description": "Placeholder branch: each grade adds 8% damage and 0.2 range.",
+          "grades": [
+            {
+              "level": 4,
+              "damage": 33,
+              "range": 7,
+              "attackCooldownMs": 800,
+              "onHitEffects": [{ "effectId": "chill", "magnitude": 0.55, "durationMs": 2000 }]
+            },
+            {
+              "level": 5,
+              "damage": 36,
+              "range": 7.2,
+              "attackCooldownMs": 800,
+              "onHitEffects": [{ "effectId": "chill", "magnitude": 0.55, "durationMs": 2000 }]
+            },
+            {
+              "level": 6,
+              "damage": 38,
+              "range": 7.4,
+              "attackCooldownMs": 800,
+              "onHitEffects": [{ "effectId": "chill", "magnitude": 0.55, "durationMs": 2000 }]
+            },
+            {
+              "level": 7,
+              "damage": 41,
+              "range": 7.6,
+              "attackCooldownMs": 800,
+              "onHitEffects": [{ "effectId": "chill", "magnitude": 0.55, "durationMs": 2000 }]
+            }
+          ]
+        }
+      ]
     },
     {
       "id": "undead_bone_obelisk",
@@ -93,7 +249,119 @@
       "attackCooldownMs": 1000,
       "spriteKey": "tower.undead.bone_obelisk",
       "description": "Grave-magic pillar that quickens every tower around it.",
-      "lore": "A spire of spines humming with grave-song. Around it the dead work faster, because the dead do not rest."
+      "lore": "A spire of spines humming with grave-song. Around it the dead work faster, because the dead do not rest.",
+      "talentBranches": [
+        {
+          "id": "undead_bone_obelisk_branch_i",
+          "name": "Bone Obelisk I",
+          "description": "Placeholder branch: each grade adds 8% damage and 0.2 range.",
+          "grades": [
+            {
+              "level": 4,
+              "damage": 0,
+              "range": 1.2,
+              "attackCooldownMs": 1000,
+              "aura": {
+                "radiusCells": 7,
+                "attackSpeedBonus": 0.34,
+                "rangeBonus": 1.4,
+                "stacking": "strongest"
+              }
+            },
+            {
+              "level": 5,
+              "damage": 0,
+              "range": 1.4,
+              "attackCooldownMs": 1000,
+              "aura": {
+                "radiusCells": 7,
+                "attackSpeedBonus": 0.34,
+                "rangeBonus": 1.4,
+                "stacking": "strongest"
+              }
+            },
+            {
+              "level": 6,
+              "damage": 0,
+              "range": 1.6,
+              "attackCooldownMs": 1000,
+              "aura": {
+                "radiusCells": 7,
+                "attackSpeedBonus": 0.34,
+                "rangeBonus": 1.4,
+                "stacking": "strongest"
+              }
+            },
+            {
+              "level": 7,
+              "damage": 0,
+              "range": 1.8,
+              "attackCooldownMs": 1000,
+              "aura": {
+                "radiusCells": 7,
+                "attackSpeedBonus": 0.34,
+                "rangeBonus": 1.4,
+                "stacking": "strongest"
+              }
+            }
+          ]
+        },
+        {
+          "id": "undead_bone_obelisk_branch_ii",
+          "name": "Bone Obelisk II",
+          "description": "Placeholder branch: each grade adds 8% damage and 0.2 range.",
+          "grades": [
+            {
+              "level": 4,
+              "damage": 0,
+              "range": 1.2,
+              "attackCooldownMs": 1000,
+              "aura": {
+                "radiusCells": 7,
+                "attackSpeedBonus": 0.34,
+                "rangeBonus": 1.4,
+                "stacking": "strongest"
+              }
+            },
+            {
+              "level": 5,
+              "damage": 0,
+              "range": 1.4,
+              "attackCooldownMs": 1000,
+              "aura": {
+                "radiusCells": 7,
+                "attackSpeedBonus": 0.34,
+                "rangeBonus": 1.4,
+                "stacking": "strongest"
+              }
+            },
+            {
+              "level": 6,
+              "damage": 0,
+              "range": 1.6,
+              "attackCooldownMs": 1000,
+              "aura": {
+                "radiusCells": 7,
+                "attackSpeedBonus": 0.34,
+                "rangeBonus": 1.4,
+                "stacking": "strongest"
+              }
+            },
+            {
+              "level": 7,
+              "damage": 0,
+              "range": 1.8,
+              "attackCooldownMs": 1000,
+              "aura": {
+                "radiusCells": 7,
+                "attackSpeedBonus": 0.34,
+                "rangeBonus": 1.4,
+                "stacking": "strongest"
+              }
+            }
+          ]
+        }
+      ]
     }
   ]
 }

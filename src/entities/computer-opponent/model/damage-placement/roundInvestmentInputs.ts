@@ -96,7 +96,7 @@ export function collectUpgradeCandidates(
     if (!upgradeableTowerIds.includes(tower.id)) {
       return;
     }
-    const cost = getUpgradeCost(tower.type, tower.level);
+    const cost = getUpgradeCost(tower, tower.level);
     const nextStats = getTowerStatsForTowerLevel(tower, tower.level + 1);
     if (cost !== null && cost > 0 && nextStats) {
       candidates.push({ towerId: tower.id, ledgerIndex, cost, nextStats });

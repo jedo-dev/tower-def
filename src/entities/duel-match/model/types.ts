@@ -1,6 +1,7 @@
 import type { RaceId } from '../../../shared/types/content-ids';
 import type { UnitId } from '../../unit/model/types';
 import type { UnitTier } from '../../unit/model/types';
+import type { TowerBranchChoices } from '../../tower/model/talents';
 import type { BattlefieldState } from './battlefield';
 
 export type DuelRoundNumber = number;
@@ -16,6 +17,11 @@ export type DuelistState = {
   battlefield: BattlefieldState;
   /** Lives this side's sends took that have not yet made a whole stolen life. */
   lifeStealRemainder: number;
+  /**
+   * Talent branch this side chose per race tower, for the whole match: round
+   * settles keep it, a new match state (restart, setup change) starts empty.
+   */
+  towerBranchChoices: TowerBranchChoices;
 };
 
 export type DuelMatchState = {
