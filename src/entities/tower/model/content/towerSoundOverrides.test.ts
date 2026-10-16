@@ -7,7 +7,7 @@ function parseWithSounds(sounds: unknown) {
   return parseTowerContentFile({
     file: FILE,
     data: {
-      schemaVersion: 2,
+      schemaVersion: 3,
       race: 'UNDEAD',
       towers: [
         {

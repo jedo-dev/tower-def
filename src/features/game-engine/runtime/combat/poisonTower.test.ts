@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
+  applyEffectToCreep,
   DEFAULT_CREEP_COMBAT_TRAITS,
   findActiveEffect,
   tickCreepEffects,
@@ -17,6 +18,7 @@ import type { CreepRenderState, TowerRenderState } from '../../scenes/gameScene.
 vi.mock('phaser', () => ({ default: { Display: { Color: {} } } }));
 
 const { updateTowerCombat } = await import('./gameSceneCombatRuntime');
+const { tickFieldCreepEffects } = await import('./towerCombatCore');
 
 type CombatConfig = Parameters<typeof updateTowerCombat>[2];
 type CombatDeps = Parameters<typeof updateTowerCombat>[1];
@@ -200,16 +202,35 @@ describe('poison tower', () => {
     expect(ticked.hp).toBeLessThan(hpAfterHit);
   });
 
-  it('bypasses armor, unlike a direct hit', () => {
-    const armored = spawnCreep();
-    armored.entity = { ...armored.entity, armor: 10, armorType: 'heavy' };
-    const battlefield = createBattlefield([buildTower(TowerTypeId.POISON)], [armored]);
+  it('deals magical damage over time: high magical armor reduces it, negative amplifies it', () => {
+    const poisonTickMs = 500;
 
-    updateTowerCombat(battlefield, createDeps(), CONFIG, 16);
+    function poisonTickLoss(magicalArmor: number): number {
+      const creep = spawnCreep();
+      creep.entity = applyEffectToCreep(
+        { ...creep.entity, physicalArmor: 0, magicalArmor },
+        { effectId: EffectId.POISON },
+      );
+      const hpBefore = creep.entity.hp;
+      const hooks = {
+        toCellCenter: (position: { x: number; y: number }) => position,
+        onCreepHit: vi.fn(),
+        onTargetStruck: vi.fn(),
+        onDamageDealt: vi.fn(),
+        onEffectApplied: vi.fn(),
+        onEffectsTicked: vi.fn(),
+        onCreepKilled: vi.fn(),
+        onTowerFired: vi.fn(),
+      };
 
-    const poison = findActiveEffect(armored.entity, EffectId.POISON)!;
-    const tick = tickCreepEffects(armored.entity, 500);
+      tickFieldCreepEffects({ creeps: [creep], towers: [] }, hooks, poisonTickMs);
+      return hpBefore - creep.entity.hp;
+    }
 
-    expect(tick.damage).toBe(poison.magnitude * poison.stacks);
+    const unwarded = poisonTickLoss(0);
+
+    expect(unwarded).toBeGreaterThan(0);
+    expect(poisonTickLoss(20)).toBeLessThan(unwarded);
+    expect(poisonTickLoss(-10)).toBeGreaterThan(unwarded);
   });
 });

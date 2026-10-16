@@ -4,8 +4,10 @@ import {
   UNIT_CONTENT_FILE_KEYS,
   UNIT_CONTENT_OPTIONAL_KEYS,
   UNIT_CONTENT_REQUIRED_KEYS,
+  UNIT_ARMOR_BOUNDS,
   UNIT_CONTENT_SCHEMA_VERSION,
   UNIT_STAT_BOUNDS,
+  type UnitArmorStatKey,
   type UnitContentEntry,
   type UnitContentFile,
   type UnitContentStatKey,
@@ -18,13 +20,15 @@ const authoredFile: UnitContentFile = sampleRaceContent;
 
 // Compile-time contract: authored stat names match the runtime unit config, so
 // migrating a race to content never requires renaming a downstream field.
-const contentStatKeyToRuntimeKey: Record<UnitContentStatKey, keyof UnitConfig> = {
-  health: 'health',
-  speed: 'speed',
-  armor: 'armor',
-  damage: 'damage',
-  rewardGold: 'rewardGold',
-};
+const contentStatKeyToRuntimeKey: Record<UnitContentStatKey | UnitArmorStatKey, keyof UnitConfig> =
+  {
+    physicalArmor: 'physicalArmor',
+    magicalArmor: 'magicalArmor',
+    health: 'health',
+    speed: 'speed',
+    damage: 'damage',
+    rewardGold: 'rewardGold',
+  };
 
 function getEntryKeys(entry: UnitContentEntry): string[] {
   return Object.keys(entry);
@@ -76,6 +80,19 @@ describe('unit content schema', () => {
         expect(Number.isFinite(value), `${unit.id}.${statKey}`).toBe(true);
         expect(value, `${unit.id}.${statKey}`).toBeGreaterThanOrEqual(bound.min);
         expect(value, `${unit.id}.${statKey}`).toBeLessThanOrEqual(bound.max);
+      }
+    }
+  });
+
+  it('keeps both authored armors whole and inside the armor bounds', () => {
+    for (const unit of authoredFile.units) {
+      for (const armorKey of Object.keys(UNIT_ARMOR_BOUNDS) as UnitArmorStatKey[]) {
+        const value = unit[armorKey];
+        const bound = UNIT_ARMOR_BOUNDS[armorKey];
+
+        expect(Number.isInteger(value), `${unit.id}.${armorKey}`).toBe(true);
+        expect(value, `${unit.id}.${armorKey}`).toBeGreaterThanOrEqual(bound.min);
+        expect(value, `${unit.id}.${armorKey}`).toBeLessThanOrEqual(bound.max);
       }
     }
   });

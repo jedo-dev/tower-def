@@ -17,7 +17,8 @@ function creepStats(creep: CreepCardViewModel): StatCell[] {
   return [
     { key: 'health', label: 'HP (wave 1)', value: String(creep.health) },
     { key: 'speed', label: 'Speed', value: String(creep.speed) },
-    { key: 'armor', label: 'Armor', value: `${creep.armor} ${capitalize(creep.armorType)}` },
+    { key: 'physical-armor', label: 'Phys. armor', value: String(creep.physicalArmor) },
+    { key: 'magical-armor', label: 'Mag. armor', value: String(creep.magicalArmor) },
     { key: 'size', label: 'Size', value: capitalize(creep.sizeClass) },
     { key: 'move', label: 'Moves', value: capitalize(creep.moveType) },
     { key: 'reward', label: 'Kill reward', value: `${creep.rewardGold}g`, tone: 'gold' },

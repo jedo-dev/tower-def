@@ -1,6 +1,5 @@
 import type { GridPosition } from '../../../shared/types/pathfinding';
 import {
-  UnitArmorType,
   UnitMoveType,
   UnitSizeClass,
   type CreepTypeId,
@@ -21,8 +20,10 @@ export type CreepStatus = CreepLifeState | 'escaped';
  * targeting can read them without touching content in a hot path.
  */
 export type CreepCombatTraits = {
-  armor: number;
-  armorType: UnitArmorType;
+  /** Mitigates physical hits; negative values amplify them. */
+  physicalArmor: number;
+  /** Mitigates magical hits and damage over time; negative values amplify them. */
+  magicalArmor: number;
   moveType: UnitMoveType;
   /** Footprint class; decides which wave route the creep walks. */
   sizeClass: UnitSizeClass;
@@ -30,8 +31,8 @@ export type CreepCombatTraits = {
 
 /** Used by spawn paths that have no authored creature behind them. */
 export const DEFAULT_CREEP_COMBAT_TRAITS: CreepCombatTraits = {
-  armor: 0,
-  armorType: UnitArmorType.LIGHT,
+  physicalArmor: 0,
+  magicalArmor: 0,
   moveType: UnitMoveType.GROUND,
   sizeClass: UnitSizeClass.MEDIUM,
 };
@@ -56,6 +57,12 @@ export type CreepEntity = CreepCombatTraits & {
   id: CreepId;
   type: CreepType;
   hp: number;
+  /**
+   * Health the creep spawned with; percent damage takes its share of this.
+   * Every spawn path sets it; a creep built without one (tests, legacy
+   * fixtures) is treated as spawned at its current health.
+   */
+  maxHp?: number;
   lifeState: CreepLifeState;
   speed: number;
   status: CreepStatus;

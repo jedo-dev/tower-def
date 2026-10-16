@@ -38,7 +38,7 @@ describe('undead roster', () => {
 
     expect(abomination.speed).toBeLessThan(banshee.speed);
     expect(abomination.health).toBeGreaterThan(banshee.health);
-    expect(abomination.armor).toBeGreaterThan(banshee.armor);
+    expect(abomination.physicalArmor).toBeGreaterThan(banshee.physicalArmor);
   });
 
   it('keeps health and reward rising with tier', () => {

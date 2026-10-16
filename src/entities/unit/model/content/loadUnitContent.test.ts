@@ -1,12 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import sampleRaceContent from './fixtures/sampleRaceContent.json';
 import { loadUnitContent, parseUnitContentFile } from './loadUnitContent';
-import {
-  RaceId,
-  UnitArmorType,
-  UnitMoveType,
-  UnitSizeClass,
-} from '../../../../shared/types/content-ids';
+import { RaceId, UnitMoveType, UnitSizeClass } from '../../../../shared/types/content-ids';
 import { UNIT_TRAIT_DEFAULTS } from './unitContent.types';
 import { CONTENT_LORE_MAX_LENGTH } from '../../../../shared/lib/content/contentValidation';
 import { UnitTier } from '../types';
@@ -22,7 +17,8 @@ function createEntry(overrides: AuthoredEntry = {}): AuthoredEntry {
     tier: 1,
     health: 110,
     speed: 1.3,
-    armor: 0,
+    physicalArmor: 0,
+    magicalArmor: 0,
     damage: 12,
     rewardGold: 6,
     spriteKey: 'unit.undead.skeleton',
@@ -32,7 +28,7 @@ function createEntry(overrides: AuthoredEntry = {}): AuthoredEntry {
 
 function createFile(units: unknown[], overrides: AuthoredEntry = {}): AuthoredEntry {
   return {
-    schemaVersion: 1,
+    schemaVersion: 3,
     race: 'UNDEAD',
     units,
     ...overrides,
@@ -55,14 +51,14 @@ describe('parseUnitContentFile', () => {
       tier: UnitTier.TIER_1,
       health: 110,
       speed: 1.3,
-      armor: 0,
+      physicalArmor: 0,
+      magicalArmor: 0,
       damage: 12,
       rewardGold: 6,
       spriteKey: 'unit.undead.skeleton',
       description: 'Restless bones marching from forgotten crypts.',
       moveType: UnitMoveType.GROUND,
       sizeClass: UnitSizeClass.MEDIUM,
-      armorType: UnitArmorType.LIGHT,
     });
     expect(units[1].description).toBeUndefined();
   });
@@ -72,7 +68,6 @@ describe('parseUnitContentFile', () => {
 
     expect(unit.moveType).toBe(UNIT_TRAIT_DEFAULTS.moveType);
     expect(unit.sizeClass).toBe(UNIT_TRAIT_DEFAULTS.sizeClass);
-    expect(unit.armorType).toBe(UNIT_TRAIT_DEFAULTS.armorType);
   });
 
   it('reads the traits a creature declares', () => {
@@ -82,14 +77,12 @@ describe('parseUnitContentFile', () => {
           id: 'undead_gargoyle',
           moveType: 'air',
           sizeClass: 'large',
-          armorType: 'heavy',
         }),
       ]),
     );
 
     expect(unit.moveType).toBe(UnitMoveType.AIR);
     expect(unit.sizeClass).toBe(UnitSizeClass.LARGE);
-    expect(unit.armorType).toBe(UnitArmorType.HEAVY);
   });
 
   it('reads the lore a creature declares and leaves it undefined otherwise', () => {
@@ -119,8 +112,8 @@ describe('parseUnitContentFile', () => {
     expect(() => parse(createFile([createEntry({ moveType: 'burrowing' })]))).toThrow(
       `${FILE} [undead_skeleton]: "moveType" is not a known value: burrowing`,
     );
-    expect(() => parse(createFile([createEntry({ armorType: 'plated' })]))).toThrow(
-      `${FILE} [undead_skeleton]: "armorType" is not a known value: plated`,
+    expect(() => parse(createFile([createEntry({ armorType: 'heavy' })]))).toThrow(
+      `${FILE} [undead_skeleton]: unknown field "armorType"`,
     );
   });
 
@@ -136,7 +129,34 @@ describe('parseUnitContentFile', () => {
 
   it('rejects an unsupported schema version', () => {
     expect(() => parse(createFile([createEntry()], { schemaVersion: 2 }))).toThrow(
-      `${FILE}: unsupported schemaVersion 2, expected 1`,
+      `${FILE}: unsupported schemaVersion 2, expected 3`,
+    );
+  });
+
+  it('rejects a single-armor version 1 file naming its first creature and the migration', () => {
+    const legacy = createFile([createEntry({ physicalArmor: undefined, armor: 2 })], {
+      schemaVersion: 1,
+    });
+
+    expect(() => parse(legacy)).toThrow(
+      `${FILE} [undead_skeleton]: schemaVersion 1 has a single "armor" and an "armorType"; ` +
+        'replace them with "physicalArmor" and "magicalArmor"',
+    );
+  });
+
+  it('reads both armors as whole points within the armor bounds', () => {
+    const [unit] = parse(createFile([createEntry({ physicalArmor: -4, magicalArmor: 12 })]));
+
+    expect(unit.physicalArmor).toBe(-4);
+    expect(unit.magicalArmor).toBe(12);
+    expect(() => parse(createFile([createEntry({ magicalArmor: 2.5 })]))).toThrow(
+      `${FILE} [undead_skeleton]: "magicalArmor" must be a whole number, got 2.5`,
+    );
+    expect(() => parse(createFile([createEntry({ physicalArmor: -26 })]))).toThrow(
+      `${FILE} [undead_skeleton]: "physicalArmor" must be between -25 and 75, got -26`,
+    );
+    expect(() => parse(createFile([createEntry({ magicalArmor: undefined })]))).toThrow(
+      `${FILE} [undead_skeleton]: "magicalArmor" must be a finite number`,
     );
   });
 

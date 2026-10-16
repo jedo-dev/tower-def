@@ -60,8 +60,11 @@ describe('BestiaryPage', () => {
       String(skeleton.health),
     );
     expect(card.getByText('Speed').nextElementSibling?.textContent).toBe(String(skeleton.speed));
-    expect(card.getByText('Armor').nextElementSibling?.textContent).toBe(
-      `${skeleton.armor} Unarmored`,
+    expect(card.getByText('Phys. armor').nextElementSibling?.textContent).toBe(
+      String(skeleton.physicalArmor),
+    );
+    expect(card.getByText('Mag. armor').nextElementSibling?.textContent).toBe(
+      String(skeleton.magicalArmor),
     );
     expect(card.getByText('Size').nextElementSibling?.textContent).toBe('Small');
     expect(card.getByText('Moves').nextElementSibling?.textContent).toBe('Ground');

@@ -123,6 +123,22 @@ export function readNumber(
   return value;
 }
 
+/** A whole number within `bound`, e.g. an armor value. */
+export function readBoundedInteger(
+  source: Record<string, unknown>,
+  key: string,
+  location: ContentLocation,
+  bound: NumericBound,
+): number {
+  const value = readNumber(source, key, location, bound);
+
+  if (!Number.isInteger(value)) {
+    throw new ContentValidationError(location, `"${key}" must be a whole number, got ${value}`);
+  }
+
+  return value;
+}
+
 export function readIntegerFrom<TValue extends number>(
   source: Record<string, unknown>,
   key: string,
@@ -168,6 +184,31 @@ export function assertKnownKeys(
   if (unknownKey !== undefined) {
     throw new ContentValidationError(location, `unknown field "${unknownKey}"`);
   }
+}
+
+/**
+ * Id of the first entity listed under `listKey`, so a stale file can name a
+ * concrete entity to migrate. Undefined when the list is missing or malformed.
+ */
+export function findFirstEntityId(
+  file: Record<string, unknown>,
+  listKey: string,
+): string | undefined {
+  const list = file[listKey];
+
+  if (!Array.isArray(list)) {
+    return undefined;
+  }
+
+  const [first] = list as unknown[];
+
+  if (typeof first !== 'object' || first === null) {
+    return undefined;
+  }
+
+  const id = (first as Record<string, unknown>).id;
+
+  return typeof id === 'string' && id.trim() !== '' ? id : undefined;
 }
 
 export function assertSchemaVersion(

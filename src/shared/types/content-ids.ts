@@ -139,20 +139,33 @@ export const UNIT_SIZE_CLASSES: readonly UnitSizeClass[] = [
   UnitSizeClass.LARGE,
 ] as const;
 
-/** Defense class a creature carries on top of its flat armor value. */
-export const UnitArmorType = {
-  UNARMORED: 'unarmored',
-  LIGHT: 'light',
-  HEAVY: 'heavy',
+/**
+ * What kind of hit a tower deals. Physical hits are mitigated by a creature's
+ * physical armor, magical hits by its magical armor; percent hits take a share
+ * of the creature's maximum health and ignore armor.
+ */
+export const DamageType = {
+  PHYSICAL: 'physical',
+  MAGICAL: 'magical',
+  PERCENT: 'percent',
 } as const;
 
-export type UnitArmorType = (typeof UnitArmorType)[keyof typeof UnitArmorType];
+export type DamageType = (typeof DamageType)[keyof typeof DamageType];
 
-export const UNIT_ARMOR_TYPES: readonly UnitArmorType[] = [
-  UnitArmorType.UNARMORED,
-  UnitArmorType.LIGHT,
-  UnitArmorType.HEAVY,
+export const DAMAGE_TYPES: readonly DamageType[] = [
+  DamageType.PHYSICAL,
+  DamageType.MAGICAL,
+  DamageType.PERCENT,
 ] as const;
+
+/** Which of a creature's two armors an armor-changing effect touches. */
+export const ArmorKind = {
+  PHYSICAL: 'physical',
+  MAGICAL: 'magical',
+  BOTH: 'both',
+} as const;
+
+export type ArmorKind = (typeof ArmorKind)[keyof typeof ArmorKind];
 
 /** Timed effects a tower can put on a creep. */
 export const EffectId = {

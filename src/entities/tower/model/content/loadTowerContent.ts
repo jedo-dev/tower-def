@@ -1,16 +1,13 @@
 import {
-  DEFAULT_TOWER_TARGET_SCOPE,
-  EFFECT_IDS,
+  DAMAGE_TYPES,
   RACE_IDS,
   RaceId,
   TOWER_ATTACK_KINDS,
-  TOWER_TARGET_SCOPES,
   TOWER_TYPE_IDS,
-  TOWER_AURA_STACKING_RULES,
-  type EffectId,
+  type DamageType,
   type TowerAttackKind,
-  type TowerAuraStacking,
   type TowerTargetScope,
+  type TowerTypeId,
 } from '../../../../shared/types/content-ids';
 import {
   CONTENT_LORE_MAX_LENGTH,
@@ -24,7 +21,6 @@ import {
   readStringFrom,
   type ContentLocation,
 } from '../../../../shared/lib/content/contentValidation';
-import type { TowerTypeId } from '../../../../shared/types/content-ids';
 import { TOWER_SOUND_SLOTS } from '../../../../shared/types/sound-ids';
 import { readSoundSlotSet } from '../../../../shared/lib/content/soundSlotValidation';
 import { BUILDABLE_TOWER_IDS } from '../towerIds';
@@ -36,45 +32,39 @@ import {
   TOWER_CONTENT_FILE_KEYS,
   TOWER_CONTENT_OPTIONAL_KEYS,
   TOWER_CONTENT_REQUIRED_KEYS,
-  TOWER_AURA_BOUNDS,
-  TOWER_AURA_KEYS,
-  TOWER_CHAIN_BOUNDS,
-  TOWER_CHAIN_KEYS,
-  TOWER_LEVEL_BOUNDS,
-  TOWER_LEVEL_KEYS,
-  TOWER_ON_HIT_EFFECT_KEYS,
   TOWER_STAT_BOUNDS,
 } from './towerContent.types';
 import { assertTowerSchemaVersion } from './assertTowerSchemaVersion';
+import {
+  parseAllowedTargets,
+  parseAura,
+  parseChain,
+  parseLevels,
+  parseOnHitEffects,
+  parseOptionalDamageType,
+  parseOptionalStat,
+  type TowerAuraDefinition,
+  type TowerChainDefinition,
+  type TowerLevelDefinition,
+} from './towerContentFields';
+
+export type {
+  TowerAuraDefinition,
+  TowerChainDefinition,
+  TowerLevelDefinition,
+} from './towerContentFields';
 
 export type TowerContentSource = {
   file: string;
   data: unknown;
 };
 
-export type TowerChainDefinition = {
-  bounces: number;
-  bounceRangeCells: number;
-  damageFalloff: number;
-};
-
-export type TowerAuraDefinition = {
-  radiusCells: number;
-  attackSpeedBonus: number;
-  rangeBonus: number;
-  stacking: TowerAuraStacking;
-};
-
-export type TowerLevelDefinition = {
-  level: number;
-  upgradeCostGold: number;
-  stats: TowerCombatStats;
-};
-
 export type TowerArchetypeDefinition = TowerCombatStats & {
   id: TowerTypeId;
   name: string;
   attackKind: TowerAttackKind;
+  /** Damage type every tower of the archetype deals unless it overrides it. */
+  damageType: DamageType;
   /** Which creeps the archetype shoots: ground, air or both. */
   allowedTargets: TowerTargetScope;
   description: string;
@@ -94,104 +84,6 @@ const ARCHETYPE_ENTRY_KEYS: readonly string[] = [
   ...TOWER_ARCHETYPE_OPTIONAL_KEYS,
 ];
 
-function parseOnHitEffects(
-  entry: Record<string, unknown>,
-  location: ContentLocation,
-): TowerOnHitEffect[] {
-  if (entry.onHitEffects === undefined) {
-    return [];
-  }
-
-  const rawEffects = readArray(entry, 'onHitEffects', location);
-
-  return rawEffects.map((rawEffect) => {
-    const effect = readRecord(rawEffect, location);
-    assertKnownKeys(effect, TOWER_ON_HIT_EFFECT_KEYS, location);
-
-    const effectId: EffectId = readStringFrom(effect, 'effectId', location, EFFECT_IDS);
-
-    return {
-      effectId,
-      magnitude:
-        effect.magnitude === undefined ? undefined : readNumber(effect, 'magnitude', location),
-      durationMs:
-        effect.durationMs === undefined ? undefined : readNumber(effect, 'durationMs', location),
-      maxStacks:
-        effect.maxStacks === undefined ? undefined : readNumber(effect, 'maxStacks', location),
-    };
-  });
-}
-
-function parseOptionalStat(
-  entry: Record<string, unknown>,
-  key: 'splashRadius',
-  location: ContentLocation,
-): number | undefined {
-  if (entry[key] === undefined) {
-    return undefined;
-  }
-
-  return readNumber(entry, key, location, TOWER_STAT_BOUNDS[key]);
-}
-
-/** `allowedTargets` of a tower or archetype entry; `both` when the content omits it. */
-function parseAllowedTargets(
-  entry: Record<string, unknown>,
-  location: ContentLocation,
-): TowerTargetScope {
-  if (entry.allowedTargets === undefined) {
-    return DEFAULT_TOWER_TARGET_SCOPE;
-  }
-  return readStringFrom(entry, 'allowedTargets', location, TOWER_TARGET_SCOPES);
-}
-
-function parseChain(
-  entry: Record<string, unknown>,
-  location: ContentLocation,
-): TowerChainDefinition | undefined {
-  if (entry.chain === undefined) {
-    return undefined;
-  }
-
-  const chain = readRecord(entry.chain, location);
-  assertKnownKeys(chain, TOWER_CHAIN_KEYS, location);
-
-  return {
-    bounces: readNumber(chain, 'bounces', location, TOWER_CHAIN_BOUNDS.bounces),
-    bounceRangeCells: readNumber(
-      chain,
-      'bounceRangeCells',
-      location,
-      TOWER_CHAIN_BOUNDS.bounceRangeCells,
-    ),
-    damageFalloff: readNumber(chain, 'damageFalloff', location, TOWER_CHAIN_BOUNDS.damageFalloff),
-  };
-}
-
-function parseAura(
-  entry: Record<string, unknown>,
-  location: ContentLocation,
-): TowerAuraDefinition | undefined {
-  if (entry.aura === undefined) {
-    return undefined;
-  }
-
-  const aura = readRecord(entry.aura, location);
-  assertKnownKeys(aura, TOWER_AURA_KEYS, location);
-
-  return {
-    radiusCells: readNumber(aura, 'radiusCells', location, TOWER_AURA_BOUNDS.radiusCells),
-    attackSpeedBonus: readNumber(
-      aura,
-      'attackSpeedBonus',
-      location,
-      TOWER_AURA_BOUNDS.attackSpeedBonus,
-    ),
-    rangeBonus: readNumber(aura, 'rangeBonus', location, TOWER_AURA_BOUNDS.rangeBonus),
-    stacking: readStringFrom(aura, 'stacking', location, TOWER_AURA_STACKING_RULES),
-  };
-}
-
 function parseTowerEntry(
   rawEntry: unknown,
   fileLocation: ContentLocation,
@@ -210,6 +102,7 @@ function parseTowerEntry(
   const splashRadius = parseOptionalStat(entry, 'splashRadius', location);
   const sounds = readSoundSlotSet(entry, 'sounds', TOWER_SOUND_SLOTS, location);
   const lore = readOptionalBoundedString(entry, 'lore', location, CONTENT_LORE_MAX_LENGTH);
+  const damageType = parseOptionalDamageType(entry, location);
 
   return {
     id,
@@ -230,6 +123,7 @@ function parseTowerEntry(
     onHitEffects: parseOnHitEffects(entry, location),
     ...(sounds === undefined ? {} : { sounds }),
     allowedTargets: parseAllowedTargets(entry, location),
+    ...(damageType === undefined ? {} : { damageType }),
     spriteKey: readString(entry, 'spriteKey', location),
     description: readString(entry, 'description', location),
     ...(lore === undefined ? {} : { lore }),
@@ -277,58 +171,6 @@ export function loadTowerContent(sources: readonly TowerContentSource[]): Builda
   return towers;
 }
 
-function parseLevels(
-  entry: Record<string, unknown>,
-  location: ContentLocation,
-): TowerLevelDefinition[] {
-  const rawLevels = readArray(entry, 'levels', location);
-
-  if (rawLevels.length === 0) {
-    throw new ContentValidationError(location, 'an archetype must declare at least one level');
-  }
-
-  return rawLevels.map((rawLevel, index) => {
-    const level = readRecord(rawLevel, location);
-    assertKnownKeys(level, TOWER_LEVEL_KEYS, location);
-
-    const declaredLevel = readNumber(level, 'level', location);
-
-    if (declaredLevel !== index + 1) {
-      throw new ContentValidationError(
-        location,
-        `levels must be listed in order from 1; found ${declaredLevel} at position ${index + 1}`,
-      );
-    }
-
-    const splashRadius = parseOptionalStat(level, 'splashRadius', location);
-    const aura = parseAura(level, location);
-    const onHitEffects = parseOnHitEffects(level, location);
-
-    return {
-      level: declaredLevel,
-      upgradeCostGold: readNumber(
-        level,
-        'upgradeCostGold',
-        location,
-        TOWER_LEVEL_BOUNDS.upgradeCostGold,
-      ),
-      stats: {
-        damage: readNumber(level, 'damage', location, TOWER_STAT_BOUNDS.damage),
-        range: readNumber(level, 'range', location, TOWER_STAT_BOUNDS.range),
-        attackCooldownMs: readNumber(
-          level,
-          'attackCooldownMs',
-          location,
-          TOWER_STAT_BOUNDS.attackCooldownMs,
-        ),
-        ...(splashRadius === undefined ? {} : { splashRadius }),
-        ...(onHitEffects.length === 0 ? {} : { onHitEffects }),
-        ...(aura === undefined ? {} : { aura }),
-      },
-    };
-  });
-}
-
 function parseArchetypeEntry(
   rawEntry: unknown,
   fileLocation: ContentLocation,
@@ -356,6 +198,7 @@ function parseArchetypeEntry(
     id,
     name: readString(entry, 'name', location),
     attackKind,
+    damageType: readStringFrom(entry, 'damageType', location, DAMAGE_TYPES),
     allowedTargets: parseAllowedTargets(entry, location),
     description: readString(entry, 'description', location),
     damage: readNumber(entry, 'damage', location, TOWER_STAT_BOUNDS.damage),

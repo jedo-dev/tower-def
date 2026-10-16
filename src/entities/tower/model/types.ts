@@ -1,7 +1,12 @@
 import towerArchetypeContent from '../../../content/towers/archetypes.json';
 import type { GridPosition } from '../../../shared/types/pathfinding';
 import type { TowerTypeUpgradeConfig } from './upgradeConfig';
-import type { EffectId, RaceId, TowerTargetScope } from '../../../shared/types/content-ids';
+import type {
+  DamageType,
+  EffectId,
+  RaceId,
+  TowerTargetScope,
+} from '../../../shared/types/content-ids';
 import { TOWER_TYPE_IDS, TowerTypeId } from '../../../shared/types/content-ids';
 import type { TowerAttackKind } from '../../../shared/types/content-ids';
 import type { TowerSoundSet } from '../../../shared/types/sound-ids';
@@ -54,6 +59,8 @@ export type BuildableTowerConfig = {
   sounds?: TowerSoundSet;
   /** Which creeps the tower shoots: ground, air or both. `both` unless authored. */
   allowedTargets: TowerTargetScope;
+  /** Authored override of the archetype damage type; see `resolveTowerDamageType`. */
+  damageType?: DamageType;
   spriteKey: string;
   description: string;
   /** Bestiary flavour text, one or two sentences in the race's voice. */

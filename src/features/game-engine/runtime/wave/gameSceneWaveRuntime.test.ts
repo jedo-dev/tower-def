@@ -148,8 +148,9 @@ describe('features/game-engine/runtime/wave creature traits', () => {
     const spawned = state.activeCreeps[0]?.entity;
 
     expect(spawned).toBeDefined();
-    expect(spawned.armor).toBe(gargoyle.armor);
-    expect(spawned.armorType).toBe(gargoyle.armorType);
+    expect(spawned.physicalArmor).toBe(gargoyle.physicalArmor);
+    expect(spawned.magicalArmor).toBe(gargoyle.magicalArmor);
+    expect(spawned.maxHp).toBe(spawned.hp);
     expect(spawned.moveType).toBe(UnitMoveType.AIR);
     expect(spawned.sizeClass).toBe(gargoyle.sizeClass);
   });
