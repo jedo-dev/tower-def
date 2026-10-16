@@ -14,10 +14,12 @@ export {
   findActiveEffect,
   getActiveEffects,
   getEffectiveSpeedMultiplier,
+  hasEffectDamage,
   removeEffectFromCreep,
+  resolveActiveEffectDamageType,
   tickCreepEffects,
 } from './model/effects';
-export type { ApplyEffectInput, CreepEffectTickResult } from './model/effects';
+export type { ApplyEffectInput, CreepEffectTickResult, EffectDamageByType } from './model/effects';
 export {
   applyDamageToCreep,
   armorKindCovers,

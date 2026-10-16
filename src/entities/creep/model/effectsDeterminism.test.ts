@@ -57,7 +57,7 @@ function simulate(seed: number, frames: number): SimulationResult {
     const deltaMs = 8 + Math.floor(random() * 24);
     const result = tickCreepEffects(creep, deltaMs);
     creep = result.creep;
-    damage += result.damage;
+    damage += result.damageByType.magical;
   }
 
   return { damage, state: JSON.stringify(getActiveEffects(creep)) };
@@ -84,7 +84,7 @@ describe('effect engine determinism', () => {
       for (let elapsed = 0; elapsed < 4_000; elapsed += frameMs) {
         const result = tickCreepEffects(creep, frameMs);
         creep = result.creep;
-        damage += result.damage;
+        damage += result.damageByType.magical;
       }
 
       return damage;

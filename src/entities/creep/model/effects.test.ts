@@ -9,7 +9,7 @@ import {
 } from './effects';
 import { DEFAULT_CREEP_COMBAT_TRAITS, type CreepEntity } from './types';
 import { EFFECT_BALANCE, resolveEffectDefinition } from '../../../shared/constants/effects';
-import { EffectId } from '../../../shared/types/content-ids';
+import { DamageType, EffectId } from '../../../shared/types/content-ids';
 
 function createCreep(overrides?: Partial<CreepEntity>): CreepEntity {
   return {
@@ -123,7 +123,7 @@ describe('tickCreepEffects', () => {
     const result = tickCreepEffects(creep, 16);
 
     expect(result.creep).toBe(creep);
-    expect(result.damage).toBe(0);
+    expect(result.damageByType.magical).toBe(0);
     expect(result.expired).toHaveLength(0);
   });
 
@@ -131,21 +131,23 @@ describe('tickCreepEffects', () => {
     const creep = applyEffectToCreep(createCreep(), { effectId: EffectId.POISON });
     const result = tickCreepEffects(creep, POISON.tickIntervalMs);
 
-    expect(result.damage).toBe(POISON.magnitude);
+    expect(result.damageByType.magical).toBe(POISON.magnitude);
     expect(result.creep.hp).toBe(creep.hp);
   });
 
   it('does not tick before the interval elapses', () => {
     const creep = applyEffectToCreep(createCreep(), { effectId: EffectId.POISON });
 
-    expect(tickCreepEffects(creep, POISON.tickIntervalMs - 1).damage).toBe(0);
+    expect(tickCreepEffects(creep, POISON.tickIntervalMs - 1).damageByType.magical).toBe(0);
   });
 
   it('scales damage with the number of stacks', () => {
     let creep = applyEffectToCreep(createCreep(), { effectId: EffectId.POISON });
     creep = applyEffectToCreep(creep, { effectId: EffectId.POISON });
 
-    expect(tickCreepEffects(creep, POISON.tickIntervalMs).damage).toBe(POISON.magnitude * 2);
+    expect(tickCreepEffects(creep, POISON.tickIntervalMs).damageByType.magical).toBe(
+      POISON.magnitude * 2,
+    );
   });
 
   it('deals the same total damage regardless of frame pacing', () => {
@@ -155,7 +157,7 @@ describe('tickCreepEffects', () => {
 
       for (let elapsed = 0; elapsed < POISON.durationMs; elapsed += frameMs) {
         const result = tickCreepEffects(creep, frameMs);
-        damage += result.damage;
+        damage += result.damageByType.magical;
         creep = result.creep;
       }
 
@@ -188,8 +190,40 @@ describe('tickCreepEffects', () => {
 
     const result = tickCreepEffects(creep, POISON.durationMs);
 
-    expect(result.damage).toBe(POISON.magnitude);
+    expect(result.damageByType.magical).toBe(POISON.magnitude);
     expect(result.expired).toEqual([EffectId.POISON]);
+  });
+
+  it('reports default damage over time as magical', () => {
+    const creep = applyEffectToCreep(createCreep(), { effectId: EffectId.POISON });
+    const result = tickCreepEffects(creep, POISON.tickIntervalMs);
+
+    expect(result.damageByType).toEqual({ physical: 0, magical: POISON.magnitude, percent: 0 });
+  });
+
+  it('reports a typed effect under its own damage type', () => {
+    const creep = applyEffectToCreep(createCreep(), {
+      effectId: EffectId.POISON,
+      magnitude: 7,
+      damageType: DamageType.PERCENT,
+    });
+    const result = tickCreepEffects(creep, POISON.tickIntervalMs);
+
+    expect(result.damageByType).toEqual({ physical: 0, magical: 0, percent: 7 });
+  });
+
+  it('lets the latest application decide the tick type of a stacking effect', () => {
+    let creep = applyEffectToCreep(createCreep(), { effectId: EffectId.POISON });
+    creep = applyEffectToCreep(creep, {
+      effectId: EffectId.POISON,
+      damageType: DamageType.PERCENT,
+    });
+
+    expect(findActiveEffect(creep, EffectId.POISON)?.damageType).toBe(DamageType.PERCENT);
+
+    creep = applyEffectToCreep(creep, { effectId: EffectId.POISON });
+
+    expect(findActiveEffect(creep, EffectId.POISON)?.damageType).toBeUndefined();
   });
 
   it('ticks several effects in one pass', () => {
@@ -198,7 +232,7 @@ describe('tickCreepEffects', () => {
 
     const result = tickCreepEffects(creep, 500);
 
-    expect(result.damage).toBe(POISON.magnitude + BURN.magnitude);
+    expect(result.damageByType.magical).toBe(POISON.magnitude + BURN.magnitude);
     expect(getActiveEffects(result.creep)).toHaveLength(2);
   });
 });

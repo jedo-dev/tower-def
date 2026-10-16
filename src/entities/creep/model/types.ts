@@ -3,6 +3,7 @@ import {
   UnitMoveType,
   UnitSizeClass,
   type CreepTypeId,
+  type DamageType,
   type EffectId,
 } from '../../../shared/types/content-ids';
 
@@ -48,6 +49,11 @@ export type ActiveEffect = {
   maxStacks: number;
   /** Time until the next damage tick; unused by effects that do not tick. */
   nextTickInMs: number;
+  /**
+   * Damage over time only: the type its ticks deal, set by the tower that
+   * applied it. Absent means `DAMAGE_OVER_TIME_DAMAGE_TYPE`.
+   */
+  damageType?: DamageType;
 };
 
 /** The duel side that bought and sent a creep; baseline wave creeps have none. */

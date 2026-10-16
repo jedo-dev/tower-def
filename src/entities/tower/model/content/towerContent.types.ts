@@ -28,6 +28,8 @@ export type TowerOnHitEffectEntry = {
   magnitude?: number;
   durationMs?: number;
   maxStacks?: number;
+  /** Damage-over-time effects only: `physical`, `magical` or `percent`; magical when absent. */
+  damageType?: string;
 };
 
 export type TowerContentEntry = {
@@ -134,6 +136,7 @@ export const TOWER_ON_HIT_EFFECT_KEYS: readonly (keyof TowerOnHitEffectEntry)[] 
   'magnitude',
   'durationMs',
   'maxStacks',
+  'damageType',
 ];
 
 export const TOWER_CONTENT_REQUIRED_KEYS: readonly (keyof TowerContentEntry)[] = [
