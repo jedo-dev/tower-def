@@ -1,16 +1,7 @@
 import Phaser from 'phaser';
-import {
-  awardBonusGold,
-  createInitialDuelMatchState,
-  reconcileBattlefieldsForNextRound,
-  refreshOpponentRoutesForWaveStart,
-  resolveQueuedSendUnits,
-  startRound,
-  type DuelMatchState,
-} from '../../../entities/duel-match';
-import { getTowersIncomePerRound } from '../../../entities/tower';
-import { calculateWaveRoutes, EMPTY_WAVE_ROUTES, hasWaveRoute } from '../../../entities/wave';
-import { startNextWaveCycle, type WavePhaseState } from '../../wave-phase';
+import { createInitialDuelMatchState, type DuelMatchState } from '../../../entities/duel-match';
+import { EMPTY_WAVE_ROUTES } from '../../../entities/wave';
+import { type WavePhaseState } from '../../wave-phase';
 import type { GridModel } from '../../../shared/types/grid';
 import {
   getGameSetupConfig,
@@ -60,23 +51,9 @@ import {
   handleChooseCreatureBranchCommand,
   handleUpgradeCreatureCommand,
 } from '../runtime/duel/creatureTalentCommands';
-import {
-  buildSentCreepOutcomes,
-  resetSentCreepDeathTally,
-} from '../runtime/duel/sentCreepOutcomeTally';
-import { summarizeFieldLeaks } from '../runtime/duel/fieldLeakSettlement';
-import { applyComputerBuildPhaseStrategies } from '../runtime/duel/gameSceneComputerStrategy';
+import { resetSentCreepDeathTally } from '../runtime/duel/sentCreepOutcomeTally';
 import { handleSendCreepCommand } from '../runtime/duel/gameSceneSendCommand';
-import {
-  publishPlayerSendLimits,
-  resetSendQueuesForWaveStart,
-} from '../runtime/duel/gameSceneSendLimits';
-import {
-  applyDuelRoundEnd as applyDuelRoundEndRuntime,
-  publishRoundLifeEvents,
-  publishRoundSettled,
-  type DuelMatchRuntimeState,
-} from '../runtime/duel/gameSceneDuelRuntime';
+import { publishPlayerSendLimits } from '../runtime/duel/gameSceneSendLimits';
 import {
   attachRoutePreviewGraphics,
   destroyRoutePreviewGraphics,
@@ -94,26 +71,16 @@ import {
 } from '../runtime/input/gameSceneInputBindings';
 import { createInputControllerState } from '../runtime/input/gameSceneInputController';
 import {
-  applyWaveCompletionRewardIfResolved as applyWaveCompletionRewardIfResolvedRuntime,
   type WaveRuntimeState,
   initializeWaveRuntime as initializeWaveRuntimeModule,
   resetRunToInitialState as resetRunToInitialStateRuntime,
-  spawnWaveCreeps as spawnWaveCreepsRuntime,
-  tryStartNextWave as tryStartNextWaveRuntime,
-  updateAutoWaveCountdown as updateAutoWaveCountdownRuntime,
 } from '../runtime/wave/gameSceneWaveRuntime';
 import { advanceGameClock, isGameSpeed } from '../runtime/time/gameClock';
 import {
   runGuardedEngineStep,
   type EngineErrorReport,
 } from '../runtime/lifecycle/engineErrorGuard';
-import {
-  clearFieldWaveSchedule,
-  isFieldWaveResolved,
-  processPendingWaveSpawns,
-  resolveWaveSpawnTiming,
-  scheduleOpponentFieldWave,
-} from '../runtime/wave/fieldWaveSpawns';
+import { clearFieldWaveSchedule, processPendingWaveSpawns } from '../runtime/wave/fieldWaveSpawns';
 import {
   createSharedBaselineWaveSource,
   resolveBaselineWaveSeed,
@@ -128,13 +95,7 @@ import {
   EXIT_CELL,
   GRID_OVERLAY_RENDER_DEPTH,
 } from './gameScene.constants';
-import {
-  mapEnemyFactionToHudFaction,
-  mapHudFactionToRaceId,
-  mapRaceIdToHudFaction,
-  mapDuelEndReasonToOutcomeReason,
-  resolveMatchOutcomeStatus,
-} from './gameScene.helpers';
+import { mapEnemyFactionToHudFaction, mapHudFactionToRaceId } from './gameScene.helpers';
 import {
   COMBAT_RUNTIME_CONFIG,
   GRID_RENDERER_CONFIG,
@@ -142,6 +103,12 @@ import {
   WAVE_RUNTIME_CONFIG,
 } from './gameScene.runtimeConfigs';
 import type { GameSceneInspection } from './gameScene.types';
+import {
+  applyWaveCompletionRewardIfResolved,
+  startWaveOnPlayerRequest,
+  tryStartNextWave,
+  updateAutoWaveCountdown,
+} from './controllers/waveFlowController';
 import { GameSceneContext } from './controllers/gameSceneContext';
 import {
   handleGameOut,
@@ -154,13 +121,9 @@ import {
 import {
   applyBattlefieldViewVisibility,
   handleBattlefieldViewChanged,
-  renderVisibleBattlefield,
-  syncOpponentBattlefieldRenderStateFromDuel,
-  syncOpponentDuelCreepsFromField,
 } from './controllers/battlefieldViewController';
 import {
   getGridRendererDeps,
-  redrawTerrainTiles,
   refreshBuildPhasePathTiles,
   updateBuildPreview,
   updateGridOverlayVisualState,
@@ -171,15 +134,12 @@ import {
   canPerformBuildActions,
   getBaselineRaceId,
   getBoardCamera,
-  getSelectedFactionUnits,
-  syncDuelPlayerGoldFromWallet,
   type GameSceneCore,
 } from './controllers/sceneQueries';
 import { type GameSceneState } from './controllers/gameSceneState';
 
 export class GameScene extends Phaser.Scene {
   public static readonly KEY = 'GameScene';
-  private static readonly OPPONENT_LEAK_HISTORY_LIMIT = 10;
   private readonly ctx = new GameSceneContext(this, {
     handleStartWaveCommand: () => this.handleStartWaveCommand(),
   });
@@ -385,7 +345,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   private stepSimulation(nowMs: number, delta: number): void {
-    this.updateAutoWaveCountdown(nowMs);
+    updateAutoWaveCountdown(this.ctx, nowMs);
 
     if (this.isGameOver) {
       return;
@@ -439,8 +399,8 @@ export class GameScene extends Phaser.Scene {
       COMBAT_RUNTIME_CONFIG,
       delta,
     );
-    this.applyWaveCompletionRewardIfResolved();
-    this.tryStartNextWave(nowMs);
+    applyWaveCompletionRewardIfResolved(this.ctx);
+    tryStartNextWave(this.ctx, nowMs);
     updateBattlefieldProjectiles(
       this.ctx.wiring.playerBattlefieldContext,
       COMBAT_RUNTIME_CONFIG,
@@ -646,131 +606,6 @@ export class GameScene extends Phaser.Scene {
     this.registry.set('performance.fps', Math.round(this.game.loop.actualFps));
   }
 
-  private applyWaveCompletionRewardIfResolved(): void {
-    const wasWaveCompletionRewardGranted = this.state.runState.isWaveCompletionRewardGranted;
-    applyWaveCompletionRewardIfResolvedRuntime(
-      this.state.runState,
-      WAVE_RUNTIME_CONFIG,
-      this.ctx.wiring.waveRuntimeDeps,
-      isFieldWaveResolved(this.state.opponentWave),
-    );
-    if (!wasWaveCompletionRewardGranted && this.state.runState.isWaveCompletionRewardGranted) {
-      this.applyDuelRoundEndFromResolvedWave();
-    }
-    if (canPerformBuildActions(this.state)) {
-      // Send queues must NOT be cleared here: this runs every frame of the
-      // build phase, which is exactly when the player queues sends. They are
-      // consumed and cleared at wave start instead.
-      if (this.state.duelMatchState.phase !== 'build') {
-        this.state.duelMatchState = { ...this.state.duelMatchState, phase: 'build' };
-      }
-      this.state.soundManager?.stopSound('ambient.tension');
-      ensureBaseAmbientPlaying(this.state);
-    }
-  }
-
-  private recordOpponentLeakHistory(round: number, leakedCount: number): void {
-    this.state.opponentLeakHistory.push({ round, leakedCount });
-    if (this.state.opponentLeakHistory.length > GameScene.OPPONENT_LEAK_HISTORY_LIMIT) {
-      this.state.opponentLeakHistory.shift();
-    }
-  }
-
-  private applyDuelRoundEndFromResolvedWave(): void {
-    const duelRuntimeState: DuelMatchRuntimeState = {
-      duelMatchState: this.state.duelMatchState,
-      wavePhaseState: this.wavePhaseState,
-      isGameOver: this.isGameOver,
-      nextWaveStartsAtMs: this.state.runState.nextWaveStartsAtMs,
-    };
-    const opponentLeakedCreeps = this.state.opponentField.creeps.filter(
-      (creep) => creep.entity.status === 'escaped',
-    ).length;
-    this.recordOpponentLeakHistory(this.state.duelMatchState.round, opponentLeakedCreeps);
-    const leaks = summarizeFieldLeaks(
-      this.state.playerField.creeps.map((c) => c.entity),
-      this.state.opponentField.creeps.map((c) => c.entity),
-    );
-    const result = applyDuelRoundEndRuntime({
-      state: duelRuntimeState,
-      deps: this.ctx.wiring.duelMatchRuntimeDeps,
-      playerLeakedCreeps: leaks.playerLeakedLives,
-      opponentLeakedCreeps: leaks.opponentLeakedLives,
-      sentLeaks: leaks.sentLeaks,
-      towerIncome: {
-        player: getTowersIncomePerRound(this.state.playerField.towers.map((tower) => tower.entity)),
-        opponent: getTowersIncomePerRound(
-          this.state.opponentField.towers.map((tower) => tower.entity),
-        ),
-      },
-      sentOutcomes: buildSentCreepOutcomes(
-        this.state.sentCreepDeaths,
-        this.state.playerField.creeps.map((creep) => creep.entity),
-        this.state.opponentField.creeps.map((creep) => creep.entity),
-      ),
-    });
-
-    const previousOpponentHp = this.state.duelMatchState.opponent.hp;
-    this.state.duelMatchState = awardBonusGold(
-      duelRuntimeState.duelMatchState,
-      'opponent',
-      leaks.leakGoldToOpponent,
-    );
-    if (leaks.leakGoldToPlayer > 0) {
-      this.playerGold += leaks.leakGoldToPlayer;
-      this.registry.set('economy.gold', this.playerGold);
-    }
-    this.wavePhaseState = duelRuntimeState.wavePhaseState;
-    this.isGameOver = duelRuntimeState.isGameOver;
-    this.state.runState.nextWaveStartsAtMs = duelRuntimeState.nextWaveStartsAtMs;
-    publishRoundLifeEvents(previousOpponentHp, result);
-    publishRoundSettled(
-      {
-        round: this.state.runState.currentWaveNumber,
-        bountyEarned: this.state.runState.waveKillBountyEarned,
-      },
-      result,
-    );
-    if (result.playerIncomePaid > 0) {
-      this.playerGold += result.playerIncomePaid;
-      this.registry.set('economy.gold', this.playerGold);
-    }
-    syncDuelPlayerGoldFromWallet(this.state);
-    this.state.matchWinner = result.winner === null ? null : mapRaceIdToHudFaction(result.winner);
-    this.state.matchOutcomeStatus = resolveMatchOutcomeStatus(
-      result.isMatchOver,
-      result.winningSide,
-    );
-    this.state.matchOutcomeReason = mapDuelEndReasonToOutcomeReason(result.endReason);
-    this.registry.set('duel.match.outcome', this.state.matchOutcomeStatus);
-    if (this.state.matchWinner !== null) {
-      this.registry.set('duel.match.winner', this.state.matchWinner);
-    } else {
-      this.registry.remove('duel.match.winner');
-    }
-    publishHudSnapshot(this.state);
-  }
-
-  private updateAutoWaveCountdown(nowMs: number): void {
-    const changed = updateAutoWaveCountdownRuntime(
-      this.state.runState,
-      nowMs,
-      canPerformBuildActions(this.state),
-    );
-    if (changed) {
-      publishHudSnapshot(this.state);
-    }
-  }
-
-  private tryStartNextWave(nowMs: number): void {
-    if (!tryStartNextWaveRuntime(this.state.runState, nowMs)) return;
-    if (!this.state.gridModel) {
-      this.state.runState.nextWaveStartsAtMs = null;
-      return;
-    }
-    this.startNextWaveFromBuildState();
-  }
-
   private resetRunToInitialState(): void {
     this.state.opponentLeakHistory = [];
     this.state.opponentSendsThisWave = [];
@@ -825,95 +660,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   private handleStartWaveCommand(): void {
-    if (this.isGameOver || !canPerformBuildActions(this.state)) {
-      return;
-    }
-    this.state.soundManager?.play('ui.wave_start');
-
-    this.state.runState.nextWaveStartsAtMs = null;
-    this.startNextWaveFromBuildState();
-  }
-
-  private startNextWaveFromBuildState(): void {
-    if (!this.state.gridModel) {
-      return;
-    }
-
-    const waveRoutes = calculateWaveRoutes(this.state.gridModel);
-    if (!hasWaveRoute(waveRoutes)) {
-      this.state.runState.nextWaveStartsAtMs = null;
-      publishHudSnapshot(this.state);
-      return;
-    }
-
-    // From here on this is the wave being fought; the HUD counts it as such.
-    this.state.runState.currentWaveNumber += 1;
-    this.state.runState.waveKillBountyEarned = 0;
-    resetSentCreepDeathTally(this.state.sentCreepDeaths);
-    this.registry.set('wave.number', this.state.runState.currentWaveNumber);
-    this.state.runState.activeCreepRoutes = waveRoutes;
-    // The path preview shows the single-cell route; large creeps may walk wider.
-    this.state.pathCellKeys = new Set(waveRoutes.small.map((cell) => `${cell.x}:${cell.y}`));
-    redrawTerrainTiles(this.core);
-    this.state.duelMatchState = applyComputerBuildPhaseStrategies(this.state.duelMatchState, {
-      difficulty: this.state.selectedDifficulty,
-      leakHistory: this.state.opponentLeakHistory,
-      mazePlanMemory: this.state.computerMazePlanMemory,
-      debugRecorder: this.state.computerDecisionRecorder,
-      setRegistryValue: (key, value) => this.registry.set(key, value),
-    });
-    this.state.opponentSendsThisWave = [...this.state.duelMatchState.opponent.sendQueue];
-    this.state.duelMatchState = refreshOpponentRoutesForWaveStart(this.state.duelMatchState);
-    this.state.duelMatchState = reconcileBattlefieldsForNextRound(this.state.duelMatchState);
-    syncOpponentBattlefieldRenderStateFromDuel(this.core);
-    this.scheduleWaveOnBothFields();
-    // Queues have now been routed onto battlefields and spawned as creeps.
-    this.state.duelMatchState = resetSendQueuesForWaveStart(
-      this.state.duelMatchState,
-      this.state.selectedBuilderFactionId,
-    );
-    this.state.duelMatchState = startRound(this.state.duelMatchState).state;
-    this.wavePhaseState = startNextWaveCycle(this.wavePhaseState);
-    ensureBaseAmbientPlaying(this.state);
-    if (!this.state.soundManager?.isPlaying('ambient.tension')) {
-      this.state.soundManager?.play('ambient.tension');
-    }
-    this.state.pendingPlacementAnchor = null;
-    this.registry.set('phase.build.active', canPerformBuildActions(this.state));
-    updateGridOverlayVisualState(this.state);
-    updateBuildPreview(this.core);
-    this.state.runState.isWaveCompletionRewardGranted = false;
-    this.state.runState.nextWaveStartsAtMs = null;
-    renderVisibleBattlefield(this.core);
-    publishHudSnapshot(this.state);
-  }
-
-  /**
-   * Both fields get the round's one shared baseline plus the other side's
-   * sends, released on the same timing from this frame.
-   */
-  private scheduleWaveOnBothFields(): void {
-    const waveNumber = this.state.runState.currentWaveNumber;
-    const baselineUnits = this.state.baselineWaves.rollNextWave(
-      waveNumber,
-      getSelectedFactionUnits(this.state),
-    );
-    spawnWaveCreepsRuntime(
-      this.state.runState,
-      WAVE_RUNTIME_CONFIG,
-      this.ctx.wiring.waveRuntimeDeps,
-      baselineUnits,
-    );
-    scheduleOpponentFieldWave(this.state.opponentWave, {
-      routes: this.state.duelMatchState.opponent.battlefield.routes,
-      waveNumber,
-      baselineUnits,
-      // Each send spawns at the creature grade it was sent with.
-      sentUnits: resolveQueuedSendUnits(this.state.duelMatchState.player),
-      timing: resolveWaveSpawnTiming(this.state.gameClock.nowMs, WAVE_RUNTIME_CONFIG),
-    });
-    // The duel state mirrors the field; the old wave's creeps are gone.
-    syncOpponentDuelCreepsFromField(this.state);
+    startWaveOnPlayerRequest(this.ctx);
   }
 
   private handleSceneShutdown(): void {
