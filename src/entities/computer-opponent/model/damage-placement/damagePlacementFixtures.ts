@@ -56,5 +56,8 @@ export const FROST_TYPE = investmentType(TowerTypeId.FROST, 70);
 export const SUPPORT_TYPE = investmentType(TowerTypeId.SUPPORT, 60);
 
 export function ledgerTower(anchor: GridPoint, type: InvestmentTowerType = WALL_TYPE): LedgerTower {
+  if (type.damageType !== undefined) {
+    return { anchor, towerType: type.towerType, stats: type.stats, damageType: type.damageType };
+  }
   return { anchor, towerType: type.towerType, stats: type.stats };
 }

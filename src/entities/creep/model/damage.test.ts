@@ -3,9 +3,11 @@ import { DEFAULT_CREEP_COMBAT_TRAITS } from './types';
 import {
   applyDamageToCreep,
   armorKindCovers,
+  calculateDamageAgainst,
   calculateMitigatedDamage,
   getArmorDamageMultiplier,
   getEffectiveArmor,
+  resolveIncomingDamage,
 } from './damage';
 import { applyEffectToCreep, tickCreepEffects } from './effects';
 import {
@@ -211,5 +213,24 @@ describe('armor mitigation', () => {
     expect(
       applyDamageToCreep(cursed, RAW_DAMAGE, DAMAGE_OVER_TIME_DAMAGE_TYPE).damageApplied,
     ).toBeGreaterThan(RAW_DAMAGE);
+  });
+});
+
+describe('calculateDamageAgainst', () => {
+  it('applies the rule combat applies, without a creep entity', () => {
+    const creep = createCreep({ hp: 60, maxHp: 240, physicalArmor: 12, magicalArmor: -5 });
+    const target = { physicalArmor: 12, magicalArmor: -5, maxHp: 240 };
+
+    for (const damageType of [DamageType.PHYSICAL, DamageType.MAGICAL, DamageType.PERCENT]) {
+      expect(calculateDamageAgainst(30, damageType, target)).toBeCloseTo(
+        resolveIncomingDamage(creep, 30, damageType),
+      );
+    }
+  });
+
+  it('takes percent damage from maximum health, whatever the armor', () => {
+    const target = { physicalArmor: 75, magicalArmor: 75, maxHp: 1000 };
+
+    expect(calculateDamageAgainst(30, DamageType.PERCENT, target)).toBeCloseTo(30);
   });
 });
