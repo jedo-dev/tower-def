@@ -2,6 +2,7 @@ import { resolveUnitConfigById } from '../../unit/model/registry';
 import {
   applyCreatureGrade,
   chooseCreatureBranch,
+  getCreatureGrade,
   upgradeCreature,
   type CreatureBranchRejectionReason,
   type CreatureTalentBranchId,
@@ -55,6 +56,21 @@ export function recordCreatureUpgrade(
     state: result.check.allowed ? withLedger(state, side, result.ledger) : state,
     check: result.check,
   };
+}
+
+/**
+ * The creature a side's next send of `unitId` spawns as: at the grade the side
+ * owns now. Its abilities decide send-time rules such as `freeNthSend`.
+ */
+export function resolveNextSendUnit(
+  duelist: Pick<DuelistState, 'creatureBranchChoices' | 'creatureGrades'>,
+  unitId: UnitId,
+): UnitConfig {
+  return applyCreatureGrade(
+    resolveUnitConfigById(unitId),
+    duelist.creatureBranchChoices,
+    getCreatureGrade(unitId, duelist.creatureGrades),
+  );
 }
 
 /**

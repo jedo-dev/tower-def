@@ -31,6 +31,7 @@ import {
 } from './unitContent.types';
 import { assertUnitSchemaVersion } from './assertUnitSchemaVersion';
 import { parseCreatureTalentBranches } from './creatureTalentContent';
+import { parseUnitAbilities } from './unitAbilityFields';
 
 export type UnitContentSource = {
   /** Authored file path, used verbatim in validation errors. */
@@ -71,6 +72,8 @@ function parseUnitEntry(
     throw new ContentValidationError(location, `id does not belong to race ${race}`);
   }
 
+  const abilities = parseUnitAbilities(entry, location);
+
   return {
     id,
     name: readString(entry, 'name', location),
@@ -97,6 +100,7 @@ function parseUnitEntry(
     lore: readOptionalBoundedString(entry, 'lore', location, CONTENT_LORE_MAX_LENGTH),
     ...parseTraits(entry, location),
     talentBranches: parseCreatureTalentBranches(entry, location, id),
+    ...(abilities === undefined ? {} : { abilities }),
   };
 }
 

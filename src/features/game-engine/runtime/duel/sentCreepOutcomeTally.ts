@@ -1,5 +1,5 @@
 import {
-  collectSentLeakTiers,
+  collectSentLeaks,
   getSentCreepTier,
   type DuelSide,
   type SentCreepOutcomesByField,
@@ -45,11 +45,11 @@ export function buildSentCreepOutcomes(
   return {
     onPlayerField: {
       diedTiers: [...tally.player],
-      leakedTiers: collectSentLeakTiers(playerFieldCreeps),
+      leaks: collectSentLeaks(playerFieldCreeps),
     },
     onOpponentField: {
       diedTiers: [...tally.opponent],
-      leakedTiers: collectSentLeakTiers(opponentFieldCreeps),
+      leaks: collectSentLeaks(opponentFieldCreeps),
     },
   };
 }

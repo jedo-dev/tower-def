@@ -1,4 +1,9 @@
-import type { CreepEntity, CreepSenderSide, CreepType } from '../../../../entities/creep';
+import {
+  createCreepAbilityRuntime,
+  type CreepEntity,
+  type CreepSenderSide,
+  type CreepType,
+} from '../../../../entities/creep';
 import type { UnitConfig } from '../../../../entities/unit';
 import { scaleHealthForWave } from '../../../../entities/wave';
 import { getRemainingRouteDistance } from '../../../../shared/lib/pathfinding/routeProgress';
@@ -60,6 +65,8 @@ export function createWaveCreepEntity(
   creepType: CreepType,
 ): CreepEntity {
   const spawnHp = scaleHealthForWave(spawn.unit.health, waveNumber);
+  const routeDistance = getRemainingRouteDistance(route, 0, 1);
+  const { abilities } = spawn.unit;
 
   return {
     id: `wave:creep:${waveNumber}:${spawn.sequenceIndex}`,
@@ -75,7 +82,10 @@ export function createWaveCreepEntity(
     status: 'alive',
     position: { x: route[0].x, y: route[0].y },
     pathIndex: 0,
-    remainingRouteDistance: getRemainingRouteDistance(route, 0, 1),
+    remainingRouteDistance: routeDistance,
     ...(spawn.sender === undefined ? {} : { sender: spawn.sender, sentTier: spawn.unit.tier }),
+    ...(abilities === undefined
+      ? {}
+      : { abilities, ...createCreepAbilityRuntime(abilities, routeDistance) }),
   };
 }

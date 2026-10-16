@@ -13,8 +13,8 @@ import {
   CreatureTalentRule,
   type CreatureTalentGradeLevel,
 } from '../../../../shared/constants/creatureTalents';
-import type { CreatureAbilities } from '../abilities';
-import { parseCreatureAbilities } from './creatureAbilityFields';
+import type { CreatureAbilities } from '../../../../shared/types/creatureAbilities';
+import { parseCreatureAbilities } from './unitAbilityFields';
 import {
   UNIT_ARMOR_BOUNDS,
   UNIT_STAT_BOUNDS,
@@ -62,7 +62,8 @@ function parseGrade(
     );
   }
 
-  const abilities = parseCreatureAbilities(grade, location);
+  const abilities =
+    grade.abilities === undefined ? undefined : parseCreatureAbilities(grade.abilities, location);
 
   return {
     level: expectedLevel,

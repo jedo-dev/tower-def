@@ -37,3 +37,13 @@ export {
   getCreepFootprintCenter,
   getCreepFootprintCenterOffsetInCells,
 } from './model/footprintCenter';
+export type { CreepAbilityRuntime } from './model/types';
+export {
+  createCreepAbilityRuntime,
+  getAbilitySpeedMultiplier,
+  getCreepLeakLives,
+  getEffectResistanceMultiplier,
+  isCreepHidden,
+  tickCreepAbilities,
+} from './model/abilities';
+export { getIncomingDamageMultiplier } from './model/abilityDamage';

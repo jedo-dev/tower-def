@@ -4,11 +4,13 @@ import {
   type ApplyEffectInput,
 } from '../../../../entities/creep';
 import {
+  getTowerAttackKind,
   getTowerOnHitEffects,
   resolveTargetDamageMultiplier,
   type TowerOnHitEffect,
 } from '../../../../entities/tower';
-import type { DamageType } from '../../../../shared/types/content-ids';
+import { TowerAttackKind, type DamageType } from '../../../../shared/types/content-ids';
+import { CreatureDamageShape } from '../../../../shared/types/creatureAbilities';
 import type { CombatCreep, CombatTower, TowerCombatHooks } from './towerCombatTypes';
 
 // One tower hit on one creep: per-target damage abilities, armor (inside
@@ -70,6 +72,21 @@ function applyOnHitEffects<C extends CombatCreep, T extends CombatTower>(
 export type StrikeResult = { damageApplied: number; killed: boolean };
 
 /**
+ * How a tower's hits reach a creep, for the creature's incoming damage
+ * multipliers: a splash or chain tower's hits by its kind, everything else
+ * (single shots, extra targets, pierce, volley) as single-target.
+ */
+export function resolveTowerDamageShape(tower: CombatTower): CreatureDamageShape {
+  const attackKind = getTowerAttackKind(tower.entity.type);
+  if (attackKind === TowerAttackKind.SPLASH && (tower.entity.combatStats.splashRadius ?? 0) > 0) {
+    return CreatureDamageShape.SPLASH;
+  }
+  return attackKind === TowerAttackKind.CHAIN
+    ? CreatureDamageShape.CHAIN
+    : CreatureDamageShape.SINGLE;
+}
+
+/**
  * Damages one creep with a tower hit of the tower's damage type (resolved once
  * per attack by the caller); `damage` is the shot's damage before per-target
  * abilities (air/ground, full health, large), which are applied here.
@@ -85,8 +102,16 @@ export function strikeCreep<C extends CombatCreep, T extends CombatTower>(
     tower.entity.combatStats.abilities,
     creep.entity,
   );
-  const damageResult = applyDamageToCreep(creep.entity, damage * targetMultiplier, damageType);
+  const damageResult = applyDamageToCreep(
+    creep.entity,
+    damage * targetMultiplier,
+    damageType,
+    resolveTowerDamageShape(tower),
+  );
   creep.entity = damageResult.creep;
+  if (damageResult.revived === true) {
+    hooks.onCreepRevived?.(creep);
+  }
   applyOnHitEffects(tower, creep, hooks);
   hooks.onCreepHit(creep);
   return { damageApplied: damageResult.damageApplied, killed: damageResult.killed };

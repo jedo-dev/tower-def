@@ -4,7 +4,7 @@ import { UnitTier } from '../../unit/model/types';
 import {
   accrueSentCreepXp,
   collectSentDeathTiers,
-  collectSentLeakTiers,
+  collectSentLeaks,
   getSentCreepTier,
   NO_SENT_CREEP_OUTCOMES,
   NO_SENT_CREEP_OUTCOMES_ON_FIELD,
@@ -28,10 +28,18 @@ describe('sent creep facts', () => {
       { status: 'dead' as const, sender: 'player' as const, sentTier: 1 },
       { status: 'escaped' as const },
       { status: 'alive' as const, sender: 'player' as const, sentTier: 4 },
-      { status: 'escaped' as const, sender: 'player' as const, sentTier: 1 },
+      {
+        status: 'escaped' as const,
+        sender: 'player' as const,
+        sentTier: 1,
+        abilities: { leakLivesTaken: 2 },
+      },
     ];
 
-    expect(collectSentLeakTiers(creeps)).toEqual([2, 1]);
+    expect(collectSentLeaks(creeps)).toEqual([
+      { tier: 2, lives: 1 },
+      { tier: 1, lives: 2 },
+    ]);
     expect(collectSentDeathTiers(creeps)).toEqual([1]);
   });
 });
@@ -41,10 +49,10 @@ describe('accrueSentCreepXp', () => {
     const next = accrueSentCreepXp(
       STATE,
       {
-        onPlayerField: { diedTiers: [UnitTier.TIER_1], leakedTiers: [] },
+        onPlayerField: { diedTiers: [UnitTier.TIER_1], leaks: [] },
         onOpponentField: {
           diedTiers: [UnitTier.TIER_2, UnitTier.TIER_2],
-          leakedTiers: [UnitTier.TIER_3],
+          leaks: [{ tier: UnitTier.TIER_3, lives: 1 }],
         },
       },
       { onPlayerField: 0, onOpponentField: 1 },
@@ -59,12 +67,37 @@ describe('accrueSentCreepXp', () => {
       STATE,
       {
         onPlayerField: NO_SENT_CREEP_OUTCOMES_ON_FIELD,
-        onOpponentField: { diedTiers: [], leakedTiers: [UnitTier.TIER_1, UnitTier.TIER_1] },
+        onOpponentField: {
+          diedTiers: [],
+          leaks: [
+            { tier: UnitTier.TIER_1, lives: 1 },
+            { tier: UnitTier.TIER_1, lives: 1 },
+          ],
+        },
       },
       { onPlayerField: 0, onOpponentField: 1 },
     );
 
     expect(next.player.creatureXpByTier).toEqual({ 1: 3 + 2 + 3 });
+  });
+
+  it('weighs each leak by the lives it takes when handing out the bonus', () => {
+    const next = accrueSentCreepXp(
+      STATE,
+      {
+        onPlayerField: NO_SENT_CREEP_OUTCOMES_ON_FIELD,
+        onOpponentField: {
+          diedTiers: [],
+          leaks: [
+            { tier: UnitTier.TIER_3, lives: 2 },
+            { tier: UnitTier.TIER_1, lives: 1 },
+          ],
+        },
+      },
+      { onPlayerField: 0, onOpponentField: 2 },
+    );
+
+    expect(next.player.creatureXpByTier).toEqual({ 3: 9 + 2, 1: 3 });
   });
 
   it('returns the same state when nothing was sent', () => {
@@ -83,8 +116,14 @@ describe('settleRound creature experience', () => {
       { onPlayerField: 0, onOpponentField: 2 },
       undefined,
       {
-        onPlayerField: { diedTiers: [UnitTier.TIER_4], leakedTiers: [] },
-        onOpponentField: { diedTiers: [], leakedTiers: [UnitTier.TIER_2, UnitTier.TIER_2] },
+        onPlayerField: { diedTiers: [UnitTier.TIER_4], leaks: [] },
+        onOpponentField: {
+          diedTiers: [],
+          leaks: [
+            { tier: UnitTier.TIER_2, lives: 1 },
+            { tier: UnitTier.TIER_2, lives: 1 },
+          ],
+        },
       },
     );
 
@@ -102,7 +141,13 @@ describe('settleRound creature experience', () => {
       undefined,
       {
         onPlayerField: NO_SENT_CREEP_OUTCOMES_ON_FIELD,
-        onOpponentField: { diedTiers: [], leakedTiers: [UnitTier.TIER_1, UnitTier.TIER_1] },
+        onOpponentField: {
+          diedTiers: [],
+          leaks: [
+            { tier: UnitTier.TIER_1, lives: 1 },
+            { tier: UnitTier.TIER_1, lives: 1 },
+          ],
+        },
       },
     );
 

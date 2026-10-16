@@ -1,6 +1,6 @@
 import {
   collectSentDeathTiers,
-  collectSentLeakTiers,
+  collectSentLeaks,
   resolveQueuedSendUnits,
   type DuelistState,
   type DuelMatchState,
@@ -32,6 +32,12 @@ export type DuelFieldWaveResult = {
   sentLeaks: number;
   /** Leaks of air creeps, which bypass the maze on the straight air route. */
   airLeaks: number;
+  /** Lives the leaks take; what the settlement charges (`leakLivesTaken`). */
+  leakedLives: number;
+  /** Gold the other side earns from its creeps that leaked here (`leakGoldToSender`). */
+  leakGoldToSender: number;
+  /** Gold this field's side loses for its kills (`killGoldPenaltyToDefender`). */
+  killGoldPenalty: number;
 };
 
 export type DuelWaveResult = {
@@ -42,6 +48,7 @@ export type DuelWaveResult = {
   ticks: number;
   /** The wave hit the tick limit before both fields resolved. */
   isCutOff: boolean;
+  /** Lives the sent creeps' leaks took on each field; steals lives for the sender. */
   sentLeaks: SentCreepLeaks;
   /** Tiers of the sent creeps that died or leaked on each field: creature experience. */
   sentOutcomes: SentCreepOutcomesByField;
@@ -85,12 +92,15 @@ function summarizeField(field: HeadlessBattlefield): DuelFieldWaveResult {
     leaks: field.leaks,
     sentLeaks: field.sentLeaks,
     airLeaks: field.airLeaks,
+    leakedLives: field.leakedLives,
+    leakGoldToSender: field.leakGoldToSender,
+    killGoldPenalty: field.killGoldPenalty,
   };
 }
 
 function collectSentOutcomes(field: HeadlessBattlefield): SentCreepOutcomes {
   const creeps = field.creeps.map((creep) => creep.entity);
-  return { diedTiers: collectSentDeathTiers(creeps), leakedTiers: collectSentLeakTiers(creeps) };
+  return { diedTiers: collectSentDeathTiers(creeps), leaks: collectSentLeaks(creeps) };
 }
 
 /** Plays one wave on both fields at once, in fixed steps, until both resolve. */
@@ -116,10 +126,10 @@ export function runDuelWave(input: DuelWaveInput): DuelWaveResult {
     fieldB: summarizeField(fieldB),
     ticks,
     isCutOff: !isResolved(),
-    sentLeaks: { onPlayerField: fieldA.sentLeaks, onOpponentField: fieldB.sentLeaks },
     sentOutcomes: {
       onPlayerField: collectSentOutcomes(fieldA),
       onOpponentField: collectSentOutcomes(fieldB),
     },
+    sentLeaks: { onPlayerField: fieldA.sentLeakedLives, onOpponentField: fieldB.sentLeakedLives },
   };
 }

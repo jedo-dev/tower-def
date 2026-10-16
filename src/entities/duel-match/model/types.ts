@@ -34,6 +34,17 @@ export type DuelistState = CreatureTalentLedger & {
    * settles keep it, a new match state (restart, setup change) starts empty.
    */
   towerBranchChoices: TowerBranchChoices;
+  /**
+   * Sends per unit this match, counted only for units with `freeNthSend`
+   * (creature abilities); absent until such a unit is sent.
+   */
+  sendCountByUnit?: Partial<Record<UnitId, number>>;
+};
+
+/** Optional inputs of a send that come from the unit's abilities. */
+export type DuelSendOptions = {
+  /** Every Nth send of this unit by the side is free (`freeNthSend`). */
+  freeNthSend?: number;
 };
 
 export type DuelMatchState = {

@@ -39,8 +39,8 @@ describe('sent creep death tally', () => {
     );
 
     expect(outcomes).toEqual({
-      onPlayerField: { diedTiers: [1], leakedTiers: [3] },
-      onOpponentField: { diedTiers: [2], leakedTiers: [] },
+      onPlayerField: { diedTiers: [1], leaks: [{ tier: 3, lives: 1 }] },
+      onOpponentField: { diedTiers: [2], leaks: [] },
     });
   });
 

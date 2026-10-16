@@ -1,4 +1,4 @@
-import { getCreepFootprintCenterOffsetInCells, isCreepAlive } from '../../creep';
+import { getCreepFootprintCenterOffsetInCells, isCreepAlive, isCreepHidden } from '../../creep';
 import type { CreepEntity } from '../../creep';
 import { canTargetScopeHitMoveType, UnitMoveType } from '../../../shared/types/content-ids';
 import { getTowerCenter } from './footprint';
@@ -27,11 +27,12 @@ export function canTowerTargetCreep(
 }
 
 /**
- * Whether the tower may shoot this creep right now: alive, inside its target
- * scope, within `range` and not closer than an authored `minRangeCells`.
+ * Whether the tower may shoot this creep right now: alive, not inside its
+ * spawn invisibility, inside its target scope, within `range` and not closer
+ * than an authored `minRangeCells`.
  */
 export function isCreepTargetableByTower(tower: TowerEntity, creep: CreepEntity): boolean {
-  if (!isCreepAlive(creep) || !canTowerTargetCreep(tower, creep)) {
+  if (!isCreepAlive(creep) || isCreepHidden(creep) || !canTowerTargetCreep(tower, creep)) {
     return false;
   }
 

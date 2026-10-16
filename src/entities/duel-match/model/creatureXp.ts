@@ -1,3 +1,4 @@
+import { getCreepLeakLives } from '../../creep/model/abilities';
 import type { CreepEntity } from '../../creep/model/types';
 import { addCreatureXp, getCreatureDeathXp, getCreatureLeakXp } from '../../unit/model/talents';
 import { UNIT_TIERS, type UnitTier } from '../../unit/model/types';
@@ -12,10 +13,16 @@ import type { DuelMatchState, DuelSide } from './types';
  * life. Baseline creeps belong to no one and earn nothing.
  */
 
+/** One sent creep that leaked: its tier and the lives its leak costs (`leakLivesTaken`). */
+export type SentCreepLeak = {
+  tier: UnitTier;
+  lives: number;
+};
+
 /** What one field saw of the creeps the other side sent, by creature tier. */
 export type SentCreepOutcomes = {
   diedTiers: readonly UnitTier[];
-  leakedTiers: readonly UnitTier[];
+  leaks: readonly SentCreepLeak[];
 };
 
 /** Sent creep outcomes by the field they happened on (the sender is the other side). */
@@ -26,7 +33,7 @@ export type SentCreepOutcomesByField = {
 
 export const NO_SENT_CREEP_OUTCOMES_ON_FIELD: SentCreepOutcomes = Object.freeze({
   diedTiers: [],
-  leakedTiers: [],
+  leaks: [],
 });
 
 export const NO_SENT_CREEP_OUTCOMES: SentCreepOutcomesByField = Object.freeze({
@@ -40,7 +47,7 @@ export type LivesTakenBySendsByField = {
   onOpponentField: number;
 };
 
-type SentCreepFacts = Pick<CreepEntity, 'status' | 'sender' | 'sentTier'>;
+type SentCreepFacts = Pick<CreepEntity, 'status' | 'sender' | 'sentTier' | 'abilities'>;
 
 /** The tier a sent creep earns experience for, or undefined for a baseline creep. */
 export function getSentCreepTier(creep: SentCreepFacts): UnitTier | undefined {
@@ -50,16 +57,16 @@ export function getSentCreepTier(creep: SentCreepFacts): UnitTier | undefined {
   return UNIT_TIERS.find((tier) => tier === creep.sentTier);
 }
 
-/** Tiers of the sent creeps that leaked, in field order. */
-export function collectSentLeakTiers(creeps: readonly SentCreepFacts[]): UnitTier[] {
-  const tiers: UnitTier[] = [];
+/** The sent creeps that leaked, in field order, with the lives each leak costs. */
+export function collectSentLeaks(creeps: readonly SentCreepFacts[]): SentCreepLeak[] {
+  const leaks: SentCreepLeak[] = [];
   for (const creep of creeps) {
     const tier = creep.status === 'escaped' ? getSentCreepTier(creep) : undefined;
     if (tier !== undefined) {
-      tiers.push(tier);
+      leaks.push({ tier, lives: getCreepLeakLives(creep) });
     }
   }
-  return tiers;
+  return leaks;
 }
 
 /** Tiers of the sent creeps that died, in field order. */
@@ -77,8 +84,8 @@ export function collectSentDeathTiers(creeps: readonly SentCreepFacts[]): UnitTi
 /**
  * Experience one side earns from its sends' outcomes on the other field. The
  * leaks that cost the defender a life are the first `livesTaken` worth of
- * leaks in field order: only the last leaks of a defender already at 0 lives
- * take none.
+ * leaks in field order, each weighing its `leakLivesTaken`: only the last
+ * leaks of a defender already at 0 lives take none.
  */
 function accrueFieldXp(
   state: DuelMatchState,
@@ -86,15 +93,16 @@ function accrueFieldXp(
   outcomes: SentCreepOutcomes,
   livesTaken: number,
 ): DuelMatchState {
-  const leaksThatTookLife = Math.ceil(livesTaken / DUEL_MATCH_BALANCE.hpLossPerLeakedCreep);
+  let livesLeft = livesTaken;
   let xpByTier = state[sender].creatureXpByTier;
 
   for (const tier of outcomes.diedTiers) {
     xpByTier = addCreatureXp(xpByTier, tier, getCreatureDeathXp(tier));
   }
-  outcomes.leakedTiers.forEach((tier, index) => {
-    xpByTier = addCreatureXp(xpByTier, tier, getCreatureLeakXp(tier, index < leaksThatTookLife));
-  });
+  for (const leak of outcomes.leaks) {
+    xpByTier = addCreatureXp(xpByTier, leak.tier, getCreatureLeakXp(leak.tier, livesLeft > 0));
+    livesLeft -= leak.lives * DUEL_MATCH_BALANCE.hpLossPerLeakedCreep;
+  }
 
   if (xpByTier === state[sender].creatureXpByTier) {
     return state;

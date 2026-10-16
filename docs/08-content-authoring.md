@@ -69,9 +69,42 @@ src/content/
 | `moveType` | no | `ground` (default) or `air`. Air creatures ignore the maze: they fly the straight line from the entrance to the exit at their own speed, towers never block them, and only towers whose `allowedTargets` is `air` or `both` can shoot them. A flier costs `WAVE_AIR_UNIT_BUDGET_MULTIPLIER` times its tier value of the wave budget (`entities/wave/model/waveBalance.ts`). |
 | `sizeClass` | no | `small`, `medium` (default) or `large`. Decides the footprint and the route a creature walks. |
 | `talentBranches` | yes | Exactly two branches of grades 1-4 a side develops with experience. See "Creature talents" below. |
+| `abilities` | no | Optional creature mechanics; see "Creature abilities" below. |
 
 Unknown fields are rejected: add the field to the schema first
 (`src/entities/unit/model/content/unitContent.types.ts`), then to content.
+
+## Creature abilities
+
+Optional mechanics for creature talent grades (tower-def-716.2). A unit entry
+may carry an `abilities` object; talent grade objects reuse the same field
+names (`parseCreatureAbilities`). Every field is optional and absent means the
+ability is off: a creature without the object walks, takes damage and pays
+out exactly as before. Values are validated on load
+(`entities/unit/model/content/unitAbilities.types.ts`) and fail naming the
+file and creature. Spawn copies the object onto the creep. Nothing rolls a
+die: every chance is a counter, so the headless duel stays deterministic.
+
+| `abilities` field | Value | Effect |
+| --- | --- | --- |
+| `effectResistance` | `{ chill?, stun?, poison?, burn?, armor_break?, vulnerability? }`, each 0-1 | Multiplier on an incoming effect: a stun gets shorter, every other effect weaker (magnitude). 0 means immune: the effect is not applied (and a chill cannot build a freeze). |
+| `dodgeEveryNthShot` | whole, 2-20 | Every Nth single-target shot aimed at the creep misses: no damage, no on-hit effects, no extra targets or pierce. A per-creep counter. Splash, chain, volley and damage-over-time hits are never dodged. |
+| `healthRegenPerSecond` | 0-500 | Health regained per second while alive, capped at maximum health. |
+| `regenPausedByPoison` | boolean, default false | Regeneration stops while poisoned. Needs `healthRegenPerSecond`. |
+| `incomingDamageMultipliers` | `{ single?, splash?, chain?, dot?, percent? }`, each 0-2 | Multiplier on damage by how it arrived: `splash` and `chain` are hits of a splash or chain tower, `single` is everything else a tower hits with (single shots, extra targets, pierce, volley), `dot` is poison and burn ticks. `percent` scales percent-type damage of any shape; it multiplies with the shape's. Applied after armor and vulnerability. |
+| `speedBoostBelowHpShare` | `{ hpShare 0.01-1, speedMultiplier 0.1-5 }` | Speed multiplier while health is at or below `hpShare` of maximum. |
+| `speedBoostLastRouteShare` | `{ routeShare 0.01-1, speedMultiplier 0.1-5 }` | Speed multiplier once at most `routeShare` of the route it spawned on is left (`remainingRouteDistance` over the route length). |
+| `startInvisibleMs` | 100-60000 | Untargetable for the first N ms after spawn: no tower aims at it, splash and chain arcs skip it. Damage over time already on it keeps ticking. |
+| `leakLivesTaken` | whole, 1-10, default 1 | Lives one leak takes. The settlement charges the weighted count, the "fewer leaks" tie-break compares it and a sent creep's lives feed the sender's life steal as usual. |
+| `leakGoldToSender` | whole, 0-200 | Gold the sending side earns when this creep, sent, leaks. Paid at the wave settle. |
+| `killGoldPenaltyToDefender` | whole, 0-200 | Gold the defender loses when it kills this creep (after the bounty), never below 0. |
+| `shieldHp` | 1-5000 | Shield pool that absorbs damage (after armor and multipliers) before health. Starts full. |
+| `shieldRechargeMs` | 100-60000 | The shield refills to full after this many ms without damage. Needs `shieldHp`; without it the shield never refills. |
+| `secondLife` | `{ hpShare 0.01-1, speedMultiplier? 0.1-5, immuneToChill? }` | The first lethal hit or tick revives the creep at `hpShare` of maximum health instead: no kill is scored (no bounty, no kill penalty, no XP). The second life moves at `speedMultiplier` and, with `immuneToChill`, drops a running chill and ignores new ones. Combat reports the revive through the `onCreepRevived` hook; `onCreepKilled` fires only on the final death. |
+| `freeNthSend` | whole, 2-20 | Every Nth send of this unit by one side costs 0 gold (income bonus still paid). Counted per side and unit for the match (`sendCountByUnit`), only for units with the ability. Applied in the shared `sendCreep` the player and the computer both use. |
+
+Speed multipliers (both boosts and the second life) multiply together and with
+movement effects (chill, stun).
 
 ## Balance-sensitive vs cosmetic
 
@@ -269,10 +302,13 @@ them, a restart, a faction change or a new setup starts with none.
 | `name`, `description` | Non-empty; shown by the send panel's develop chooser. |
 | `grades` | Exactly levels 1, 2, 3, 4 in that order. |
 | grade `health`, `speed`, `physicalArmor`, `magicalArmor` | Required, same bounds as the creature's own. Health is the wave 1 value; wave growth still applies on spawn. |
-| grade `abilities` | Optional typed creature abilities object (`entities/unit/model/abilities.ts`); unknown keys fail on load. Empty until the creature abilities land. |
+| grade `abilities` | Optional creature abilities object, same fields and parser as a creature's own (`parseCreatureAbilities`, see "Creature abilities"); unknown keys fail on load. |
 
-A grade replaces the four stats (and the abilities) of the sent creature;
-tier, reward, size, move type and send price stay. Grade 0 is the authored
+A grade replaces the four stats and the abilities of the sent creature: a
+grade without `abilities` sends the creature without any, so carry base
+abilities forward explicitly. Tier, reward, size, move type and the base send
+price stay; a graded `freeNthSend` counts from the next send
+(`resolveNextSendUnit`). Grade 0 is the authored
 creature. docs/12 caps grade 4 health at +40% of the base; a content test
 enforces it.
 
@@ -285,9 +321,9 @@ credited to the sender at the round settle:
 | leaked | 3 x tier |
 | leaked and took a life | +2 |
 
-A leak "took a life" while the defender still had one: the first
-`livesTaken` leaks of the round in field order (`countLivesTakenBySends`)
-get the bonus. Deaths are tallied as they happen (the scene drops a corpse
+A leak "took a life" while the defender still had one: walking the round's
+sent leaks in field order, each leak gets the bonus while lives taken by the
+sends (`countLivesTakenBySends`) remain, and spends its `leakLivesTaken`. Deaths are tallied as they happen (the scene drops a corpse
 long before the settle) and leaks read from the field at the settle
 (`settleRound(..., sentOutcomes)`, `entities/duel-match/model/creatureXp.ts`);
 the headless duel simulation passes the same outcomes. Baseline creeps earn
@@ -373,6 +409,10 @@ in `docs/07-duel-mode-expansion-plan.md` (Duel Balance).
 | Experience accrual | `src/entities/duel-match/model/creatureXp.ts` |
 | Registered content files | `src/entities/unit/model/content/unitContentSources.ts` |
 | Roster lookups | `src/entities/unit/model/registry.ts` |
+| Creature abilities: schema and parser | `src/entities/unit/model/content/unitAbilities.types.ts`, `unitAbilityFields.ts` |
+| Creature abilities: type and constants | `src/shared/types/creatureAbilities.ts`, `src/shared/constants/creatureAbilities.ts` |
+| Creature abilities: runtime | `src/entities/creep/model/abilities.ts`, `abilityDamage.ts`, `effectResistance.ts` |
+| Creature abilities: economy | `src/entities/duel-match/model/creatureEconomy.ts`, `sendEconomy.ts` |
 
 ---
 

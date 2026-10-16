@@ -41,6 +41,8 @@ export type UnitContentEntry = {
   lore?: string;
   moveType?: string;
   sizeClass?: string;
+  /** Optional creature abilities, validated by `parseUnitAbilities`. */
+  abilities?: unknown;
   talentBranches: UnitTalentBranchContentEntry[];
 };
 
@@ -51,8 +53,8 @@ export type UnitTalentGradeContentEntry = {
   speed: number;
   physicalArmor: number;
   magicalArmor: number;
-  /** Typed creature abilities object; see `entities/unit/model/abilities.ts`. */
-  abilities?: Record<string, unknown>;
+  /** Optional creature abilities, validated by `parseCreatureAbilities`. */
+  abilities?: unknown;
 };
 
 export type UnitTalentBranchContentEntry = {
@@ -128,6 +130,7 @@ export const UNIT_CONTENT_OPTIONAL_KEYS: readonly (keyof UnitContentEntry)[] = [
   'lore',
   'moveType',
   'sizeClass',
+  'abilities',
 ];
 
 export const UNIT_CONTENT_FILE_KEYS: readonly (keyof UnitContentFile)[] = [

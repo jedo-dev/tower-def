@@ -68,6 +68,17 @@ describe('creature talent branch content', () => {
     expect(unit.talentBranches[0].grades[0].abilities).toBeUndefined();
   });
 
+  it('reads grade abilities with the creature abilities parser', () => {
+    const unit = parseUnit({
+      talentBranches: branchesWith((branch) => ({
+        ...branch,
+        grades: gradesWith((grade) => ({ ...grade, abilities: { dodgeEveryNthShot: 4 } })),
+      })),
+    });
+
+    expect(unit.talentBranches[0].grades[0].abilities).toEqual({ dodgeEveryNthShot: 4 });
+  });
+
   it('rejects an unknown ability naming the unit and branch', () => {
     expect(() =>
       parseUnit({

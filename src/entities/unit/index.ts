@@ -16,7 +16,6 @@ export {
   resolveUnitConfigById,
   tryResolveUnitConfigById,
 } from './model/registry';
-export type { CreatureAbilities } from './model/abilities';
 export type {
   CreatureGradeStats,
   CreatureTalentBranchDefinition,
@@ -55,3 +54,5 @@ export type {
   CreatureUpgradeRejectionReason,
   CreatureXpByTier,
 } from './model/talents';
+export type { CreatureAbilities } from '../../shared/types/creatureAbilities';
+export { parseCreatureAbilities, parseUnitAbilities } from './model/content/unitAbilityFields';

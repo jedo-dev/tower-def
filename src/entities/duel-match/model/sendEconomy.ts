@@ -29,3 +29,21 @@ export function lookupTierValue(table: TierEconomyTable, tier: UnitTier): number
   }
   return value;
 }
+
+/**
+ * `freeNthSend`: whether the next send of a unit is free, given how many of it
+ * the side already sent (`sentSoFar`). Every Nth send costs nothing; without
+ * the ability no send is free.
+ */
+export function isFreeSend(freeNthSend: number | undefined, sentSoFar: number): boolean {
+  return freeNthSend !== undefined && (sentSoFar + 1) % freeNthSend === 0;
+}
+
+/** The gold the next send of a unit costs after `freeNthSend`. */
+export function resolveSendCost(
+  baseCost: number,
+  freeNthSend: number | undefined,
+  sentSoFar: number,
+): number {
+  return isFreeSend(freeNthSend, sentSoFar) ? 0 : baseCost;
+}

@@ -5,6 +5,7 @@ import { UnitTier } from '../../unit/model/types';
 import {
   recordCreatureBranchChoice,
   recordCreatureUpgrade,
+  resolveNextSendUnit,
   resolveQueuedSendUnits,
 } from './creatureTalents';
 import { clearSendQueue, sendCreep } from './lifecycle';
@@ -76,6 +77,15 @@ describe('duel creature talents', () => {
     expect(second.physicalArmor).toBe(BRANCH_A.grades[1].physicalArmor);
 
     expect(clearSendQueue(state).player.sendQueueGrades).toEqual([]);
+  });
+
+  it('resolves the next send at the grade owned now, for send-time rules', () => {
+    const owned = { creatureBranchChoices: { [FIEND.id]: BRANCH_A.id }, creatureGrades: {} };
+
+    expect(resolveNextSendUnit(owned, FIEND.id)).toBe(FIEND);
+    expect(
+      resolveNextSendUnit({ ...owned, creatureGrades: { [FIEND.id]: 3 } }, FIEND.id).health,
+    ).toBe(BRANCH_A.grades[2].health);
   });
 
   it('spawns a send queued without a grade snapshot as the base creature', () => {

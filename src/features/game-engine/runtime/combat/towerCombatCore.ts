@@ -45,6 +45,22 @@ function takeShotDamageMultiplier(tower: CombatTower): number {
   return resolveShotDamageMultiplier(abilities, shotNumber);
 }
 
+/**
+ * Counts a single-target shot aimed at the creep for `dodgeEveryNthShot` and
+ * says whether this one misses. Creeps without the ability are untouched.
+ */
+function takeDodge(target: CombatCreep): boolean {
+  const dodgeEveryNthShot = target.entity.abilities?.dodgeEveryNthShot;
+
+  if (dodgeEveryNthShot === undefined) {
+    return false;
+  }
+
+  const shotNumber = (target.entity.shotsAimedAt ?? 0) + 1;
+  target.entity.shotsAimedAt = shotNumber;
+  return shotNumber % dodgeEveryNthShot === 0;
+}
+
 /** A single-target shot plus the abilities that widen it. */
 function applySingleTargetShot<C extends CombatCreep, T extends CombatTower>(
   field: CombatField<C, T>,
@@ -122,6 +138,8 @@ export function resolveTowerAttacks<C extends CombatCreep, T extends CombatTower
       applySplashDamage(field, tower, target, shotDamage, damageType, hooks);
     } else if (attackKind === TowerAttackKind.CHAIN) {
       applyChainDamage(field, tower, target, shotDamage, damageType, hooks);
+    } else if (takeDodge(target)) {
+      hooks.onShotDodged?.(tower, target);
     } else {
       applySingleTargetShot(field, tower, target, shotDamage, damageType, hooks);
     }
