@@ -1,3 +1,4 @@
+import type { TowerBranchShare } from './duelBatchBranchShares';
 import {
   DuelDevelopmentDefaults,
   type EndBoardStats,
@@ -58,6 +59,22 @@ function formatBranchPicks(picks: ReadonlyMap<string, number>): string {
     .join(', ');
 }
 
+const PERCENT = 100;
+
+/** `orc_tar_pit: orc_tar_pit_quagmire 12/20 (60%), orc_tar_pit_sticky 8/20 (40%)`. */
+function formatBranchShare(share: TowerBranchShare): string {
+  const picks = share.picks.map(
+    ({ branchId, count }) =>
+      `${branchId} ${count}/${share.sides} (${Math.round((count / share.sides) * PERCENT)}%)`,
+  );
+  return `${share.towerId}: ${picks.join(', ')}`;
+}
+
+/** The race's branch shares, one indented line per tower type it developed. */
+function formatBranchShareLines(row: RaceDevelopmentStats): string[] {
+  return row.branchShares.map((share) => `    ${formatBranchShare(share)}`);
+}
+
 function formatRaceRow(row: RaceDevelopmentStats): string {
   const early = formatDeveloped(
     row.developedByEarlyRound,
@@ -80,7 +97,7 @@ export function formatRaceDevelopment(rows: readonly RaceDevelopmentStats[]): st
   const { EARLY_ROUND, LATE_ROUND, DEVELOPED_GRADE } = DuelDevelopmentDefaults;
   return [
     `development (sides at grade ${DEVELOPED_GRADE}+ by round ${EARLY_ROUND} / ${LATE_ROUND}, ` +
-      'average top grade; branch picks):',
-    ...rows.map(formatRaceRow),
+      'average top grade; branch picks, then each developed type split by branch):',
+    ...rows.flatMap((row) => [formatRaceRow(row), ...formatBranchShareLines(row)]),
   ];
 }
