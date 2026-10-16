@@ -48,6 +48,28 @@ describe('resolveMatchShortcut', () => {
     });
   });
 
+  it('maps +/= and - to the board zoom steps and 0 to the reset', () => {
+    expect(resolveMatchShortcut(key({ key: '+', code: 'Equal' }), BODY)).toEqual({
+      kind: 'zoom-board',
+      action: 'in',
+    });
+    expect(resolveMatchShortcut(key({ key: '=', code: 'Equal' }), BODY)).toEqual({
+      kind: 'zoom-board',
+      action: 'in',
+    });
+    expect(resolveMatchShortcut(key({ key: '-', code: 'Minus' }), BODY)).toEqual({
+      kind: 'zoom-board',
+      action: 'out',
+    });
+    expect(resolveMatchShortcut(key({ key: '0', code: 'Digit0' }), BODY)).toEqual({
+      kind: 'zoom-board',
+      action: 'reset',
+    });
+    // Browser page zoom keeps its chords.
+    expect(resolveMatchShortcut(key({ key: '+', code: 'Equal', ctrlKey: true }), BODY)).toBeNull();
+    expect(resolveMatchShortcut(key({ key: '0', code: 'Digit0' }), INPUT)).toBeNull();
+  });
+
   it('stays out of text entry and modifier chords', () => {
     expect(resolveMatchShortcut(key({ key: 'p', code: 'KeyP' }), INPUT)).toBeNull();
     expect(

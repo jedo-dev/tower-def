@@ -119,6 +119,8 @@ export type GameHudSnapshot = {
   gameSpeed: GameSpeed;
 };
 
+export type BoardZoomAction = 'in' | 'out' | 'reset';
+
 export type GameCommandMap = {
   'start-wave': undefined;
   'select-tower': { towerType: HudTowerType | null };
@@ -130,6 +132,8 @@ export type GameCommandMap = {
   'restart-match': undefined;
   'set-paused': { isPaused: boolean };
   'set-game-speed': { speed: GameSpeed };
+  /** Board camera: step the zoom in or out around the viewport centre, or back to fit. */
+  'zoom-board': { action: BoardZoomAction };
   /** The player confirmed leaving the match; the game page returns to the menu. */
   'quit-match': undefined;
 };

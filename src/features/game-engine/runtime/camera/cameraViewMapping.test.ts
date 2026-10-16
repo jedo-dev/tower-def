@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { GRID_DIMENSIONS } from '../../../../shared/constants/grid';
 import { toPointerGridTarget } from '../grid/gameSceneGridPreviewRuntime';
+import { panCameraView, zoomCameraViewAt } from './boardCameraZoom';
 import {
   computeResponsiveCameraView,
   rebaseScreenPoint,
@@ -65,6 +66,37 @@ describe('screenToWorldPoint', () => {
     // camera view used for input must be the one the board is rendered with.
     const stale = screenToWorldPoint(tapAfterResize, beforeResize);
     expect(toPointerGridTarget(stale.x, stale.y)).not.toEqual(expected);
+  });
+});
+
+describe('pointer mapping under zoom and pan', () => {
+  const fit = computeResponsiveCameraView(390, 844, WORLD);
+
+  it.each([1.5, 2, 3])('resolves the tapped block at %sx zoom', (factor) => {
+    const zoomed = zoomCameraViewAt(fit, { x: 250, y: 300 }, fit.zoom * factor, WORLD);
+
+    for (const anchor of [
+      { x: 0, y: 0 },
+      { x: 6, y: 12 },
+      { x: 18, y: 28 },
+    ]) {
+      const resolved = screenToWorldPoint(screenPointInCell(anchor.x, anchor.y, zoomed), zoomed);
+      expect(toPointerGridTarget(resolved.x, resolved.y)?.buildAnchor).toEqual(anchor);
+    }
+  });
+
+  it('resolves the tapped block after the zoomed view was panned', () => {
+    const zoomed = zoomCameraViewAt(fit, { x: 195, y: 422 }, fit.zoom * 2.5, WORLD);
+    const panned = panCameraView(zoomed, { x: -90, y: 140 }, WORLD);
+    const anchor = { x: 10, y: 20 };
+
+    const tap = screenPointInCell(anchor.x, anchor.y, panned);
+    const resolved = screenToWorldPoint(tap, panned);
+    expect(toPointerGridTarget(resolved.x, resolved.y)?.buildAnchor).toEqual(anchor);
+
+    // The same tap through the un-panned view lands on another block.
+    const stale = screenToWorldPoint(tap, zoomed);
+    expect(toPointerGridTarget(stale.x, stale.y)?.buildAnchor).not.toEqual(anchor);
   });
 });
 

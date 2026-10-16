@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react';
 import type { AppRoute } from '../../../shared/config/game-setup';
+import { ToggleSwitch } from '../../../shared/ui/toggle-switch';
 import './SettingsPage.css';
 
 // Drives the filled part of the range track (WebKit has no native progress).
@@ -8,6 +9,7 @@ function fillStyle(volume: number): CSSProperties {
 }
 
 export const MUTE_TOGGLE_LABEL = 'Mute all sound';
+export const CONFIRM_PLACEMENT_LABEL = 'Confirm placement with a second tap';
 
 export type SettingsPageProps = {
   onNavigate: (route: AppRoute) => void;
@@ -17,6 +19,8 @@ export type SettingsPageProps = {
   onSfxVolumeChange: (volume: number) => void;
   onAmbientVolumeChange: (volume: number) => void;
   onMuteToggle: () => void;
+  confirmPlacementWithSecondTap: boolean;
+  onConfirmPlacementChange: (enabled: boolean) => void;
 };
 
 export function SettingsPage({
@@ -27,6 +31,8 @@ export function SettingsPage({
   onSfxVolumeChange,
   onAmbientVolumeChange,
   onMuteToggle,
+  confirmPlacementWithSecondTap,
+  onConfirmPlacementChange,
 }: SettingsPageProps) {
   return (
     <main className="settings-page">
@@ -95,6 +101,22 @@ export function SettingsPage({
             All sound is muted. Slider values are kept.
           </p>
         )}
+
+        <div className="settings-section settings-section-toggle">
+          <label className="settings-label" htmlFor="confirm-placement">
+            {CONFIRM_PLACEMENT_LABEL}
+          </label>
+          <ToggleSwitch
+            id="confirm-placement"
+            checked={confirmPlacementWithSecondTap}
+            aria-checked={confirmPlacementWithSecondTap}
+            onChange={(event) => onConfirmPlacementChange(event.target.checked)}
+          />
+          <p className="settings-hint">
+            On touch, the first tap previews the tower and a second tap on the same spot builds it.
+            Mouse clicks always build at once.
+          </p>
+        </div>
       </div>
     </main>
   );

@@ -22,6 +22,12 @@ import {
 import { getBrowserAudioSettingsStorage } from '../shared/lib/audio/audioSettingsPersistence';
 import { useAudioSettings } from '../shared/lib/audio/useAudioSettings';
 import {
+  hydrateControlSettings,
+  setControlSettings,
+} from '../shared/lib/control-settings/controlSettingsStore';
+import { getBrowserControlSettingsStorage } from '../shared/lib/control-settings/controlSettingsPersistence';
+import { useControlSettings } from '../shared/lib/control-settings/useControlSettings';
+import {
   createAmbientFader,
   type AmbientFader,
   type FadeableAudio,
@@ -46,11 +52,13 @@ const MENU_ROUTES: ReadonlySet<AppRoute> = new Set<AppRoute>([
 
 // Hydrate once per session, before the first render reads the store.
 hydrateAudioSettings(getBrowserAudioSettingsStorage());
+hydrateControlSettings(getBrowserControlSettingsStorage());
 
 export function App() {
   const [route, setRoute] = useState<AppRoute>('start');
   const [gameSetup, setGameSetup] = useState<GameSetupConfig | null>(null);
   const { sfxVolume, ambientVolume, isMuted } = useAudioSettings();
+  const { confirmPlacementWithSecondTap } = useControlSettings();
   const effectiveSfxVolume = isMuted ? 0 : sfxVolume;
   const effectiveAmbientVolume = isMuted ? 0 : ambientVolume;
   const ambientRef = useRef<FadeableAudio | null>(null);
@@ -106,6 +114,10 @@ export function App() {
 
   const handleMuteToggle = useCallback(() => {
     toggleAudioMuted();
+  }, []);
+
+  const handleConfirmPlacementChange = useCallback((enabled: boolean) => {
+    setControlSettings({ confirmPlacementWithSecondTap: enabled });
   }, []);
 
   useEffect(() => {
@@ -241,6 +253,8 @@ export function App() {
         onSfxVolumeChange={handleSfxVolumeChange}
         onAmbientVolumeChange={handleAmbientVolumeChange}
         onMuteToggle={handleMuteToggle}
+        confirmPlacementWithSecondTap={confirmPlacementWithSecondTap}
+        onConfirmPlacementChange={handleConfirmPlacementChange}
       />
     );
   }

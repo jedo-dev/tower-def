@@ -26,6 +26,7 @@ import {
 } from '../../wave-phase';
 import type { GridCell, GridModel, GridPoint } from '../../../shared/types/grid';
 import type { GridPosition } from '../../../shared/types/pathfinding';
+import { getControlSettings } from '../../../shared/lib/control-settings/controlSettingsStore';
 import {
   getGameSetupConfig,
   onGameCommand,
@@ -35,6 +36,7 @@ import {
 } from '../../../shared/lib/game-bridge/bridge';
 import type {
   BattlefieldView,
+  BoardZoomAction,
   GameCommandMap,
   GameHudSnapshot,
   GameSpeed,
@@ -81,14 +83,25 @@ import {
   updateBattlefieldTowerCombat,
 } from '../runtime/battlefield/battlefieldUpdateRuntime';
 import {
+  createBoardCameraState,
+  getBoardViewportCentre,
+  getBoardZoomFactor,
+  isBoardCameraZoomed,
+  panBoardCamera,
   registerResponsiveCamera,
+  resetBoardCamera,
+  resolvePointerScreenPoint,
   resolvePointerWorldPoint,
+  setBoardCameraZoomFactorAt,
+  zoomBoardCameraByAt,
+  type BoardCameraState,
 } from '../runtime/camera/gameSceneCameraRuntime';
 import {
   isBuildAnchorValid as isBuildAnchorValidRuntime,
   type BuildRuntimeDeps,
   type BuildRuntimeState,
 } from '../runtime/build/gameSceneBuildRuntime';
+import { resolvePlacementTap, resolvePreviewAnchor } from '../runtime/build/placementConfirmation';
 import {
   handleSellTowerCommand,
   handleUpgradeTowerCommand,
@@ -144,12 +157,15 @@ import {
 } from '../runtime/input/gameSceneInputBindings';
 import {
   canProcessUserAction as canProcessUserActionRuntime,
+  createInputControllerState,
   handleGameOut as handleGameOutRuntime,
   handlePointerDown as handlePointerDownRuntime,
   handlePointerMove as handlePointerMoveRuntime,
   handlePointerUp as handlePointerUpRuntime,
+  handleWheel as handleWheelRuntime,
   syncHoveredCellFromPointer,
   markUserActionProcessed as markUserActionProcessedRuntime,
+  type BoardTapOutcome,
   type InputControllerDependencies,
   type InputControllerState,
 } from '../runtime/input/gameSceneInputController';
@@ -189,6 +205,7 @@ import type { GameSetupEndpoints } from '../../../shared/config/game-setup';
 import { GameAudioManager } from '../sound/GameAudioManager';
 import { createGameSoundRouter, type GameSoundRouter } from '../runtime/audio/gameSoundRouting';
 import {
+  BOARD_ZOOM_KEY_STEP_FACTOR,
   BUILD_PREVIEW_RENDER_DEPTH,
   ROUTE_PREVIEW_RENDER_DEPTH,
   DEFAULT_TOWER_COST,
@@ -233,6 +250,10 @@ export class GameScene extends Phaser.Scene {
   private isSceneCleanedUp = false;
   private hoveredCell: GridPosition | null = null;
   private hoveredBuildAnchor: GridPosition | null = null;
+  /** Block armed by a first touch tap; the preview stays on it until it is built or moved. */
+  private pendingPlacementAnchor: GridPosition | null = null;
+  /** Input modality from the pointer event type: finger or mouse/pen. */
+  private isLastPointerTouch = false;
   private gridModel: GridModel | null = null;
   private readonly gridRendererState: GridRendererState = {
     gridGraphics: null,
@@ -279,10 +300,9 @@ export class GameScene extends Phaser.Scene {
   private baselineWaves: SharedBaselineWaveSource =
     createSharedBaselineWaveSource(DEFAULT_MAP_SEED);
   private mapEndpoints: EdgeEndpoints = { entrance: ENTRANCE_CELL, exit: EXIT_CELL };
-  private inputControllerState: InputControllerState = {
-    activeTouchGesture: null,
-    lastActionAtMs: Number.NEGATIVE_INFINITY,
-  };
+  private inputControllerState: InputControllerState = createInputControllerState();
+  /** Created with the scene systems: `scale` is not available in the constructor. */
+  private boardCamera: BoardCameraState | null = null;
   private devFpsReportElapsedMs = 0;
   private soundManager: GameAudioManager | null = null;
   /** Simulation time: paused and sped up independently of Phaser's clock. */
@@ -316,7 +336,9 @@ export class GameScene extends Phaser.Scene {
 
   private readonly inputControllerDeps: InputControllerDependencies = {
     nowMs: () => this.time.now,
-    toPointerWorldPoint: (pointer) => resolvePointerWorldPoint(this, pointer),
+    toPointerScreenPoint: (pointer) => resolvePointerScreenPoint(this, pointer),
+    toPointerWorldPoint: (pointer) =>
+      resolvePointerWorldPoint(this, this.getBoardCamera(), pointer),
     toPointerTarget: (worldX, worldY) => toPointerGridTarget(worldX, worldY),
     setHoveredTarget: (target) => {
       this.hoveredCell = target?.cell ?? null;
@@ -328,8 +350,21 @@ export class GameScene extends Phaser.Scene {
     },
     updateHoveredCellDebugRegistry: () => undefined,
     updateBuildPreview: () => this.updateBuildPreview(),
-    tryPlaceTowerAtHoveredCell: () => tryPlaceTowerAtHoveredCell(this.towerCommandDeps),
+    onBoardTap: (pointer) => this.handleBoardTap(pointer),
     trySellTowerAtHoveredCell: () => trySellTowerAtHoveredCell(this.towerCommandDeps),
+    isCameraZoomed: () => isBoardCameraZoomed(this.getBoardCamera()),
+    getCameraZoomFactor: () => getBoardZoomFactor(this.getBoardCamera()),
+    setCameraZoomFactorAt: (factor, focus) =>
+      setBoardCameraZoomFactorAt(this, this.getBoardCamera(), factor, focus),
+    zoomCameraByAt: (multiplier, focus) =>
+      zoomBoardCameraByAt(this, this.getBoardCamera(), multiplier, focus),
+    panCameraBy: (dragDelta) => panBoardCamera(this, this.getBoardCamera(), dragDelta),
+    resetCameraZoom: () => resetBoardCamera(this, this.getBoardCamera()),
+    hasPanModifier: (pointer) => {
+      // The harness emits plain pointer objects without a DOM event.
+      const event: { shiftKey?: boolean } | undefined = pointer.event;
+      return event?.shiftKey === true;
+    },
   };
 
   /** Tower and creature sounds, resolved through the race sound profiles. */
@@ -429,7 +464,30 @@ export class GameScene extends Phaser.Scene {
       activeBattlefieldView: this.activeBattlefieldView,
       gridModel: this.gridModel,
       gridRenderer: this.gridRendererState,
+      cameraView: this.getBoardCamera().view,
+      cameraZoomFactor: getBoardZoomFactor(this.getBoardCamera()),
+      pendingPlacementAnchor: this.pendingPlacementAnchor,
     };
+  }
+
+  /** The block the preview shows: the armed one on touch, else the hovered one. */
+  private getPreviewAnchor(): GridPosition | null {
+    return resolvePreviewAnchor({
+      pendingAnchor: this.pendingPlacementAnchor,
+      hoveredAnchor: this.hoveredBuildAnchor,
+      confirmsTouchPlacement: this.confirmsTouchPlacement(),
+    });
+  }
+
+  private confirmsTouchPlacement(): boolean {
+    return this.isLastPointerTouch && getControlSettings().confirmPlacementWithSecondTap;
+  }
+
+  private getBoardCamera(): BoardCameraState {
+    if (!this.boardCamera) {
+      this.boardCamera = createBoardCameraState(this);
+    }
+    return this.boardCamera;
   }
 
   public preload(): void {
@@ -519,13 +577,17 @@ export class GameScene extends Phaser.Scene {
     this.cameras.main.setBackgroundColor('#1a1f2c');
     this.cameras.main.roundPixels = true;
     applyNearestNeighborFiltering(this);
-    this.teardownCallbacks.push(registerResponsiveCamera(this));
+    this.boardCamera = null;
+    this.teardownCallbacks.push(registerResponsiveCamera(this, this.getBoardCamera()));
     this.drawGrid();
+    // Phaser tracks one touch pointer by default; pinch needs a second one.
+    this.input.addPointer(1);
     this.teardownCallbacks.push(
       registerScenePointerHandlers(this, {
         onPointerMove: (pointer) => this.handlePointerMove(pointer),
         onPointerDown: (pointer) => this.handlePointerDown(pointer),
         onPointerUp: (pointer) => this.handlePointerUp(pointer),
+        onWheel: (pointer, deltaY) => this.handleWheel(pointer, deltaY),
         onGameOut: () => this.handleGameOut(),
       }),
     );
@@ -696,6 +758,9 @@ export class GameScene extends Phaser.Scene {
       onCommand('sell-tower', (payload) => {
         handleSellTowerCommand(this.towerCommandDeps, payload.towerId);
       }),
+      onCommand('zoom-board', (payload) => {
+        this.handleZoomBoardCommand(payload.action);
+      }),
       onCommand('restart-match', () => {
         // A restart is also the recover action after an engine error.
         this.hasEngineError = false;
@@ -712,6 +777,7 @@ export class GameScene extends Phaser.Scene {
         if (payload.activeView !== 'player') {
           // The opponent view is read-only: close the player's tower actions.
           publishGameEvent('selected-tower', { tower: null });
+          this.pendingPlacementAnchor = null;
         }
         this.renderVisibleBattlefield();
         this.publishHudSnapshot();
@@ -847,7 +913,7 @@ export class GameScene extends Phaser.Scene {
         overlay: this.buildPreviewOverlay,
         gridGraphics: this.gridRendererState.gridGraphics,
         gridModel: this.gridModel,
-        hoveredBuildAnchor: this.hoveredBuildAnchor,
+        hoveredBuildAnchor: this.getPreviewAnchor(),
         canPerformBuildActions: this.canPerformBuildActions(),
         selectedTowerRangeCells: resolveTowerRangeCells(this.selectedTowerType),
         isBuildAnchorValid: (anchor, grid) => this.isBuildAnchorValid(anchor, grid),
@@ -861,7 +927,7 @@ export class GameScene extends Phaser.Scene {
       {
         grid: this.gridModel,
         isBuildPhase: this.canPerformBuildActions(),
-        hoveredAnchor: this.hoveredBuildAnchor,
+        hoveredAnchor: this.getPreviewAnchor(),
         isHoveredAnchorValid,
         hasAirCreeps: this.doesFacedRosterHaveAirCreeps(),
       },
@@ -1129,6 +1195,7 @@ export class GameScene extends Phaser.Scene {
     this.placedTowerCostsByCellKey.clear();
     this.hoveredCell = null;
     this.hoveredBuildAnchor = null;
+    this.pendingPlacementAnchor = null;
     this.buildPreviewOverlay?.clear();
     markRoutePreviewLayoutChanged(this.routePreview);
     this.pathCellKeys.clear();
@@ -1185,6 +1252,11 @@ export class GameScene extends Phaser.Scene {
   }
 
   private handlePointerMove(pointer: Phaser.Input.Pointer): void {
+    if (!pointer.wasTouch) {
+      // Back on a mouse: the preview follows the cursor again.
+      this.isLastPointerTouch = false;
+      this.pendingPlacementAnchor = null;
+    }
     handlePointerMoveRuntime(
       this.inputControllerState,
       this.inputControllerDeps,
@@ -1206,37 +1278,85 @@ export class GameScene extends Phaser.Scene {
   }
 
   private handlePointerDown(pointer: Phaser.Input.Pointer): void {
-    syncHoveredCellFromPointer(this.inputControllerDeps, pointer);
-    if (trySelectTowerAtHoveredCell(this.towerCommandDeps)) {
-      return;
-    }
-
-    if (this.hoveredCell) {
-      publishGameEvent('selected-tower', { tower: null });
-    }
-
+    this.isLastPointerTouch = pointer.wasTouch;
     handlePointerDownRuntime(this.inputControllerState, this.inputControllerDeps, pointer);
   }
 
   private handlePointerUp(pointer: Phaser.Input.Pointer): void {
-    if (pointer.wasTouch) {
-      syncHoveredCellFromPointer(this.inputControllerDeps, pointer);
-    }
-    if (pointer.wasTouch && trySelectTowerAtHoveredCell(this.towerCommandDeps)) {
-      this.inputControllerState.activeTouchGesture = null;
-      return;
-    }
-
-    if (pointer.wasTouch && this.hoveredCell) {
-      publishGameEvent('selected-tower', { tower: null });
-    }
-
     handlePointerUpRuntime(
       this.inputControllerState,
       this.inputControllerDeps,
       INPUT_CONTROLLER_CONFIG,
       pointer,
     );
+  }
+
+  private handleWheel(pointer: Phaser.Input.Pointer, deltaY: number): void {
+    handleWheelRuntime(this.inputControllerDeps, INPUT_CONTROLLER_CONFIG, pointer, deltaY);
+  }
+
+  private handleZoomBoardCommand(action: BoardZoomAction): void {
+    const camera = this.getBoardCamera();
+    if (action === 'reset') {
+      resetBoardCamera(this, camera);
+      return;
+    }
+    const multiplier =
+      action === 'in' ? BOARD_ZOOM_KEY_STEP_FACTOR : 1 / BOARD_ZOOM_KEY_STEP_FACTOR;
+    zoomBoardCameraByAt(this, camera, multiplier, getBoardViewportCentre(camera));
+  }
+
+  /**
+   * A tap or click that reached the board: a tower under it is selected,
+   * otherwise the selection closes and the tap goes to building.
+   */
+  private handleBoardTap(pointer: Phaser.Input.Pointer): BoardTapOutcome {
+    syncHoveredCellFromPointer(this.inputControllerDeps, pointer);
+    if (trySelectTowerAtHoveredCell(this.towerCommandDeps)) {
+      this.clearPendingPlacement();
+      return 'selected-tower';
+    }
+    if (this.hoveredCell) {
+      publishGameEvent('selected-tower', { tower: null });
+    }
+
+    const isBuildTap = this.activeBattlefieldView === 'player' && this.canPerformBuildActions();
+    if (isBuildTap && this.confirmsTouchPlacement()) {
+      this.handleTwoTapPlacement();
+    } else {
+      this.pendingPlacementAnchor = null;
+      tryPlaceTowerAtHoveredCell(this.towerCommandDeps);
+    }
+    return isBuildTap ? 'build-tap' : 'board-tap';
+  }
+
+  private clearPendingPlacement(): void {
+    if (!this.pendingPlacementAnchor) {
+      return;
+    }
+    this.pendingPlacementAnchor = null;
+    this.updateBuildPreview();
+  }
+
+  /** First tap arms the hovered block; a second tap on it builds (a refusal keeps it armed). */
+  private handleTwoTapPlacement(): void {
+    if (!this.hoveredBuildAnchor) {
+      return;
+    }
+    const decision = resolvePlacementTap(this.pendingPlacementAnchor, this.hoveredBuildAnchor);
+    if (decision.kind === 'arm') {
+      this.pendingPlacementAnchor = decision.anchor;
+      this.soundManager?.play('ui.click');
+      this.updateBuildPreview();
+      return;
+    }
+
+    const towersBefore = this.playerField.towers.length;
+    tryPlaceTowerAtHoveredCell(this.towerCommandDeps);
+    if (this.playerField.towers.length > towersBefore) {
+      this.pendingPlacementAnchor = null;
+      this.updateBuildPreview();
+    }
   }
 
   private handleGameOut(): void {
@@ -1295,6 +1415,7 @@ export class GameScene extends Phaser.Scene {
     if (!this.soundManager?.isPlaying('ambient.tension')) {
       this.soundManager?.play('ambient.tension');
     }
+    this.pendingPlacementAnchor = null;
     this.registry.set('phase.build.active', this.canPerformBuildActions());
     this.updateGridOverlayVisualState();
     this.updateBuildPreview();
@@ -1499,13 +1620,13 @@ export class GameScene extends Phaser.Scene {
     this.gridModel = null;
     this.runState.nextWaveStartsAtMs = null;
     this.placedTowerCostsByCellKey.clear();
-    this.inputControllerState.activeTouchGesture = null;
-    this.inputControllerState.lastActionAtMs = Number.NEGATIVE_INFINITY;
+    this.inputControllerState = createInputControllerState();
     this.devFpsReportElapsedMs = 0;
     this.runState.lastPublishedAutoStartSecondsLeft = null;
     this.soundManager?.destroy();
     this.soundManager = null;
     this.hoveredCell = null;
     this.hoveredBuildAnchor = null;
+    this.pendingPlacementAnchor = null;
   }
 }

@@ -111,6 +111,13 @@ class FakeScaleManager extends FakeEventEmitter {
 class FakeInputPlugin extends FakeEventEmitter {
   public readonly keyboard = new FakeEventEmitter();
   public readonly mouse = { disableContextMenu: (): void => undefined };
+  /** Touch pointers the scene asked for beyond Phaser's default two. */
+  public extraPointerCount = 0;
+
+  public addPointer(quantity = 1): this {
+    this.extraPointerCount += quantity;
+    return this;
+  }
 }
 
 class FakeTextureManager {

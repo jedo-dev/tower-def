@@ -7,6 +7,10 @@ import type { MovementRuntimeConfig } from '../runtime/movement/gameSceneMovemen
 import type { WaveRuntimeConfig } from '../runtime/wave/gameSceneWaveRuntime';
 import {
   ACTION_COOLDOWN_MS,
+  BOARD_WHEEL_ZOOM_SENSITIVITY,
+  DOUBLE_TAP_MAX_INTERVAL_MS,
+  DOUBLE_TAP_MAX_MOVE_PX,
+  POINTER_PAN_START_THRESHOLD_PX,
   ROUTE_PREVIEW_AIR_ALPHA,
   ROUTE_PREVIEW_AIR_COLOR,
   ROUTE_PREVIEW_AIR_DASH_PX,
@@ -111,6 +115,10 @@ export const INPUT_CONTROLLER_CONFIG: InputControllerConfig = {
   touchTapMaxDurationMs: TOUCH_TAP_MAX_DURATION_MS,
   touchTapMaxMovePx: TOUCH_TAP_MAX_MOVE_PX,
   touchLongPressMinDurationMs: TOUCH_LONG_PRESS_MIN_DURATION_MS,
+  panStartThresholdPx: POINTER_PAN_START_THRESHOLD_PX,
+  doubleTapMaxIntervalMs: DOUBLE_TAP_MAX_INTERVAL_MS,
+  doubleTapMaxMovePx: DOUBLE_TAP_MAX_MOVE_PX,
+  wheelZoomSensitivity: BOARD_WHEEL_ZOOM_SENSITIVITY,
 };
 
 export const GRID_PREVIEW_CONFIG: GridPreviewConfig = {

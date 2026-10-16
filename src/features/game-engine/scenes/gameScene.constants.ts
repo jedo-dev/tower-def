@@ -23,6 +23,17 @@ export const TOUCH_TAP_MIN_DURATION_MS = 0;
 export const TOUCH_TAP_MAX_DURATION_MS = 350;
 export const TOUCH_TAP_MAX_MOVE_PX = 12;
 export const TOUCH_LONG_PRESS_MIN_DURATION_MS = 450;
+/** A press that travels further than this on screen is a pan, not a tap. */
+export const POINTER_PAN_START_THRESHOLD_PX = 12;
+export const DOUBLE_TAP_MAX_INTERVAL_MS = 300;
+export const DOUBLE_TAP_MAX_MOVE_PX = 24;
+/** Board zoom relative to the fit zoom: 1x shows the whole board. */
+export const BOARD_ZOOM_MIN_FACTOR = 1;
+export const BOARD_ZOOM_MAX_FACTOR = 3;
+/** One keyboard or wheel notch multiplies the zoom factor by this. */
+export const BOARD_ZOOM_KEY_STEP_FACTOR = 1.25;
+/** Wheel delta (pixels) to zoom factor: exp(-deltaY * sensitivity). */
+export const BOARD_WHEEL_ZOOM_SENSITIVITY = 0.0015;
 export const DEV_FPS_REPORT_INTERVAL_MS = 500;
 export const PREVIEW_VALID_FILL = 0x3ecf78;
 export const PREVIEW_VALID_STROKE = 0xaaf5c8;

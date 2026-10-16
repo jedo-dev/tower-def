@@ -3,8 +3,6 @@ import { BuilderFaction } from '../../../entities/builder-faction';
 import { Difficulty } from '../../../entities/difficulty';
 import { EnemyFaction } from '../../../entities/enemy-faction';
 import type { GameSetupConfig } from '../../../shared/config/game-setup';
-import { TOWER_FOOTPRINT } from '../../../shared/constants/footprint';
-import { GRID_DIMENSIONS } from '../../../shared/constants/grid';
 import type { GridPosition } from '../../../shared/types/pathfinding';
 import {
   clearGameSetupConfig,
@@ -21,11 +19,17 @@ import type {
   GameEventMap,
   GameHudSnapshot,
 } from '../../../shared/lib/game-bridge/types';
-import { worldToScreenPoint } from '../runtime/camera/cameraViewMapping';
+import type { CameraView, ScreenPoint } from '../runtime/camera/cameraViewMapping';
 import type { GameScene } from '../scenes/GameScene';
 import type { GameSceneInspection } from '../scenes/gameScene.types';
 import type { FakeGameObject } from './fakePhaser';
 import { fakePhaserModule, getFakeSceneSystems, type FakeSceneSystems } from './fakeSceneSystems';
+import {
+  createPointerDispatcher,
+  readCameraView,
+  toAnchorScreenPoint,
+  type MousePointerOptions,
+} from './harnessPointers';
 
 /**
  * Headless harness for the real GameScene. `phaser` is swapped for the fake
@@ -87,6 +91,22 @@ export type GameSceneHarness = {
   switchBattlefieldView: (view: BattlefieldView) => void;
   /** Left mouse click on the tile that anchors a tower footprint at `anchor`. */
   clickBuildAnchor: (anchor: GridPosition) => void;
+  /** Canvas pixel at the centre of the tower block anchored at `anchor`, under the live camera. */
+  anchorScreenPoint: (anchor: GridPosition) => ScreenPoint;
+  /** The camera view the fake main camera was last set to. */
+  cameraView: () => CameraView;
+  /** Mouse: move, press and release at a canvas pixel. */
+  clickAt: (screen: ScreenPoint, options?: MousePointerOptions) => void;
+  /** Mouse: press at `from`, move through `steps` points to `to`, release. */
+  dragMouse: (from: ScreenPoint, to: ScreenPoint, options?: MousePointerOptions) => void;
+  /** Mouse wheel at a canvas pixel; `deltaY` positive zooms out. */
+  wheelAt: (screen: ScreenPoint, deltaY: number) => void;
+  /** Touch: one finger down and up at a canvas pixel. */
+  touchTapAt: (screen: ScreenPoint, pointerId?: number) => void;
+  /** Touch: one finger pressed at `from`, moved in steps to `to`, lifted. */
+  dragTouch: (from: ScreenPoint, to: ScreenPoint, steps?: number) => void;
+  /** Touch: two fingers pressed at `from`, moved in steps to `to`, lifted. */
+  pinch: (from: [ScreenPoint, ScreenPoint], to: [ScreenPoint, ScreenPoint], steps?: number) => void;
   events: () => readonly RecordedGameEvent[];
   eventsOf: <Name extends keyof GameEventMap>(name: Name) => GameEventMap[Name][];
   hudSnapshots: () => readonly GameHudSnapshot[];
@@ -107,45 +127,6 @@ async function loadGameSceneClass(): Promise<typeof GameScene> {
  */
 export async function preloadGameScene(): Promise<void> {
   await loadGameSceneClass();
-}
-
-type PagePointerGlobals = { window?: unknown; document?: unknown };
-
-/**
- * Pointer mapping reads the canvas' live page offset from `window`/`document`.
- * Node has neither, so a page at scroll 0 is provided for the dispatch only.
- */
-function withPagePointerGlobals(run: () => void): void {
-  const globals = globalThis as unknown as PagePointerGlobals;
-  const missingWindow = globals.window === undefined;
-  const missingDocument = globals.document === undefined;
-  if (missingWindow) globals.window = { scrollX: 0, scrollY: 0 };
-  if (missingDocument) globals.document = { documentElement: { clientLeft: 0, clientTop: 0 } };
-  try {
-    run();
-  } finally {
-    if (missingWindow) delete globals.window;
-    if (missingDocument) delete globals.document;
-  }
-}
-
-function toAnchorScreenPoint(systems: FakeSceneSystems, anchor: GridPosition) {
-  const camera = systems.cameras.main;
-  return worldToScreenPoint(
-    {
-      x: (anchor.x + TOWER_FOOTPRINT.width / 2) * GRID_DIMENSIONS.cellSize,
-      y: (anchor.y + TOWER_FOOTPRINT.height / 2) * GRID_DIMENSIONS.cellSize,
-    },
-    {
-      viewportX: camera.x,
-      viewportY: camera.y,
-      viewportWidth: camera.width,
-      viewportHeight: camera.height,
-      zoom: camera.zoom,
-      scrollX: camera.scrollX,
-      scrollY: camera.scrollY,
-    },
-  );
 }
 
 function recordBridgeTraffic(events: RecordedGameEvent[], snapshots: GameHudSnapshot[]) {
@@ -172,6 +153,7 @@ export async function createGameSceneHarness(
   const systems = getFakeSceneSystems(scene);
   scene.create();
 
+  const pointers = createPointerDispatcher(systems);
   const tick = (frames = 1, deltaMs = frameDeltaMs): void => {
     for (let frame = 0; frame < frames; frame += 1) {
       systems.time.advanceTo(systems.time.now + deltaMs);
@@ -194,15 +176,10 @@ export async function createGameSceneHarness(
     },
     command: (name, payload) => sendGameCommand(name, payload),
     switchBattlefieldView: (view) => sendGameCommand('switch-battlefield-view', { view }),
-    clickBuildAnchor: (anchor) => {
-      const screen = toAnchorScreenPoint(systems, anchor);
-      const pointer = { x: screen.x, y: screen.y, wasTouch: false, button: 0, primaryDown: true };
-      withPagePointerGlobals(() => {
-        systems.input.emit('pointermove', pointer);
-        systems.input.emit('pointerdown', pointer);
-        systems.input.emit('pointerup', pointer);
-      });
-    },
+    clickBuildAnchor: (anchor) => pointers.clickAt(toAnchorScreenPoint(systems, anchor)),
+    anchorScreenPoint: (anchor) => toAnchorScreenPoint(systems, anchor),
+    cameraView: () => readCameraView(systems),
+    ...pointers,
     events: () => events,
     eventsOf: <Name extends keyof GameEventMap>(name: Name) =>
       events

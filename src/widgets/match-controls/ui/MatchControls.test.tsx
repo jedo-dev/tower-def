@@ -48,6 +48,7 @@ describe('MatchControls', () => {
       onGameCommand('set-paused', (payload) => sent.push({ name: 'set-paused', payload })),
       onGameCommand('set-game-speed', (payload) => sent.push({ name: 'set-game-speed', payload })),
       onGameCommand('quit-match', (payload) => sent.push({ name: 'quit-match', payload })),
+      onGameCommand('zoom-board', (payload) => sent.push({ name: 'zoom-board', payload })),
     ];
     publishGameHudSnapshot(createSnapshot());
   });
@@ -111,6 +112,20 @@ describe('MatchControls', () => {
 
     fireEvent.keyDown(window, { key: 'Escape', code: 'Escape' });
     expect(screen.getByRole('dialog', { name: QUIT_DIALOG_TITLE })).toBeDefined();
+  });
+
+  it('maps +/- and 0 to typed board zoom commands', () => {
+    render(<MatchControls />);
+
+    fireEvent.keyDown(window, { key: '+', code: 'Equal' });
+    fireEvent.keyDown(window, { key: '-', code: 'Minus' });
+    fireEvent.keyDown(window, { key: '0', code: 'Digit0' });
+
+    expect(sent).toEqual([
+      { name: 'zoom-board', payload: { action: 'in' } },
+      { name: 'zoom-board', payload: { action: 'out' } },
+      { name: 'zoom-board', payload: { action: 'reset' } },
+    ]);
   });
 
   it('leaves keys typed into an input alone', () => {
