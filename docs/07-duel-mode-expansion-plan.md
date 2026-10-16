@@ -775,6 +775,85 @@ the match", and `npm run sim:duel-batch -- --seeds 1-3 --matchups hard:normal
 --maps classic`. Each full map of the standard batch takes about 85 seconds
 and each game-faithful row about 45; run them one at a time.
 
+### Tower talents authoring (tower-def-bge.3)
+
+The two branches of every race tower are authored from
+`docs/11-tower-talents-ru.md` (the design source) in
+`src/content/towers/<race>.json`, with English names and descriptions. Only
+mechanics that exist today are used (docs/08 "Tower abilities"); nothing was
+balanced by simulation, a later task tunes the numbers.
+
+**Translating the doc numbers.** The doc's grade 3 rows are older than the
+shipped content (e.g. the doc archer reloads in 800 ms, the shipped one in
+700), so its grade 4-7 numbers are read against the shipped grade 3:
+
+- damage and cooldown scale by `shipped grade 3 / doc grade 3` (cooldowns
+  rounded to the 50 ms step of the duel simulator);
+- range and splash radius shift by `shipped grade 3 - doc grade 3`; splash
+  towers keep their grade 3 range (5.8) where the doc gives none;
+- support aura radius, attack speed and range bonus shift the same way
+  (shipped grade 3 is 7 cells, +34%, +1.4 against the doc's 5, +18%, +0.8);
+- poison magnitude and stack cap of the alchemist scale and shift the same
+  way (the doc quotes the level 1 poison as grade 3);
+- a mechanic new at grade 4 takes the doc value; "N per second" damage over
+  time becomes magnitude `N / 2` (ticks every 500 ms);
+- chill adds the doc's steps to the shipped slow but stays at or below 0.75,
+  the movement floor (`EFFECT_BALANCE.minimumSpeedMultiplier`).
+
+The shipped guard keeps grade 4 damage and range at or above grade 3, and a
+test asserts the two branches of every tower differ in at least one ability,
+effect or aura mechanic (`towerTalentContent.test.ts`).
+
+**Substitutions** (revisit when the deferred mechanic lands):
+
+| Tower / branch | Doc (grade) | Authored instead |
+| --- | --- | --- |
+| Bone Archer / Bone Volley | every 3rd / 2nd shot hits two targets (5 / 6) | `extraTargets` 1 at `extraTargetDamageShare` 0.33 / 0.5 (the average) |
+| Plague Tower / Plague Cloud | poison cloud left on the ground, slowing at 6-7 | on-hit magical `poison` and `chill` on everything the blast hits |
+| Plague Tower / Corpse Blast | killed creeps explode for 20-50% of their max health, chaining | doc damage +10% (48 / 55 / 64 / 75) and radius +0.2; no death hook |
+| Frost Wyrm Nest / Permafrost | slow 45-65% (doc steps over the shipped 0.55 would pass the floor) | chill 0.6 / 0.65 / 0.7 / 0.75 |
+| Frost Wyrm Nest / Permafrost | frozen fliers fall and become ground targets (7) | `airDamageMultiplier` 1.25 at grade 7 |
+| Frost Wyrm Nest / Wyrm Breath | cone of 30-60 degrees hitting everything in it | `pierceLine` 0.6 / 0.7 / 0.85 / 1 (the line to the target) |
+| Frost Wyrm Nest / Wyrm Breath | frozen creeps take +25% / +50% (6 / 7) | on-hit `vulnerability` (all types, 2 s) on every breath target |
+| Bone Obelisk / Necromancer's Whisper | two obelisk auras stack at half (7) | magical damage bonus 0.25 instead of 0.20 |
+| Bone Obelisk / Soul Harvest | single-target percent hits of 8-22 per mille | magical `volleyEveryMs` pulse (12 / 16 / 22 / 30) at every creep in reach (5-6 cells): the damage type is per tower, not per grade; keeps the grade 3 speed aura |
+| Spear Watchtower / Spear Throwers | the spear passes into the second creep for 50% (6) | `pierceLine` 0.3 (every creep on the line, at a lower share); 0.5 at 7 as the doc says |
+| Spear Watchtower / Heavy Spear | ignores 5-20 physical armor | on-hit physical `armor_break` 5-20 for 1 s (a debuff other towers also profit from) |
+| Burning Pit / Napalm | burning creeps run 10% slower (7) | on-hit `chill` 0.1 |
+| Burning Pit / Mortar | targets air too (4) | `allowedTargets` is per tower: stays ground; damage +10% over the doc (55 / 68 / 86 / 110) |
+| Burning Pit / Mortar | knocks small creeps back a cell (7) | on-hit `stun` 300 ms |
+| Lightning Totem / Thunderstorm | 8 jumps (7) | 6, the `TOWER_CHAIN_BOUNDS` maximum |
+| Lightning Totem / both | per-grade jumps, falloff and jump range | authored on every grade, but combat still reads the archetype chain (3 jumps, 4 cells, -25%); live once combat reads the grade chain |
+| Lightning Totem / Thunder Strike | stun only on the first target (4) | the stun is on-hit, so every creep in the chain is stunned |
+| Lightning Totem / Thunder Strike | stunned creeps take +20% / +35% (6 / 7) | on-hit `vulnerability` lasting as long as the stun |
+| Tar Pit / Quagmire | tar puddle (radius 1.5-3) slows all inside, ground only | `extraTargets` 1-4 at 0.5 share carrying the chill; the pit still reaches fliers |
+| Tar Pit / Quagmire | large creeps stuck harder (-65% / -75%) | dropped: the chill is already at the 0.75 floor and there is no per-size slow |
+| Tar Pit / Sticky Tar | +20% physical and magical (6) | `vulnerability` with `damageKind` `all` (covers percent too); keeps the grade 3 chill |
+| Guard Archer / Crossbowmen | air priority (6) | none (no targeting priority field) |
+| Guard Archer / Crossbowmen | a flier hit loses 10% max health (7) | `airDamageMultiplier` 2.2 instead of 2.0 |
+| Cannon Bastion / Siege Cannon | +10-30 per mille of max health per target, large x1.5 / x2 | `largeTargetMultiplier` 1.15 / 1.25 / 1.5 / 2 on the physical blast |
+| Cannon Bastion / Grapeshot | damage 36 at 4-5, below grade 3's 38 | 38 / 38 / 40 / 42 (keeps grade 4 at or above grade 3) |
+| Cannon Bastion / Grapeshot | small and medium creeps knocked back 0.5 / 1 cell (6 / 7) | on-hit `stun` 200 / 300 ms (hits large creeps too) |
+| Alchemist Tower / Plague Flasks | poison jumps to one / two neighbours on death (6 / 7) | `extraTargets` 1 / 2 at 0.5 share (neighbours are poisoned directly) |
+| Alchemist Tower / Acid | armor can go negative at 2 stacks (7) | always true: broken armor already goes down to -25 |
+| Guard Post / Headquarters | +5% crit to every neighbour (7) | physical damage bonus 0.25 instead of 0.20 |
+| Moon Archer / Sniper | sees the whole row or column (7) | range +1 (13.2 cells) |
+| Wisp Bloom / Spores | spore zone on the ground | on-hit `chill` (and magical `poison` at 6-7) on everything the blast hits |
+| Wisp Bloom / Wild Growth | targets air too (4) | `allowedTargets` is per tower: stays ground; +2 damage at grade 4 |
+| Wisp Bloom / Wild Growth | roots only at the blast centre (5-7) | on-hit `stun` on the whole blast |
+| Wisp Bloom / Wild Growth | fliers in the radius 20% slower (6), fliers pulled down (7) | dropped: the bloom cannot hit fliers |
+| Moonwell / Moonlight | no shots: 10-24 damage per second to every creep in radius 4-5.5 | the shot stays (damage 32-40); `volleyEveryMs` 1000 with `volleyDamageShare` set to the doc's pulse (0.31-0.6); the pulse reaches the tower range (6.8, kept to hold the grade 3 floor) and carries the chill |
+| Moonwell / Moonlight | first entry freezes for 0.5 s (7) | chill `freezeAtStacks` 3, `freezeMs` 500 |
+| Moonwell / Living Water | neighbours' hits chill 10-25% | not grantable by an aura; folded into aura attack speed +5% / +8% / +15% / +22% (the doc's +10% / +15% at 6-7 plus a share) |
+| Thorn Spire / Thornbite | percent poison 5-12 per mille per second, up to 5 stacks | 9 / 10 / 12 / 14 per mille per tick, stacks 4 / 4 / 5 / 6 (damped: the ratio rule would reach about 29% of max health per second) |
+| Thorn Spire / Thornbite | large creeps take x1.5 (7) | `largeTargetMultiplier` 1.5 (applies to hits, not to poison ticks) |
+| Thorn Spire / Grasping Vine | +20% / +35% damage while held (6 / 7) | on-hit `vulnerability` lasting as long as the stun |
+
+| Every tower | stack caps below 3 ("does not stack" or "stacks up to 2": Cursed Arrow, Heavy Spear, Napalm 4-6, Acid, the cloud and spore poison) | left out: an on-hit `maxStacks` only raises the balance cap (3 for poison, burn and armor break), so these stack to 3; Heavy Spear's 1 s break lasts just past its reload, so it mostly helps its own next spear |
+
+Bounds clamped: Thunderstorm jumps (8 to 6). No other doc number exceeded
+`TOWER_STAT_BOUNDS`, `TOWER_CHAIN_BOUNDS` or `TOWER_ABILITY_BOUNDS`.
+
 ## Suggested Improvements
 
 - Add difficulty presets for the computer opponent: relaxed, normal, aggressive.

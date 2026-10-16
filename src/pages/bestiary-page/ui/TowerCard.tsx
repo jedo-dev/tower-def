@@ -2,6 +2,7 @@ import type { FactionThemeName } from '../../../shared/constants/theme';
 import { TowerIcon } from '../../../shared/ui/tower-icon';
 import type { TowerCardViewModel } from '../model/types';
 import { StatGrid, type StatCell } from './StatGrid';
+import { TowerBranchTable } from './TowerBranchTable';
 import styles from './BestiaryPage.module.css';
 
 export type TowerCardProps = {
@@ -71,13 +72,11 @@ export function TowerCard({ tower, faction }: TowerCardProps) {
       {tower.talentBranches.length > 0 && (
         <div className={styles.branches}>
           <span className={styles.branchesLabel}>Grade 3 talents, choose one</span>
-          <ul className={styles.branchList} aria-label="Talent branches">
+          <div className={styles.branchList} role="group" aria-label="Talent branches">
             {tower.talentBranches.map((branch) => (
-              <li key={branch.id} className={styles.branch}>
-                {branch.name}
-              </li>
+              <TowerBranchTable key={branch.id} branch={branch} />
             ))}
-          </ul>
+          </div>
         </div>
       )}
       <p className={styles.cardDescription}>{tower.description}</p>

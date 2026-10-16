@@ -489,12 +489,15 @@ Every race tower entry declares exactly two branches:
   {
     "id": "undead_bone_archer_tower_volley",
     "name": "Bone Volley",
-    "description": "Fires in bursts: modest hits, many of them.",
+    "description": "Fires in bursts: modest arrows, many of them, and more of them strike a second creep.",
     "grades": [
-      { "level": 4, "damage": 40, "range": 6.8, "attackCooldownMs": 600 },
-      { "level": 5, "damage": 42, "range": 6.8, "attackCooldownMs": 480 },
-      { "level": 6, "damage": 44, "range": 7, "attackCooldownMs": 400 },
-      { "level": 7, "damage": 46, "range": 7, "attackCooldownMs": 320 }
+      { "level": 4, "damage": 42, "range": 6.6, "attackCooldownMs": 550 },
+      { "level": 5, "damage": 44, "range": 6.6, "attackCooldownMs": 400,
+        "abilities": { "extraTargets": 1, "extraTargetDamageShare": 0.33 } },
+      { "level": 6, "damage": 46, "range": 6.8, "attackCooldownMs": 350,
+        "abilities": { "extraTargets": 1, "extraTargetDamageShare": 0.5 } },
+      { "level": 7, "damage": 48, "range": 6.8, "attackCooldownMs": 300,
+        "abilities": { "extraTargets": 1, "extraTargetDamageShare": 1 } }
     ]
   },
   { "id": "undead_bone_archer_tower_cursed", "...": "..." }
@@ -541,9 +544,15 @@ choices and read one resolved curve: levels 1-3 from the tower's authored
 curve (or its archetype's), 4-7 from the chosen branch. The curve tops out at
 3 without a branch and at 7 with one.
 
-The shipped branches are placeholders (`<Tower> I` / `<Tower> II`: +8% damage
-and +0.2 range per grade over grade 3); authoring them from docs/11 is
-tower-def-bge.3.
+**Shipped branches** (tower-def-bge.3) follow docs/11 with English names, read
+against the shipped grade 3 stats. Where docs/11 asks for a mechanic that does
+not exist yet (ground zones, cones, knockback, corpse explosions, fliers
+falling, a target scope that changes at a grade) the grade uses the closest
+existing ability or a number buff; every such substitution is listed in
+docs/07 "Tower talents authoring (tower-def-bge.3)". A content test asserts
+the two branches of each tower differ in at least one ability, effect or aura
+mechanic, not only in numbers; the bestiary card shows each branch with its
+grade 4-7 table.
 
 ---
 
