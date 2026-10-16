@@ -26,19 +26,19 @@
           "name": "Moonfall",
           "description": "A rain of fast arrows; from grade 6 every few shots is a critical hit.",
           "grades": [
-            { "level": 4, "damage": 42, "range": 7.2, "attackCooldownMs": 550 },
-            { "level": 5, "damage": 44, "range": 7.4, "attackCooldownMs": 400 },
+            { "level": 4, "damage": 42, "range": 7.4, "attackCooldownMs": 550 },
+            { "level": 5, "damage": 44, "range": 7.8, "attackCooldownMs": 400 },
             {
               "level": 6,
               "damage": 46,
-              "range": 7.6,
+              "range": 8.2,
               "attackCooldownMs": 350,
               "abilities": { "critEveryNthShot": 4, "critMultiplier": 2 }
             },
             {
               "level": 7,
               "damage": 50,
-              "range": 7.8,
+              "range": 8.6,
               "attackCooldownMs": 300,
               "abilities": { "critEveryNthShot": 3, "critMultiplier": 2 }
             }
@@ -282,7 +282,7 @@
               "onHitEffects": [{ "effectId": "chill", "magnitude": 0.48, "durationMs": 2000 }],
               "aura": {
                 "radiusCells": 4,
-                "attackSpeedBonus": 0.05,
+                "attackSpeedBonus": 0.1,
                 "rangeBonus": 0,
                 "stacking": "strongest"
               }
@@ -295,7 +295,7 @@
               "onHitEffects": [{ "effectId": "chill", "magnitude": 0.48, "durationMs": 2000 }],
               "aura": {
                 "radiusCells": 4.5,
-                "attackSpeedBonus": 0.08,
+                "attackSpeedBonus": 0.15,
                 "rangeBonus": 0,
                 "stacking": "strongest"
               }
@@ -308,7 +308,7 @@
               "onHitEffects": [{ "effectId": "chill", "magnitude": 0.48, "durationMs": 2000 }],
               "aura": {
                 "radiusCells": 5,
-                "attackSpeedBonus": 0.15,
+                "attackSpeedBonus": 0.22,
                 "rangeBonus": 0,
                 "stacking": "strongest"
               }
@@ -321,7 +321,7 @@
               "onHitEffects": [{ "effectId": "chill", "magnitude": 0.48, "durationMs": 2000 }],
               "aura": {
                 "radiusCells": 5.5,
-                "attackSpeedBonus": 0.22,
+                "attackSpeedBonus": 0.3,
                 "rangeBonus": 0,
                 "stacking": "strongest"
               }
@@ -411,7 +411,7 @@
             {
               "level": 4,
               "damage": 9,
-              "range": 7,
+              "range": 7.4,
               "attackCooldownMs": 900,
               "onHitEffects": [
                 {
@@ -426,14 +426,14 @@
             {
               "level": 5,
               "damage": 9,
-              "range": 7.2,
+              "range": 7.8,
               "attackCooldownMs": 850,
               "onHitEffects": [
                 {
                   "effectId": "poison",
                   "magnitude": 12,
                   "durationMs": 4000,
-                  "maxStacks": 4,
+                  "maxStacks": 5,
                   "damageType": "percent"
                 }
               ]
@@ -441,7 +441,7 @@
             {
               "level": 6,
               "damage": 10,
-              "range": 7.4,
+              "range": 8.2,
               "attackCooldownMs": 800,
               "onHitEffects": [
                 {
@@ -456,7 +456,7 @@
             {
               "level": 7,
               "damage": 11,
-              "range": 7.8,
+              "range": 8.6,
               "attackCooldownMs": 750,
               "onHitEffects": [
                 {

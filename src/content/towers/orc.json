@@ -26,19 +26,25 @@
           "name": "Spear Throwers",
           "description": "More throwers on the tower: fast spears that start running through the line at grade 6.",
           "grades": [
-            { "level": 4, "damage": 44, "range": 6.8, "attackCooldownMs": 550 },
-            { "level": 5, "damage": 46, "range": 6.8, "attackCooldownMs": 450 },
+            { "level": 4, "damage": 46, "range": 7, "attackCooldownMs": 500 },
+            {
+              "level": 5,
+              "damage": 48,
+              "range": 7.2,
+              "attackCooldownMs": 450,
+              "abilities": { "pierceLine": 0.2 }
+            },
             {
               "level": 6,
-              "damage": 48,
-              "range": 7,
+              "damage": 50,
+              "range": 7.4,
               "attackCooldownMs": 350,
-              "abilities": { "pierceLine": 0.3 }
+              "abilities": { "pierceLine": 0.35 }
             },
             {
               "level": 7,
-              "damage": 52,
-              "range": 7,
+              "damage": 54,
+              "range": 7.6,
               "attackCooldownMs": 300,
               "abilities": { "pierceLine": 0.5 }
             }
@@ -135,35 +141,35 @@
             {
               "level": 4,
               "damage": 40,
-              "range": 5.8,
+              "range": 6,
               "attackCooldownMs": 1100,
               "splashRadius": 3.6,
-              "onHitEffects": [{ "effectId": "burn", "magnitude": 2.5, "durationMs": 3000 }]
+              "onHitEffects": [{ "effectId": "burn", "magnitude": 4, "durationMs": 3000 }]
             },
             {
               "level": 5,
               "damage": 42,
-              "range": 5.8,
+              "range": 6.2,
               "attackCooldownMs": 1050,
               "splashRadius": 3.8,
-              "onHitEffects": [{ "effectId": "burn", "magnitude": 3.5, "durationMs": 3000 }]
+              "onHitEffects": [{ "effectId": "burn", "magnitude": 5, "durationMs": 3000 }]
             },
             {
               "level": 6,
               "damage": 44,
-              "range": 5.8,
+              "range": 6.4,
               "attackCooldownMs": 1000,
               "splashRadius": 4.2,
-              "onHitEffects": [{ "effectId": "burn", "magnitude": 5, "durationMs": 4000 }]
+              "onHitEffects": [{ "effectId": "burn", "magnitude": 6.5, "durationMs": 4000 }]
             },
             {
               "level": 7,
               "damage": 48,
-              "range": 5.8,
+              "range": 6.6,
               "attackCooldownMs": 900,
               "splashRadius": 4.6,
               "onHitEffects": [
-                { "effectId": "burn", "magnitude": 7, "durationMs": 4000 },
+                { "effectId": "burn", "magnitude": 8, "durationMs": 4000 },
                 { "effectId": "chill", "magnitude": 0.1, "durationMs": 2000 }
               ]
             }
@@ -218,29 +224,29 @@
           "grades": [
             {
               "level": 4,
-              "damage": 46,
-              "range": 6.8,
+              "damage": 50,
+              "range": 7,
               "attackCooldownMs": 900,
               "chain": { "bounces": 4, "bounceRangeCells": 4, "damageFalloff": 0.2 }
             },
             {
               "level": 5,
-              "damage": 50,
-              "range": 6.8,
+              "damage": 56,
+              "range": 7.2,
               "attackCooldownMs": 850,
               "chain": { "bounces": 5, "bounceRangeCells": 4, "damageFalloff": 0.18 }
             },
             {
               "level": 6,
-              "damage": 53,
-              "range": 6.8,
+              "damage": 62,
+              "range": 7.4,
               "attackCooldownMs": 800,
               "chain": { "bounces": 6, "bounceRangeCells": 4, "damageFalloff": 0.15 }
             },
             {
               "level": 7,
-              "damage": 59,
-              "range": 6.8,
+              "damage": 70,
+              "range": 7.6,
               "attackCooldownMs": 750,
               "chain": { "bounces": 6, "bounceRangeCells": 5, "damageFalloff": 0.1 }
             }
