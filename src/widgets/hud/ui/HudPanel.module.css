@@ -5,7 +5,7 @@
   flex-direction: column;
   gap: var(--space-sm);
   margin-top: 10px; /* room for the tab above the frame */
-  padding: 14px 16px 12px;
+  padding: 12px 16px 12px;
   color: var(--color-text-primary);
   /* Never taller than its share of the viewport: the fixed rows stay put
    * and the expanded body scrolls (see .expandedContent). The frame itself
@@ -15,27 +15,43 @@
   max-height: var(--hud-panel-max-height);
 }
 
-/* Expand tab centered on the top edge of the frame, chevron from the kit. */
+/* Expand tab centered on the top edge of the frame, chevron from the kit.
+ * The button is a full touch target; the visible 64x30 plate (::before) sits
+ * at its bottom edge so the extra hit area grows upward, into the gap above
+ * the frame, instead of over the resource row and Start Wave below it. */
 .toggle {
   position: absolute;
-  top: -18px;
+  top: calc(12px - var(--touch-target-min));
   left: 50%;
   width: 64px;
-  height: 30px;
+  min-width: var(--touch-target-min);
+  height: var(--touch-target-min);
+  min-height: var(--touch-target-min);
   transform: translateX(-50%);
   display: inline-flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
-  padding: 0;
+  padding: 0 0 4px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  touch-action: manipulation;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.7));
+  z-index: 2;
+}
+
+.toggle::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 30px;
   border: 0;
   border-image-source: url('/assets/ui/kit/slot-empty.png');
   border-image-slice: 14 fill;
   border-image-width: 10px;
   border-image-repeat: stretch;
-  background: transparent;
-  cursor: pointer;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.7));
-  z-index: 2;
 }
 
 .toggle:hover {
@@ -48,6 +64,7 @@
 }
 
 .toggleIcon {
+  position: relative;
   display: inline-block;
   width: 22px;
   height: 22px;
@@ -109,16 +126,21 @@
   text-shadow: 0 1px 0 rgba(0, 0, 0, 0.9);
 }
 
-.startBtn,
-.forceStartBtn {
+/* Both wave starters and the field toggle are full touch targets; `.panel`
+ * outranks the global compact button size. */
+.panel .startBtn,
+.panel .forceStartBtn {
   flex: 0 0 auto;
+  min-height: var(--touch-target-min);
+  white-space: nowrap;
 }
 
 .battlefieldViewBtn {
   display: inline-flex;
   align-items: center;
-  min-height: 36px;
-  min-width: 64px;
+  justify-content: center;
+  min-height: var(--touch-target-min);
+  min-width: 76px;
   padding: var(--space-xs) var(--space-lg);
   border: 1px solid rgba(150, 160, 180, 0.4);
   border-radius: 6px;
@@ -217,51 +239,59 @@
   color: #ff7b6b;
 }
 
-/* --- expanded --- */
-.expandedContent {
+/* Pressure bar and duel line: always in view while collapsed. */
+.statusBody {
   display: flex;
   flex-direction: column;
+  gap: var(--space-sm);
+}
+
+/* --- expanded --- */
+/* The build drawer sits right under the resources so the tower cards never
+ * scroll away; the status body below it is the only part that scrolls once
+ * the panel hits its viewport cap. */
+.buildSection {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.expandedContent {
   gap: 6px;
   margin-top: 2px;
-  padding: 6px 2px 2px;
+  padding: 2px;
   border-top: 1px solid rgba(150, 160, 180, 0.25);
-  /* The only part of the HUD that scrolls when the panel hits its cap. */
   flex: 0 1 auto;
-  min-height: 0;
+  min-height: var(--hud-status-min-height);
   overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-width: thin;
   -webkit-overflow-scrolling: touch;
 }
 
-/* Rows keep their natural height so the body scrolls instead of squashing
- * the tower cards (the horizontally scrolling row would otherwise shrink). */
+/* Rows keep their natural height so the body scrolls instead of squashing. */
 .expandedContent > * {
   flex-shrink: 0;
 }
 
-.buildHeading {
-  font-size: 15px;
-  text-align: center;
-}
-
+/* Four equal cards fit the 312px inner width of a 360px phone; a race with
+ * more towers wraps to a second row instead of scrolling sideways. */
 .towerButtons {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(68px, 1fr));
   gap: var(--space-sm);
   padding: 4px 2px 2px;
-  overflow-x: auto;
-  scrollbar-width: thin;
-  -webkit-overflow-scrolling: touch;
 }
 
 .towerBtn {
-  flex: 1 1 0;
-  min-width: 78px;
+  min-width: 0;
+  min-height: var(--touch-target-min);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
-  padding: 8px 4px 6px;
+  gap: 3px;
+  padding: 6px 4px 4px;
   color: #e6e9ef;
   cursor: pointer;
   touch-action: manipulation;
@@ -300,11 +330,11 @@
 }
 
 .towerBtnPortrait {
-  --placeholder-icon-size: 40px;
+  --placeholder-icon-size: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 44px;
+  height: 40px;
 }
 
 .towerBtnBody {
@@ -319,16 +349,19 @@
 .towerBtnName {
   width: 100%;
   font-family: var(--font-family-display);
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 700;
-  letter-spacing: 0.04em;
-  line-height: 1.15;
+  letter-spacing: 0;
+  line-height: 1.2;
   text-align: center;
   text-transform: uppercase;
   overflow: hidden;
+  overflow-wrap: break-word;
   display: -webkit-box;
   -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
+  /* "Guard Archer Tower" needs three words on a 68px card; the full name
+   * stays in the aria-label and title. */
+  -webkit-line-clamp: 3;
   min-height: 2.3em;
 }
 

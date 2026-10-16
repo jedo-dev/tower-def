@@ -10,9 +10,11 @@ import { UnitIcon } from '../../../shared/ui/unit-icon';
 
 export type CreepSendPanelProps = {
   setup: GameSetupConfig | null;
+  /** Folded to its header while the build drawer owns the strip (portrait accordion). */
+  isCompact?: boolean;
 };
 
-function CreepSendPanelComponent({ setup }: CreepSendPanelProps) {
+function CreepSendPanelComponent({ setup, isCompact = false }: CreepSendPanelProps) {
   const snapshot = useGameHudSnapshot();
   const sendLimits = usePlayerSendLimits();
   const viewModel = mapCreepSendPanelToViewModel(snapshot, setup, sendLimits);
@@ -23,28 +25,31 @@ function CreepSendPanelComponent({ setup }: CreepSendPanelProps) {
 
   return (
     <section
-      className={`ui-panel ${styles.panel}`}
+      className={`ui-panel ${styles.panel}${isCompact ? ` ${styles.panelCompact}` : ''}`}
       data-creep-send-panel="true"
+      data-compact={isCompact || undefined}
       aria-label="Creep sending panel"
     >
       <div className={styles.header}>
         <span className={`ui-heading ${styles.title}`}>Send {viewModel.raceName}</span>
-        <span className={styles.queue} aria-live="polite">
-          {viewModel.isBattleActive ? (
-            <span className={`ui-chip ${styles.phaseNote}`}>Locked in battle</span>
-          ) : (
-            <span className="ui-chip">{viewModel.queueSummary}</span>
-          )}
-          {viewModel.waveCapacitySummary && (
-            <span
-              className={`ui-chip ${styles.capacity}`}
-              aria-label={viewModel.waveCapacityAriaLabel ?? undefined}
-              data-send-capacity="true"
-            >
-              {viewModel.waveCapacitySummary}
-            </span>
-          )}
-        </span>
+        {!isCompact && (
+          <span className={styles.queue} aria-live="polite">
+            {viewModel.isBattleActive ? (
+              <span className={`ui-chip ${styles.phaseNote}`}>Locked in battle</span>
+            ) : (
+              <span className="ui-chip">{viewModel.queueSummary}</span>
+            )}
+            {viewModel.waveCapacitySummary && (
+              <span
+                className={`ui-chip ${styles.capacity}`}
+                aria-label={viewModel.waveCapacityAriaLabel ?? undefined}
+                data-send-capacity="true"
+              >
+                {viewModel.waveCapacitySummary}
+              </span>
+            )}
+          </span>
+        )}
         <span
           className={styles.meta}
           aria-label={`Gold ${viewModel.gold}, income ${viewModel.income}`}
@@ -56,41 +61,43 @@ function CreepSendPanelComponent({ setup }: CreepSendPanelProps) {
         </span>
       </div>
 
-      <div className={styles.buttons}>
-        {viewModel.buttons.map((button) => (
-          <button
-            key={button.creepTypeId}
-            type="button"
-            className={`ui-slot ${styles.button}`}
-            disabled={button.isDisabled}
-            aria-label={button.ariaLabel}
-            onClick={() => handleSend(button.creepTypeId)}
-          >
-            <UnitIcon
-              unitId={button.creepTypeId}
-              label={button.name}
-              faction={viewModel.faction}
-              className={styles.buttonIcon}
-            />
-            <span className={styles.buttonName}>{button.name}</span>
-            <span className={styles.buttonStats} aria-hidden="true">
-              <span>T{button.tier}</span>
-              <span className={styles.buttonCost}>${button.cost}</span>
-              <span className={styles.buttonIncome}>+{button.incomeGain}</span>
-              {button.remainingOfType !== null && (
-                <span className={styles.buttonRemaining} data-send-remaining="true">
-                  {button.remainingOfType}/{button.typeCap}
+      {!isCompact && (
+        <div className={styles.buttons}>
+          {viewModel.buttons.map((button) => (
+            <button
+              key={button.creepTypeId}
+              type="button"
+              className={`ui-slot ${styles.button}`}
+              disabled={button.isDisabled}
+              aria-label={button.ariaLabel}
+              onClick={() => handleSend(button.creepTypeId)}
+            >
+              <UnitIcon
+                unitId={button.creepTypeId}
+                label={button.name}
+                faction={viewModel.faction}
+                className={styles.buttonIcon}
+              />
+              <span className={styles.buttonName}>{button.name}</span>
+              <span className={styles.buttonStats} aria-hidden="true">
+                <span>T{button.tier}</span>
+                <span className={styles.buttonCost}>${button.cost}</span>
+                <span className={styles.buttonIncome}>+{button.incomeGain}</span>
+                {button.remainingOfType !== null && (
+                  <span className={styles.buttonRemaining} data-send-remaining="true">
+                    {button.remainingOfType}/{button.typeCap}
+                  </span>
+                )}
+              </span>
+              {button.disabledReason && (
+                <span className={styles.buttonReason} aria-hidden="true">
+                  {button.disabledReason}
                 </span>
               )}
-            </span>
-            {button.disabledReason && (
-              <span className={styles.buttonReason} aria-hidden="true">
-                {button.disabledReason}
-              </span>
-            )}
-          </button>
-        ))}
-      </div>
+            </button>
+          ))}
+        </div>
+      )}
     </section>
   );
 }

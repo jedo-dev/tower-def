@@ -117,3 +117,21 @@ describe('CreepSendPanel', () => {
     expect(screen.queryByRole('img', { name: 'Militia' })).toBeNull();
   });
 });
+
+describe('CreepSendPanel compact mode', () => {
+  it('folds to its header while the build drawer owns the strip', () => {
+    render(<CreepSendPanel setup={createSetup(RaceId.ORC)} isCompact />);
+
+    expect(screen.getByText('Send Orc')).toBeDefined();
+    expect(screen.getByLabelText('Gold 1000, income 50')).toBeDefined();
+    expect(screen.queryByText('No sends queued')).toBeNull();
+    expect(screen.queryAllByRole('button')).toHaveLength(0);
+  });
+
+  it('shows the send cards again once the drawer closes', () => {
+    const { rerender } = render(<CreepSendPanel setup={createSetup(RaceId.ORC)} isCompact />);
+    rerender(<CreepSendPanel setup={createSetup(RaceId.ORC)} isCompact={false} />);
+
+    expect(screen.getAllByRole('button').length).toBeGreaterThan(0);
+  });
+});

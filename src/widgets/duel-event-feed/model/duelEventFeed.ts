@@ -1,6 +1,8 @@
 import type { GameEventMap } from '../../../shared/lib/game-bridge/types';
 
 export const DUEL_EVENT_FEED_LIMIT = 5;
+/** Lines the collapsed strip shows; the rest waits behind the expand toggle. */
+export const DUEL_EVENT_FEED_PREVIEW_LINES = 3;
 
 export type DuelFeedEntryKind = 'send' | 'income' | 'damage' | 'rejected' | 'summary';
 
@@ -17,6 +19,14 @@ export function appendFeedEntry(
 ): DuelFeedEntry[] {
   const next = [...entries, entry];
   return next.length > limit ? next.slice(next.length - limit) : next;
+}
+
+/** The newest entries that fit the collapsed strip, oldest first. */
+export function selectPreviewEntries(
+  entries: readonly DuelFeedEntry[],
+  lines: number = DUEL_EVENT_FEED_PREVIEW_LINES,
+): DuelFeedEntry[] {
+  return entries.length > lines ? entries.slice(entries.length - lines) : [...entries];
 }
 
 /** A new match starts with an empty feed. */

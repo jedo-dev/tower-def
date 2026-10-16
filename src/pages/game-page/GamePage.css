@@ -23,11 +23,14 @@
   overflow: hidden;
 }
 
-/* Battlefield: fills the leftover height; WaveQueue and DuelEventFeed
- * position themselves absolutely inside this box as canvas overlays. */
+/* Battlefield: fills the leftover height; WaveQueue and MatchControls
+ * position themselves absolutely inside this box as canvas overlays. The
+ * duel event feed is a sibling strip below it, never over the cells. */
 .game-canvas-area {
   position: relative;
-  flex: 1 1 auto;
+  /* Basis 0: the box is the leftover space, never the canvas's last size,
+   * so a stale Phaser canvas cannot push the panels off the page. */
+  flex: 1 1 0;
   min-height: 0;
   display: flex;
   border: 0;
@@ -38,18 +41,57 @@
     0 4px 14px rgba(0, 0, 0, 0.5);
 }
 
-/* Controls stay a strip: capped low enough that the battlefield always
- * keeps the majority of the viewport. The HUD shrinks into whatever is left
- * under the send panel and scrolls its expanded body internally; the strip
- * itself only scrolls as a last resort on very short viewports. */
+/* Controls stay a strip: capped low enough that the battlefield keeps at
+ * least ~450px (a 300px-wide board) on a 390x844 phone even with the build
+ * drawer open. The HUD scrolls its expanded body internally and the send
+ * panel folds to its header while the drawer is open; the strip itself only
+ * scrolls as a last resort on very short viewports. */
 .game-panels {
   flex: 0 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 0 2px 2px;
+  gap: var(--space-md);
+  padding: 0 2px;
   min-height: 0;
   max-height: var(--game-controls-max-height);
   overflow-y: auto;
   overscroll-behavior: contain;
+}
+
+/*
+ * Landscape phones (the class comes from useLandscapeLayout, one breakpoint
+ * in shared/constants/layout): the board fills the height on the left and
+ * the send panel + HUD become a scrollable column on the right, so nothing
+ * runs off the bottom of a 360px-tall viewport. The canvas element is the
+ * same one as in portrait; only its box changes, and the engine re-fits the
+ * camera on the resize.
+ */
+.game-page--landscape {
+  max-width: none;
+}
+
+.game-page--landscape .game-viewport {
+  flex-direction: row;
+  align-items: stretch;
+}
+
+.game-page--landscape .game-canvas-area {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 100%;
+}
+
+.game-page--landscape .game-panels {
+  /* The column scrolls as a whole; the HUD no longer caps itself. */
+  --hud-panel-max-height: none;
+  flex: 0 0 clamp(300px, 44%, 400px);
+  height: 100%;
+  max-height: none;
+  padding: 2px;
+}
+
+/* The panels keep their natural height so the column scrolls, instead of
+ * squashing the HUD into its own inner scroller next to the board. */
+.game-page--landscape .game-panels > * {
+  flex-shrink: 0;
 }

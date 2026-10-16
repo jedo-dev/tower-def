@@ -86,10 +86,8 @@ describe('mapCreepSendPanelToViewModel', () => {
 
     expect(viewModel.isBattleActive).toBe(true);
     expect(viewModel.buttons.every((button) => button.isDisabled)).toBe(true);
-    expect(viewModel.buttons[0].disabledReason).toBe('sending is locked during battle');
-    expect(viewModel.buttons[0].ariaLabel).toBe(
-      'Cannot send Grunt: sending is locked during battle',
-    );
+    expect(viewModel.buttons[0].disabledReason).toBe('locked in battle');
+    expect(viewModel.buttons[0].ariaLabel).toBe('Cannot send Grunt: locked in battle');
   });
 
   it('summarizes queued player sends from the event-driven snapshot', () => {
