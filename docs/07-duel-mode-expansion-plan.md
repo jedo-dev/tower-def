@@ -1455,6 +1455,104 @@ take back part of that nudge (the vulnerability first), not to make the
 valuation miss it again. Difficulty spot-check (`--seeds 1-3 --matchups
 hard:normal --maps classic`): hard won 40/8/0, 83% (bge.6: 79%).
 
+### AI air lane weight (tower-def-02k.12)
+
+The 02k.11 A/B left Crossbowmen (human archer branch, `airDamageMultiplier`
+1.25 to 2.2, range 10) a hair better than Archer Company in the sim and valued
+at about half. Both branches, and every placement and upgrade of the round,
+are valued on one dual route ledger (`buildRoundActions.ts`
+`createInvestmentLedger`), so the air lane's weight there decides how much an
+anti-air mechanic is worth.
+
+**Diagnosis.** That weight was `computeAirThreatShare`: the air lane's part of
+the damage both lanes still lack to the comfortable margin. Two things kept it
+low through the rounds a branch is picked (16-23):
+
+- It reads the baseline off one typical draw (`BASELINE_ESTIMATE_RANDOM_ROLL`
+  0.5 picks the same unit every draw), which is far from the wave's real flier
+  share: for the undead baseline it sees 0% fliers at waves 12 and 14 (the
+  real share is 15-18% of hit points), 47% at wave 10 (13%); for orc and elf
+  it sees 40-84% from wave 16 (real: 7-11% and 15-20%); for human 0% always
+  (16-26% from wave 16). With no fliers in the draw there is no air lane at all.
+- When the air lane holds and the maze is short, the weight is 0, though the
+  fliers keep coming and are what the late lives are lost to.
+
+**Weight.** The ledger now weighs the air lane by `resolveAirLaneWeight`:
+
+```txt
+s      = expected flier share of the next wave's hit points
+       = (E[baseline air HP] * growth + send air HP) / (E[baseline HP] * growth + send HP)
+threat = m * s / ((1 - s) + m * s)          m = WAVE_AIR_UNIT_BUDGET_MULTIPLIER (4)
+weight = max(computeAirThreatShare(...), threat)
+```
+
+- `E[baseline ...]` is the exact expectation over every roll of
+  `generateWaveUnits` for the match's `baselineRaceId` roster
+  (`entities/wave/model/expectedWaveHealth.ts`: a walk over remaining budget
+  and units picked, each draw split by the tier-bias weights of the units
+  still affordable, the fallback padding counted), so a flier's budget cost of
+  `m` times its tier is in it. The sends are those of the threat estimate (the
+  observed queue, or the income estimate when that is larger), so queued
+  fliers raise it. `IncomingThreat.expectedAirHealthShare` /
+  `DefenceAssessment.expectedAirHealthShare` carry `s`.
+- `threat` counts a flying hit point as `m` walking ones, the rate the wave
+  budget charges a flier for meeting a fraction of the fire a walker takes.
+  Expected `s` / `threat` for the undead baseline: wave 8 10% / 0.31, wave 12
+  15% / 0.41, wave 18 31% / 0.64, wave 25 40% / 0.73.
+- The max keeps the spend split's view where it is stronger (a held maze still
+  sends every coverage tower to the fliers).
+
+It applies to the one ledger, so damage placement, upgrades and branch
+valuation weigh the air alike. The threat estimate, margins and budget split,
+and the coverage scoring of single builds (`findBestScoredBuild`), are
+unchanged.
+
+**A/B** (as in 02k.11: human's two standard duels, hard vs hard, seeds 1-5,
+classic and seeded, 20 duels, human wins; the ratio is Crossbowmen over
+Company value per gold on the lead archer, over every round a pick was
+valued):
+
+| | Usual pick | Crossbowmen forced | Company forced | Value ratio, median (quartiles) |
+| --- | --- | --- | --- | --- |
+| Before (main) | 9 (Company 16/18) | 10 | 8 | 0.59 (0.50-0.82) |
+| Expected share, no multiplier (tried) | - | - | - | 0.65 (0.59-0.95) |
+| Shipped | 8.5 (Company 18/20) | 9 | 8.5 | 0.79 (0.71-0.86) |
+
+The ratio moved from half to four fifths and the spread narrowed; the A/B is
+a tie within a win either way. It does not reach 1: on the rounds where the
+weight was already 1 the model rates Crossbowmen at 0.95-1.17 of Company, so no
+air weight below 1 lifts it further. What is left is the model's own read of
+the air line (Company's volley packing is counted at the route's arrival rate,
+on a lane that carries two or three fliers a wave), not the weight.
+
+**Standard batch** (hard vs hard, six race pairs, classic + seeded, baseline
+undead, a draw counting half; seeds 1-12 added because one duel is 2.8 points
+of a race's row at seeds 1-6):
+
+| Race | Main, seeds 1-6 (classic / seeded) | Shipped, seeds 1-6 (classic / seeded) | Main, seeds 1-12 | Shipped, seeds 1-12 |
+| --- | --- | --- | --- | --- |
+| Undead | 47.2% (38.9 / 55.6) | 58.3% (55.6 / 61.1) | 52.8% | 58.3% |
+| Orc | 44.4% (50.0 / 38.9) | 47.2% (50.0 / 44.4) | 50.0% | 47.2% |
+| Human | 47.2% (38.9 / 55.6) | 34.7% (27.8 / 41.7) | 43.1% | 35.4% |
+| Elf | 61.1% (72.2 / 50.0) | 59.7% (66.7 / 52.8) | 54.2% | 59.0% |
+
+Pacing: median rounds 25 -> 26 on classic and 28 -> 30.5 on seeded at seeds
+1-6 (two seeded duels hit the 40-round cap, one draw), 25.5 -> 26 and 27 -> 28
+at seeds 7-12 with no cap; 12-13 towers at round 5 as before.
+
+Undead and human move by more than 3 points. Why: every side now holds an air
+lane through the waves its old estimate drew no fliers for (rounds stretch on
+seeded maps, where the air line is longest), which pays most for the race
+whose chill and aura sit on the air line (undead) and least for the race with
+one anti-air archetype (human: its archers now split between the maze and the
+air line, and the planner has nothing else to put on the air). The weight
+without the multiplier moved the seeds 1-6 batch as far (undead 62.5%, orc
+41.7%, human 45.8%, elf 50.0%) for a smaller valuation gain, so the shift
+comes from seeing the fliers at all, not from how much each one counts; at
+72 duels a race the shifts are within about one standard deviation of a
+batch, but undead up and human down held at both seed ranges. Human's
+air-lane kit is the content follow-up the air passes already name.
+
 
 ## Suggested Improvements
 
