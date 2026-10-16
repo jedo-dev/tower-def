@@ -125,10 +125,10 @@ describe('mapHudSnapshotToViewModel', () => {
     expect(vm.pressure).toEqual({
       level: 'high',
       label: 'Incoming 8',
-      detail: '1 queued by enemy',
+      detail: '1 sent by enemy',
       queuedCount: 1,
       incomingCount: 8,
-      ariaLabel: 'Incoming 8. 1 queued by enemy. Pressure high',
+      ariaLabel: 'Incoming 8. 1 sent by enemy. Pressure high',
     });
   });
 

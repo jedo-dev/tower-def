@@ -103,6 +103,21 @@ export function mapUnitIdToHudCreepType(unitId: string): HudWaveQueueItem['type'
   return 'skeleton';
 }
 
+/**
+ * The computer's sends as the HUD shows them. The computer decides its sends
+ * at wave start and the same call routes them onto the player's field, so its
+ * live queue is empty in every published snapshot. During the wave the HUD
+ * gets the sends it made for this wave (now incoming); in the build phase,
+ * the live queue (what is queued for the next wave, if anything).
+ */
+export function resolveHudOpponentSends(
+  phase: GamePhase,
+  queuedForNextWave: readonly string[],
+  sentThisWave: readonly string[],
+): readonly string[] {
+  return phase === 'wave' ? sentThisWave : queuedForNextWave;
+}
+
 export function buildHudSendQueue(sendQueue: readonly string[]): HudWaveQueueItem[] {
   return sendQueue.map((unitId, index) => ({
     type: mapUnitIdToHudCreepType(unitId),

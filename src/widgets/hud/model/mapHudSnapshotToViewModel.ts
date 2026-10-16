@@ -76,6 +76,8 @@ export function mapHudDuelToViewModel(snapshot: GameHudSnapshot): HudDuelViewMod
   };
 }
 
+export const ENEMY_SENDS_PENDING_DETAIL = 'Enemy sends at wave start';
+
 export function mapHudPressureToViewModel(snapshot: GameHudSnapshot): HudPressureViewModel {
   const queuedCount = snapshot.opponentSendQueue.length;
   const incomingCount = snapshot.phase === 'wave' ? snapshot.pendingCreepCount : 0;
@@ -83,11 +85,13 @@ export function mapHudPressureToViewModel(snapshot: GameHudSnapshot): HudPressur
   const level = mapPressureLevel(pressureCount);
   const label =
     snapshot.phase === 'wave' ? `Incoming ${incomingCount}` : `Enemy sends ${queuedCount}`;
+  // The computer picks its sends when the wave starts: before that there is
+  // nothing to show, during the wave the snapshot lists what it sent.
   const detail =
     snapshot.phase === 'wave'
-      ? `${queuedCount} queued by enemy`
+      ? `${queuedCount} sent by enemy`
       : queuedCount === 0
-        ? 'No pressure queued'
+        ? ENEMY_SENDS_PENDING_DETAIL
         : 'Queued for next wave';
 
   return {

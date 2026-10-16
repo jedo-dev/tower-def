@@ -39,6 +39,15 @@ describe('duel event feed model', () => {
         queue: [{ creepTypeId: 'undead_skeleton', index: 0 }],
       }),
     ).toBe('You queued a send (1 total)');
+    expect(
+      formatSendQueueUpdated({
+        owner: 'opponent',
+        queue: [
+          { creepTypeId: 'undead_skeleton', index: 0 },
+          { creepTypeId: 'undead_ghoul', index: 1 },
+        ],
+      }),
+    ).toBe('Enemy sends 2 this wave');
     expect(formatSendQueueUpdated({ owner: 'opponent', queue: [] })).toBeNull();
   });
 
