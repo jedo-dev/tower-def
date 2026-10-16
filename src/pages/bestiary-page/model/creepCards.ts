@@ -1,5 +1,6 @@
 import type { UnitConfig } from '../../../entities/unit';
 import { describeArmor } from './combatTypeDisplay';
+import { mapCreatureBranches } from './creepBranchCards';
 import { getTierEconomy } from './tierEconomy';
 import type { CreepCardViewModel } from './types';
 
@@ -29,6 +30,7 @@ export function mapUnitToCreepCard(unit: UnitConfig): CreepCardViewModel {
     economy: getTierEconomy(unit.tier),
     description: unit.description ?? null,
     lore: readLore(unit),
+    talentBranches: mapCreatureBranches(unit.talentBranches),
   };
 }
 

@@ -1094,6 +1094,152 @@ seeded` (about 85 s each), the four game-faithful rows (about 45 s each, the
 elf row about 100 s) and the spot-check, one at a time. The `development`
 block and the `end boards` line print with every batch.
 
+### Creature talents authoring (tower-def-716.3)
+
+The two branches of every creature are authored from
+`docs/12-unit-talents-ru.md` (the design source) in
+`src/content/units/<race>.json`, with English names and descriptions. Only
+the creature abilities that exist today are used (docs/08 "Creature
+abilities"); nothing was balanced by simulation, a later task tunes the
+numbers. Branch ids are `<unitId>_<branch>` (`undead_skeleton_bone_legion`).
+
+**Translating the doc numbers.** The doc's base health and speed equal the
+shipped ones, so grade health and speed are taken as written. The doc has one
+"броня" per creature, the shipped content two armors per race profile
+(docs/08 "Race armor profiles"), so armor is read as a delta over the doc
+base:
+
+- a single armor column adds its delta in full to the race's strong axis
+  (magical for undead and elves, physical for orcs and humans) and half of
+  it, rounded down, to the weak axis;
+- separate "Физ./Маг. броня" columns add their own deltas to each axis;
+- graded armor stays at or below 25 (the authored ceiling, a content test);
+- grade 4 health stays within +40% of the base: where the doc goes over, all
+  four grades' gains are scaled down by the same factor.
+
+A content test asserts the two branches of every creature use different
+ability fields (`creatureTalentContent.test.ts`). Doc chances become counters
+(`dodgeEveryNthShot`, `secondLife`), so the duel stays deterministic.
+
+**Bounds clamped:** Ghoul Devourer health 46-64 to 44-56, Abomination Meat
+Mountain 290-390 to 284-364, Frost Wyrm Ancient Terror 340-450 to 337-434,
+Siege Engine Armored Wagon 240-330 to 234-301, Druid Bear Form 190-270 to
+186-244 (the +40% cap); Dryad Spell Immunity magical armor 26 / 41 to 25 at
+grades 3 / 4, Hippogryph Rider physical armor 31 to 25 at grade 4 (the armor
+ceiling). No ability exceeded its bound.
+
+**Direct mappings** (the doc mechanic exists as an ability): kill reward -N
+is `killGoldPenaltyToDefender` N; "every 3 sends a 4th free" is
+`freeNthSend` 4 ("every 2, a 3rd" is 3); "a leak takes N lives" is
+`leakLivesTaken`; "a leak gives the sender N gold" is `leakGoldToSender`; "a
+kill gives the defender 0 gold" is a kill penalty equal to the reward (34);
+"a leak refunds 50% of the send price" is `leakGoldToSender` 160 (half the
+tier 6 price, 320); slow and stun resistance or immunity is
+`effectResistance` chill / stun; "percent / splash damage xN" is
+`incomingDamageMultipliers`; "the last N% of the route xM" is
+`speedBoostLastRouteShare`; "below N% HP speed +M%" is
+`speedBoostBelowHpShare`; the second head is `secondLife`.
+
+**Substitutions** (revisit when the deferred mechanic lands). "Tower damage
+xN" below means `incomingDamageMultipliers` single, splash and chain at N,
+the stand-in for "towers near it deal less"; "misses every N" means
+`dodgeEveryNthShot` N, about 1 / (share of shots lost), the stand-in for
+silencing or slowing the towers that shoot it.
+
+| Creature / branch | Doc (grade) | Authored instead |
+| --- | --- | --- |
+| Skeleton / Reassembly | 25% / 35% / 50% chance to rise with 30% / 40% / 50% HP (1-3) | `secondLife` hpShare 0.08 / 0.14 / 0.25 (chance x HP, always); grade 4 as written (0.5) |
+| Ghoul / Frenzy | slow immunity for 3 s after spawn (4) | chill resistance 0.35 for the whole walk |
+| Ghoul / Devourer | +10-30 HP per ally death in radius 2-3 (creature aura) | `healthRegenPerSecond` 2 / 3 / 4 / 6 |
+| Ghoul / Devourer | heals up to 150% of max (4) | one-time `shieldHp` 15 |
+| Crypt Fiend / Carapace | armor break lasts half as long (2) | `effectResistance` armor_break 0.5 (half magnitude) |
+| Crypt Fiend / Carapace | first hit of every tower x0.5 (4) | single x0.85 |
+| Crypt Fiend / Web | the tower that hit it fires 10-30% slower (tower debuff) | misses every 10 / 7 / 5 / 3 |
+| Crypt Fiend / Web | the web also slows support auras (4) | dropped |
+| Gargoyle / Stoneskin | below 50% HP: +15-25 armor and speed 0.8 for 2-3 s (2-4) | one-time `shieldHp` 20 / 30 / 40 |
+| Gargoyle / Stoneskin | in stone it is not an air target (4) | dropped (no grounding) |
+| Abomination / Plague Sack | towers in radius 2-3 deal 10-30% less (aura on towers) | tower damage x0.9 / 0.85 / 0.8 / 0.7 |
+| Abomination / Plague Sack | death turns auras off for 4 s (3) | dropped |
+| Abomination / Plague Sack | death spawns 2 graded Ghouls (4) | `secondLife` 0.2 HP at speed x2 |
+| Necromancer / Raise Dead | raises 1-2 Skeletons every 2.5-4 s (summon) | `freeNthSend` 6 / 5 / 4 / 3 (more bodies per gold) |
+| Necromancer / Soul Shield | 15-50 HP shield on allies in radius 3-4 every 5 s (aura on allies) | its own `shieldHp` 15 / 25 / 35 / 50, `shieldRechargeMs` 5000 |
+| Necromancer / Soul Shield | the shield eats the whole first hit (4) | dropped |
+| Banshee / Wail | towers in radius 3-4 fire 10-30% slower, miss 10% at 4 (aura on towers) | misses every 10 / 7 / 5 / 3 |
+| Banshee / Incorporeal | physical damage x0.85-0.5, magical x1.1-1.2 (no per-type multiplier) | physical armor -1 / 1 / 4 / 10, magical 14 / 14 / 11 / 9 (the same factor through the armor curve, from -5 / 14) |
+| Banshee / Incorporeal | invulnerable 1 s every 6 s (4) | `shieldHp` 25, `shieldRechargeMs` 6000 |
+| Frost Wyrm / Frost Breath | freezes 1-3 towers for 1-2.5 s every 5 s (tower debuff) | misses every 10 / 8 / 5 / 4 |
+| Frost Wyrm / Frost Breath | a frozen tower loses its aura (4) | dropped |
+| Grunt / Rage | slow immunity below 25% HP (3) | chill resistance 0.75 always |
+| Grunt / Rage | stun immunity below 25% HP (4) | stun resistance 0.75 always |
+| Grunt / Shieldbearer | blocks every 5th / 4th / 3rd physical shot (2-4) | `dodgeEveryNthShot` 5 / 4 / 3 (any single shot, not only physical) |
+| Grunt / Shieldbearer | the block covers the ally behind (4) | dropped |
+| Peon / Workforce, Peasant / Tithe, Wisp / Firefly | +1 income per leak (4) | leak gold 12 instead of 10 |
+| Peon / Sabotage | the nearest tower loses 5-20% attack speed for 3-5 s, stacking (tower debuff) | misses every 20 / 10 / 7 / 5; stacks dropped |
+| Wolf Rider / Pack Hunters | +3% speed per rider in radius 2, up to 15-50% (creature aura) | flat speed at a quarter of the cap: 1.98 / 2.07 / 2.18 / 2.35 |
+| Wolf Rider / Pack Hunters | the pack shares slows; a pack of 3+ is not slowed (3-4) | chill resistance 0.5 / 0.25 |
+| Wolf Rider / Nets | a net silences a tower 0.8-1.5 s every 4-6 s (tower debuff) | misses every 8 / 5 / 4 / 3 |
+| Troll / Regeneration | regeneration x2 below 30% HP (4) | 17 HP/s instead of 15; poison pauses it at grades 1-2 (the doc lifts that at 3) |
+| Troll / Berserker | the tower that hit it deals 5-12% less, stacking (tower debuff) | tower damage x0.9 / 0.85 / 0.8 / 0.75 |
+| Troll / Berserker | death silences towers in radius 3 for 1 s (4) | dropped |
+| Headhunter / Tower Hunter | marked towers lose 0.5-2 range and their aura bonus (tower debuff) | tower damage x0.92 / 0.85 / 0.78 / 0.7 |
+| Headhunter / Wind Walk | ignores puddles and ground zones (2) | poison and burn resistance 0.5 |
+| Headhunter / Wind Walk | x1.5 speed for the first 3 / 5 s (3-4) | `startInvisibleMs` 1500 / 2500 (no start-of-walk boost) |
+| Shaman / Bloodlust | allies in radius 3-4 +10-30% speed, +3 HP/s at 4 (aura on allies) | its own speed x1.1 / 1.15 / 1.2 / 1.3 and its own +3 HP/s |
+| Shaman / Earth Lightning | support auras in radius 3-3.5 weaker or off (tower debuff) | tower damage x0.92 / 0.88 / 0.82 / 0.82 |
+| Shaman / Earth Lightning | chain towers bounce 2 fewer times (4) | chain x0.6 |
+| Wind Rider / Bomber | turns support auras off for 2-5 s, then frost and control towers (tower debuff) | tower damage x0.92 / 0.88 / 0.84 / 0.8; chill 0.75 (3), chill and stun 0.5 (4) |
+| Tauren / Battering Ram | immune to grab (2) | chill resistance 0.85 (no grab effect exists) |
+| Tauren / Battering Ram | followers in radius 1 also immune (4) | dropped |
+| Tauren / Warchief | all orcs +2-6 armor, +10-15% speed while it lives (aura on allies) | its own armor +2 / +4 / +5 / +7, speed 0.94 / 1.04 at 3 / 4 |
+| Tauren / Warchief | its death gives everyone +30% speed for 3 s (4) | dropped |
+| Militia / Levy | +1 armor per Militia in radius 1, up to +3-8 (formation aura) | flat armor +2 / +3 / +3 / +4 over the doc column |
+| Militia / Torches | splash towers target it last (1) | splash x0.95 (no targeting priority) |
+| Peasant / Repair | an ally in radius 1-2 regains 2-8 HP/s (aura on allies) | its own `healthRegenPerSecond` 2 / 4 / 6 / 8 |
+| Peasant / Repair | removes poison from an ally every 4 s (4) | its own poison resistance 0.5 |
+| Footman / Defensive Stance | +5 / +8 / +12 armor below 50% HP, first hit of every tower x0.5 at 4 | tower damage x0.92 / 0.88 / 0.8 always |
+| Footman / Captain's Shield | the ally behind takes 10-30% less (aura on allies) | its own tower damage x0.9 / 0.85 / 0.8 / 0.7 |
+| Footman / Captain's Shield | intercepts the first shot at an ally (4) | one-time `shieldHp` 20 |
+| Rifleman / Long Shot | a tower in radius 4-5 loses 10-30% attack speed (tower debuff) | misses every 10 / 7 / 5 / 3 |
+| Rifleman / Flak Vest | critical hits x0.75 / 0.5 (3-4) | dropped (no crit shape); percent x0.75 / 0.5 as written |
+| Siege Engine / Armored Wagon | immune to grab (4) | dropped (no grab effect) |
+| Siege Engine / Ram | adjacent towers -10-40% attack speed, -1 / -2 range (tower debuff) | misses every 10 / 5 / 4 / 3 |
+| Knight / Paladin | heals an ally in radius 2-3 for 20-60 every 4 s (aura on allies) | its own `healthRegenPerSecond` 5 / 7.5 / 10 / 15 |
+| Knight / Paladin | removes control from an ally (4) | its own chill and stun resistance 0.75 |
+| Knight / Cavalry | x1.5 for the first 4 / 6 s, repeating every 10 s at 4 (start boost) | flat speed 1.52 / 1.67 / 1.98 at 2 / 3 / 4 |
+| Knight / Cavalry | slow immunity during the charge (3) | chill resistance 0.85 (3), 0.7 (4) |
+| Sorceress / Invisibility | towers target her last (1) | misses every 10th |
+| Sorceress / Invisibility | invisible 2 s every 8 s / 3 s every 6 s (3-4) | misses every 4th / 2nd, plus the 3 s start invisibility from 2 |
+| Sorceress / Invisibility | the neighbour in radius 1 also goes invisible (4) | dropped |
+| Sorceress / Polymorph | a tower in radius 3 silenced 1-2 s every 5-8 s (tower debuff) | misses every 8 / 6 / 4 / 3 |
+| Gryphon Rider / Sky Hammer | anti-air towers in radius 3 hit it x0.85-0.5 | tower damage x0.85 / 0.75 / 0.65 / 0.5 (only anti-air towers reach a flier anyway) |
+| Gryphon Rider / Sky Hammer | silences 1 / 2 anti-air towers 1.5 s every 5 s (3-4) | misses every 6 / 4 |
+| Archer / Evasion | towers miss 10-30% (chance) | misses every 10 / 7 / 5 / 3 |
+| Archer / Forest Shadow | +25% / +40% speed for 2-3 s after the invisibility (3-4) | grade speed +0.05 / +0.1 |
+| Wisp / Detonation | death silences towers in radius 1.5-2 for 0.5-1.5 s, strips auras at 4 (death hook) | `killGoldPenaltyToDefender` 1 / 1 / 2 / 3 |
+| Huntress / Moon Blade | towers miss 10-25%, the first shot of every tower misses at 4 (chance) | misses every 10 / 7 / 5 / 3 |
+| Huntress / Moon Blade | +20% speed for 1 s after a miss (3) | grade speed +0.05 |
+| Huntress / Owl Scout | ignores ground zones (2) | poison and burn resistance 0.5 |
+| Huntress / Owl Scout | jumps 1-2 cells along the route every 5-6 s (route jump) | grade speed x1.1 / x1.2 (2.2 / 2.46) |
+| Dryad / Spell Immunity | poison and chill last half as long (2) | poison and chill resistance 0.5 (magnitude) |
+| Dryad / Spell Immunity | allies in radius 1 also immune (4) | dropped |
+| Dryad / Purify | removes 1 / all effects from an ally every 2-4 s (aura on allies) | its own chill and stun resistance 0.75 / 0.6, then chill, stun, armor break and vulnerability 0.5 / 0.4; damage over time x0.75 / 0.6 / 0.5 / 0.4 (cleansed poison and burn) |
+| Dryad / Purify | +10% speed for 2 s after a cleanse (4) | grade speed 1.72 |
+| Chimera / Acid Breath | towers in radius 2 lose 0.5-2 range and 10-20% attack speed (tower debuff) | tower damage x0.92 / 0.85 / 0.72 / 0.6 |
+| Druid of the Claw / Bear Form | below 50% HP +8-16 armor (2-4) | tower damage x0.9 / 0.85 / 0.8 always; the +15-35% speed as written |
+| Druid of the Claw / Bear Form | immune to control in bear form (4) | chill and stun resistance 0.5 always |
+| Druid of the Claw / Forest Whisper | allies in radius 2-3 regain 3-10 HP/s (aura on allies) | its own `healthRegenPerSecond` 3 / 5 / 7 / 10 |
+| Druid of the Claw / Forest Whisper | death heals all in radius 4 for 30% (4) | dropped |
+| Hippogryph / Whirlwind | towers miss 20% (4) | misses every 5th |
+| Hippogryph / Rider | physical damage x0.85-0.6 (2-4) | physical armor 10 / 17 / 25 (the factor through the armor curve; 31 clamped to 25) |
+| Hippogryph / Rider | anti-air towers target it last (4) | misses every 10th |
+| Mountain Giant / Stone Flesh | immune to grab (3) | dropped (no grab effect); stun immunity as written |
+| Mountain Giant / Stone Flesh | +10% health every 5 s (4) | `healthRegenPerSecond` 9 (10% of the grade 4 wave 1 health per 5 s; it does not grow with waves) |
+| Mountain Giant / Uprooted Tree | silences 1-2 towers 1-2.5 s every 3-5 s (tower debuff) | misses every 5 / 3 / 2 / 2 |
+
+The orc peon, human peasant and elf wisp are baseline-only (not sendable), so
+their branches, leak gold included, only matter once they become sendable.
+
+
 ## Suggested Improvements
 
 - Add difficulty presets for the computer opponent: relaxed, normal, aggressive.

@@ -17,72 +17,112 @@
       "lore": "Axe, hide, teeth. A grunt needs nothing else and asks for nothing else, and the warchief never has to ask twice.",
       "talentBranches": [
         {
-          "id": "orc_grunt_i",
-          "name": "Grunt I",
-          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "id": "orc_grunt_rage",
+          "name": "Rage",
+          "description": "Pain drives it on: faster when wounded, harder to slow and stun.",
           "grades": [
             {
               "level": 1,
-              "health": 76,
-              "speed": 1.15,
-              "physicalArmor": 4,
-              "magicalArmor": 0
+              "health": 72,
+              "speed": 1.1,
+              "physicalArmor": 3,
+              "magicalArmor": 0,
+              "abilities": {
+                "speedBoostBelowHpShare": {
+                  "hpShare": 0.5,
+                  "speedMultiplier": 1.15
+                }
+              }
             },
             {
               "level": 2,
-              "health": 81,
-              "speed": 1.2,
-              "physicalArmor": 5,
-              "magicalArmor": 0
+              "health": 75,
+              "speed": 1.15,
+              "physicalArmor": 3,
+              "magicalArmor": 0,
+              "abilities": {
+                "speedBoostBelowHpShare": {
+                  "hpShare": 0.5,
+                  "speedMultiplier": 1.25
+                }
+              }
             },
             {
               "level": 3,
-              "health": 87,
-              "speed": 1.25,
-              "physicalArmor": 6,
-              "magicalArmor": 0
+              "health": 78,
+              "speed": 1.15,
+              "physicalArmor": 4,
+              "magicalArmor": 0,
+              "abilities": {
+                "speedBoostBelowHpShare": {
+                  "hpShare": 0.5,
+                  "speedMultiplier": 1.35
+                },
+                "effectResistance": {
+                  "chill": 0.75
+                }
+              }
             },
             {
               "level": 4,
-              "health": 92,
-              "speed": 1.3,
-              "physicalArmor": 7,
-              "magicalArmor": 0
+              "health": 85,
+              "speed": 1.2,
+              "physicalArmor": 4,
+              "magicalArmor": 0,
+              "abilities": {
+                "speedBoostBelowHpShare": {
+                  "hpShare": 0.5,
+                  "speedMultiplier": 1.5
+                },
+                "effectResistance": {
+                  "chill": 0.75,
+                  "stun": 0.75
+                }
+              }
             }
           ]
         },
         {
-          "id": "orc_grunt_ii",
-          "name": "Grunt II",
-          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "id": "orc_grunt_shieldbearer",
+          "name": "Shieldbearer",
+          "description": "A raised shield: heavy physical armor and blocked shots.",
           "grades": [
             {
               "level": 1,
-              "health": 76,
-              "speed": 1.15,
-              "physicalArmor": 4,
-              "magicalArmor": 0
-            },
-            {
-              "level": 2,
-              "health": 81,
-              "speed": 1.2,
+              "health": 75,
+              "speed": 1.1,
               "physicalArmor": 5,
               "magicalArmor": 0
             },
             {
+              "level": 2,
+              "health": 80,
+              "speed": 1.1,
+              "physicalArmor": 7,
+              "magicalArmor": 0,
+              "abilities": {
+                "dodgeEveryNthShot": 5
+              }
+            },
+            {
               "level": 3,
-              "health": 87,
-              "speed": 1.25,
-              "physicalArmor": 6,
-              "magicalArmor": 0
+              "health": 85,
+              "speed": 1.1,
+              "physicalArmor": 9,
+              "magicalArmor": 1,
+              "abilities": {
+                "dodgeEveryNthShot": 4
+              }
             },
             {
               "level": 4,
-              "health": 92,
-              "speed": 1.3,
-              "physicalArmor": 7,
-              "magicalArmor": 0
+              "health": 95,
+              "speed": 1.1,
+              "physicalArmor": 12,
+              "magicalArmor": 1,
+              "abilities": {
+                "dodgeEveryNthShot": 3
+              }
             }
           ]
         }
@@ -104,72 +144,98 @@
       "lore": "Not a warrior, just a body with a shovel and nowhere else to be. The horde throws peons first and counts them last.",
       "talentBranches": [
         {
-          "id": "orc_peon_i",
-          "name": "Peon I",
-          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "id": "orc_peon_workforce",
+          "name": "Workforce",
+          "description": "Every peon that slips through brings gold home.",
           "grades": [
             {
               "level": 1,
-              "health": 54,
-              "speed": 1.25,
-              "physicalArmor": 2,
-              "magicalArmor": 0
+              "health": 52,
+              "speed": 1.2,
+              "physicalArmor": 1,
+              "magicalArmor": 0,
+              "abilities": {
+                "leakGoldToSender": 2
+              }
             },
             {
               "level": 2,
-              "health": 58,
-              "speed": 1.3,
-              "physicalArmor": 3,
-              "magicalArmor": 0
+              "health": 54,
+              "speed": 1.2,
+              "physicalArmor": 1,
+              "magicalArmor": 0,
+              "abilities": {
+                "leakGoldToSender": 4
+              }
             },
             {
               "level": 3,
-              "health": 62,
-              "speed": 1.35,
-              "physicalArmor": 4,
-              "magicalArmor": 0
+              "health": 56,
+              "speed": 1.25,
+              "physicalArmor": 2,
+              "magicalArmor": 0,
+              "abilities": {
+                "leakGoldToSender": 6,
+                "killGoldPenaltyToDefender": 1
+              }
             },
             {
               "level": 4,
-              "health": 66,
-              "speed": 1.4,
-              "physicalArmor": 5,
-              "magicalArmor": 0
+              "health": 60,
+              "speed": 1.25,
+              "physicalArmor": 2,
+              "magicalArmor": 0,
+              "abilities": {
+                "leakGoldToSender": 12,
+                "killGoldPenaltyToDefender": 1
+              }
             }
           ]
         },
         {
-          "id": "orc_peon_ii",
-          "name": "Peon II",
-          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "id": "orc_peon_sabotage",
+          "name": "Sabotage",
+          "description": "A pick in the gears: towers it passes misfire.",
           "grades": [
             {
               "level": 1,
-              "health": 54,
-              "speed": 1.25,
-              "physicalArmor": 2,
-              "magicalArmor": 0
+              "health": 52,
+              "speed": 1.2,
+              "physicalArmor": 1,
+              "magicalArmor": 0,
+              "abilities": {
+                "dodgeEveryNthShot": 20
+              }
             },
             {
               "level": 2,
-              "health": 58,
-              "speed": 1.3,
-              "physicalArmor": 3,
-              "magicalArmor": 0
+              "health": 54,
+              "speed": 1.2,
+              "physicalArmor": 1,
+              "magicalArmor": 0,
+              "abilities": {
+                "dodgeEveryNthShot": 10
+              }
             },
             {
               "level": 3,
-              "health": 62,
-              "speed": 1.35,
-              "physicalArmor": 4,
-              "magicalArmor": 0
+              "health": 58,
+              "speed": 1.2,
+              "physicalArmor": 2,
+              "magicalArmor": 0,
+              "abilities": {
+                "dodgeEveryNthShot": 7
+              }
             },
             {
               "level": 4,
-              "health": 66,
-              "speed": 1.4,
-              "physicalArmor": 5,
-              "magicalArmor": 0
+              "health": 64,
+              "speed": 1.25,
+              "physicalArmor": 2,
+              "magicalArmor": 0,
+              "abilities": {
+                "dodgeEveryNthShot": 5
+              }
             }
           ]
         }
@@ -190,72 +256,94 @@
       "lore": "The wolf chose the rider, not the other way around. Together they outrun the arrow and bite before the bow is drawn.",
       "talentBranches": [
         {
-          "id": "orc_wolf_rider_i",
-          "name": "Wolf Rider I",
-          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "id": "orc_wolf_rider_pack_hunters",
+          "name": "Pack Hunters",
+          "description": "The pack runs faster together and shares its slows.",
           "grades": [
             {
               "level": 1,
-              "health": 97,
-              "speed": 1.9,
-              "physicalArmor": 5,
+              "health": 92,
+              "speed": 1.98,
+              "physicalArmor": 4,
               "magicalArmor": 0
             },
             {
               "level": 2,
-              "health": 104,
-              "speed": 1.95,
-              "physicalArmor": 6,
+              "health": 95,
+              "speed": 2.07,
+              "physicalArmor": 4,
               "magicalArmor": 0
             },
             {
               "level": 3,
-              "health": 112,
-              "speed": 2,
-              "physicalArmor": 7,
-              "magicalArmor": 0
+              "health": 100,
+              "speed": 2.18,
+              "physicalArmor": 5,
+              "magicalArmor": 0,
+              "abilities": {
+                "effectResistance": {
+                  "chill": 0.5
+                }
+              }
             },
             {
               "level": 4,
-              "health": 119,
-              "speed": 2.05,
-              "physicalArmor": 8,
-              "magicalArmor": 0
+              "health": 110,
+              "speed": 2.35,
+              "physicalArmor": 5,
+              "magicalArmor": 0,
+              "abilities": {
+                "effectResistance": {
+                  "chill": 0.25
+                }
+              }
             }
           ]
         },
         {
-          "id": "orc_wolf_rider_ii",
-          "name": "Wolf Rider II",
-          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "id": "orc_wolf_rider_nets",
+          "name": "Nets",
+          "description": "Nets thrown over towers: they lose shots at the rider.",
           "grades": [
             {
               "level": 1,
-              "health": 97,
-              "speed": 1.9,
-              "physicalArmor": 5,
-              "magicalArmor": 0
+              "health": 90,
+              "speed": 1.85,
+              "physicalArmor": 4,
+              "magicalArmor": 0,
+              "abilities": {
+                "dodgeEveryNthShot": 8
+              }
             },
             {
               "level": 2,
-              "health": 104,
-              "speed": 1.95,
-              "physicalArmor": 6,
-              "magicalArmor": 0
+              "health": 95,
+              "speed": 1.85,
+              "physicalArmor": 5,
+              "magicalArmor": 0,
+              "abilities": {
+                "dodgeEveryNthShot": 5
+              }
             },
             {
               "level": 3,
-              "health": 112,
-              "speed": 2,
-              "physicalArmor": 7,
-              "magicalArmor": 0
+              "health": 100,
+              "speed": 1.9,
+              "physicalArmor": 5,
+              "magicalArmor": 0,
+              "abilities": {
+                "dodgeEveryNthShot": 4
+              }
             },
             {
               "level": 4,
-              "health": 119,
-              "speed": 2.05,
-              "physicalArmor": 8,
-              "magicalArmor": 0
+              "health": 110,
+              "speed": 1.9,
+              "physicalArmor": 6,
+              "magicalArmor": 1,
+              "abilities": {
+                "dodgeEveryNthShot": 3
+              }
             }
           ]
         }
@@ -277,72 +365,114 @@
       "lore": "Trolls heal what they lose and forget what they healed. Hit it hard the first time, because it will not remember to fall.",
       "talentBranches": [
         {
-          "id": "orc_troll_i",
-          "name": "Troll I",
-          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "id": "orc_troll_regeneration",
+          "name": "Regeneration",
+          "description": "Wounds close as it walks; later even poison cannot stop it.",
           "grades": [
             {
               "level": 1,
-              "health": 194,
-              "speed": 1,
-              "physicalArmor": 7,
-              "magicalArmor": 2
+              "health": 185,
+              "speed": 0.95,
+              "physicalArmor": 6,
+              "magicalArmor": 2,
+              "abilities": {
+                "healthRegenPerSecond": 4,
+                "regenPausedByPoison": true
+              }
             },
             {
               "level": 2,
-              "health": 209,
-              "speed": 1.05,
-              "physicalArmor": 8,
-              "magicalArmor": 2
+              "health": 195,
+              "speed": 0.95,
+              "physicalArmor": 6,
+              "magicalArmor": 2,
+              "abilities": {
+                "healthRegenPerSecond": 7,
+                "regenPausedByPoison": true
+              }
             },
             {
               "level": 3,
-              "health": 223,
-              "speed": 1.1,
-              "physicalArmor": 9,
-              "magicalArmor": 2
+              "health": 205,
+              "speed": 1,
+              "physicalArmor": 7,
+              "magicalArmor": 2,
+              "abilities": {
+                "healthRegenPerSecond": 10
+              }
             },
             {
               "level": 4,
-              "health": 238,
-              "speed": 1.15,
-              "physicalArmor": 10,
-              "magicalArmor": 2
+              "health": 225,
+              "speed": 1,
+              "physicalArmor": 7,
+              "magicalArmor": 2,
+              "abilities": {
+                "healthRegenPerSecond": 17
+              }
             }
           ]
         },
         {
-          "id": "orc_troll_ii",
-          "name": "Troll II",
-          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "id": "orc_troll_berserker",
+          "name": "Berserker",
+          "description": "It hits back at its attackers: towers deal it less damage.",
           "grades": [
             {
               "level": 1,
-              "health": 194,
+              "health": 180,
               "speed": 1,
-              "physicalArmor": 7,
-              "magicalArmor": 2
+              "physicalArmor": 6,
+              "magicalArmor": 2,
+              "abilities": {
+                "incomingDamageMultipliers": {
+                  "single": 0.9,
+                  "splash": 0.9,
+                  "chain": 0.9
+                }
+              }
             },
             {
               "level": 2,
-              "health": 209,
+              "health": 185,
               "speed": 1.05,
-              "physicalArmor": 8,
-              "magicalArmor": 2
+              "physicalArmor": 6,
+              "magicalArmor": 2,
+              "abilities": {
+                "incomingDamageMultipliers": {
+                  "single": 0.85,
+                  "splash": 0.85,
+                  "chain": 0.85
+                }
+              }
             },
             {
               "level": 3,
-              "health": 223,
+              "health": 190,
               "speed": 1.1,
-              "physicalArmor": 9,
-              "magicalArmor": 2
+              "physicalArmor": 6,
+              "magicalArmor": 2,
+              "abilities": {
+                "incomingDamageMultipliers": {
+                  "single": 0.8,
+                  "splash": 0.8,
+                  "chain": 0.8
+                }
+              }
             },
             {
               "level": 4,
-              "health": 238,
+              "health": 200,
               "speed": 1.15,
-              "physicalArmor": 10,
-              "magicalArmor": 2
+              "physicalArmor": 6,
+              "magicalArmor": 2,
+              "abilities": {
+                "incomingDamageMultipliers": {
+                  "single": 0.75,
+                  "splash": 0.75,
+                  "chain": 0.75
+                }
+              }
             }
           ]
         }
@@ -363,72 +493,121 @@
       "lore": "Every skull on his belt was a warning nobody listened to. The spear is for the ones who still will not.",
       "talentBranches": [
         {
-          "id": "orc_headhunter_i",
-          "name": "Headhunter I",
-          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "id": "orc_headhunter_tower_hunter",
+          "name": "Tower Hunter",
+          "description": "Marked towers lose range and land fewer hits.",
           "grades": [
             {
               "level": 1,
-              "health": 178,
-              "speed": 1.4,
-              "physicalArmor": 7,
-              "magicalArmor": 0
+              "health": 170,
+              "speed": 1.35,
+              "physicalArmor": 6,
+              "magicalArmor": 0,
+              "abilities": {
+                "incomingDamageMultipliers": {
+                  "single": 0.92,
+                  "splash": 0.92,
+                  "chain": 0.92
+                }
+              }
             },
             {
               "level": 2,
-              "health": 191,
-              "speed": 1.45,
-              "physicalArmor": 8,
-              "magicalArmor": 0
+              "health": 175,
+              "speed": 1.35,
+              "physicalArmor": 6,
+              "magicalArmor": 0,
+              "abilities": {
+                "incomingDamageMultipliers": {
+                  "single": 0.85,
+                  "splash": 0.85,
+                  "chain": 0.85
+                }
+              }
             },
             {
               "level": 3,
-              "health": 205,
-              "speed": 1.5,
-              "physicalArmor": 9,
-              "magicalArmor": 0
+              "health": 182,
+              "speed": 1.4,
+              "physicalArmor": 7,
+              "magicalArmor": 0,
+              "abilities": {
+                "incomingDamageMultipliers": {
+                  "single": 0.78,
+                  "splash": 0.78,
+                  "chain": 0.78
+                }
+              }
             },
             {
               "level": 4,
-              "health": 218,
-              "speed": 1.55,
-              "physicalArmor": 10,
-              "magicalArmor": 0
+              "health": 195,
+              "speed": 1.4,
+              "physicalArmor": 7,
+              "magicalArmor": 0,
+              "abilities": {
+                "incomingDamageMultipliers": {
+                  "single": 0.7,
+                  "splash": 0.7,
+                  "chain": 0.7
+                }
+              }
             }
           ]
         },
         {
-          "id": "orc_headhunter_ii",
-          "name": "Headhunter II",
-          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "id": "orc_headhunter_wind_walk",
+          "name": "Wind Walk",
+          "description": "A burst past the defenses: fast, unseen at first, two lives a leak.",
           "grades": [
             {
               "level": 1,
-              "health": 178,
-              "speed": 1.4,
-              "physicalArmor": 7,
+              "health": 165,
+              "speed": 1.5,
+              "physicalArmor": 6,
               "magicalArmor": 0
             },
             {
               "level": 2,
-              "health": 191,
-              "speed": 1.45,
-              "physicalArmor": 8,
-              "magicalArmor": 0
+              "health": 170,
+              "speed": 1.6,
+              "physicalArmor": 6,
+              "magicalArmor": 0,
+              "abilities": {
+                "effectResistance": {
+                  "poison": 0.5,
+                  "burn": 0.5
+                }
+              }
             },
             {
               "level": 3,
-              "health": 205,
-              "speed": 1.5,
-              "physicalArmor": 9,
-              "magicalArmor": 0
+              "health": 175,
+              "speed": 1.7,
+              "physicalArmor": 6,
+              "magicalArmor": 0,
+              "abilities": {
+                "effectResistance": {
+                  "poison": 0.5,
+                  "burn": 0.5
+                },
+                "startInvisibleMs": 1500
+              }
             },
             {
               "level": 4,
-              "health": 218,
-              "speed": 1.55,
-              "physicalArmor": 10,
-              "magicalArmor": 0
+              "health": 185,
+              "speed": 1.8,
+              "physicalArmor": 7,
+              "magicalArmor": 0,
+              "abilities": {
+                "effectResistance": {
+                  "poison": 0.5,
+                  "burn": 0.5
+                },
+                "startInvisibleMs": 2500,
+                "leakLivesTaken": 2
+              }
             }
           ]
         }
@@ -449,72 +628,103 @@
       "lore": "He speaks to the storm and the storm answers. Lightning is cheap when the spirits still owe you.",
       "talentBranches": [
         {
-          "id": "orc_shaman_i",
-          "name": "Shaman I",
-          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "id": "orc_shaman_bloodlust",
+          "name": "Bloodlust",
+          "description": "Bloodlust speeds the shaman and later knits its wounds.",
           "grades": [
             {
               "level": 1,
-              "health": 184,
-              "speed": 1.15,
-              "physicalArmor": 5,
+              "health": 172,
+              "speed": 1.21,
+              "physicalArmor": 4,
               "magicalArmor": 5
             },
             {
               "level": 2,
-              "health": 197,
-              "speed": 1.2,
-              "physicalArmor": 6,
+              "health": 176,
+              "speed": 1.27,
+              "physicalArmor": 4,
               "magicalArmor": 5
             },
             {
               "level": 3,
-              "health": 211,
-              "speed": 1.25,
-              "physicalArmor": 7,
+              "health": 182,
+              "speed": 1.38,
+              "physicalArmor": 5,
               "magicalArmor": 5
             },
             {
               "level": 4,
-              "health": 224,
-              "speed": 1.3,
-              "physicalArmor": 8,
-              "magicalArmor": 5
+              "health": 195,
+              "speed": 1.5,
+              "physicalArmor": 5,
+              "magicalArmor": 5,
+              "abilities": {
+                "healthRegenPerSecond": 3
+              }
             }
           ]
         },
         {
-          "id": "orc_shaman_ii",
-          "name": "Shaman II",
-          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "id": "orc_shaman_earth_lightning",
+          "name": "Earth Lightning",
+          "description": "Breaks the links between towers: their support and chains weaken.",
           "grades": [
             {
               "level": 1,
-              "health": 184,
-              "speed": 1.15,
-              "physicalArmor": 5,
-              "magicalArmor": 5
+              "health": 170,
+              "speed": 1.1,
+              "physicalArmor": 4,
+              "magicalArmor": 5,
+              "abilities": {
+                "incomingDamageMultipliers": {
+                  "single": 0.92,
+                  "splash": 0.92,
+                  "chain": 0.92
+                }
+              }
             },
             {
               "level": 2,
-              "health": 197,
-              "speed": 1.2,
-              "physicalArmor": 6,
-              "magicalArmor": 5
+              "health": 175,
+              "speed": 1.1,
+              "physicalArmor": 5,
+              "magicalArmor": 5,
+              "abilities": {
+                "incomingDamageMultipliers": {
+                  "single": 0.88,
+                  "splash": 0.88,
+                  "chain": 0.88
+                }
+              }
             },
             {
               "level": 3,
-              "health": 211,
-              "speed": 1.25,
-              "physicalArmor": 7,
-              "magicalArmor": 5
+              "health": 180,
+              "speed": 1.1,
+              "physicalArmor": 5,
+              "magicalArmor": 5,
+              "abilities": {
+                "incomingDamageMultipliers": {
+                  "single": 0.82,
+                  "splash": 0.82,
+                  "chain": 0.82
+                }
+              }
             },
             {
               "level": 4,
-              "health": 224,
-              "speed": 1.3,
-              "physicalArmor": 8,
-              "magicalArmor": 5
+              "health": 190,
+              "speed": 1.15,
+              "physicalArmor": 6,
+              "magicalArmor": 6,
+              "abilities": {
+                "incomingDamageMultipliers": {
+                  "single": 0.82,
+                  "splash": 0.82,
+                  "chain": 0.6
+                }
+              }
             }
           ]
         }
@@ -536,72 +746,123 @@
       "lore": "A wyvern broken with meat and scars. The rider screams louder than the beast, and both of them like it that way.",
       "talentBranches": [
         {
-          "id": "orc_wind_rider_i",
-          "name": "Wind Rider I",
-          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "id": "orc_wind_rider_bomber",
+          "name": "Bomber",
+          "description": "Bombs on the support towers below: weaker volleys, weaker slows.",
           "grades": [
             {
               "level": 1,
-              "health": 173,
-              "speed": 1.5,
-              "physicalArmor": 8,
-              "magicalArmor": 2
+              "health": 165,
+              "speed": 1.45,
+              "physicalArmor": 7,
+              "magicalArmor": 2,
+              "abilities": {
+                "incomingDamageMultipliers": {
+                  "single": 0.92,
+                  "splash": 0.92,
+                  "chain": 0.92
+                }
+              }
             },
             {
               "level": 2,
-              "health": 186,
-              "speed": 1.55,
-              "physicalArmor": 9,
-              "magicalArmor": 2
+              "health": 170,
+              "speed": 1.45,
+              "physicalArmor": 8,
+              "magicalArmor": 2,
+              "abilities": {
+                "incomingDamageMultipliers": {
+                  "single": 0.88,
+                  "splash": 0.88,
+                  "chain": 0.88
+                }
+              }
             },
             {
               "level": 3,
-              "health": 198,
-              "speed": 1.6,
-              "physicalArmor": 10,
-              "magicalArmor": 2
+              "health": 178,
+              "speed": 1.5,
+              "physicalArmor": 8,
+              "magicalArmor": 2,
+              "abilities": {
+                "incomingDamageMultipliers": {
+                  "single": 0.84,
+                  "splash": 0.84,
+                  "chain": 0.84
+                },
+                "effectResistance": {
+                  "chill": 0.75
+                }
+              }
             },
             {
               "level": 4,
-              "health": 211,
-              "speed": 1.65,
-              "physicalArmor": 11,
-              "magicalArmor": 2
+              "health": 190,
+              "speed": 1.5,
+              "physicalArmor": 9,
+              "magicalArmor": 3,
+              "abilities": {
+                "incomingDamageMultipliers": {
+                  "single": 0.8,
+                  "splash": 0.8,
+                  "chain": 0.8
+                },
+                "effectResistance": {
+                  "chill": 0.5,
+                  "stun": 0.5
+                }
+              }
             }
           ]
         },
         {
-          "id": "orc_wind_rider_ii",
-          "name": "Wind Rider II",
-          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "id": "orc_wind_rider_tailwind",
+          "name": "Tailwind",
+          "description": "The wind at its back: faster, then immune to slows.",
           "grades": [
             {
               "level": 1,
-              "health": 173,
-              "speed": 1.5,
-              "physicalArmor": 8,
+              "health": 160,
+              "speed": 1.6,
+              "physicalArmor": 7,
               "magicalArmor": 2
             },
             {
               "level": 2,
-              "health": 186,
-              "speed": 1.55,
-              "physicalArmor": 9,
-              "magicalArmor": 2
+              "health": 162,
+              "speed": 1.75,
+              "physicalArmor": 7,
+              "magicalArmor": 2,
+              "abilities": {
+                "effectResistance": {
+                  "chill": 0.5
+                }
+              }
             },
             {
               "level": 3,
-              "health": 198,
-              "speed": 1.6,
-              "physicalArmor": 10,
-              "magicalArmor": 2
+              "health": 166,
+              "speed": 1.9,
+              "physicalArmor": 7,
+              "magicalArmor": 2,
+              "abilities": {
+                "effectResistance": {
+                  "chill": 0.25
+                }
+              }
             },
             {
               "level": 4,
-              "health": 211,
-              "speed": 1.65,
-              "physicalArmor": 11,
-              "magicalArmor": 2
+              "health": 175,
+              "speed": 2.1,
+              "physicalArmor": 8,
+              "magicalArmor": 2,
+              "abilities": {
+                "effectResistance": {
+                  "chill": 0
+                },
+                "leakLivesTaken": 2
+              }
             }
           ]
         }
@@ -623,72 +884,95 @@
       "lore": "The earth shakes when the tauren charges and keeps shaking after. A wall is a suggestion it chooses to ignore.",
       "talentBranches": [
         {
-          "id": "orc_tauren_i",
-          "name": "Tauren I",
-          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "id": "orc_tauren_battering_ram",
+          "name": "Battering Ram",
+          "description": "Unstoppable: immune to stuns, then to slows.",
           "grades": [
             {
               "level": 1,
-              "health": 367,
-              "speed": 0.9,
-              "physicalArmor": 14,
-              "magicalArmor": 4
+              "health": 360,
+              "speed": 0.85,
+              "physicalArmor": 13,
+              "magicalArmor": 4,
+              "abilities": {
+                "effectResistance": {
+                  "stun": 0
+                }
+              }
             },
             {
               "level": 2,
-              "health": 394,
-              "speed": 0.95,
-              "physicalArmor": 15,
-              "magicalArmor": 4
+              "health": 385,
+              "speed": 0.85,
+              "physicalArmor": 14,
+              "magicalArmor": 4,
+              "abilities": {
+                "effectResistance": {
+                  "stun": 0,
+                  "chill": 0.85
+                }
+              }
             },
             {
               "level": 3,
-              "health": 422,
-              "speed": 1,
-              "physicalArmor": 16,
-              "magicalArmor": 4
+              "health": 410,
+              "speed": 0.9,
+              "physicalArmor": 15,
+              "magicalArmor": 5,
+              "abilities": {
+                "effectResistance": {
+                  "stun": 0,
+                  "chill": 0.5
+                }
+              }
             },
             {
               "level": 4,
-              "health": 449,
-              "speed": 1.05,
-              "physicalArmor": 17,
-              "magicalArmor": 4
+              "health": 450,
+              "speed": 0.9,
+              "physicalArmor": 16,
+              "magicalArmor": 5,
+              "abilities": {
+                "effectResistance": {
+                  "stun": 0,
+                  "chill": 0
+                }
+              }
             }
           ]
         },
         {
-          "id": "orc_tauren_ii",
-          "name": "Tauren II",
-          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "id": "orc_tauren_warchief",
+          "name": "Warchief",
+          "description": "Carries the war banner: thicker hide and a quicker stride.",
           "grades": [
             {
               "level": 1,
-              "health": 367,
-              "speed": 0.9,
-              "physicalArmor": 14,
-              "magicalArmor": 4
+              "health": 340,
+              "speed": 0.85,
+              "physicalArmor": 15,
+              "magicalArmor": 5
             },
             {
               "level": 2,
-              "health": 394,
-              "speed": 0.95,
-              "physicalArmor": 15,
-              "magicalArmor": 4
+              "health": 355,
+              "speed": 0.85,
+              "physicalArmor": 17,
+              "magicalArmor": 6
             },
             {
               "level": 3,
-              "health": 422,
-              "speed": 1,
-              "physicalArmor": 16,
-              "magicalArmor": 4
+              "health": 370,
+              "speed": 0.94,
+              "physicalArmor": 18,
+              "magicalArmor": 6
             },
             {
               "level": 4,
-              "health": 449,
-              "speed": 1.05,
-              "physicalArmor": 17,
-              "magicalArmor": 4
+              "health": 400,
+              "speed": 1.04,
+              "physicalArmor": 20,
+              "magicalArmor": 7
             }
           ]
         }

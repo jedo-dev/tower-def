@@ -18,72 +18,102 @@
       "lore": "She learned the bow before she learned to speak, and the forest taught her both. The arrow is loosed before the leaf lands.",
       "talentBranches": [
         {
-          "id": "elf_archer_i",
-          "name": "Archer I",
-          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "id": "elf_archer_evasion",
+          "name": "Evasion",
+          "description": "Light on her feet: towers miss more and splash finds less.",
           "grades": [
             {
               "level": 1,
-              "health": 43,
-              "speed": 1.75,
+              "health": 42,
+              "speed": 1.7,
               "physicalArmor": 0,
-              "magicalArmor": 3
+              "magicalArmor": 2,
+              "abilities": {
+                "dodgeEveryNthShot": 10
+              }
             },
             {
               "level": 2,
-              "health": 46,
-              "speed": 1.8,
+              "health": 44,
+              "speed": 1.75,
               "physicalArmor": 0,
-              "magicalArmor": 4
+              "magicalArmor": 2,
+              "abilities": {
+                "dodgeEveryNthShot": 7
+              }
             },
             {
               "level": 3,
-              "health": 50,
-              "speed": 1.85,
+              "health": 46,
+              "speed": 1.8,
               "physicalArmor": 0,
-              "magicalArmor": 5
+              "magicalArmor": 2,
+              "abilities": {
+                "dodgeEveryNthShot": 5,
+                "incomingDamageMultipliers": {
+                  "splash": 0.85
+                }
+              }
             },
             {
               "level": 4,
-              "health": 53,
-              "speed": 1.9,
+              "health": 50,
+              "speed": 1.85,
               "physicalArmor": 0,
-              "magicalArmor": 6
+              "magicalArmor": 3,
+              "abilities": {
+                "dodgeEveryNthShot": 3,
+                "incomingDamageMultipliers": {
+                  "splash": 0.7
+                }
+              }
             }
           ]
         },
         {
-          "id": "elf_archer_ii",
-          "name": "Archer II",
-          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "id": "elf_archer_forest_shadow",
+          "name": "Forest Shadow",
+          "description": "Starts unseen in the forest shadow, longer with every grade.",
           "grades": [
             {
               "level": 1,
-              "health": 43,
-              "speed": 1.75,
+              "health": 40,
+              "speed": 1.7,
               "physicalArmor": 0,
-              "magicalArmor": 3
+              "magicalArmor": 2,
+              "abilities": {
+                "startInvisibleMs": 2000
+              }
             },
             {
               "level": 2,
-              "health": 46,
-              "speed": 1.8,
+              "health": 42,
+              "speed": 1.75,
               "physicalArmor": 0,
-              "magicalArmor": 4
+              "magicalArmor": 2,
+              "abilities": {
+                "startInvisibleMs": 3000
+              }
             },
             {
               "level": 3,
-              "health": 50,
-              "speed": 1.85,
+              "health": 44,
+              "speed": 1.8,
               "physicalArmor": 0,
-              "magicalArmor": 5
+              "magicalArmor": 2,
+              "abilities": {
+                "startInvisibleMs": 4000
+              }
             },
             {
               "level": 4,
-              "health": 53,
+              "health": 48,
               "speed": 1.9,
               "physicalArmor": 0,
-              "magicalArmor": 6
+              "magicalArmor": 3,
+              "abilities": {
+                "startInvisibleMs": 5000
+              }
             }
           ]
         }
@@ -105,72 +135,98 @@
       "lore": "A spirit of the grove, more light than body. It drifts where the forest wants to look and ends where it must.",
       "talentBranches": [
         {
-          "id": "elf_wisp_i",
-          "name": "Wisp I",
-          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "id": "elf_wisp_firefly",
+          "name": "Firefly",
+          "description": "Every wisp that slips through brings gold home.",
           "grades": [
             {
               "level": 1,
-              "health": 35,
-              "speed": 2.05,
+              "health": 33,
+              "speed": 2,
               "physicalArmor": 0,
-              "magicalArmor": 1
+              "magicalArmor": 0,
+              "abilities": {
+                "leakGoldToSender": 2
+              }
             },
             {
               "level": 2,
-              "health": 37,
-              "speed": 2.1,
+              "health": 34,
+              "speed": 2.05,
               "physicalArmor": 0,
-              "magicalArmor": 2
+              "magicalArmor": 0,
+              "abilities": {
+                "leakGoldToSender": 4
+              }
             },
             {
               "level": 3,
-              "health": 40,
-              "speed": 2.15,
+              "health": 36,
+              "speed": 2.1,
               "physicalArmor": 0,
-              "magicalArmor": 3
+              "magicalArmor": 0,
+              "abilities": {
+                "leakGoldToSender": 6,
+                "killGoldPenaltyToDefender": 1
+              }
             },
             {
               "level": 4,
-              "health": 42,
-              "speed": 2.2,
+              "health": 40,
+              "speed": 2.15,
               "physicalArmor": 0,
-              "magicalArmor": 4
+              "magicalArmor": 0,
+              "abilities": {
+                "leakGoldToSender": 12,
+                "killGoldPenaltyToDefender": 1
+              }
             }
           ]
         },
         {
-          "id": "elf_wisp_ii",
-          "name": "Wisp II",
-          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "id": "elf_wisp_detonation",
+          "name": "Detonation",
+          "description": "Bursts when killed, and the burst costs the defender.",
           "grades": [
             {
               "level": 1,
-              "health": 35,
-              "speed": 2.05,
+              "health": 32,
+              "speed": 2,
               "physicalArmor": 0,
-              "magicalArmor": 1
+              "magicalArmor": 0,
+              "abilities": {
+                "killGoldPenaltyToDefender": 1
+              }
             },
             {
               "level": 2,
-              "health": 37,
-              "speed": 2.1,
+              "health": 34,
+              "speed": 2,
               "physicalArmor": 0,
-              "magicalArmor": 2
+              "magicalArmor": 0,
+              "abilities": {
+                "killGoldPenaltyToDefender": 1
+              }
             },
             {
               "level": 3,
-              "health": 40,
-              "speed": 2.15,
+              "health": 36,
+              "speed": 2,
               "physicalArmor": 0,
-              "magicalArmor": 3
+              "magicalArmor": 0,
+              "abilities": {
+                "killGoldPenaltyToDefender": 2
+              }
             },
             {
               "level": 4,
-              "health": 42,
-              "speed": 2.2,
+              "health": 40,
+              "speed": 2.05,
               "physicalArmor": 0,
-              "magicalArmor": 4
+              "magicalArmor": 0,
+              "abilities": {
+                "killGoldPenaltyToDefender": 3
+              }
             }
           ]
         }
@@ -191,72 +247,102 @@
       "lore": "Glaive and nightsaber move as one shadow under the moon. What she hunts does not hear the branches part.",
       "talentBranches": [
         {
-          "id": "elf_huntress_i",
-          "name": "Huntress I",
-          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "id": "elf_huntress_moon_blade",
+          "name": "Moon Blade",
+          "description": "Moonlit grace: towers miss her more and more.",
           "grades": [
             {
               "level": 1,
-              "health": 76,
-              "speed": 1.9,
+              "health": 72,
+              "speed": 1.85,
               "physicalArmor": 1,
-              "magicalArmor": 5
+              "magicalArmor": 4,
+              "abilities": {
+                "dodgeEveryNthShot": 10
+              }
             },
             {
               "level": 2,
-              "health": 81,
-              "speed": 1.95,
+              "health": 75,
+              "speed": 1.9,
               "physicalArmor": 1,
-              "magicalArmor": 6
+              "magicalArmor": 4,
+              "abilities": {
+                "dodgeEveryNthShot": 7
+              }
             },
             {
               "level": 3,
-              "health": 87,
+              "health": 80,
               "speed": 2,
               "physicalArmor": 1,
-              "magicalArmor": 7
+              "magicalArmor": 5,
+              "abilities": {
+                "dodgeEveryNthShot": 5
+              }
             },
             {
               "level": 4,
-              "health": 92,
+              "health": 88,
               "speed": 2.05,
               "physicalArmor": 1,
-              "magicalArmor": 8
+              "magicalArmor": 5,
+              "abilities": {
+                "dodgeEveryNthShot": 3
+              }
             }
           ]
         },
         {
-          "id": "elf_huntress_ii",
-          "name": "Huntress II",
-          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "id": "elf_huntress_owl_scout",
+          "name": "Owl Scout",
+          "description": "The owl shows the short way: faster, and ground hazards bite less.",
           "grades": [
             {
               "level": 1,
-              "health": 76,
+              "health": 70,
               "speed": 1.9,
               "physicalArmor": 1,
-              "magicalArmor": 5
+              "magicalArmor": 4
             },
             {
               "level": 2,
-              "health": 81,
+              "health": 72,
               "speed": 1.95,
               "physicalArmor": 1,
-              "magicalArmor": 6
+              "magicalArmor": 4,
+              "abilities": {
+                "effectResistance": {
+                  "poison": 0.5,
+                  "burn": 0.5
+                }
+              }
             },
             {
               "level": 3,
-              "health": 87,
-              "speed": 2,
+              "health": 76,
+              "speed": 2.2,
               "physicalArmor": 1,
-              "magicalArmor": 7
+              "magicalArmor": 4,
+              "abilities": {
+                "effectResistance": {
+                  "poison": 0.5,
+                  "burn": 0.5
+                }
+              }
             },
             {
               "level": 4,
-              "health": 92,
-              "speed": 2.05,
+              "health": 82,
+              "speed": 2.46,
               "physicalArmor": 1,
-              "magicalArmor": 8
+              "magicalArmor": 5,
+              "abilities": {
+                "effectResistance": {
+                  "poison": 0.5,
+                  "burn": 0.5
+                }
+              }
             }
           ]
         }
@@ -278,72 +364,134 @@
       "lore": "Daughter of the grove, half bark and half breeze. Spells slide off her like rain off a leaf.",
       "talentBranches": [
         {
-          "id": "elf_dryad_i",
-          "name": "Dryad I",
-          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "id": "elf_dryad_spell_immunity",
+          "name": "Spell Immunity",
+          "description": "Magic slides off her: high magical armor, then immunity to effects.",
           "grades": [
             {
               "level": 1,
-              "health": 108,
-              "speed": 1.65,
+              "health": 102,
+              "speed": 1.6,
               "physicalArmor": -2,
-              "magicalArmor": 7
+              "magicalArmor": 11
             },
             {
               "level": 2,
-              "health": 116,
-              "speed": 1.7,
+              "health": 105,
+              "speed": 1.6,
               "physicalArmor": -2,
-              "magicalArmor": 8
+              "magicalArmor": 16,
+              "abilities": {
+                "effectResistance": {
+                  "poison": 0.5,
+                  "chill": 0.5
+                }
+              }
             },
             {
               "level": 3,
-              "health": 124,
-              "speed": 1.75,
+              "health": 110,
+              "speed": 1.65,
               "physicalArmor": -2,
-              "magicalArmor": 9
+              "magicalArmor": 25,
+              "abilities": {
+                "effectResistance": {
+                  "poison": 0,
+                  "chill": 0.5
+                }
+              }
             },
             {
               "level": 4,
-              "health": 132,
-              "speed": 1.8,
+              "health": 120,
+              "speed": 1.65,
               "physicalArmor": -2,
-              "magicalArmor": 10
+              "magicalArmor": 25,
+              "abilities": {
+                "effectResistance": {
+                  "chill": 0,
+                  "stun": 0,
+                  "poison": 0,
+                  "burn": 0,
+                  "armor_break": 0,
+                  "vulnerability": 0
+                }
+              }
             }
           ]
         },
         {
-          "id": "elf_dryad_ii",
-          "name": "Dryad II",
-          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "id": "elf_dryad_purify",
+          "name": "Purify",
+          "description": "Cleansing sap washes effects and poison off her.",
           "grades": [
             {
               "level": 1,
-              "health": 108,
-              "speed": 1.65,
+              "health": 100,
+              "speed": 1.6,
               "physicalArmor": -2,
-              "magicalArmor": 7
+              "magicalArmor": 6,
+              "abilities": {
+                "effectResistance": {
+                  "chill": 0.75,
+                  "stun": 0.75
+                },
+                "incomingDamageMultipliers": {
+                  "dot": 0.75
+                }
+              }
             },
             {
               "level": 2,
-              "health": 116,
-              "speed": 1.7,
+              "health": 104,
+              "speed": 1.6,
               "physicalArmor": -2,
-              "magicalArmor": 8
+              "magicalArmor": 6,
+              "abilities": {
+                "effectResistance": {
+                  "chill": 0.6,
+                  "stun": 0.6
+                },
+                "incomingDamageMultipliers": {
+                  "dot": 0.6
+                }
+              }
             },
             {
               "level": 3,
-              "health": 124,
-              "speed": 1.75,
+              "health": 108,
+              "speed": 1.65,
               "physicalArmor": -2,
-              "magicalArmor": 9
+              "magicalArmor": 7,
+              "abilities": {
+                "effectResistance": {
+                  "chill": 0.5,
+                  "stun": 0.5,
+                  "armor_break": 0.5,
+                  "vulnerability": 0.5
+                },
+                "incomingDamageMultipliers": {
+                  "dot": 0.5
+                }
+              }
             },
             {
               "level": 4,
-              "health": 132,
-              "speed": 1.8,
+              "health": 115,
+              "speed": 1.72,
               "physicalArmor": -2,
-              "magicalArmor": 10
+              "magicalArmor": 7,
+              "abilities": {
+                "effectResistance": {
+                  "chill": 0.4,
+                  "stun": 0.4,
+                  "armor_break": 0.4,
+                  "vulnerability": 0.4
+                },
+                "incomingDamageMultipliers": {
+                  "dot": 0.4
+                }
+              }
             }
           ]
         }
@@ -366,72 +514,123 @@
       "lore": "Two heads grown from one old grudge of the wild. It is too heavy for the canopy, so it comes the long way, and it still comes.",
       "talentBranches": [
         {
-          "id": "elf_chimera_i",
-          "name": "Chimera I",
-          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "id": "elf_chimera_acid_breath",
+          "name": "Acid Breath",
+          "description": "Acid eats the towers' reach: they hit it less and less.",
           "grades": [
             {
               "level": 1,
-              "health": 162,
-              "speed": 1.35,
+              "health": 160,
+              "speed": 1.3,
               "physicalArmor": 2,
-              "magicalArmor": 6
+              "magicalArmor": 5,
+              "abilities": {
+                "incomingDamageMultipliers": {
+                  "single": 0.92,
+                  "splash": 0.92,
+                  "chain": 0.92
+                }
+              }
             },
             {
               "level": 2,
-              "health": 174,
-              "speed": 1.4,
+              "health": 170,
+              "speed": 1.3,
               "physicalArmor": 2,
-              "magicalArmor": 7
+              "magicalArmor": 6,
+              "abilities": {
+                "incomingDamageMultipliers": {
+                  "single": 0.85,
+                  "splash": 0.85,
+                  "chain": 0.85
+                }
+              }
             },
             {
               "level": 3,
-              "health": 186,
-              "speed": 1.45,
+              "health": 180,
+              "speed": 1.35,
               "physicalArmor": 2,
-              "magicalArmor": 8
+              "magicalArmor": 6,
+              "abilities": {
+                "incomingDamageMultipliers": {
+                  "single": 0.72,
+                  "splash": 0.72,
+                  "chain": 0.72
+                }
+              }
             },
             {
               "level": 4,
-              "health": 198,
-              "speed": 1.5,
-              "physicalArmor": 2,
-              "magicalArmor": 9
+              "health": 200,
+              "speed": 1.35,
+              "physicalArmor": 3,
+              "magicalArmor": 7,
+              "abilities": {
+                "incomingDamageMultipliers": {
+                  "single": 0.6,
+                  "splash": 0.6,
+                  "chain": 0.6
+                }
+              }
             }
           ]
         },
         {
-          "id": "elf_chimera_ii",
-          "name": "Chimera II",
-          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "id": "elf_chimera_two_headed",
+          "name": "Two-Headed",
+          "description": "When the first head falls the second flies on.",
           "grades": [
             {
               "level": 1,
-              "health": 162,
-              "speed": 1.35,
+              "health": 155,
+              "speed": 1.3,
               "physicalArmor": 2,
-              "magicalArmor": 6
+              "magicalArmor": 5,
+              "abilities": {
+                "secondLife": {
+                  "hpShare": 0.25
+                }
+              }
             },
             {
               "level": 2,
-              "health": 174,
-              "speed": 1.4,
+              "health": 160,
+              "speed": 1.3,
               "physicalArmor": 2,
-              "magicalArmor": 7
+              "magicalArmor": 5,
+              "abilities": {
+                "secondLife": {
+                  "hpShare": 0.35
+                }
+              }
             },
             {
               "level": 3,
-              "health": 186,
-              "speed": 1.45,
+              "health": 170,
+              "speed": 1.35,
               "physicalArmor": 2,
-              "magicalArmor": 8
+              "magicalArmor": 6,
+              "abilities": {
+                "secondLife": {
+                  "hpShare": 0.5,
+                  "speedMultiplier": 1.3
+                }
+              }
             },
             {
               "level": 4,
-              "health": 198,
-              "speed": 1.5,
+              "health": 185,
+              "speed": 1.35,
               "physicalArmor": 2,
-              "magicalArmor": 9
+              "magicalArmor": 6,
+              "abilities": {
+                "secondLife": {
+                  "hpShare": 0.6,
+                  "speedMultiplier": 1.3,
+                  "immuneToChill": true
+                }
+              }
             }
           ]
         }
@@ -453,72 +652,121 @@
       "lore": "He slept a thousand years as a bear and woke as one. The claw remembers what the druid chose to forget.",
       "talentBranches": [
         {
-          "id": "elf_druid_of_the_claw_i",
-          "name": "Druid of the Claw I",
-          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "id": "elf_druid_of_the_claw_bear_form",
+          "name": "Bear Form",
+          "description": "Wounded, the druid becomes a bear: tougher and faster.",
           "grades": [
             {
               "level": 1,
-              "health": 189,
-              "speed": 1.25,
+              "health": 186,
+              "speed": 1.2,
               "physicalArmor": 3,
               "magicalArmor": 8
             },
             {
               "level": 2,
-              "health": 203,
-              "speed": 1.3,
-              "physicalArmor": 3,
-              "magicalArmor": 9
+              "health": 200,
+              "speed": 1.15,
+              "physicalArmor": 4,
+              "magicalArmor": 9,
+              "abilities": {
+                "speedBoostBelowHpShare": {
+                  "hpShare": 0.5,
+                  "speedMultiplier": 1.15
+                },
+                "incomingDamageMultipliers": {
+                  "single": 0.9,
+                  "splash": 0.9,
+                  "chain": 0.9
+                }
+              }
             },
             {
               "level": 3,
-              "health": 217,
-              "speed": 1.35,
-              "physicalArmor": 3,
-              "magicalArmor": 10
+              "health": 219,
+              "speed": 1.15,
+              "physicalArmor": 4,
+              "magicalArmor": 10,
+              "abilities": {
+                "speedBoostBelowHpShare": {
+                  "hpShare": 0.5,
+                  "speedMultiplier": 1.25
+                },
+                "incomingDamageMultipliers": {
+                  "single": 0.85,
+                  "splash": 0.85,
+                  "chain": 0.85
+                }
+              }
             },
             {
               "level": 4,
-              "health": 231,
-              "speed": 1.4,
-              "physicalArmor": 3,
-              "magicalArmor": 11
+              "health": 244,
+              "speed": 1.15,
+              "physicalArmor": 5,
+              "magicalArmor": 11,
+              "abilities": {
+                "speedBoostBelowHpShare": {
+                  "hpShare": 0.5,
+                  "speedMultiplier": 1.35
+                },
+                "incomingDamageMultipliers": {
+                  "single": 0.8,
+                  "splash": 0.8,
+                  "chain": 0.8
+                },
+                "effectResistance": {
+                  "chill": 0.5,
+                  "stun": 0.5
+                }
+              }
             }
           ]
         },
         {
-          "id": "elf_druid_of_the_claw_ii",
-          "name": "Druid of the Claw II",
-          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "id": "elf_druid_of_the_claw_forest_whisper",
+          "name": "Forest Whisper",
+          "description": "The forest whispers and the druid heals as it walks.",
           "grades": [
             {
               "level": 1,
-              "health": 189,
-              "speed": 1.25,
+              "health": 175,
+              "speed": 1.2,
               "physicalArmor": 3,
-              "magicalArmor": 8
+              "magicalArmor": 7,
+              "abilities": {
+                "healthRegenPerSecond": 3
+              }
             },
             {
               "level": 2,
-              "health": 203,
-              "speed": 1.3,
+              "health": 180,
+              "speed": 1.2,
               "physicalArmor": 3,
-              "magicalArmor": 9
+              "magicalArmor": 7,
+              "abilities": {
+                "healthRegenPerSecond": 5
+              }
             },
             {
               "level": 3,
-              "health": 217,
-              "speed": 1.35,
+              "health": 188,
+              "speed": 1.25,
               "physicalArmor": 3,
-              "magicalArmor": 10
+              "magicalArmor": 8,
+              "abilities": {
+                "healthRegenPerSecond": 7
+              }
             },
             {
               "level": 4,
-              "health": 231,
-              "speed": 1.4,
+              "health": 200,
+              "speed": 1.25,
               "physicalArmor": 3,
-              "magicalArmor": 11
+              "magicalArmor": 8,
+              "abilities": {
+                "healthRegenPerSecond": 10
+              }
             }
           ]
         }
@@ -540,72 +788,92 @@
       "lore": "Half eagle, half stag, wholly of the high crags. It stoops like a thought and is gone before the string sings.",
       "talentBranches": [
         {
-          "id": "elf_hippogryph_i",
-          "name": "Hippogryph I",
-          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "id": "elf_hippogryph_whirlwind",
+          "name": "Whirlwind",
+          "description": "A whirlwind flight: faster, immune to slows, two lives a leak.",
           "grades": [
             {
               "level": 1,
-              "health": 151,
-              "speed": 1.8,
+              "health": 140,
+              "speed": 1.9,
               "physicalArmor": 0,
-              "magicalArmor": 6
+              "magicalArmor": 5
             },
             {
               "level": 2,
-              "health": 162,
-              "speed": 1.85,
+              "health": 142,
+              "speed": 2.05,
               "physicalArmor": 0,
-              "magicalArmor": 7
+              "magicalArmor": 5,
+              "abilities": {
+                "effectResistance": {
+                  "chill": 0.5
+                }
+              }
             },
             {
               "level": 3,
-              "health": 174,
-              "speed": 1.9,
+              "health": 146,
+              "speed": 2.2,
               "physicalArmor": 0,
-              "magicalArmor": 8
+              "magicalArmor": 5,
+              "abilities": {
+                "effectResistance": {
+                  "chill": 0
+                }
+              }
             },
             {
               "level": 4,
-              "health": 185,
-              "speed": 1.95,
+              "health": 155,
+              "speed": 2.4,
               "physicalArmor": 0,
-              "magicalArmor": 9
+              "magicalArmor": 6,
+              "abilities": {
+                "effectResistance": {
+                  "chill": 0
+                },
+                "dodgeEveryNthShot": 5,
+                "leakLivesTaken": 2
+              }
             }
           ]
         },
         {
-          "id": "elf_hippogryph_ii",
-          "name": "Hippogryph II",
-          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "id": "elf_hippogryph_rider",
+          "name": "Rider",
+          "description": "An archer rider whose shield turns arrows aside.",
           "grades": [
             {
               "level": 1,
-              "health": 151,
-              "speed": 1.8,
-              "physicalArmor": 0,
-              "magicalArmor": 6
+              "health": 145,
+              "speed": 1.75,
+              "physicalArmor": 3,
+              "magicalArmor": 5
             },
             {
               "level": 2,
-              "health": 162,
-              "speed": 1.85,
-              "physicalArmor": 0,
-              "magicalArmor": 7
+              "health": 150,
+              "speed": 1.75,
+              "physicalArmor": 10,
+              "magicalArmor": 6
             },
             {
               "level": 3,
-              "health": 174,
-              "speed": 1.9,
-              "physicalArmor": 0,
-              "magicalArmor": 8
+              "health": 158,
+              "speed": 1.8,
+              "physicalArmor": 17,
+              "magicalArmor": 6
             },
             {
               "level": 4,
-              "health": 185,
-              "speed": 1.95,
-              "physicalArmor": 0,
-              "magicalArmor": 9
+              "health": 170,
+              "speed": 1.8,
+              "physicalArmor": 25,
+              "magicalArmor": 7,
+              "abilities": {
+                "dodgeEveryNthShot": 10
+              }
             }
           ]
         }
@@ -627,72 +895,108 @@
       "lore": "The mountain grew tired of being climbed and stood up. Trees ride on its shoulders, and it does not hurry for anyone.",
       "talentBranches": [
         {
-          "id": "elf_mountain_giant_i",
-          "name": "Mountain Giant I",
-          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "id": "elf_mountain_giant_stone_flesh",
+          "name": "Stone Flesh",
+          "description": "Flesh of stone: shrugs off percent, splash and stuns, and slowly mends.",
           "grades": [
             {
               "level": 1,
-              "health": 356,
-              "speed": 0.85,
+              "health": 355,
+              "speed": 0.8,
               "physicalArmor": 5,
               "magicalArmor": 13
             },
             {
               "level": 2,
-              "health": 383,
-              "speed": 0.9,
-              "physicalArmor": 5,
-              "magicalArmor": 14
+              "health": 380,
+              "speed": 0.8,
+              "physicalArmor": 6,
+              "magicalArmor": 14,
+              "abilities": {
+                "incomingDamageMultipliers": {
+                  "percent": 0.75
+                }
+              }
             },
             {
               "level": 3,
-              "health": 409,
-              "speed": 0.95,
-              "physicalArmor": 5,
-              "magicalArmor": 15
+              "health": 410,
+              "speed": 0.82,
+              "physicalArmor": 7,
+              "magicalArmor": 16,
+              "abilities": {
+                "incomingDamageMultipliers": {
+                  "percent": 0.5
+                },
+                "effectResistance": {
+                  "stun": 0
+                }
+              }
             },
             {
               "level": 4,
-              "health": 436,
-              "speed": 1,
-              "physicalArmor": 5,
-              "magicalArmor": 16
+              "health": 450,
+              "speed": 0.85,
+              "physicalArmor": 8,
+              "magicalArmor": 18,
+              "abilities": {
+                "incomingDamageMultipliers": {
+                  "percent": 0.5,
+                  "splash": 0.5
+                },
+                "effectResistance": {
+                  "stun": 0
+                },
+                "healthRegenPerSecond": 9
+              }
             }
           ]
         },
         {
-          "id": "elf_mountain_giant_ii",
-          "name": "Mountain Giant II",
-          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "id": "elf_mountain_giant_uprooted_tree",
+          "name": "Uprooted Tree",
+          "description": "Swings a tree at the towers: they lose shots, and a leak costs three lives.",
           "grades": [
             {
               "level": 1,
-              "health": 356,
+              "health": 330,
               "speed": 0.85,
               "physicalArmor": 5,
-              "magicalArmor": 13
+              "magicalArmor": 12,
+              "abilities": {
+                "dodgeEveryNthShot": 5
+              }
             },
             {
               "level": 2,
-              "health": 383,
-              "speed": 0.9,
+              "health": 345,
+              "speed": 0.85,
               "physicalArmor": 5,
-              "magicalArmor": 14
+              "magicalArmor": 12,
+              "abilities": {
+                "dodgeEveryNthShot": 3
+              }
             },
             {
               "level": 3,
-              "health": 409,
-              "speed": 0.95,
+              "health": 365,
+              "speed": 0.85,
               "physicalArmor": 5,
-              "magicalArmor": 15
+              "magicalArmor": 13,
+              "abilities": {
+                "dodgeEveryNthShot": 2
+              }
             },
             {
               "level": 4,
-              "health": 436,
-              "speed": 1,
+              "health": 400,
+              "speed": 0.9,
               "physicalArmor": 5,
-              "magicalArmor": 16
+              "magicalArmor": 13,
+              "abilities": {
+                "dodgeEveryNthShot": 2,
+                "leakLivesTaken": 3
+              }
             }
           ]
         }

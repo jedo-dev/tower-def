@@ -32,6 +32,28 @@ export type CreepCardViewModel = {
   economy: TierEconomyViewModel;
   description: string | null;
   lore: string | null;
+  /** The two talent branches; a side picks one per creature for the match. */
+  talentBranches: CreepBranchViewModel[];
+};
+
+/** One creature talent grade (1-4) as the card's branch table shows it. */
+export type CreepBranchGradeViewModel = {
+  level: number;
+  /** Wave 1 health at this grade. */
+  health: number;
+  speed: number;
+  physicalArmor: number;
+  magicalArmor: number;
+  /** The grade's abilities in one line, or a dash. */
+  special: string;
+};
+
+/** A creature talent branch with its grade 1-4 table. */
+export type CreepBranchViewModel = {
+  id: string;
+  name: string;
+  description: string;
+  grades: CreepBranchGradeViewModel[];
 };
 
 export type TowerSpecialViewModel = {

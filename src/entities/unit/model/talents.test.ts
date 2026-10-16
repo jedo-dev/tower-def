@@ -164,6 +164,7 @@ describe('resolveCreatureStatsForGrade', () => {
       speed: row.speed,
       physicalArmor: row.physicalArmor,
       magicalArmor: row.magicalArmor,
+      ...(row.abilities === undefined ? {} : { abilities: row.abilities }),
     });
   });
 

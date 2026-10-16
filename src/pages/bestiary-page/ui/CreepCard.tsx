@@ -2,6 +2,7 @@ import type { FactionThemeName } from '../../../shared/constants/theme';
 import { UnitIcon } from '../../../shared/ui/unit-icon';
 import { ARMOR_SHORT_LABELS } from '../model/combatTypeDisplay';
 import type { CreepCardViewModel } from '../model/types';
+import { CreepBranchTable } from './CreepBranchTable';
 import { StatGrid, type StatCell } from './StatGrid';
 import styles from './BestiaryPage.module.css';
 
@@ -61,6 +62,16 @@ export function CreepCard({ creep, faction }: CreepCardProps) {
         </span>
       </header>
       <StatGrid cells={creepStats(creep)} />
+      {creep.talentBranches.length > 0 && (
+        <div className={styles.branches}>
+          <span className={styles.branchesLabel}>Talents, choose one per match</span>
+          <div className={styles.branchList} role="group" aria-label="Talent branches">
+            {creep.talentBranches.map((branch) => (
+              <CreepBranchTable key={branch.id} branch={branch} />
+            ))}
+          </div>
+        </div>
+      )}
       {creep.description && <p className={styles.cardDescription}>{creep.description}</p>}
       {creep.lore && <p className={styles.cardLore}>{creep.lore}</p>}
     </article>
