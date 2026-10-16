@@ -53,14 +53,15 @@ export function computeMixedEffectiveHealth(creature: ArmoredHealth, mix: Damage
 }
 
 /**
- * How well `damageType` does against a wave compared with the armor-typed
- * damage on offer (the mean of physical and magical): 1 when the wave's two
- * armors are alike, above 1 for the type that goes through its weaker armor.
+ * The same wave with its two armors averaged: physical and magical both worth
+ * their mean, percent unchanged. The reference a damage type is compared with
+ * to tell whether it goes through the wave's weaker armor or its stronger one.
  */
-export function computeRelativeDamageEfficiency(
-  efficiency: DamageTypeEfficiency,
-  damageType: DamageType,
-): number {
-  const reference = (efficiency[DamageType.PHYSICAL] + efficiency[DamageType.MAGICAL]) / 2;
-  return reference > 0 ? efficiency[damageType] / reference : 1;
+export function toArmorNeutralEfficiency(efficiency: DamageTypeEfficiency): DamageTypeEfficiency {
+  const mean = (efficiency[DamageType.PHYSICAL] + efficiency[DamageType.MAGICAL]) / 2;
+  return {
+    [DamageType.PHYSICAL]: mean,
+    [DamageType.MAGICAL]: mean,
+    [DamageType.PERCENT]: efficiency[DamageType.PERCENT],
+  };
 }

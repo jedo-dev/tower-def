@@ -21,6 +21,7 @@ export {
   computeShotDps,
   resolveDamageModelDamageType,
 } from './towerDamageModel';
+export { computeArmorCounterFactor } from './armorCounterFactor';
 export { computeDefenceDamageMix } from './defenceDamageMix';
 
 export type {

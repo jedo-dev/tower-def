@@ -3,6 +3,7 @@ import type { TowerTypeId } from '../../../shared/types/content-ids';
 import type { GridPosition } from '../../../shared/types/pathfinding';
 import type { Difficulty } from '../../difficulty/model/types';
 import type { UnitId } from '../../unit/model/types';
+import type { DamageTypeMix } from './damage-profile';
 import type { DefenceAssessment } from './threat-budget/splitThreatBudget';
 
 export const StrategyIntent = {
@@ -75,6 +76,12 @@ export type DecisionContext = {
    * back to the difficulty's fixed spend ratios.
    */
   defence?: DefenceAssessment;
+  /**
+   * Damage types the other duelist's towers deal, as shares of their raw
+   * damage. The send planner values its creeps' armor against it; an even
+   * physical/magical mix when omitted.
+   */
+  enemyDamageMix?: DamageTypeMix;
 };
 
 export type BuildAction = {

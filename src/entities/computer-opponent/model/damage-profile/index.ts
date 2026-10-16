@@ -9,7 +9,7 @@ export {
 } from './armorProfile';
 export {
   computeMixedEffectiveHealth,
-  computeRelativeDamageEfficiency,
+  toArmorNeutralEfficiency,
   EVEN_DAMAGE_MIX,
   normalizeDamageMix,
 } from './damageMix';

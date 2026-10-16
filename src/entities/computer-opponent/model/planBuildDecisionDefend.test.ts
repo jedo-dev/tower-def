@@ -16,6 +16,7 @@ import { createMazeEvaluator } from './maze-evaluation';
 import { createMazePlanPriority, type MazePlan, type MazePlanPriority } from './maze-planning';
 import type { BuildDecisionOutput } from './planBuildDecision';
 import { DEFENSE_PLACEMENT_WEIGHTS, scoreAllPlacements } from './scoreTowerPlacement';
+import { resolveDamageTypeFactor } from './damageTypeFactor';
 import { resolveAirThreatShare } from './threat-budget/resolveAirThreatShare';
 import type { BuildAction, DecisionContext } from './types';
 import { StrategyIntent } from './types';
@@ -101,8 +102,11 @@ function findBestBuildByFullProbe(
       airPath,
       airThreatShare,
     }).find((score) => score.isValid);
-    if (top && top.totalScore / cost > bestValuePerGold) {
-      bestValuePerGold = top.totalScore / cost;
+    // The production search weighs each type by how its damage meets the wave's armor.
+    const valuePerGold =
+      ((top?.totalScore ?? 0) * resolveDamageTypeFactor(context, towerType, airThreatShare)) / cost;
+    if (top && valuePerGold > bestValuePerGold) {
+      bestValuePerGold = valuePerGold;
       best = { kind: 'build', towerType, position: top.position };
     }
   }

@@ -1,6 +1,7 @@
 import { getCellAt } from '../../../shared/lib/grid/getCellAt';
 import { calculateAirRoute } from '../../../shared/lib/pathfinding/airRoute';
 import type { TowerTargetScope, TowerTypeId } from '../../../shared/types/content-ids';
+import { resolveDamageTypeFactor } from './damageTypeFactor';
 import type { GridModel } from '../../../shared/types/grid';
 import type { GridPosition } from '../../../shared/types/pathfinding';
 import type { TowerCombatStats, TowerEntity } from '../../tower/model/types';
@@ -55,6 +56,8 @@ type PricedTower = {
   cost: number;
   allowedTargets: TowerTargetScope;
   combatStats: TowerCombatStats;
+  /** How well its damage type does against the expected wave's armor; 1 is neutral. */
+  damageTypeFactor: number;
 };
 
 type ScoredCandidate = PricedTower & {
@@ -69,7 +72,11 @@ type RouteCuttingCandidate = { position: GridPosition; positionIndex: number; sc
 
 const SEALED: PathProbeResult = Object.freeze({ path: null, cost: 0, gain: 0 });
 
-function collectPricedTowers(context: DecisionContext, budget: number): PricedTower[] {
+function collectPricedTowers(
+  context: DecisionContext,
+  budget: number,
+  airThreatShare: number,
+): PricedTower[] {
   const priced: PricedTower[] = [];
   for (const towerType of context.affordableTowers) {
     const authored = getRaceTowerConfig(towerType, context.raceId);
@@ -79,6 +86,7 @@ function collectPricedTowers(context: DecisionContext, budget: number): PricedTo
         cost: authored.costGold,
         allowedTargets: authored.allowedTargets,
         combatStats: resolveTowerPlacementStats(towerType, authored),
+        damageTypeFactor: resolveDamageTypeFactor(context, towerType, airThreatShare),
       });
     }
   }
@@ -107,7 +115,9 @@ function compareCandidates(a: ScoredCandidate, b: ScoredCandidate): number {
 export function findBestScoredBuild(input: FindBestScoredBuildInput): ScoredBuild | null {
   const { context, grid, evaluator, mazePlan, weights, existingTowers } = input;
   const { smallRoute, smallRouteCost } = evaluator.routes;
-  const pricedTowers = collectPricedTowers(context, input.budget);
+  // Fliers take the straight line: coverage of it counts by their share of the wave.
+  const airThreatShare = resolveAirThreatShare(context);
+  const pricedTowers = collectPricedTowers(context, input.budget, airThreatShare);
   // A sealed field takes no tower: nothing could keep it legal.
   if (smallRoute === null || smallRouteCost === null || pricedTowers.length === 0) {
     return null;
@@ -123,8 +133,6 @@ export function findBestScoredBuild(input: FindBestScoredBuildInput): ScoredBuil
   const basePath = smallRoute;
   const baseCost = smallRouteCost;
   const unchangedRoute: PathProbeResult = { path: basePath, cost: baseCost, gain: 0 };
-  // Fliers take the straight line: coverage of it counts by their share of the wave.
-  const airThreatShare = resolveAirThreatShare(context);
   const airPath = airThreatShare > 0 ? calculateAirRoute(grid.entrance, grid.exit) : undefined;
 
   function toPathProbe(result: PathProbeResult): PathProbe {
@@ -146,7 +154,7 @@ export function findBestScoredBuild(input: FindBestScoredBuildInput): ScoredBuil
   function scoreAnchor(position: GridPosition, positionIndex: number, result: PathProbeResult) {
     const pathProbe = toPathProbe(result);
     return pricedTowers.map((priced, typeIndex): ScoredCandidate | null => {
-      const { towerType, cost, allowedTargets, combatStats } = priced;
+      const { towerType, cost, allowedTargets, combatStats, damageTypeFactor } = priced;
       const score = scoreTowerPlacement({
         grid,
         position,
@@ -162,17 +170,20 @@ export function findBestScoredBuild(input: FindBestScoredBuildInput): ScoredBuil
         combatStats,
       });
       // Value per gold, not raw value: a cheap tower walls a cell just as well
-      // as a pricey one, so raw scores would overpay for every brick.
+      // as a pricey one, so raw scores would overpay for every brick. The
+      // damage type factor favours the type that goes through the wave's
+      // weaker armor.
       return score.isValid && score.totalScore > 0
         ? {
             towerType,
             cost,
             allowedTargets,
             combatStats,
+            damageTypeFactor,
             position,
             typeIndex,
             positionIndex,
-            valuePerGold: score.totalScore / cost,
+            valuePerGold: (score.totalScore * damageTypeFactor) / cost,
             routeGain: score.mazeGainCells,
           }
         : null;

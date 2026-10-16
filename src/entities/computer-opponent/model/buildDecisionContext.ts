@@ -5,6 +5,7 @@ import type { RaceId } from '../../../shared/types/content-ids';
 import type { GridPosition } from '../../../shared/types/pathfinding';
 import type { Difficulty } from '../../difficulty/model/types';
 import type { DuelMatchState, DuelistState } from '../../duel-match/model/types';
+import { computeDefenceDamageMix, toLedgerTowers } from './damage-placement';
 import { assessDefence } from './threat-budget/assessDefence';
 import type { TowerEntity } from '../../tower/model/types';
 import { canAffordUpgrade } from '../../tower/model/upgrade';
@@ -129,5 +130,6 @@ export function buildDecisionContext(input: OpponentSnapshotInput): DecisionCont
     enemy: computeEnemySnapshot(matchState.player),
     queuedSends: opponent.sendQueue,
     defence: assessDefence(matchState),
+    enemyDamageMix: computeDefenceDamageMix(toLedgerTowers(matchState.player.battlefield.towers)),
   };
 }

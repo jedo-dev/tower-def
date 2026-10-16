@@ -1,17 +1,15 @@
-import type { RaceId } from '../../../shared/types/content-ids';
-import type { UnitId, UnitTier } from '../../unit/model/types';
-import { getSendCostByTier, getIncomeBonusByTier } from '../../duel-match/model/sendEconomy';
+import type { UnitId } from '../../unit/model/types';
 import {
   countRemainingSendsOfUnit,
   countRemainingWaveSends,
 } from '../../duel-match/model/sendLimits';
-import { getRaceRegistry } from '../../race-registry/model/registries';
-import { resolveUnitConfigById } from '../../unit/model/registry';
+import { getWaveHealthMultiplier } from '../../wave/model/waveHealth';
 import type { DecisionContext, SendCreepAction } from './types';
 import { createSendDecisionOutput } from './decisionDebugSnapshots';
+import { EVEN_DAMAGE_MIX } from './damage-profile';
+import { createSendCandidates, type SendCandidate } from './sendCandidates';
 import { SEND_TUNING_BY_DIFFICULTY, type SendTuning } from './sendTuning';
 import { computeContextThreatSplit } from './contextThreatSplit';
-import { computeEffectiveHealth } from './threat-budget/effectiveHealth';
 import type { ThreatBudgetSplit } from './threat-budget/splitThreatBudget';
 import type { ComputerDecisionDebugRecorder } from './decisionDebugSnapshots';
 
@@ -36,38 +34,8 @@ const DESPERATE_PRESSURE_BOOST = 0.35;
 /** How far an income lead or deficit can shift the split either way. */
 const INCOME_LEAD_BIAS_LIMIT = 0.2;
 
-type SendCandidate = {
-  id: UnitId;
-  tier: UnitTier;
-  cost: number;
-  incomeBonus: number;
-  /** Income per gold spent: what an economy buy maximises. */
-  incomeEfficiency: number;
-  /** Armor-adjusted health per gold spent: what a pressure buy maximises. */
-  pressureEfficiency: number;
-};
-
 function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
-}
-
-function createSendCandidates(raceId: RaceId): SendCandidate[] {
-  const registry = getRaceRegistry(raceId);
-
-  return registry.sendableCreepIds.map((id) => {
-    const config = resolveUnitConfigById(id);
-    const cost = getSendCostByTier(config.tier);
-    const incomeBonus = getIncomeBonusByTier(config.tier);
-
-    return {
-      id,
-      tier: config.tier,
-      cost,
-      incomeBonus,
-      incomeEfficiency: incomeBonus / cost,
-      pressureEfficiency: computeEffectiveHealth(config) / cost,
-    };
-  });
 }
 
 /**
@@ -196,7 +164,11 @@ function selectCreepsToSend(
   budget: number,
   tuning: SendTuning,
 ): { selected: SendCandidate[]; pressureWeight: number } {
-  const candidates = createSendCandidates(context.raceId);
+  // Our creeps are valued against the damage types the defender's towers deal.
+  const candidates = createSendCandidates(context.raceId, {
+    defenderDamageMix: context.enemyDamageMix ?? EVEN_DAMAGE_MIX,
+    healthMultiplier: getWaveHealthMultiplier(context.round),
+  });
   if (candidates.length === 0) {
     return { selected: [], pressureWeight: 0 };
   }
