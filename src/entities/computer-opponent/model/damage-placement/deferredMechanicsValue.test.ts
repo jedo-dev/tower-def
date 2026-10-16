@@ -2,9 +2,13 @@ import { describe, expect, it } from 'vitest';
 import { TowerTypeId } from '../../../../shared/types/content-ids';
 import { TOWER_COMBAT_STATS_BY_TYPE } from '../../../tower/model/types';
 import { U_TURN_ROUTE } from './damagePlacementFixtures';
-import { computeConeExtraHitShare } from './deferredMechanicsValue';
+import { computeConeExtraHitShare, computeCorpseExplosionFactor } from './deferredMechanicsValue';
 import { createRouteGeometry } from './routeGeometry';
-import { computeTargetsPerShot, type DamageModelTower } from './towerDamageModel';
+import {
+  computeSampleDamageRate,
+  computeTargetsPerShot,
+  type DamageModelTower,
+} from './towerDamageModel';
 
 // The conservative terms the damage model gives the deferred talent
 // mechanics (tower-def-bge.9).
@@ -33,5 +37,27 @@ describe('cone valuation', () => {
     const cone = computeTargetsPerShot(frostTower({ coneDegrees: 60 }), geometry, TURN_SAMPLE);
     expect(plain).toBe(1);
     expect(cone).toBeGreaterThan(1);
+  });
+});
+
+describe('corpse explosion valuation', () => {
+  const blast = { corpseExplosionShare: 0.5, corpseExplosionRadiusCells: 3 };
+
+  it('is nothing without the ability and scales with the share', () => {
+    expect(computeCorpseExplosionFactor(undefined, geometry, TURN_SAMPLE)).toBe(0);
+    const half = computeCorpseExplosionFactor(blast, geometry, TURN_SAMPLE);
+    const quarter = computeCorpseExplosionFactor(
+      { ...blast, corpseExplosionShare: 0.25 },
+      geometry,
+      TURN_SAMPLE,
+    );
+    expect(half).toBeGreaterThan(0);
+    expect(quarter).toBeCloseTo(half / 2);
+  });
+
+  it('raises the damage rate of the tower that carries it', () => {
+    const plain = computeSampleDamageRate(frostTower(undefined), geometry, TURN_SAMPLE);
+    const corpse = computeSampleDamageRate(frostTower(blast), geometry, TURN_SAMPLE);
+    expect(corpse).toBeGreaterThan(plain);
   });
 });

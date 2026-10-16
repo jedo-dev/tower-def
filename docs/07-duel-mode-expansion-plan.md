@@ -812,7 +812,7 @@ effect or aura mechanic (`towerTalentContent.test.ts`).
 | --- | --- | --- |
 | Bone Archer / Bone Volley | every 3rd / 2nd shot hits two targets (5 / 6) | `extraTargets` 1 at `extraTargetDamageShare` 0.33 / 0.5 (the average) |
 | Plague Tower / Plague Cloud | poison cloud left on the ground, slowing at 6-7 | on-hit magical `poison` and `chill` on everything the blast hits |
-| Plague Tower / Corpse Blast | killed creeps explode for 20-50% of their max health, chaining | doc damage +10% (48 / 55 / 64 / 75, 52 / 62 / 74 / 88 since tower-def-bge.6) and radius +0.2 (+0.4 since bge.6); no death hook |
+| Plague Tower / Corpse Blast | killed creeps explode for 20-50% of their max health, chaining | **restored** (tower-def-bge.9): `corpseExplosionShare` 0.2 / 0.3 / 0.4 / 0.5 within `corpseExplosionRadiusCells` 2 / 2.5 / 3 / 3.5, `corpseExplosionChainLimit` 1 / 1 / 3 / 20 (20 stands for the doc's "no limit"); damage and blast back to the doc read on grade 3 (44 / 50 / 58 / 68, splash 3.4 / 3.4 / 3.6 / 3.8), so the tower-def-bge.6 buff of the substitute is gone |
 | Frost Wyrm Nest / Permafrost | slow 45-65% (doc steps over the shipped 0.55 would pass the floor) | chill 0.6 / 0.65 / 0.7 / 0.75 |
 | Frost Wyrm Nest / Permafrost | frozen fliers fall and become ground targets (7) | **restored** (tower-def-bge.9): chill `groundsFliersMs` 1200 (the freeze length); the `airDamageMultiplier` is gone |
 | Frost Wyrm Nest / Wyrm Breath | cone of 30-60 degrees hitting everything in it | **restored** (tower-def-bge.9): `coneDegrees` 30 / 40 / 50 / 60, full damage to every valid creep in range inside the cone |
@@ -877,6 +877,7 @@ expected wave, never a roll:
 | `extraTargets` (+ share) | up to N more creeps of those the route packs within the tower's range, at their share |
 | `pierceLine` | its share on the creeps within 2 cells of the target on the route |
 | `coneDegrees` (tower-def-bge.9, `deferredMechanicsValue.ts`) | `coneDegrees / 360` of the other creeps the route packs within range, at full damage |
+| `corpseExplosionShare` (+ radius, chain) (tower-def-bge.9) | half its share of the shot on the other creeps the route packs within the explosion radius (at most 4): a kill's explosion is worth `share * maxHp`, and the shot's damage turns into kills at `damage / maxHp`, so the health cancels; one generation only |
 | `knockbackCells`, `groundsFliersMs`, chill `groundsFliersMs` (tower-def-bge.9) | not valued (0): a conservative floor, like a stun |
 | `volleyEveryMs` (+ share) | `damage * share / interval` on the creeps in range around the target (at most 6); support towers too |
 | `airDamageMultiplier` / `groundDamageMultiplier` | in full on the lane whose creeps fly / walk (the ledger knows its lane) |

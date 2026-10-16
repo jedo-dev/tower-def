@@ -46,6 +46,12 @@ export type TowerAbilities = {
   knockbackCells?: number;
   /** Each hit pulls a flier down: it counts as a ground creep for this many ms. */
   groundsFliersMs?: number;
+  /** A creep this tower kills explodes for this share of its maximum health. */
+  corpseExplosionShare?: number;
+  /** Radius of a corpse explosion, in cells, from the dead creep's footprint centre. */
+  corpseExplosionRadiusCells?: number;
+  /** Generations of explosions one kill may set off (1 = no chain); 1 when omitted. */
+  corpseExplosionChainLimit?: number;
 };
 
 type TargetedCreep = Pick<CreepEntity, 'moveType' | 'sizeClass' | 'hp' | 'maxHp'>;

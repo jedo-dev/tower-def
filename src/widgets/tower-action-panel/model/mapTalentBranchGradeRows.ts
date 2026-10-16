@@ -72,6 +72,11 @@ export function describeTowerAbilities(abilities: TowerAbilities | undefined): s
     const seconds = (abilities.groundsFliersMs / MILLISECONDS_PER_SECOND).toFixed(1);
     phrases.push(`Grounds fliers ${seconds}s`);
   }
+  if (abilities.corpseExplosionShare !== undefined) {
+    const chain = abilities.corpseExplosionChainLimit ?? 1;
+    const chainSuffix = chain > 1 ? ` x${chain}` : '';
+    phrases.push(`Corpse blast ${formatPercent(abilities.corpseExplosionShare)}${chainSuffix}`);
+  }
   if (abilities.airDamageMultiplier !== undefined) {
     phrases.push(`${formatMultiplier(abilities.airDamageMultiplier)} vs air`);
   }

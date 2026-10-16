@@ -13,6 +13,7 @@ import {
 import { writeCreepFootprintCenterPx } from './combatCellCenter';
 import { getSharedChainTargetScratch, selectChainTargets } from './chainTargetSelection';
 import { strikeAndReport, strikeCreep } from './towerStrike';
+import { reportTowerKill } from './towerCorpseExplosions';
 
 // Splash and chain attack shapes. `shotDamage` is the tower damage after
 // shot-wide abilities (a critical hit); per-target abilities apply per strike.
@@ -29,7 +30,7 @@ export function applySingleTargetDamage<C extends CombatCreep, T extends CombatT
   hooks.onDamageDealt(target.entity.position, Math.round(result.damageApplied), 'hit');
 
   if (result.killed) {
-    hooks.onCreepKilled(target, tower);
+    reportTowerKill(target, tower, hooks);
   }
 }
 
@@ -135,7 +136,7 @@ export function applySplashDamage<C extends CombatCreep, T extends CombatTower>(
       totalDamageDealt += result.damageApplied;
 
       if (result.killed) {
-        hooks.onCreepKilled(creep, tower);
+        reportTowerKill(creep, tower, hooks);
       }
     }
   } finally {

@@ -41,6 +41,9 @@ const ABILITY_REQUIREMENTS: readonly [keyof TowerAbilities, keyof TowerAbilities
   ['critMultiplier', 'critEveryNthShot'],
   ['extraTargetDamageShare', 'extraTargets'],
   ['volleyDamageShare', 'volleyEveryMs'],
+  ['corpseExplosionShare', 'corpseExplosionRadiusCells'],
+  ['corpseExplosionRadiusCells', 'corpseExplosionShare'],
+  ['corpseExplosionChainLimit', 'corpseExplosionShare'],
 ];
 
 function assertAbilityRequirements(abilities: TowerAbilities, location: ContentLocation): void {

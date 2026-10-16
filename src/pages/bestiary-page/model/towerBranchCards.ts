@@ -49,6 +49,14 @@ function describeAbilities(abilities: TowerAbilities): string[] {
   if (abilities.groundsFliersMs !== undefined) {
     parts.push(`pulls fliers down for ${formatSeconds(abilities.groundsFliersMs)}`);
   }
+  if (abilities.corpseExplosionShare !== undefined) {
+    const radius = formatCells(abilities.corpseExplosionRadiusCells ?? 0);
+    const chain = abilities.corpseExplosionChainLimit ?? 1;
+    const chaining = chain > 1 ? `, chaining ${chain} times` : '';
+    parts.push(
+      `kills explode for ${formatPercent(abilities.corpseExplosionShare)} max health within ${radius}${chaining}`,
+    );
+  }
   if (abilities.airDamageMultiplier !== undefined) {
     parts.push(`${formatMultiplier(abilities.airDamageMultiplier)} vs air`);
   }

@@ -14,6 +14,7 @@ import {
 import { TowerAttackKind, type DamageType } from '../../../../shared/types/content-ids';
 import { CreatureDamageShape } from '../../../../shared/types/creatureAbilities';
 import type { CombatCreep, CombatTower, TowerCombatHooks } from './towerCombatTypes';
+import { reportTowerKill } from './towerCorpseExplosions';
 
 // One tower hit on one creep: per-target damage abilities, armor (inside
 // applyDamageToCreep), on-hit effects and hit feedback. Every attack shape
@@ -160,7 +161,7 @@ export function strikeAndReport<C extends CombatCreep, T extends CombatTower>(
   hooks.onDamageDealt(creep.entity.position, Math.round(result.damageApplied), 'hit');
 
   if (result.killed) {
-    hooks.onCreepKilled(creep, tower);
+    reportTowerKill(creep, tower, hooks);
   }
 
   return result;

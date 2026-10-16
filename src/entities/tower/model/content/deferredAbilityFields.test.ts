@@ -47,6 +47,26 @@ describe('chill groundsFliersMs', () => {
   });
 });
 
+describe('corpse explosion', () => {
+  it('reads share, radius and chain limit together', () => {
+    const blast = {
+      corpseExplosionShare: 0.4,
+      corpseExplosionRadiusCells: 3,
+      corpseExplosionChainLimit: 3,
+    };
+    expect(parseAbilities(blast)).toEqual(blast);
+  });
+
+  it('needs share and radius together and a whole chain limit', () => {
+    expectRejection({ corpseExplosionShare: 0.4 }, /needs "corpseExplosionRadiusCells"/);
+    expectRejection({ corpseExplosionRadiusCells: 2 }, /needs "corpseExplosionShare"/);
+    expectRejection(
+      { corpseExplosionShare: 0.4, corpseExplosionRadiusCells: 2, corpseExplosionChainLimit: 1.5 },
+      /whole number/,
+    );
+  });
+});
+
 describe('coneDegrees', () => {
   it('reads a cone opening in degrees', () => {
     expect(parseAbilities({ coneDegrees: 45 })).toEqual({ coneDegrees: 45 });

@@ -10,6 +10,7 @@ import {
 import { TowerAttackKind, type DamageType } from '../../../../shared/types/content-ids';
 import { applyChainDamage, applySingleTargetDamage, applySplashDamage } from './towerAreaAttacks';
 import type { CombatCreep, CombatField, CombatTower, TowerCombatHooks } from './towerCombatTypes';
+import { resolveCorpseExplosions } from './towerCorpseExplosions';
 import {
   applyCone,
   applyExtraTargets,
@@ -170,6 +171,7 @@ export function resolveTowerAttacks<C extends CombatCreep, T extends CombatTower
 
     if (tower.entity.combatStats.abilities?.volleyEveryMs !== undefined) {
       resolveTowerVolley(field, tower, hooks, deltaMs, resolveTowerDamageType(tower.entity));
+      resolveCorpseExplosions(field, hooks);
     }
 
     // Support towers have no attack of their own; their aura does the work.
@@ -210,6 +212,7 @@ export function resolveTowerAttacks<C extends CombatCreep, T extends CombatTower
       applySingleTargetShot(field, tower, target, shotDamage, damageType, hooks);
     }
 
+    resolveCorpseExplosions(field, hooks);
     consumeAttackInPlace(tower);
     hooks.onTowerFired(tower, target, isSplashTower);
   }

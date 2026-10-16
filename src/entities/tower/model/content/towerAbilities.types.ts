@@ -27,12 +27,16 @@ export const TOWER_ABILITY_KEYS: readonly TowerAbilityKey[] = [
   'coneDegrees',
   'knockbackCells',
   'groundsFliersMs',
+  'corpseExplosionShare',
+  'corpseExplosionRadiusCells',
+  'corpseExplosionChainLimit',
 ];
 
 /** Abilities read as whole numbers. */
 export const TOWER_ABILITY_INTEGER_KEYS: readonly TowerAbilityKey[] = [
   'critEveryNthShot',
   'extraTargets',
+  'corpseExplosionChainLimit',
 ];
 
 export const TOWER_ABILITY_BOUNDS: Record<TowerAbilityKey, NumericBound> = {
@@ -51,6 +55,9 @@ export const TOWER_ABILITY_BOUNDS: Record<TowerAbilityKey, NumericBound> = {
   coneDegrees: { min: 10, max: 180 },
   knockbackCells: { min: 0.1, max: 3 },
   groundsFliersMs: { min: 100, max: 10_000 },
+  corpseExplosionShare: { min: 0.01, max: 1 },
+  corpseExplosionRadiusCells: { min: 0.5, max: 6 },
+  corpseExplosionChainLimit: { min: 1, max: 20 },
 };
 
 export type TowerAuraExtensionNumberKey =

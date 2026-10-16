@@ -10,6 +10,8 @@ export const TOWER_ABILITY_BALANCE = {
   defaultExtraTargetDamageShare: 1,
   /** Share of the tower's damage a volley deals when `volleyDamageShare` is omitted. */
   defaultVolleyDamageShare: 1,
+  /** Generations of corpse explosions one kill sets off when `corpseExplosionChainLimit` is omitted. */
+  defaultCorpseExplosionChainLimit: 1,
   /** Ceiling on a tower's sell refund ratio after aura bonuses. */
   maxSellRefundRatio: 1,
 } as const;
