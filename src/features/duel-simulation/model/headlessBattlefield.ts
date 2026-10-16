@@ -23,6 +23,7 @@ import {
 } from '../../game-engine/runtime/movement/routeWalk';
 import {
   createWaveCreepEntity,
+  hasReadyWaveSpawn,
   scheduleWaveSpawns,
   takeReadyWaveSpawns,
 } from '../../game-engine/runtime/wave/waveSpawnCore';
@@ -161,6 +162,10 @@ function createHeadlessCombatHooks(
 }
 
 function spawnReadyCreeps(field: HeadlessBattlefield): void {
+  // Between spawns the schedule stays as is: no per-step copy of it.
+  if (!hasReadyWaveSpawn(field.pendingSpawns, field.elapsedMs)) {
+    return;
+  }
   const { ready, pending } = takeReadyWaveSpawns(field.pendingSpawns, field.elapsedMs);
   field.pendingSpawns = pending;
 
