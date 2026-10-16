@@ -77,6 +77,44 @@
   color: var(--color-text-secondary);
 }
 
+/* "NEXT:" preview: dimmed so it reads as a forecast, not the live stats. */
+.next {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-sm);
+  font-family: var(--font-family-ui);
+  font-size: var(--font-size-2xs);
+  color: var(--color-text-muted);
+}
+
+.nextLabel {
+  flex: 0 0 auto;
+  letter-spacing: 0.08em;
+  color: var(--color-text-label);
+}
+
+.nextList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2xs) var(--space-md);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.nextItem {
+  white-space: nowrap;
+}
+
+.nextItemLabel {
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.nextDelta {
+  color: var(--color-text-success);
+}
+
 .visuallyHidden {
   position: absolute;
   width: 1px;

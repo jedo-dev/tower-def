@@ -14,13 +14,12 @@ import {
   getUpgradeCost,
   isMaxLevel,
 } from '../../../entities/tower';
-import {
-  mapTowerEffectsToLines,
-  mapTowerEffectUpgradeDeltas,
-} from '../model/mapTowerEffectsToLines';
+import { mapTowerEffectsToLines } from '../model/mapTowerEffectsToLines';
+import { mapTowerNextLevelPreview } from '../model/mapTowerNextLevelPreview';
 import { mapTowerStatsToLines } from '../model/mapTowerStatsToLines';
 import type { HudTowerType } from '../../../shared/lib/game-bridge/types';
 import { PlaceholderIcon } from '../../../shared/ui/placeholder-icon';
+import { NextLevelPreview } from './NextLevelPreview';
 
 const TOWER_DISPLAY_NAMES: Record<HudTowerType, string> = {
   [TowerTypeId.SINGLE]: 'Archer Tower',
@@ -54,9 +53,9 @@ function TowerActionPanelComponent() {
   const effectLines = mapTowerEffectsToLines(type, combatStats);
   const statLines = mapTowerStatsToLines(combatStats);
   const nextLevelStats = maxed ? null : getTowerStatsForLevel(type, level + 1);
-  const upgradeDeltas = nextLevelStats
-    ? mapTowerEffectUpgradeDeltas(type, combatStats, nextLevelStats)
-    : [];
+  const nextLevelPreview = nextLevelStats
+    ? mapTowerNextLevelPreview(type, combatStats, nextLevelStats, level + 1)
+    : null;
 
   function handleUpgrade(): void {
     sendGameCommand('upgrade-tower', { towerId: id });
@@ -109,16 +108,7 @@ function TowerActionPanelComponent() {
         </ul>
       )}
 
-      {upgradeDeltas.length > 0 && (
-        <ul className={styles.effects} aria-label="Next level effects">
-          {upgradeDeltas.map((line) => (
-            <li key={`next-${line.key}`} className={styles.effectRow}>
-              <span className={styles.effectLabel}>NEXT</span>
-              <span className={styles.effectValue}>{`${line.label} ${line.value}`}</span>
-            </li>
-          ))}
-        </ul>
-      )}
+      {nextLevelPreview && <NextLevelPreview preview={nextLevelPreview} />}
 
       <div className={styles.buttons}>
         {maxed ? (
