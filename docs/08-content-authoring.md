@@ -17,7 +17,7 @@ src/content/
 
 ```json
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "race": "UNDEAD",
   "units": [
     {
@@ -26,11 +26,11 @@ src/content/
       "tier": 1,
       "health": 80,
       "speed": 1.95,
-      "armor": 0,
+      "physicalArmor": 0,
+      "magicalArmor": 0,
       "damage": 14,
       "rewardGold": 7,
       "sizeClass": "small",
-      "armorType": "unarmored",
       "spriteKey": "unit.undead.ghoul",
       "description": "Feral clawed scavenger that outruns slow defenses."
     }
@@ -55,25 +55,81 @@ src/content/
 | `tier` | yes | 1 to 6. Drives wave budget and duel send cost, **not** the stats. |
 | `health` | yes | Hit points at spawn in wave 1. Every creep, baseline or sent, grows by `WAVE_HEALTH_GROWTH` per wave after that (`entities/wave/model/waveBalance.ts`). |
 | `speed` | yes | Path speed multiplier. `1.0` is the baseline step rate. |
-| `armor` | yes | Armor points. Each point removes a share of a direct hit (see `shared/constants/damage.ts`); damage over time ignores armor. |
+| `physicalArmor` | yes | Whole armor points, `-25` to `75`, against physical hits. See "Armor and damage types" below. |
+| `magicalArmor` | yes | Whole armor points, `-25` to `75`, against magical hits and damage over time. |
 | `damage` | yes | Damage the creature deals; reserved for duel pressure. |
 | `rewardGold` | yes | Gold the defender earns for the kill. |
 | `spriteKey` | yes | Art key, `unit.<race>.<name>`. Missing art falls back to a placeholder. |
 | `description` | no | One-line flavour text for the HUD and wave preview. Cosmetic only. |
 | `lore` | no | Bestiary text, one or two sentences in the race's voice, at most `CONTENT_LORE_MAX_LENGTH` (160) characters. Cosmetic only; the loader rejects longer text. |
 | `moveType` | no | `ground` (default) or `air`. Air creatures ignore the maze: they fly the straight line from the entrance to the exit at their own speed, towers never block them, and only towers whose `allowedTargets` is `air` or `both` can shoot them. A flier costs `WAVE_AIR_UNIT_BUDGET_MULTIPLIER` times its tier value of the wave budget (`entities/wave/model/waveBalance.ts`). |
-| `sizeClass` | no | `small`, `medium` (default) or `large`. |
-| `armorType` | no | `unarmored`, `light` (default) or `heavy`. Shifts effective armor points. |
+| `sizeClass` | no | `small`, `medium` (default) or `large`. Decides the footprint and the route a creature walks. |
 
 Unknown fields are rejected: add the field to the schema first
 (`src/entities/unit/model/content/unitContent.types.ts`), then to content.
 
 ## Balance-sensitive vs cosmetic
 
-**Balance-sensitive:** `tier`, `health`, `speed`, `armor`, `rewardGold`,
-`armorType`, `moveType`. Changing these changes how a wave plays.
+**Balance-sensitive:** `tier`, `health`, `speed`, `physicalArmor`,
+`magicalArmor`, `rewardGold`, `moveType`. Changing these changes how a wave
+plays.
 
 **Cosmetic:** `name`, `description`, `lore`, `spriteKey`, `sizeClass`.
+
+## Armor and damage types
+
+Every creature carries two armors and every tower deals one damage type:
+
+| Tower `damageType` | Against |
+| --- | --- |
+| `physical` | the creature's `physicalArmor` |
+| `magical` | the creature's `magicalArmor` |
+| `percent` | no armor: `damage / 1000` of the creature's maximum health per hit |
+
+Physical and magical hits go through one diminishing curve
+(`DAMAGE_MITIGATION` in `shared/constants/damage.ts`, applied in
+`entities/creep/model/damage.ts`):
+
+```txt
+factor     = |armor| * 0.06
+share      = factor / (1 + factor)
+armor >= 0 : damage = raw * (1 - share)      never below 10% of raw
+armor <  0 : damage = raw * (1 + share)      at -25 armor, +60%
+```
+
+| Armor | Physical/magical hit lands for |
+| --- | --- |
+| -25 | 160% |
+| -10 | 137.5% |
+| 0 | 100% |
+| 3 | 85% |
+| 10 | 62.5% |
+| 25 | 40% |
+| 75 | 18% |
+
+A `percent` tower with `damage` 30 removes 3% of maximum health with every
+hit (maximum health is the wave-scaled health the creature spawned with),
+whatever its armor. Damage over time (poison, burn) is magical
+(`DAMAGE_OVER_TIME_DAMAGE_TYPE`), so a warded creature shrugs part of it off
+and a creature with negative magical armor takes more.
+
+Armor break lowers both armors by default; an effect definition narrows it
+with `armorKind: 'physical' | 'magical' | 'both'`
+(`shared/constants/effects.ts`). Broken armor goes negative but never below
+`-25`.
+
+## Creature schema versions
+
+| Version | Meaning |
+| --- | --- |
+| 1 | Retired. A single `armor` plus an `armorType` bonus (unarmored -1, light 0, heavy 2). |
+| 3 | Current. `physicalArmor` and `magicalArmor`, shared version number with towers. |
+
+A version 1 file fails on load naming the file and its first creature. To
+migrate one, set both armors to `max(0, armor + armorType bonus)` (what the
+creature effectively carried before), drop `armorType` and set `schemaVersion`
+to 3. The shipped rosters were migrated exactly this way; giving each race its
+own physical/magical profile is a separate balance task (tower-def-6nf.2).
 
 ## Lore voice
 
@@ -190,13 +246,29 @@ in `docs/07-duel-mode-expansion-plan.md` (Duel Balance).
 
 Tower stats live in `src/content/towers/<race>.json` (the buildable roster of
 each race) and `src/content/towers/archetypes.json` (base stats and upgrade
-curves). Both files carry `schemaVersion` 2 (`TOWER_CONTENT_SCHEMA_VERSION` in
+curves). Both files carry `schemaVersion` 3 (`TOWER_CONTENT_SCHEMA_VERSION` in
 `src/entities/tower/model/content/towerContent.types.ts`).
 
 ## Tower fields
 
 Besides the stats below, a tower entry has the same cosmetic `description` and
 optional `lore` fields as a creature, with the same length limit on `lore`.
+
+## Damage type
+
+Every archetype declares `damageType`: `physical`, `magical` or `percent`
+(see "Armor and damage types" above). A race tower inherits it and may
+override it with its own `damageType`; a value outside the three fails on load
+naming the file and the id. Combat resolves the type once per attack
+(`resolveTowerDamageType`, `entities/tower/model/damageType.ts`), a roster
+view reads it through `resolveBuildableTowerDamageType`.
+
+| Archetype | `damageType` |
+| --- | --- |
+| `single`, `splash`, `chain` | `physical` |
+| `frost`, `poison`, `support` | `magical` |
+
+No race tower overrides its archetype yet.
 
 ## Units
 
@@ -228,7 +300,7 @@ and the id. Today every race tower mirrors its archetype (a test enforces it):
 | --- | --- | --- |
 | `single` | `both` | Single-target shots reach a flier. |
 | `frost` | `both` | Single-target; the chill keeps fliers in range longer. |
-| `poison` | `both` | Single-target flask; ticks ignore armour. |
+| `poison` | `both` | Single-target flask; its ticks are magical damage. |
 | `splash` | `ground` | Area blast on the ground; a flier over it is untouched. |
 | `chain` | `both` | Lightning arcs between creeps on either lane; the orc answer to a flock of fliers (tower-def-xwc.5). |
 | `support` | `both` (omitted) | Has no attack; the scope is meaningless and left out. |
@@ -262,12 +334,16 @@ orc 21 / 31 / 42, human 25 / 37 / 50, elf on the archetype 20 / 30 / 40.
 | Version | Meaning |
 | --- | --- |
 | 1 | Retired. Distances in coarse 32px cells (10x15 grid). |
-| 2 | Current. Distances in fine 16px cells: every version 1 distance doubled. |
+| 2 | Retired. Distances in fine 16px cells: every version 1 distance doubled. |
+| 3 | Current. Every archetype declares a `damageType`; a race tower may override it. |
 
 A version 1 file fails on load with the file and its first entity id, e.g.
 `content/towers/human.json [human_guard_archer_tower]: schemaVersion 1 measures
 distances in coarse 32px cells; ...`. To migrate one, double every field in
-the cell column above and set `schemaVersion` to 2. Schema bounds
+the cell column above, add a `damageType` to every archetype and set
+`schemaVersion` to 3. A version 2 file fails the same way
+(`schemaVersion 2 has no damage types; ...`): add the archetype `damageType`
+and set `schemaVersion` to 3. Schema bounds
 (`TOWER_STAT_BOUNDS`, `TOWER_AURA_BOUNDS`, `TOWER_CHAIN_BOUNDS`) are expressed
 in fine-grid cells too.
 

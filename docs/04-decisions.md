@@ -152,3 +152,36 @@ The engine depends on the whole game domain, so it never was shared code;
 keeping it under `shared/lib` let `shared` import `entities` and `features`
 and made the layer rules unenforceable. A feature slice names the dependency
 direction honestly, and the guard test keeps it that way.
+
+## Decision 013: Armor and damage types
+
+Creatures carry two authored armors, `physicalArmor` and `magicalArmor` (whole
+points, -25 to 75), and every tower deals one damage type: `physical`,
+`magical` or `percent`. The archetype sets the type; a race tower may
+override it. A hit is mitigated by the armor matching its type through one
+diminishing curve:
+
+- `factor = |armor| * 0.06`, `share = factor / (1 + factor)`;
+- positive armor removes `share` of the hit, never more than 90%;
+- negative armor adds the same `share`, at most +60% at -25;
+- `percent` damage takes `damage / 1000` of maximum health and ignores armor;
+- damage over time is magical and goes through magical armor.
+
+The single `armor` value with its `armorType` bonus and the "damage over time
+ignores armor" rule are gone; the shipped creatures were migrated to the armor
+they effectively carried, so balance is unchanged until race profiles are
+authored.
+
+Reason:
+
+Two armors let a race be tough against arrows but soft against magic (or the
+reverse), which is what makes tower choice matter per opponent. A diminishing
+curve instead of WispTD's linear "1 armor = 1% reduction": with a linear
+scale, high armor approaches immunity and a few points of armor break swing
+damage by a fixed amount whether the creature is bare or plated, so balance
+would need hard caps everywhere. The curve keeps every point of armor worth
+something without ever making a creature unkillable, gives armor break and
+negative armor a symmetric, bounded effect, and is the formula combat and the
+computer opponent's effective-health estimate already shared. Explicit damage
+types replace the special `ignoreArmor` path, so every source of damage goes
+through one rule.
