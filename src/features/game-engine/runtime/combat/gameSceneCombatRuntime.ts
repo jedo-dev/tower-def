@@ -1,4 +1,8 @@
-import { getTowerCenter, getTowerOnHitEffects } from '../../../../entities/tower';
+import {
+  getTowerCenter,
+  getTowerKillBonusGold,
+  getTowerOnHitEffects,
+} from '../../../../entities/tower';
 import Phaser from 'phaser';
 import { isCreepDead, type ApplyEffectInput } from '../../../../entities/creep';
 import {
@@ -73,14 +77,19 @@ export type CombatRuntimeDependencies = {
   soundRouter: GameSoundRouter;
   /**
    * Pays the kill bounty to the side that owns this battlefield. Both sides
-   * wire it to the shared duel-match bounty rule.
+   * wire it to the shared duel-match bounty rule. `bonusGold` is the killing
+   * tower's aura kill bonus (`goldPerKill`); 0 or absent for most kills.
    */
-  awardKillBounty: () => void;
+  awardKillBounty: (bonusGold?: number) => void;
   onHudChanged: () => void;
 };
 
-function handleCreepKill(deps: CombatRuntimeDependencies, creep: CreepRenderState): void {
-  deps.awardKillBounty();
+function handleCreepKill(
+  deps: CombatRuntimeDependencies,
+  creep: CreepRenderState,
+  killer: TowerRenderState | undefined,
+): void {
+  deps.awardKillBounty(killer ? getTowerKillBonusGold(killer.entity) : 0);
   deps.soundRouter.playCreepSound(creep, CreepSoundSlot.DEATH);
   deps.playSound('economy.gold_gain');
   deps.onHudChanged();
@@ -245,7 +254,7 @@ function createRenderCombatHooks(
       }
     },
     onEffectsTicked: (creep) => refreshCreepEffectVisuals(deps.scene, creep, config.creepBaseColor),
-    onCreepKilled: (creep) => handleCreepKill(deps, creep),
+    onCreepKilled: (creep, killer) => handleCreepKill(deps, creep, killer),
     onTowerFired: (tower, target, isSplashTower) => {
       if (isSplashTower) {
         deps.playSplashAttackAnimation(tower);

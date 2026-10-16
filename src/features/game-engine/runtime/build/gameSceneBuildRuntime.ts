@@ -46,6 +46,11 @@ export type BuildRuntimeDeps = {
     footprint: Readonly<Footprint>,
   ) => FootprintPlacementPathCheck;
   sellRefundRatio: number;
+  /**
+   * The sell refund ratio of one placed tower (its aura `sellRefundBonus`
+   * included); `sellRefundRatio` for every tower when omitted.
+   */
+  resolveSellRefundRatio?: (towerId: string) => number;
 };
 
 export type BuildPlacementResult = {
@@ -266,6 +271,8 @@ export function trySellTowerAtHoveredCell(
     success: true,
     changedCells,
     removedTowerId: deps.toTowerId(anchor),
-    refundAmount: Math.floor(towerCost * deps.sellRefundRatio),
+    refundAmount: Math.floor(
+      towerCost * (deps.resolveSellRefundRatio?.(deps.toTowerId(anchor)) ?? deps.sellRefundRatio),
+    ),
   };
 }

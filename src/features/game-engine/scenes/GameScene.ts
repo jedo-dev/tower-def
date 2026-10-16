@@ -16,6 +16,7 @@ import {
 } from '../../../entities/duel-match';
 import { DEFAULT_DIFFICULTY, type Difficulty } from '../../../entities/difficulty';
 import { resolveUnitConfigById, type UnitConfig } from '../../../entities/unit';
+import { getTowersIncomePerRound, resolveTowerSellRefundRatio } from '../../../entities/tower';
 import { calculateWaveRoutes, EMPTY_WAVE_ROUTES, hasWaveRoute } from '../../../entities/wave';
 import { RaceId, UnitMoveType } from '../../../shared/types/content-ids';
 import {
@@ -893,6 +894,12 @@ export class GameScene extends Phaser.Scene {
       checkFootprintPlacementPath: (grid, anchor, footprint) =>
         checkFootprintPlacementPath(grid, anchor, footprint),
       sellRefundRatio: SELL_REFUND_RATIO,
+      resolveSellRefundRatio: (towerId) => {
+        const tower = this.playerField.towers.find((candidate) => candidate.entity.id === towerId);
+        return tower
+          ? resolveTowerSellRefundRatio(tower.entity, SELL_REFUND_RATIO)
+          : SELL_REFUND_RATIO;
+      },
     };
   }
 
@@ -1132,6 +1139,10 @@ export class GameScene extends Phaser.Scene {
       sentLeaks: {
         onPlayerField: countLeakedSentCreeps(this.playerField.creeps.map((c) => c.entity)),
         onOpponentField: countLeakedSentCreeps(this.opponentField.creeps.map((c) => c.entity)),
+      },
+      towerIncome: {
+        player: getTowersIncomePerRound(this.playerField.towers.map((tower) => tower.entity)),
+        opponent: getTowersIncomePerRound(this.opponentField.towers.map((tower) => tower.entity)),
       },
     });
 

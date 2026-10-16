@@ -162,6 +162,19 @@ describe('player 2x2 tower building', () => {
     }
   });
 
+  it('refunds at the per-tower ratio when one is resolved (an aura sell bonus)', () => {
+    const state = createState();
+    place(state, { x: 6, y: 4 });
+    state.hoveredCell = { x: 6, y: 4 };
+
+    const result = trySellTowerAtHoveredCell(state, {
+      ...DEPS,
+      resolveSellRefundRatio: (towerId) => (towerId === 'tower:6:4' ? 0.75 : 0.5),
+    });
+
+    expect(result.refundAmount).toBe(Math.floor(TOWER_COST * 0.75));
+  });
+
   it('finds the right tower among neighbours', () => {
     const state = createState();
     place(state, { x: 6, y: 4 });

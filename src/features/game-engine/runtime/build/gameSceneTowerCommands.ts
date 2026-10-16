@@ -1,4 +1,4 @@
-import { recalculateTowerAuras } from '../../../../entities/tower';
+import { recalculateTowerAuras, resolveTowerSellRefundRatio } from '../../../../entities/tower';
 import { TowerAttackKind, TowerTypeId } from '../../../../shared/types/content-ids';
 import { getTowerAttackKind, isTowerCoveringCell } from '../../../../entities/tower';
 import { TOWER_FOOTPRINT } from '../../../../shared/constants/footprint';
@@ -283,7 +283,9 @@ export function handleSellTowerCommand(deps: TowerCommandDeps, towerId: string):
   refreshFieldAuras(deps.playerField);
   playBoneArcherSellAnimation(tower);
 
-  const refundAmount = Math.floor(tower.entity.cost * SELL_REFUND_RATIO);
+  const refundAmount = Math.floor(
+    tower.entity.cost * resolveTowerSellRefundRatio(tower.entity, SELL_REFUND_RATIO),
+  );
   deps.onGoldUpdated(deps.getPlayerGold() + refundAmount);
   deps.onRefundRecorded(refundAmount);
 

@@ -30,12 +30,13 @@ export {
   clearSendQueue,
   endRound,
   generateBaselineWaveId,
+  NO_TOWER_INCOME,
   payIncome,
   sendCreep,
   settleRound,
   startRound,
 } from './model/lifecycle';
-export type { DuelRoundSettlement } from './model/lifecycle';
+export type { DuelRoundSettlement, DuelTowerIncome } from './model/lifecycle';
 export { resolveDuelMatchOutcome } from './model/matchOutcome';
 export type { DuelWaveOutcomeFacts } from './model/matchOutcome';
 export {
@@ -55,7 +56,12 @@ export {
   getUnitTypeSendCapByTier,
 } from './model/sendLimits';
 export type { SendLimitCheck } from './model/sendLimits';
-export { addKillBounty, awardKillBounty, getKillBountyGold } from './model/killBounty';
+export {
+  addKillBounty,
+  awardBonusGold,
+  awardKillBounty,
+  getKillBountyGold,
+} from './model/killBounty';
 export {
   accrueStolenLives,
   countLeakedSentCreeps,

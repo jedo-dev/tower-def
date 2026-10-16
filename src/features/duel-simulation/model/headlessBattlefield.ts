@@ -3,6 +3,7 @@ import type { BattlefieldState } from '../../../entities/duel-match';
 import {
   createInitialTowerCombatRuntime,
   createTowersWithAuras,
+  getTowerKillBonusGold,
   type TowerCombatRuntime,
   type TowerEntity,
 } from '../../../entities/tower';
@@ -63,6 +64,8 @@ export type HeadlessBattlefield = {
   waveNumber: number;
   elapsedMs: number;
   kills: number;
+  /** Extra gold kills by aura-buffed towers earned (`goldPerKill`), on top of the bounty. */
+  killBonusGold: number;
   leaks: number;
   /** Leaks of creeps the other side sent; they steal lives for the sender. */
   sentLeaks: number;
@@ -101,6 +104,7 @@ export function createHeadlessBattlefield(input: HeadlessWaveInput): HeadlessBat
     waveNumber: input.waveNumber,
     elapsedMs: 0,
     kills: 0,
+    killBonusGold: 0,
     leaks: 0,
     sentLeaks: 0,
     airLeaks: 0,
@@ -133,8 +137,11 @@ function createHeadlessCombatHooks(
     onDamageDealt: noop,
     onEffectApplied: noop,
     onEffectsTicked: noop,
-    onCreepKilled: () => {
+    onCreepKilled: (_creep, killer) => {
       field.kills += 1;
+      if (killer) {
+        field.killBonusGold += getTowerKillBonusGold(killer.entity);
+      }
     },
     onTowerFired: noop,
   };

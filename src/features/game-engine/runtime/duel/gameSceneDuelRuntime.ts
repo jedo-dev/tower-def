@@ -1,7 +1,8 @@
-import { NO_SENT_CREEP_LEAKS, settleRound } from '../../../../entities/duel-match';
+import { NO_SENT_CREEP_LEAKS, NO_TOWER_INCOME, settleRound } from '../../../../entities/duel-match';
 import type {
   DuelMatchState,
   DuelRoundSettlement,
+  DuelTowerIncome,
   SentCreepLeaks,
 } from '../../../../entities/duel-match';
 import { publishGameEvent } from '../../../../shared/lib/game-bridge/bridge';
@@ -29,6 +30,8 @@ export type ApplyDuelRoundEndInput = {
   opponentLeakedCreeps: number;
   /** How many of those leaks were creeps the other side sent; none when omitted. */
   sentLeaks?: SentCreepLeaks;
+  /** Income the standing towers add this round (`incomePerRound` auras); none when omitted. */
+  towerIncome?: DuelTowerIncome;
 };
 
 export type ApplyDuelRoundEndResult = DuelRoundSettlement;
@@ -39,6 +42,7 @@ export function applyDuelRoundEnd(input: ApplyDuelRoundEndInput): ApplyDuelRound
     input.playerLeakedCreeps,
     input.opponentLeakedCreeps,
     input.sentLeaks ?? NO_SENT_CREEP_LEAKS,
+    input.towerIncome ?? NO_TOWER_INCOME,
   );
   input.state.duelMatchState = result.state;
   input.deps.onDuelMatchStateUpdated(input.state.duelMatchState);

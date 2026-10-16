@@ -63,6 +63,21 @@ describe('kill bounty wiring', () => {
   });
 });
 
+describe('aura kill bonus wiring', () => {
+  it('adds the killing tower bonus to either side bounty', () => {
+    const host = createHost();
+    const opponentGoldBefore = host.duelState().opponent.gold;
+    const wiring = createGameSceneRuntimeWiring(host);
+
+    wiring.playerBattlefieldContext.combatDeps.awardKillBounty(3);
+    wiring.opponentBattlefieldContext.combatDeps.awardKillBounty(2);
+
+    expect(host.runState.playerGold).toBe(STARTING_WALLET + getKillBountyGold() + 3);
+    expect(host.runState.waveKillBountyEarned).toBe(getKillBountyGold() + 3);
+    expect(host.duelState().opponent.gold).toBe(opponentGoldBefore + getKillBountyGold() + 2);
+  });
+});
+
 describe('life counter wiring', () => {
   it('drives the registry lives from the duel state HP when a round settles', () => {
     const host = createHost();

@@ -37,9 +37,21 @@ export function startRound(state: DuelMatchState): DuelRoundStartResult {
   };
 }
 
-export function payIncome(state: DuelMatchState): DuelIncomePayoutResult {
-  const playerIncomePaid = state.player.income;
-  const opponentIncomePaid = state.opponent.income;
+/**
+ * Income that standing towers add to each side's payout this round (support
+ * auras with `incomePerRound`). Computed by the caller from the towers it
+ * fights with; none by default.
+ */
+export type DuelTowerIncome = { player: number; opponent: number };
+
+export const NO_TOWER_INCOME: DuelTowerIncome = { player: 0, opponent: 0 };
+
+export function payIncome(
+  state: DuelMatchState,
+  towerIncome: DuelTowerIncome = NO_TOWER_INCOME,
+): DuelIncomePayoutResult {
+  const playerIncomePaid = state.player.income + towerIncome.player;
+  const opponentIncomePaid = state.opponent.income + towerIncome.opponent;
 
   return {
     state: {
@@ -144,20 +156,22 @@ export type DuelRoundSettlement = DuelRoundEndResult & {
 
 /**
  * End of a wave: resolves the leaks (`endRound`) and, unless that ended the
- * match, pays both sides their income for the next build phase.
+ * match, pays both sides their income (plus any tower income) for the next
+ * build phase.
  */
 export function settleRound(
   state: DuelMatchState,
   playerLeakedCreeps: number,
   opponentLeakedCreeps: number,
   sentLeaks: SentCreepLeaks = NO_SENT_CREEP_LEAKS,
+  towerIncome: DuelTowerIncome = NO_TOWER_INCOME,
 ): DuelRoundSettlement {
   const result = endRound(state, playerLeakedCreeps, opponentLeakedCreeps, sentLeaks);
   if (result.isMatchOver) {
     return { ...result, playerIncomePaid: 0, opponentIncomePaid: 0 };
   }
 
-  const payout = payIncome(result.state);
+  const payout = payIncome(result.state, towerIncome);
   return {
     ...result,
     state: payout.state,

@@ -26,6 +26,25 @@ function createDeps(): DuelMatchRuntimeDeps {
 }
 
 describe('features/game-engine/runtime/duel/applyDuelRoundEnd', () => {
+  it('pays the standing towers income on top of each side income', () => {
+    const state = createRuntimeState();
+    const before = state.duelMatchState;
+
+    const result = applyDuelRoundEnd({
+      state,
+      deps: createDeps(),
+      playerLeakedCreeps: 0,
+      opponentLeakedCreeps: 0,
+      towerIncome: { player: 6, opponent: 2 },
+    });
+
+    expect(result.playerIncomePaid).toBe(before.player.income + 6);
+    expect(result.opponentIncomePaid).toBe(before.opponent.income + 2);
+    expect(state.duelMatchState.opponent.gold).toBe(
+      before.opponent.gold + before.opponent.income + 2,
+    );
+  });
+
   it('ends the runtime match when the player HP reaches zero', () => {
     const baseMatchState = createInitialDuelMatchState(RaceId.UNDEAD, RaceId.ORC);
     const state = createRuntimeState({

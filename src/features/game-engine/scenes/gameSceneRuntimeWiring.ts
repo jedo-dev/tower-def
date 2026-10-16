@@ -69,9 +69,9 @@ function createPlayerCombatDeps(host: GameSceneWiringHost): CombatRuntimeDepende
     playSound: (soundId: SoundId) => host.getSoundManager()?.play(soundId),
     soundRouter: host.soundRouter,
     // The player's purse lives in the scene wallet; the same bounty rule applies.
-    awardKillBounty: () => {
+    awardKillBounty: (bonusGold) => {
       const goldBefore = host.runState.playerGold;
-      const goldAfter = addKillBounty(goldBefore);
+      const goldAfter = addKillBounty(goldBefore, bonusGold);
       host.runState.waveKillBountyEarned += goldAfter - goldBefore;
       updatePlayerGold(host, goldAfter);
     },
@@ -88,8 +88,8 @@ function createOpponentCombatDeps(host: GameSceneWiringHost): CombatRuntimeDepen
     playSound: () => undefined,
     soundRouter: SILENT_SOUND_ROUTER,
     // Kills on the computer's own battlefield pay the computer.
-    awardKillBounty: () =>
-      host.setDuelMatchState(awardKillBounty(host.getDuelMatchState(), 'opponent')),
+    awardKillBounty: (bonusGold) =>
+      host.setDuelMatchState(awardKillBounty(host.getDuelMatchState(), 'opponent', bonusGold)),
     onHudChanged: () => host.publishHudSnapshot(),
   };
 }

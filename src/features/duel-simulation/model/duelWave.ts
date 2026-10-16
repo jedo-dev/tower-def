@@ -22,6 +22,8 @@ import {
 export type DuelFieldWaveResult = {
   spawned: number;
   kills: number;
+  /** Extra gold aura kill bonuses earned on this field, paid with the bounties. */
+  killBonusGold: number;
   leaks: number;
   sentLeaks: number;
   /** Leaks of air creeps, which bypass the maze on the straight air route. */
@@ -86,6 +88,7 @@ function summarizeField(field: HeadlessBattlefield): DuelFieldWaveResult {
   return {
     spawned: field.creeps.length,
     kills: field.kills,
+    killBonusGold: field.killBonusGold,
     leaks: field.leaks,
     sentLeaks: field.sentLeaks,
     airLeaks: field.airLeaks,

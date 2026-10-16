@@ -6,6 +6,7 @@ import {
   type BattlefieldState,
 } from '../../../entities/duel-match';
 import {
+  getTowerArchetype,
   TOWER_BASE_LEVEL,
   TOWER_COMBAT_STATS_BY_TYPE,
   type TowerEntity,
@@ -33,6 +34,7 @@ import {
 const TOWER_ROW_OFFSETS = [-3, 3] as const;
 const TOWER_EVERY_ROUTE_CELLS = 2;
 const WAVE_NUMBER = 1;
+const SUPPORT_AURA = getTowerArchetype(TowerTypeId.SUPPORT).aura!;
 
 function createTower(type: TowerTypeId, x: number, y: number): TowerEntity {
   return {
@@ -126,6 +128,32 @@ describe('features/duel-simulation/headlessBattlefield', () => {
     expect(second.field.creeps.map((creep) => creep.entity)).toEqual(
       first.field.creeps.map((creep) => creep.entity),
     );
+  });
+
+  it('counts aura kill bonus gold for kills by towers in a goldPerKill aura', () => {
+    const plain = createFixedBoard([TowerTypeId.SINGLE, TowerTypeId.SUPPORT]);
+    const withBonus: BattlefieldState = {
+      ...plain,
+      towers: plain.towers.map((tower) =>
+        tower.type === TowerTypeId.SUPPORT
+          ? {
+              ...tower,
+              combatStats: {
+                ...tower.combatStats,
+                aura: { ...SUPPORT_AURA, radiusCells: 12, goldPerKill: 1 },
+              },
+            }
+          : tower,
+      ),
+    };
+
+    const plainRun = runWave(plain);
+    const bonusRun = runWave(withBonus);
+
+    expect(plainRun.field.killBonusGold).toBe(0);
+    expect(bonusRun.field.kills).toBeGreaterThan(0);
+    expect(bonusRun.field.killBonusGold).toBeGreaterThan(0);
+    expect(bonusRun.field.killBonusGold).toBeLessThanOrEqual(bonusRun.field.kills);
   });
 
   it('does not touch the towers of the battlefield it was built from', () => {

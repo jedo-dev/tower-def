@@ -33,6 +33,11 @@ export {
   resolveTargetDamageMultiplier,
 } from './model/abilities';
 export type { TowerAbilities } from './model/abilities';
+export {
+  getTowerKillBonusGold,
+  getTowersIncomePerRound,
+  resolveTowerSellRefundRatio,
+} from './model/auraEconomy';
 export { getTowerCenter, isTowerCoveringCell } from './model/footprint';
 export {
   applyAuraBonusToStats,

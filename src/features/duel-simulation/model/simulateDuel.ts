@@ -1,5 +1,6 @@
 import { createMazeEvaluator } from '../../../entities/computer-opponent';
 import {
+  awardBonusGold,
   awardKillBounty,
   clearSendQueue,
   createInitialDuelMatchState,
@@ -11,6 +12,7 @@ import {
   type DuelMatchOutcome,
   type DuelSide,
 } from '../../../entities/duel-match';
+import { getTowersIncomePerRound } from '../../../entities/tower';
 import {
   createDefaultEdgeEndpoints,
   generateEdgeEndpoints,
@@ -182,7 +184,12 @@ export function simulateDuel(config: DuelSimulationConfig): DuelSimulationResult
     state = startRound(clearSendQueue(state)).state;
     state = payKillBounties(state, 'player', wave.fieldA.kills);
     state = payKillBounties(state, 'opponent', wave.fieldB.kills);
-    const settlement = settleRound(state, wave.fieldA.leaks, wave.fieldB.leaks, wave.sentLeaks);
+    state = awardBonusGold(state, 'player', wave.fieldA.killBonusGold);
+    state = awardBonusGold(state, 'opponent', wave.fieldB.killBonusGold);
+    const settlement = settleRound(state, wave.fieldA.leaks, wave.fieldB.leaks, wave.sentLeaks, {
+      player: getTowersIncomePerRound(state.player.battlefield.towers),
+      opponent: getTowersIncomePerRound(state.opponent.battlefield.towers),
+    });
     state = settlement.state;
     isMatchOver = settlement.isMatchOver;
     if (isMatchOver) {
