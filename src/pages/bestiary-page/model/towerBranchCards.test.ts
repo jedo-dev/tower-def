@@ -82,7 +82,7 @@ describe('talent branch cards', () => {
     expect(harvest.grades[0].special).toMatch(/volley at all in range every 1\.5s$/);
     expect(storm.grades[3].special).toBe('6 jumps within 5 cells, -10% each');
     expect(thornbite.grades[0].damage).toBe('0.9% max HP');
-    expect(thornbite.grades[0].special).toBe('poison 1.8% max HP/s for 4.0s, up to 4 stacks');
+    expect(thornbite.grades[0].special).toBe('poison 2% max HP/s for 4.0s, up to 4 stacks');
   });
 
   it('describes a chill that freezes and a vulnerability', () => {

@@ -154,7 +154,7 @@
               "range": 5.8,
               "attackCooldownMs": 750,
               "splashRadius": 4.8,
-              "onHitEffects": [{ "effectId": "stun", "durationMs": 200 }]
+              "onHitEffects": [{ "effectId": "stun", "durationMs": 150 }]
             },
             {
               "level": 7,
@@ -162,7 +162,7 @@
               "range": 5.8,
               "attackCooldownMs": 650,
               "splashRadius": 5.4,
-              "onHitEffects": [{ "effectId": "stun", "durationMs": 300 }]
+              "onHitEffects": [{ "effectId": "stun", "durationMs": 200 }]
             }
           ]
         }
@@ -246,6 +246,7 @@
               "range": 7,
               "attackCooldownMs": 900,
               "onHitEffects": [
+                { "effectId": "poison", "magnitude": 8, "durationMs": 4000, "maxStacks": 5 },
                 {
                   "effectId": "armor_break",
                   "magnitude": 4,
@@ -260,6 +261,7 @@
               "range": 7.2,
               "attackCooldownMs": 850,
               "onHitEffects": [
+                { "effectId": "poison", "magnitude": 8, "durationMs": 4000, "maxStacks": 5 },
                 {
                   "effectId": "armor_break",
                   "magnitude": 7,
@@ -274,6 +276,7 @@
               "range": 7.4,
               "attackCooldownMs": 800,
               "onHitEffects": [
+                { "effectId": "poison", "magnitude": 8, "durationMs": 4000, "maxStacks": 5 },
                 {
                   "effectId": "armor_break",
                   "magnitude": 10,
@@ -288,6 +291,7 @@
               "range": 7.8,
               "attackCooldownMs": 750,
               "onHitEffects": [
+                { "effectId": "poison", "magnitude": 8, "durationMs": 4000, "maxStacks": 5 },
                 {
                   "effectId": "armor_break",
                   "magnitude": 14,

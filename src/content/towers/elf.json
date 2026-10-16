@@ -153,7 +153,7 @@
               "range": 5.8,
               "attackCooldownMs": 1050,
               "splashRadius": 3.6,
-              "onHitEffects": [{ "effectId": "stun", "durationMs": 400 }]
+              "onHitEffects": [{ "effectId": "stun", "durationMs": 250 }]
             },
             {
               "level": 6,
@@ -161,7 +161,7 @@
               "range": 5.8,
               "attackCooldownMs": 1000,
               "splashRadius": 3.8,
-              "onHitEffects": [{ "effectId": "stun", "durationMs": 600 }]
+              "onHitEffects": [{ "effectId": "stun", "durationMs": 300 }]
             },
             {
               "level": 7,
@@ -169,7 +169,7 @@
               "range": 5.8,
               "attackCooldownMs": 900,
               "splashRadius": 4,
-              "onHitEffects": [{ "effectId": "stun", "durationMs": 800 }]
+              "onHitEffects": [{ "effectId": "stun", "durationMs": 350 }]
             }
           ]
         }
@@ -232,24 +232,24 @@
               "damage": 32,
               "range": 6.8,
               "attackCooldownMs": 800,
-              "onHitEffects": [{ "effectId": "chill", "magnitude": 0.27, "durationMs": 1500 }],
-              "abilities": { "volleyEveryMs": 1000, "volleyDamageShare": 0.31 }
+              "onHitEffects": [{ "effectId": "chill", "magnitude": 0.48, "durationMs": 2000 }],
+              "abilities": { "volleyEveryMs": 1000, "volleyDamageShare": 0.35 }
             },
             {
               "level": 5,
               "damage": 34,
               "range": 6.8,
               "attackCooldownMs": 800,
-              "onHitEffects": [{ "effectId": "chill", "magnitude": 0.41, "durationMs": 1500 }],
-              "abilities": { "volleyEveryMs": 1000, "volleyDamageShare": 0.41 }
+              "onHitEffects": [{ "effectId": "chill", "magnitude": 0.48, "durationMs": 2000 }],
+              "abilities": { "volleyEveryMs": 1000, "volleyDamageShare": 0.45 }
             },
             {
               "level": 6,
               "damage": 36,
               "range": 6.8,
               "attackCooldownMs": 800,
-              "onHitEffects": [{ "effectId": "chill", "magnitude": 0.48, "durationMs": 1500 }],
-              "abilities": { "volleyEveryMs": 1000, "volleyDamageShare": 0.5 }
+              "onHitEffects": [{ "effectId": "chill", "magnitude": 0.5, "durationMs": 2000 }],
+              "abilities": { "volleyEveryMs": 1000, "volleyDamageShare": 0.55 }
             },
             {
               "level": 7,
@@ -259,13 +259,13 @@
               "onHitEffects": [
                 {
                   "effectId": "chill",
-                  "magnitude": 0.62,
-                  "durationMs": 1500,
+                  "magnitude": 0.55,
+                  "durationMs": 2000,
                   "freezeAtStacks": 3,
                   "freezeMs": 500
                 }
               ],
-              "abilities": { "volleyEveryMs": 1000, "volleyDamageShare": 0.6 }
+              "abilities": { "volleyEveryMs": 1000, "volleyDamageShare": 0.65 }
             }
           ]
         },
@@ -416,7 +416,7 @@
               "onHitEffects": [
                 {
                   "effectId": "poison",
-                  "magnitude": 9,
+                  "magnitude": 10,
                   "durationMs": 4000,
                   "maxStacks": 4,
                   "damageType": "percent"
@@ -431,7 +431,7 @@
               "onHitEffects": [
                 {
                   "effectId": "poison",
-                  "magnitude": 10,
+                  "magnitude": 12,
                   "durationMs": 4000,
                   "maxStacks": 4,
                   "damageType": "percent"
@@ -446,7 +446,7 @@
               "onHitEffects": [
                 {
                   "effectId": "poison",
-                  "magnitude": 12,
+                  "magnitude": 14,
                   "durationMs": 5000,
                   "maxStacks": 5,
                   "damageType": "percent"
@@ -461,7 +461,7 @@
               "onHitEffects": [
                 {
                   "effectId": "poison",
-                  "magnitude": 14,
+                  "magnitude": 16,
                   "durationMs": 5000,
                   "maxStacks": 6,
                   "damageType": "percent"
@@ -481,14 +481,32 @@
               "damage": 11,
               "range": 7.6,
               "attackCooldownMs": 900,
-              "onHitEffects": [{ "effectId": "stun", "durationMs": 300 }]
+              "onHitEffects": [
+                {
+                  "effectId": "poison",
+                  "magnitude": 8,
+                  "durationMs": 4000,
+                  "maxStacks": 4,
+                  "damageType": "percent"
+                },
+                { "effectId": "stun", "durationMs": 300 }
+              ]
             },
             {
               "level": 5,
               "damage": 13,
               "range": 8.4,
               "attackCooldownMs": 900,
-              "onHitEffects": [{ "effectId": "stun", "durationMs": 500 }]
+              "onHitEffects": [
+                {
+                  "effectId": "poison",
+                  "magnitude": 8,
+                  "durationMs": 4000,
+                  "maxStacks": 4,
+                  "damageType": "percent"
+                },
+                { "effectId": "stun", "durationMs": 400 }
+              ]
             },
             {
               "level": 6,
@@ -496,11 +514,18 @@
               "range": 9.2,
               "attackCooldownMs": 850,
               "onHitEffects": [
-                { "effectId": "stun", "durationMs": 600 },
+                {
+                  "effectId": "poison",
+                  "magnitude": 8,
+                  "durationMs": 4000,
+                  "maxStacks": 4,
+                  "damageType": "percent"
+                },
+                { "effectId": "stun", "durationMs": 500 },
                 {
                   "effectId": "vulnerability",
                   "magnitude": 0.2,
-                  "durationMs": 600,
+                  "durationMs": 500,
                   "damageKind": "all"
                 }
               ]
@@ -511,11 +536,18 @@
               "range": 10,
               "attackCooldownMs": 800,
               "onHitEffects": [
-                { "effectId": "stun", "durationMs": 800 },
+                {
+                  "effectId": "poison",
+                  "magnitude": 8,
+                  "durationMs": 4000,
+                  "maxStacks": 4,
+                  "damageType": "percent"
+                },
+                { "effectId": "stun", "durationMs": 600 },
                 {
                   "effectId": "vulnerability",
                   "magnitude": 0.35,
-                  "durationMs": 800,
+                  "durationMs": 600,
                   "damageKind": "all"
                 }
               ]
