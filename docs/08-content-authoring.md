@@ -116,8 +116,14 @@ type its ticks differently (see "Damage over time type" below).
 
 Armor break lowers both armors by default; an effect definition narrows it
 with `armorKind: 'physical' | 'magical' | 'both'`
-(`shared/constants/effects.ts`). Broken armor goes negative but never below
-`-25`.
+(`shared/constants/effects.ts`), and a tower's on-hit entry may narrow it per
+tower with the same field (see "Tower abilities"). Breaks of different kinds
+run side by side; breaks of the same kind stack. Broken armor goes negative
+but never below `-25`.
+
+A vulnerability (on-hit `vulnerability`) multiplies the damage a creature
+takes after armor by `1 + magnitude` per running instance whose `damageKind`
+covers the hit's type, damage over time included.
 
 ## Race armor profiles
 
@@ -317,6 +323,61 @@ upgrade). Thorn Spire does this: hits and poison ticks of 6, 7 and 8 per mille
 (tower-def-6nf.4 capped level 3 at 4). When two towers poison the
 same creep, the latest application sets the tick type, as it sets the
 remaining duration.
+
+## Tower abilities
+
+Optional mechanics for talent grades (tower-def-bge.2). Any `levels[]` entry
+of an archetype or race tower (levels 1 to 7) may carry an `abilities` object;
+talent grade objects reuse the same field names. Every field is optional and
+absent means the ability is off: a tower without the object fights exactly as
+before. Values are validated on load (`TOWER_ABILITY_BOUNDS`,
+`entities/tower/model/content/towerAbilities.types.ts`) and fail naming the
+file and tower. Level 1 abilities come with the placed tower; an upgrade
+brings the next level's object (or none).
+
+| `abilities` field | Value | Effect |
+| --- | --- | --- |
+| `critEveryNthShot` | whole, 2-20 | Every Nth shot of the tower is critical. A per-tower counter, not a roll, so the headless duel stays deterministic. Needs `critMultiplier`. |
+| `critMultiplier` | 1-10 | Damage multiplier of a critical shot (every hit of that shot: splash, arcs, extra targets, pierce). |
+| `extraTargets` | whole, 1-6 | A single-target shot also hits this many other valid creeps in range, nearest the tower first (ties by id). |
+| `extraTargetDamageShare` | 0-1 | Share of the shot each extra target takes; 1 when omitted. Needs `extraTargets`. |
+| `pierceLine` | 0-1 | Share of the shot dealt to every other valid creep whose centre is within 0.5 cells of the line from the tower to the target. |
+| `airDamageMultiplier` | 0-5 | Damage multiplier against fliers. |
+| `groundDamageMultiplier` | 0-5 | Damage multiplier against ground creeps. |
+| `fullHealthBonusMultiplier` | 0-5 | Damage multiplier against a creep still at full health. |
+| `largeTargetMultiplier` | 0-5 | Damage multiplier against `sizeClass: large` creeps. |
+| `minRangeCells` | 0-12, below `range` | Targeting ignores creeps closer than this (mortar dead zone). |
+| `volleyEveryMs` | 500-60000 | Every this many ms the tower hits every valid creep in range once, besides its normal attack (support towers too). A ready volley waits for a target; a new tower starts ready. |
+| `volleyDamageShare` | 0-5 | Share of the tower's damage a volley deals; 1 when omitted. Needs `volleyEveryMs`. |
+
+Target multipliers multiply together and apply to every hit of the tower
+(primary, splash, arcs, extra, pierce, volley), before armor and
+vulnerability. A single-target shot is any attack that is neither splash nor
+chain; `extraTargets` and `pierceLine` only widen those.
+
+On-hit effect fields (in `onHitEffects[]` entries, at any level):
+
+| Field | Effect | Notes |
+| --- | --- | --- |
+| `armorKind` | `armor_break` only: `physical`, `magical` or `both` (default). | Lowers just that armor. |
+| `damageKind` | `vulnerability` only: `physical`, `magical`, `percent` or `all` (default). | `magnitude` is the added share (default 0.15), refreshed, not stacked. |
+| `freezeAtStacks` | `chill` only, whole 2-20. | Every Nth chilling hit on a creep (counted while its chill runs, weaker chills included) freezes it: a `stun`. |
+| `freezeMs` | `chill` only, with `freezeAtStacks`, 100-10000 ms. | Freeze length; the stun balance duration when omitted. |
+| `damageType` | `poison` and `burn`. | See "Damage over time type". |
+
+`stun` and `burn` are ordinary on-hit effects (`{ "effectId": "stun",
+"durationMs": 400 }`). Burn deals magical ticks by default and stacks like
+poison (up to 3, `maxStacks` raises it).
+
+Aura extensions (optional fields on any `aura` shape):
+
+| Field | Value | Effect |
+| --- | --- | --- |
+| `damagePercentBonus` | 0-2 | Towers in radius deal `damage * (1 + bonus)`. Combines per the aura's `stacking`. |
+| `damageBonusType` | `physical`, `magical`, `percent`, `all` | Which towers (by their damage type) get the bonus; `all` when omitted. Needs `damagePercentBonus`. |
+| `goldPerKill` | 0-50 | Extra gold the owner gets for each kill landed by a tower in radius (damage-over-time kills carry no tower and pay none). Paid with the kill bounty in the game and summed into the round in the headless duel. |
+| `incomePerRound` | 0-200 | Added to the owner's income payout at every round settle while the tower stands (`settleRound` tower income). |
+| `sellRefundBonus` | 0-1 | Added to the sell refund ratio of towers in radius, capped at 100%. |
 
 ## Units
 
