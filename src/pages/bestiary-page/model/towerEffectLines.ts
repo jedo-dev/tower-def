@@ -48,7 +48,11 @@ function describeChill(effect: TowerOnHitEffect, magnitude: number, durationMs: 
   }
 
   const freezeMs = effect.freezeMs ?? resolveEffectDefinition(EffectId.STUN).durationMs;
-  return `${slow}; every ${effect.freezeAtStacks} hits freeze ${formatSeconds(freezeMs)}`;
+  const grounding =
+    effect.groundsFliersMs === undefined
+      ? ''
+      : `, frozen fliers fall for ${formatSeconds(effect.groundsFliersMs)}`;
+  return `${slow}; every ${effect.freezeAtStacks} hits freeze ${formatSeconds(freezeMs)}${grounding}`;
 }
 
 function describeDamageOverTime(

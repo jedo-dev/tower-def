@@ -38,7 +38,9 @@ function describeOnHitEffect(effect: TowerOnHitEffect): TowerEffectLine {
       return {
         key: effect.effectId,
         label: 'SLOW',
-        value: `${formatPercent(magnitude)} / ${formatSeconds(durationMs)}`,
+        value:
+          `${formatPercent(magnitude)} / ${formatSeconds(durationMs)}` +
+          (effect.groundsFliersMs === undefined ? '' : ', grounds fliers'),
       };
     case EffectId.STUN:
       return { key: effect.effectId, label: 'STUN', value: formatSeconds(durationMs) };

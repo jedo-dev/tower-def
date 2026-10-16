@@ -1,4 +1,10 @@
+import type Phaser from 'phaser';
 import { destroyCreepRenderState } from '../combat/creepEffectVisuals';
+import {
+  clearGroundZones,
+  createGroundZoneStore,
+  type GroundZoneStore,
+} from '../combat/towerGroundZones';
 import type {
   CreepRenderState,
   DamageNumberState,
@@ -17,6 +23,10 @@ export type BattlefieldRenderState = {
   projectiles: ProjectileState[];
   impactEffects: ImpactEffectState[];
   damageNumbers: DamageNumberState[];
+  /** Ground zones the towers left (tower-def-bge.9); records are reused. */
+  groundZones: GroundZoneStore;
+  /** One Graphics per field draws its zones; created on the first zone. */
+  groundZoneGraphics?: Phaser.GameObjects.Graphics;
 };
 
 export function createBattlefieldRenderState(): BattlefieldRenderState {
@@ -26,6 +36,7 @@ export function createBattlefieldRenderState(): BattlefieldRenderState {
     projectiles: [],
     impactEffects: [],
     damageNumbers: [],
+    groundZones: createGroundZoneStore(),
   };
 }
 
@@ -38,6 +49,7 @@ export function setBattlefieldRenderStateVisible(
   battlefield.projectiles.forEach((projectile) => projectile.sprite.setVisible(visible));
   battlefield.impactEffects.forEach((effect) => effect.sprite.setVisible(visible));
   battlefield.damageNumbers.forEach((numberState) => numberState.text.setVisible(visible));
+  battlefield.groundZoneGraphics?.setVisible(visible);
 }
 
 export function destroyBattlefieldCreeps(battlefield: BattlefieldRenderState): void {
@@ -65,10 +77,19 @@ export function destroyBattlefieldDamageNumbers(battlefield: BattlefieldRenderSt
   battlefield.damageNumbers = [];
 }
 
+/** Drops every ground zone and wipes their drawing; the Graphics is kept for reuse. */
+export function clearBattlefieldGroundZones(battlefield: BattlefieldRenderState): void {
+  clearGroundZones(battlefield.groundZones);
+  battlefield.groundZoneGraphics?.clear();
+}
+
 export function destroyBattlefieldRenderState(battlefield: BattlefieldRenderState): void {
   destroyBattlefieldCreeps(battlefield);
   destroyBattlefieldTowers(battlefield);
   destroyBattlefieldProjectiles(battlefield);
   destroyBattlefieldImpactEffects(battlefield);
   destroyBattlefieldDamageNumbers(battlefield);
+  clearGroundZones(battlefield.groundZones);
+  battlefield.groundZoneGraphics?.destroy();
+  battlefield.groundZoneGraphics = undefined;
 }

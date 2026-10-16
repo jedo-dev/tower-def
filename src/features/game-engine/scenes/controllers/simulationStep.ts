@@ -4,6 +4,7 @@ import {
   updateBattlefieldCreepEffects,
   updateBattlefieldCreepHitFeedback,
   updateBattlefieldDamageNumbers,
+  updateBattlefieldGroundZones,
   updateBattlefieldImpactEffects,
   updateBattlefieldProjectiles,
   updateBattlefieldTowerCombat,
@@ -64,6 +65,7 @@ export function runSimulationStep(context: GameSceneContext, nowMs: number, delt
   stepBothFields(wiring, moveBattlefieldCreeps, MOVEMENT_RUNTIME_CONFIG, delta);
   stepBothFields(wiring, updateBattlefieldTowerCombat, COMBAT_RUNTIME_CONFIG, delta);
   stepBothFields(wiring, updateBattlefieldCreepEffects, COMBAT_RUNTIME_CONFIG, delta);
+  stepBothFields(wiring, updateBattlefieldGroundZones, COMBAT_RUNTIME_CONFIG, delta);
   stepBothFields(wiring, updateBattlefieldCreepHitFeedback, COMBAT_RUNTIME_CONFIG, delta);
   stepBothFields(wiring, removeDeadBattlefieldCreeps, COMBAT_RUNTIME_CONFIG, delta);
   applyWaveCompletionRewardIfResolved(context);

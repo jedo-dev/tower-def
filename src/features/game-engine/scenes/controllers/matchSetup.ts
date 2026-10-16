@@ -3,6 +3,7 @@ import { getGameSetupConfig, publishGameEvent } from '../../../../shared/lib/gam
 import { generateEdgeEndpoints } from '../../../../shared/lib/grid/generateEdgeEndpoints';
 import type { GridModel } from '../../../../shared/types/grid';
 import {
+  clearBattlefieldGroundZones,
   destroyBattlefieldCreeps,
   destroyBattlefieldImpactEffects,
   destroyBattlefieldProjectiles,
@@ -134,6 +135,7 @@ function clearMatchRuntime(state: GameSceneState): void {
   clearFieldWaveSchedule(state.opponentWave);
   destroyBattlefieldProjectiles(state.playerField);
   destroyBattlefieldImpactEffects(state.playerField);
+  clearBattlefieldGroundZones(state.playerField);
   destroyBattlefieldTowers(state.playerField);
   state.placedTowerCostsByCellKey.clear();
   state.hoveredCell = null;

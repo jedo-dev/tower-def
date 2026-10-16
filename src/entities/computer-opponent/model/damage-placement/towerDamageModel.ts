@@ -24,6 +24,7 @@ import {
   computeVolleyDps,
 } from './abilityDamageModel';
 import { POISON_STACK_UPTIME } from './constants';
+import { computeCorpseExplosionFactor, computeGroundZoneDps } from './deferredMechanicsValue';
 import { computeCreepsStruckPerShot, computeTargetsPerShot } from './shotReach';
 import type { RouteGeometry } from './routeGeometry';
 
@@ -51,9 +52,15 @@ export function resolveDamageModelDamageType(tower: DamageModelTower): DamageTyp
   return tower.damageType ?? getTowerArchetype(tower.towerType).damageType;
 }
 
-/** Whether the tower can shoot creeps that move by `moveType` (its `allowedTargets`). */
+/**
+ * Whether the tower can shoot creeps that move by `moveType`: its level's or
+ * grade's `allowedTargets` first, then its own, then the archetype's.
+ */
 export function canDamageModelTowerHit(tower: DamageModelTower, moveType: UnitMoveType): boolean {
-  const scope = tower.allowedTargets ?? getTowerArchetype(tower.towerType).allowedTargets;
+  const scope =
+    tower.stats.allowedTargets ??
+    tower.allowedTargets ??
+    getTowerArchetype(tower.towerType).allowedTargets;
   return canTargetScopeHitMoveType(scope, moveType);
 }
 
@@ -237,9 +244,17 @@ export function computeSampleDamageRate(
     typeEfficiency *
     computeCritFactor(tower.stats.abilities) *
     hitFactor *
-    computeTargetsPerShot(tower, geometry, sampleIndex);
+    computeTargetsPerShot(tower, geometry, sampleIndex) *
+    (1 + computeCorpseExplosionFactor(tower.stats.abilities, geometry, sampleIndex));
   const damageOverTime =
     computeDamageOverTimeDps(tower, efficiency) *
     computeCreepsStruckPerShot(tower, geometry, sampleIndex);
-  return shots + volley + damageOverTime;
+  const zone = computeGroundZoneDps(
+    tower.stats.abilities,
+    geometry,
+    sampleIndex,
+    efficiency,
+    moveType,
+  );
+  return shots + volley + damageOverTime + zone;
 }

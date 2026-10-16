@@ -122,6 +122,17 @@ describe('level abilities', () => {
   });
 });
 
+describe('per-level allowedTargets (tower-def-bge.9)', () => {
+  it('parses a level scope and leaves it absent when not authored', () => {
+    expect(parseLevelOne({ allowedTargets: 'both' })?.allowedTargets).toBe('both');
+    expect(parseLevelOne({})?.allowedTargets).toBeUndefined();
+  });
+
+  it('rejects an unknown scope naming the file and tower', () => {
+    expectRejection({ allowedTargets: 'sky' }, /undead\.json.*undead_bone_archer_tower/);
+  });
+});
+
 describe('on-hit effect extensions', () => {
   function effectEntry(effect: AuthoredEntry) {
     return parseLevelOne({ onHitEffects: [effect] })?.onHitEffects?.[0];

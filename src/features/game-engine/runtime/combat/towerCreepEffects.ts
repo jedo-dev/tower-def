@@ -2,18 +2,21 @@ import {
   applyDamageToCreep,
   hasEffectDamage,
   tickCreepAbilities,
+  tickCreepGrounding,
   tickCreepEffects,
   type EffectDamageByType,
 } from '../../../../entities/creep';
 import { DAMAGE_TYPES } from '../../../../shared/types/content-ids';
 import { CreatureDamageShape } from '../../../../shared/types/creatureAbilities';
 import type { CombatCreep, CombatField, CombatTower, TowerCombatHooks } from './towerCombatTypes';
+import { tickGroundZones } from './towerGroundZones';
 
 /**
  * Advances status effects (and the creature ability counters: invisibility,
  * regeneration, shield recharge) on every living creep and routes damage over
  * time through the same kill path as a tower hit, so a poison kill pays out
- * exactly once. `deltaMs` is used as given; clamping is the caller's job.
+ * exactly once. Ground zones tick here too, after the effects.
+ * `deltaMs` is used as given; clamping is the caller's job.
  */
 export function tickFieldCreepEffects<C extends CombatCreep, T extends CombatTower>(
   field: CombatField<C, T>,
@@ -26,6 +29,9 @@ export function tickFieldCreepEffects<C extends CombatCreep, T extends CombatTow
     }
 
     tickCreepAbilities(creep.entity, deltaMs);
+    if (creep.entity.groundedRemainingMs !== undefined) {
+      tickCreepGrounding(creep.entity, deltaMs);
+    }
     const tickResult = tickCreepEffects(creep.entity, deltaMs);
 
     if (tickResult.creep === creep.entity) {
@@ -41,6 +47,8 @@ export function tickFieldCreepEffects<C extends CombatCreep, T extends CombatTow
 
     applyEffectTickDamage(creep, tickResult.damageByType, hooks);
   }
+
+  tickGroundZones(field, hooks, deltaMs);
 }
 
 /**

@@ -24,9 +24,22 @@ function formatMultiplier(multiplier: number): string {
   return `x${Number(multiplier.toFixed(2))}`;
 }
 
+function describeGroundZone(zone: NonNullable<TowerAbilities['groundZone']>): string {
+  const effects = [
+    zone.damage > 0
+      ? `${zone.damage} ${zone.damageType} every ${formatSeconds(zone.tickMs)}`
+      : null,
+    zone.chill === undefined ? null : `${formatPercent(zone.chill)} slower`,
+  ].filter((effect): effect is string => effect !== null);
+  return `leaves a ${formatCells(zone.radiusCells)} ground zone for ${formatSeconds(zone.durationMs)}: ${effects.join(', ')}`;
+}
+
 function describeAbilities(abilities: TowerAbilities): string[] {
   const parts: string[] = [];
 
+  if (abilities.groundZone !== undefined) {
+    parts.push(describeGroundZone(abilities.groundZone));
+  }
   if (abilities.critEveryNthShot !== undefined && abilities.critMultiplier !== undefined) {
     parts.push(
       `every ${abilities.critEveryNthShot} shots crit ${formatMultiplier(abilities.critMultiplier)}`,
@@ -39,6 +52,23 @@ function describeAbilities(abilities: TowerAbilities): string[] {
   }
   if (abilities.pierceLine !== undefined) {
     parts.push(`pierces the line at ${formatPercent(abilities.pierceLine)}`);
+  }
+  if (abilities.coneDegrees !== undefined) {
+    parts.push(`hits all in a ${abilities.coneDegrees}° cone`);
+  }
+  if (abilities.knockbackCells !== undefined) {
+    parts.push(`knocks small and medium back ${formatCells(abilities.knockbackCells)}`);
+  }
+  if (abilities.groundsFliersMs !== undefined) {
+    parts.push(`pulls fliers down for ${formatSeconds(abilities.groundsFliersMs)}`);
+  }
+  if (abilities.corpseExplosionShare !== undefined) {
+    const radius = formatCells(abilities.corpseExplosionRadiusCells ?? 0);
+    const chain = abilities.corpseExplosionChainLimit ?? 1;
+    const chaining = chain > 1 ? `, chaining ${chain} times` : '';
+    parts.push(
+      `kills explode for ${formatPercent(abilities.corpseExplosionShare)} max health within ${radius}${chaining}`,
+    );
   }
   if (abilities.airDamageMultiplier !== undefined) {
     parts.push(`${formatMultiplier(abilities.airDamageMultiplier)} vs air`);
@@ -94,6 +124,9 @@ function describeChain(chain: TowerChainStats): string {
 export function describeGradeSpecial(stats: TowerLevelStats): string {
   const parts: string[] = [];
 
+  if (stats.allowedTargets !== undefined) {
+    parts.push(`targets ${stats.allowedTargets}`);
+  }
   if (stats.splashRadius !== undefined) {
     parts.push(`splash ${formatCells(stats.splashRadius)}`);
   }

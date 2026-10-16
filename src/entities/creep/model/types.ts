@@ -130,4 +130,16 @@ export type CreepAbilityRuntime = {
   isOnSecondLife?: boolean;
   /** Route length in cells when it spawned, for `speedBoostLastRouteShare`. */
   routeDistanceAtSpawn?: number;
+  /**
+   * Cells a tower knocked the creep back since its last movement step
+   * (`knockbackCells`, tower-def-bge.9); movement walks it back along its own
+   * route and clears it. Absent means none.
+   */
+  pendingKnockbackCells?: number;
+  /**
+   * Ms a flier stays pulled down to the ground (tower-def-bge.9): targetable
+   * by ground-only towers while above 0, still on its air route. Absent means
+   * never grounded.
+   */
+  groundedRemainingMs?: number;
 };

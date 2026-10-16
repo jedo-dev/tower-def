@@ -1,5 +1,6 @@
 import {
   removeDeadCreepsFromActiveWave,
+  renderGroundZones,
   updateCreepEffects,
   updateCreepHitFeedback,
   updateDamageNumbers,
@@ -61,12 +62,24 @@ export function updateBattlefieldCreepEffects(
   config: CombatRuntimeConfig,
   deltaMs: number,
 ): void {
-  if (context.field.creeps.length === 0) {
+  if (context.field.creeps.length === 0 && context.field.groundZones.count === 0) {
     return;
   }
 
   updateCreepEffects(context.field, context.combatDeps, config, deltaMs);
   context.afterFieldMutated();
+}
+
+/** Redraws the field's ground zones while any live, and wipes them once they are gone. */
+export function updateBattlefieldGroundZones(
+  context: BattlefieldUpdateContext,
+  _config: CombatRuntimeConfig,
+  _deltaMs: number,
+): void {
+  if (context.field.groundZones.count === 0 && context.field.groundZoneGraphics === undefined) {
+    return;
+  }
+  renderGroundZones(context.field, context.combatDeps);
 }
 
 export function updateBattlefieldCreepHitFeedback(

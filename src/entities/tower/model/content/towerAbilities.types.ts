@@ -11,7 +11,10 @@ import type { TowerAuraDefinition } from './towerContentFields';
 
 export type TowerAbilityKey = keyof TowerAbilities;
 
-export const TOWER_ABILITY_KEYS: readonly TowerAbilityKey[] = [
+/** Abilities authored as one number; `groundZone` is an object (`towerGroundZoneFields.ts`). */
+export type TowerAbilityNumberKey = Exclude<TowerAbilityKey, 'groundZone'>;
+
+export const TOWER_ABILITY_NUMBER_KEYS: readonly TowerAbilityNumberKey[] = [
   'critEveryNthShot',
   'critMultiplier',
   'extraTargets',
@@ -24,15 +27,28 @@ export const TOWER_ABILITY_KEYS: readonly TowerAbilityKey[] = [
   'minRangeCells',
   'volleyEveryMs',
   'volleyDamageShare',
+  'coneDegrees',
+  'knockbackCells',
+  'groundsFliersMs',
+  'corpseExplosionShare',
+  'corpseExplosionRadiusCells',
+  'corpseExplosionChainLimit',
+];
+
+/** Every key an `abilities` object may carry. */
+export const TOWER_ABILITY_KEYS: readonly TowerAbilityKey[] = [
+  ...TOWER_ABILITY_NUMBER_KEYS,
+  'groundZone',
 ];
 
 /** Abilities read as whole numbers. */
-export const TOWER_ABILITY_INTEGER_KEYS: readonly TowerAbilityKey[] = [
+export const TOWER_ABILITY_INTEGER_KEYS: readonly TowerAbilityNumberKey[] = [
   'critEveryNthShot',
   'extraTargets',
+  'corpseExplosionChainLimit',
 ];
 
-export const TOWER_ABILITY_BOUNDS: Record<TowerAbilityKey, NumericBound> = {
+export const TOWER_ABILITY_BOUNDS: Record<TowerAbilityNumberKey, NumericBound> = {
   critEveryNthShot: { min: 2, max: 20 },
   critMultiplier: { min: 1, max: 10 },
   extraTargets: { min: 1, max: 6 },
@@ -45,6 +61,12 @@ export const TOWER_ABILITY_BOUNDS: Record<TowerAbilityKey, NumericBound> = {
   minRangeCells: { min: 0, max: 12 },
   volleyEveryMs: { min: 500, max: 60_000 },
   volleyDamageShare: { min: 0, max: 5 },
+  coneDegrees: { min: 10, max: 180 },
+  knockbackCells: { min: 0.1, max: 3 },
+  groundsFliersMs: { min: 100, max: 10_000 },
+  corpseExplosionShare: { min: 0.01, max: 1 },
+  corpseExplosionRadiusCells: { min: 0.5, max: 6 },
+  corpseExplosionChainLimit: { min: 1, max: 20 },
 };
 
 export type TowerAuraExtensionNumberKey =
@@ -81,4 +103,23 @@ export const TOWER_STACK_BOUNDS = {
 export const TOWER_FREEZE_BOUNDS = {
   freezeAtStacks: { min: 2, max: 20 },
   freezeMs: { min: 100, max: 10_000 },
+  groundsFliersMs: { min: 100, max: 10_000 },
 } as const;
+
+/** Bounds of a `groundZone` object's numbers. */
+export const TOWER_GROUND_ZONE_BOUNDS = {
+  radiusCells: { min: 0.5, max: 6 },
+  durationMs: { min: 500, max: 20_000 },
+  tickMs: { min: 100, max: 5_000 },
+  damage: { min: 0, max: 500 },
+  chill: { min: 0.01, max: 0.75 },
+} as const;
+
+export const TOWER_GROUND_ZONE_KEYS = [
+  'radiusCells',
+  'durationMs',
+  'tickMs',
+  'damage',
+  'damageType',
+  'chill',
+] as const;

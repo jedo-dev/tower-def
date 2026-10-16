@@ -18,10 +18,12 @@ import {
 } from '../../../../shared/lib/content/contentValidation';
 import type { TowerAbilities } from '../abilities';
 import type { TowerOnHitEffect } from '../types';
+import { parseGroundZone } from './towerGroundZoneFields';
 import {
   TOWER_ABILITY_BOUNDS,
   TOWER_ABILITY_INTEGER_KEYS,
   TOWER_ABILITY_KEYS,
+  TOWER_ABILITY_NUMBER_KEYS,
   TOWER_AURA_EXTENSION_BOUNDS,
   TOWER_AURA_EXTENSION_NUMBER_KEYS,
   TOWER_FREEZE_BOUNDS,
@@ -41,6 +43,9 @@ const ABILITY_REQUIREMENTS: readonly [keyof TowerAbilities, keyof TowerAbilities
   ['critMultiplier', 'critEveryNthShot'],
   ['extraTargetDamageShare', 'extraTargets'],
   ['volleyDamageShare', 'volleyEveryMs'],
+  ['corpseExplosionShare', 'corpseExplosionRadiusCells'],
+  ['corpseExplosionRadiusCells', 'corpseExplosionShare'],
+  ['corpseExplosionChainLimit', 'corpseExplosionShare'],
 ];
 
 function assertAbilityRequirements(abilities: TowerAbilities, location: ContentLocation): void {
@@ -72,13 +77,18 @@ export function parseAbilities(
 
   const abilities: TowerAbilities = {};
 
-  for (const key of TOWER_ABILITY_KEYS) {
+  for (const key of TOWER_ABILITY_NUMBER_KEYS) {
     if (raw[key] === undefined) {
       continue;
     }
     abilities[key] = TOWER_ABILITY_INTEGER_KEYS.includes(key)
       ? readBoundedInteger(raw, key, location, TOWER_ABILITY_BOUNDS[key])
       : readNumber(raw, key, location, TOWER_ABILITY_BOUNDS[key]);
+  }
+
+  const groundZone = parseGroundZone(raw, location);
+  if (groundZone !== undefined) {
+    abilities.groundZone = groundZone;
   }
 
   assertAbilityRequirements(abilities, location);
@@ -151,7 +161,7 @@ export function parseOnHitEffectMaxStacks(
 
 type OnHitEffectExtensions = Pick<
   TowerOnHitEffect,
-  'armorKind' | 'damageKind' | 'freezeAtStacks' | 'freezeMs'
+  'armorKind' | 'damageKind' | 'freezeAtStacks' | 'freezeMs' | 'groundsFliersMs'
 >;
 
 function assertEffectField(
@@ -175,7 +185,7 @@ function assertEffectField(
 
 /**
  * Effect-specific on-hit fields: `armorKind` (armor break), `damageKind`
- * (vulnerability), `freezeAtStacks` + `freezeMs` (chill).
+ * (vulnerability), `freezeAtStacks` + `freezeMs` + `groundsFliersMs` (chill).
  */
 export function parseOnHitEffectExtensions(
   effect: Record<string, unknown>,
@@ -207,6 +217,18 @@ export function parseOnHitEffectExtensions(
       throw new ContentValidationError(location, 'chill "freezeMs" needs "freezeAtStacks"');
     }
     extensions.freezeMs = readNumber(effect, 'freezeMs', location, TOWER_FREEZE_BOUNDS.freezeMs);
+  }
+
+  if (assertEffectField(effect, 'groundsFliersMs', effectId, EffectId.CHILL, location)) {
+    if (extensions.freezeAtStacks === undefined) {
+      throw new ContentValidationError(location, 'chill "groundsFliersMs" needs "freezeAtStacks"');
+    }
+    extensions.groundsFliersMs = readNumber(
+      effect,
+      'groundsFliersMs',
+      location,
+      TOWER_FREEZE_BOUNDS.groundsFliersMs,
+    );
   }
 
   return extensions;

@@ -43,6 +43,8 @@ export type TowerOnHitEffectEntry = {
   freezeAtStacks?: number;
   /** Chill only, with `freezeAtStacks`: freeze duration in ms; stun balance duration when absent. */
   freezeMs?: number;
+  /** Chill only, with `freezeAtStacks`: a freeze grounds a flier for this many ms. */
+  groundsFliersMs?: number;
 };
 
 export type TowerContentEntry = {
@@ -85,7 +87,9 @@ export type TowerTalentGradeContentEntry = {
   aura?: TowerAuraContentEntry;
   onHitEffects?: TowerOnHitEffectEntry[];
   /** Optional abilities of this grade; see docs/08 "Tower abilities". */
-  abilities?: Record<string, number>;
+  abilities?: Record<string, unknown>;
+  /** `ground`, `air` or `both`: overrides the tower's scope at this grade. */
+  allowedTargets?: string;
 };
 
 export type TowerTalentBranchContentEntry = {
@@ -139,7 +143,9 @@ export type TowerLevelContentEntry = {
   onHitEffects?: TowerOnHitEffectEntry[];
   aura?: TowerAuraContentEntry;
   /** Optional abilities of this level; see docs/08 "Tower abilities". */
-  abilities?: Record<string, number>;
+  abilities?: Record<string, unknown>;
+  /** `ground`, `air` or `both`: overrides the tower's scope at this level. */
+  allowedTargets?: string;
 };
 
 export type TowerArchetypeContentEntry = {
@@ -193,6 +199,7 @@ export const TOWER_ON_HIT_EFFECT_KEYS: readonly (keyof TowerOnHitEffectEntry)[] 
   'damageKind',
   'freezeAtStacks',
   'freezeMs',
+  'groundsFliersMs',
 ];
 
 export const TOWER_CONTENT_REQUIRED_KEYS: readonly (keyof TowerContentEntry)[] = [
@@ -234,6 +241,7 @@ export const TOWER_LEVEL_KEYS: readonly (keyof TowerLevelContentEntry)[] = [
   'onHitEffects',
   'aura',
   'abilities',
+  'allowedTargets',
 ];
 
 export const TOWER_TALENT_BRANCH_KEYS: readonly (keyof TowerTalentBranchContentEntry)[] = [
@@ -253,6 +261,7 @@ export const TOWER_TALENT_GRADE_KEYS: readonly (keyof TowerTalentGradeContentEnt
   'aura',
   'onHitEffects',
   'abilities',
+  'allowedTargets',
 ];
 
 export const TOWER_LEVEL_BOUNDS = {

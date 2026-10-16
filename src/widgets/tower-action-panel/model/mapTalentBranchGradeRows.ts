@@ -50,6 +50,14 @@ export function describeTowerAbilities(abilities: TowerAbilities | undefined): s
 
   const phrases: string[] = [];
 
+  if (abilities.groundZone !== undefined) {
+    const { radiusCells, durationMs, damage, tickMs, chill } = abilities.groundZone;
+    const seconds = (durationMs / MILLISECONDS_PER_SECOND).toFixed(1);
+    const perSecond = Math.round((damage * MILLISECONDS_PER_SECOND) / tickMs);
+    const damagePart = damage > 0 ? ` ${perSecond}/s` : '';
+    const chillPart = chill === undefined ? '' : ` -${formatPercent(chill)}`;
+    phrases.push(`Zone r${radiusCells} ${seconds}s${damagePart}${chillPart}`);
+  }
   if (abilities.critEveryNthShot !== undefined) {
     const multiplier = formatMultiplier(abilities.critMultiplier ?? 1);
     phrases.push(`Crit ${multiplier} every ${abilities.critEveryNthShot}`);
@@ -61,6 +69,21 @@ export function describeTowerAbilities(abilities: TowerAbilities | undefined): s
   }
   if (abilities.pierceLine !== undefined) {
     phrases.push(`Pierce ${formatPercent(abilities.pierceLine)}`);
+  }
+  if (abilities.coneDegrees !== undefined) {
+    phrases.push(`Cone ${abilities.coneDegrees}°`);
+  }
+  if (abilities.knockbackCells !== undefined) {
+    phrases.push(`Knockback ${abilities.knockbackCells}`);
+  }
+  if (abilities.groundsFliersMs !== undefined) {
+    const seconds = (abilities.groundsFliersMs / MILLISECONDS_PER_SECOND).toFixed(1);
+    phrases.push(`Grounds fliers ${seconds}s`);
+  }
+  if (abilities.corpseExplosionShare !== undefined) {
+    const chain = abilities.corpseExplosionChainLimit ?? 1;
+    const chainSuffix = chain > 1 ? ` x${chain}` : '';
+    phrases.push(`Corpse blast ${formatPercent(abilities.corpseExplosionShare)}${chainSuffix}`);
   }
   if (abilities.airDamageMultiplier !== undefined) {
     phrases.push(`${formatMultiplier(abilities.airDamageMultiplier)} vs air`);
@@ -112,6 +135,7 @@ export function describeGradeSpecial(
     (line) => `${line.label} ${line.value}`,
   );
   const phrases = [
+    ...(grade.allowedTargets === undefined ? [] : [`Targets ${grade.allowedTargets}`]),
     ...describeTowerAbilities(grade.abilities),
     ...effectPhrases,
     ...describeChainChange(towerType, grade),

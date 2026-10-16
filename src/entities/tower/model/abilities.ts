@@ -1,7 +1,25 @@
 import { TOWER_ABILITY_BALANCE } from '../../../shared/constants/towerAbilities';
 import { UnitMoveType, UnitSizeClass } from '../../../shared/types/content-ids';
+import type { DamageType } from '../../../shared/types/content-ids';
 import type { GridPoint } from '../../../shared/types/grid';
 import type { CreepEntity } from '../../creep';
+
+/**
+ * A zone a tower leaves on the ground where its shot lands (tower-def-bge.9:
+ * Plague Cloud, Spores, Quagmire). Every `tickMs` it deals `damage` of
+ * `damageType` to every ground creep inside (grounded fliers too) and chills
+ * them by `chill`, for `durationMs`.
+ */
+export type TowerGroundZone = {
+  radiusCells: number;
+  durationMs: number;
+  tickMs: number;
+  /** Damage per tick per creep inside; 0 for a zone that only slows. */
+  damage: number;
+  damageType: DamageType;
+  /** Slow put on creeps inside each tick, lasting just past the next tick. */
+  chill?: number;
+};
 
 /**
  * Optional abilities a tower level (1-7) may carry under `abilities`. Every
@@ -34,6 +52,26 @@ export type TowerAbilities = {
   volleyEveryMs?: number;
   /** Share of the tower's damage a volley deals; 1 when omitted. */
   volleyDamageShare?: number;
+  /**
+   * A single-target shot also hits every other valid creep in range inside a
+   * cone of this many degrees toward the target, at full damage (Wyrm Breath).
+   */
+  coneDegrees?: number;
+  /**
+   * Each hit pushes a small or medium creep this many cells back along its own
+   * route (large creeps stand firm); movement applies it on its next step.
+   */
+  knockbackCells?: number;
+  /** Each hit pulls a flier down: it counts as a ground creep for this many ms. */
+  groundsFliersMs?: number;
+  /** A creep this tower kills explodes for this share of its maximum health. */
+  corpseExplosionShare?: number;
+  /** Radius of a corpse explosion, in cells, from the dead creep's footprint centre. */
+  corpseExplosionRadiusCells?: number;
+  /** Generations of explosions one kill may set off (1 = no chain); 1 when omitted. */
+  corpseExplosionChainLimit?: number;
+  /** Leaves a ground zone where each shot lands (the primary target's footprint centre). */
+  groundZone?: TowerGroundZone;
 };
 
 type TargetedCreep = Pick<CreepEntity, 'moveType' | 'sizeClass' | 'hp' | 'maxHp'>;
@@ -87,6 +125,34 @@ export function resolveShotDamageMultiplier(
     return 1;
   }
   return abilities?.critMultiplier ?? 1;
+}
+
+const DEGREES_PER_HALF_TURN = 180;
+
+/** Cosine of half a cone's opening; compare it with `isInCone` per creep. */
+export function getConeHalfAngleCosine(coneDegrees: number): number {
+  return Math.cos(((coneDegrees / 2) * Math.PI) / DEGREES_PER_HALF_TURN);
+}
+
+/**
+ * Whether the point (`offsetX`, `offsetY` from the cone apex) lies inside the
+ * cone that opens toward (`axisX`, `axisY`) with the given half-angle cosine.
+ * Plain numbers, so a cone shot allocates nothing per creep. The apex itself
+ * counts as inside.
+ */
+export function isInCone(
+  axisX: number,
+  axisY: number,
+  offsetX: number,
+  offsetY: number,
+  halfAngleCosine: number,
+): boolean {
+  const axisLength = Math.hypot(axisX, axisY);
+  const offsetLength = Math.hypot(offsetX, offsetY);
+  if (axisLength === 0 || offsetLength === 0) {
+    return true;
+  }
+  return (axisX * offsetX + axisY * offsetY) / (axisLength * offsetLength) >= halfAngleCosine;
 }
 
 /**

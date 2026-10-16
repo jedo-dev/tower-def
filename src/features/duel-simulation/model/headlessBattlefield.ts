@@ -11,8 +11,10 @@ import type { UnitConfig } from '../../../entities/unit';
 import { UnitMoveType } from '../../../shared/types/content-ids';
 import { selectWaveRoute, type WaveRoutes } from '../../../shared/lib/pathfinding/waveRoutes';
 import {
+  createGroundZoneStore,
   resolveTowerAttacks,
   tickFieldCreepEffects,
+  type GroundZoneStore,
   type TowerCombatHooks,
 } from '../../game-engine/runtime/combat/towerCombatCore';
 import { getCreepVisualMetrics } from '../../game-engine/runtime/creep/creepVisualMetrics';
@@ -62,6 +64,8 @@ export type HeadlessBattlefield = {
   /** Every creep spawned this wave, alive, dead or escaped. */
   creeps: HeadlessCreep[];
   pendingSpawns: PendingWaveSpawn[];
+  /** Ground zones the towers left this wave. */
+  groundZones: GroundZoneStore;
   waveNumber: number;
   elapsedMs: number;
   kills: number;
@@ -110,6 +114,7 @@ export function createHeadlessBattlefield(input: HeadlessWaveInput): HeadlessBat
       firstSpawnAtMs: input.timing.firstSpawnDelayMs,
       spawnIntervalMs: input.timing.spawnIntervalMs,
     }),
+    groundZones: createGroundZoneStore(),
     waveNumber: input.waveNumber,
     elapsedMs: 0,
     kills: 0,

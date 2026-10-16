@@ -70,6 +70,13 @@ export const PROJECTILE_DISPLAY_SIZE_PX = 18;
 export const PROJECTILE_RENDER_DEPTH = 70;
 export const IMPACT_EFFECT_LIFETIME_MS = 120;
 export const IMPACT_EFFECT_RENDER_DEPTH = 72;
+/** Ground zones (tower-def-bge.9) lie on the board, under towers and creeps. */
+export const GROUND_ZONE_RENDER_DEPTH = 30;
+/** A subtle wash: zones show where they are without hiding the maze. */
+export const GROUND_ZONE_FILL_COLOR = 0x9de8a4;
+export const GROUND_ZONE_FILL_ALPHA = 0.16;
+export const GROUND_ZONE_OUTLINE_ALPHA = 0.4;
+export const GROUND_ZONE_OUTLINE_WIDTH_PX = 1;
 export const ARCHER_PROJECTILE_VISUAL_MODE: 'projectile' | 'attackEffect' = 'attackEffect';
 export const DAMAGE_NUMBERS_ENABLED = true;
 export const DAMAGE_NUMBER_LIFETIME_MS = 420;

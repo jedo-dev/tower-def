@@ -1,6 +1,8 @@
 import {
   applyDamageToCreep,
   applyEffectToCreep,
+  groundCreep,
+  queueCreepKnockback,
   type ApplyEffectInput,
 } from '../../../../entities/creep';
 import {
@@ -12,6 +14,7 @@ import {
 import { TowerAttackKind, type DamageType } from '../../../../shared/types/content-ids';
 import { CreatureDamageShape } from '../../../../shared/types/creatureAbilities';
 import type { CombatCreep, CombatTower, TowerCombatHooks } from './towerCombatTypes';
+import { reportTowerKill } from './towerCorpseExplosions';
 
 // One tower hit on one creep: per-target damage abilities, armor (inside
 // applyDamageToCreep), on-hit effects and hit feedback. Every attack shape
@@ -49,6 +52,9 @@ export function toApplyEffectInput(effect: TowerOnHitEffect): ApplyEffectInput {
     ...(effect.damageKind === undefined ? {} : { damageScope: effect.damageKind }),
     ...(effect.freezeAtStacks === undefined ? {} : { freezeAtStacks: effect.freezeAtStacks }),
     ...(effect.freezeMs === undefined ? {} : { freezeMs: effect.freezeMs }),
+    ...(effect.groundsFliersMs === undefined
+      ? {}
+      : { freezeGroundsFliersMs: effect.groundsFliersMs }),
   };
 }
 
@@ -117,10 +123,8 @@ export function strikeCreep<C extends CombatCreep, T extends CombatTower>(
   damageType: DamageType,
   hooks: TowerCombatHooks<C, T>,
 ): StrikeResult {
-  const targetMultiplier = resolveTargetDamageMultiplier(
-    tower.entity.combatStats.abilities,
-    creep.entity,
-  );
+  const abilities = tower.entity.combatStats.abilities;
+  const targetMultiplier = resolveTargetDamageMultiplier(abilities, creep.entity);
   const damageResult = applyDamageToCreep(
     creep.entity,
     damage * targetMultiplier,
@@ -132,6 +136,12 @@ export function strikeCreep<C extends CombatCreep, T extends CombatTower>(
     hooks.onCreepRevived?.(creep);
   }
   applyOnHitEffects(tower, creep, hooks);
+  if (abilities?.knockbackCells !== undefined) {
+    queueCreepKnockback(creep.entity, abilities.knockbackCells);
+  }
+  if (abilities?.groundsFliersMs !== undefined) {
+    groundCreep(creep.entity, abilities.groundsFliersMs);
+  }
   hooks.onCreepHit(creep);
   return { damageApplied: damageResult.damageApplied, killed: damageResult.killed };
 }
@@ -151,7 +161,7 @@ export function strikeAndReport<C extends CombatCreep, T extends CombatTower>(
   hooks.onDamageDealt(creep.entity.position, Math.round(result.damageApplied), 'hit');
 
   if (result.killed) {
-    hooks.onCreepKilled(creep, tower);
+    reportTowerKill(creep, tower, hooks);
   }
 
   return result;

@@ -10,10 +10,17 @@ import {
 import { TowerAttackKind, type DamageType } from '../../../../shared/types/content-ids';
 import { applyChainDamage, applySingleTargetDamage, applySplashDamage } from './towerAreaAttacks';
 import type { CombatCreep, CombatField, CombatTower, TowerCombatHooks } from './towerCombatTypes';
-import { applyExtraTargets, applyPierceLine, resolveTowerVolley } from './towerShotAbilities';
+import { resolveCorpseExplosions } from './towerCorpseExplosions';
+import { spawnTowerGroundZone } from './towerGroundZones';
+import {
+  applyCone,
+  applyExtraTargets,
+  applyPierceLine,
+  resolveTowerVolley,
+} from './towerShotAbilities';
 
 // Renderer-free core of tower combat: targeting, single/splash/chain damage,
-// optional abilities (crit, extra targets, piercing line, volley), on-hit
+// optional abilities (crit, extra targets, piercing line, cone, volley), on-hit
 // status effects and damage over time. The Phaser combat runtime and the
 // headless duel simulation both run these; everything visual or audible (hit
 // flash, projectiles, damage numbers, sounds) goes through the hooks.
@@ -28,6 +35,7 @@ export {
 } from './towerCombatTypes';
 export { applyTowerEffect } from './towerStrike';
 export { tickFieldCreepEffects } from './towerCreepEffects';
+export { clearGroundZones, createGroundZoneStore, type GroundZoneStore } from './towerGroundZones';
 
 /**
  * Counts the shot for `critEveryNthShot` and returns the shot-wide damage
@@ -85,6 +93,10 @@ function applySingleTargetShot<C extends CombatCreep, T extends CombatTower>(
 
   if (abilities.pierceLine !== undefined) {
     applyPierceLine(field, tower, target, shotDamage, damageType, hooks, abilities.pierceLine);
+  }
+
+  if (abilities.coneDegrees !== undefined) {
+    applyCone(field, tower, target, shotDamage, damageType, hooks, abilities.coneDegrees);
   }
 }
 
@@ -161,6 +173,7 @@ export function resolveTowerAttacks<C extends CombatCreep, T extends CombatTower
 
     if (tower.entity.combatStats.abilities?.volleyEveryMs !== undefined) {
       resolveTowerVolley(field, tower, hooks, deltaMs, resolveTowerDamageType(tower.entity));
+      resolveCorpseExplosions(field, hooks);
     }
 
     // Support towers have no attack of their own; their aura does the work.
@@ -201,6 +214,10 @@ export function resolveTowerAttacks<C extends CombatCreep, T extends CombatTower
       applySingleTargetShot(field, tower, target, shotDamage, damageType, hooks);
     }
 
+    resolveCorpseExplosions(field, hooks);
+    if (tower.entity.combatStats.abilities?.groundZone !== undefined) {
+      spawnTowerGroundZone(field, tower, target);
+    }
     consumeAttackInPlace(tower);
     hooks.onTowerFired(tower, target, isSplashTower);
   }

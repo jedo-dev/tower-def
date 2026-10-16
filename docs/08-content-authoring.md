@@ -509,11 +509,33 @@ brings the next level's object (or none).
 | `minRangeCells` | 0-12, below `range` | Targeting ignores creeps closer than this (mortar dead zone). |
 | `volleyEveryMs` | 500-60000 | Every this many ms the tower hits every valid creep in range once, besides its normal attack (support towers too). A ready volley waits for a target; a new tower starts ready. |
 | `volleyDamageShare` | 0-5 | Share of the tower's damage a volley deals; 1 when omitted. Needs `volleyEveryMs`. |
+| `knockbackCells` | 0.1-3 | Every hit pushes a small or medium creep this many cells back along its own route (air creeps along the air line); large creeps stand firm. The push is queued on the creep (`pendingKnockbackCells`, the strongest of the frame's pushes) and the movement step walks it back, never past the route start, raising its remaining route distance (tower-def-bge.9, Mortar, Grapeshot). |
+| `groundsFliersMs` | 100-10000 | Every hit pulls a flier down for this many ms: it keeps flying its air route but counts as a ground creep for targeting (ground-only towers, splash and chain may hit it) until the timer runs out; a longer running timer is kept (tower-def-bge.9, Wild Growth). |
+| `corpseExplosionShare` | 0.01-1 | A creep a hit of this tower kills (any shape: shot, splash, arc, extra, pierce, cone, volley) explodes for this share of its maximum health, of the tower's damage type, on every other valid creep (in the tower's target scope, not hidden) within `corpseExplosionRadiusCells` of its footprint centre. Needs the radius. Kills are queued and resolved when the attack is done, first in first out, each explosion walking the field in order (tower-def-bge.9, Corpse Blast). Explosion kills are credited to the tower. |
+| `corpseExplosionRadiusCells` | 0.5-6 | Radius of the explosion. Needs `corpseExplosionShare`. |
+| `corpseExplosionChainLimit` | whole, 1-20 | Generations of explosions one kill may set off: creeps an explosion kills explode in turn while the chain is within the limit. 1 (no chain) when omitted (`TOWER_ABILITY_BALANCE.defaultCorpseExplosionChainLimit`). Needs `corpseExplosionShare`. |
+| `groundZone` | object, see below | Leaves a zone on the ground where each shot lands (the primary target's footprint centre; splash and single-target towers alike). Every `tickMs` it deals `damage` of `damageType` to every ground creep inside (grounded fliers too, hidden ones not) and chills them by `chill`, for `durationMs`; the first tick lands on the zone's first step, `durationMs / tickMs` ticks in all (tower-def-bge.9: Plague Cloud, Spores, Quagmire). Zone kills are credited to the tower. |
+| `coneDegrees` | 10-180 | A single-target shot also hits every other valid creep in range whose footprint centre lies inside a cone of this opening from the tower centre toward the target, at full damage (tower-def-bge.9, Wyrm Breath). Field order, deterministic. |
+
+`groundZone` fields (`TOWER_GROUND_ZONE_BOUNDS`; unknown keys fail on load):
+
+| Field | Value | Meaning |
+| --- | --- | --- |
+| `radiusCells` | 0.5-6 | Radius from the landing point, measured to creep footprint centres. |
+| `durationMs` | 500-20000 | How long the zone lies. |
+| `tickMs` | 100-5000, at most `durationMs` | Time between ticks. |
+| `damage` | 0-500 | Damage per tick per creep inside, before armor (damage over time shape). |
+| `damageType` | `physical`, `magical`, `percent` | Type of the tick damage (percent is per mille of maximum health). |
+| `chill` | 0.01-0.75, optional | Slow put on every creep inside each tick, lasting `tickMs` plus `TOWER_ABILITY_BALANCE.groundZoneChillLingerMs`, so it wears off just after a creep leaves. |
+
+A zone must deal damage or chill. Zones live in a per-battlefield store of
+reused records (at most `maxGroundZonesPerField`, a new zone past that is
+dropped) and the game draws each as a subtle circle under the towers.
 
 Target multipliers multiply together and apply to every hit of the tower
 (primary, splash, arcs, extra, pierce, volley), before armor and
 vulnerability. A single-target shot is any attack that is neither splash nor
-chain; `extraTargets` and `pierceLine` only widen those.
+chain; `extraTargets`, `pierceLine` and `coneDegrees` only widen those.
 
 On-hit effect fields (in `onHitEffects[]` entries, at any level):
 
@@ -523,6 +545,7 @@ On-hit effect fields (in `onHitEffects[]` entries, at any level):
 | `damageKind` | `vulnerability` only: `physical`, `magical`, `percent` or `all` (default). | `magnitude` is the added share (default 0.15), refreshed, not stacked. |
 | `freezeAtStacks` | `chill` only, whole 2-20. | Every Nth chilling hit on a creep (counted while its chill runs, weaker chills included) freezes it: a `stun`. |
 | `freezeMs` | `chill` only, with `freezeAtStacks`, 100-10000 ms. | Freeze length; the stun balance duration when omitted. |
+| `groundsFliersMs` | `chill` only, with `freezeAtStacks`, 100-10000 ms. | A freeze also grounds a flier for this long (see the ability of the same name); a freeze the creature resists grounds nothing (tower-def-bge.9, Permafrost). |
 | `damageType` | `poison` and `burn`. | See "Damage over time type". |
 | `maxStacks` | Stacking effects only (`poison`, `burn`, `armor_break`), whole 1-10. | The stack cap of this tower's application, below or above the balance default (3); 1 means it does not stack. The balance cap when omitted. A running instance keeps the highest cap among the towers feeding it. |
 
@@ -576,7 +599,16 @@ and the id. Today every race tower mirrors its archetype (a test enforces it):
 | `support` | `both` (omitted) | Has no attack; the scope is meaningless and left out. |
 
 The rule of thumb: the blast stays on the ground, everything that picks a
-target reaches the air. Loaders expose the resolved value on
+target reaches the air.
+
+**Per-grade scope** (tower-def-bge.9). A `levels[]` entry or a talent grade
+may declare its own `allowedTargets` (same three values, validated the same
+way); absent means the tower's scope. Targeting, splash, chain and the
+computer's damage model read the resolved level first
+(`resolveTowerTargetScope`: level or grade, then the tower, then the
+archetype). The Mortar and Wild Growth branches reach fliers from grade 4
+this way. A grade replaces the stats like any level, so a branch that keeps
+the wider scope repeats it on every grade. Loaders expose the resolved value on
 `BuildableTowerConfig` and `TowerArchetypeDefinition` (`allowedTargets`), so a
 roster view can show "targets: ground / air / both". Targeting, splash and
 chain all consult it (`entities/tower/model/targeting.ts`,
@@ -673,6 +705,7 @@ Every race tower entry declares exactly two branches:
 | `grades` | Exactly levels 4, 5, 6, 7 in that order. |
 | grade `damage`, `range`, `attackCooldownMs` | Required, same bounds as a level. |
 | grade `splashRadius`, `onHitEffects`, `aura`, `chain` | Optional, same shapes as on a level or archetype. |
+| grade `allowedTargets` | Optional `ground`, `air` or `both`: the scope at that grade (see "Target scope"). |
 | grade `abilities` | Optional typed abilities object, same fields as a level's `abilities` (see "Tower abilities" above); unknown keys fail on load. |
 
 A grade replaces the tower's stats like a level does: anything the grade does
@@ -710,10 +743,12 @@ curve (or its archetype's), 4-7 from the chosen branch. The curve tops out at
 
 **Shipped branches** (tower-def-bge.3) follow docs/11 with English names, read
 against the shipped grade 3 stats. Where docs/11 asks for a mechanic that does
-not exist yet (ground zones, cones, knockback, corpse explosions, fliers
-falling, a target scope that changes at a grade) the grade uses the closest
-existing ability or a number buff; every such substitution is listed in
-docs/07 "Tower talents authoring (tower-def-bge.3)". A content test asserts
+not exist yet the grade uses the closest existing ability or a number buff;
+every such substitution is listed in docs/07 "Tower talents authoring
+(tower-def-bge.3)". tower-def-bge.9 added ground zones (`groundZone`), cones
+(`coneDegrees`), knockback (`knockbackCells`), corpse explosions
+(`corpseExplosion*`), fliers falling (`groundsFliersMs`) and per-grade
+`allowedTargets`, and swapped the affected rows back (marked "restored"). A content test asserts
 the two branches of each tower differ in at least one ability, effect or aura
 mechanic, not only in numbers; the bestiary card shows each branch with its
 grade 4-7 table.

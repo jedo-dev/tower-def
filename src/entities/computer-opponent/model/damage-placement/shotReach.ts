@@ -3,6 +3,7 @@ import type { TowerChainDefinition } from '../../../tower/model/content/loadTowe
 import { getTowerArchetype } from '../../../tower/model/types';
 import { computeExtraCreepsStruck, computeExtraHitShare } from './abilityDamageModel';
 import { MAX_EXPECTED_SPLASH_TARGETS } from './constants';
+import { computeConeExtraHitShare } from './deferredMechanicsValue';
 import { expectedCreepsAround } from './routeDensity';
 import type { RouteGeometry } from './routeGeometry';
 import type { DamageModelTower } from './towerDamageModel';
@@ -49,7 +50,12 @@ export function computeTargetsPerShot(
     return targets;
   }
 
-  return 1 + computeExtraHitShare(tower.stats.abilities, tower.stats.range, geometry, sampleIndex);
+  const { abilities, range } = tower.stats;
+  return (
+    1 +
+    computeExtraHitShare(abilities, range, geometry, sampleIndex) +
+    computeConeExtraHitShare(abilities, range, geometry, sampleIndex)
+  );
 }
 
 /**
@@ -75,7 +81,11 @@ export function computeCreepsStruckPerShot(
     }
     return struck;
   }
+  // Cone hits land at full damage, so the cone's share is also whole creeps struck.
+  const { abilities, range } = tower.stats;
   return (
-    1 + computeExtraCreepsStruck(tower.stats.abilities, tower.stats.range, geometry, sampleIndex)
+    1 +
+    computeExtraCreepsStruck(abilities, range, geometry, sampleIndex) +
+    computeConeExtraHitShare(abilities, range, geometry, sampleIndex)
   );
 }

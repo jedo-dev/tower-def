@@ -262,6 +262,8 @@ export function parseLevelStats(
   const onHitEffects = parseOnHitEffects(level, location);
   const range = readNumber(level, 'range', location, TOWER_STAT_BOUNDS.range);
   const abilities = parseAbilities(level, location, range);
+  const allowedTargets =
+    level.allowedTargets === undefined ? undefined : parseAllowedTargets(level, location);
 
   return {
     damage: readNumber(level, 'damage', location, TOWER_STAT_BOUNDS.damage),
@@ -276,5 +278,6 @@ export function parseLevelStats(
     ...(onHitEffects.length === 0 ? {} : { onHitEffects }),
     ...(aura === undefined ? {} : { aura }),
     ...(abilities === undefined ? {} : { abilities }),
+    ...(allowedTargets === undefined ? {} : { allowedTargets }),
   };
 }
