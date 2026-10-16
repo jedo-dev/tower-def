@@ -325,6 +325,28 @@
   color: var(--color-accent-gold);
 }
 
+/* Carousel position ("1 / 4"); the step dashes in the top bar stay step progress. */
+.setup-race-counter {
+  margin: var(--space-md) 0 0;
+  font-family: var(--font-family-stats);
+  font-size: var(--font-size-xs);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.12em;
+  color: var(--color-text-label);
+}
+
+.setup-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
 /* Primary CTA, same procedural language as FantasyButton. */
 .setup-next-button {
   position: relative;

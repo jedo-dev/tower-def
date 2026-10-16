@@ -190,6 +190,18 @@ describe('HudPanel build bar', () => {
     expect(consoleError).not.toHaveBeenCalled();
   });
 
+  it('names the difficulty the way the race and enemy are named', () => {
+    publishGameHudSnapshot(createSnapshot());
+
+    render(<HudPanel setup={createSetup(RaceId.UNDEAD)} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Expand HUD' }));
+
+    // Display name ("Normal"), never the raw config id ("normal").
+    expect(screen.getByText('Normal')).toBeDefined();
+    expect(screen.queryByText(Difficulty.NORMAL)).toBeNull();
+    expect(consoleError).not.toHaveBeenCalled();
+  });
+
   it('disables a tower the player cannot afford', () => {
     publishGameHudSnapshot(createSnapshot({ gold: 0 }));
 

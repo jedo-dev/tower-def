@@ -1,16 +1,20 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { builderFactions } from '../../../entities/builder-faction';
 import { DEFAULT_DIFFICULTY, difficulties } from '../../../entities/difficulty';
 import { DEFAULT_ENEMY_FACTION, enemyFactions } from '../../../entities/enemy-faction';
 import { DIFFICULTY_GROUP_LABEL } from './DifficultyStep';
 import { ENEMY_FACTION_GROUP_LABEL } from './EnemyFactionStep';
+import { resetSetupSelectionMemory } from '../model/setupSelectionMemory';
 import { GameSetupPage } from './GameSetupPage';
 
 const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
 
 afterEach(() => {
   cleanup();
+  resetSetupSelectionMemory();
+  vi.useRealTimers();
   consoleError.mockClear();
 });
 
@@ -79,6 +83,75 @@ describe('GameSetupPage selection semantics', () => {
 
     fireEvent.keyDown(checkedRadio(group), { key: 'End' });
     expect(checkedRadio(group).textContent).toContain(difficulties[difficulties.length - 1].name);
+    expect(consoleError).not.toHaveBeenCalled();
+  });
+});
+
+describe('GameSetupPage wizard consistency', () => {
+  it('counts the race carousel as "n / total" and keeps the dashes as step progress', () => {
+    vi.useFakeTimers();
+    renderPage();
+
+    expect(screen.getByText(`1 / ${builderFactions.length}`)).toBeDefined();
+    expect(screen.getByRole('img', { name: 'Step 1 of 4' })).toBeDefined();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Next race' }));
+    act(() => {
+      vi.runAllTimers();
+    });
+
+    expect(screen.getByText(`2 / ${builderFactions.length}`)).toBeDefined();
+    const progress = screen.getByRole('img', { name: 'Step 1 of 4' });
+    const activeDashes = progress.querySelectorAll('.setup-progress-dot-active');
+    expect(activeDashes).toHaveLength(1);
+    expect(activeDashes[0].getAttribute('data-step')).toBe('builder-race');
+    expect(consoleError).not.toHaveBeenCalled();
+  });
+
+  it('remembers race, enemy and difficulty when the wizard is opened again', () => {
+    vi.useFakeTimers();
+    renderPage();
+    fireEvent.click(screen.getByRole('button', { name: 'Next race' }));
+    act(() => {
+      vi.runAllTimers();
+    });
+    const pickedRace = builderFactions[1].name;
+    fireEvent.click(screen.getByRole('button', { name: 'Choose' }));
+
+    const enemyGroup = screen.getByRole('radiogroup', { name: ENEMY_FACTION_GROUP_LABEL });
+    const pickedEnemy = within(enemyGroup).getAllByRole('radio')[enemyFactions.length - 1];
+    fireEvent.click(pickedEnemy);
+    fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
+    const difficultyGroup = screen.getByRole('radiogroup', { name: DIFFICULTY_GROUP_LABEL });
+    fireEvent.click(within(difficultyGroup).getAllByRole('radio')[difficulties.length - 1]);
+
+    cleanup();
+    renderPage();
+
+    expect(screen.getByRole('heading', { name: pickedRace })).toBeDefined();
+    fireEvent.click(screen.getByRole('button', { name: 'Choose' }));
+    expect(
+      checkedRadio(screen.getByRole('radiogroup', { name: ENEMY_FACTION_GROUP_LABEL })).textContent,
+    ).toContain(enemyFactions[enemyFactions.length - 1].name);
+    fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
+    expect(
+      checkedRadio(screen.getByRole('radiogroup', { name: DIFFICULTY_GROUP_LABEL })).textContent,
+    ).toContain(difficulties[difficulties.length - 1].name);
+    expect(consoleError).not.toHaveBeenCalled();
+  });
+
+  it('keeps dynamic entrances a labelled switch on the summary', () => {
+    renderPage();
+    fireEvent.click(screen.getByRole('button', { name: 'Choose' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
+
+    const toggle = screen.getByRole('switch', {
+      name: 'Randomize entrance and exit positions on map edges',
+    });
+    expect((toggle as HTMLInputElement).checked).toBe(false);
+    fireEvent.click(toggle);
+    expect(screen.getByText('Random edges')).toBeDefined();
     expect(consoleError).not.toHaveBeenCalled();
   });
 });

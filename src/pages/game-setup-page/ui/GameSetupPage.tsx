@@ -1,23 +1,16 @@
 import { useState, useCallback, useEffect, useRef, type CSSProperties } from 'react';
-import {
-  BuilderFaction,
-  builderFactions,
-  DEFAULT_BUILDER_FACTION,
-} from '../../../entities/builder-faction';
-import {
-  EnemyFaction,
-  enemyFactions,
-  DEFAULT_ENEMY_FACTION,
-} from '../../../entities/enemy-faction';
-import { Difficulty, difficulties, DEFAULT_DIFFICULTY } from '../../../entities/difficulty';
+import { BuilderFaction, builderFactions } from '../../../entities/builder-faction';
+import { EnemyFaction, enemyFactions } from '../../../entities/enemy-faction';
+import { Difficulty, difficulties } from '../../../entities/difficulty';
 import type { GameSetupConfig, AppRoute } from '../../../shared/config/game-setup';
 import { ToggleSwitch } from '../../../shared/ui/toggle-switch';
 import { DifficultyStep } from './DifficultyStep';
 import { EnemyFactionStep } from './EnemyFactionStep';
 import { getEnemyThemeColor } from './enemyThemeColor';
+import { readSetupSelection, rememberSetupSelection } from '../model/setupSelectionMemory';
+import type { SetupStep } from '../model/setupSteps';
+import { SetupProgress } from './SetupProgress';
 import './GameSetupPage.css';
-
-type SetupStep = 'builder-race' | 'enemy-faction' | 'difficulty' | 'summary';
 
 export type GameSetupPageProps = {
   onStartGame: (config: GameSetupConfig) => void;
@@ -40,10 +33,29 @@ const BUILDER_BACKGROUND_VIDEO: Partial<Record<BuilderFaction, string>> = {
 
 export function GameSetupPage({ onStartGame, onNavigate }: GameSetupPageProps) {
   const [step, setStep] = useState<SetupStep>('builder-race');
-  const [builderRace, setBuilderRace] = useState<BuilderFaction>(DEFAULT_BUILDER_FACTION);
-  const [enemyFactionSelected, setEnemyFactionSelected] =
-    useState<EnemyFaction>(DEFAULT_ENEMY_FACTION);
-  const [difficultySelected, setDifficultySelected] = useState<Difficulty>(DEFAULT_DIFFICULTY);
+  // Picks start from the session memory: re-opening the wizard (or coming
+  // back from a match) finds the last race, enemy and difficulty.
+  const [builderRace, setBuilderRaceState] = useState<BuilderFaction>(
+    () => readSetupSelection().builderRace,
+  );
+  const [enemyFactionSelected, setEnemyFactionState] = useState<EnemyFaction>(
+    () => readSetupSelection().enemyFaction,
+  );
+  const [difficultySelected, setDifficultyState] = useState<Difficulty>(
+    () => readSetupSelection().difficulty,
+  );
+  const setBuilderRace = useCallback((race: BuilderFaction) => {
+    rememberSetupSelection({ builderRace: race });
+    setBuilderRaceState(race);
+  }, []);
+  const setEnemyFactionSelected = useCallback((faction: EnemyFaction) => {
+    rememberSetupSelection({ enemyFaction: faction });
+    setEnemyFactionState(faction);
+  }, []);
+  const setDifficultySelected = useCallback((difficulty: Difficulty) => {
+    rememberSetupSelection({ difficulty });
+    setDifficultyState(difficulty);
+  }, []);
   const [useDynamicEndpoints, setUseDynamicEndpoints] = useState(false);
   const [isRaceVisible, setIsRaceVisible] = useState(true);
   const transitionTimeoutRef = useRef<number | null>(null);
@@ -103,6 +115,10 @@ export function GameSetupPage({ onStartGame, onNavigate }: GameSetupPageProps) {
   const currentDifficultyConfig =
     difficulties.find((d) => d.id === difficultySelected) ?? difficulties[0];
   const currentBuilderVideo = BUILDER_BACKGROUND_VIDEO[builderRace];
+  const builderRaceIndex = Math.max(
+    0,
+    builderFactions.findIndex((faction) => faction.id === builderRace),
+  );
   const starterTowerName = formatTowerName(currentBuilderConfig.towerIds[0]);
 
   useEffect(() => {
@@ -130,7 +146,7 @@ export function GameSetupPage({ onStartGame, onNavigate }: GameSetupPageProps) {
         transitionTimeoutRef.current = null;
       }, 180);
     },
-    [builderRace],
+    [builderRace, setBuilderRace],
   );
 
   const handleBuilderRaceSwitch = useCallback(
@@ -168,18 +184,7 @@ export function GameSetupPage({ onStartGame, onNavigate }: GameSetupPageProps) {
             {'<'}
           </button>
           <h1 className="setup-title">{STEP_TITLES[step]}</h1>
-          <div className="setup-progress">
-            {['builder-race', 'enemy-faction', 'difficulty', 'summary'].map((s, idx) => (
-              <div
-                key={s}
-                className={`setup-progress-dot${step === s ? ' setup-progress-dot-active' : ''}${
-                  ['builder-race', 'enemy-faction', 'difficulty', 'summary'].indexOf(step) > idx
-                    ? ' setup-progress-dot-complete'
-                    : ''
-                }`}
-              />
-            ))}
-          </div>
+          <SetupProgress step={step} />
         </header>
       )}
 
@@ -197,14 +202,7 @@ export function GameSetupPage({ onStartGame, onNavigate }: GameSetupPageProps) {
                 {'<'}
               </button>
               <h1 className="setup-race-title">{STEP_TITLES[step]}</h1>
-              <div className="setup-progress">
-                {builderFactions.map((faction) => (
-                  <div
-                    key={faction.id}
-                    className={`setup-progress-dot${builderRace === faction.id ? ' setup-progress-dot-active' : ''}`}
-                  />
-                ))}
-              </div>
+              <SetupProgress step={step} />
             </div>
 
             <div
@@ -256,6 +254,14 @@ export function GameSetupPage({ onStartGame, onNavigate }: GameSetupPageProps) {
                 <p className="setup-card-tower">
                   Starter Tower
                   <span className="setup-card-tower-value">{starterTowerName}</span>
+                </p>
+                <p className="setup-race-counter" aria-live="polite">
+                  <span aria-hidden="true">
+                    {builderRaceIndex + 1} / {builderFactions.length}
+                  </span>
+                  <span className="setup-visually-hidden">
+                    Race {builderRaceIndex + 1} of {builderFactions.length}
+                  </span>
                 </p>
               </div>
             </div>
