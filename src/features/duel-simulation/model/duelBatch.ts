@@ -16,6 +16,12 @@ import {
   type RaceDevelopmentStats,
 } from './duelBatchDevelopment';
 import {
+  summarizeCreatureDevelopment,
+  summarizeRaceCreatureDevelopment,
+  type DuelMatchCreatureDevelopment,
+  type RaceCreatureDevelopmentStats,
+} from './duelBatchCreatureDevelopment';
+import {
   simulateDuel,
   type DuelEndReason,
   type DuelSimulationResult,
@@ -69,6 +75,8 @@ export type DuelMatchSummary = {
   endReason: DuelEndReason;
   /** Boards at match end, top grades at the checkpoint rounds, branch picks. */
   development: DuelMatchDevelopment;
+  /** Creature experience, grades, branch picks and leak sources per side. */
+  creatureDevelopment: DuelMatchCreatureDevelopment;
 };
 
 /** Average unspent gold and income per side-round. */
@@ -118,6 +126,7 @@ export type DuelBatchResult = {
   overall: DuelBatchStats;
   /** Per race over the whole batch. */
   development: RaceDevelopmentStats[];
+  creatureDevelopment: RaceCreatureDevelopmentStats[];
 };
 
 export const DEFAULT_DUEL_BATCH_RACE_PAIRS: readonly (readonly [RaceId, RaceId])[] = [
@@ -181,6 +190,7 @@ export function summarizeDuel(result: DuelSimulationResult): DuelMatchSummary {
     winner: result.winner,
     endReason: result.endReason,
     development: summarizeDevelopment(result),
+    creatureDevelopment: summarizeCreatureDevelopment(result),
   };
 }
 
@@ -278,5 +288,8 @@ export function runDuelBatch(config: DuelBatchConfig): DuelBatchResult {
     matchups,
     overall: summarizeBatch(summaries),
     development: summarizeRaceDevelopment(summaries),
+    creatureDevelopment: summarizeRaceCreatureDevelopment(
+      summaries.map((summary) => summary.creatureDevelopment),
+    ),
   };
 }

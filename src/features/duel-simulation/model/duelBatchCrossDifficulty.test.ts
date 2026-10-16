@@ -8,6 +8,7 @@ import {
   summarizeCrossDifficulty,
 } from './duelBatchCrossDifficulty';
 import { parseDuelBatchArgs } from './parseDuelBatchArgs';
+import type { DuelSideCreatureDevelopment } from './duelBatchCreatureDevelopment';
 
 function side(raceId: RaceId): DuelSideDevelopment {
   return {
@@ -18,6 +19,18 @@ function side(raceId: RaceId): DuelSideDevelopment {
     topGradeAtLateRound: 3,
     branchIds: [],
     branchChoices: {},
+  };
+}
+
+function creatureSide(raceId: RaceId): DuelSideCreatureDevelopment {
+  return {
+    raceId,
+    xpSpent: 0,
+    topCreatureGradeAtEarlyRound: 0,
+    topCreatureGradeAtLateRound: 0,
+    creatureBranchIds: [],
+    sendLeaksCaused: 0,
+    baselineLeaksSuffered: 0,
   };
 }
 
@@ -32,6 +45,10 @@ function summary(winner: DuelMatchSummary['winner'], rounds: number): DuelMatchS
     development: {
       a: side(RaceId.UNDEAD),
       b: side(RaceId.ORC),
+    },
+    creatureDevelopment: {
+      a: creatureSide(RaceId.UNDEAD),
+      b: creatureSide(RaceId.ORC),
     },
   };
 }

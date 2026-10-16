@@ -12,6 +12,7 @@ import {
   formatEndTowers,
   formatRaceDevelopment,
 } from './formatDuelBatchDevelopment';
+import { formatRaceCreatureDevelopment } from './duelBatchCreatureDevelopment';
 import { summarizeCrossDifficulty, type CrossDifficultyStats } from './duelBatchCrossDifficulty';
 
 const PERCENT = 100;
@@ -147,6 +148,7 @@ export function formatDuelBatch(result: DuelBatchResult): string {
     '',
     formatEndBoardLine(result.overall.endBoards),
     ...formatRaceDevelopment(result.development),
+    ...formatRaceCreatureDevelopment(result.creatureDevelopment),
     '',
     ...result.matchups.map(formatMatchLine),
   ].join('\n');

@@ -14,6 +14,7 @@ import {
 import type { DuelSideDevelopment } from './duelBatchDevelopment';
 import { formatDuelBatch } from './formatDuelBatch';
 import { parseDuelBatchArgs } from './parseDuelBatchArgs';
+import type { DuelSideCreatureDevelopment } from './duelBatchCreatureDevelopment';
 
 /** Full batch runs several duels; under full-suite load it can exceed the 5s default. */
 const BATCH_RUN_TIMEOUT_MS = 30_000;
@@ -30,6 +31,18 @@ function side(raceId: RaceId): DuelSideDevelopment {
   };
 }
 
+function creatureSide(raceId: RaceId): DuelSideCreatureDevelopment {
+  return {
+    raceId,
+    xpSpent: 0,
+    topCreatureGradeAtEarlyRound: 0,
+    topCreatureGradeAtLateRound: 0,
+    creatureBranchIds: [],
+    sendLeaksCaused: 0,
+    baselineLeaksSuffered: 0,
+  };
+}
+
 function summary(overrides: Partial<DuelMatchSummary>): DuelMatchSummary {
   return {
     seed: 1,
@@ -41,6 +54,10 @@ function summary(overrides: Partial<DuelMatchSummary>): DuelMatchSummary {
     development: {
       a: side(RaceId.UNDEAD),
       b: side(RaceId.ORC),
+    },
+    creatureDevelopment: {
+      a: creatureSide(RaceId.UNDEAD),
+      b: creatureSide(RaceId.ORC),
     },
     ...overrides,
   };
