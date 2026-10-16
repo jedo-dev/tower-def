@@ -129,7 +129,7 @@ together.
 | Race | Profile | Avg `physicalArmor` | Avg `magicalArmor` |
 | --- | --- | --- | --- |
 | Undead | Bones and spirits: low physical, highest magical | 1.875 | 8.625 |
-| Orc | Hide and iron: highest physical, lowest magical | 6.125 | 1.125 |
+| Orc | Hide and iron: highest physical, lowest magical | 5.5 | 1.625 |
 | Human | Balanced; footmen, knights and siege lean physical | 5.125 | 4.0 |
 | Elf | Unarmored and fey: lowest physical, mid magical | 1.125 | 5.125 |
 
@@ -313,7 +313,8 @@ The type belongs to the effect entry, not to the tower, so a race tower whose
 poison differs from its archetype authors its own `levels` with the typed
 effect at every level (the archetype curve would bring back magical poison on
 upgrade). Thorn Spire does this: hits and poison ticks of 6, 7 and 8 per mille
-(0.6% to 0.8% of maximum health) at levels 1 to 3. When two towers poison the
+(0.6% to 0.8% of maximum health) at levels 1 to 3, stacking 3, 4 and 4 times
+(tower-def-6nf.4 capped level 3 at 4). When two towers poison the
 same creep, the latest application sets the tick type, as it sets the
 remaining duration.
 
@@ -372,9 +373,21 @@ differ from the archetype must author all its `levels`**, or the first
 upgrade snaps it back to the archetype numbers. Prices stay equal per
 archetype across races (a test enforces it); the per-race dial is the stats.
 
-Today only the `single` archers differ, as the anti-air dial of
-tower-def-xwc.5 (docs/07, "Air waves across races"): undead 19 / 29 / 38,
-orc 21 / 31 / 42, human 25 / 37 / 50, elf on the archetype 20 / 30 / 40.
+The `single` archers are the per-race dial (tower-def-xwc.5, retuned for
+armor types in tower-def-6nf.4; docs/07 "Armor types rebalance"):
+
+| Race | Damage L1 / L2 / L3 | Range L1 / L2 / L3 |
+| --- | --- | --- |
+| Undead | 20 / 30 / 40 | 5.7 / 6.2 / 6.6 |
+| Orc | 21 / 31 / 42 | archetype (6 / 6.4 / 6.8) |
+| Human | 23 / 35 / 46 | archetype |
+| Elf | archetype (20 / 30 / 40) | 6.2 / 6.6 / 7 |
+
+Besides the archers, the elf moonwell chills less than the frost archetype
+(0.28 / 0.38 / 0.48), the undead frost wyrm nest hits 20 at level 1 (19 on the
+archetype) and Thorn Spire is percent (above). Keep cooldowns in steps of
+50 ms: the duel simulator steps 50 ms, so an off-step cooldown fights like the
+next step up there but not in the game.
 
 ## Schema versions
 
