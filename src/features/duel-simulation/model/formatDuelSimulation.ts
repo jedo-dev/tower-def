@@ -1,4 +1,4 @@
-import type { BattlefieldState } from '../../../entities/duel-match';
+import type { BattlefieldState, DuelistState } from '../../../entities/duel-match';
 import { renderBoardSnapshot } from '../../../shared/lib/board-snapshot';
 import { RouteSizeClass } from '../../../shared/constants/board-snapshot';
 import { TOWER_FOOTPRINT } from '../../../shared/constants/footprint';
@@ -42,6 +42,7 @@ export function formatDuelRoundLine(report: DuelRoundReport): string {
     pair('kills', a, b, (side) => side.kills),
     pair('sent', a, b, (side) => side.sentCount),
     pair('towers', a, b, (side) => side.towers),
+    pair('grade', a, b, (side) => side.topGrade),
     `route s/l A ${formatRouteCost(a.routeCost)} B ${formatRouteCost(b.routeCost)}`,
     `ticks ${report.ticks}${report.isWaveCutOff ? ' (cut off)' : ''}`,
   ].join(' | ');
@@ -60,6 +61,22 @@ function renderBattlefield(battlefield: BattlefieldState): string {
       { label: 'large', sizeClass: RouteSizeClass.LARGE, cells: battlefield.routes.large },
     ],
   });
+}
+
+/** `grades 1x4 3x2 5x1 | branches id=branch`: how far the side developed its towers. */
+export function formatTowerDevelopment(duelist: DuelistState): string {
+  const countByGrade = new Map<number, number>();
+  for (const tower of duelist.battlefield.towers) {
+    countByGrade.set(tower.level, (countByGrade.get(tower.level) ?? 0) + 1);
+  }
+  const grades = [...countByGrade.entries()]
+    .sort(([left], [right]) => left - right)
+    .map(([grade, count]) => `${grade}x${count}`)
+    .join(' ');
+  const branches = Object.entries(duelist.towerBranchChoices)
+    .map(([towerId, branchId]) => `${towerId}=${branchId}`)
+    .join(' ');
+  return `grades ${grades || 'none'} | branches ${branches || 'none'}`;
 }
 
 function describeSide(label: string, side: DuelSimulationSide): string {
@@ -95,9 +112,11 @@ export function formatDuelSimulation(result: DuelSimulationResult): string {
     '',
     describeSide('board A', config.sideA),
     renderBattlefield(result.finalState.player.battlefield),
+    formatTowerDevelopment(result.finalState.player),
     '',
     describeSide('board B', config.sideB),
     renderBattlefield(result.finalState.opponent.battlefield),
+    formatTowerDevelopment(result.finalState.opponent),
     '',
     formatWinner(result),
   ].join('\n');

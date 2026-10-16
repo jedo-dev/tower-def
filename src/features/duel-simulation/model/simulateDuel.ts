@@ -59,6 +59,8 @@ export type DuelSideRoundReport = DuelFieldWaveResult & {
   builtCount: number;
   upgradedCount: number;
   towers: number;
+  /** Highest grade among the side's towers (0 without towers). */
+  topGrade: number;
   routeCost: DuelRouteCost;
 };
 
@@ -144,6 +146,7 @@ function reportSide(duelist: DuelMatchState['player'], facts: SideRoundFacts): D
     builtCount: facts.builtCount,
     upgradedCount: facts.upgradedCount,
     towers: duelist.battlefield.towers.length,
+    topGrade: duelist.battlefield.towers.reduce((top, tower) => Math.max(top, tower.level), 0),
     routeCost: measureRouteCost(duelist.battlefield),
   };
 }
