@@ -25,13 +25,11 @@ export const TALENT_VALUATION_BY_DIFFICULTY: Readonly<Record<Difficulty, TalentV
 };
 
 /**
- * Economy talents (aura `incomePerRound`, `goldPerKill`) are valued as gold
- * back: what they pay over this many rounds lowers the branch path's price.
+ * Economy talents (aura `incomePerRound`, `goldPerKill`) are valued by the
+ * gold they pay over this many rounds, at the route value a gold buys on the
+ * board (`computeBoardValuePerGold`).
  */
 export const TALENT_ECONOMY_PAYBACK_ROUNDS = 5;
 
 /** Kills a round the model credits to towers inside an economy aura. */
 export const TALENT_EXPECTED_AURA_KILLS_PER_ROUND = 6;
-
-/** Gold back never makes a path cheaper than this share of its price. */
-export const TALENT_MIN_EFFECTIVE_COST_SHARE = 0.25;

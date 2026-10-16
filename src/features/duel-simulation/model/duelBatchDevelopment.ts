@@ -1,4 +1,9 @@
 import type { RaceId } from '../../../shared/types/content-ids';
+import {
+  summarizeBranchShares,
+  type SideBranchChoices,
+  type TowerBranchShare,
+} from './duelBatchBranchShares';
 import type { DuelSimulationResult, DuelWinner } from './simulateDuel';
 
 // Talent development in a batch (tower-def-bge.6): how big and how developed
@@ -22,6 +27,8 @@ export type DuelSideDevelopment = {
   topGradeAtLateRound: number | null;
   /** Branch ids the side picked over the match. */
   branchIds: readonly string[];
+  /** The same picks keyed by race tower id. */
+  branchChoices: SideBranchChoices;
 };
 
 export type DuelMatchDevelopment = { a: DuelSideDevelopment; b: DuelSideDevelopment };
@@ -40,15 +47,17 @@ function topGradeAfterRound(
 function describeSide(result: DuelSimulationResult, side: SideKey): DuelSideDevelopment {
   const last = result.rounds[result.rounds.length - 1];
   const duelist = side === 'a' ? result.finalState.player : result.finalState.opponent;
+  const choices = Object.entries(duelist.towerBranchChoices).flatMap(([towerId, branchId]) =>
+    branchId === undefined ? [] : [[towerId, branchId] as const],
+  );
   return {
     raceId: side === 'a' ? result.config.sideA.raceId : result.config.sideB.raceId,
     endTowers: last ? last[side].towers : 0,
     endTopGrade: last ? last[side].topGrade : 0,
     topGradeAtEarlyRound: topGradeAfterRound(result, side, DuelDevelopmentDefaults.EARLY_ROUND),
     topGradeAtLateRound: topGradeAfterRound(result, side, DuelDevelopmentDefaults.LATE_ROUND),
-    branchIds: Object.values(duelist.towerBranchChoices).filter(
-      (branchId): branchId is NonNullable<typeof branchId> => branchId !== undefined,
-    ),
+    branchIds: choices.map(([, branchId]) => branchId),
+    branchChoices: Object.fromEntries(choices),
   };
 }
 
@@ -128,6 +137,8 @@ export type RaceDevelopmentStats = {
   averageTopGradeAtLateRound: number;
   /** Times each branch was picked, in first-seen order. */
   branchPicks: ReadonlyMap<string, number>;
+  /** Per tower type: how the sides that developed it split between its branches. */
+  branchShares: readonly TowerBranchShare[];
 };
 
 function countBranches(sides: readonly DuelSideDevelopment[]): Map<string, number> {
@@ -162,6 +173,7 @@ function summarizeRace(
     developedByLateRound: developed(late),
     averageTopGradeAtLateRound: average(late),
     branchPicks: countBranches(sides),
+    branchShares: summarizeBranchShares(sides),
   };
 }
 

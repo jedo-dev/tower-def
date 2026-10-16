@@ -26,6 +26,7 @@ function side(raceId: RaceId): DuelSideDevelopment {
     topGradeAtEarlyRound: 3,
     topGradeAtLateRound: 3,
     branchIds: [],
+    branchChoices: {},
   };
 }
 

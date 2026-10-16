@@ -882,8 +882,11 @@ expected wave, never a roll:
 | `vulnerability` | its magnitude on the tower's own damage (when the scope covers its type) and on the field's damage over the samples it keeps marked (half for a single-type scope), over what a stronger mark already adds, times the share of the wave it reaches |
 | `armor_break` | the same, with the gain read off the combat mitigation curve: the wave's efficiency of that type turned back into an equivalent armor, minus the reachable stacks' points |
 | chill `freezeAtStacks` / `freezeMs` | the frozen share of the time as a full stop, a mean slow up to 0.85 |
+| `stun` (since tower-def-02k.11) | the share of each reload it holds the creep (`stun / reload`, at most 1) on top of the chill: `slow + (1 - slow) * share`, never a chill of its own |
+| on-hit effects of splash, chain arcs, extra targets, pierce (since 02k.11) | every struck creep counted whole: damage over time on each, and the chilled / marked share of the wave is `shots * creeps struck / arrivals` |
+| slow time gain (since 02k.11) | `1 / (1 - slow) - 1` capped at 2 (`MAX_SLOW_TIME_GAIN`, a 67% slow): past it the towers reaching a held creep are busy with the creeps behind it |
 | aura `damagePercentBonus` (+ type) | added to the aura's attack speed bonus for neighbours whose damage type it covers |
-| aura `incomePerRound` / `goldPerKill` | gold back: what the grade pays over 5 rounds (6 kills a round for `goldPerKill`) lowers the branch path's price, never below 25% |
+| aura `incomePerRound` / `goldPerKill` | the gold the grade pays over 5 rounds (6 kills a round for `goldPerKill`) at the board's route value per gold (every tower's ledger value over the gold it took), added to the grade's gain (since 02k.11; it used to lower the path price, floored at 25%) |
 
 **Branch valuation** (`talent-development/`). For each undeveloped type the
 computer values both branches on its most valuable grade-3 tower, on the same
@@ -892,10 +895,10 @@ profile) that prices walls and upgrades:
 
 ```txt
 gain[g]   = ledger value at grade g - ledger value at grade 3   (g = 4..7)
+          + economy gold of grade g over 5 rounds * board value per gold
 pathCost  = branch price + grade 4..7 prices (120 + 950)
-effective = max(0.25 * pathCost, pathCost - economy gold back)
-score     = mean(gain[4..7]) / effective    -> picks the branch
-ratio     = gain[7] / effective             -> ranks the pick in the round plan
+score     = mean(gain[4..7]) / pathCost     -> picks the branch
+ratio     = gain[7] / pathCost              -> ranks the pick in the round plan
 ```
 
 The better branch enters `planRoundInvestments` as a `choose-branch`
@@ -1305,6 +1308,152 @@ the round line now reports `cg`, the top creature grade per side): both sides
 reach creature grade 1 by round 2-4, grade 2 by rounds 13 (orc) and 18
 (undead), and undead grade 3 in round 24. Hard wins with 12 lives (11
 before). Balance is a later task.
+
+### AI branch valuation (tower-def-02k.11)
+
+After bge.6 ten branches were never picked in any batch (Plague Cloud, Wyrm
+Breath, Soul Harvest, Spear Throwers, Napalm, Siege Cannon, Plague Flasks,
+Treasury, Living Water, Thornbite). This pass fixes the branch valuation, not
+the content.
+
+**New batch metric.** The `development` block now prints, under each race,
+one line per tower type it developed: every authored branch of the type with
+its picks over the sides that picked a branch for that type (the eligible
+cases), e.g. `orc_tar_pit: orc_tar_pit_quagmire 12/20 (60%), orc_tar_pit_sticky
+8/20 (40%)`, so a branch the computer never takes shows as 0 of N
+(`duelBatchBranchShares.ts`).
+
+**Diagnosis** (both branches' value per gold printed on the lead tower for
+seeds 1-3, all four standard pairs, through a test-only wrapper around
+`selectBestBranch`; the share of the top grade's gain each mechanic made was
+read by removing it from the grades):
+
+- **Stuns were valued as a 75% chill.** A stun is a movement effect with
+  magnitude 1, so the frost model capped it at 0.75 and kept it for the whole
+  reach. That was most of the value of every stun branch: Grapeshot 19,000 of
+  21,400 (Siege Cannon 2,400), Grasping Vine 20,200 of 31,200 (Thornbite
+  8,400), Thunder Strike 11,000 of 15,700 (Thunderstorm 2,700), Heavy Spear
+  8,500 of 13,800 (Spear Throwers 2,600), Mortar 4,300 of 8,100 (Napalm 1,700).
+- **Splash damage over time counted on one creep.** Every strike applies the
+  tower's on-hit effects (`towerStrike.ts`), so a splash poison or burn lands
+  on the whole blast and an extra target takes the full poison; the model put
+  it on the target only (Plague Cloud, Napalm, Plague Flasks, Spores).
+- **The effect share ignored extra creeps struck.** Chills and marks reached
+  `shots / arrivals` of the wave whatever a shot struck (Quagmire's extra
+  targets, chain arcs, Wyrm Breath's pierce).
+- **Deep slows ran away.** `1 / (1 - slow) - 1` is 5.7 for Permafrost's frozen
+  0.85 against 1.2 for grade 3's 0.55, so Permafrost's slow alone was worth
+  3,000-10,000 against Wyrm Breath's whole gain of 1,650-3,500.
+- **Economy only lowered the price.** Gold back cut the path price (at most
+  to 25%), which gives nothing to a branch whose route gain is near zero:
+  Treasury scored 0.06-0.14 of Headquarters however much it paid.
+- Left as they were: the 20% large-target share, percent poison stacking
+  and volley packing. Once the above were fixed, the pairs that lean on them
+  (Siege Cannon, Thornbite, Living Water against Moonlight) ranked in the
+  A/B's order.
+
+**Valuation changes** (rows marked "since 02k.11" in the table of "AI talent
+development"): a stun is the share of each reload it holds a creep, on top of
+the chill; damage over time counts on every creep a shot strikes, and the
+chilled or marked share of the wave is creeps struck per second over arrivals;
+the slow time gain is capped at 2 (a 67% slow, above every untalented chill,
+so building and upgrades below grade 4 value frost as before); economy gold
+over the 5-round horizon is added to the grade's gain at the board's route
+value per gold (`computeBoardValuePerGold`), and the price is the plain path
+price. Two more were tried and dropped because they changed the untalented
+game: chain arcs walking along the wave (each arc reaching `bounce` jumps out;
+it rated Thunderstorm right but made the orc computer buy lightning totems
+over walls, 8 towers at round 5 instead of 12, orc 67% game-faithful) and a
+`1 - e^-x` coverage for the effect share (frost upgrades fell, no tower at
+grade 3 by round 10, human 23% game-faithful).
+
+**A/B: forced pick against the usual one** (test-only override of
+`selectBestBranch`; the race's two standard duels, seeds 1-5, classic and
+seeded maps, 20 duels; wins, then lives the race lost):
+
+| Branch forced (instead of) | Before (main valuation, classic only, 10 duels) | After (this valuation, 20 duels) | Value per gold, branch / usual: before -> after |
+| --- | --- | --- | --- |
+| Wyrm Breath (Permafrost) | 5 / 10 wins against 3, lives lost 191 against 208 | Permafrost forced: 10 / 20 against 14, 390 against 289 | 0.40-0.58 -> 1.9-2.2 |
+| Treasury (Headquarters) | 4 against 5, 202 against 201 | 7 against 9, 404 against 378 | 0.06-0.14 -> 0.25-0.44 |
+| Living Water (Moonlight) | 4 against 4, 197 against 188 | 6 against 6, 422 against 401 | 0.42-0.50 -> 0.44-0.50 |
+| Spear Throwers (Heavy Spear) | 7 against 8, 188 against 174 | 8 against 11, 401 against 384 | 0.26-0.45 -> 0.33-0.59 |
+| Thornbite (Grasping Vine) | 4 against 4, 187 against 188 | 6 against 6, 415 against 401 | 0.22-0.24 -> 0.60-0.73 |
+| Sticky Tar (Quagmire) | - | 10 against 11, 395 against 384 | 1.26-1.29 -> 0.27-0.37 |
+| Thunderstorm (Thunder Strike) | - | 10 against 11, 392 against 384 | 0.11-0.59 -> 0.41-0.92 |
+| Soul Harvest (Necromancer's Whisper) | - | 14 against 14, 297 against 289 | - -> 0.43-0.95 |
+| Crossbowmen (Archer Company) | - | 10 against 9, 370 against 378 | 0.42-0.59 -> 0.42-0.65 |
+| Napalm / Siege Cannon / Corpse Blast | - | no difference: the type was developed by 2-4 sides, late | Napalm 0.26 -> 0.68-0.71, Siege 0.12 -> 0.38-0.41 |
+
+The valuation now orders every testable pair as the A/B does except
+Crossbowmen, a hair better in the sim than Archer Company and valued at about
+half (its 2.2 air multiplier is weighed by the expected wave's air share, while
+late lives are lost to fliers, see "Known gap" above). The ratios are still
+wider than the sim's differences: a forced pick moves a race by 0-3 wins in 20
+and a few percent of lives, so the computer still takes one branch of a pair
+almost always. Wyrm Breath was undervalued against Permafrost before and is
+now the clear pick, as the A/B says (a forced Permafrost costs undead 4 wins of
+20).
+
+**Pick shares** (standard batch, hard vs hard, seeds 1-10, classic + seeded
+maps, picks over the sides that developed the type; before is main):
+
+| Tower type | Before | After |
+| --- | --- | --- |
+| Undead Frost Wyrm Nest | Permafrost 40/40, Wyrm Breath 0 | Permafrost 0/40, Wyrm Breath 40/40 |
+| Undead Bone Archer | Bone Volley 0/16, Cursed Arrow 16 | Bone Volley 3/25 (12%), Cursed Arrow 22 |
+| Undead Bone Obelisk | Whisper 13/13, Soul Harvest 0 | Whisper 24/26, Soul Harvest 2 (8%) |
+| Undead Plague Tower | Plague Cloud 0/5, Corpse Blast 5 | Plague Cloud 4/4, Corpse Blast 0 |
+| Orc Tar Pit | Quagmire 11/40, Sticky Tar 29 | Quagmire 40/40, Sticky Tar 0 |
+| Orc Lightning Totem | Thunderstorm 1/23, Thunder Strike 22 | Thunderstorm 1/18 (6%), Thunder Strike 17 |
+| Orc Spear Watchtower | Spear Throwers 0/31, Heavy Spear 31 | Spear Throwers 0/27, Heavy Spear 27 |
+| Orc Burning Pit | Napalm 0/8, Mortar 8 | Napalm 0/8, Mortar 8 |
+| Human Guard Post | Headquarters 37/37, Treasury 0 | Headquarters 37/37, Treasury 0 |
+| Human Guard Archer | Company 33/35, Crossbowmen 2 (6%) | Company 32/35, Crossbowmen 3 (9%) |
+| Human Alchemist | Plague Flasks 0/18, Acid 18 | Plague Flasks 11/19 (58%), Acid 8 |
+| Human Cannon | Siege Cannon 0/11, Grapeshot 11 | Siege Cannon 0/10, Grapeshot 10 |
+| Elf Moonwell | Moonlight 40/40, Living Water 0 | Moonlight 40/40, Living Water 0 |
+| Elf Thorn Spire | Thornbite 0/25, Grasping Vine 25 | Thornbite 2/26 (8%), Grasping Vine 24 |
+| Elf Moon Archer | Moonfall 4/17, Sniper 13 | Moonfall 3/19 (16%), Sniper 16 |
+
+Wisp Bloom was developed by no side of the standard batch (Spores in the
+game-faithful rows). Now picked: Wyrm Breath, Plague Cloud, Plague Flasks,
+Bone Volley; Soul Harvest and Thornbite at 8%.
+
+**Flagged for content** (worse in the A/B above, so the valuation is right to
+pass them): Permafrost (clearly: -4 wins in 20, +35% lives lost), Treasury
+(-2 wins, +7%: 15 gold a round plus 4 a kill is about 5% of a late income of
+550-800), Spear Throwers (-3 wins), Sticky Tar, Thunderstorm, Living Water and
+Thornbite (0-1 win, +2-5%), Soul Harvest (even wins, +3%). Napalm, Siege Cannon
+and Corpse Blast: no measurable effect either way, their types are developed
+late and rarely. Crossbowmen is the one the valuation underrates (air weight,
+not a branch matter).
+
+**Balance** (before is main at the start of this task, not the bge.6 tables:
+the creature abilities and flier work since then moved them):
+
+| Standard batch | Before (classic / seeded) | After (classic / seeded) |
+| --- | --- | --- |
+| Undead | 47.5% (30 / 65) | 62.5% (55 / 70) |
+| Orc | 60.0% (80 / 40) | 57.5% (65 / 50) |
+| Human | 56.3% (50 / 62.5) | 47.5% (45 / 50) |
+| Elf | 36.3% (40 / 32.5) | 32.5% (35 / 30) |
+
+| Game-faithful (classic, seeds 1-10) | Before: wins / median rounds / round caps | After |
+| --- | --- | --- |
+| Undead | 13 of 30 / 26 / 0 | 15 of 30 / 26 / 0 |
+| Orc | 13 of 30 / 26.5 / 0 | 10 of 30 / 27.5 / 0 |
+| Human | 15 of 30 / 26 / 0 | 12.5 of 30 / 27 / 0 |
+| Elf | 15.5 of 30 / 40 / 22 | 9 of 30 / 40 / 26 |
+
+Out of the 40-60% band after: undead (62.5%) and elf (32.5%, 36% before) on
+the standard batch, orc (33%) and elf (30%) on the game-faithful rows. The shift is Wyrm Breath: the
+undead computer now takes the stronger branch (elf against undead 5-4 -> 1-9,
+orc against undead 9-1 -> 3-7 in the game-faithful rows). Breath carries
+Permafrost's grade numbers since bge.6 (damage 40-66, range 7.2-8.4, chill
+0.55) plus a full pierce and a 50% vulnerability; the content follow-up is to
+take back part of that nudge (the vulnerability first), not to make the
+valuation miss it again. Difficulty spot-check (`--seeds 1-3 --matchups
+hard:normal --maps classic`): hard won 40/8/0, 83% (bge.6: 79%).
 
 
 ## Suggested Improvements

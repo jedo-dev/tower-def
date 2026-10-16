@@ -16,6 +16,7 @@ function side(overrides: Partial<DuelSideDevelopment>): DuelSideDevelopment {
     topGradeAtEarlyRound: 3,
     topGradeAtLateRound: 3,
     branchIds: [],
+    branchChoices: {},
     ...overrides,
   };
 }
@@ -24,21 +25,33 @@ const MATCHES: DevelopmentMatch[] = [
   {
     winner: 'A',
     development: {
-      a: side({ endTowers: 34, endTopGrade: 5, topGradeAtLateRound: 5, branchIds: ['x_a'] }),
+      a: side({
+        endTowers: 34,
+        endTopGrade: 5,
+        topGradeAtLateRound: 5,
+        branchIds: ['x_a'],
+        branchChoices: { x: 'x_a' },
+      }),
       b: side({ raceId: RaceId.ORC, endTowers: 30, endTopGrade: 3 }),
     },
   },
   {
     winner: 'B',
     development: {
-      a: side({ endTowers: 20, endTopGrade: 7, topGradeAtEarlyRound: 4, branchIds: ['x_a'] }),
+      a: side({
+        endTowers: 20,
+        endTopGrade: 7,
+        topGradeAtEarlyRound: 4,
+        branchIds: ['x_a'],
+        branchChoices: { x: 'x_a' },
+      }),
       b: side({ raceId: RaceId.ORC, endTowers: 30, endTopGrade: 3, topGradeAtLateRound: null }),
     },
   },
   {
     winner: null,
     development: {
-      a: side({ endTowers: 10, endTopGrade: 3, branchIds: ['x_b'] }),
+      a: side({ endTowers: 10, endTopGrade: 3, branchIds: ['x_b'], branchChoices: { x: 'x_b' } }),
       b: side({ raceId: RaceId.ORC, endTowers: 10, endTopGrade: 3 }),
     },
   },
@@ -81,9 +94,10 @@ describe('features/duel-simulation/duelBatchDevelopment', () => {
       ['x_b', 1],
     ]);
     expect(orc).toMatchObject({ sides: 3, reachedLateRound: 2, developedByLateRound: 0 });
-    expect(formatRaceDevelopment([undead, orc])[1]).toBe(
-      '  UNDEAD (3 sides): r10 1/3 (avg 3.3), r20 1/3 (avg 3.7); x_a 2, x_b 1',
-    );
-    expect(formatRaceDevelopment([undead, orc])[2]).toContain('; none');
+    const lines = formatRaceDevelopment([undead, orc]);
+    expect(lines[1]).toBe('  UNDEAD (3 sides): r10 1/3 (avg 3.3), r20 1/3 (avg 3.7); x_a 2, x_b 1');
+    expect(lines[2]).toBe('    x: x_a 2/3 (67%), x_b 1/3 (33%)');
+    expect(lines[3]).toContain('; none');
+    expect(lines).toHaveLength(4);
   });
 });

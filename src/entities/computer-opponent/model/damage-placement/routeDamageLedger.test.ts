@@ -14,7 +14,8 @@ import {
 } from './damagePlacementFixtures';
 import { createRouteDamageLedger } from './routeDamageLedger';
 import { createRouteGeometry } from './routeGeometry';
-import { computeSampleDamageRate, computeShotDps, computeTargetsPerShot } from './towerDamageModel';
+import { computeTargetsPerShot } from './shotReach';
+import { computeSampleDamageRate, computeShotDps } from './towerDamageModel';
 
 const geometry = createRouteGeometry(U_TURN_ROUTE);
 const range = WALL_TYPE.stats.range;

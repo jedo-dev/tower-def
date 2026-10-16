@@ -69,6 +69,34 @@ export function computeTargetMultiplierFactor(
   );
 }
 
+/** Extra creeps a single-target shot reaches: its extra targets and the pierced ones. */
+type ExtraCreeps = { targets: number; targetShare: number; pierced: number; pierceShare: number };
+
+function computeExtraCreeps(
+  abilities: TowerAbilities | undefined,
+  range: number,
+  geometry: RouteGeometry,
+  sampleIndex: number,
+): ExtraCreeps {
+  const extra: ExtraCreeps = { targets: 0, targetShare: 0, pierced: 0, pierceShare: 0 };
+  if (abilities === undefined) {
+    return extra;
+  }
+  if (abilities.extraTargets !== undefined && abilities.extraTargets > 0) {
+    const others = expectedCreepsAround(geometry, sampleIndex, range) - 1;
+    extra.targets = Math.min(abilities.extraTargets, Math.max(0, others));
+    extra.targetShare =
+      abilities.extraTargetDamageShare ?? TOWER_ABILITY_BALANCE.defaultExtraTargetDamageShare;
+  }
+  if (abilities.pierceLine !== undefined && abilities.pierceLine > 0) {
+    const others =
+      expectedCreepsAround(geometry, sampleIndex, ABILITY_VALUATION.pierceLineReachCells) - 1;
+    extra.pierced = Math.max(0, others);
+    extra.pierceShare = abilities.pierceLine;
+  }
+  return extra;
+}
+
 /**
  * Extra creeps (in shares of a full hit) a single-target shot at `sampleIndex`
  * also damages: its extra targets among the creeps in range, and the creeps
@@ -80,22 +108,23 @@ export function computeExtraHitShare(
   geometry: RouteGeometry,
   sampleIndex: number,
 ): number {
-  if (abilities === undefined) {
-    return 0;
-  }
-  let extra = 0;
-  if (abilities.extraTargets !== undefined && abilities.extraTargets > 0) {
-    const others = expectedCreepsAround(geometry, sampleIndex, range) - 1;
-    const share =
-      abilities.extraTargetDamageShare ?? TOWER_ABILITY_BALANCE.defaultExtraTargetDamageShare;
-    extra += Math.min(abilities.extraTargets, Math.max(0, others)) * share;
-  }
-  if (abilities.pierceLine !== undefined && abilities.pierceLine > 0) {
-    const others =
-      expectedCreepsAround(geometry, sampleIndex, ABILITY_VALUATION.pierceLineReachCells) - 1;
-    extra += abilities.pierceLine * Math.max(0, others);
-  }
-  return extra;
+  const extra = computeExtraCreeps(abilities, range, geometry, sampleIndex);
+  return extra.targets * extra.targetShare + extra.pierced * extra.pierceShare;
+}
+
+/**
+ * Extra creeps a single-target shot at `sampleIndex` strikes, counted whole:
+ * every creep an extra target or the piercing line reaches takes the shot's
+ * on-hit effects in full (poison, burn, chill, stun), whatever its damage share.
+ */
+export function computeExtraCreepsStruck(
+  abilities: TowerAbilities | undefined,
+  range: number,
+  geometry: RouteGeometry,
+  sampleIndex: number,
+): number {
+  const extra = computeExtraCreeps(abilities, range, geometry, sampleIndex);
+  return extra.targets + extra.pierced;
 }
 
 /** Raw volley damage per second at `sampleIndex`: every creep in range, once per volley. */
@@ -235,4 +264,21 @@ export function computeFreezeAdjustedSlow(
   const cycleMs = effect.freezeAtStacks * Math.max(1, attackCooldownMs) + freezeMs;
   const frozenShare = freezeMs / cycleMs;
   return slow + (1 - slow) * frozenShare;
+}
+
+/**
+ * Mean slow of a chill plus a stun of `stunMs` on every hit: the stun stops
+ * the creeps it lands on for that share of a reload (it refreshes, never
+ * stacks, so it holds at most the whole reload), on top of the chill's slow.
+ */
+export function computeStunAdjustedSlow(
+  slow: number,
+  stunMs: number,
+  attackCooldownMs: number,
+): number {
+  if (stunMs <= 0) {
+    return slow;
+  }
+  const stoppedShare = Math.min(1, stunMs / Math.max(1, attackCooldownMs));
+  return slow + (1 - slow) * stoppedShare;
 }
