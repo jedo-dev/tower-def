@@ -66,6 +66,9 @@ function createActiveSnapshot(overrides?: Partial<GameHudSnapshot>): GameHudSnap
     isPaused: false,
     gameSpeed: 1,
     towerBranchChoices: {},
+    creatureXpByTier: {},
+    creatureBranchChoices: {},
+    creatureGrades: {},
     ...overrides,
   };
 }

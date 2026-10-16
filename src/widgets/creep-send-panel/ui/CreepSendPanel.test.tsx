@@ -32,6 +32,9 @@ const snapshot: GameHudSnapshot = {
   isPaused: false,
   gameSpeed: 1,
   towerBranchChoices: {},
+  creatureXpByTier: {},
+  creatureBranchChoices: {},
+  creatureGrades: {},
 };
 
 vi.mock('../../../shared/lib/game-bridge/useGameHudSnapshot', () => ({
@@ -72,8 +75,24 @@ describe('CreepSendPanel send limits', () => {
   it('shows remaining wave capacity and per-type counters from the bridge event', () => {
     render(<CreepSendPanel setup={createSetup(RaceId.ORC)} />);
     publishOrcSendLimits(9, [
-      { creepTypeId: 'orc_grunt', cap: 6, remaining: 3 },
-      { creepTypeId: 'orc_wolf_rider', cap: 5, remaining: 5 },
+      {
+        creepTypeId: 'orc_grunt',
+        cap: 6,
+        remaining: 3,
+        availableBranches: [],
+        branchCostXp: 4,
+        grade: 0,
+        nextUpgradeCostXp: 6,
+      },
+      {
+        creepTypeId: 'orc_wolf_rider',
+        cap: 5,
+        remaining: 5,
+        availableBranches: [],
+        branchCostXp: 4,
+        grade: 0,
+        nextUpgradeCostXp: 6,
+      },
     ]);
 
     expect(screen.getByLabelText('9 of 12 sends left this wave').textContent).toBe('9/12 left');
@@ -85,7 +104,17 @@ describe('CreepSendPanel send limits', () => {
 
   it('disables a creep whose type cap is reached', () => {
     render(<CreepSendPanel setup={createSetup(RaceId.ORC)} />);
-    publishOrcSendLimits(6, [{ creepTypeId: 'orc_grunt', cap: 6, remaining: 0 }]);
+    publishOrcSendLimits(6, [
+      {
+        creepTypeId: 'orc_grunt',
+        cap: 6,
+        remaining: 0,
+        availableBranches: [],
+        branchCostXp: 4,
+        grade: 0,
+        nextUpgradeCostXp: 6,
+      },
+    ]);
 
     const grunt = screen.getByRole('button', { name: 'Cannot send Grunt: send limit reached' });
     expect((grunt as HTMLButtonElement).disabled).toBe(true);
@@ -93,7 +122,17 @@ describe('CreepSendPanel send limits', () => {
 
   it('disables every creep once the wave cap is reached', () => {
     render(<CreepSendPanel setup={createSetup(RaceId.ORC)} />);
-    publishOrcSendLimits(0, [{ creepTypeId: 'orc_grunt', cap: 6, remaining: 0 }]);
+    publishOrcSendLimits(0, [
+      {
+        creepTypeId: 'orc_grunt',
+        cap: 6,
+        remaining: 0,
+        availableBranches: [],
+        branchCostXp: 4,
+        grade: 0,
+        nextUpgradeCostXp: 6,
+      },
+    ]);
 
     const buttons = screen.getAllByRole('button');
     expect(buttons.length).toBeGreaterThan(0);

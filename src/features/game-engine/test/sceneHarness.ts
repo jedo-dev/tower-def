@@ -2,6 +2,8 @@ import { vi } from 'vitest';
 import { BuilderFaction } from '../../../entities/builder-faction';
 import { Difficulty } from '../../../entities/difficulty';
 import { EnemyFaction } from '../../../entities/enemy-faction';
+import type { DuelMatchState } from '../../../entities/duel-match';
+import type { CreatureXpByTier } from '../../../entities/unit';
 import type { GameSetupConfig } from '../../../shared/config/game-setup';
 import type { GridPosition } from '../../../shared/types/pathfinding';
 import {
@@ -90,6 +92,8 @@ export type GameSceneHarness = {
   command: <Name extends keyof GameCommandMap>(name: Name, payload: GameCommandMap[Name]) => void;
   /** Sets the player's wallet, for scenarios that need more gold than a match opens with. */
   setPlayerGold: (gold: number) => void;
+  /** Test-only: replaces the player's creature experience ledger. */
+  setPlayerCreatureXp: (xpByTier: CreatureXpByTier) => void;
   switchBattlefieldView: (view: BattlefieldView) => void;
   /** Left mouse click on the tile that anchors a tower footprint at `anchor`. */
   clickBuildAnchor: (anchor: GridPosition) => void;
@@ -180,6 +184,14 @@ export async function createGameSceneHarness(
     setPlayerGold: (gold) => {
       // Test-only seam: the wallet is private run state with no gameplay setter.
       (scene as unknown as { runState: { playerGold: number } }).runState.playerGold = gold;
+    },
+    setPlayerCreatureXp: (xpByTier) => {
+      // Test-only seam: experience is earned in waves; this skips the grind.
+      const host = scene as unknown as { duelMatchState: DuelMatchState };
+      host.duelMatchState = {
+        ...host.duelMatchState,
+        player: { ...host.duelMatchState.player, creatureXpByTier: xpByTier },
+      };
     },
     switchBattlefieldView: (view) => sendGameCommand('switch-battlefield-view', { view }),
     clickBuildAnchor: (anchor) => pointers.clickAt(toAnchorScreenPoint(systems, anchor)),

@@ -29,6 +29,20 @@ describe('features/duel-simulation/simulateDuel', () => {
     expect(result.totalTicks).toBeLessThanOrEqual(result.rounds.length * CONFIG.maxWaveTicks);
   });
 
+  it('earns both computers creature experience from their sends, spending none yet', () => {
+    const { finalState } = simulateDuel(CONFIG);
+
+    for (const side of [finalState.player, finalState.opponent]) {
+      const earned = Object.values(side.creatureXpByTier).reduce(
+        (sum: number, xp) => sum + (xp ?? 0),
+        0,
+      );
+      expect(earned).toBeGreaterThan(0);
+      expect(side.creatureBranchChoices).toEqual({});
+      expect(side.creatureGrades).toEqual({});
+    }
+  });
+
   it('accounts for every creep and every life', () => {
     const result = simulateDuel(CONFIG);
 

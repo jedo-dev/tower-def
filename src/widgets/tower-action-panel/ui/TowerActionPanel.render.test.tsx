@@ -31,6 +31,9 @@ function createHudSnapshot(): GameHudSnapshot {
     isPaused: false,
     gameSpeed: 1,
     towerBranchChoices: {},
+    creatureXpByTier: {},
+    creatureBranchChoices: {},
+    creatureGrades: {},
   };
 }
 

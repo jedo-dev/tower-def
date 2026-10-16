@@ -5,6 +5,11 @@ import { createGridModel } from '../../../shared/lib/grid/createGridModel';
 import { createDefaultEdgeEndpoints } from '../../../shared/lib/grid/generateEdgeEndpoints';
 import { calculateWaveRoutes } from '../../wave/model/calculateWavePath';
 import { NO_TOWER_BRANCH_CHOICES } from '../../tower/model/talents';
+import {
+  NO_CREATURE_BRANCH_CHOICES,
+  NO_CREATURE_GRADES,
+  NO_CREATURE_XP,
+} from '../../unit/model/talents';
 import { DUEL_MATCH_BALANCE } from './balance';
 import { createBattlefieldState } from './battlefieldOps';
 import type { DuelMatchState, DuelistState } from './types';
@@ -28,9 +33,13 @@ function createDuelistState(raceId: RaceId, grid: GridModel, routes: WaveRoutes)
     income: DUEL_MATCH_BALANCE.startingIncome,
     raceId,
     sendQueue: [],
+    sendQueueGrades: [],
     battlefield: createBattlefieldState(grid, routes),
     lifeStealRemainder: 0,
     towerBranchChoices: NO_TOWER_BRANCH_CHOICES,
+    creatureXpByTier: NO_CREATURE_XP,
+    creatureBranchChoices: NO_CREATURE_BRANCH_CHOICES,
+    creatureGrades: NO_CREATURE_GRADES,
   };
 }
 

@@ -55,6 +55,9 @@ export function createInitialGameHudSnapshot(): GameHudSnapshot {
     isPaused: false,
     gameSpeed: 1,
     towerBranchChoices: {},
+    creatureXpByTier: {},
+    creatureBranchChoices: {},
+    creatureGrades: {},
   };
 }
 

@@ -45,6 +45,9 @@ function createHudSnapshot(overrides?: Partial<GameHudSnapshot>): GameHudSnapsho
     isPaused: false,
     gameSpeed: 1,
     towerBranchChoices: {},
+    creatureXpByTier: {},
+    creatureBranchChoices: {},
+    creatureGrades: {},
     ...overrides,
   };
 }

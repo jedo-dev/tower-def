@@ -4,7 +4,7 @@ import {
   getTowerOnHitEffects,
 } from '../../../../entities/tower';
 import Phaser from 'phaser';
-import { isCreepDead, type ApplyEffectInput } from '../../../../entities/creep';
+import { isCreepDead, type ApplyEffectInput, type CreepEntity } from '../../../../entities/creep';
 import {
   TOWER_BONE_ARCHER_EFFECT_FRAMES,
   TOWER_SPRITE_KEYS,
@@ -81,6 +81,11 @@ export type CombatRuntimeDependencies = {
    * tower's aura kill bonus (`goldPerKill`); 0 or absent for most kills.
    */
   awardKillBounty: (bonusGold?: number) => void;
+  /**
+   * Notes the kill for the round settle (a sent creep's death earns its sender
+   * creature experience). Absent where nothing settles a duel round.
+   */
+  recordCreepDeath?: (creep: CreepEntity) => void;
   onHudChanged: () => void;
 };
 
@@ -90,6 +95,7 @@ function handleCreepKill(
   killer: TowerRenderState | undefined,
 ): void {
   deps.awardKillBounty(killer ? getTowerKillBonusGold(killer.entity) : 0);
+  deps.recordCreepDeath?.(creep.entity);
   deps.soundRouter.playCreepSound(creep, CreepSoundSlot.DEATH);
   deps.playSound('economy.gold_gain');
   deps.onHudChanged();

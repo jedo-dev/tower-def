@@ -1,11 +1,15 @@
 import {
-  generateBaselineWaveId,
+  collectSentDeathTiers,
+  collectSentLeakTiers,
+  resolveQueuedSendUnits,
+  type DuelistState,
   type DuelMatchState,
   type SentCreepLeaks,
+  type SentCreepOutcomes,
+  type SentCreepOutcomesByField,
 } from '../../../entities/duel-match';
 import type { CreepSenderSide } from '../../../entities/creep';
-import type { UnitConfig, UnitId } from '../../../entities/unit';
-import { composeWave } from '../../../entities/wave';
+import type { UnitConfig } from '../../../entities/unit';
 import type { BattlefieldState } from '../../../entities/duel-match';
 import {
   DUEL_SIMULATION_BASE_MOVE_SPEED_PX_PER_SEC,
@@ -39,6 +43,8 @@ export type DuelWaveResult = {
   /** The wave hit the tick limit before both fields resolved. */
   isCutOff: boolean;
   sentLeaks: SentCreepLeaks;
+  /** Tiers of the sent creeps that died or leaked on each field: creature experience. */
+  sentOutcomes: SentCreepOutcomesByField;
 };
 
 export type DuelWaveInput = {
@@ -52,33 +58,20 @@ export type DuelWaveInput = {
 
 /**
  * One field's wave: the shared baseline plus whatever the other side sent,
- * through the same `composeWave` the wave preview uses.
+ * each send at the creature grade it was sent with (`resolveQueuedSendUnits`,
+ * the same resolution the game scene spawns from).
  */
 function createField(
   battlefield: BattlefieldState,
   input: DuelWaveInput,
-  attackerQueue: readonly UnitId[],
+  attackerSide: DuelistState,
   attacker: CreepSenderSide,
 ): HeadlessBattlefield {
-  const composition = composeWave({
-    waveId: generateBaselineWaveId(input.waveNumber),
-    round: input.waveNumber,
-    baselineUnits: input.baselineUnits,
-    playerSendQueue: attacker === 'player' ? attackerQueue : [],
-    opponentSendQueue: attacker === 'opponent' ? attackerQueue : [],
-  });
-  const baselineUnits = composition.entries
-    .filter((entry) => entry.source === 'baseline')
-    .map((entry) => entry.unit);
-  const sentUnits = composition.entries
-    .filter((entry) => entry.source !== 'baseline')
-    .map((entry) => entry.unit);
-
   return createHeadlessBattlefield({
     battlefield,
     waveNumber: input.waveNumber,
-    baselineUnits,
-    sentUnits,
+    baselineUnits: input.baselineUnits,
+    sentUnits: resolveQueuedSendUnits(attackerSide),
     sender: attacker,
     timing: DUEL_SIMULATION_TIMING,
   });
@@ -95,11 +88,16 @@ function summarizeField(field: HeadlessBattlefield): DuelFieldWaveResult {
   };
 }
 
+function collectSentOutcomes(field: HeadlessBattlefield): SentCreepOutcomes {
+  const creeps = field.creeps.map((creep) => creep.entity);
+  return { diedTiers: collectSentDeathTiers(creeps), leakedTiers: collectSentLeakTiers(creeps) };
+}
+
 /** Plays one wave on both fields at once, in fixed steps, until both resolve. */
 export function runDuelWave(input: DuelWaveInput): DuelWaveResult {
   const { state } = input;
-  const fieldA = createField(state.player.battlefield, input, state.opponent.sendQueue, 'opponent');
-  const fieldB = createField(state.opponent.battlefield, input, state.player.sendQueue, 'player');
+  const fieldA = createField(state.player.battlefield, input, state.opponent, 'opponent');
+  const fieldB = createField(state.opponent.battlefield, input, state.player, 'player');
   const stepperA = createHeadlessStepper(fieldA, DUEL_SIMULATION_BASE_MOVE_SPEED_PX_PER_SEC);
   const stepperB = createHeadlessStepper(fieldB, DUEL_SIMULATION_BASE_MOVE_SPEED_PX_PER_SEC);
 
@@ -119,5 +117,9 @@ export function runDuelWave(input: DuelWaveInput): DuelWaveResult {
     ticks,
     isCutOff: !isResolved(),
     sentLeaks: { onPlayerField: fieldA.sentLeaks, onOpponentField: fieldB.sentLeaks },
+    sentOutcomes: {
+      onPlayerField: collectSentOutcomes(fieldA),
+      onOpponentField: collectSentOutcomes(fieldB),
+    },
   };
 }

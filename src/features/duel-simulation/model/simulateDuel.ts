@@ -33,7 +33,8 @@ import { runDuelWave, type DuelFieldWaveResult } from './duelWave';
 // entry the game uses for its computer), routes are fixed, both fields play
 // the wave (shared seeded baseline plus the other side's sends) in fixed
 // steps, kills pay the bounty, leaks cost lives and steal lives for the
-// sender, and income is paid. Side A is `player` in the duel state, side B is
+// sender, sent creeps that died or leaked earn their sender creature
+// experience, and income is paid. Side A is `player` in the duel state, side B is
 // `opponent`. Not simulated: rendering, sounds, the single-player wave
 // completion reward (the game pays it only to the human wallet).
 
@@ -189,10 +190,17 @@ export function simulateDuel(config: DuelSimulationConfig): DuelSimulationResult
     state = payKillBounties(state, 'opponent', wave.fieldB.kills);
     state = awardBonusGold(state, 'player', wave.fieldA.killBonusGold);
     state = awardBonusGold(state, 'opponent', wave.fieldB.killBonusGold);
-    const settlement = settleRound(state, wave.fieldA.leaks, wave.fieldB.leaks, wave.sentLeaks, {
-      player: getTowersIncomePerRound(state.player.battlefield.towers),
-      opponent: getTowersIncomePerRound(state.opponent.battlefield.towers),
-    });
+    const settlement = settleRound(
+      state,
+      wave.fieldA.leaks,
+      wave.fieldB.leaks,
+      wave.sentLeaks,
+      {
+        player: getTowersIncomePerRound(state.player.battlefield.towers),
+        opponent: getTowersIncomePerRound(state.opponent.battlefield.towers),
+      },
+      wave.sentOutcomes,
+    );
     state = settlement.state;
     isMatchOver = settlement.isMatchOver;
     if (isMatchOver) {
