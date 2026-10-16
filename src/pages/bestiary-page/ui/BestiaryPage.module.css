@@ -2,484 +2,138 @@
 .page {
   position: relative;
   width: 100%;
-  max-width: 480px;
+  max-width: var(--codex-max-width);
   height: 100dvh;
   margin: 0 auto;
   overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
-  padding: 0 max(var(--space-lg), var(--safe-area-right))
-    max(var(--space-2xl), var(--safe-area-bottom)) max(var(--space-lg), var(--safe-area-left));
-  color: var(--color-text-primary);
+  padding: 0 var(--safe-area-right) 0 var(--safe-area-left);
+  color: var(--color-codex-text);
   font-family: var(--font-family-ui);
+  font-size: var(--font-size-md);
+  line-height: 1.25;
+  background:
+    radial-gradient(120% 40% at 50% 0%, var(--race-tint), transparent 70%), var(--color-codex-bg);
 }
 
-/* The header and tabs stay put while the cards scroll under them. */
+/* The bar and tabs stay put while the tiles scroll under them. */
 .stickyTop {
   position: sticky;
   top: 0;
-  z-index: 1;
-  margin: 0 calc(-1 * max(var(--space-lg), var(--safe-area-right))) var(--space-lg)
-    calc(-1 * max(var(--space-lg), var(--safe-area-left)));
-  padding: max(var(--space-lg), var(--safe-area-top)) max(var(--space-lg), var(--safe-area-right))
-    var(--space-md) max(var(--space-lg), var(--safe-area-left));
-  background: var(--color-surface-overlay);
-  backdrop-filter: blur(var(--glass-blur));
-  border-bottom: 1px solid var(--glass-border);
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  padding: calc(var(--safe-area-top) + var(--space-xs)) var(--codex-gutter) var(--space-md);
+  border-bottom: 1px solid var(--color-gold-trim);
+  background: linear-gradient(180deg, var(--color-codex-bar), var(--color-codex-panel));
+  box-shadow: var(--shadow-codex-bar);
 }
 
-.header {
+.bar {
   display: grid;
-  grid-template-columns: var(--touch-target-min) 1fr var(--touch-target-min);
+  grid-template-columns: var(--touch-target-min) minmax(0, 1fr) var(--touch-target-min);
   align-items: center;
-  gap: var(--space-lg);
-  margin-bottom: var(--space-lg);
-}
-
-.headerSpacer {
-  width: var(--touch-target-min);
+  min-height: var(--touch-target-min);
 }
 
 .backButton {
   width: var(--touch-target-min);
   height: var(--touch-target-min);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-md);
-  background: var(--glass-bg-soft);
-  box-shadow: var(--shadow-sm), var(--shadow-inset-top);
-  color: var(--color-text-secondary);
-  font-size: var(--font-size-xl);
-  line-height: 1;
-  cursor: pointer;
-  transition:
-    border-color var(--duration-med) var(--ease-out),
-    color var(--duration-med) var(--ease-out);
-}
-
-.backButton:hover {
-  border-color: var(--glass-border-strong);
-  color: var(--color-text-primary);
-}
-
-.backButton:focus-visible {
-  outline: none;
-  box-shadow: var(--focus-ring);
+  display: grid;
+  place-items: center;
+  padding: 0;
+  color: var(--color-accent-gold);
 }
 
 .title {
   margin: 0;
-  text-align: center;
+  padding-left: var(--codex-tracking-logo);
+  color: var(--color-accent-gold);
   font-family: var(--font-family-display);
   font-size: var(--font-size-xl);
   font-weight: 700;
-  letter-spacing: 0.16em;
+  letter-spacing: var(--codex-tracking-logo);
+  text-align: center;
   text-transform: uppercase;
-  background: var(--gradient-gold);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  text-shadow:
+    0 1px 0 var(--color-iron-black),
+    0 0 14px var(--color-accent-gold-glow);
 }
 
-/* Race tablist: four equal tabs, each a 44px-tall target, accented by its race. */
+/* ---------- race tabs ---------- */
 .tabs {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
-  gap: var(--space-sm);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-xs);
 }
 
 .tab {
-  display: inline-flex;
-  flex-direction: column;
+  position: relative;
+  min-width: 0;
+  height: var(--touch-target-min);
+  display: flex;
   align-items: center;
   justify-content: center;
-  gap: var(--space-2xs);
-  min-height: var(--touch-target-min);
-  padding: var(--space-sm) var(--space-xs);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-md);
-  background: var(--glass-bg-soft);
-  color: var(--color-text-secondary);
-  font: inherit;
+  gap: var(--space-xs);
+  padding: 0 var(--space-2xs);
+  border: 1px solid var(--color-iron-shadow);
+  border-radius: var(--radius-sm);
+  background: var(--color-codex-panel-sunken);
+  box-shadow: inset 0 0 0 1px var(--color-iron);
+  color: var(--color-codex-text-muted);
+  font-family: var(--font-family-display);
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   cursor: pointer;
-  touch-action: manipulation;
-  transition:
-    border-color var(--duration-med) var(--ease-out),
-    color var(--duration-med) var(--ease-out),
-    background var(--duration-med) var(--ease-out);
+  -webkit-tap-highlight-color: transparent;
 }
 
-.tab:hover {
-  color: var(--color-text-primary);
-  border-color: var(--glass-border-strong);
-}
-
-.tab:focus-visible {
-  outline: none;
-  box-shadow: var(--focus-ring);
-}
-
-.tabSelected {
-  border-color: var(--race-theme);
-  background: var(--glass-bg-raised);
-  color: var(--color-text-primary);
-  box-shadow: var(--shadow-inset-top);
-}
-
-.tabCrest {
-  width: var(--space-md);
-  height: var(--space-md);
-  border-radius: var(--radius-pill);
-  background: var(--race-theme);
-  opacity: 0.55;
-}
-
-.tabSelected .tabCrest {
-  opacity: 1;
+.tabGem {
+  flex: none;
+  width: var(--codex-gem-size);
+  height: var(--codex-gem-size);
+  transform: rotate(45deg);
+  background: var(--race-accent);
+  box-shadow: 0 0 0 1px var(--color-iron-black);
 }
 
 .tabLabel {
-  font-family: var(--font-family-display);
-  font-size: var(--font-size-xs);
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.panel {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-xl);
-}
-
-.raceDescription {
-  margin: 0;
-  font-family: var(--font-family-accent);
-  font-size: var(--font-size-md);
-  line-height: 1.45;
-  color: var(--color-text-secondary);
-}
-
-.section {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-md);
-}
-
-.sectionTitle {
-  display: flex;
-  align-items: baseline;
-  gap: var(--space-md);
-  margin: 0;
-  padding-bottom: var(--space-xs);
-  border-bottom: 1px solid var(--glass-border);
-  font-family: var(--font-family-display);
-  font-size: var(--font-size-lg);
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--race-theme, var(--color-text-primary));
-}
-
-.sectionCount {
-  font-family: var(--font-family-stats);
-  font-size: var(--font-size-sm);
-  color: var(--color-text-label);
-}
-
-/* Single column of cards; a card is a glass panel with a compact stat grid. */
-.cards {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-lg);
-}
-
-.card {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-md);
-  padding: var(--space-lg);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-lg);
-  background: var(--glass-bg);
-  box-shadow: var(--shadow-md), var(--shadow-inset-top);
-}
-
-.cardHeader {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  align-items: center;
-  gap: var(--space-lg);
-}
-
-.cardIcon {
-  --unit-icon-size: 48px;
-  --tower-icon-size: 48px;
-  --placeholder-icon-size: 48px;
-}
-
-.cardTitleBlock {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2xs);
-}
-
-.cardName {
-  margin: 0;
   overflow: hidden;
-  font-family: var(--font-family-display);
-  font-size: var(--font-size-lg);
-  font-weight: 700;
-  letter-spacing: 0.04em;
   text-overflow: ellipsis;
   white-space: nowrap;
-  color: var(--color-text-gold);
 }
 
-.cardSubtitle {
-  font-size: var(--font-size-xs);
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--color-text-label);
-}
-
-.tierBadge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 36px;
-  padding: var(--space-xs) var(--space-md);
-  border: 1px solid var(--race-theme, var(--glass-border-strong));
-  border-radius: var(--radius-pill);
-  font-family: var(--font-family-stats);
-  font-size: var(--font-size-sm);
-  font-weight: 700;
-  color: var(--race-theme, var(--color-text-primary));
-}
-
-.statGrid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-xs) var(--space-md);
-  margin: 0;
-}
-
-@media (min-width: 400px) {
-  .statGrid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
-
-.stat {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2xs);
-  min-width: 0;
-  padding: var(--space-xs) var(--space-sm);
-  border-radius: var(--radius-sm);
-  background: var(--glass-bg-soft);
-}
-
-.statLabel {
-  font-size: var(--font-size-2xs);
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--color-text-label);
-}
-
-.statValue {
-  margin: 0;
-  font-family: var(--font-family-stats);
-  font-size: var(--font-size-md);
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  color: var(--color-text-primary);
-}
-
-.statValueGold {
+.tabSelected {
+  background:
+    linear-gradient(180deg, var(--race-tint), transparent 80%), var(--color-codex-panel-raised);
+  box-shadow:
+    inset 0 0 0 1px var(--race-accent),
+    inset 0 -3px 0 0 var(--race-accent),
+    0 0 14px var(--race-glow);
   color: var(--color-accent-gold);
 }
 
-.statValueSuccess {
-  color: var(--color-text-success);
+.tabSelected .tabGem {
+  box-shadow:
+    0 0 0 1px var(--color-iron-black),
+    0 0 6px var(--race-accent);
 }
 
-.specials,
-.levels {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-xs);
-  margin: 0;
-  padding: 0;
-  list-style: none;
+.tab:focus-visible {
+  z-index: 1;
+  outline: 2px solid var(--color-codex-focus);
+  outline-offset: 2px;
 }
 
-.special {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: baseline;
-  gap: var(--space-md);
-  font-size: var(--font-size-sm);
-}
-
-.specialLabel {
-  font-family: var(--font-family-display);
-  font-size: var(--font-size-xs);
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--race-theme, var(--color-text-gold));
-}
-
-.specialValue {
-  color: var(--color-text-secondary);
-}
-
-.level {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  align-items: baseline;
-  gap: var(--space-md);
-  font-size: var(--font-size-xs);
-  color: var(--color-text-secondary);
-}
-
-.levelBadge {
-  font-family: var(--font-family-stats);
-  font-weight: 700;
-  color: var(--color-text-gold-dim);
-}
-
-.levelSummary {
-  min-width: 0;
-}
-
-.levelCost {
-  font-family: var(--font-family-stats);
-  font-variant-numeric: tabular-nums;
-  color: var(--color-accent-gold);
-}
-
-.branches {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-xs);
-}
-
-.branchesLabel {
-  font-family: var(--font-family-display);
-  font-size: var(--font-size-xs);
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--race-theme, var(--color-text-gold));
-}
-
-.branchList {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-md);
-}
-
-.branch {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-xs);
-  min-width: 0;
-  padding: var(--space-xs) var(--space-sm);
-  border-radius: var(--radius-sm);
-  background: var(--glass-bg-soft);
-}
-
-.branchHeader {
-  display: flex;
-  align-items: center;
-  gap: var(--space-md);
-}
-
-.branchName {
-  margin: 0;
-  font-family: var(--font-family-display);
-  font-size: var(--font-size-sm);
-  font-weight: 700;
-  color: var(--color-text-primary);
-}
-
-.branchDescription {
-  margin: 0;
-  font-size: var(--font-size-xs);
-  line-height: 1.4;
-  color: var(--color-text-secondary);
-}
-
-.branchTable {
-  width: 100%;
-  border-collapse: collapse;
-  table-layout: fixed;
-  font-size: var(--font-size-xs);
-  color: var(--color-text-secondary);
-}
-
-.branchTable th,
-.branchTable td {
-  padding: var(--space-2xs) var(--space-xs);
-  text-align: left;
-  overflow-wrap: anywhere;
-}
-
-.branchTable thead th {
-  font-size: var(--font-size-2xs);
-  font-weight: 400;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--color-text-label);
-}
-
-.branchGradeRow td {
-  font-family: var(--font-family-stats);
-  font-variant-numeric: tabular-nums;
-  color: var(--color-text-primary);
-}
-
-.branchGradeBadge {
-  font-family: var(--font-family-stats);
-  font-weight: 700;
-  color: var(--color-text-gold-dim);
-}
-
-.branchTable .branchGradeCost {
-  color: var(--color-accent-gold);
-}
-
-.branchSpecial {
-  padding-bottom: var(--space-xs);
-  line-height: 1.35;
-}
-
-.cardDescription {
-  margin: 0;
-  font-size: var(--font-size-sm);
-  line-height: 1.45;
-  color: var(--color-text-secondary);
-}
-
-.cardLore {
-  margin: 0;
-  padding-left: var(--space-md);
-  border-left: 2px solid var(--race-theme, var(--glass-border-strong));
-  font-family: var(--font-family-accent);
-  font-size: var(--font-size-sm);
-  font-style: italic;
-  line-height: 1.5;
-  color: var(--color-text-parchment);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .backButton,
-  .tab {
-    transition: none;
-  }
+.tab:active {
+  transform: translateY(1px);
+  background: var(--color-codex-pressed);
+  box-shadow:
+    var(--shadow-codex-sunken),
+    inset 0 0 0 1px var(--race-accent-deep);
+  color: var(--color-codex-text);
 }

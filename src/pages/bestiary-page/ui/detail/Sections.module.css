@@ -1,0 +1,184 @@
+/* Detail sections: level columns, creature economy and the lore fold. */
+
+.levels {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-sm);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.level {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+  min-width: 0;
+  padding: var(--space-sm) var(--space-md);
+}
+
+.levelHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-2xs);
+  padding-bottom: var(--space-xs);
+  border-bottom: 1px solid var(--color-codex-line);
+}
+
+.levelName {
+  margin: 0;
+  font-family: var(--font-family-display);
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+.price {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  color: var(--color-accent-gold);
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+.readings {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.reading {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  min-height: var(--codex-chip-height);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums lining-nums;
+  white-space: nowrap;
+}
+
+.readingDelta {
+  margin-left: auto;
+  font-size: var(--font-size-xs);
+}
+
+/* ---------- economy ---------- */
+.economy {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-xs);
+  margin: 0;
+}
+
+.economyCell {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+  min-width: 0;
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-sm);
+  background: var(--color-codex-panel-sunken);
+  box-shadow: inset 0 0 0 1px var(--color-codex-line);
+}
+
+.economyLabel {
+  color: var(--color-codex-text-dim);
+  font-size: var(--font-size-xs);
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.economyValue {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  margin: 0;
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums lining-nums;
+  white-space: nowrap;
+}
+
+.economyUnit {
+  color: var(--color-codex-text-dim);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+}
+
+/* ---------- lore fold ---------- */
+.fold {
+  overflow: hidden;
+}
+
+.foldButton {
+  width: 100%;
+  min-height: var(--touch-target-min);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  padding: 0 var(--space-lg);
+  border: 0;
+  background: transparent;
+  color: var(--color-accent-gold);
+  font-family: var(--font-family-display);
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  letter-spacing: var(--codex-tracking-display);
+  text-transform: uppercase;
+  cursor: pointer;
+  text-align: left;
+}
+
+.foldButton:focus-visible {
+  outline: 2px solid var(--color-codex-focus);
+  outline-offset: -3px;
+}
+
+.foldHint {
+  margin-left: var(--space-md);
+  color: var(--color-codex-text-dim);
+  font-family: var(--font-family-ui);
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.foldChevron {
+  transition: transform var(--duration-fast) var(--ease-out);
+}
+
+.foldOpen .foldChevron {
+  transform: rotate(180deg);
+}
+
+.foldBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  padding: 0 var(--space-lg) var(--space-lg);
+}
+
+.description {
+  margin: 0;
+  color: var(--color-codex-text-muted);
+  font-size: var(--font-size-md);
+  line-height: 1.35;
+}
+
+.lore {
+  margin: 0;
+  color: var(--color-codex-lore);
+  font-family: var(--font-family-accent);
+  font-size: var(--font-size-md);
+  font-style: italic;
+  line-height: 1.4;
+}

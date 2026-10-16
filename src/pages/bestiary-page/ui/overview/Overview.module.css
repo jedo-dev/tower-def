@@ -1,0 +1,88 @@
+/* Race overview: two sections of tiles, two per row on a phone. */
+
+.overview {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xl);
+  padding: var(--space-lg) var(--codex-gutter) calc(var(--safe-area-bottom) + var(--space-xl));
+}
+
+.raceDescription {
+  margin: 0;
+  color: var(--color-codex-text-muted);
+  font-size: var(--font-size-sm);
+  line-height: 1.35;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-md);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Wider screens fit more tiles per row without stretching them. */
+@media (min-width: 640px) {
+  .grid {
+    grid-template-columns: repeat(auto-fill, minmax(176px, 1fr));
+  }
+}
+
+.tile {
+  width: 100%;
+  min-width: 0;
+  min-height: var(--touch-target-min);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+}
+
+.tile:active {
+  box-shadow:
+    var(--shadow-codex-sunken),
+    inset 0 0 0 1px var(--race-accent),
+    inset 0 0 0 2px var(--color-iron-shadow),
+    inset 0 0 0 3px var(--race-accent-deep);
+}
+
+.tileTop {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  min-width: 0;
+}
+
+.tileIdentity {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+  min-width: 0;
+}
+
+.tileName {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--color-codex-text);
+  font-size: var(--font-size-md);
+  font-weight: 600;
+  line-height: 1.12;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.tileSub {
+  overflow: hidden;
+  color: var(--color-codex-text-dim);
+  font-size: var(--font-size-xs);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}

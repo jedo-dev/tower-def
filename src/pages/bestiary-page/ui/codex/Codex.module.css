@@ -1,0 +1,272 @@
+/* Codex primitives shared by the overview and the detail view: the iron
+   frame, race accents, pictograms, stat chips, portraits and section heads. */
+
+/* ---------- race accents ---------- */
+.raceUndead {
+  --race-accent: var(--color-faction-undead);
+  --race-accent-secondary: var(--color-faction-undead-secondary);
+  --race-accent-deep: var(--color-faction-undead-deep);
+  --race-glow: var(--color-faction-undead-glow);
+  --race-tint: var(--color-faction-undead-tint);
+  --race-tint-secondary: var(--color-faction-undead-tint-secondary);
+}
+
+.raceOrc {
+  --race-accent: var(--color-faction-orc);
+  --race-accent-secondary: var(--color-faction-orc-secondary);
+  --race-accent-deep: var(--color-faction-orc-deep);
+  --race-glow: var(--color-faction-orc-glow);
+  --race-tint: var(--color-faction-orc-tint);
+  --race-tint-secondary: var(--color-faction-orc-tint-secondary);
+}
+
+.raceHuman {
+  --race-accent: var(--color-faction-human);
+  --race-accent-secondary: var(--color-faction-human-secondary);
+  --race-accent-deep: var(--color-faction-human-deep);
+  --race-glow: var(--color-faction-human-glow);
+  --race-tint: var(--color-faction-human-tint);
+  --race-tint-secondary: var(--color-faction-human-tint-secondary);
+}
+
+.raceElf {
+  --race-accent: var(--color-faction-elf);
+  --race-accent-secondary: var(--color-faction-elf-secondary);
+  --race-accent-deep: var(--color-faction-elf-deep);
+  --race-glow: var(--color-faction-elf-glow);
+  --race-tint: var(--color-faction-elf-tint);
+  --race-tint-secondary: var(--color-faction-elf-tint-secondary);
+}
+
+/* ---------- iron frame ---------- */
+.frame {
+  position: relative;
+  border: 1px solid var(--color-iron-shadow);
+  border-radius: var(--radius-sm);
+  background: linear-gradient(180deg, var(--color-codex-panel-raised), var(--color-codex-panel));
+  box-shadow:
+    inset 0 1px 0 0 var(--color-iron-highlight),
+    inset 0 0 0 1px var(--color-iron),
+    inset 0 0 0 2px var(--color-iron-shadow),
+    inset 0 0 0 3px var(--color-gold-trim),
+    var(--shadow-codex-drop);
+}
+
+.frameFlat {
+  background: var(--color-codex-panel);
+  box-shadow:
+    inset 0 0 0 1px var(--color-iron),
+    inset 0 0 0 2px var(--color-iron-shadow),
+    var(--shadow-codex-drop);
+}
+
+.frameGlow {
+  box-shadow:
+    inset 0 1px 0 0 var(--color-iron-highlight),
+    inset 0 0 0 1px var(--color-iron),
+    inset 0 0 0 2px var(--color-iron-shadow),
+    inset 0 0 0 3px var(--color-gold-trim),
+    0 0 0 1px var(--race-accent-deep),
+    0 0 16px var(--race-glow);
+}
+
+.rivets::after {
+  --rivet: radial-gradient(
+    circle,
+    var(--color-rivet) 0 1.1px,
+    var(--color-rivet-shadow) 1.7px,
+    transparent 2.3px
+  );
+  content: '';
+  position: absolute;
+  inset: var(--space-xs);
+  pointer-events: none;
+  background:
+    var(--rivet) left top / var(--codex-rivet-size) var(--codex-rivet-size) no-repeat,
+    var(--rivet) right top / var(--codex-rivet-size) var(--codex-rivet-size) no-repeat,
+    var(--rivet) left bottom / var(--codex-rivet-size) var(--codex-rivet-size) no-repeat,
+    var(--rivet) right bottom / var(--codex-rivet-size) var(--codex-rivet-size) no-repeat;
+}
+
+.pressable {
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.pressable:focus-visible {
+  outline: 2px solid var(--color-codex-focus);
+  outline-offset: 2px;
+}
+
+.pressable:active {
+  transform: translateY(1px);
+  background: var(--color-codex-panel-sunken);
+  box-shadow:
+    var(--shadow-codex-sunken),
+    inset 0 0 0 1px var(--color-iron-light);
+}
+
+/* ---------- pictograms ---------- */
+.icon {
+  flex: none;
+  width: var(--codex-icon-size-md);
+  height: var(--codex-icon-size-md);
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.iconXs {
+  width: var(--codex-icon-size-xs);
+  height: var(--codex-icon-size-xs);
+  stroke-width: 1.9;
+}
+
+.iconSm {
+  width: var(--codex-icon-size-sm);
+  height: var(--codex-icon-size-sm);
+  stroke-width: 1.8;
+}
+
+.iconLg {
+  width: var(--codex-icon-size-lg);
+  height: var(--codex-icon-size-lg);
+  stroke-width: 1.8;
+}
+
+.tintPhysical {
+  color: var(--color-stat-physical);
+}
+.tintMagical {
+  color: var(--color-stat-magical);
+}
+.tintPercent {
+  color: var(--color-stat-percent);
+}
+.tintRange {
+  color: var(--color-stat-range);
+}
+.tintReload {
+  color: var(--color-stat-reload);
+}
+.tintHealth {
+  color: var(--color-stat-health);
+}
+.tintSpeed {
+  color: var(--color-stat-speed);
+}
+.tintPhysicalArmor {
+  color: var(--color-stat-armor);
+}
+.tintMagicalArmor {
+  color: var(--color-stat-rune);
+}
+.tintGold {
+  color: var(--color-stat-gold);
+}
+.tintIncome {
+  color: var(--color-codex-good);
+}
+
+/* ---------- chips ---------- */
+.chips {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-xs);
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chip {
+  flex: 0 1 auto;
+  min-width: 0;
+  height: var(--codex-chip-height);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  padding: 0 var(--space-xs);
+  border-radius: var(--radius-sm);
+  background: var(--color-codex-panel-sunken);
+  box-shadow: inset 0 0 0 1px var(--color-codex-line);
+  color: var(--color-codex-text);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums lining-nums;
+  white-space: nowrap;
+}
+
+.chipsLarge {
+  gap: var(--space-sm);
+}
+
+.chipsLarge .chip {
+  flex: 1 1 0;
+  justify-content: center;
+  height: var(--codex-chip-height-lg);
+  gap: var(--space-xs);
+  font-size: var(--font-size-md);
+  font-weight: 700;
+}
+
+.good {
+  color: var(--color-codex-good);
+}
+.bad {
+  color: var(--color-codex-bad);
+}
+.neutral {
+  color: var(--color-codex-text-dim);
+}
+
+/* ---------- section heads ---------- */
+.sectionHead {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  min-height: 20px;
+}
+
+.sectionTitle {
+  margin: 0;
+  color: var(--color-accent-gold);
+  font-family: var(--font-family-display);
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  letter-spacing: var(--codex-tracking-display);
+  text-transform: uppercase;
+}
+
+.sectionRule {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    var(--race-accent),
+    var(--race-accent-secondary) 40%,
+    transparent
+  );
+  opacity: 0.6;
+}
+
+.sectionMeta {
+  color: var(--color-codex-text-dim);
+  font-size: var(--font-size-xs);
+  letter-spacing: var(--codex-tracking-ui);
+  text-transform: uppercase;
+}
+
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}

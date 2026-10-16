@@ -1,6 +1,7 @@
-import { useRef, type CSSProperties, type KeyboardEvent } from 'react';
+import { useRef, type KeyboardEvent } from 'react';
 import type { RaceId } from '../../../shared/types/content-ids';
 import type { RaceBestiaryViewModel } from '../model/types';
+import { raceAccentClass } from './codex/raceAccentClass';
 import { racePanelId, raceTabId } from './raceTabIds';
 import styles from './BestiaryPage.module.css';
 
@@ -58,13 +59,12 @@ export function RaceTabs({ races, selectedRaceId, onSelect }: RaceTabsProps) {
             aria-selected={isSelected}
             aria-controls={racePanelId(race.raceId)}
             tabIndex={isSelected ? 0 : -1}
-            className={`${styles.tab}${isSelected ? ` ${styles.tabSelected}` : ''}`}
-            style={{ '--race-theme': race.themeColor } as CSSProperties}
+            className={`${styles.tab} ${raceAccentClass(race.faction)}${isSelected ? ` ${styles.tabSelected}` : ''}`}
             onClick={() => onSelect(race.raceId)}
             onKeyDown={(event) => handleKeyDown(event, index)}
             data-sound="ui.faction_select"
           >
-            <span className={styles.tabCrest} aria-hidden="true" />
+            <span className={styles.tabGem} aria-hidden="true" />
             <span className={styles.tabLabel}>{race.name}</span>
           </button>
         );

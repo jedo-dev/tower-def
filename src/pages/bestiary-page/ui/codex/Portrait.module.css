@@ -1,0 +1,54 @@
+/* Framed portrait slot: the sprite icon sits on a race-tinted plate. */
+
+.portrait {
+  --unit-icon-size: var(--codex-portrait-size-sm);
+  --tower-icon-size: var(--codex-portrait-size-sm);
+  --placeholder-icon-size: var(--codex-portrait-size-sm);
+  position: relative;
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: var(--codex-portrait-size-sm);
+  height: var(--codex-portrait-size-sm);
+  border-radius: var(--radius-sm);
+  background:
+    radial-gradient(circle at 50% 35%, var(--race-tint), transparent 70%),
+    var(--color-codex-panel-sunken);
+  box-shadow:
+    inset 0 0 0 1px var(--color-iron-black),
+    inset 0 0 0 2px var(--color-iron),
+    0 0 0 1px var(--color-gold-trim);
+}
+
+.large {
+  --unit-icon-size: var(--codex-portrait-size-lg);
+  --tower-icon-size: var(--codex-portrait-size-lg);
+  --placeholder-icon-size: var(--codex-portrait-size-lg);
+  width: var(--codex-portrait-size-lg);
+  height: var(--codex-portrait-size-lg);
+}
+
+.badge {
+  position: absolute;
+  top: calc(var(--space-xs) * -1);
+  left: calc(var(--space-xs) * -1);
+  min-width: var(--codex-badge-min-width);
+  height: var(--codex-badge-height);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 var(--space-xs);
+  border: 1px solid var(--color-iron-black);
+  border-radius: var(--radius-sm);
+  background: var(--gradient-codex-gold);
+  color: var(--color-accent-gold-ink);
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  line-height: 1;
+}
+
+.badgeType {
+  padding: 0 var(--space-2xs);
+  border-color: var(--color-gold-trim);
+  background: var(--color-codex-panel-sunken);
+}

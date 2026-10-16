@@ -114,9 +114,18 @@ describe('creature branches on the creep card', () => {
         ],
       },
       1,
+      { health: 110, speed: 1.8, physicalArmor: 4, magicalArmor: 8 },
     );
 
     expect(branch.glyph).toBe('II');
+    expect(branch.grades.map((grade) => grade.comparedTo)).toEqual(['base', 'G1', 'G2', 'G3']);
+    expect(branch.grades[0].stats.map((stat) => stat.delta?.text)).toEqual([
+      '+5',
+      '+0.05',
+      '±0',
+      '±0',
+    ]);
+    expect(branch.grades[3].stats[3].delta).toEqual({ text: '+1', tone: 'good' });
     expect(branch.grades.map((grade) => grade.special)).toEqual([
       NO_CREATURE_SPECIAL,
       'a leak takes 2 lives',
