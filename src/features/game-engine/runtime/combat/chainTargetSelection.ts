@@ -1,7 +1,14 @@
-import { getCreepFootprintCenter, isCreepHidden } from '../../../../entities/creep';
+import { isCreepHidden } from '../../../../entities/creep';
 import { canTowerTargetCreep } from '../../../../entities/tower';
 import { GRID_DIMENSIONS } from '../../../../shared/constants/grid';
-import type { CombatCreep, CombatField, CombatTower, TowerCombatHooks } from './towerCombatTypes';
+import { writeCreepFootprintCenterPx } from './combatCellCenter';
+import type {
+  CombatCreep,
+  CombatField,
+  CombatTower,
+  PixelPoint,
+  TowerCombatHooks,
+} from './towerCombatTypes';
 
 /**
  * Reusable working memory for chain target selection, so a chain shot does
@@ -32,6 +39,9 @@ export function createChainTargetScratch(
 }
 
 const sharedChainTargetScratch = createChainTargetScratch();
+
+/** Written by `writeCellCenter` and copied out at once; selection calls no other hook. */
+const chainCenterPx: PixelPoint = { x: 0, y: 0 };
 
 /** The module-wide scratch the chain shot uses; exposed so tests can check reuse. */
 export function getSharedChainTargetScratch(): ChainTargetScratch {
@@ -86,9 +96,9 @@ function collectCandidates<C extends CombatCreep, T extends CombatTower>(
       canTowerTargetCreep(tower.entity, creep);
     scratch.isCandidate[index] = isCandidate ? 1 : 0;
     if (isCandidate) {
-      const center = hooks.toCellCenter(getCreepFootprintCenter(creep));
-      scratch.centerX[index] = center.x;
-      scratch.centerY[index] = center.y;
+      writeCreepFootprintCenterPx(hooks, creep, chainCenterPx);
+      scratch.centerX[index] = chainCenterPx.x;
+      scratch.centerY[index] = chainCenterPx.y;
     }
   }
 }
@@ -120,9 +130,9 @@ export function selectChainTargets<C extends CombatCreep, T extends CombatTower>
 
   const { centerX, centerY, isCandidate, targets } = scratch;
   const rangePx = bounceRangeCells * GRID_DIMENSIONS.cellSize;
-  const fromCenter = hooks.toCellCenter(getCreepFootprintCenter(from.entity));
-  let currentX = fromCenter.x;
-  let currentY = fromCenter.y;
+  writeCreepFootprintCenterPx(hooks, from.entity, chainCenterPx);
+  let currentX = chainCenterPx.x;
+  let currentY = chainCenterPx.y;
   let count = 0;
 
   for (let bounce = 0; bounce < bounces; bounce += 1) {

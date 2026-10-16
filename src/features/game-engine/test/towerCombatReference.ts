@@ -48,6 +48,16 @@ import {
 
 type Hooks<C extends CombatCreep, T extends CombatTower> = TowerCombatHooks<C, T>;
 
+/** The pre-rewrite `hooks.toCellCenter`: a fresh point per call. */
+export function toCellCenterViaHooks(
+  hooks: Pick<TowerCombatHooks<CombatCreep, CombatTower>, 'writeCellCenter'>,
+  position: { x: number; y: number },
+): { x: number; y: number } {
+  const center = { x: 0, y: 0 };
+  hooks.writeCellCenter(position, center);
+  return center;
+}
+
 function getRemainingDistanceToExit(creep: CreepEntity): number {
   return creep.remainingRouteDistance ?? Number.POSITIVE_INFINITY;
 }
@@ -143,7 +153,7 @@ export function referenceApplySplashDamage<C extends CombatCreep, T extends Comb
 ): void {
   const splashRadius = tower.entity.combatStats.splashRadius ?? DEFAULT_SPLASH_RADIUS_CELLS;
   const splashRadiusPx = splashRadius * GRID_DIMENSIONS.cellSize;
-  const towerCenterPx = hooks.toCellCenter(getTowerCenter(tower.entity));
+  const towerCenterPx = toCellCenterViaHooks(hooks, getTowerCenter(tower.entity));
 
   const creepsInSplashRadius = field.creeps.filter((creep) => {
     if (
@@ -153,7 +163,7 @@ export function referenceApplySplashDamage<C extends CombatCreep, T extends Comb
     ) {
       return false;
     }
-    const creepCenter = hooks.toCellCenter(getCreepFootprintCenter(creep.entity));
+    const creepCenter = toCellCenterViaHooks(hooks, getCreepFootprintCenter(creep.entity));
     const distance = Math.hypot(creepCenter.x - towerCenterPx.x, creepCenter.y - towerCenterPx.y);
     return distance <= splashRadiusPx;
   });

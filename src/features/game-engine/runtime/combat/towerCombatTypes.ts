@@ -18,8 +18,15 @@ export type CombatField<C extends CombatCreep, T extends CombatTower> = {
 
 export type DamageNumberSource = 'hit' | 'effect';
 
+/** A pixel position; combat writes into reused instances instead of allocating. */
+export type PixelPoint = { x: number; y: number };
+
+/** Writes the pixel centre of a grid position into `out` (no allocation). */
+export type CellCenterWriter = (position: GridPosition, out: PixelPoint) => void;
+
 export type TowerCombatHooks<C extends CombatCreep, T extends CombatTower> = {
-  toCellCenter: (position: GridPosition) => { x: number; y: number };
+  /** Pixel centre of a cell, written into `out` so splash and chain stay allocation-free. */
+  writeCellCenter: CellCenterWriter;
   /** A creep took a tower hit (single, splash, chain arc, extra target, pierce or volley). */
   onCreepHit: (creep: C) => void;
   /** The primary target of a single or splash shot (or a volley) was struck. */

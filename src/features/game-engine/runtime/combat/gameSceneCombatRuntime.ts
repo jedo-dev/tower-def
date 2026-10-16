@@ -44,6 +44,11 @@ import {
   type DamageNumberSource,
   type TowerCombatHooks,
 } from './towerCombatCore';
+import type { CellCenterWriter, PixelPoint } from './towerCombatTypes';
+
+/** Reused pixel points for spawning feedback; each is read before the next write. */
+const feedbackFromPx: PixelPoint = { x: 0, y: 0 };
+const feedbackToPx: PixelPoint = { x: 0, y: 0 };
 
 export type CombatRuntimeConfig = {
   archerProjectileVisualMode: 'projectile' | 'attackEffect';
@@ -69,7 +74,8 @@ export type CombatRuntimeConfig = {
 
 export type CombatRuntimeDependencies = {
   scene: Phaser.Scene;
-  toCellCenter: (position: GridPosition) => { x: number; y: number };
+  /** Pixel centre of a cell, written into `out` (no allocation). */
+  writeCellCenter: CellCenterWriter;
   playArcherAttackAnimation: (tower: TowerRenderState) => void;
   playSplashAttackAnimation: (tower: TowerRenderState) => void;
   /** Fixed cues (economy, status effects); tower and creature sounds go through `soundRouter`. */
@@ -157,7 +163,8 @@ function spawnDamageNumber(
     return;
   }
 
-  const center = deps.toCellCenter(position);
+  const center = feedbackToPx;
+  deps.writeCellCenter(position, center);
   const text = deps.scene.add.text(center.x, center.y - 10, `${damage}`, {
     fontFamily: 'Exo 2, Segoe UI, Tahoma, sans-serif',
     fontSize: source === 'effect' ? '10px' : '11px',
@@ -187,13 +194,13 @@ function spawnProjectileFeedback(
   target: CreepRenderState,
   isSplash: boolean,
 ): void {
-  const fromCenter = deps.toCellCenter(getTowerCenter(tower.entity));
-  const targetCellCenter = deps.toCellCenter(target.entity.position);
+  const fromCenter = feedbackFromPx;
+  deps.writeCellCenter(getTowerCenter(tower.entity), fromCenter);
+  const toCenter = feedbackToPx;
+  deps.writeCellCenter(target.entity.position, toCenter);
   const targetOffsetPx = target.footprintCenterOffsetPx ?? 0;
-  const toCenter = {
-    x: targetCellCenter.x + targetOffsetPx,
-    y: targetCellCenter.y + targetOffsetPx,
-  };
+  toCenter.x += targetOffsetPx;
+  toCenter.y += targetOffsetPx;
   const lifetimeMs = Math.max(
     config.projectileMinLifetimeMs,
     Math.min(
@@ -255,7 +262,7 @@ function createRenderCombatHooks(
   config: CombatRuntimeConfig,
 ): RenderCombatHooks {
   return {
-    toCellCenter: deps.toCellCenter,
+    writeCellCenter: deps.writeCellCenter,
     onCreepHit: (creep) => {
       applyCreepHitFeedback(creep, config);
       deps.soundRouter.playCreepSound(creep, CreepSoundSlot.HIT);

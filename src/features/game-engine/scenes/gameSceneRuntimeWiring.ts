@@ -73,7 +73,7 @@ function updatePlayerGold(host: GameSceneWiringHost, nextGold: number): void {
 function createPlayerCombatDeps(host: GameSceneWiringHost): CombatRuntimeDependencies {
   return {
     scene: host.scene,
-    toCellCenter: (position) => toCellCenter(position),
+    writeCellCenter,
     playArcherAttackAnimation: (tower) => playArcherAttackAnimation(tower),
     playSplashAttackAnimation: (tower) => playPlagueAttackAnimation(host.scene, tower),
     playSound: (soundId: SoundId) => host.getSoundManager()?.play(soundId),
@@ -95,7 +95,7 @@ function createPlayerCombatDeps(host: GameSceneWiringHost): CombatRuntimeDepende
 function createOpponentCombatDeps(host: GameSceneWiringHost): CombatRuntimeDependencies {
   return {
     scene: host.scene,
-    toCellCenter: (position) => toCellCenter(position),
+    writeCellCenter,
     playArcherAttackAnimation: (tower) => playArcherAttackAnimation(tower),
     playSplashAttackAnimation: (tower) => playPlagueAttackAnimation(host.scene, tower),
     playSound: () => undefined,

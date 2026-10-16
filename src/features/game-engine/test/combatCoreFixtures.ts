@@ -101,10 +101,10 @@ export function createRecordingHooks(): RecordingHooks {
     hitCreepIds: [],
     struckTowerIds: [],
     firedTowerIds: [],
-    toCellCenter: (position) => ({
-      x: position.x * GRID_DIMENSIONS.cellSize,
-      y: position.y * GRID_DIMENSIONS.cellSize,
-    }),
+    writeCellCenter: (position, out) => {
+      out.x = position.x * GRID_DIMENSIONS.cellSize;
+      out.y = position.y * GRID_DIMENSIONS.cellSize;
+    },
     onCreepHit: (creep) => hooks.hitCreepIds.push(creep.entity.id),
     onTargetStruck: (tower) => hooks.struckTowerIds.push(tower.entity.id),
     onDamageDealt: (_position, damage) => hooks.damageNumbers.push(damage),
