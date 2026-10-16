@@ -239,8 +239,10 @@ class FakeScene {
 
 type Rgb = { r: number; g: number; b: number };
 
+// Mirrors Phaser 4's `RGBWithRGB`: channels are `Linear(from, to, index / length)`
+// floats, left unrounded; `GetColor` truncates them when it packs the bits.
 const interpolateChannel = (from: number, to: number, length: number, index: number): number =>
-  Math.round(from + ((to - from) * index) / length);
+  (to - from) * (index / length) + from;
 
 /** The slice of the `Phaser` namespace that the game's runtime code touches. */
 export const fakePhaser = {

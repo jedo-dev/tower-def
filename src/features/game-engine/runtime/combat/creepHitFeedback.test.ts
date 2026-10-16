@@ -3,34 +3,9 @@ import { DEFAULT_CREEP_COMBAT_TRAITS } from '../../../../entities/creep';
 import { CreepTypeId } from '../../../../shared/types/content-ids';
 import type { CreepRenderState } from '../../scenes/gameScene.types';
 
-// The combat runtime pulls in Phaser only for colour maths; a stub keeps this
-// suite in the node environment (Phaser needs a real canvas to initialise).
-vi.mock('phaser', () => ({
-  default: {
-    Display: {
-      Color: {
-        ValueToColor: (value: number) => ({
-          r: (value >> 16) & 0xff,
-          g: (value >> 8) & 0xff,
-          b: value & 0xff,
-        }),
-        Interpolate: {
-          ColorWithColor: (
-            from: { r: number; g: number; b: number },
-            to: { r: number; g: number; b: number },
-            length: number,
-            index: number,
-          ) => ({
-            r: Math.round(from.r + ((to.r - from.r) * index) / length),
-            g: Math.round(from.g + ((to.g - from.g) * index) / length),
-            b: Math.round(from.b + ((to.b - from.b) * index) / length),
-          }),
-        },
-        GetColor: (r: number, g: number, b: number) => (r << 16) | (g << 8) | b,
-      },
-    },
-  },
-}));
+// Sibling combat modules import Phaser (which needs a real canvas to
+// initialise); the hit flash itself no longer touches Phaser's colour helpers.
+vi.mock('phaser', () => ({ default: { Display: { Color: {} } } }));
 
 const { updateCreepHitFeedback } = await import('./gameSceneCombatRuntime');
 type CombatConfig = Parameters<typeof updateCreepHitFeedback>[1];
@@ -96,5 +71,14 @@ describe('updateCreepHitFeedback', () => {
 
     expect(tinted.hitFlashRemainingMs).toBeGreaterThan(0);
     expect(tinted.tints.at(-1)).not.toBe(plain.tints.at(-1));
+  });
+
+  it('truncates mid-flash channels exactly like Phaser instead of rounding', () => {
+    const creep = createCreep(ORC_TINT);
+
+    updateCreepHitFeedback([creep], CONFIG, FLASH_MS / 2);
+
+    // Halfway from 0x8fce6a to 0xff5555: green 145.5 and blue 95.5 truncate.
+    expect(creep.tints.at(-1)).toBe(0xc7915f);
   });
 });

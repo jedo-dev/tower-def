@@ -1,5 +1,4 @@
 import { getTowerKillBonusGold } from '../../../../entities/tower';
-import Phaser from 'phaser';
 import { isCreepDead, type ApplyEffectInput } from '../../../../entities/creep';
 import { getKillGoldPenalty } from '../../../../entities/duel-match';
 import { EffectId } from '../../../../shared/types/content-ids';
@@ -18,6 +17,7 @@ import {
 import { getCreepDeathAnimationKey } from '../animation/creepFacing';
 import type { CombatRuntimeConfig, CombatRuntimeDependencies } from './combatRuntimeTypes';
 import { spawnDamageNumber } from './damageNumbers';
+import { resolveHitFlashTint } from './hitFlashTint';
 import { spawnProjectileFeedback } from './projectiles';
 import {
   applyTowerEffect,
@@ -254,13 +254,13 @@ export function updateCreepHitFeedback(
       continue;
     }
 
-    const progress = creep.hitFlashRemainingMs / config.creepHitFlashDurationMs;
-    const tint = Phaser.Display.Color.Interpolate.ColorWithColor(
-      Phaser.Display.Color.ValueToColor(baseColor),
-      Phaser.Display.Color.ValueToColor(config.creepHitFlashColor),
-      100,
-      Math.round(progress * 100),
+    creep.sprite.setTint(
+      resolveHitFlashTint(
+        baseColor,
+        config.creepHitFlashColor,
+        creep.hitFlashRemainingMs,
+        config.creepHitFlashDurationMs,
+      ),
     );
-    creep.sprite.setTint(Phaser.Display.Color.GetColor(tint.r, tint.g, tint.b));
   }
 }
