@@ -1,4 +1,8 @@
-import { getEffectiveSpeedMultiplier, type CreepEntity } from '../../../../entities/creep';
+import {
+  getAbilitySpeedMultiplier,
+  getEffectiveSpeedMultiplier,
+  type CreepEntity,
+} from '../../../../entities/creep';
 import type { GridPosition } from '../../../../shared/types/pathfinding';
 import { getRemainingRouteDistance } from '../../../../shared/lib/pathfinding/routeProgress';
 import {
@@ -41,14 +45,22 @@ const previousWaypointPx: MutablePoint = { x: 0, y: 0 };
 /** Scratch position handed to `readPositionPx` / `commitMove`. */
 const positionPx: MutablePoint = { x: 0, y: 0 };
 
-/** Pixels a creep covers in `deltaMs`, after speed modifiers such as chill or stun. */
+/**
+ * Pixels a creep covers in `deltaMs`, after speed modifiers such as chill or
+ * stun and the creature's own speed abilities (low-health and route-end
+ * boosts, second life).
+ */
 export function computeCreepStepDistancePx(
   entity: CreepEntity,
   deltaMs: number,
   baseMoveSpeedPxPerSec: number,
 ): number {
   return (
-    (deltaMs / 1000) * baseMoveSpeedPxPerSec * entity.speed * getEffectiveSpeedMultiplier(entity)
+    (deltaMs / 1000) *
+    baseMoveSpeedPxPerSec *
+    entity.speed *
+    getEffectiveSpeedMultiplier(entity) *
+    getAbilitySpeedMultiplier(entity)
   );
 }
 

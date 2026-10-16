@@ -1,16 +1,19 @@
 import {
   applyDamageToCreep,
   hasEffectDamage,
+  tickCreepAbilities,
   tickCreepEffects,
   type EffectDamageByType,
 } from '../../../../entities/creep';
 import { DAMAGE_TYPES } from '../../../../shared/types/content-ids';
+import { CreatureDamageShape } from '../../../../shared/types/creatureAbilities';
 import type { CombatCreep, CombatField, CombatTower, TowerCombatHooks } from './towerCombatTypes';
 
 /**
- * Advances status effects on every living creep and routes damage over time
- * through the same kill path as a tower hit, so a poison kill pays out exactly
- * once. `deltaMs` is used as given; clamping is the caller's job.
+ * Advances status effects (and the creature ability counters: invisibility,
+ * regeneration, shield recharge) on every living creep and routes damage over
+ * time through the same kill path as a tower hit, so a poison kill pays out
+ * exactly once. `deltaMs` is used as given; clamping is the caller's job.
  */
 export function tickFieldCreepEffects<C extends CombatCreep, T extends CombatTower>(
   field: CombatField<C, T>,
@@ -22,6 +25,7 @@ export function tickFieldCreepEffects<C extends CombatCreep, T extends CombatTow
       continue;
     }
 
+    tickCreepAbilities(creep.entity, deltaMs);
     const tickResult = tickCreepEffects(creep.entity, deltaMs);
 
     if (tickResult.creep === creep.entity) {
@@ -51,6 +55,7 @@ function applyEffectTickDamage<C extends CombatCreep, T extends CombatTower>(
 ): void {
   let damageApplied = 0;
   let killed = false;
+  let revived = false;
 
   for (const damageType of DAMAGE_TYPES) {
     const rawDamage = damageByType[damageType];
@@ -59,10 +64,20 @@ function applyEffectTickDamage<C extends CombatCreep, T extends CombatTower>(
       continue;
     }
 
-    const damageResult = applyDamageToCreep(creep.entity, rawDamage, damageType);
+    const damageResult = applyDamageToCreep(
+      creep.entity,
+      rawDamage,
+      damageType,
+      CreatureDamageShape.DOT,
+    );
     creep.entity = damageResult.creep;
     damageApplied += damageResult.damageApplied;
     killed = damageResult.killed;
+    revived ||= damageResult.revived === true;
+  }
+
+  if (revived) {
+    hooks.onCreepRevived?.(creep);
   }
 
   hooks.onDamageDealt(creep.entity.position, Math.round(damageApplied), 'effect');

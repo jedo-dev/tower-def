@@ -36,4 +36,12 @@ export type TowerCombatHooks<C extends CombatCreep, T extends CombatTower> = {
   onCreepKilled: (creep: C, killer?: T) => void;
   /** The tower attacked; its cooldown is already consumed. */
   onTowerFired: (tower: T, target: C, isSplashTower: boolean) => void;
+  /**
+   * A lethal hit or tick was spent on the creep's `secondLife`: it stood up
+   * again and no kill was scored. `onCreepKilled` fires only on the final
+   * death, so kill rewards (bounty, talent XP) count each creature once.
+   */
+  onCreepRevived?: (creep: C) => void;
+  /** The creep dodged a single-target shot (`dodgeEveryNthShot`): no damage, no effects. */
+  onShotDodged?: (tower: T, target: C) => void;
 };

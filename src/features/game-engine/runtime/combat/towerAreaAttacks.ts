@@ -1,4 +1,4 @@
-import { getCreepFootprintCenter } from '../../../../entities/creep';
+import { getCreepFootprintCenter, isCreepHidden } from '../../../../entities/creep';
 import { canTowerTargetCreep, getTowerCenter, resolveTowerChain } from '../../../../entities/tower';
 import { GRID_DIMENSIONS } from '../../../../shared/constants/grid';
 import type { DamageType } from '../../../../shared/types/content-ids';
@@ -44,7 +44,11 @@ export function applySplashDamage<C extends CombatCreep, T extends CombatTower>(
 
   // A ground-only splash never touches a flier over its blast; a both-scope one does.
   const creepsInSplashRadius = field.creeps.filter((creep) => {
-    if (creep.entity.status !== 'alive' || !canTowerTargetCreep(tower.entity, creep.entity)) {
+    if (
+      creep.entity.status !== 'alive' ||
+      isCreepHidden(creep.entity) ||
+      !canTowerTargetCreep(tower.entity, creep.entity)
+    ) {
       return false;
     }
     const creepCenter = hooks.toCellCenter(getCreepFootprintCenter(creep.entity));
@@ -92,6 +96,7 @@ function selectChainTargets<C extends CombatCreep, T extends CombatTower>(
         (creep) =>
           creep.entity.status === 'alive' &&
           !visited.has(creep.entity.id) &&
+          !isCreepHidden(creep.entity) &&
           canTowerTargetCreep(tower.entity, creep.entity),
       )
       .map((creep) => {
