@@ -25,6 +25,10 @@ export default defineConfig({
     // (see `shared/test/injectCssModule`).
     css: { include: [/\.css\?raw$/] },
     setupFiles: ['./src/shared/test/setup.ts'],
+    // Scene-harness suites preload the real game scene and content; under a
+    // full parallel run that can exceed the 5s/10s defaults without any hang.
+    testTimeout: 20_000,
+    hookTimeout: 60_000,
     include: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
     coverage: {
       provider: 'v8',
