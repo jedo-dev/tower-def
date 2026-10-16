@@ -17,10 +17,7 @@ export type TowerLevelStats = {
   onHitEffects?: TowerOnHitEffect[];
   /** Aura this level projects; only support archetypes declare one. */
   aura?: TowerAuraDefinition;
-  /**
-   * Chain shape of a talent grade. Combat still reads the archetype's shape;
-   * the combat mechanics task wires the per-grade one.
-   */
+  /** Chain shape of this level or talent grade; absent means the archetype's. */
   chain?: TowerChainDefinition;
   /**
    * Optional abilities of this level, authored under `abilities` on any

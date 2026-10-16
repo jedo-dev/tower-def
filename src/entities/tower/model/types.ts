@@ -16,6 +16,7 @@ import {
   loadTowerArchetypeContent,
   type TowerArchetypeDefinition,
   type TowerAuraDefinition,
+  type TowerChainDefinition,
   type TowerLevelDefinition,
   type TowerTalentBranchDefinition,
 } from './content/loadTowerContent';
@@ -97,6 +98,11 @@ export type TowerCombatStats = {
   onHitEffects?: TowerOnHitEffect[];
   /** Aura projected at this level; only support archetypes have one. */
   aura?: TowerAuraDefinition;
+  /**
+   * Chain shape authored on this level or talent grade; absent means the
+   * archetype shape (see `resolveTowerChain`).
+   */
+  chain?: TowerChainDefinition;
   /** Optional abilities of this level (crit, extra targets, volley...); see `TowerAbilities`. */
   abilities?: TowerAbilities;
 };
@@ -128,6 +134,19 @@ export const TOWER_UPGRADE_CONFIG: Record<TowerTypeId, TowerTypeUpgradeConfig> =
 
 export function getTowerArchetype(towerType: TowerTypeId): TowerArchetypeDefinition {
   return TOWER_ARCHETYPE_DEFINITIONS[towerType];
+}
+
+/**
+ * The chain shape a tower fights with at its current stats: the level's or
+ * talent grade's authored `chain` first, the archetype shape otherwise.
+ * Combat, the tower panel preview and the computer's damage model all read
+ * this one resolution.
+ */
+export function resolveTowerChain(
+  towerType: TowerTypeId,
+  stats: Pick<TowerCombatStats, 'chain'>,
+): TowerChainDefinition | undefined {
+  return stats.chain ?? TOWER_ARCHETYPE_DEFINITIONS[towerType].chain;
 }
 
 export function getTowerAttackKind(towerType: TowerTypeId): TowerAttackKind {

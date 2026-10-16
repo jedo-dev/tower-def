@@ -170,8 +170,9 @@ export function computeTargetsPerShot(
     );
   }
 
-  if (archetype.attackKind === TowerAttackKind.CHAIN && archetype.chain) {
-    const { bounces, bounceRangeCells, damageFalloff } = archetype.chain;
+  const chain = tower.stats.chain ?? archetype.chain;
+  if (archetype.attackKind === TowerAttackKind.CHAIN && chain) {
+    const { bounces, bounceRangeCells, damageFalloff } = chain;
     const available = expectedCreepsAround(geometry, sampleIndex, bounceRangeCells);
     let targets = 1;
     let arcShare = 1;

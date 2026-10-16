@@ -515,9 +515,11 @@ Every race tower entry declares exactly two branches:
 
 A grade replaces the tower's stats like a level does: anything the grade does
 not declare (splash, effects, aura) is absent at that grade, so carry the
-grade 3 values forward explicitly. Combat still reads the chain shape of the
-archetype; per-grade `chain` and `abilities` take effect as the combat
-mechanics land.
+grade 3 values forward explicitly. The one exception is `chain`: a level or
+grade that authors one fights with it (bounces, bounce range, falloff), one
+that does not falls back to the archetype shape (`resolveTowerChain`); the
+tower panel's NEXT preview and the computer's damage model read the same
+resolution.
 
 **Price ladder.** Grades never declare `upgradeCostGold` (the key is rejected):
 the loader fills it from `TowerTalentPricing` in

@@ -1,5 +1,5 @@
 import { getCreepFootprintCenter } from '../../../../entities/creep';
-import { canTowerTargetCreep, getTowerArchetype, getTowerCenter } from '../../../../entities/tower';
+import { canTowerTargetCreep, getTowerCenter, resolveTowerChain } from '../../../../entities/tower';
 import { GRID_DIMENSIONS } from '../../../../shared/constants/grid';
 import type { DamageType } from '../../../../shared/types/content-ids';
 import {
@@ -128,7 +128,7 @@ export function applyChainDamage<C extends CombatCreep, T extends CombatTower>(
   damageType: DamageType,
   hooks: TowerCombatHooks<C, T>,
 ): void {
-  const chainShape = getTowerArchetype(tower.entity.type).chain;
+  const chainShape = resolveTowerChain(tower.entity.type, tower.entity.combatStats);
 
   applySingleTargetDamage(tower, target, shotDamage, damageType, hooks);
 

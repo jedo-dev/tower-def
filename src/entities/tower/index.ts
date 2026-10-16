@@ -2,11 +2,15 @@ export {
   getTowerArchetype,
   getTowerAttackKind,
   getTowerOnHitEffects,
+  resolveTowerChain,
   resolveTowerTargetScope,
   TOWER_ARCHETYPE_DEFINITIONS,
   TOWER_COMBAT_STATS_BY_TYPE,
 } from './model/types';
-export type { TowerArchetypeDefinition } from './model/content/loadTowerContent';
+export type {
+  TowerArchetypeDefinition,
+  TowerChainDefinition,
+} from './model/content/loadTowerContent';
 export {
   buildableTowers,
   getBuildableTowersByFaction,

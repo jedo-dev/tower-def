@@ -39,6 +39,30 @@ describe('mapTowerNextLevelPreview', () => {
     expect(arcs?.value.split('/')).toHaveLength(chain.bounces);
   });
 
+  it('reads the next grade authored chain shape, as combat does', () => {
+    const current = { damage: 100, range: 6, attackCooldownMs: 1_000 };
+    const next = {
+      ...current,
+      chain: { bounces: 5, bounceRangeCells: 4, damageFalloff: 0.5 },
+    };
+
+    const preview = mapTowerNextLevelPreview(TowerTypeId.CHAIN, current, next, 4);
+
+    const arcs = preview.effectLines.find((line) => line.key === 'chain-arcs');
+    expect(arcs?.value).toBe('jumps 50/25/13/6/3');
+  });
+
+  it('keeps the archetype chain when the next level authors none', () => {
+    const current = { damage: 100, range: 6, attackCooldownMs: 1_000 };
+    const next = { ...current, damage: 200 };
+    const chain = getTowerArchetype(TowerTypeId.CHAIN).chain!;
+
+    const preview = mapTowerNextLevelPreview(TowerTypeId.CHAIN, current, next, 2);
+
+    const arcs = preview.effectLines.find((line) => line.key === 'chain-arcs');
+    expect(arcs?.value.split('/')).toHaveLength(chain.bounces);
+  });
+
   it('carries the changed poison line', () => {
     const { preview } = previewFor(TowerTypeId.POISON);
 

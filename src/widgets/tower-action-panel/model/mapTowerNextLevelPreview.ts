@@ -1,4 +1,4 @@
-import { getTowerArchetype, type TowerCombatStats } from '../../../entities/tower';
+import { resolveTowerChain, type TowerCombatStats } from '../../../entities/tower';
 import type { TowerTypeId } from '../../../shared/types/content-ids';
 import { mapTowerEffectUpgradeDeltas, type TowerEffectLine } from './mapTowerEffectsToLines';
 import {
@@ -71,16 +71,23 @@ function mapStatDeltas(current: TowerCombatStats, next: TowerCombatStats): Tower
 }
 
 /**
- * Damage of each jump after the first hit at the next level: the chain's
- * shape is fixed, so its jumps only change through the base damage.
+ * Damage of each jump after the first hit at the next level, read from the
+ * chain shape combat resolves at that level (a talent grade may author its
+ * own bounces and falloff). Shown when the damage or the shape changes.
  */
 function mapChainArcLine(
   towerType: TowerTypeId,
   current: TowerCombatStats,
   next: TowerCombatStats,
 ): TowerEffectLine | null {
-  const { chain } = getTowerArchetype(towerType);
-  if (!chain || chain.bounces <= 0 || next.damage === current.damage) {
+  const chain = resolveTowerChain(towerType, next);
+  const currentChain = resolveTowerChain(towerType, current);
+  const isShapeUnchanged =
+    currentChain !== undefined &&
+    currentChain.bounces === chain?.bounces &&
+    currentChain.bounceRangeCells === chain.bounceRangeCells &&
+    currentChain.damageFalloff === chain.damageFalloff;
+  if (!chain || chain.bounces <= 0 || (next.damage === current.damage && isShapeUnchanged)) {
     return null;
   }
 
