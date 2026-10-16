@@ -34,8 +34,8 @@ src/content/
       "spriteKey": "unit.undead.ghoul",
       "description": "Feral clawed scavenger that outruns slow defenses.",
       "talentBranches": [
-        { "id": "undead_ghoul_i", "...": "see Creature talents" },
-        { "id": "undead_ghoul_ii", "...": "..." }
+        { "id": "undead_ghoul_frenzy", "...": "see Creature talents" },
+        { "id": "undead_ghoul_devourer", "...": "..." }
       ]
     }
   ]
@@ -281,18 +281,21 @@ them, a restart, a faction change or a new setup starts with none.
 ```json
 "talentBranches": [
   {
-    "id": "undead_crypt_fiend_i",
-    "name": "Crypt Fiend I",
-    "description": "Placeholder branch: a little tougher and faster with every grade.",
+    "id": "undead_crypt_fiend_carapace",
+    "name": "Carapace",
+    "description": "A chitin shell that piles on physical armor and resists armor breaks.",
     "grades": [
-      { "level": 1, "health": 113, "speed": 1.1, "physicalArmor": 4, "magicalArmor": 7 },
-      { "level": 2, "health": 122, "speed": 1.15, "physicalArmor": 4, "magicalArmor": 8 },
-      { "level": 3, "health": 130, "speed": 1.2, "physicalArmor": 4, "magicalArmor": 9 },
-      { "level": 4, "health": 139, "speed": 1.25, "physicalArmor": 4, "magicalArmor": 10,
-        "abilities": {} }
+      { "level": 1, "health": 110, "speed": 1.05, "physicalArmor": 6, "magicalArmor": 6 },
+      { "level": 2, "health": 115, "speed": 1.05, "physicalArmor": 9, "magicalArmor": 7,
+        "abilities": { "effectResistance": { "armor_break": 0.5 } } },
+      { "level": 3, "health": 120, "speed": 1.05, "physicalArmor": 13, "magicalArmor": 8,
+        "abilities": { "effectResistance": { "armor_break": 0.5 } } },
+      { "level": 4, "health": 130, "speed": 1.05, "physicalArmor": 17, "magicalArmor": 9,
+        "abilities": { "effectResistance": { "armor_break": 0.5 },
+                       "incomingDamageMultipliers": { "single": 0.85 } } }
     ]
   },
-  { "id": "undead_crypt_fiend_ii", "...": "..." }
+  { "id": "undead_crypt_fiend_web", "...": "..." }
 ]
 ```
 
@@ -360,10 +363,19 @@ each unit of `send-limits-updated` carries `availableBranches`,
 `branchCostXp`, `grade` and `nextUpgradeCostXp` (`null` at grade 4). The
 computer earns experience but spends none yet.
 
-**Shipped branches** are placeholders ("<Name> I" and "<Name> II": +8% health,
-+0.05 speed and +1 armor on the race's strong axis per grade; magical for
-undead and elves, physical for orcs and humans) until the docs/12 branches
-are authored.
+**Shipped branches** are the docs/12 branches (tower-def-716.3), ids
+`<unitId>_<branch>`. The doc's single "броня" maps onto the race profile: the
+delta over the doc base goes in full to the race's strong axis (magical for
+undead and elves, physical for orcs and humans) and half, rounded down, to
+the weak one; separate "Физ./Маг. броня" columns map axis by axis. Graded
+armor stays at or below 25. Doc mechanics the engine does not have yet (tower
+debuffs, creature auras, summons, route jumps) are substituted with existing
+abilities; every substitution is listed in
+`docs/07-duel-mode-expansion-plan.md` ("Creature talents authoring"). Content
+tests keep grade 4 health within +40%, graded armor within 25 and the two
+branches of a creature on different ability fields. The bestiary creep card
+shows both branches with a grade 1-4 table (`pages/bestiary-page`,
+`creepBranchCards.ts`, `creatureAbilityLines.ts`).
 
 ## Adding a creature
 

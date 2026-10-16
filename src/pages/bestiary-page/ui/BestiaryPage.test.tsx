@@ -155,6 +155,43 @@ describe('BestiaryPage', () => {
     expect(consoleError).not.toHaveBeenCalled();
   });
 
+  it('shows both creature talent branches with a grade 1-4 table and special lines', () => {
+    render(<BestiaryPage onNavigate={() => undefined} />);
+    const gargoyle = resolveUnitConfigById('undead_gargoyle');
+
+    const card = within(screen.getByRole('article', { name: gargoyle.name }));
+    const branches = within(card.getByRole('group', { name: 'Talent branches' }));
+
+    expect(
+      branches.getAllByRole('heading', { level: 4 }).map((heading) => heading.textContent),
+    ).toEqual(gargoyle.talentBranches.map((branch) => branch.name));
+    for (const branch of gargoyle.talentBranches) {
+      const section = within(branches.getByRole('region', { name: branch.name }));
+      expect(section.getByText(branch.description)).toBeDefined();
+      const table = within(section.getByRole('table', { name: `${branch.name} grades` }));
+      expect(table.getAllByRole('rowheader').map((header) => header.textContent)).toEqual([
+        'G1',
+        'G2',
+        'G3',
+        'G4',
+      ]);
+      const gradeFour = table.getByRole('rowheader', { name: 'G4' }).closest('tr');
+      const cells = [...(gradeFour?.querySelectorAll('td') ?? [])].map((cell) => cell.textContent);
+      const top = branch.grades[3];
+      expect(cells).toEqual(
+        [top.health, top.speed, top.physicalArmor, top.magicalArmor].map(String),
+      );
+    }
+
+    const dive = within(
+      branches.getByRole('table', { name: `${gargoyle.talentBranches[1].name} grades` }),
+    );
+    expect(
+      dive.getByText(/last 50% of the route speed x1\.75; a leak takes 2 lives/),
+    ).toBeDefined();
+    expect(consoleError).not.toHaveBeenCalled();
+  });
+
   it('renders lore when the content carries it', () => {
     const [undead] = getAllRaceRegistries();
     const ghoul = resolveUnitConfigById('undead_ghoul');
