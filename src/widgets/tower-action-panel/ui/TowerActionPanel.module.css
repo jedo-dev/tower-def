@@ -42,17 +42,26 @@
 }
 
 .close:focus-visible {
-  outline: none;
-  box-shadow: var(--focus-ring);
+  outline: var(--focus-ring-outline);
+  outline-offset: var(--focus-ring-outline-offset);
 }
 
+/* Label/value pairs as a description list: each value is announced with
+ * its full stat name, the short label stays visual. */
 .stats {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-2xs) var(--space-md);
+  margin: 0;
   font-family: var(--font-family-ui);
   font-size: var(--font-size-2xs);
+}
+
+.stat {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-xs);
 }
 
 .statLabel {
@@ -62,9 +71,22 @@
 }
 
 .statValue {
+  margin: 0;
   font-family: var(--font-family-stats);
   font-variant-numeric: tabular-nums;
   color: var(--color-text-secondary);
+}
+
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
 }
 
 .buttons {

@@ -138,6 +138,11 @@
 
   /* Focus ring used by every procedural control */
   --focus-ring: 0 0 0 2px rgba(10, 15, 25, 0.95), 0 0 0 4px var(--color-accent-gold);
+  /* Kit controls paint their chrome with border-image (glow outset included),
+   * which covers a box-shadow ring, and selected slots already use a gold
+   * box-shadow. They take the outline ring instead: outlines paint on top. */
+  --focus-ring-outline: 2px solid var(--color-accent-gold);
+  --focus-ring-outline-offset: 2px;
 
   /* Sizing */
   --touch-target-min: 44px;

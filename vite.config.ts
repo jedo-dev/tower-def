@@ -20,10 +20,10 @@ export default defineConfig({
     // Domain logic runs in node; component tests opt into jsdom via the
     // `@vitest-environment jsdom` docblock in each .test.tsx file.
     environment: 'node',
-    // Vitest stubs every CSS import; let a `?raw` import of a CSS module
+    // Vitest stubs every CSS import; let a `?raw` import of a stylesheet
     // through so layout tests can inject the real rules into jsdom
     // (see `shared/test/injectCssModule`).
-    css: { include: [/\.module\.css\?raw$/] },
+    css: { include: [/\.css\?raw$/] },
     setupFiles: ['./src/shared/test/setup.ts'],
     include: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
     coverage: {

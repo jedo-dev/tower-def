@@ -18,6 +18,7 @@ import {
   mapTowerEffectsToLines,
   mapTowerEffectUpgradeDeltas,
 } from '../model/mapTowerEffectsToLines';
+import { mapTowerStatsToLines } from '../model/mapTowerStatsToLines';
 import type { HudTowerType } from '../../../shared/lib/game-bridge/types';
 import { PlaceholderIcon } from '../../../shared/ui/placeholder-icon';
 
@@ -51,6 +52,7 @@ function TowerActionPanelComponent() {
 
   const canUpgrade = upgradeCheck.allowed;
   const effectLines = mapTowerEffectsToLines(type, combatStats);
+  const statLines = mapTowerStatsToLines(combatStats);
   const nextLevelStats = maxed ? null : getTowerStatsForLevel(type, level + 1);
   const upgradeDeltas = nextLevelStats
     ? mapTowerEffectUpgradeDeltas(type, combatStats, nextLevelStats)
@@ -84,20 +86,17 @@ function TowerActionPanelComponent() {
         </button>
       </div>
 
-      <div className={styles.stats}>
-        <span className={styles.statLabel}>DMG:</span>
-        <span className={styles.statValue}>{combatStats.damage}</span>
-        <span className={styles.statLabel}>RNG:</span>
-        <span className={styles.statValue}>{combatStats.range.toFixed(1)}</span>
-        <span className={styles.statLabel}>SPD:</span>
-        <span className={styles.statValue}>{combatStats.attackCooldownMs}ms</span>
-        {combatStats.splashRadius !== undefined && (
-          <>
-            <span className={styles.statLabel}>AOE:</span>
-            <span className={styles.statValue}>{combatStats.splashRadius.toFixed(1)}</span>
-          </>
-        )}
-      </div>
+      <dl className={styles.stats}>
+        {statLines.map((stat) => (
+          <div key={stat.key} className={styles.stat}>
+            <dt className={styles.statLabel} title={stat.name}>
+              <span aria-hidden="true">{stat.shortLabel}</span>
+              <span className={styles.visuallyHidden}>{stat.name}</span>
+            </dt>
+            <dd className={styles.statValue}>{stat.value}</dd>
+          </div>
+        ))}
+      </dl>
 
       {effectLines.length > 0 && (
         <ul className={styles.effects} aria-label="Tower effects">

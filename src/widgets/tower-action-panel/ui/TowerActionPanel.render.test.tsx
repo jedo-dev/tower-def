@@ -107,3 +107,29 @@ describe('TowerActionPanel effects', () => {
     expect(consoleError).not.toHaveBeenCalled();
   });
 });
+
+describe('TowerActionPanel stats', () => {
+  it('pairs each stat value with its full name in a description list', () => {
+    publishGameHudSnapshot(createHudSnapshot());
+
+    render(<TowerActionPanel />);
+    act(() => {
+      publishGameEvent('selected-tower', { tower: selectTower(TowerTypeId.SPLASH) });
+    });
+
+    const stats = screen.getByRole('region', { name: 'Tower actions' });
+    const terms = within(stats).getAllByRole('term');
+    const definitions = within(stats).getAllByRole('definition');
+    const expected = getTowerStatsForLevel(TowerTypeId.SPLASH, 1)!;
+
+    expect(terms.map((term) => term.textContent)).toEqual([
+      'DMGDamage',
+      'RNGRange',
+      'SPDAttack cooldown',
+      'AOESplash radius',
+    ]);
+    expect(definitions[0].textContent).toBe(String(expected.damage));
+    expect(terms[0].querySelector('[aria-hidden="true"]')?.textContent).toBe('DMG');
+    expect(consoleError).not.toHaveBeenCalled();
+  });
+});

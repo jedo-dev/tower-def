@@ -10,10 +10,11 @@ import {
   DEFAULT_ENEMY_FACTION,
 } from '../../../entities/enemy-faction';
 import { Difficulty, difficulties, DEFAULT_DIFFICULTY } from '../../../entities/difficulty';
-import { getComputerDifficultyPreset } from '../../../entities/computer-opponent';
 import type { GameSetupConfig, AppRoute } from '../../../shared/config/game-setup';
-import { FACTION_THEME_COLOR_VARS } from '../../../shared/constants/theme';
 import { ToggleSwitch } from '../../../shared/ui/toggle-switch';
+import { DifficultyStep } from './DifficultyStep';
+import { EnemyFactionStep } from './EnemyFactionStep';
+import { getEnemyThemeColor } from './enemyThemeColor';
 import './GameSetupPage.css';
 
 type SetupStep = 'builder-race' | 'enemy-faction' | 'difficulty' | 'summary';
@@ -271,46 +272,11 @@ export function GameSetupPage({ onStartGame, onNavigate }: GameSetupPageProps) {
         )}
 
         {step === 'enemy-faction' && (
-          <div className="setup-cards">
-            {enemyFactions.map((faction) => (
-              <button
-                key={faction.id}
-                type="button"
-                className={`setup-card${enemyFactionSelected === faction.id ? ' setup-card-selected' : ''}`}
-                onClick={() => setEnemyFactionSelected(faction.id)}
-                style={{ '--card-theme': getEnemyThemeColor(faction.id) } as CSSProperties}
-                data-sound="ui.faction_select"
-              >
-                <div className="setup-card-icon" />
-                <h2 className="setup-card-name">{faction.name}</h2>
-                <p className="setup-card-desc">{faction.description}</p>
-                <p className="setup-card-tower">Creeps: {faction.creepStyle.split(',')[0]}</p>
-              </button>
-            ))}
-          </div>
+          <EnemyFactionStep selected={enemyFactionSelected} onSelect={setEnemyFactionSelected} />
         )}
 
         {step === 'difficulty' && (
-          <div className="setup-cards setup-cards-vertical">
-            {difficulties.map((diff) => (
-              <button
-                key={diff.id}
-                type="button"
-                className={`setup-difficulty-btn${difficultySelected === diff.id ? ' setup-difficulty-btn-selected' : ''}`}
-                onClick={() => setDifficultySelected(diff.id)}
-                data-sound="ui.build_select"
-              >
-                <span className="setup-difficulty-name">{diff.name}</span>
-                <span className="setup-difficulty-desc">{diff.description}</span>
-                <span className="setup-difficulty-modifiers">
-                  <span className="setup-difficulty-chip">
-                    AI {getComputerDifficultyPreset(diff.id).name}
-                  </span>
-                  <span className="setup-difficulty-chip">Equal stats &amp; gold</span>
-                </span>
-              </button>
-            ))}
-          </div>
+          <DifficultyStep selected={difficultySelected} onSelect={setDifficultySelected} />
         )}
 
         {step === 'summary' && (
@@ -375,19 +341,6 @@ export function GameSetupPage({ onStartGame, onNavigate }: GameSetupPageProps) {
       )}
     </main>
   );
-}
-
-function getEnemyThemeColor(faction: EnemyFaction): string {
-  switch (faction) {
-    case EnemyFaction.UNDEAD:
-      return FACTION_THEME_COLOR_VARS.undead;
-    case EnemyFaction.ORC:
-      return FACTION_THEME_COLOR_VARS.orc;
-    case EnemyFaction.HUMAN:
-      return FACTION_THEME_COLOR_VARS.human;
-    case EnemyFaction.ELF:
-      return FACTION_THEME_COLOR_VARS.elf;
-  }
 }
 
 function formatTowerName(towerId: string | undefined): string {

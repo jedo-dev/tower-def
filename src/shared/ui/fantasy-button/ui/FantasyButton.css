@@ -61,9 +61,10 @@
   color: color-mix(in srgb, var(--btn-label-color) 70%, #000);
 }
 
+/* The 9-slice glow outset paints over a box-shadow ring; an outline does not. */
 .fantasy-button:focus-visible {
-  outline: none;
-  box-shadow: var(--focus-ring);
+  outline: var(--focus-ring-outline);
+  outline-offset: var(--focus-ring-outline-offset);
 }
 
 .fantasy-button:disabled {

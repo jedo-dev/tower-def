@@ -174,6 +174,7 @@ function HudPanelComponent({
                 )}
                 disabled={!option.isAffordable && !option.isSelected}
                 aria-disabled={isBuildLocked || undefined}
+                aria-pressed={option.isSelected}
                 aria-label={option.ariaLabel}
                 title={isBuildLocked ? BUILD_PHASE_ONLY_HINT : option.name}
                 onClick={() => {
