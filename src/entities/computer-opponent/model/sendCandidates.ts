@@ -2,6 +2,11 @@ import type { RaceId } from '../../../shared/types/content-ids';
 import { getIncomeBonusByTier, getSendCostByTier } from '../../duel-match/model/sendEconomy';
 import { getRaceRegistry } from '../../race-registry/model/registries';
 import { resolveUnitConfigById } from '../../unit/model/registry';
+import {
+  applyCreatureGrade,
+  getCreatureGrade,
+  type CreatureTalentLedger,
+} from '../../unit/model/talents';
 import type { UnitConfig, UnitId, UnitTier } from '../../unit/model/types';
 import { EVEN_DAMAGE_MIX, type DamageTypeMix } from './damage-profile';
 import { computeEffectiveHealth } from './threat-budget/effectiveHealth';
@@ -26,6 +31,8 @@ export type SendValuation = {
   defenderDamageMix: DamageTypeMix;
   /** Health multiplier of the wave the sends spawn in, for percent damage. */
   healthMultiplier: number;
+  /** The sender's creature picks and grades: a creature is valued as it would spawn now. */
+  creatureTalents?: Pick<CreatureTalentLedger, 'creatureBranchChoices' | 'creatureGrades'>;
 };
 
 const NEUTRAL_VALUATION: SendValuation = {
@@ -56,7 +63,15 @@ export function createSendCandidates(
   valuation: SendValuation = NEUTRAL_VALUATION,
 ): SendCandidate[] {
   return getRaceRegistry(raceId).sendableCreepIds.map((id) => {
-    const config = resolveUnitConfigById(id);
+    const talents = valuation.creatureTalents;
+    const config =
+      talents === undefined
+        ? resolveUnitConfigById(id)
+        : applyCreatureGrade(
+            resolveUnitConfigById(id),
+            talents.creatureBranchChoices,
+            getCreatureGrade(id, talents.creatureGrades),
+          );
     const cost = getSendCostByTier(config.tier);
     const incomeBonus = getIncomeBonusByTier(config.tier);
 

@@ -361,7 +361,8 @@ sendable creatures only; a refusal plays the error sound). The HUD snapshot
 carries `creatureXpByTier`, `creatureBranchChoices` and `creatureGrades`;
 each unit of `send-limits-updated` carries `availableBranches`,
 `branchCostXp`, `grade` and `nextUpgradeCostXp` (`null` at grade 4). The
-computer earns experience but spends none yet.
+computer spends its experience through the same rules each build phase
+(tower-def-716.5, docs/07 "AI creature development"; never on easy).
 
 **Shipped branches** are the docs/12 branches (tower-def-716.3), ids
 `<unitId>_<branch>`. The doc's single "броня" maps onto the race profile: the

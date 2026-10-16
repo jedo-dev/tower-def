@@ -43,6 +43,7 @@ export function formatDuelRoundLine(report: DuelRoundReport): string {
     pair('sent', a, b, (side) => side.sentCount),
     pair('towers', a, b, (side) => side.towers),
     pair('grade', a, b, (side) => side.topGrade),
+    pair('cg', a, b, (side) => side.topCreatureGrade),
     `route s/l A ${formatRouteCost(a.routeCost)} B ${formatRouteCost(b.routeCost)}`,
     `ticks ${report.ticks}${report.isWaveCutOff ? ' (cut off)' : ''}`,
   ].join(' | ');

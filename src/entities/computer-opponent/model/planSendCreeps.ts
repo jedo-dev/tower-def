@@ -10,6 +10,7 @@ import { EVEN_DAMAGE_MIX } from './damage-profile';
 import { createSendCandidates, type SendCandidate } from './sendCandidates';
 import { SEND_TUNING_BY_DIFFICULTY, type SendTuning } from './sendTuning';
 import { computeContextThreatSplit } from './contextThreatSplit';
+import { planContextDevelopment, type CreatureDevelopmentAction } from './creature-development';
 import type { ThreatBudgetSplit } from './threat-budget/splitThreatBudget';
 import type { ComputerDecisionDebugRecorder } from './decisionDebugSnapshots';
 
@@ -19,6 +20,11 @@ export type SendPlannerInput = {
 };
 
 export type SendPlannerOutput = {
+  /**
+   * Creature talents bought this build phase (tower-def-716.5), to apply
+   * before the sends so they spawn at the new grades.
+   */
+  developmentActions: readonly CreatureDevelopmentAction[];
   actions: readonly SendCreepAction[];
   totalCost: number;
   totalIncomeBonus: number;
@@ -168,6 +174,7 @@ function selectCreepsToSend(
   const candidates = createSendCandidates(context.raceId, {
     defenderDamageMix: context.enemyDamageMix ?? EVEN_DAMAGE_MIX,
     healthMultiplier: getWaveHealthMultiplier(context.round),
+    ...(context.creatureTalents === undefined ? {} : { creatureTalents: context.creatureTalents }),
   });
   if (candidates.length === 0) {
     return { selected: [], pressureWeight: 0 };
@@ -211,7 +218,13 @@ function selectCreepsToSend(
 export function planSendCreeps(input: SendPlannerInput): SendPlannerOutput {
   const { context, debugRecorder } = input;
 
-  function finish(output: SendPlannerOutput): SendPlannerOutput {
+  function finish(sends: Omit<SendPlannerOutput, 'developmentActions'>): SendPlannerOutput {
+    const plannedSends = [
+      ...(context.queuedSends ?? []),
+      ...sends.actions.map((action) => action.creepTypeId),
+    ];
+    const development = planContextDevelopment(context, plannedSends);
+    const output = { ...sends, developmentActions: development.actions };
     debugRecorder?.recordSendDecision(context, createSendDecisionOutput(context, output));
     return output;
   }
