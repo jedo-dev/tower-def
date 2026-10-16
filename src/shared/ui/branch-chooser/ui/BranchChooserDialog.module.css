@@ -1,4 +1,4 @@
-/* Portalled to <body>: covers the battlefield and both bottom panels. */
+/* Portalled to <body>: covers the battlefield and both bottom panels. Shared by the tower and creature choosers. */
 .backdrop {
   position: fixed;
   inset: 0;
@@ -128,6 +128,7 @@
   font-family: var(--font-family-stats);
   font-variant-numeric: tabular-nums;
   color: var(--color-text-gold);
+  white-space: nowrap;
 }
 
 .warning {
