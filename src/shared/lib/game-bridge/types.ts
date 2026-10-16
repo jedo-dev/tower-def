@@ -77,6 +77,8 @@ export type SelectedTowerSnapshot = {
   type: HudTowerType;
   /** Authored tower name, e.g. "Frost Wyrm Nest"; absent falls back to the archetype. */
   name?: string;
+  /** Authored tower id; its level curve drives upgrades. Absent: the archetype curve. */
+  buildableTowerId?: string;
   level: number;
   position: { x: number; y: number };
   cost: number;

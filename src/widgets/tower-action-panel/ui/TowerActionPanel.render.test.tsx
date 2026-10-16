@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, render, screen, within } from '@testing-library/react';
 import { publishGameEvent, publishGameHudSnapshot } from '../../../shared/lib/game-bridge/bridge';
 import type { GameHudSnapshot, SelectedTowerSnapshot } from '../../../shared/lib/game-bridge/types';
-import { getTowerStatsForLevel } from '../../../entities/tower';
+import { getTowerStatsForCurveLevel, getTowerStatsForLevel } from '../../../entities/tower';
 import { TowerTypeId } from '../../../shared/types/content-ids';
 import { TowerActionPanel } from './TowerActionPanel';
 import { NEXT_LEVEL_PREVIEW_LABEL } from './NextLevelPreview';
@@ -148,6 +148,31 @@ describe('TowerActionPanel next level preview', () => {
       `RNGRange ${next.range.toFixed(1)} (+${(next.range - current.range).toFixed(1)})`,
       `SPDAttack cooldown ${next.attackCooldownMs}ms (-${current.attackCooldownMs - next.attackCooldownMs}ms)`,
     ]);
+    expect(consoleError).not.toHaveBeenCalled();
+  });
+
+  it('reads an authored tower from its own curve, the one its upgrade follows', () => {
+    const authoredId = 'undead_bone_archer_tower';
+    const current = getTowerStatsForCurveLevel(TowerTypeId.SINGLE, authoredId, 1)!;
+    const next = getTowerStatsForCurveLevel(TowerTypeId.SINGLE, authoredId, 2)!;
+    // The authored curve differs from the archetype one, so the source matters.
+    expect(next.damage).not.toBe(getTowerStatsForLevel(TowerTypeId.SINGLE, 2)!.damage);
+    publishGameHudSnapshot(createHudSnapshot());
+    render(<TowerActionPanel />);
+    act(() => {
+      publishGameEvent('selected-tower', {
+        tower: {
+          ...selectTower(TowerTypeId.SINGLE),
+          buildableTowerId: authoredId,
+          combatStats: { ...current },
+        },
+      });
+    });
+
+    const preview = screen.getByRole('group', { name: `${NEXT_LEVEL_PREVIEW_LABEL} 2` });
+    expect(itemTexts(preview)[0]).toBe(
+      `DMGDamage ${next.damage} (+${next.damage - current.damage})`,
+    );
     expect(consoleError).not.toHaveBeenCalled();
   });
 

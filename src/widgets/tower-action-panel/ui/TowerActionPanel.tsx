@@ -10,7 +10,7 @@ import { useGameHudSnapshot } from '../../../shared/lib/game-bridge/useGameHudSn
 import {
   canAffordUpgrade,
   getSellValue,
-  getTowerStatsForLevel,
+  getTowerStatsForCurveLevel,
   getUpgradeCost,
   isMaxLevel,
 } from '../../../entities/tower';
@@ -42,7 +42,7 @@ function TowerActionPanelComponent() {
     return null;
   }
 
-  const { id, type, name, level, cost, combatStats } = selectedTower;
+  const { id, type, name, buildableTowerId, level, cost, combatStats } = selectedTower;
   const towerName = name ?? formatTowerType(type);
   const upgradeCost = getUpgradeCost(type, level);
   const maxed = isMaxLevel(type, level);
@@ -52,9 +52,15 @@ function TowerActionPanelComponent() {
   const canUpgrade = upgradeCheck.allowed;
   const effectLines = mapTowerEffectsToLines(type, combatStats);
   const statLines = mapTowerStatsToLines(combatStats);
-  const nextLevelStats = maxed ? null : getTowerStatsForLevel(type, level + 1);
+  // Deltas compare two levels of the curve the tower upgrades along (its
+  // authored one, else the archetype's), not the live stats an aura buffs.
+  const currentLevelStats =
+    getTowerStatsForCurveLevel(type, buildableTowerId, level) ?? combatStats;
+  const nextLevelStats = maxed
+    ? null
+    : getTowerStatsForCurveLevel(type, buildableTowerId, level + 1);
   const nextLevelPreview = nextLevelStats
-    ? mapTowerNextLevelPreview(type, combatStats, nextLevelStats, level + 1)
+    ? mapTowerNextLevelPreview(type, currentLevelStats, nextLevelStats, level + 1)
     : null;
 
   function handleUpgrade(): void {

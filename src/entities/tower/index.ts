@@ -34,6 +34,7 @@ export {
   getTotalInvestedGold,
   getTowerStatsForLevel,
   getTowerStatsForTowerLevel,
+  getTowerStatsForCurveLevel,
   resolveTowerUpgradeConfig,
   getUpgradeCost,
   isMaxLevel,

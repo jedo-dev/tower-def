@@ -3,6 +3,10 @@ import type { TowerLevelStats } from './upgradeConfig';
 import type { TowerEntity, TowerType } from './types';
 import { TOWER_BASE_LEVEL, TOWER_UPGRADE_CONFIG } from './types';
 import { tryResolveBuildableTowerById } from './config/buildableTowers';
+import { BUILDABLE_TOWER_IDS } from './towerIds';
+
+/** What picks a tower's upgrade curve: its archetype and, if any, its authored id. */
+export type TowerUpgradeCurveRef = Pick<TowerEntity, 'type' | 'buildableTowerId'>;
 
 export type UpgradeCheckResult = {
   allowed: boolean;
@@ -104,7 +108,7 @@ export const INITIAL_TOWER_LEVEL = TOWER_BASE_LEVEL;
  * Upgrade curve a placed tower follows: its own authored curve when it declares
  * one, the archetype curve otherwise.
  */
-export function resolveTowerUpgradeConfig(tower: TowerEntity) {
+export function resolveTowerUpgradeConfig(tower: TowerUpgradeCurveRef) {
   const authored = tower.buildableTowerId
     ? tryResolveBuildableTowerById(tower.buildableTowerId)
     : undefined;
@@ -117,11 +121,24 @@ export function resolveTowerUpgradeConfig(tower: TowerEntity) {
 }
 
 export function getTowerStatsForTowerLevel(
-  tower: TowerEntity,
+  tower: TowerUpgradeCurveRef,
   level: number,
 ): TowerLevelStats | null {
   const config = resolveTowerUpgradeConfig(tower);
   const levelConfig = config.levels.find((candidate) => candidate.level === level);
 
   return levelConfig ? levelConfig.stats : null;
+}
+
+/**
+ * The same curve read from ids alone, for UI previews that only hold a
+ * bridge snapshot: an unknown authored id falls back to the archetype curve.
+ */
+export function getTowerStatsForCurveLevel(
+  towerType: TowerType,
+  buildableTowerId: string | undefined,
+  level: number,
+): TowerLevelStats | null {
+  const authoredId = BUILDABLE_TOWER_IDS.find((towerId) => towerId === buildableTowerId);
+  return getTowerStatsForTowerLevel({ type: towerType, buildableTowerId: authoredId }, level);
 }
