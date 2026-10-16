@@ -67,6 +67,43 @@ describe('theme contrast (WCAG AA)', () => {
     }
   });
 
+  it('keeps bestiary codex text and faction accents readable on every codex surface', () => {
+    const surfaces = [
+      '--color-codex-bg',
+      '--color-codex-panel',
+      '--color-codex-panel-raised',
+      '--color-codex-panel-sunken',
+      '--color-codex-bar',
+    ];
+    const texts = [
+      '--color-codex-text',
+      '--color-codex-text-muted',
+      '--color-codex-text-dim',
+      '--color-codex-lore',
+      '--color-codex-good',
+      '--color-codex-bad',
+      '--color-accent-gold',
+      ...['undead', 'orc', 'human', 'elf'].map((faction) => `--color-faction-${faction}`),
+    ];
+    for (const text of texts) {
+      for (const surface of surfaces) {
+        expect(
+          contrastRatio(token(text), token(surface)),
+          `${text} on ${surface}`,
+        ).toBeGreaterThanOrEqual(WCAG_AA_NORMAL_TEXT);
+      }
+    }
+  });
+
+  it('keeps the gold ink readable on both stops of the codex gold gradient', () => {
+    for (const stop of ['--color-gold-light', '--color-accent-gold-deep']) {
+      expect(
+        contrastRatio(token('--color-accent-gold-ink'), token(stop)),
+        stop,
+      ).toBeGreaterThanOrEqual(WCAG_AA_NORMAL_TEXT);
+    }
+  });
+
   it('gives each faction its own accent', () => {
     const accents = ['undead', 'orc', 'human', 'elf'].map((faction) =>
       token(`--color-faction-${faction}`),

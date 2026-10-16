@@ -78,6 +78,76 @@
   --color-faction-orc: #ec7048;
   --color-faction-human: #6b9df5;
   --color-faction-elf: #a98cf5;
+  /* Second accent, deep shade, glow and tints per faction: rules, frames and
+   * washes of the bestiary codex. The tints only ever sit behind text. */
+  --color-faction-undead-secondary: #86ccff;
+  --color-faction-undead-deep: #2f6b2a;
+  --color-faction-undead-glow: rgba(143, 209, 79, 0.38);
+  --color-faction-undead-tint: rgba(143, 209, 79, 0.1);
+  --color-faction-undead-tint-secondary: rgba(134, 204, 255, 0.1);
+  --color-faction-orc-secondary: #ffa033;
+  --color-faction-orc-deep: #7a1d14;
+  --color-faction-orc-glow: rgba(236, 112, 72, 0.42);
+  --color-faction-orc-tint: rgba(236, 112, 72, 0.13);
+  --color-faction-orc-tint-secondary: rgba(255, 160, 51, 0.1);
+  --color-faction-human-secondary: #f0d188;
+  --color-faction-human-deep: #1f3a7a;
+  --color-faction-human-glow: rgba(107, 157, 245, 0.4);
+  --color-faction-human-tint: rgba(107, 157, 245, 0.12);
+  --color-faction-human-tint-secondary: rgba(240, 209, 136, 0.08);
+  --color-faction-elf-secondary: #4fd9a6;
+  --color-faction-elf-deep: #47297a;
+  --color-faction-elf-glow: rgba(169, 140, 245, 0.4);
+  --color-faction-elf-tint: rgba(169, 140, 245, 0.12);
+  --color-faction-elf-tint-secondary: rgba(79, 217, 166, 0.08);
+
+  /* Bestiary codex (docs/10): dark iron panels with a gold trim. Codex text
+   * tokens clear AA on every codex surface; see themeContrast.test.ts. */
+  --color-codex-bg: #0a0c11;
+  --color-codex-panel: #12151d;
+  --color-codex-panel-raised: #1a1f2c;
+  --color-codex-panel-sunken: #0c0f15;
+  --color-codex-pressed: #07090d;
+  --color-codex-bar: #0f1219;
+  --color-codex-line: #262c38;
+  --color-codex-text: #ece6d6;
+  --color-codex-text-muted: #b6bccb;
+  --color-codex-text-dim: #959db0;
+  --color-codex-lore: #dcd2bb;
+  --color-codex-good: #86e07f;
+  --color-codex-bad: #ff7a6e;
+  --color-codex-focus: #ffe7a8;
+  --color-iron-black: #000000;
+  --color-iron-shadow: #040508;
+  --color-iron: #3b4150;
+  --color-iron-light: #5d6474;
+  --color-iron-highlight: rgba(138, 145, 161, 0.55);
+  --color-gold-trim: #7d6230;
+  --color-gold-light: #f6dc9c;
+  --color-accent-gold-deep: #c9a24f;
+  --color-accent-gold-ink: #1a1406;
+  --color-accent-gold-glow: rgba(240, 209, 136, 0.35);
+  --color-rivet: #d9b866;
+  --color-rivet-shadow: #2b2312;
+  --gradient-codex-gold: linear-gradient(
+    180deg,
+    var(--color-gold-light),
+    var(--color-accent-gold-deep)
+  );
+  --shadow-codex-drop: 0 2px 0 rgba(0, 0, 0, 0.65);
+  --shadow-codex-sunken: inset 0 2px 5px rgba(0, 0, 0, 0.85);
+  --shadow-codex-bar: 0 1px 0 var(--color-iron-black), 0 8px 14px rgba(0, 0, 0, 0.55);
+  /* Stat pictogram tints. */
+  --color-stat-physical: #e8d2a8;
+  --color-stat-magical: #c6b3ff;
+  --color-stat-percent: #ffb36b;
+  --color-stat-range: #9fd3ff;
+  --color-stat-reload: #ddd3bf;
+  --color-stat-health: #ff8f85;
+  --color-stat-speed: #dcc59b;
+  --color-stat-armor: #c8d0dc;
+  --color-stat-rune: #93bbff;
+  --color-stat-gold: #f0d188;
 
   /* Action buttons (docs/10): crimson for the primary action, mossy green
    * for confirm. The label clears AA (4.5:1) on every gradient stop. */
@@ -176,6 +246,27 @@
   /* Talent branch icons: badge on cards and buttons, header of chooser and bestiary cards. */
   --talent-icon-size-sm: 22px;
   --talent-icon-size-lg: 48px;
+
+  /* Bestiary codex: portraits, stat chips, pictograms and diamond marks. */
+  --codex-portrait-size-sm: 46px;
+  --codex-portrait-size-lg: 88px;
+  --codex-chip-height: 22px;
+  --codex-chip-height-lg: 32px;
+  --codex-icon-size-xs: 11px;
+  --codex-icon-size-sm: 12px;
+  --codex-icon-size-md: 15px;
+  --codex-icon-size-lg: 18px;
+  --codex-badge-height: 17px;
+  --codex-badge-min-width: 20px;
+  --codex-gem-size: 7px;
+  --codex-dot-size: 6px;
+  --codex-rivet-size: 6px;
+  --codex-segment-min-height: 56px;
+  --codex-gutter: 12px;
+  --codex-max-width: 560px;
+  --codex-tracking-ui: 0.04em;
+  --codex-tracking-display: 0.14em;
+  --codex-tracking-logo: 0.24em;
 
   /* Game page layout: how much of the viewport the control strip and the
    * HUD may claim, so the battlefield always keeps the rest. */

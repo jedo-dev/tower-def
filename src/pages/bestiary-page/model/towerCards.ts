@@ -8,7 +8,8 @@ import {
 import { DamageType } from '../../../shared/types/content-ids';
 import { describeDamageType, formatPercentOfMaxHealth } from './combatTypeDisplay';
 import { readLore } from './creepCards';
-import { mapTalentBranch } from './towerBranchCards';
+import { describeGradeSpecial, mapTalentBranch } from './towerBranchCards';
+import { goldReading, towerAttackReadings } from './statReadings';
 import { describeOnHitEffect, formatCells, formatPercent, formatSeconds } from './towerEffectLines';
 import type { TowerCardViewModel, TowerLevelViewModel, TowerSpecialViewModel } from './types';
 
@@ -76,23 +77,49 @@ function summarizeLevel(level: TowerUpgradeLevel, damageType: DamageType): strin
   return parts.join(', ');
 }
 
-function mapLevels(
+function resolveLevels(
   tower: BuildableTowerConfig,
   archetype: TowerArchetypeDefinition,
-): TowerLevelViewModel[] {
-  const levels = tower.levels && tower.levels.length > 0 ? tower.levels : archetype.levels;
-  const damageType = resolveBuildableTowerDamageType(tower);
+): readonly TowerUpgradeLevel[] {
+  return tower.levels && tower.levels.length > 0 ? tower.levels : archetype.levels;
+}
 
-  return levels.map((level) => ({
-    level: level.level,
-    upgradeCost: level.level === 1 ? null : level.upgradeCostGold,
-    summary: summarizeLevel(level, damageType),
-  }));
+const NO_GRADE_SPECIAL = '—';
+
+/** A level's extras, or null when they read the same as the level before. */
+function levelSpecial(level: TowerUpgradeLevel, previous: TowerUpgradeLevel | null): string | null {
+  const special = describeGradeSpecial(level.stats);
+  if (special === NO_GRADE_SPECIAL) {
+    return null;
+  }
+  return previous !== null && describeGradeSpecial(previous.stats) === special ? null : special;
+}
+
+function mapLevels(
+  tower: BuildableTowerConfig,
+  levels: readonly TowerUpgradeLevel[],
+  damageType: DamageType,
+): TowerLevelViewModel[] {
+  return levels.map((level, index) => {
+    const previous = index > 0 ? levels[index - 1] : null;
+    return {
+      level: level.level,
+      upgradeCost: level.level === 1 ? null : level.upgradeCostGold,
+      cost: level.level === 1 ? tower.costGold : level.upgradeCostGold,
+      summary: summarizeLevel(level, damageType),
+      stats: towerAttackReadings(level.stats, previous?.stats ?? null, damageType),
+      special: levelSpecial(level, previous),
+    };
+  });
 }
 
 export function mapTowerToTowerCard(tower: BuildableTowerConfig): TowerCardViewModel {
   const archetype = getTowerArchetype(tower.towerType);
   const damageType = resolveBuildableTowerDamageType(tower);
+  const levels = resolveLevels(tower, archetype);
+  const topLevel = levels[levels.length - 1];
+  const baseAttack = tower;
+  const tileStats = towerAttackReadings(baseAttack, null, damageType);
 
   return {
     id: tower.id,
@@ -105,10 +132,15 @@ export function mapTowerToTowerCard(tower: BuildableTowerConfig): TowerCardViewM
     damageType: describeDamageType(damageType),
     rangeCells: tower.range,
     cooldownMs: tower.attackCooldownMs,
+    tileStats,
+    headerStats: [...tileStats, goldReading('Build cost, gold', tower.costGold)],
     specials: mapSpecials(tower, archetype),
-    levels: mapLevels(tower, archetype),
+    levels: mapLevels(tower, levels, damageType),
     talentBranches: tower.talentBranches.map((branch, branchIndex) =>
-      mapTalentBranch(branch, branchIndex, damageType),
+      mapTalentBranch(branch, branchIndex, damageType, {
+        level: topLevel?.level ?? 1,
+        numbers: topLevel?.stats ?? baseAttack,
+      }),
     ),
     description: tower.description,
     lore: readLore(tower),

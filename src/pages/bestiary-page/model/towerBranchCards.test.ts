@@ -119,6 +119,7 @@ describe('talent branch cards', () => {
       },
       0,
       DamageType.PHYSICAL,
+      { level: 3, numbers: { damage: 24, range: 6, attackCooldownMs: 1300 } },
     );
 
     expect(branch.glyph).toBe('I');
@@ -129,8 +130,46 @@ describe('talent branch cards', () => {
         damage: '30',
         range: '6',
         cooldown: '1.2s',
+        stats: [
+          {
+            key: 'physical',
+            label: 'Physical damage',
+            value: '30',
+            delta: { text: '+6', tone: 'good' },
+          },
+          {
+            key: 'range',
+            label: 'Range, cells',
+            value: '6',
+            delta: { text: '±0', tone: 'neutral' },
+          },
+          {
+            key: 'reload',
+            label: 'Reload, seconds',
+            value: '1.2s',
+            delta: { text: '−0.1', tone: 'good' },
+          },
+          { key: 'gold', label: 'Upgrade cost, gold', value: '150', delta: null },
+        ],
+        comparedTo: 'L3',
         special: 'splash 3 cells',
       },
     ]);
+  });
+
+  it('compares grade 4 with level 3 and each later grade with the one before', () => {
+    const [gradeFour, gradeFive] = branchCard('undead_bone_archer_tower', 0).grades;
+    const archer = resolveBuildableTowerById('undead_bone_archer_tower');
+    const levelThree = archer.levels?.[2]?.stats;
+    const [volleyFour, volleyFive] = archer.talentBranches[0].grades;
+
+    expect(gradeFour.comparedTo).toBe('L3');
+    expect(gradeFive.comparedTo).toBe('G4');
+    expect(gradeFour.stats[0].delta?.text).toBe(
+      `+${volleyFour.stats.damage - (levelThree?.damage ?? 0)}`,
+    );
+    expect(gradeFive.stats[0].delta?.text).toBe(
+      `+${volleyFive.stats.damage - volleyFour.stats.damage}`,
+    );
   });
 });

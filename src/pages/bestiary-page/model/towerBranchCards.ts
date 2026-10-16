@@ -8,6 +8,7 @@ import { DamageScope, DamageType } from '../../../shared/types/content-ids';
 import { toBranchGlyph } from '../../../shared/ui/branch-glyph';
 import { formatPercentOfMaxHealth } from './combatTypeDisplay';
 import { describeOnHitEffect, formatCells, formatPercent, formatSeconds } from './towerEffectLines';
+import { goldReading, towerAttackReadings, type TowerAttackNumbers } from './statReadings';
 import type { TowerBranchGradeViewModel, TowerBranchViewModel } from './types';
 
 /**
@@ -157,7 +158,11 @@ function formatGradeDamage(damage: number, damageType: DamageType): string {
   return damageType === DamageType.PERCENT ? formatPercentOfMaxHealth(damage) : String(damage);
 }
 
-function mapGrade(grade: TowerUpgradeLevel, damageType: DamageType): TowerBranchGradeViewModel {
+function mapGrade(
+  grade: TowerUpgradeLevel,
+  damageType: DamageType,
+  previous: { label: string; numbers: TowerAttackNumbers },
+): TowerBranchGradeViewModel {
   const { stats } = grade;
   // A support grade without an attack: its numbers are placeholders, not stats.
   const attacks = stats.damage > 0;
@@ -168,20 +173,37 @@ function mapGrade(grade: TowerUpgradeLevel, damageType: DamageType): TowerBranch
     damage: attacks ? formatGradeDamage(stats.damage, damageType) : NO_SPECIAL,
     range: attacks ? String(Number(stats.range.toFixed(1))) : NO_SPECIAL,
     cooldown: attacks ? formatReload(stats.attackCooldownMs) : NO_SPECIAL,
+    stats: [
+      ...towerAttackReadings(stats, previous.numbers, damageType),
+      goldReading('Upgrade cost, gold', grade.upgradeCostGold),
+    ],
+    comparedTo: previous.label,
     special: describeGradeSpecial(stats),
   };
 }
 
+/**
+ * A talent branch with its grade 4-7 rows. `baseline` is the tower's top
+ * base level (grade 3), which grade 4 is compared against.
+ */
 export function mapTalentBranch(
   branch: TowerTalentBranchDefinition,
   branchIndex: number,
   damageType: DamageType,
+  baseline: { level: number; numbers: TowerAttackNumbers },
 ): TowerBranchViewModel {
+  let previous = { label: `L${baseline.level}`, numbers: baseline.numbers };
+  const grades = branch.grades.map((grade) => {
+    const mapped = mapGrade(grade, damageType, previous);
+    previous = { label: `G${grade.level}`, numbers: grade.stats };
+    return mapped;
+  });
+
   return {
     id: branch.id,
     name: branch.name,
     glyph: toBranchGlyph(branchIndex),
     description: branch.description,
-    grades: branch.grades.map((grade) => mapGrade(grade, damageType)),
+    grades,
   };
 }
