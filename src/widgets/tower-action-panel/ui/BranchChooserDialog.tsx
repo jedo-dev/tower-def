@@ -75,7 +75,7 @@ function BranchCard({ branch, cost, isSelected, isAffordable, onSelect }: Branch
         disabled={!isAffordable}
         onClick={onSelect}
       >
-        <span>{isSelected ? 'Chosen' : 'Choose'}</span>
+        <span>{isSelected ? 'Selected' : 'Choose'}</span>
         <span className={styles.cost}>${cost}</span>
       </button>
     </article>
