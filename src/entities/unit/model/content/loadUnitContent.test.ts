@@ -5,6 +5,7 @@ import { RaceId, UnitMoveType, UnitSizeClass } from '../../../../shared/types/co
 import { UNIT_TRAIT_DEFAULTS } from './unitContent.types';
 import { CONTENT_LORE_MAX_LENGTH } from '../../../../shared/lib/content/contentValidation';
 import { UnitTier } from '../types';
+import { createTalentBranches } from './fixtures/talentBranchFixture';
 
 const FILE = 'content/units/undead.json';
 
@@ -22,13 +23,14 @@ function createEntry(overrides: AuthoredEntry = {}): AuthoredEntry {
     damage: 12,
     rewardGold: 6,
     spriteKey: 'unit.undead.skeleton',
+    talentBranches: createTalentBranches(String(overrides.id ?? 'undead_skeleton')),
     ...overrides,
   };
 }
 
 function createFile(units: unknown[], overrides: AuthoredEntry = {}): AuthoredEntry {
   return {
-    schemaVersion: 3,
+    schemaVersion: 4,
     race: 'UNDEAD',
     units,
     ...overrides,
@@ -59,7 +61,12 @@ describe('parseUnitContentFile', () => {
       description: 'Restless bones marching from forgotten crypts.',
       moveType: UnitMoveType.GROUND,
       sizeClass: UnitSizeClass.MEDIUM,
+      talentBranches: units[0].talentBranches,
     });
+    expect(units[0].talentBranches.map((branch) => branch.id)).toEqual([
+      'undead_skeleton_bulwark',
+      'undead_skeleton_rush',
+    ]);
     expect(units[1].description).toBeUndefined();
   });
 
@@ -129,7 +136,15 @@ describe('parseUnitContentFile', () => {
 
   it('rejects an unsupported schema version', () => {
     expect(() => parse(createFile([createEntry()], { schemaVersion: 2 }))).toThrow(
-      `${FILE}: unsupported schemaVersion 2, expected 3`,
+      `${FILE}: unsupported schemaVersion 2, expected 4`,
+    );
+  });
+
+  it('rejects a version 3 file without talent branches naming its first creature and the migration', () => {
+    const legacy = createFile([createEntry({ talentBranches: undefined })], { schemaVersion: 3 });
+
+    expect(() => parse(legacy)).toThrow(
+      `${FILE} [undead_skeleton]: schemaVersion 3 has no talent branches; add "talentBranches"`,
     );
   });
 

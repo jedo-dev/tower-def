@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 4,
   "race": "HUMAN",
   "units": [
     {
@@ -15,14 +15,86 @@
       "sizeClass": "small",
       "spriteKey": "unit.human.militia",
       "description": "Common folk pressed into service with pitchforks and hope.",
-      "lore": "Farmers with pitchforks and a bell that would not stop ringing. They hold the line because the line runs through their fields."
+      "lore": "Farmers with pitchforks and a bell that would not stop ringing. They hold the line because the line runs through their fields.",
+      "talentBranches": [
+        {
+          "id": "human_militia_i",
+          "name": "Militia I",
+          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "grades": [
+            {
+              "level": 1,
+              "health": 59,
+              "speed": 1.3,
+              "physicalArmor": 3,
+              "magicalArmor": 1
+            },
+            {
+              "level": 2,
+              "health": 64,
+              "speed": 1.35,
+              "physicalArmor": 4,
+              "magicalArmor": 1
+            },
+            {
+              "level": 3,
+              "health": 68,
+              "speed": 1.4,
+              "physicalArmor": 5,
+              "magicalArmor": 1
+            },
+            {
+              "level": 4,
+              "health": 73,
+              "speed": 1.45,
+              "physicalArmor": 6,
+              "magicalArmor": 1
+            }
+          ]
+        },
+        {
+          "id": "human_militia_ii",
+          "name": "Militia II",
+          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "grades": [
+            {
+              "level": 1,
+              "health": 59,
+              "speed": 1.3,
+              "physicalArmor": 3,
+              "magicalArmor": 1
+            },
+            {
+              "level": 2,
+              "health": 64,
+              "speed": 1.35,
+              "physicalArmor": 4,
+              "magicalArmor": 1
+            },
+            {
+              "level": 3,
+              "health": 68,
+              "speed": 1.4,
+              "physicalArmor": 5,
+              "magicalArmor": 1
+            },
+            {
+              "level": 4,
+              "health": 73,
+              "speed": 1.45,
+              "physicalArmor": 6,
+              "magicalArmor": 1
+            }
+          ]
+        }
+      ]
     },
     {
       "id": "human_peasant",
       "name": "Peasant",
       "tier": 1,
       "health": 40,
-      "speed": 1.0,
+      "speed": 1,
       "physicalArmor": 0,
       "magicalArmor": 0,
       "damage": 8,
@@ -30,7 +102,79 @@
       "sizeClass": "small",
       "spriteKey": "unit.human.peasant",
       "description": "Conscript with a hoe, slow and easily spent.",
-      "lore": "Conscripted at harvest with a hoe and a hymn. He was promised the war would be over before the fields needed him."
+      "lore": "Conscripted at harvest with a hoe and a hymn. He was promised the war would be over before the fields needed him.",
+      "talentBranches": [
+        {
+          "id": "human_peasant_i",
+          "name": "Peasant I",
+          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "grades": [
+            {
+              "level": 1,
+              "health": 43,
+              "speed": 1.05,
+              "physicalArmor": 1,
+              "magicalArmor": 0
+            },
+            {
+              "level": 2,
+              "health": 46,
+              "speed": 1.1,
+              "physicalArmor": 2,
+              "magicalArmor": 0
+            },
+            {
+              "level": 3,
+              "health": 50,
+              "speed": 1.15,
+              "physicalArmor": 3,
+              "magicalArmor": 0
+            },
+            {
+              "level": 4,
+              "health": 53,
+              "speed": 1.2,
+              "physicalArmor": 4,
+              "magicalArmor": 0
+            }
+          ]
+        },
+        {
+          "id": "human_peasant_ii",
+          "name": "Peasant II",
+          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "grades": [
+            {
+              "level": 1,
+              "health": 43,
+              "speed": 1.05,
+              "physicalArmor": 1,
+              "magicalArmor": 0
+            },
+            {
+              "level": 2,
+              "health": 46,
+              "speed": 1.1,
+              "physicalArmor": 2,
+              "magicalArmor": 0
+            },
+            {
+              "level": 3,
+              "health": 50,
+              "speed": 1.15,
+              "physicalArmor": 3,
+              "magicalArmor": 0
+            },
+            {
+              "level": 4,
+              "health": 53,
+              "speed": 1.2,
+              "physicalArmor": 4,
+              "magicalArmor": 0
+            }
+          ]
+        }
+      ]
     },
     {
       "id": "human_footman",
@@ -44,7 +188,79 @@
       "rewardGold": 11,
       "spriteKey": "unit.human.footman",
       "description": "Shielded soldier that blunts light towers on its own.",
-      "lore": "Drilled until the shield is heavier to drop than to carry. The footman does not break; he is relieved."
+      "lore": "Drilled until the shield is heavier to drop than to carry. The footman does not break; he is relieved.",
+      "talentBranches": [
+        {
+          "id": "human_footman_i",
+          "name": "Footman I",
+          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "grades": [
+            {
+              "level": 1,
+              "health": 108,
+              "speed": 1.2,
+              "physicalArmor": 7,
+              "magicalArmor": 3
+            },
+            {
+              "level": 2,
+              "health": 116,
+              "speed": 1.25,
+              "physicalArmor": 8,
+              "magicalArmor": 3
+            },
+            {
+              "level": 3,
+              "health": 124,
+              "speed": 1.3,
+              "physicalArmor": 9,
+              "magicalArmor": 3
+            },
+            {
+              "level": 4,
+              "health": 132,
+              "speed": 1.35,
+              "physicalArmor": 10,
+              "magicalArmor": 3
+            }
+          ]
+        },
+        {
+          "id": "human_footman_ii",
+          "name": "Footman II",
+          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "grades": [
+            {
+              "level": 1,
+              "health": 108,
+              "speed": 1.2,
+              "physicalArmor": 7,
+              "magicalArmor": 3
+            },
+            {
+              "level": 2,
+              "health": 116,
+              "speed": 1.25,
+              "physicalArmor": 8,
+              "magicalArmor": 3
+            },
+            {
+              "level": 3,
+              "health": 124,
+              "speed": 1.3,
+              "physicalArmor": 9,
+              "magicalArmor": 3
+            },
+            {
+              "level": 4,
+              "health": 132,
+              "speed": 1.35,
+              "physicalArmor": 10,
+              "magicalArmor": 3
+            }
+          ]
+        }
+      ]
     },
     {
       "id": "human_rifleman",
@@ -58,7 +274,79 @@
       "rewardGold": 15,
       "spriteKey": "unit.human.rifleman",
       "description": "Sharpshooter with a dwarven rifle and little protection.",
-      "lore": "A dwarven rifle, a flask of black powder and a grudge against anything taller than him. He shoots before the sermon ends."
+      "lore": "A dwarven rifle, a flask of black powder and a grudge against anything taller than him. He shoots before the sermon ends.",
+      "talentBranches": [
+        {
+          "id": "human_rifleman_i",
+          "name": "Rifleman I",
+          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "grades": [
+            {
+              "level": 1,
+              "health": 119,
+              "speed": 1.35,
+              "physicalArmor": 3,
+              "magicalArmor": 2
+            },
+            {
+              "level": 2,
+              "health": 128,
+              "speed": 1.4,
+              "physicalArmor": 4,
+              "magicalArmor": 2
+            },
+            {
+              "level": 3,
+              "health": 136,
+              "speed": 1.45,
+              "physicalArmor": 5,
+              "magicalArmor": 2
+            },
+            {
+              "level": 4,
+              "health": 145,
+              "speed": 1.5,
+              "physicalArmor": 6,
+              "magicalArmor": 2
+            }
+          ]
+        },
+        {
+          "id": "human_rifleman_ii",
+          "name": "Rifleman II",
+          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "grades": [
+            {
+              "level": 1,
+              "health": 119,
+              "speed": 1.35,
+              "physicalArmor": 3,
+              "magicalArmor": 2
+            },
+            {
+              "level": 2,
+              "health": 128,
+              "speed": 1.4,
+              "physicalArmor": 4,
+              "magicalArmor": 2
+            },
+            {
+              "level": 3,
+              "health": 136,
+              "speed": 1.45,
+              "physicalArmor": 5,
+              "magicalArmor": 2
+            },
+            {
+              "level": 4,
+              "health": 145,
+              "speed": 1.5,
+              "physicalArmor": 6,
+              "magicalArmor": 2
+            }
+          ]
+        }
+      ]
     },
     {
       "id": "human_siege_engine",
@@ -73,7 +361,79 @@
       "sizeClass": "large",
       "spriteKey": "unit.human.siege_engine",
       "description": "Plated war machine that crawls forward and refuses to die.",
-      "lore": "Iron, oak and a crew that stopped flinching years ago. It does not storm the gate; it arrives at it and waits."
+      "lore": "Iron, oak and a crew that stopped flinching years ago. It does not storm the gate; it arrives at it and waits.",
+      "talentBranches": [
+        {
+          "id": "human_siege_engine_i",
+          "name": "Siege Engine I",
+          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "grades": [
+            {
+              "level": 1,
+              "health": 232,
+              "speed": 0.8,
+              "physicalArmor": 11,
+              "magicalArmor": 3
+            },
+            {
+              "level": 2,
+              "health": 249,
+              "speed": 0.85,
+              "physicalArmor": 12,
+              "magicalArmor": 3
+            },
+            {
+              "level": 3,
+              "health": 267,
+              "speed": 0.9,
+              "physicalArmor": 13,
+              "magicalArmor": 3
+            },
+            {
+              "level": 4,
+              "health": 284,
+              "speed": 0.95,
+              "physicalArmor": 14,
+              "magicalArmor": 3
+            }
+          ]
+        },
+        {
+          "id": "human_siege_engine_ii",
+          "name": "Siege Engine II",
+          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "grades": [
+            {
+              "level": 1,
+              "health": 232,
+              "speed": 0.8,
+              "physicalArmor": 11,
+              "magicalArmor": 3
+            },
+            {
+              "level": 2,
+              "health": 249,
+              "speed": 0.85,
+              "physicalArmor": 12,
+              "magicalArmor": 3
+            },
+            {
+              "level": 3,
+              "health": 267,
+              "speed": 0.9,
+              "physicalArmor": 13,
+              "magicalArmor": 3
+            },
+            {
+              "level": 4,
+              "health": 284,
+              "speed": 0.95,
+              "physicalArmor": 14,
+              "magicalArmor": 3
+            }
+          ]
+        }
+      ]
     },
     {
       "id": "human_knight",
@@ -87,7 +447,79 @@
       "rewardGold": 28,
       "spriteKey": "unit.human.knight",
       "description": "Plated cavalry that shrugs off light arrows at a canter.",
-      "lore": "Plate forged in the capital, oath sworn in the chapel. He does not stop for arrows; he has stopped for nothing yet."
+      "lore": "Plate forged in the capital, oath sworn in the chapel. He does not stop for arrows; he has stopped for nothing yet.",
+      "talentBranches": [
+        {
+          "id": "human_knight_i",
+          "name": "Knight I",
+          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "grades": [
+            {
+              "level": 1,
+              "health": 205,
+              "speed": 1.25,
+              "physicalArmor": 13,
+              "magicalArmor": 5
+            },
+            {
+              "level": 2,
+              "health": 220,
+              "speed": 1.3,
+              "physicalArmor": 14,
+              "magicalArmor": 5
+            },
+            {
+              "level": 3,
+              "health": 236,
+              "speed": 1.35,
+              "physicalArmor": 15,
+              "magicalArmor": 5
+            },
+            {
+              "level": 4,
+              "health": 251,
+              "speed": 1.4,
+              "physicalArmor": 16,
+              "magicalArmor": 5
+            }
+          ]
+        },
+        {
+          "id": "human_knight_ii",
+          "name": "Knight II",
+          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "grades": [
+            {
+              "level": 1,
+              "health": 205,
+              "speed": 1.25,
+              "physicalArmor": 13,
+              "magicalArmor": 5
+            },
+            {
+              "level": 2,
+              "health": 220,
+              "speed": 1.3,
+              "physicalArmor": 14,
+              "magicalArmor": 5
+            },
+            {
+              "level": 3,
+              "health": 236,
+              "speed": 1.35,
+              "physicalArmor": 15,
+              "magicalArmor": 5
+            },
+            {
+              "level": 4,
+              "health": 251,
+              "speed": 1.4,
+              "physicalArmor": 16,
+              "magicalArmor": 5
+            }
+          ]
+        }
+      ]
     },
     {
       "id": "human_sorceress",
@@ -102,7 +534,79 @@
       "sizeClass": "small",
       "spriteKey": "unit.human.sorceress",
       "description": "Quick arcane caster with no armor to speak of.",
-      "lore": "Trained in the tower at Dalaran, she can turn a volley into mist. Just not two volleys."
+      "lore": "Trained in the tower at Dalaran, she can turn a volley into mist. Just not two volleys.",
+      "talentBranches": [
+        {
+          "id": "human_sorceress_i",
+          "name": "Sorceress I",
+          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "grades": [
+            {
+              "level": 1,
+              "health": 151,
+              "speed": 1.4,
+              "physicalArmor": 1,
+              "magicalArmor": 10
+            },
+            {
+              "level": 2,
+              "health": 162,
+              "speed": 1.45,
+              "physicalArmor": 2,
+              "magicalArmor": 10
+            },
+            {
+              "level": 3,
+              "health": 174,
+              "speed": 1.5,
+              "physicalArmor": 3,
+              "magicalArmor": 10
+            },
+            {
+              "level": 4,
+              "health": 185,
+              "speed": 1.55,
+              "physicalArmor": 4,
+              "magicalArmor": 10
+            }
+          ]
+        },
+        {
+          "id": "human_sorceress_ii",
+          "name": "Sorceress II",
+          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "grades": [
+            {
+              "level": 1,
+              "health": 151,
+              "speed": 1.4,
+              "physicalArmor": 1,
+              "magicalArmor": 10
+            },
+            {
+              "level": 2,
+              "health": 162,
+              "speed": 1.45,
+              "physicalArmor": 2,
+              "magicalArmor": 10
+            },
+            {
+              "level": 3,
+              "health": 174,
+              "speed": 1.5,
+              "physicalArmor": 3,
+              "magicalArmor": 10
+            },
+            {
+              "level": 4,
+              "health": 185,
+              "speed": 1.55,
+              "physicalArmor": 4,
+              "magicalArmor": 10
+            }
+          ]
+        }
+      ]
     },
     {
       "id": "human_gryphon_rider",
@@ -118,7 +622,79 @@
       "sizeClass": "large",
       "spriteKey": "unit.human.gryphon_rider",
       "description": "Dwarven hammer-wielder on a gryphon, the kingdom's answer from above.",
-      "lore": "A dwarf, a storm hammer and a gryphon that answers to no one else. The sky is the only wall the kingdom could not build."
+      "lore": "A dwarf, a storm hammer and a gryphon that answers to no one else. The sky is the only wall the kingdom could not build.",
+      "talentBranches": [
+        {
+          "id": "human_gryphon_rider_i",
+          "name": "Gryphon Rider I",
+          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "grades": [
+            {
+              "level": 1,
+              "health": 324,
+              "speed": 1.25,
+              "physicalArmor": 10,
+              "magicalArmor": 8
+            },
+            {
+              "level": 2,
+              "health": 348,
+              "speed": 1.3,
+              "physicalArmor": 11,
+              "magicalArmor": 8
+            },
+            {
+              "level": 3,
+              "health": 372,
+              "speed": 1.35,
+              "physicalArmor": 12,
+              "magicalArmor": 8
+            },
+            {
+              "level": 4,
+              "health": 396,
+              "speed": 1.4,
+              "physicalArmor": 13,
+              "magicalArmor": 8
+            }
+          ]
+        },
+        {
+          "id": "human_gryphon_rider_ii",
+          "name": "Gryphon Rider II",
+          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "grades": [
+            {
+              "level": 1,
+              "health": 324,
+              "speed": 1.25,
+              "physicalArmor": 10,
+              "magicalArmor": 8
+            },
+            {
+              "level": 2,
+              "health": 348,
+              "speed": 1.3,
+              "physicalArmor": 11,
+              "magicalArmor": 8
+            },
+            {
+              "level": 3,
+              "health": 372,
+              "speed": 1.35,
+              "physicalArmor": 12,
+              "magicalArmor": 8
+            },
+            {
+              "level": 4,
+              "health": 396,
+              "speed": 1.4,
+              "physicalArmor": 13,
+              "magicalArmor": 8
+            }
+          ]
+        }
+      ]
     }
   ]
 }

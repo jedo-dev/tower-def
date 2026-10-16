@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 4,
   "race": "UNDEAD",
   "units": [
     {
@@ -15,7 +15,79 @@
       "sizeClass": "small",
       "spriteKey": "unit.undead.skeleton",
       "description": "Restless bones marching from forgotten crypts.",
-      "lore": "The grave gives back what it was lent. These bones answer the call long after the flesh forgot whose name they bore."
+      "lore": "The grave gives back what it was lent. These bones answer the call long after the flesh forgot whose name they bore.",
+      "talentBranches": [
+        {
+          "id": "undead_skeleton_i",
+          "name": "Skeleton I",
+          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "grades": [
+            {
+              "level": 1,
+              "health": 54,
+              "speed": 1.35,
+              "physicalArmor": 1,
+              "magicalArmor": 4
+            },
+            {
+              "level": 2,
+              "health": 58,
+              "speed": 1.4,
+              "physicalArmor": 1,
+              "magicalArmor": 5
+            },
+            {
+              "level": 3,
+              "health": 62,
+              "speed": 1.45,
+              "physicalArmor": 1,
+              "magicalArmor": 6
+            },
+            {
+              "level": 4,
+              "health": 66,
+              "speed": 1.5,
+              "physicalArmor": 1,
+              "magicalArmor": 7
+            }
+          ]
+        },
+        {
+          "id": "undead_skeleton_ii",
+          "name": "Skeleton II",
+          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "grades": [
+            {
+              "level": 1,
+              "health": 54,
+              "speed": 1.35,
+              "physicalArmor": 1,
+              "magicalArmor": 4
+            },
+            {
+              "level": 2,
+              "health": 58,
+              "speed": 1.4,
+              "physicalArmor": 1,
+              "magicalArmor": 5
+            },
+            {
+              "level": 3,
+              "health": 62,
+              "speed": 1.45,
+              "physicalArmor": 1,
+              "magicalArmor": 6
+            },
+            {
+              "level": 4,
+              "health": 66,
+              "speed": 1.5,
+              "physicalArmor": 1,
+              "magicalArmor": 7
+            }
+          ]
+        }
+      ]
     },
     {
       "id": "undead_ghoul",
@@ -30,7 +102,79 @@
       "sizeClass": "small",
       "spriteKey": "unit.undead.ghoul",
       "description": "Feral clawed scavenger that outruns slow defenses.",
-      "lore": "It fed on the fallen until hunger was all that remained. It runs because the hunger does; nothing else is left to tire."
+      "lore": "It fed on the fallen until hunger was all that remained. It runs because the hunger does; nothing else is left to tire.",
+      "talentBranches": [
+        {
+          "id": "undead_ghoul_i",
+          "name": "Ghoul I",
+          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "grades": [
+            {
+              "level": 1,
+              "health": 43,
+              "speed": 2,
+              "physicalArmor": 0,
+              "magicalArmor": 3
+            },
+            {
+              "level": 2,
+              "health": 46,
+              "speed": 2.05,
+              "physicalArmor": 0,
+              "magicalArmor": 4
+            },
+            {
+              "level": 3,
+              "health": 50,
+              "speed": 2.1,
+              "physicalArmor": 0,
+              "magicalArmor": 5
+            },
+            {
+              "level": 4,
+              "health": 53,
+              "speed": 2.15,
+              "physicalArmor": 0,
+              "magicalArmor": 6
+            }
+          ]
+        },
+        {
+          "id": "undead_ghoul_ii",
+          "name": "Ghoul II",
+          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "grades": [
+            {
+              "level": 1,
+              "health": 43,
+              "speed": 2,
+              "physicalArmor": 0,
+              "magicalArmor": 3
+            },
+            {
+              "level": 2,
+              "health": 46,
+              "speed": 2.05,
+              "physicalArmor": 0,
+              "magicalArmor": 4
+            },
+            {
+              "level": 3,
+              "health": 50,
+              "speed": 2.1,
+              "physicalArmor": 0,
+              "magicalArmor": 5
+            },
+            {
+              "level": 4,
+              "health": 53,
+              "speed": 2.15,
+              "physicalArmor": 0,
+              "magicalArmor": 6
+            }
+          ]
+        }
+      ]
     },
     {
       "id": "undead_crypt_fiend",
@@ -44,7 +188,79 @@
       "rewardGold": 11,
       "spriteKey": "unit.undead.crypt_fiend",
       "description": "A spider-like horror wrapped in deathly chitin.",
-      "lore": "Woven from spider and corpse in the deep vaults, it carries the cold of the crypt in every joint of its chitin."
+      "lore": "Woven from spider and corpse in the deep vaults, it carries the cold of the crypt in every joint of its chitin.",
+      "talentBranches": [
+        {
+          "id": "undead_crypt_fiend_i",
+          "name": "Crypt Fiend I",
+          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "grades": [
+            {
+              "level": 1,
+              "health": 113,
+              "speed": 1.1,
+              "physicalArmor": 4,
+              "magicalArmor": 7
+            },
+            {
+              "level": 2,
+              "health": 122,
+              "speed": 1.15,
+              "physicalArmor": 4,
+              "magicalArmor": 8
+            },
+            {
+              "level": 3,
+              "health": 130,
+              "speed": 1.2,
+              "physicalArmor": 4,
+              "magicalArmor": 9
+            },
+            {
+              "level": 4,
+              "health": 139,
+              "speed": 1.25,
+              "physicalArmor": 4,
+              "magicalArmor": 10
+            }
+          ]
+        },
+        {
+          "id": "undead_crypt_fiend_ii",
+          "name": "Crypt Fiend II",
+          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "grades": [
+            {
+              "level": 1,
+              "health": 113,
+              "speed": 1.1,
+              "physicalArmor": 4,
+              "magicalArmor": 7
+            },
+            {
+              "level": 2,
+              "health": 122,
+              "speed": 1.15,
+              "physicalArmor": 4,
+              "magicalArmor": 8
+            },
+            {
+              "level": 3,
+              "health": 130,
+              "speed": 1.2,
+              "physicalArmor": 4,
+              "magicalArmor": 9
+            },
+            {
+              "level": 4,
+              "health": 139,
+              "speed": 1.25,
+              "physicalArmor": 4,
+              "magicalArmor": 10
+            }
+          ]
+        }
+      ]
     },
     {
       "id": "undead_gargoyle",
@@ -59,7 +275,79 @@
       "moveType": "air",
       "spriteKey": "unit.undead.gargoyle",
       "description": "Winged stone predator that dives past the front line.",
-      "lore": "Stone that remembers being carved to watch. Its wings are dead weight it has learned to lift out of spite."
+      "lore": "Stone that remembers being carved to watch. Its wings are dead weight it has learned to lift out of spite.",
+      "talentBranches": [
+        {
+          "id": "undead_gargoyle_i",
+          "name": "Gargoyle I",
+          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "grades": [
+            {
+              "level": 1,
+              "health": 124,
+              "speed": 1.75,
+              "physicalArmor": 4,
+              "magicalArmor": 9
+            },
+            {
+              "level": 2,
+              "health": 133,
+              "speed": 1.8,
+              "physicalArmor": 4,
+              "magicalArmor": 10
+            },
+            {
+              "level": 3,
+              "health": 143,
+              "speed": 1.85,
+              "physicalArmor": 4,
+              "magicalArmor": 11
+            },
+            {
+              "level": 4,
+              "health": 152,
+              "speed": 1.9,
+              "physicalArmor": 4,
+              "magicalArmor": 12
+            }
+          ]
+        },
+        {
+          "id": "undead_gargoyle_ii",
+          "name": "Gargoyle II",
+          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "grades": [
+            {
+              "level": 1,
+              "health": 124,
+              "speed": 1.75,
+              "physicalArmor": 4,
+              "magicalArmor": 9
+            },
+            {
+              "level": 2,
+              "health": 133,
+              "speed": 1.8,
+              "physicalArmor": 4,
+              "magicalArmor": 10
+            },
+            {
+              "level": 3,
+              "health": 143,
+              "speed": 1.85,
+              "physicalArmor": 4,
+              "magicalArmor": 11
+            },
+            {
+              "level": 4,
+              "health": 152,
+              "speed": 1.9,
+              "physicalArmor": 4,
+              "magicalArmor": 12
+            }
+          ]
+        }
+      ]
     },
     {
       "id": "undead_abomination",
@@ -74,7 +362,79 @@
       "sizeClass": "large",
       "spriteKey": "unit.undead.abomination",
       "description": "Patchworked brute that soaks damage instead of dodging it.",
-      "lore": "Three corpses, one purpose. Every stitch is a vow the dead made to keep walking while the living still have gold to lose."
+      "lore": "Three corpses, one purpose. Every stitch is a vow the dead made to keep walking while the living still have gold to lose.",
+      "talentBranches": [
+        {
+          "id": "undead_abomination_i",
+          "name": "Abomination I",
+          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "grades": [
+            {
+              "level": 1,
+              "health": 281,
+              "speed": 0.75,
+              "physicalArmor": 5,
+              "magicalArmor": 9
+            },
+            {
+              "level": 2,
+              "health": 302,
+              "speed": 0.8,
+              "physicalArmor": 5,
+              "magicalArmor": 10
+            },
+            {
+              "level": 3,
+              "health": 322,
+              "speed": 0.85,
+              "physicalArmor": 5,
+              "magicalArmor": 11
+            },
+            {
+              "level": 4,
+              "health": 343,
+              "speed": 0.9,
+              "physicalArmor": 5,
+              "magicalArmor": 12
+            }
+          ]
+        },
+        {
+          "id": "undead_abomination_ii",
+          "name": "Abomination II",
+          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "grades": [
+            {
+              "level": 1,
+              "health": 281,
+              "speed": 0.75,
+              "physicalArmor": 5,
+              "magicalArmor": 9
+            },
+            {
+              "level": 2,
+              "health": 302,
+              "speed": 0.8,
+              "physicalArmor": 5,
+              "magicalArmor": 10
+            },
+            {
+              "level": 3,
+              "health": 322,
+              "speed": 0.85,
+              "physicalArmor": 5,
+              "magicalArmor": 11
+            },
+            {
+              "level": 4,
+              "health": 343,
+              "speed": 0.9,
+              "physicalArmor": 5,
+              "magicalArmor": 12
+            }
+          ]
+        }
+      ]
     },
     {
       "id": "undead_necromancer",
@@ -88,7 +448,79 @@
       "rewardGold": 28,
       "spriteKey": "unit.undead.necromancer",
       "description": "Dark acolyte worth killing early and worth gold when you do.",
-      "lore": "He counts the dead the way the living count coin, and he is never short. Kill him before the ledger fills."
+      "lore": "He counts the dead the way the living count coin, and he is never short. Kill him before the ledger fills.",
+      "talentBranches": [
+        {
+          "id": "undead_necromancer_i",
+          "name": "Necromancer I",
+          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "grades": [
+            {
+              "level": 1,
+              "health": 178,
+              "speed": 1.2,
+              "physicalArmor": 0,
+              "magicalArmor": 13
+            },
+            {
+              "level": 2,
+              "health": 191,
+              "speed": 1.25,
+              "physicalArmor": 0,
+              "magicalArmor": 14
+            },
+            {
+              "level": 3,
+              "health": 205,
+              "speed": 1.3,
+              "physicalArmor": 0,
+              "magicalArmor": 15
+            },
+            {
+              "level": 4,
+              "health": 218,
+              "speed": 1.35,
+              "physicalArmor": 0,
+              "magicalArmor": 16
+            }
+          ]
+        },
+        {
+          "id": "undead_necromancer_ii",
+          "name": "Necromancer II",
+          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "grades": [
+            {
+              "level": 1,
+              "health": 178,
+              "speed": 1.2,
+              "physicalArmor": 0,
+              "magicalArmor": 13
+            },
+            {
+              "level": 2,
+              "health": 191,
+              "speed": 1.25,
+              "physicalArmor": 0,
+              "magicalArmor": 14
+            },
+            {
+              "level": 3,
+              "health": 205,
+              "speed": 1.3,
+              "physicalArmor": 0,
+              "magicalArmor": 15
+            },
+            {
+              "level": 4,
+              "health": 218,
+              "speed": 1.35,
+              "physicalArmor": 0,
+              "magicalArmor": 16
+            }
+          ]
+        }
+      ]
     },
     {
       "id": "undead_banshee",
@@ -104,7 +536,79 @@
       "sizeClass": "small",
       "spriteKey": "unit.undead.banshee",
       "description": "Wailing spirit drifting between life and oblivion.",
-      "lore": "Her wail is the last breath of a village that burned for the cause. She remembers every name, and she is not finished."
+      "lore": "Her wail is the last breath of a village that burned for the cause. She remembers every name, and she is not finished.",
+      "talentBranches": [
+        {
+          "id": "undead_banshee_i",
+          "name": "Banshee I",
+          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "grades": [
+            {
+              "level": 1,
+              "health": 162,
+              "speed": 1.45,
+              "physicalArmor": -5,
+              "magicalArmor": 15
+            },
+            {
+              "level": 2,
+              "health": 174,
+              "speed": 1.5,
+              "physicalArmor": -5,
+              "magicalArmor": 16
+            },
+            {
+              "level": 3,
+              "health": 186,
+              "speed": 1.55,
+              "physicalArmor": -5,
+              "magicalArmor": 17
+            },
+            {
+              "level": 4,
+              "health": 198,
+              "speed": 1.6,
+              "physicalArmor": -5,
+              "magicalArmor": 18
+            }
+          ]
+        },
+        {
+          "id": "undead_banshee_ii",
+          "name": "Banshee II",
+          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "grades": [
+            {
+              "level": 1,
+              "health": 162,
+              "speed": 1.45,
+              "physicalArmor": -5,
+              "magicalArmor": 15
+            },
+            {
+              "level": 2,
+              "health": 174,
+              "speed": 1.5,
+              "physicalArmor": -5,
+              "magicalArmor": 16
+            },
+            {
+              "level": 3,
+              "health": 186,
+              "speed": 1.55,
+              "physicalArmor": -5,
+              "magicalArmor": 17
+            },
+            {
+              "level": 4,
+              "health": 198,
+              "speed": 1.6,
+              "physicalArmor": -5,
+              "magicalArmor": 18
+            }
+          ]
+        }
+      ]
     },
     {
       "id": "undead_frost_wyrm",
@@ -120,7 +624,79 @@
       "sizeClass": "large",
       "spriteKey": "unit.undead.frost_wyrm",
       "description": "Ancient dragon bound to ice and undeath.",
-      "lore": "A dragon ten centuries dead, roused with ice where its heart was. The cold it breathes has forgotten what warmth was for."
+      "lore": "A dragon ten centuries dead, roused with ice where its heart was. The cold it breathes has forgotten what warmth was for.",
+      "talentBranches": [
+        {
+          "id": "undead_frost_wyrm_i",
+          "name": "Frost Wyrm I",
+          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "grades": [
+            {
+              "level": 1,
+              "health": 335,
+              "speed": 1.3,
+              "physicalArmor": 6,
+              "magicalArmor": 17
+            },
+            {
+              "level": 2,
+              "health": 360,
+              "speed": 1.35,
+              "physicalArmor": 6,
+              "magicalArmor": 18
+            },
+            {
+              "level": 3,
+              "health": 384,
+              "speed": 1.4,
+              "physicalArmor": 6,
+              "magicalArmor": 19
+            },
+            {
+              "level": 4,
+              "health": 409,
+              "speed": 1.45,
+              "physicalArmor": 6,
+              "magicalArmor": 20
+            }
+          ]
+        },
+        {
+          "id": "undead_frost_wyrm_ii",
+          "name": "Frost Wyrm II",
+          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "grades": [
+            {
+              "level": 1,
+              "health": 335,
+              "speed": 1.3,
+              "physicalArmor": 6,
+              "magicalArmor": 17
+            },
+            {
+              "level": 2,
+              "health": 360,
+              "speed": 1.35,
+              "physicalArmor": 6,
+              "magicalArmor": 18
+            },
+            {
+              "level": 3,
+              "health": 384,
+              "speed": 1.4,
+              "physicalArmor": 6,
+              "magicalArmor": 19
+            },
+            {
+              "level": 4,
+              "health": 409,
+              "speed": 1.45,
+              "physicalArmor": 6,
+              "magicalArmor": 20
+            }
+          ]
+        }
+      ]
     }
   ]
 }

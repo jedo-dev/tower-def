@@ -15,9 +15,12 @@ import { UnitMoveType, UnitSizeClass } from '../../../../shared/types/content-id
  * Bumped whenever the authored creature format changes shape. Version 3 (shared
  * with towers, which gained damage types in the same change) replaced the
  * single `armor` and the `armorType` bonus with `physicalArmor` and
- * `magicalArmor`.
+ * `magicalArmor`. Version 4 added the required `talentBranches`.
  */
-export const UNIT_CONTENT_SCHEMA_VERSION = 3;
+export const UNIT_CONTENT_SCHEMA_VERSION = 4;
+
+/** The two-armor format without talent branches, recognised to explain the migration. */
+export const UNIT_CONTENT_NO_TALENTS_SCHEMA_VERSION = 3;
 
 /** The retired single-armor format, recognised only to explain the rejection. */
 export const UNIT_CONTENT_SINGLE_ARMOR_SCHEMA_VERSION = 1;
@@ -38,6 +41,25 @@ export type UnitContentEntry = {
   lore?: string;
   moveType?: string;
   sizeClass?: string;
+  talentBranches: UnitTalentBranchContentEntry[];
+};
+
+/** One authored grade (1-4) of a creature talent branch. */
+export type UnitTalentGradeContentEntry = {
+  level: number;
+  health: number;
+  speed: number;
+  physicalArmor: number;
+  magicalArmor: number;
+  /** Typed creature abilities object; see `entities/unit/model/abilities.ts`. */
+  abilities?: Record<string, unknown>;
+};
+
+export type UnitTalentBranchContentEntry = {
+  id: string;
+  name: string;
+  description: string;
+  grades: UnitTalentGradeContentEntry[];
 };
 
 export type UnitTraits = {
@@ -98,6 +120,7 @@ export const UNIT_CONTENT_REQUIRED_KEYS: readonly (keyof UnitContentEntry)[] = [
   'damage',
   'rewardGold',
   'spriteKey',
+  'talentBranches',
 ];
 
 export const UNIT_CONTENT_OPTIONAL_KEYS: readonly (keyof UnitContentEntry)[] = [
@@ -111,4 +134,20 @@ export const UNIT_CONTENT_FILE_KEYS: readonly (keyof UnitContentFile)[] = [
   'schemaVersion',
   'race',
   'units',
+];
+
+export const UNIT_TALENT_BRANCH_KEYS: readonly (keyof UnitTalentBranchContentEntry)[] = [
+  'id',
+  'name',
+  'description',
+  'grades',
+];
+
+export const UNIT_TALENT_GRADE_KEYS: readonly (keyof UnitTalentGradeContentEntry)[] = [
+  'level',
+  'health',
+  'speed',
+  'physicalArmor',
+  'magicalArmor',
+  'abilities',
 ];

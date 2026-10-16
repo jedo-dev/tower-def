@@ -30,6 +30,7 @@ import {
   type UnitTraits,
 } from './unitContent.types';
 import { assertUnitSchemaVersion } from './assertUnitSchemaVersion';
+import { parseCreatureTalentBranches } from './creatureTalentContent';
 
 export type UnitContentSource = {
   /** Authored file path, used verbatim in validation errors. */
@@ -95,6 +96,7 @@ function parseUnitEntry(
     description: readOptionalString(entry, 'description', location),
     lore: readOptionalBoundedString(entry, 'lore', location, CONTENT_LORE_MAX_LENGTH),
     ...parseTraits(entry, location),
+    talentBranches: parseCreatureTalentBranches(entry, location, id),
   };
 }
 
