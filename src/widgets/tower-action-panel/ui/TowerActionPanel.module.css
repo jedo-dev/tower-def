@@ -20,6 +20,8 @@
 }
 
 .title {
+  flex: 1 1 auto;
+  min-width: 0;
   font-family: var(--font-family-display);
   font-size: var(--font-size-sm);
   font-weight: 700;
@@ -29,7 +31,13 @@
   text-shadow: 0 1px 0 rgba(0, 0, 0, 0.9);
 }
 
+.branch {
+  display: inline-flex;
+  flex: 0 0 auto;
+}
+
 .level {
+  flex: 0 0 auto;
   font-family: var(--font-family-stats);
   font-size: var(--font-size-2xs);
   color: var(--color-accent-gold);
@@ -135,6 +143,7 @@
 
 .actionBtn {
   width: 100%;
+  min-height: var(--touch-target-min);
   gap: var(--space-sm);
 }
 
@@ -181,4 +190,20 @@
   color: var(--color-text-secondary);
   font-family: var(--font-family-ui);
   font-size: var(--font-size-xs);
+}
+
+/* Develop it cannot pay for yet: still focusable, so the reason is read out. */
+.actionBtnBlocked {
+  cursor: not-allowed;
+  filter: grayscale(0.6) brightness(0.7);
+}
+
+.blockedReason {
+  grid-column: 1 / -1;
+  order: 1;
+  margin: 0;
+  font-family: var(--font-family-ui);
+  font-size: var(--font-size-xs);
+  text-align: center;
+  color: var(--color-text-warning);
 }

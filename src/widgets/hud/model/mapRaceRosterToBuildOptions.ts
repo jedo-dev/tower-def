@@ -3,6 +3,7 @@ import {
   getTowerArchetype,
   type BuildableTowerConfig,
 } from '../../../entities/tower';
+import { toBranchGlyph } from '../../../shared/ui/branch-glyph';
 import {
   EffectId,
   RaceId,
@@ -23,6 +24,10 @@ export type HudBuildOptionViewModel = {
   effectHint: string;
   isAffordable: boolean;
   isSelected: boolean;
+  /** The talent branch this tower type took this match; `null` while open. */
+  chosenBranch: { name: string; glyph: string } | null;
+  /** Hover hint: the tower name, plus its branch once chosen. */
+  tooltip: string;
   ariaLabel: string;
 };
 
@@ -59,12 +64,27 @@ export type MapRaceRosterInput = {
   raceId: RaceId;
   gold: number;
   selectedTowerType: TowerTypeId | null;
+  /** The player's picks, race tower id to branch id (`GameHudSnapshot.towerBranchChoices`). */
+  towerBranchChoices?: Readonly<Record<string, string>>;
 };
+
+function resolveChosenBranch(
+  tower: BuildableTowerConfig,
+  choices: Readonly<Record<string, string>>,
+): HudBuildOptionViewModel['chosenBranch'] {
+  const chosenId = choices[tower.id];
+  const branches = tower.talentBranches;
+  const index =
+    chosenId === undefined ? -1 : branches.findIndex((branch) => branch.id === chosenId);
+  return index < 0 ? null : { name: branches[index].name, glyph: toBranchGlyph(index) };
+}
 
 export function mapRaceRosterToBuildOptions(input: MapRaceRosterInput): HudBuildOptionViewModel[] {
   return getBuildableTowersByFaction(input.raceId).map((tower) => {
     const effectHint = resolveEffectHint(tower.towerType);
     const isAffordable = input.gold >= tower.costGold;
+    const chosenBranch = resolveChosenBranch(tower, input.towerBranchChoices ?? {});
+    const branchSuffix = chosenBranch ? `, branch ${chosenBranch.name}` : '';
 
     return {
       towerId: tower.id,
@@ -74,7 +94,9 @@ export function mapRaceRosterToBuildOptions(input: MapRaceRosterInput): HudBuild
       effectHint,
       isAffordable,
       isSelected: input.selectedTowerType === tower.towerType,
-      ariaLabel: `${tower.name}, ${tower.costGold} gold, ${effectHint}${isAffordable ? '' : ', not affordable'}`,
+      chosenBranch,
+      tooltip: chosenBranch ? `${tower.name} — ${chosenBranch.name}` : tower.name,
+      ariaLabel: `${tower.name}, ${tower.costGold} gold, ${effectHint}${branchSuffix}${isAffordable ? '' : ', not affordable'}`,
     };
   });
 }

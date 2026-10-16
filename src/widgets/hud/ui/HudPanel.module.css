@@ -331,10 +331,18 @@
 
 .towerBtnPortrait {
   --placeholder-icon-size: 36px;
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   height: 40px;
+}
+
+/* Chosen talent branch, pinned to the portrait's corner. */
+.towerBtnBranch {
+  position: absolute;
+  top: calc(-1 * var(--space-2xs));
+  right: calc(-1 * var(--space-md));
 }
 
 .towerBtnBody {

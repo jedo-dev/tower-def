@@ -113,6 +113,32 @@ describe('HudPanel build bar', () => {
     expect(consoleError).not.toHaveBeenCalled();
   });
 
+  it('marks a tower type with its chosen talent branch and names it in the tooltip', () => {
+    const [archer, plague] = getBuildableTowersByFaction(RaceId.UNDEAD);
+    const branch = archer.talentBranches[1];
+    publishGameHudSnapshot(
+      createSnapshot({ gold: 1000, towerBranchChoices: { [archer.id]: branch.id } }),
+    );
+
+    render(<HudPanel setup={createSetup(RaceId.UNDEAD)} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Expand HUD' }));
+
+    const buildBar = screen.getByRole('group', { name: 'Buildable towers' });
+    const archerButton = within(buildBar).getByRole('button', {
+      name: new RegExp(`^${archer.name},`),
+    });
+    const plagueButton = within(buildBar).getByRole('button', {
+      name: new RegExp(`^${plague.name},`),
+    });
+
+    expect(within(archerButton).getByTestId('branch-glyph').textContent).toBe('II');
+    expect(archerButton.getAttribute('title')).toBe(`${archer.name} — ${branch.name}`);
+    expect(archerButton.getAttribute('aria-label')).toContain(`branch ${branch.name}`);
+    expect(within(plagueButton).queryByTestId('branch-glyph')).toBeNull();
+    expect(plagueButton.getAttribute('title')).toBe(plague.name);
+    expect(consoleError).not.toHaveBeenCalled();
+  });
+
   it('swaps the bar when another race is building', () => {
     publishGameHudSnapshot(createSnapshot({ gold: 1000 }));
 

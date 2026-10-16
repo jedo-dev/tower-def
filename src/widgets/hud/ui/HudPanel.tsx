@@ -15,6 +15,7 @@ import type { HudFactionType } from '../../../shared/lib/game-bridge/types';
 import type { GameSetupConfig } from '../../../shared/config/game-setup';
 import { PlaceholderIcon } from '../../../shared/ui/placeholder-icon';
 import { FantasyButton } from '../../../shared/ui/fantasy-button';
+import { BranchGlyph } from '../../../shared/ui/branch-glyph';
 import { getDifficultyConfig } from '../../../entities/difficulty';
 
 export type HudPanelProps = {
@@ -84,6 +85,7 @@ function HudPanelComponent({
     raceId: setup?.builderFaction ?? RaceId.UNDEAD,
     gold: snapshot.gold,
     selectedTowerType: snapshot.selectedTowerType,
+    towerBranchChoices: snapshot.towerBranchChoices,
   });
   // Towers go down in the build phase only; the buttons say so during a wave
   // instead of letting a tap end in a silent error sound.
@@ -177,7 +179,7 @@ function HudPanelComponent({
                 aria-disabled={isBuildLocked || undefined}
                 aria-pressed={option.isSelected}
                 aria-label={option.ariaLabel}
-                title={isBuildLocked ? BUILD_PHASE_ONLY_HINT : option.name}
+                title={isBuildLocked ? BUILD_PHASE_ONLY_HINT : option.tooltip}
                 onClick={() => {
                   if (isBuildLocked) return;
                   sendGameCommand('select-tower', {
@@ -187,6 +189,12 @@ function HudPanelComponent({
               >
                 <span className={styles.towerBtnPortrait}>
                   <PlaceholderIcon label={option.name} faction={builderFactionTheme} />
+                  {option.chosenBranch && (
+                    <BranchGlyph
+                      glyph={option.chosenBranch.glyph}
+                      className={styles.towerBtnBranch}
+                    />
+                  )}
                 </span>
                 <span className={styles.towerBtnBody}>
                   <span className={styles.towerBtnName}>{option.name}</span>

@@ -20,7 +20,10 @@ import { mapTowerNextLevelPreview } from '../model/mapTowerNextLevelPreview';
 import { mapTowerStatsToLines } from '../model/mapTowerStatsToLines';
 import type { HudTowerType } from '../../../shared/lib/game-bridge/types';
 import { PlaceholderIcon } from '../../../shared/ui/placeholder-icon';
+import { BranchGlyph } from '../../../shared/ui/branch-glyph';
+import { mapTowerBranchState } from '../model/mapTowerBranchState';
 import { NextLevelPreview } from './NextLevelPreview';
+import { TowerDevelopAction } from './TowerDevelopAction';
 
 const TOWER_DISPLAY_NAMES: Record<HudTowerType, string> = {
   [TowerTypeId.SINGLE]: 'Archer Tower',
@@ -64,6 +67,8 @@ function TowerActionPanelComponent() {
   const nextLevelStats = maxed
     ? null
     : getTowerStatsForCurveLevel(type, buildableTowerId, level + 1, choices);
+  const branchState = mapTowerBranchState(selectedTower, snapshot.gold, choices);
+  const { chosenBranch, develop } = branchState;
   const nextLevelPreview = nextLevelStats
     ? mapTowerNextLevelPreview(type, currentLevelStats, nextLevelStats, level + 1)
     : null;
@@ -85,7 +90,14 @@ function TowerActionPanelComponent() {
       <div className={styles.header}>
         <PlaceholderIcon label={towerName} faction={snapshot.selectedFaction} />
         <span className={styles.title}>{towerName}</span>
-        <span className={styles.level}>Lv {level}</span>
+        {chosenBranch && (
+          <span className={styles.branch} aria-label={`Branch: ${chosenBranch.name}`} role="note">
+            <BranchGlyph glyph={chosenBranch.glyph} title={chosenBranch.name} />
+          </span>
+        )}
+        <span className={styles.level} aria-label={`Level ${level} of ${branchState.maxGrade}`}>
+          Lv {level}/{branchState.maxGrade}
+        </span>
         <button
           type="button"
           className={`ui-btn-small ui-btn-small--close ${styles.close}`}
@@ -122,7 +134,9 @@ function TowerActionPanelComponent() {
       {nextLevelPreview && <NextLevelPreview preview={nextLevelPreview} />}
 
       <div className={styles.buttons}>
-        {maxed ? (
+        {develop ? (
+          <TowerDevelopAction key={id} towerId={id} towerName={towerName} develop={develop} />
+        ) : maxed ? (
           <div className={styles.maxLabel}>MAX LEVEL</div>
         ) : (
           <button
