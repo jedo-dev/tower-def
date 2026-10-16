@@ -18,10 +18,18 @@ export {
   tickCreepEffects,
 } from './model/effects';
 export type { ApplyEffectInput, CreepEffectTickResult } from './model/effects';
-export { applyDamageToCreep, calculateMitigatedDamage, getEffectiveArmor } from './model/damage';
+export {
+  applyDamageToCreep,
+  armorKindCovers,
+  calculateMitigatedDamage,
+  getArmorDamageMultiplier,
+  getEffectiveArmor,
+  resolveIncomingDamage,
+  type CreepArmorKind,
+} from './model/damage';
 export { filterActiveWaveCreeps } from './model/runtime';
 export { isCreepAlive, isCreepDead, setCreepLifeState } from './model/lifeState';
-export type { ApplyCreepDamageOptions, ApplyCreepDamageResult } from './model/damage';
+export type { ApplyCreepDamageResult } from './model/damage';
 export {
   getCreepFootprintCenter,
   getCreepFootprintCenterOffsetInCells,

@@ -1,4 +1,10 @@
-import { EFFECT_IDS, EffectId, EffectKind, EffectStackingRule } from '../types/content-ids';
+import {
+  ArmorKind,
+  EFFECT_IDS,
+  EffectId,
+  EffectKind,
+  EffectStackingRule,
+} from '../types/content-ids';
 
 /**
  * Balance table for creep status effects. Towers reference an effect by id and
@@ -20,6 +26,11 @@ export type EffectDefinition = {
   tickIntervalMs: number;
   maxStacks: number;
   stackingRule: EffectStackingRule;
+  /**
+   * Defense effects only: which armor the effect lowers. Absent means both;
+   * see `resolveEffectArmorKind`.
+   */
+  armorKind?: ArmorKind;
 };
 
 export const EFFECT_DEFINITIONS: Record<EffectId, EffectDefinition> = {
@@ -68,6 +79,7 @@ export const EFFECT_DEFINITIONS: Record<EffectId, EffectDefinition> = {
     tickIntervalMs: 0,
     maxStacks: 3,
     stackingRule: EffectStackingRule.STACK,
+    armorKind: ArmorKind.BOTH,
   },
 };
 
@@ -77,11 +89,14 @@ export const EFFECT_BALANCE = {
    * stun, so chill towers cannot lock a wave in place forever.
    */
   minimumSpeedMultiplier: 0.25,
-  /** Armor can be broken down to this value, never below. */
-  minimumArmor: 0,
   /** Cap on simultaneous distinct effects, keeping the tick path bounded. */
   maxDistinctEffectsPerCreep: EFFECT_IDS.length,
 } as const;
+
+/** Armor a defense effect lowers; `both` unless the definition narrows it. */
+export function resolveEffectArmorKind(effectId: EffectId): ArmorKind {
+  return EFFECT_DEFINITIONS[effectId].armorKind ?? ArmorKind.BOTH;
+}
 
 export function resolveEffectDefinition(effectId: EffectId): EffectDefinition {
   return EFFECT_DEFINITIONS[effectId];

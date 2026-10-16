@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_CREEP_COMBAT_TRAITS } from '../../creep';
 import { applyDamageToCreep, type CreepEntity } from '../../creep';
+import { resolveTowerDamageType } from './damageType';
 import { selectTowerTarget } from './targeting';
 import { TOWER_COMBAT_STATS_BY_TYPE, type TowerEntity } from './types';
 
@@ -52,7 +53,11 @@ describe('tower combat flow', () => {
     const target = selectTowerTarget(tower, [lowProgress, highProgress]);
     expect(target?.id).toBe('creep:high');
 
-    const damageResult = applyDamageToCreep(target as CreepEntity, tower.combatStats.damage);
+    const damageResult = applyDamageToCreep(
+      target as CreepEntity,
+      tower.combatStats.damage,
+      resolveTowerDamageType(tower),
+    );
     expect(damageResult.damageApplied).toBe(tower.combatStats.damage);
     expect(damageResult.creep.hp).toBe(60 - tower.combatStats.damage);
     expect(damageResult.killed).toBe(false);
@@ -72,7 +77,11 @@ describe('tower combat flow', () => {
       const target = selectTowerTarget(tower, [creep]);
       expect(target).not.toBeNull();
 
-      const damageResult = applyDamageToCreep(target as CreepEntity, tower.combatStats.damage);
+      const damageResult = applyDamageToCreep(
+        target as CreepEntity,
+        tower.combatStats.damage,
+        resolveTowerDamageType(tower),
+      );
       creep = damageResult.creep;
       attacks += 1;
     }

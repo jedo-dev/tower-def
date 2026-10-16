@@ -1,4 +1,4 @@
-import type { UnitArmorType, UnitMoveType, UnitSizeClass } from '../../../shared/types/content-ids';
+import type { UnitMoveType, UnitSizeClass } from '../../../shared/types/content-ids';
 import { RaceId } from '../../../shared/types/content-ids';
 
 export { RaceId as Faction };
@@ -70,7 +70,10 @@ export type UnitConfig = {
   tier: UnitTier;
   health: number;
   speed: number;
-  armor: number;
+  /** Mitigates physical hits, `ARMOR_BOUNDS` range; negative amplifies. */
+  physicalArmor: number;
+  /** Mitigates magical hits and damage over time, same range. */
+  magicalArmor: number;
   damage: number;
   rewardGold: number;
   spriteKey: string;
@@ -80,5 +83,4 @@ export type UnitConfig = {
   /** Resolved traits: content may omit them, the loader fills the defaults. */
   moveType: UnitMoveType;
   sizeClass: UnitSizeClass;
-  armorType: UnitArmorType;
 };

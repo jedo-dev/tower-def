@@ -59,14 +59,17 @@ export function createWaveCreepEntity(
   route: WaveRoute,
   creepType: CreepType,
 ): CreepEntity {
+  const spawnHp = scaleHealthForWave(spawn.unit.health, waveNumber);
+
   return {
     id: `wave:creep:${waveNumber}:${spawn.sequenceIndex}`,
     type: creepType,
-    hp: scaleHealthForWave(spawn.unit.health, waveNumber),
+    hp: spawnHp,
+    maxHp: spawnHp,
     lifeState: 'alive',
     speed: spawn.unit.speed,
-    armor: spawn.unit.armor,
-    armorType: spawn.unit.armorType,
+    physicalArmor: spawn.unit.physicalArmor,
+    magicalArmor: spawn.unit.magicalArmor,
     moveType: spawn.unit.moveType,
     sizeClass: spawn.unit.sizeClass,
     status: 'alive',

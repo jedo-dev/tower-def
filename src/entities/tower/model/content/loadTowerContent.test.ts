@@ -42,7 +42,7 @@ function createTower(overrides: AuthoredEntry = {}): AuthoredEntry {
 }
 
 function createFile(towers: unknown[], overrides: AuthoredEntry = {}): AuthoredEntry {
-  return { schemaVersion: 2, race: 'UNDEAD', towers, ...overrides };
+  return { schemaVersion: 3, race: 'UNDEAD', towers, ...overrides };
 }
 
 function parse(data: unknown, file = FILE) {
@@ -124,7 +124,7 @@ describe('parseTowerContentFile', () => {
       loadTowerArchetypeContent({
         file: 'content/towers/archetypes.json',
         data: {
-          schemaVersion: 2,
+          schemaVersion: 3,
           archetypes: [
             createArchetype({
               levels: [
@@ -142,7 +142,7 @@ describe('parseTowerContentFile', () => {
       loadTowerArchetypeContent({
         file: 'content/towers/archetypes.json',
         data: {
-          schemaVersion: 2,
+          schemaVersion: 3,
           archetypes: [createArchetype({ attackKind: undefined })],
         },
       }),
@@ -197,6 +197,7 @@ function createArchetype(overrides: AuthoredEntry = {}): AuthoredEntry {
     id: 'single',
     name: 'Archer',
     attackKind: 'single-target',
+    damageType: 'physical',
     damage: 20,
     range: 6,
     attackCooldownMs: 800,
@@ -233,9 +234,22 @@ describe('tower content schema version', () => {
     ).toThrow('content/towers/archetypes.json [single]: schemaVersion 1 measures distances');
   });
 
+  it('rejects an untyped-damage version 2 file and names the first tower to migrate', () => {
+    expect(() => parse(createFile([createTower()], { schemaVersion: 2 }))).toThrow(
+      `${FILE} [undead_bone_archer_tower]: schemaVersion 2 has no damage types; ` +
+        'add a "damageType" (physical, magical or percent) to every archetype and set schemaVersion 3',
+    );
+    expect(() =>
+      loadTowerArchetypeContent({
+        file: 'content/towers/archetypes.json',
+        data: { schemaVersion: 2, archetypes: [createArchetype()] },
+      }),
+    ).toThrow('content/towers/archetypes.json [single]: schemaVersion 2 has no damage types');
+  });
+
   it('rejects any other unknown version at file level', () => {
-    expect(() => parse(createFile([createTower()], { schemaVersion: 3 }))).toThrow(
-      `${FILE}: unsupported schemaVersion 3, expected 2`,
+    expect(() => parse(createFile([createTower()], { schemaVersion: 4 }))).toThrow(
+      `${FILE}: unsupported schemaVersion 4, expected 3`,
     );
   });
 });
@@ -246,7 +260,7 @@ describe('loadTowerArchetypeContent', () => {
       loadTowerArchetypeContent({
         file: 'content/towers/archetypes.json',
         data: {
-          schemaVersion: 2,
+          schemaVersion: 3,
           archetypes: [createArchetype()],
         },
       }),
@@ -259,7 +273,7 @@ describe('loadTowerArchetypeContent', () => {
     expect(() =>
       loadTowerArchetypeContent({
         file: 'content/towers/archetypes.json',
-        data: { schemaVersion: 2, archetypes: [archetype, archetype] },
+        data: { schemaVersion: 3, archetypes: [archetype, archetype] },
       }),
     ).toThrow(/duplicate archetype id/);
   });

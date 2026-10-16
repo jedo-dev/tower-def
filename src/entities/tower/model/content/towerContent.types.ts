@@ -9,11 +9,16 @@ import type { TowerSoundSet } from '../../../../shared/types/sound-ids';
  */
 
 /**
- * Version 2 measures every distance (range, splash, chain jump, aura radius and
- * range bonus) in cells of the fine 16px grid. Version 1 used the coarse 32px
- * cell and is rejected so a stale file cannot load with halved ranges.
+ * Version 3 types every archetype's damage (`damageType`); a race tower may
+ * override it. Every distance (range, splash, chain jump, aura radius and range
+ * bonus) is measured in cells of the fine 16px grid, as since version 2.
+ * Version 1 used the coarse 32px cell and is rejected so a stale file cannot
+ * load with halved ranges; version 2 is rejected for its missing damage types.
  */
-export const TOWER_CONTENT_SCHEMA_VERSION = 2;
+export const TOWER_CONTENT_SCHEMA_VERSION = 3;
+
+/** The retired untyped-damage format, recognised only to explain the rejection. */
+export const TOWER_CONTENT_UNTYPED_DAMAGE_SCHEMA_VERSION = 2;
 
 /** The retired coarse-grid format, recognised only to explain the rejection. */
 export const TOWER_CONTENT_COARSE_GRID_SCHEMA_VERSION = 1;
@@ -41,6 +46,8 @@ export type TowerContentEntry = {
   sounds?: TowerSoundSet;
   /** `ground`, `air` or `both`; `both` when absent. Mirrors the archetype today. */
   allowedTargets?: string;
+  /** `physical`, `magical` or `percent`; the archetype's type when absent. */
+  damageType?: string;
   spriteKey: string;
   description: string;
   /** Bestiary flavour text in the race's voice; at most `CONTENT_LORE_MAX_LENGTH`. */
@@ -85,6 +92,8 @@ export type TowerArchetypeContentEntry = {
   id: string;
   name: string;
   attackKind: string;
+  /** `physical`, `magical` or `percent`; race towers inherit it. */
+  damageType: string;
   damage: number;
   range: number;
   attackCooldownMs: number;
@@ -146,6 +155,7 @@ export const TOWER_CONTENT_OPTIONAL_KEYS: readonly (keyof TowerContentEntry)[] =
   'sounds',
   'lore',
   'allowedTargets',
+  'damageType',
 ];
 
 export const TOWER_CONTENT_FILE_KEYS: readonly (keyof TowerContentFile)[] = [
@@ -173,6 +183,7 @@ export const TOWER_ARCHETYPE_REQUIRED_KEYS: readonly (keyof TowerArchetypeConten
   'id',
   'name',
   'attackKind',
+  'damageType',
   'levels',
   'damage',
   'range',

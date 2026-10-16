@@ -20,8 +20,8 @@ export type CreepCardViewModel = {
   /** Authored health, what the creep has in wave 1 before wave growth. */
   health: number;
   speed: number;
-  armor: number;
-  armorType: string;
+  physicalArmor: number;
+  magicalArmor: number;
   sizeClass: string;
   moveType: string;
   rewardGold: number;

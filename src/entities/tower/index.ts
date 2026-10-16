@@ -42,6 +42,7 @@ export {
 } from './model/upgrade';
 export type { UpgradeCheckResult } from './model/upgrade';
 export { resolveTowerPlacementStats } from './model/placementStats';
+export { resolveBuildableTowerDamageType, resolveTowerDamageType } from './model/damageType';
 export type {
   BuildableTowerConfig,
   BuildableTowerId,

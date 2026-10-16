@@ -8,10 +8,19 @@
  * `RaceId` and `UnitTier` is the content validator's job.
  */
 
-import { UnitArmorType, UnitMoveType, UnitSizeClass } from '../../../../shared/types/content-ids';
+import { ARMOR_BOUNDS } from '../../../../shared/constants/damage';
+import { UnitMoveType, UnitSizeClass } from '../../../../shared/types/content-ids';
 
-/** Bumped whenever the authored creature format changes shape. */
-export const UNIT_CONTENT_SCHEMA_VERSION = 1;
+/**
+ * Bumped whenever the authored creature format changes shape. Version 3 (shared
+ * with towers, which gained damage types in the same change) replaced the
+ * single `armor` and the `armorType` bonus with `physicalArmor` and
+ * `magicalArmor`.
+ */
+export const UNIT_CONTENT_SCHEMA_VERSION = 3;
+
+/** The retired single-armor format, recognised only to explain the rejection. */
+export const UNIT_CONTENT_SINGLE_ARMOR_SCHEMA_VERSION = 1;
 
 export type UnitContentEntry = {
   id: string;
@@ -19,7 +28,8 @@ export type UnitContentEntry = {
   tier: number;
   health: number;
   speed: number;
-  armor: number;
+  physicalArmor: number;
+  magicalArmor: number;
   damage: number;
   rewardGold: number;
   spriteKey: string;
@@ -28,13 +38,11 @@ export type UnitContentEntry = {
   lore?: string;
   moveType?: string;
   sizeClass?: string;
-  armorType?: string;
 };
 
 export type UnitTraits = {
   moveType: UnitMoveType;
   sizeClass: UnitSizeClass;
-  armorType: UnitArmorType;
 };
 
 /**
@@ -44,7 +52,6 @@ export type UnitTraits = {
 export const UNIT_TRAIT_DEFAULTS: UnitTraits = {
   moveType: UnitMoveType.GROUND,
   sizeClass: UnitSizeClass.MEDIUM,
-  armorType: UnitArmorType.LIGHT,
 };
 
 export type UnitContentFile = {
@@ -53,7 +60,9 @@ export type UnitContentFile = {
   units: UnitContentEntry[];
 };
 
-export type UnitContentStatKey = 'health' | 'speed' | 'armor' | 'damage' | 'rewardGold';
+export type UnitContentStatKey = 'health' | 'speed' | 'damage' | 'rewardGold';
+
+export type UnitArmorStatKey = 'physicalArmor' | 'magicalArmor';
 
 export type UnitStatBound = {
   min: number;
@@ -68,9 +77,14 @@ export type UnitStatBound = {
 export const UNIT_STAT_BOUNDS: Record<UnitContentStatKey, UnitStatBound> = {
   health: { min: 1, max: 5000 },
   speed: { min: 0.1, max: 6 },
-  armor: { min: 0, max: 50 },
   damage: { min: 0, max: 500 },
   rewardGold: { min: 0, max: 500 },
+};
+
+/** Both armors are whole points within `ARMOR_BOUNDS`. */
+export const UNIT_ARMOR_BOUNDS: Record<UnitArmorStatKey, UnitStatBound> = {
+  physicalArmor: ARMOR_BOUNDS,
+  magicalArmor: ARMOR_BOUNDS,
 };
 
 export const UNIT_CONTENT_REQUIRED_KEYS: readonly (keyof UnitContentEntry)[] = [
@@ -79,7 +93,8 @@ export const UNIT_CONTENT_REQUIRED_KEYS: readonly (keyof UnitContentEntry)[] = [
   'tier',
   'health',
   'speed',
-  'armor',
+  'physicalArmor',
+  'magicalArmor',
   'damage',
   'rewardGold',
   'spriteKey',
@@ -90,7 +105,6 @@ export const UNIT_CONTENT_OPTIONAL_KEYS: readonly (keyof UnitContentEntry)[] = [
   'lore',
   'moveType',
   'sizeClass',
-  'armorType',
 ];
 
 export const UNIT_CONTENT_FILE_KEYS: readonly (keyof UnitContentFile)[] = [

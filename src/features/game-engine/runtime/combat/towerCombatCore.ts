@@ -14,13 +14,19 @@ import {
   getTowerAttackKind,
   getTowerCenter,
   getTowerOnHitEffects,
+  resolveTowerDamageType,
   selectTowerTarget,
   tickTowerCooldown,
   type TowerCombatRuntime,
   type TowerEntity,
 } from '../../../../entities/tower';
+import { DAMAGE_OVER_TIME_DAMAGE_TYPE } from '../../../../shared/constants/damage';
 import { GRID_DIMENSIONS } from '../../../../shared/constants/grid';
-import { TowerAttackKind, type EffectId } from '../../../../shared/types/content-ids';
+import {
+  TowerAttackKind,
+  type DamageType,
+  type EffectId,
+} from '../../../../shared/types/content-ids';
 import type { GridPosition } from '../../../../shared/types/pathfinding';
 
 // Renderer-free core of tower combat: targeting, single/splash/chain damage,
@@ -106,14 +112,18 @@ function applyOnHitEffects<C extends CombatCreep, T extends CombatTower>(
   }
 }
 
-/** Damages one creep with a tower hit; returns the damage actually applied. */
+/**
+ * Damages one creep with a tower hit of the tower's damage type (resolved once
+ * per attack by the caller); returns the damage actually applied.
+ */
 function strikeCreep<C extends CombatCreep, T extends CombatTower>(
   tower: T,
   creep: C,
   damage: number,
+  damageType: DamageType,
   hooks: TowerCombatHooks<C, T>,
 ): { damageApplied: number; killed: boolean } {
-  const damageResult = applyDamageToCreep(creep.entity, damage);
+  const damageResult = applyDamageToCreep(creep.entity, damage, damageType);
   creep.entity = damageResult.creep;
   applyOnHitEffects(tower, creep, hooks);
   hooks.onCreepHit(creep);
@@ -123,9 +133,10 @@ function strikeCreep<C extends CombatCreep, T extends CombatTower>(
 function applySingleTargetDamage<C extends CombatCreep, T extends CombatTower>(
   tower: T,
   target: C,
+  damageType: DamageType,
   hooks: TowerCombatHooks<C, T>,
 ): void {
-  const result = strikeCreep(tower, target, tower.entity.combatStats.damage, hooks);
+  const result = strikeCreep(tower, target, tower.entity.combatStats.damage, damageType, hooks);
   hooks.onTargetStruck(tower);
   hooks.onDamageDealt(target.entity.position, Math.round(result.damageApplied), 'hit');
 
@@ -138,6 +149,7 @@ function applySplashDamage<C extends CombatCreep, T extends CombatTower>(
   field: CombatField<C, T>,
   tower: T,
   target: C,
+  damageType: DamageType,
   hooks: TowerCombatHooks<C, T>,
 ): void {
   const splashRadius = tower.entity.combatStats.splashRadius ?? DEFAULT_SPLASH_RADIUS_CELLS;
@@ -156,7 +168,7 @@ function applySplashDamage<C extends CombatCreep, T extends CombatTower>(
 
   let totalDamageDealt = 0;
   for (const creep of creepsInSplashRadius) {
-    const result = strikeCreep(tower, creep, tower.entity.combatStats.damage, hooks);
+    const result = strikeCreep(tower, creep, tower.entity.combatStats.damage, damageType, hooks);
     totalDamageDealt += result.damageApplied;
 
     if (result.killed) {
@@ -226,11 +238,12 @@ function applyChainDamage<C extends CombatCreep, T extends CombatTower>(
   field: CombatField<C, T>,
   tower: T,
   target: C,
+  damageType: DamageType,
   hooks: TowerCombatHooks<C, T>,
 ): void {
   const chainShape = getTowerArchetype(tower.entity.type).chain;
 
-  applySingleTargetDamage(tower, target, hooks);
+  applySingleTargetDamage(tower, target, damageType, hooks);
 
   if (!chainShape) {
     return;
@@ -250,7 +263,7 @@ function applyChainDamage<C extends CombatCreep, T extends CombatTower>(
   for (const creep of chainTargets) {
     arcDamage *= 1 - chainShape.damageFalloff;
 
-    const result = strikeCreep(tower, creep, arcDamage, hooks);
+    const result = strikeCreep(tower, creep, arcDamage, damageType, hooks);
     hooks.onDamageDealt(creep.entity.position, Math.round(result.damageApplied), 'hit');
 
     if (result.killed) {
@@ -299,13 +312,14 @@ export function resolveTowerAttacks<C extends CombatCreep, T extends CombatTower
 
     const isSplashTower = attackKind === TowerAttackKind.SPLASH;
     const splashRadius = tower.entity.combatStats.splashRadius ?? 0;
+    const damageType = resolveTowerDamageType(tower.entity);
 
     if (isSplashTower && splashRadius > 0) {
-      applySplashDamage(field, tower, target, hooks);
+      applySplashDamage(field, tower, target, damageType, hooks);
     } else if (attackKind === TowerAttackKind.CHAIN) {
-      applyChainDamage(field, tower, target, hooks);
+      applyChainDamage(field, tower, target, damageType, hooks);
     } else {
-      applySingleTargetDamage(tower, target, hooks);
+      applySingleTargetDamage(tower, target, damageType, hooks);
     }
 
     tower.runtime = consumeTowerAttack(tower.entity, tower.runtime);
@@ -341,9 +355,14 @@ export function tickFieldCreepEffects<C extends CombatCreep, T extends CombatTow
       continue;
     }
 
-    const damageResult = applyDamageToCreep(creep.entity, tickResult.damage, { ignoreArmor: true });
+    // Damage over time is magical: magical armor reduces it, negative magical armor amplifies it.
+    const damageResult = applyDamageToCreep(
+      creep.entity,
+      tickResult.damage,
+      DAMAGE_OVER_TIME_DAMAGE_TYPE,
+    );
     creep.entity = damageResult.creep;
-    hooks.onDamageDealt(creep.entity.position, Math.round(tickResult.damage), 'effect');
+    hooks.onDamageDealt(creep.entity.position, Math.round(damageResult.damageApplied), 'effect');
 
     if (damageResult.killed) {
       hooks.onCreepKilled(creep);

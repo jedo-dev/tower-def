@@ -3,6 +3,7 @@ import {
   CONTENT_LORE_MAX_LENGTH,
   ContentValidationError,
   assertKnownKeys,
+  readBoundedInteger,
   readNumber,
   readOptionalBoundedString,
   readOptionalString,
@@ -44,6 +45,19 @@ describe('content validation primitives', () => {
     expect(() => readNumber({ speed: Number.POSITIVE_INFINITY }, 'speed', { file: FILE })).toThrow(
       ContentValidationError,
     );
+  });
+
+  it('reads a whole number within its bounds and names a fraction or overflow', () => {
+    const bound = { min: -25, max: 75 };
+    const location = { file: FILE, entityId: 'undead_ghoul' };
+
+    expect(readBoundedInteger({ physicalArmor: -3 }, 'physicalArmor', location, bound)).toBe(-3);
+    expect(() =>
+      readBoundedInteger({ physicalArmor: 1.5 }, 'physicalArmor', location, bound),
+    ).toThrow(`${FILE} [undead_ghoul]: "physicalArmor" must be a whole number, got 1.5`);
+    expect(() =>
+      readBoundedInteger({ physicalArmor: 76 }, 'physicalArmor', location, bound),
+    ).toThrow(`${FILE} [undead_ghoul]: "physicalArmor" must be between -25 and 75, got 76`);
   });
 
   it('narrows a string to the allowed set', () => {

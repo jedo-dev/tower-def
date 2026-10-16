@@ -1,7 +1,6 @@
 import {
   RACE_IDS,
   RaceId,
-  UNIT_ARMOR_TYPES,
   UNIT_MOVE_TYPES,
   UNIT_SIZE_CLASSES,
 } from '../../../../shared/types/content-ids';
@@ -9,8 +8,8 @@ import {
   CONTENT_LORE_MAX_LENGTH,
   ContentValidationError,
   assertKnownKeys,
-  assertSchemaVersion,
   readArray,
+  readBoundedInteger,
   readIntegerFrom,
   readNumber,
   readOptionalBoundedString,
@@ -25,11 +24,12 @@ import {
   UNIT_CONTENT_FILE_KEYS,
   UNIT_CONTENT_OPTIONAL_KEYS,
   UNIT_CONTENT_REQUIRED_KEYS,
-  UNIT_CONTENT_SCHEMA_VERSION,
+  UNIT_ARMOR_BOUNDS,
   UNIT_STAT_BOUNDS,
   UNIT_TRAIT_DEFAULTS,
   type UnitTraits,
 } from './unitContent.types';
+import { assertUnitSchemaVersion } from './assertUnitSchemaVersion';
 
 export type UnitContentSource = {
   /** Authored file path, used verbatim in validation errors. */
@@ -52,10 +52,6 @@ function parseTraits(entry: Record<string, unknown>, location: ContentLocation):
       entry.sizeClass === undefined
         ? UNIT_TRAIT_DEFAULTS.sizeClass
         : readStringFrom(entry, 'sizeClass', location, UNIT_SIZE_CLASSES),
-    armorType:
-      entry.armorType === undefined
-        ? UNIT_TRAIT_DEFAULTS.armorType
-        : readStringFrom(entry, 'armorType', location, UNIT_ARMOR_TYPES),
   };
 }
 
@@ -81,7 +77,18 @@ function parseUnitEntry(
     tier: readIntegerFrom(entry, 'tier', location, UNIT_TIERS),
     health: readNumber(entry, 'health', location, UNIT_STAT_BOUNDS.health),
     speed: readNumber(entry, 'speed', location, UNIT_STAT_BOUNDS.speed),
-    armor: readNumber(entry, 'armor', location, UNIT_STAT_BOUNDS.armor),
+    physicalArmor: readBoundedInteger(
+      entry,
+      'physicalArmor',
+      location,
+      UNIT_ARMOR_BOUNDS.physicalArmor,
+    ),
+    magicalArmor: readBoundedInteger(
+      entry,
+      'magicalArmor',
+      location,
+      UNIT_ARMOR_BOUNDS.magicalArmor,
+    ),
     damage: readNumber(entry, 'damage', location, UNIT_STAT_BOUNDS.damage),
     rewardGold: readNumber(entry, 'rewardGold', location, UNIT_STAT_BOUNDS.rewardGold),
     spriteKey: readString(entry, 'spriteKey', location),
@@ -97,7 +104,7 @@ export function parseUnitContentFile(source: UnitContentSource): UnitConfig[] {
   const file = readRecord(source.data, location);
 
   assertKnownKeys(file, UNIT_CONTENT_FILE_KEYS, location);
-  assertSchemaVersion(file, UNIT_CONTENT_SCHEMA_VERSION, location);
+  assertUnitSchemaVersion(file, location);
 
   const race = readStringFrom(file, 'race', location, RACE_IDS);
   const rawUnits = readArray(file, 'units', location);
