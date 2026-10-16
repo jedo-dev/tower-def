@@ -18,72 +18,105 @@
       "lore": "Farmers with pitchforks and a bell that would not stop ringing. They hold the line because the line runs through their fields.",
       "talentBranches": [
         {
-          "id": "human_militia_i",
-          "name": "Militia I",
-          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "id": "human_militia_levy",
+          "name": "Levy",
+          "description": "Close ranks: more armor and less splash damage.",
           "grades": [
             {
               "level": 1,
-              "health": 59,
-              "speed": 1.3,
-              "physicalArmor": 3,
-              "magicalArmor": 1
+              "health": 57,
+              "speed": 1.25,
+              "physicalArmor": 4,
+              "magicalArmor": 2
             },
             {
               "level": 2,
-              "health": 64,
-              "speed": 1.35,
-              "physicalArmor": 4,
-              "magicalArmor": 1
+              "health": 60,
+              "speed": 1.25,
+              "physicalArmor": 5,
+              "magicalArmor": 2
             },
             {
               "level": 3,
-              "health": 68,
-              "speed": 1.4,
-              "physicalArmor": 5,
-              "magicalArmor": 1
+              "health": 63,
+              "speed": 1.25,
+              "physicalArmor": 6,
+              "magicalArmor": 3,
+              "abilities": {
+                "incomingDamageMultipliers": {
+                  "splash": 0.8
+                }
+              }
             },
             {
               "level": 4,
-              "health": 73,
-              "speed": 1.45,
-              "physicalArmor": 6,
-              "magicalArmor": 1
+              "health": 70,
+              "speed": 1.3,
+              "physicalArmor": 7,
+              "magicalArmor": 3,
+              "abilities": {
+                "incomingDamageMultipliers": {
+                  "splash": 0.6
+                }
+              }
             }
           ]
         },
         {
-          "id": "human_militia_ii",
-          "name": "Militia II",
-          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "id": "human_militia_torches",
+          "name": "Torches",
+          "description": "Smoke and torches: splash towers struggle and fire will not take.",
           "grades": [
             {
               "level": 1,
-              "health": 59,
+              "health": 55,
               "speed": 1.3,
-              "physicalArmor": 3,
-              "magicalArmor": 1
+              "physicalArmor": 2,
+              "magicalArmor": 1,
+              "abilities": {
+                "incomingDamageMultipliers": {
+                  "splash": 0.95
+                }
+              }
             },
             {
               "level": 2,
-              "health": 64,
-              "speed": 1.35,
-              "physicalArmor": 4,
-              "magicalArmor": 1
+              "health": 58,
+              "speed": 1.3,
+              "physicalArmor": 2,
+              "magicalArmor": 1,
+              "abilities": {
+                "incomingDamageMultipliers": {
+                  "splash": 0.85
+                }
+              }
             },
             {
               "level": 3,
-              "health": 68,
-              "speed": 1.4,
-              "physicalArmor": 5,
-              "magicalArmor": 1
+              "health": 62,
+              "speed": 1.35,
+              "physicalArmor": 2,
+              "magicalArmor": 1,
+              "abilities": {
+                "incomingDamageMultipliers": {
+                  "splash": 0.7
+                }
+              }
             },
             {
               "level": 4,
-              "health": 73,
-              "speed": 1.45,
-              "physicalArmor": 6,
-              "magicalArmor": 1
+              "health": 68,
+              "speed": 1.35,
+              "physicalArmor": 3,
+              "magicalArmor": 1,
+              "abilities": {
+                "incomingDamageMultipliers": {
+                  "splash": 0.5
+                },
+                "effectResistance": {
+                  "burn": 0
+                }
+              }
             }
           ]
         }
@@ -105,72 +138,101 @@
       "lore": "Conscripted at harvest with a hoe and a hymn. He was promised the war would be over before the fields needed him.",
       "talentBranches": [
         {
-          "id": "human_peasant_i",
-          "name": "Peasant I",
-          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "id": "human_peasant_tithe",
+          "name": "Tithe",
+          "description": "Every peasant that slips through brings the tithe home.",
           "grades": [
             {
               "level": 1,
-              "health": 43,
-              "speed": 1.05,
-              "physicalArmor": 1,
-              "magicalArmor": 0
+              "health": 42,
+              "speed": 1,
+              "physicalArmor": 0,
+              "magicalArmor": 0,
+              "abilities": {
+                "leakGoldToSender": 2
+              }
             },
             {
               "level": 2,
-              "health": 46,
-              "speed": 1.1,
-              "physicalArmor": 2,
-              "magicalArmor": 0
+              "health": 44,
+              "speed": 1,
+              "physicalArmor": 0,
+              "magicalArmor": 0,
+              "abilities": {
+                "leakGoldToSender": 4
+              }
             },
             {
               "level": 3,
-              "health": 50,
-              "speed": 1.15,
-              "physicalArmor": 3,
-              "magicalArmor": 0
+              "health": 46,
+              "speed": 1.05,
+              "physicalArmor": 1,
+              "magicalArmor": 0,
+              "abilities": {
+                "leakGoldToSender": 6,
+                "killGoldPenaltyToDefender": 1
+              }
             },
             {
               "level": 4,
-              "health": 53,
-              "speed": 1.2,
-              "physicalArmor": 4,
-              "magicalArmor": 0
+              "health": 50,
+              "speed": 1.05,
+              "physicalArmor": 1,
+              "magicalArmor": 0,
+              "abilities": {
+                "leakGoldToSender": 12,
+                "killGoldPenaltyToDefender": 1
+              }
             }
           ]
         },
         {
-          "id": "human_peasant_ii",
-          "name": "Peasant II",
-          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "id": "human_peasant_repair",
+          "name": "Repair",
+          "description": "Patches itself up on the march and shakes off poison.",
           "grades": [
             {
               "level": 1,
-              "health": 43,
-              "speed": 1.05,
-              "physicalArmor": 1,
-              "magicalArmor": 0
+              "health": 42,
+              "speed": 1,
+              "physicalArmor": 0,
+              "magicalArmor": 0,
+              "abilities": {
+                "healthRegenPerSecond": 2
+              }
             },
             {
               "level": 2,
-              "health": 46,
-              "speed": 1.1,
-              "physicalArmor": 2,
-              "magicalArmor": 0
+              "health": 44,
+              "speed": 1,
+              "physicalArmor": 0,
+              "magicalArmor": 0,
+              "abilities": {
+                "healthRegenPerSecond": 4
+              }
             },
             {
               "level": 3,
-              "health": 50,
-              "speed": 1.15,
-              "physicalArmor": 3,
-              "magicalArmor": 0
+              "health": 48,
+              "speed": 1.05,
+              "physicalArmor": 1,
+              "magicalArmor": 0,
+              "abilities": {
+                "healthRegenPerSecond": 6
+              }
             },
             {
               "level": 4,
-              "health": 53,
-              "speed": 1.2,
-              "physicalArmor": 4,
-              "magicalArmor": 0
+              "health": 54,
+              "speed": 1.05,
+              "physicalArmor": 1,
+              "magicalArmor": 0,
+              "abilities": {
+                "healthRegenPerSecond": 8,
+                "effectResistance": {
+                  "poison": 0.5
+                }
+              }
             }
           ]
         }
@@ -191,72 +253,122 @@
       "lore": "Drilled until the shield is heavier to drop than to carry. The footman does not break; he is relieved.",
       "talentBranches": [
         {
-          "id": "human_footman_i",
-          "name": "Footman I",
-          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "id": "human_footman_defensive_stance",
+          "name": "Defensive Stance",
+          "description": "Shield up: heavy physical armor and a stance that blunts every hit.",
           "grades": [
             {
               "level": 1,
-              "health": 108,
-              "speed": 1.2,
-              "physicalArmor": 7,
-              "magicalArmor": 3
-            },
-            {
-              "level": 2,
-              "health": 116,
-              "speed": 1.25,
+              "health": 105,
+              "speed": 1.15,
               "physicalArmor": 8,
               "magicalArmor": 3
             },
             {
+              "level": 2,
+              "health": 110,
+              "speed": 1.15,
+              "physicalArmor": 10,
+              "magicalArmor": 4,
+              "abilities": {
+                "incomingDamageMultipliers": {
+                  "single": 0.92,
+                  "splash": 0.92,
+                  "chain": 0.92
+                }
+              }
+            },
+            {
               "level": 3,
-              "health": 124,
-              "speed": 1.3,
-              "physicalArmor": 9,
-              "magicalArmor": 3
+              "health": 118,
+              "speed": 1.15,
+              "physicalArmor": 13,
+              "magicalArmor": 5,
+              "abilities": {
+                "incomingDamageMultipliers": {
+                  "single": 0.88,
+                  "splash": 0.88,
+                  "chain": 0.88
+                }
+              }
             },
             {
               "level": 4,
-              "health": 132,
-              "speed": 1.35,
-              "physicalArmor": 10,
-              "magicalArmor": 3
+              "health": 130,
+              "speed": 1.15,
+              "physicalArmor": 16,
+              "magicalArmor": 6,
+              "abilities": {
+                "incomingDamageMultipliers": {
+                  "single": 0.8,
+                  "splash": 0.8,
+                  "chain": 0.8
+                }
+              }
             }
           ]
         },
         {
-          "id": "human_footman_ii",
-          "name": "Footman II",
-          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "id": "human_footman_captains_shield",
+          "name": "Captain's Shield",
+          "description": "A captain's shield wall that turns blows aside.",
           "grades": [
             {
               "level": 1,
-              "health": 108,
-              "speed": 1.2,
-              "physicalArmor": 7,
-              "magicalArmor": 3
+              "health": 102,
+              "speed": 1.15,
+              "physicalArmor": 6,
+              "magicalArmor": 3,
+              "abilities": {
+                "incomingDamageMultipliers": {
+                  "single": 0.9,
+                  "splash": 0.9,
+                  "chain": 0.9
+                }
+              }
             },
             {
               "level": 2,
-              "health": 116,
-              "speed": 1.25,
-              "physicalArmor": 8,
-              "magicalArmor": 3
+              "health": 106,
+              "speed": 1.15,
+              "physicalArmor": 6,
+              "magicalArmor": 3,
+              "abilities": {
+                "incomingDamageMultipliers": {
+                  "single": 0.85,
+                  "splash": 0.85,
+                  "chain": 0.85
+                }
+              }
             },
             {
               "level": 3,
-              "health": 124,
-              "speed": 1.3,
-              "physicalArmor": 9,
-              "magicalArmor": 3
+              "health": 112,
+              "speed": 1.15,
+              "physicalArmor": 7,
+              "magicalArmor": 3,
+              "abilities": {
+                "incomingDamageMultipliers": {
+                  "single": 0.8,
+                  "splash": 0.8,
+                  "chain": 0.8
+                }
+              }
             },
             {
               "level": 4,
-              "health": 132,
-              "speed": 1.35,
-              "physicalArmor": 10,
-              "magicalArmor": 3
+              "health": 120,
+              "speed": 1.2,
+              "physicalArmor": 7,
+              "magicalArmor": 3,
+              "abilities": {
+                "incomingDamageMultipliers": {
+                  "single": 0.7,
+                  "splash": 0.7,
+                  "chain": 0.7
+                },
+                "shieldHp": 20
+              }
             }
           ]
         }
@@ -277,72 +389,94 @@
       "lore": "A dwarven rifle, a flask of black powder and a grudge against anything taller than him. He shoots before the sermon ends.",
       "talentBranches": [
         {
-          "id": "human_rifleman_i",
-          "name": "Rifleman I",
-          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "id": "human_rifleman_long_shot",
+          "name": "Long Shot",
+          "description": "Shoots out the towers' sights: every few single shots miss.",
           "grades": [
             {
               "level": 1,
-              "health": 119,
-              "speed": 1.35,
-              "physicalArmor": 3,
-              "magicalArmor": 2
+              "health": 112,
+              "speed": 1.3,
+              "physicalArmor": 2,
+              "magicalArmor": 2,
+              "abilities": {
+                "dodgeEveryNthShot": 10
+              }
             },
             {
               "level": 2,
-              "health": 128,
-              "speed": 1.4,
-              "physicalArmor": 4,
-              "magicalArmor": 2
+              "health": 115,
+              "speed": 1.3,
+              "physicalArmor": 2,
+              "magicalArmor": 2,
+              "abilities": {
+                "dodgeEveryNthShot": 7
+              }
             },
             {
               "level": 3,
-              "health": 136,
-              "speed": 1.45,
-              "physicalArmor": 5,
-              "magicalArmor": 2
+              "health": 120,
+              "speed": 1.35,
+              "physicalArmor": 3,
+              "magicalArmor": 2,
+              "abilities": {
+                "dodgeEveryNthShot": 5
+              }
             },
             {
               "level": 4,
-              "health": 145,
-              "speed": 1.5,
-              "physicalArmor": 6,
-              "magicalArmor": 2
+              "health": 130,
+              "speed": 1.35,
+              "physicalArmor": 3,
+              "magicalArmor": 2,
+              "abilities": {
+                "dodgeEveryNthShot": 3
+              }
             }
           ]
         },
         {
-          "id": "human_rifleman_ii",
-          "name": "Rifleman II",
-          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "id": "human_rifleman_flak_vest",
+          "name": "Flak Vest",
+          "description": "A plated vest: more armor, then resistance to percent damage.",
           "grades": [
             {
               "level": 1,
-              "health": 119,
-              "speed": 1.35,
-              "physicalArmor": 3,
-              "magicalArmor": 2
-            },
-            {
-              "level": 2,
-              "health": 128,
-              "speed": 1.4,
+              "health": 118,
+              "speed": 1.3,
               "physicalArmor": 4,
               "magicalArmor": 2
             },
             {
+              "level": 2,
+              "health": 126,
+              "speed": 1.3,
+              "physicalArmor": 6,
+              "magicalArmor": 3
+            },
+            {
               "level": 3,
               "health": 136,
-              "speed": 1.45,
-              "physicalArmor": 5,
-              "magicalArmor": 2
+              "speed": 1.3,
+              "physicalArmor": 8,
+              "magicalArmor": 3,
+              "abilities": {
+                "incomingDamageMultipliers": {
+                  "percent": 0.75
+                }
+              }
             },
             {
               "level": 4,
-              "health": 145,
-              "speed": 1.5,
-              "physicalArmor": 6,
-              "magicalArmor": 2
+              "health": 150,
+              "speed": 1.3,
+              "physicalArmor": 10,
+              "magicalArmor": 4,
+              "abilities": {
+                "incomingDamageMultipliers": {
+                  "percent": 0.5
+                }
+              }
             }
           ]
         }
@@ -364,72 +498,107 @@
       "lore": "Iron, oak and a crew that stopped flinching years ago. It does not storm the gate; it arrives at it and waits.",
       "talentBranches": [
         {
-          "id": "human_siege_engine_i",
-          "name": "Siege Engine I",
-          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "id": "human_siege_engine_armored_wagon",
+          "name": "Armored Wagon",
+          "description": "Plated hull: shrugs off percent, splash and stuns.",
           "grades": [
             {
               "level": 1,
-              "health": 232,
-              "speed": 0.8,
+              "health": 234,
+              "speed": 0.75,
               "physicalArmor": 11,
               "magicalArmor": 3
             },
             {
               "level": 2,
-              "health": 249,
-              "speed": 0.85,
+              "health": 252,
+              "speed": 0.75,
               "physicalArmor": 12,
-              "magicalArmor": 3
+              "magicalArmor": 4,
+              "abilities": {
+                "incomingDamageMultipliers": {
+                  "percent": 0.75
+                }
+              }
             },
             {
               "level": 3,
-              "health": 267,
-              "speed": 0.9,
+              "health": 271,
+              "speed": 0.78,
               "physicalArmor": 13,
-              "magicalArmor": 3
+              "magicalArmor": 4,
+              "abilities": {
+                "incomingDamageMultipliers": {
+                  "percent": 0.5
+                },
+                "effectResistance": {
+                  "stun": 0
+                }
+              }
             },
             {
               "level": 4,
-              "health": 284,
-              "speed": 0.95,
-              "physicalArmor": 14,
-              "magicalArmor": 3
+              "health": 301,
+              "speed": 0.8,
+              "physicalArmor": 15,
+              "magicalArmor": 5,
+              "abilities": {
+                "incomingDamageMultipliers": {
+                  "percent": 0.5,
+                  "splash": 0.6
+                },
+                "effectResistance": {
+                  "stun": 0
+                }
+              }
             }
           ]
         },
         {
-          "id": "human_siege_engine_ii",
-          "name": "Siege Engine II",
-          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "id": "human_siege_engine_ram",
+          "name": "Ram",
+          "description": "Rams the towers it rolls past: they misfire, and a leak costs two lives.",
           "grades": [
             {
               "level": 1,
-              "health": 232,
+              "health": 215,
               "speed": 0.8,
-              "physicalArmor": 11,
-              "magicalArmor": 3
+              "physicalArmor": 10,
+              "magicalArmor": 3,
+              "abilities": {
+                "dodgeEveryNthShot": 10
+              }
             },
             {
               "level": 2,
-              "health": 249,
-              "speed": 0.85,
-              "physicalArmor": 12,
-              "magicalArmor": 3
+              "health": 225,
+              "speed": 0.8,
+              "physicalArmor": 10,
+              "magicalArmor": 3,
+              "abilities": {
+                "dodgeEveryNthShot": 5
+              }
             },
             {
               "level": 3,
-              "health": 267,
-              "speed": 0.9,
-              "physicalArmor": 13,
-              "magicalArmor": 3
+              "health": 235,
+              "speed": 0.85,
+              "physicalArmor": 11,
+              "magicalArmor": 3,
+              "abilities": {
+                "dodgeEveryNthShot": 4
+              }
             },
             {
               "level": 4,
-              "health": 284,
-              "speed": 0.95,
-              "physicalArmor": 14,
-              "magicalArmor": 3
+              "health": 250,
+              "speed": 0.85,
+              "physicalArmor": 11,
+              "magicalArmor": 3,
+              "abilities": {
+                "dodgeEveryNthShot": 3,
+                "leakLivesTaken": 2
+              }
             }
           ]
         }
@@ -450,72 +619,99 @@
       "lore": "Plate forged in the capital, oath sworn in the chapel. He does not stop for arrows; he has stopped for nothing yet.",
       "talentBranches": [
         {
-          "id": "human_knight_i",
-          "name": "Knight I",
-          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "id": "human_knight_paladin",
+          "name": "Paladin",
+          "description": "Holy light mends the knight as it rides and breaks control.",
           "grades": [
             {
               "level": 1,
-              "health": 205,
-              "speed": 1.25,
-              "physicalArmor": 13,
-              "magicalArmor": 5
+              "health": 195,
+              "speed": 1.2,
+              "physicalArmor": 12,
+              "magicalArmor": 5,
+              "abilities": {
+                "healthRegenPerSecond": 5
+              }
             },
             {
               "level": 2,
-              "health": 220,
-              "speed": 1.3,
-              "physicalArmor": 14,
-              "magicalArmor": 5
+              "health": 200,
+              "speed": 1.2,
+              "physicalArmor": 12,
+              "magicalArmor": 5,
+              "abilities": {
+                "healthRegenPerSecond": 7.5
+              }
             },
             {
               "level": 3,
-              "health": 236,
-              "speed": 1.35,
-              "physicalArmor": 15,
-              "magicalArmor": 5
+              "health": 210,
+              "speed": 1.2,
+              "physicalArmor": 13,
+              "magicalArmor": 5,
+              "abilities": {
+                "healthRegenPerSecond": 10
+              }
             },
             {
               "level": 4,
-              "health": 251,
-              "speed": 1.4,
-              "physicalArmor": 16,
-              "magicalArmor": 5
+              "health": 225,
+              "speed": 1.25,
+              "physicalArmor": 13,
+              "magicalArmor": 5,
+              "abilities": {
+                "healthRegenPerSecond": 15,
+                "effectResistance": {
+                  "chill": 0.75,
+                  "stun": 0.75
+                }
+              }
             }
           ]
         },
         {
-          "id": "human_knight_ii",
-          "name": "Knight II",
-          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "id": "human_knight_cavalry",
+          "name": "Cavalry",
+          "description": "Charging horse: faster, slow-resistant, two lives a leak.",
           "grades": [
             {
               "level": 1,
-              "health": 205,
-              "speed": 1.25,
-              "physicalArmor": 13,
+              "health": 190,
+              "speed": 1.35,
+              "physicalArmor": 12,
               "magicalArmor": 5
             },
             {
               "level": 2,
-              "health": 220,
-              "speed": 1.3,
-              "physicalArmor": 14,
+              "health": 195,
+              "speed": 1.52,
+              "physicalArmor": 12,
               "magicalArmor": 5
             },
             {
               "level": 3,
-              "health": 236,
-              "speed": 1.35,
-              "physicalArmor": 15,
-              "magicalArmor": 5
+              "health": 200,
+              "speed": 1.67,
+              "physicalArmor": 12,
+              "magicalArmor": 5,
+              "abilities": {
+                "effectResistance": {
+                  "chill": 0.85
+                }
+              }
             },
             {
               "level": 4,
-              "health": 251,
-              "speed": 1.4,
-              "physicalArmor": 16,
-              "magicalArmor": 5
+              "health": 215,
+              "speed": 1.98,
+              "physicalArmor": 13,
+              "magicalArmor": 5,
+              "abilities": {
+                "effectResistance": {
+                  "chill": 0.7
+                },
+                "leakLivesTaken": 2
+              }
             }
           ]
         }
@@ -537,72 +733,99 @@
       "lore": "Trained in the tower at Dalaran, she can turn a volley into mist. Just not two volleys.",
       "talentBranches": [
         {
-          "id": "human_sorceress_i",
-          "name": "Sorceress I",
-          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "id": "human_sorceress_invisibility",
+          "name": "Invisibility",
+          "description": "Hard to see, then unseen: she starts invisible and flickers out of sight.",
           "grades": [
             {
               "level": 1,
-              "health": 151,
-              "speed": 1.4,
-              "physicalArmor": 1,
-              "magicalArmor": 10
+              "health": 142,
+              "speed": 1.35,
+              "physicalArmor": 0,
+              "magicalArmor": 10,
+              "abilities": {
+                "dodgeEveryNthShot": 10
+              }
             },
             {
               "level": 2,
-              "health": 162,
-              "speed": 1.45,
-              "physicalArmor": 2,
-              "magicalArmor": 10
+              "health": 145,
+              "speed": 1.4,
+              "physicalArmor": 0,
+              "magicalArmor": 10,
+              "abilities": {
+                "dodgeEveryNthShot": 10,
+                "startInvisibleMs": 3000
+              }
             },
             {
               "level": 3,
-              "health": 174,
-              "speed": 1.5,
-              "physicalArmor": 3,
-              "magicalArmor": 10
+              "health": 150,
+              "speed": 1.4,
+              "physicalArmor": 1,
+              "magicalArmor": 10,
+              "abilities": {
+                "dodgeEveryNthShot": 4,
+                "startInvisibleMs": 3000
+              }
             },
             {
               "level": 4,
-              "health": 185,
-              "speed": 1.55,
-              "physicalArmor": 4,
-              "magicalArmor": 10
+              "health": 160,
+              "speed": 1.45,
+              "physicalArmor": 1,
+              "magicalArmor": 10,
+              "abilities": {
+                "dodgeEveryNthShot": 2,
+                "startInvisibleMs": 3000
+              }
             }
           ]
         },
         {
-          "id": "human_sorceress_ii",
-          "name": "Sorceress II",
-          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "id": "human_sorceress_polymorph",
+          "name": "Polymorph",
+          "description": "Turns towers into sheep for a moment: they lose shots at her.",
           "grades": [
             {
               "level": 1,
-              "health": 151,
-              "speed": 1.4,
-              "physicalArmor": 1,
-              "magicalArmor": 10
+              "health": 140,
+              "speed": 1.35,
+              "physicalArmor": 0,
+              "magicalArmor": 10,
+              "abilities": {
+                "dodgeEveryNthShot": 8
+              }
             },
             {
               "level": 2,
-              "health": 162,
-              "speed": 1.45,
-              "physicalArmor": 2,
-              "magicalArmor": 10
+              "health": 145,
+              "speed": 1.35,
+              "physicalArmor": 1,
+              "magicalArmor": 10,
+              "abilities": {
+                "dodgeEveryNthShot": 6
+              }
             },
             {
               "level": 3,
-              "health": 174,
-              "speed": 1.5,
-              "physicalArmor": 3,
-              "magicalArmor": 10
+              "health": 150,
+              "speed": 1.4,
+              "physicalArmor": 1,
+              "magicalArmor": 10,
+              "abilities": {
+                "dodgeEveryNthShot": 4
+              }
             },
             {
               "level": 4,
-              "health": 185,
-              "speed": 1.55,
-              "physicalArmor": 4,
-              "magicalArmor": 10
+              "health": 160,
+              "speed": 1.4,
+              "physicalArmor": 2,
+              "magicalArmor": 11,
+              "abilities": {
+                "dodgeEveryNthShot": 3
+              }
             }
           ]
         }
@@ -625,72 +848,123 @@
       "lore": "A dwarf, a storm hammer and a gryphon that answers to no one else. The sky is the only wall the kingdom could not build.",
       "talentBranches": [
         {
-          "id": "human_gryphon_rider_i",
-          "name": "Gryphon Rider I",
-          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "id": "human_gryphon_rider_sky_hammer",
+          "name": "Sky Hammer",
+          "description": "Hammers the anti-air towers below: they hit it softer and miss.",
           "grades": [
             {
               "level": 1,
-              "health": 324,
-              "speed": 1.25,
-              "physicalArmor": 10,
-              "magicalArmor": 8
+              "health": 320,
+              "speed": 1.2,
+              "physicalArmor": 9,
+              "magicalArmor": 8,
+              "abilities": {
+                "incomingDamageMultipliers": {
+                  "single": 0.85,
+                  "splash": 0.85,
+                  "chain": 0.85
+                }
+              }
             },
             {
               "level": 2,
-              "health": 348,
-              "speed": 1.3,
-              "physicalArmor": 11,
-              "magicalArmor": 8
+              "health": 340,
+              "speed": 1.2,
+              "physicalArmor": 10,
+              "magicalArmor": 8,
+              "abilities": {
+                "incomingDamageMultipliers": {
+                  "single": 0.75,
+                  "splash": 0.75,
+                  "chain": 0.75
+                }
+              }
             },
             {
               "level": 3,
-              "health": 372,
-              "speed": 1.35,
-              "physicalArmor": 12,
-              "magicalArmor": 8
+              "health": 365,
+              "speed": 1.25,
+              "physicalArmor": 11,
+              "magicalArmor": 9,
+              "abilities": {
+                "incomingDamageMultipliers": {
+                  "single": 0.65,
+                  "splash": 0.65,
+                  "chain": 0.65
+                },
+                "dodgeEveryNthShot": 6
+              }
             },
             {
               "level": 4,
-              "health": 396,
-              "speed": 1.4,
-              "physicalArmor": 13,
-              "magicalArmor": 8
+              "health": 400,
+              "speed": 1.25,
+              "physicalArmor": 12,
+              "magicalArmor": 9,
+              "abilities": {
+                "incomingDamageMultipliers": {
+                  "single": 0.5,
+                  "splash": 0.5,
+                  "chain": 0.5
+                },
+                "dodgeEveryNthShot": 4
+              }
             }
           ]
         },
         {
-          "id": "human_gryphon_rider_ii",
-          "name": "Gryphon Rider II",
-          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "id": "human_gryphon_rider_assault",
+          "name": "Assault",
+          "description": "A strike flight: several lives a leak, a final dive and a refund.",
           "grades": [
             {
               "level": 1,
-              "health": 324,
-              "speed": 1.25,
-              "physicalArmor": 10,
-              "magicalArmor": 8
+              "health": 310,
+              "speed": 1.3,
+              "physicalArmor": 9,
+              "magicalArmor": 8,
+              "abilities": {
+                "leakLivesTaken": 2
+              }
             },
             {
               "level": 2,
-              "health": 348,
-              "speed": 1.3,
-              "physicalArmor": 11,
-              "magicalArmor": 8
+              "health": 330,
+              "speed": 1.4,
+              "physicalArmor": 9,
+              "magicalArmor": 8,
+              "abilities": {
+                "leakLivesTaken": 3
+              }
             },
             {
               "level": 3,
-              "health": 372,
-              "speed": 1.35,
-              "physicalArmor": 12,
-              "magicalArmor": 8
+              "health": 355,
+              "speed": 1.45,
+              "physicalArmor": 10,
+              "magicalArmor": 8,
+              "abilities": {
+                "leakLivesTaken": 4,
+                "speedBoostLastRouteShare": {
+                  "routeShare": 0.3,
+                  "speedMultiplier": 1.5
+                }
+              }
             },
             {
               "level": 4,
-              "health": 396,
-              "speed": 1.4,
-              "physicalArmor": 13,
-              "magicalArmor": 8
+              "health": 390,
+              "speed": 1.5,
+              "physicalArmor": 10,
+              "magicalArmor": 8,
+              "abilities": {
+                "leakLivesTaken": 5,
+                "speedBoostLastRouteShare": {
+                  "routeShare": 0.3,
+                  "speedMultiplier": 1.5
+                },
+                "leakGoldToSender": 160
+              }
             }
           ]
         }
