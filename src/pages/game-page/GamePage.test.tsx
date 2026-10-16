@@ -65,6 +65,7 @@ function createActiveSnapshot(overrides?: Partial<GameHudSnapshot>): GameHudSnap
     pendingCreepCount: 0,
     isPaused: false,
     gameSpeed: 1,
+    towerBranchChoices: {},
     ...overrides,
   };
 }

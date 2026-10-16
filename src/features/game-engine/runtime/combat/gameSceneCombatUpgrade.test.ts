@@ -45,12 +45,12 @@ function simulateUpgrade(
   tower: TowerEntity,
   resources: PlayerResources,
 ): { tower: TowerEntity; resources: PlayerResources; success: boolean } {
-  const check = canAffordUpgrade(tower.type, tower.level, resources.gold);
+  const check = canAffordUpgrade(tower, tower.level, resources.gold);
   if (!check.allowed) {
     return { tower, resources, success: false };
   }
 
-  const cost = getUpgradeCost(tower.type, tower.level);
+  const cost = getUpgradeCost(tower, tower.level);
   if (cost === null) {
     return { tower, resources, success: false };
   }
@@ -142,7 +142,7 @@ describe('upgrade gold deduction', () => {
     const tower = createTestTower();
     const initialGold = 100;
     const resources: PlayerResources = { gold: initialGold };
-    const upgradeCost = getUpgradeCost(tower.type, tower.level)!;
+    const upgradeCost = getUpgradeCost(tower, tower.level)!;
 
     const result = simulateUpgrade(tower, resources);
 
@@ -166,12 +166,12 @@ describe('upgrade gold deduction', () => {
     let resources: PlayerResources = { gold: 500 };
     const initialGold = resources.gold;
 
-    const cost1 = getUpgradeCost(tower.type, 1)!;
+    const cost1 = getUpgradeCost(tower, 1)!;
     const r1 = simulateUpgrade(tower, resources);
     tower = r1.tower;
     resources = r1.resources;
 
-    const cost2 = getUpgradeCost(tower.type, 2)!;
+    const cost2 = getUpgradeCost(tower, 2)!;
     const r2 = simulateUpgrade(tower, resources);
     tower = r2.tower;
     resources = r2.resources;

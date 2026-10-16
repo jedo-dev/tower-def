@@ -1,9 +1,10 @@
 import { ECONOMY_BALANCE } from '../../../shared/constants/economy';
-import type { TowerLevelStats } from './upgradeConfig';
+import type { TowerLevelStats, TowerTypeUpgradeConfig } from './upgradeConfig';
 import type { TowerEntity, TowerType } from './types';
 import { TOWER_BASE_LEVEL, TOWER_UPGRADE_CONFIG } from './types';
 import { tryResolveBuildableTowerById } from './config/buildableTowers';
-import { BUILDABLE_TOWER_IDS } from './towerIds';
+import { BUILDABLE_TOWER_IDS, type BuildableTowerId } from './towerIds';
+import { NO_TOWER_BRANCH_CHOICES, resolveChosenBranch, type TowerBranchChoices } from './talents';
 
 /** What picks a tower's upgrade curve: its archetype and, if any, its authored id. */
 export type TowerUpgradeCurveRef = Pick<TowerEntity, 'type' | 'buildableTowerId'>;
@@ -13,39 +14,66 @@ export type UpgradeCheckResult = {
   reason?: 'max_level' | 'insufficient_gold';
 };
 
-export function isMaxLevel(towerType: TowerType, currentLevel: number): boolean {
-  const config = TOWER_UPGRADE_CONFIG[towerType];
-  if (!config) {
-    return true;
-  }
-  return currentLevel >= config.maxLevel;
+/**
+ * Upgrade curve a placed tower follows. Levels 1-3 come from its own authored
+ * curve when it declares one, the archetype curve otherwise; grades 4-7 come
+ * from the branch its side chose for the tower's type. Without a branch the
+ * curve tops out at grade 3. Cost, max level, stats, preview and sell value all
+ * read this one curve.
+ */
+export function resolveTowerUpgradeConfig(
+  tower: TowerUpgradeCurveRef,
+  choices: TowerBranchChoices = NO_TOWER_BRANCH_CHOICES,
+): TowerTypeUpgradeConfig {
+  const authored = tower.buildableTowerId
+    ? tryResolveBuildableTowerById(tower.buildableTowerId)
+    : undefined;
+  const baseLevels =
+    authored?.levels && authored.levels.length > 0
+      ? authored.levels
+      : TOWER_UPGRADE_CONFIG[tower.type].levels;
+  const branch = resolveChosenBranch(tower, choices);
+  const levels = branch ? [...baseLevels, ...branch.grades] : baseLevels;
+
+  return { maxLevel: levels.length, levels };
 }
 
-export function getUpgradeCost(towerType: TowerType, currentLevel: number): number | null {
-  const config = TOWER_UPGRADE_CONFIG[towerType];
-  if (!config) {
-    return null;
-  }
+function findCurveLevel(
+  tower: TowerUpgradeCurveRef,
+  level: number,
+  choices: TowerBranchChoices,
+): TowerTypeUpgradeConfig['levels'][number] | undefined {
+  return resolveTowerUpgradeConfig(tower, choices).levels.find(
+    (candidate) => candidate.level === level,
+  );
+}
 
-  const nextLevel = currentLevel + 1;
-  const nextLevelConfig = config.levels.find((candidate) => candidate.level === nextLevel);
-  if (!nextLevelConfig) {
-    return null;
-  }
+export function isMaxLevel(
+  tower: TowerUpgradeCurveRef,
+  currentLevel: number,
+  choices: TowerBranchChoices = NO_TOWER_BRANCH_CHOICES,
+): boolean {
+  return currentLevel >= resolveTowerUpgradeConfig(tower, choices).maxLevel;
+}
 
-  return nextLevelConfig.upgradeCostGold;
+export function getUpgradeCost(
+  tower: TowerUpgradeCurveRef,
+  currentLevel: number,
+  choices: TowerBranchChoices = NO_TOWER_BRANCH_CHOICES,
+): number | null {
+  return findCurveLevel(tower, currentLevel + 1, choices)?.upgradeCostGold ?? null;
 }
 
 export function canAffordUpgrade(
-  towerType: TowerType,
+  tower: TowerUpgradeCurveRef,
   currentLevel: number,
   currentGold: number,
+  choices: TowerBranchChoices = NO_TOWER_BRANCH_CHOICES,
 ): UpgradeCheckResult {
-  if (isMaxLevel(towerType, currentLevel)) {
-    return { allowed: false, reason: 'max_level' };
-  }
+  const upgradeCost = isMaxLevel(tower, currentLevel, choices)
+    ? null
+    : getUpgradeCost(tower, currentLevel, choices);
 
-  const upgradeCost = getUpgradeCost(towerType, currentLevel);
   if (upgradeCost === null) {
     return { allowed: false, reason: 'max_level' };
   }
@@ -57,28 +85,22 @@ export function canAffordUpgrade(
   return { allowed: true };
 }
 
+/** The archetype curve alone, for callers that hold no tower (content checks, previews). */
 export function getTowerStatsForLevel(towerType: TowerType, level: number): TowerLevelStats | null {
-  const config = TOWER_UPGRADE_CONFIG[towerType];
-  if (!config) {
-    return null;
-  }
-
-  const levelConfig = config.levels.find((candidate) => candidate.level === level);
-  if (!levelConfig) {
-    return null;
-  }
-
-  return levelConfig.stats;
+  const levelConfig = TOWER_UPGRADE_CONFIG[towerType]?.levels.find(
+    (candidate) => candidate.level === level,
+  );
+  return levelConfig ? levelConfig.stats : null;
 }
 
-export function getTotalInvestedGold(towerType: TowerType, level: number): number {
-  const config = TOWER_UPGRADE_CONFIG[towerType];
-  if (!config) {
-    return 0;
-  }
-
+/** Upgrade gold a tower took to reach `level`; the branch price is per type and not included. */
+export function getTotalInvestedGold(
+  tower: TowerUpgradeCurveRef,
+  level: number,
+  choices: TowerBranchChoices = NO_TOWER_BRANCH_CHOICES,
+): number {
   let total = 0;
-  for (const levelConfig of config.levels) {
+  for (const levelConfig of resolveTowerUpgradeConfig(tower, choices).levels) {
     if (levelConfig.level <= level) {
       total += levelConfig.upgradeCostGold;
     }
@@ -86,8 +108,13 @@ export function getTotalInvestedGold(towerType: TowerType, level: number): numbe
   return total;
 }
 
-export function getSellValue(towerType: TowerType, level: number, buildCostGold: number): number {
-  const totalInvested = getTotalInvestedGold(towerType, level) + buildCostGold;
+export function getSellValue(
+  tower: TowerUpgradeCurveRef,
+  level: number,
+  buildCostGold: number,
+  choices: TowerBranchChoices = NO_TOWER_BRANCH_CHOICES,
+): number {
+  const totalInvested = getTotalInvestedGold(tower, level, choices) + buildCostGold;
   return Math.floor(totalInvested * ECONOMY_BALANCE.towerSellRatio);
 }
 
@@ -104,41 +131,38 @@ export function createTowerLevel(
 
 export const INITIAL_TOWER_LEVEL = TOWER_BASE_LEVEL;
 
-/**
- * Upgrade curve a placed tower follows: its own authored curve when it declares
- * one, the archetype curve otherwise.
- */
-export function resolveTowerUpgradeConfig(tower: TowerUpgradeCurveRef) {
-  const authored = tower.buildableTowerId
-    ? tryResolveBuildableTowerById(tower.buildableTowerId)
-    : undefined;
-
-  if (authored?.levels && authored.levels.length > 0) {
-    return { maxLevel: authored.levels.length, levels: authored.levels };
-  }
-
-  return TOWER_UPGRADE_CONFIG[tower.type];
-}
-
 export function getTowerStatsForTowerLevel(
   tower: TowerUpgradeCurveRef,
   level: number,
+  choices: TowerBranchChoices = NO_TOWER_BRANCH_CHOICES,
 ): TowerLevelStats | null {
-  const config = resolveTowerUpgradeConfig(tower);
-  const levelConfig = config.levels.find((candidate) => candidate.level === level);
-
-  return levelConfig ? levelConfig.stats : null;
+  return findCurveLevel(tower, level, choices)?.stats ?? null;
 }
 
 /**
- * The same curve read from ids alone, for UI previews that only hold a
- * bridge snapshot: an unknown authored id falls back to the archetype curve.
+ * A curve reference read from ids alone, for UI that only holds a bridge
+ * snapshot: an unknown authored id falls back to the archetype curve.
  */
+export function toTowerUpgradeCurveRef(
+  towerType: TowerType,
+  buildableTowerId: string | undefined,
+): TowerUpgradeCurveRef {
+  const authoredId: BuildableTowerId | undefined = BUILDABLE_TOWER_IDS.find(
+    (towerId) => towerId === buildableTowerId,
+  );
+  return { type: towerType, buildableTowerId: authoredId };
+}
+
+/** `getTowerStatsForTowerLevel` from ids alone; see `toTowerUpgradeCurveRef`. */
 export function getTowerStatsForCurveLevel(
   towerType: TowerType,
   buildableTowerId: string | undefined,
   level: number,
+  choices: TowerBranchChoices = NO_TOWER_BRANCH_CHOICES,
 ): TowerLevelStats | null {
-  const authoredId = BUILDABLE_TOWER_IDS.find((towerId) => towerId === buildableTowerId);
-  return getTowerStatsForTowerLevel({ type: towerType, buildableTowerId: authoredId }, level);
+  return getTowerStatsForTowerLevel(
+    toTowerUpgradeCurveRef(towerType, buildableTowerId),
+    level,
+    choices,
+  );
 }

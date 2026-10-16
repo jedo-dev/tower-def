@@ -30,6 +30,7 @@ function createHudSnapshot(): GameHudSnapshot {
     pendingCreepCount: 0,
     isPaused: false,
     gameSpeed: 1,
+    towerBranchChoices: {},
   };
 }
 
@@ -43,6 +44,8 @@ function selectTower(type: TowerTypeId, level = 1): SelectedTowerSnapshot {
     position: { x: 4, y: 4 },
     cost: 60,
     combatStats: { ...stats },
+    availableBranches: [],
+    chosenBranchId: null,
   };
 }
 

@@ -9,13 +9,18 @@ import type { TowerSoundSet } from '../../../../shared/types/sound-ids';
  */
 
 /**
- * Version 3 types every archetype's damage (`damageType`); a race tower may
- * override it. Every distance (range, splash, chain jump, aura radius and range
- * bonus) is measured in cells of the fine 16px grid, as since version 2.
- * Version 1 used the coarse 32px cell and is rejected so a stale file cannot
- * load with halved ranges; version 2 is rejected for its missing damage types.
+ * Version 4 gives every race tower two talent branches (`talentBranches`,
+ * grades 4-7). Since version 3 every archetype types its damage
+ * (`damageType`) and a race tower may override it; every distance (range,
+ * splash, chain jump, aura radius and range bonus) is measured in cells of the
+ * fine 16px grid, as since version 2. Version 1 used the coarse 32px cell and
+ * is rejected so a stale file cannot load with halved ranges; version 2 is
+ * rejected for its missing damage types, version 3 for its missing branches.
  */
-export const TOWER_CONTENT_SCHEMA_VERSION = 3;
+export const TOWER_CONTENT_SCHEMA_VERSION = 4;
+
+/** The retired branchless format, recognised only to explain the rejection. */
+export const TOWER_CONTENT_BRANCHLESS_SCHEMA_VERSION = 3;
 
 /** The retired untyped-damage format, recognised only to explain the rejection. */
 export const TOWER_CONTENT_UNTYPED_DAMAGE_SCHEMA_VERSION = 2;
@@ -54,6 +59,33 @@ export type TowerContentEntry = {
   description: string;
   /** Bestiary flavour text in the race's voice; at most `CONTENT_LORE_MAX_LENGTH`. */
   lore?: string;
+  /** Exactly two branches; see "Tower talents" in docs/08-content-authoring.md. */
+  talentBranches: TowerTalentBranchContentEntry[];
+};
+
+/**
+ * One grade (4-7) of a talent branch. Its upgrade cost is not authored: the
+ * loader fills it from `TowerTalentPricing`.
+ */
+export type TowerTalentGradeContentEntry = {
+  level: number;
+  damage: number;
+  range: number;
+  attackCooldownMs: number;
+  splashRadius?: number;
+  chain?: TowerChainContentEntry;
+  aura?: TowerAuraContentEntry;
+  onHitEffects?: TowerOnHitEffectEntry[];
+  /** Named numeric modifiers of the combat mechanics; keys from `TOWER_GRADE_ABILITY_KEYS`. */
+  abilities?: Record<string, number>;
+};
+
+export type TowerTalentBranchContentEntry = {
+  /** Unique; starts with the tower id, e.g. `undead_bone_archer_tower_volley`. */
+  id: string;
+  name: string;
+  description: string;
+  grades: TowerTalentGradeContentEntry[];
 };
 
 export type TowerContentFile = {
@@ -149,6 +181,7 @@ export const TOWER_CONTENT_REQUIRED_KEYS: readonly (keyof TowerContentEntry)[] =
   'attackCooldownMs',
   'spriteKey',
   'description',
+  'talentBranches',
 ];
 
 export const TOWER_CONTENT_OPTIONAL_KEYS: readonly (keyof TowerContentEntry)[] = [
@@ -177,6 +210,34 @@ export const TOWER_LEVEL_KEYS: readonly (keyof TowerLevelContentEntry)[] = [
   'onHitEffects',
   'aura',
 ];
+
+export const TOWER_TALENT_BRANCH_KEYS: readonly (keyof TowerTalentBranchContentEntry)[] = [
+  'id',
+  'name',
+  'description',
+  'grades',
+];
+
+export const TOWER_TALENT_GRADE_KEYS: readonly (keyof TowerTalentGradeContentEntry)[] = [
+  'level',
+  'damage',
+  'range',
+  'attackCooldownMs',
+  'splashRadius',
+  'chain',
+  'aura',
+  'onHitEffects',
+  'abilities',
+];
+
+/**
+ * Ability modifiers a grade may declare under `abilities`. The combat
+ * mechanics task extends this list as each mechanic lands; until a key is
+ * listed here content using it fails on load instead of being ignored.
+ */
+export const TOWER_GRADE_ABILITY_KEYS: readonly string[] = [];
+
+export const TOWER_GRADE_ABILITY_BOUNDS = { min: -1000, max: 1000 } as const;
 
 export const TOWER_LEVEL_BOUNDS = {
   upgradeCostGold: { min: 0, max: 1000 },

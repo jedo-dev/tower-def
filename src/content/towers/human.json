@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 4,
   "race": "HUMAN",
   "towers": [
     {
@@ -19,7 +19,31 @@
       ],
       "spriteKey": "tower.human.guard_archer",
       "description": "Disciplined marksmen watch over fortified walls.",
-      "lore": "A watchtower with a roster, a bell and a sergeant. Shifts change at dawn and the arrows never stop."
+      "lore": "A watchtower with a roster, a bell and a sergeant. Shifts change at dawn and the arrows never stop.",
+      "talentBranches": [
+        {
+          "id": "human_guard_archer_tower_branch_i",
+          "name": "Guard Archer Tower I",
+          "description": "Placeholder branch: each grade adds 8% damage and 0.2 range.",
+          "grades": [
+            { "level": 4, "damage": 50, "range": 7, "attackCooldownMs": 700 },
+            { "level": 5, "damage": 53, "range": 7.2, "attackCooldownMs": 700 },
+            { "level": 6, "damage": 57, "range": 7.4, "attackCooldownMs": 700 },
+            { "level": 7, "damage": 61, "range": 7.6, "attackCooldownMs": 700 }
+          ]
+        },
+        {
+          "id": "human_guard_archer_tower_branch_ii",
+          "name": "Guard Archer Tower II",
+          "description": "Placeholder branch: each grade adds 8% damage and 0.2 range.",
+          "grades": [
+            { "level": 4, "damage": 50, "range": 7, "attackCooldownMs": 700 },
+            { "level": 5, "damage": 53, "range": 7.2, "attackCooldownMs": 700 },
+            { "level": 6, "damage": 57, "range": 7.4, "attackCooldownMs": 700 },
+            { "level": 7, "damage": 61, "range": 7.6, "attackCooldownMs": 700 }
+          ]
+        }
+      ]
     },
     {
       "id": "human_cannon_bastion",
@@ -34,7 +58,67 @@
       "splashRadius": 3,
       "spriteKey": "tower.human.cannon_bastion",
       "description": "Dwarven powder and iron shot, loud and wide.",
-      "lore": "Dwarven powder packed into kingdom stone. One shot is heard in three valleys and felt in the whole line."
+      "lore": "Dwarven powder packed into kingdom stone. One shot is heard in three valleys and felt in the whole line.",
+      "talentBranches": [
+        {
+          "id": "human_cannon_bastion_branch_i",
+          "name": "Cannon Bastion I",
+          "description": "Placeholder branch: each grade adds 8% damage and 0.2 range.",
+          "grades": [
+            { "level": 4, "damage": 41, "range": 6, "attackCooldownMs": 1100, "splashRadius": 3.4 },
+            {
+              "level": 5,
+              "damage": 44,
+              "range": 6.2,
+              "attackCooldownMs": 1100,
+              "splashRadius": 3.4
+            },
+            {
+              "level": 6,
+              "damage": 47,
+              "range": 6.4,
+              "attackCooldownMs": 1100,
+              "splashRadius": 3.4
+            },
+            {
+              "level": 7,
+              "damage": 50,
+              "range": 6.6,
+              "attackCooldownMs": 1100,
+              "splashRadius": 3.4
+            }
+          ]
+        },
+        {
+          "id": "human_cannon_bastion_branch_ii",
+          "name": "Cannon Bastion II",
+          "description": "Placeholder branch: each grade adds 8% damage and 0.2 range.",
+          "grades": [
+            { "level": 4, "damage": 41, "range": 6, "attackCooldownMs": 1100, "splashRadius": 3.4 },
+            {
+              "level": 5,
+              "damage": 44,
+              "range": 6.2,
+              "attackCooldownMs": 1100,
+              "splashRadius": 3.4
+            },
+            {
+              "level": 6,
+              "damage": 47,
+              "range": 6.4,
+              "attackCooldownMs": 1100,
+              "splashRadius": 3.4
+            },
+            {
+              "level": 7,
+              "damage": 50,
+              "range": 6.6,
+              "attackCooldownMs": 1100,
+              "splashRadius": 3.4
+            }
+          ]
+        }
+      ]
     },
     {
       "id": "human_alchemist_tower",
@@ -56,7 +140,95 @@
       ],
       "spriteKey": "tower.human.alchemist_tower",
       "description": "Flasks of slow-working blight that ignore armor.",
-      "lore": "A university tower with the windows bricked up. The flasks that leave it keep working long after the lecture."
+      "lore": "A university tower with the windows bricked up. The flasks that leave it keep working long after the lecture.",
+      "talentBranches": [
+        {
+          "id": "human_alchemist_tower_branch_i",
+          "name": "Alchemist Tower I",
+          "description": "Placeholder branch: each grade adds 8% damage and 0.2 range.",
+          "grades": [
+            {
+              "level": 4,
+              "damage": 13,
+              "range": 7,
+              "attackCooldownMs": 900,
+              "onHitEffects": [
+                { "effectId": "poison", "magnitude": 8, "durationMs": 4000, "maxStacks": 5 }
+              ]
+            },
+            {
+              "level": 5,
+              "damage": 14,
+              "range": 7.2,
+              "attackCooldownMs": 900,
+              "onHitEffects": [
+                { "effectId": "poison", "magnitude": 8, "durationMs": 4000, "maxStacks": 5 }
+              ]
+            },
+            {
+              "level": 6,
+              "damage": 15,
+              "range": 7.4,
+              "attackCooldownMs": 900,
+              "onHitEffects": [
+                { "effectId": "poison", "magnitude": 8, "durationMs": 4000, "maxStacks": 5 }
+              ]
+            },
+            {
+              "level": 7,
+              "damage": 16,
+              "range": 7.6,
+              "attackCooldownMs": 900,
+              "onHitEffects": [
+                { "effectId": "poison", "magnitude": 8, "durationMs": 4000, "maxStacks": 5 }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "human_alchemist_tower_branch_ii",
+          "name": "Alchemist Tower II",
+          "description": "Placeholder branch: each grade adds 8% damage and 0.2 range.",
+          "grades": [
+            {
+              "level": 4,
+              "damage": 13,
+              "range": 7,
+              "attackCooldownMs": 900,
+              "onHitEffects": [
+                { "effectId": "poison", "magnitude": 8, "durationMs": 4000, "maxStacks": 5 }
+              ]
+            },
+            {
+              "level": 5,
+              "damage": 14,
+              "range": 7.2,
+              "attackCooldownMs": 900,
+              "onHitEffects": [
+                { "effectId": "poison", "magnitude": 8, "durationMs": 4000, "maxStacks": 5 }
+              ]
+            },
+            {
+              "level": 6,
+              "damage": 15,
+              "range": 7.4,
+              "attackCooldownMs": 900,
+              "onHitEffects": [
+                { "effectId": "poison", "magnitude": 8, "durationMs": 4000, "maxStacks": 5 }
+              ]
+            },
+            {
+              "level": 7,
+              "damage": 16,
+              "range": 7.6,
+              "attackCooldownMs": 900,
+              "onHitEffects": [
+                { "effectId": "poison", "magnitude": 8, "durationMs": 4000, "maxStacks": 5 }
+              ]
+            }
+          ]
+        }
+      ]
     },
     {
       "id": "human_guard_post",
@@ -68,7 +240,119 @@
       "attackCooldownMs": 1000,
       "spriteKey": "tower.human.guard_post",
       "description": "A captain barking orders sharpens the whole wall.",
-      "lore": "A captain, a banner and a voice that carries. Every wall within earshot stands straighter and fires faster."
+      "lore": "A captain, a banner and a voice that carries. Every wall within earshot stands straighter and fires faster.",
+      "talentBranches": [
+        {
+          "id": "human_guard_post_branch_i",
+          "name": "Guard Post I",
+          "description": "Placeholder branch: each grade adds 8% damage and 0.2 range.",
+          "grades": [
+            {
+              "level": 4,
+              "damage": 0,
+              "range": 1.2,
+              "attackCooldownMs": 1000,
+              "aura": {
+                "radiusCells": 7,
+                "attackSpeedBonus": 0.34,
+                "rangeBonus": 1.4,
+                "stacking": "strongest"
+              }
+            },
+            {
+              "level": 5,
+              "damage": 0,
+              "range": 1.4,
+              "attackCooldownMs": 1000,
+              "aura": {
+                "radiusCells": 7,
+                "attackSpeedBonus": 0.34,
+                "rangeBonus": 1.4,
+                "stacking": "strongest"
+              }
+            },
+            {
+              "level": 6,
+              "damage": 0,
+              "range": 1.6,
+              "attackCooldownMs": 1000,
+              "aura": {
+                "radiusCells": 7,
+                "attackSpeedBonus": 0.34,
+                "rangeBonus": 1.4,
+                "stacking": "strongest"
+              }
+            },
+            {
+              "level": 7,
+              "damage": 0,
+              "range": 1.8,
+              "attackCooldownMs": 1000,
+              "aura": {
+                "radiusCells": 7,
+                "attackSpeedBonus": 0.34,
+                "rangeBonus": 1.4,
+                "stacking": "strongest"
+              }
+            }
+          ]
+        },
+        {
+          "id": "human_guard_post_branch_ii",
+          "name": "Guard Post II",
+          "description": "Placeholder branch: each grade adds 8% damage and 0.2 range.",
+          "grades": [
+            {
+              "level": 4,
+              "damage": 0,
+              "range": 1.2,
+              "attackCooldownMs": 1000,
+              "aura": {
+                "radiusCells": 7,
+                "attackSpeedBonus": 0.34,
+                "rangeBonus": 1.4,
+                "stacking": "strongest"
+              }
+            },
+            {
+              "level": 5,
+              "damage": 0,
+              "range": 1.4,
+              "attackCooldownMs": 1000,
+              "aura": {
+                "radiusCells": 7,
+                "attackSpeedBonus": 0.34,
+                "rangeBonus": 1.4,
+                "stacking": "strongest"
+              }
+            },
+            {
+              "level": 6,
+              "damage": 0,
+              "range": 1.6,
+              "attackCooldownMs": 1000,
+              "aura": {
+                "radiusCells": 7,
+                "attackSpeedBonus": 0.34,
+                "rangeBonus": 1.4,
+                "stacking": "strongest"
+              }
+            },
+            {
+              "level": 7,
+              "damage": 0,
+              "range": 1.8,
+              "attackCooldownMs": 1000,
+              "aura": {
+                "radiusCells": 7,
+                "attackSpeedBonus": 0.34,
+                "rangeBonus": 1.4,
+                "stacking": "strongest"
+              }
+            }
+          ]
+        }
+      ]
     }
   ]
 }

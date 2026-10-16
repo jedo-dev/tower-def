@@ -18,6 +18,10 @@ import {
 import { BUILDABLE_TOWER_IDS } from '../towerIds';
 import { GRID_DIMENSIONS } from '../../../../shared/constants/grid';
 import { CONTENT_LORE_MAX_LENGTH } from '../../../../shared/lib/content/contentValidation';
+import {
+  createBaseLevelsFixture,
+  createTalentBranchesFixture,
+} from './fixtures/talentBranchFixture';
 
 /** Tower reach before the fine-grid migration, authored in 32px cells. */
 const COARSE_CELL_SIZE_PX = 32;
@@ -38,12 +42,13 @@ function createTower(overrides: AuthoredEntry = {}): AuthoredEntry {
     attackCooldownMs: 800,
     spriteKey: 'tower.undead.bone_archer',
     description: 'Necromantic archer nest built from cursed remains.',
+    talentBranches: createTalentBranchesFixture(String(overrides.id ?? 'undead_bone_archer_tower')),
     ...overrides,
   };
 }
 
 function createFile(towers: unknown[], overrides: AuthoredEntry = {}): AuthoredEntry {
-  return { schemaVersion: 3, race: 'UNDEAD', towers, ...overrides };
+  return { schemaVersion: 4, race: 'UNDEAD', towers, ...overrides };
 }
 
 function parse(data: unknown, file = FILE) {
@@ -67,6 +72,7 @@ describe('parseTowerContentFile', () => {
       onHitEffects: [],
       spriteKey: 'tower.undead.bone_archer',
       description: 'Necromantic archer nest built from cursed remains.',
+      talentBranches: expect.any(Array),
     });
   });
 
@@ -157,12 +163,13 @@ describe('parseTowerContentFile', () => {
       loadTowerArchetypeContent({
         file: 'content/towers/archetypes.json',
         data: {
-          schemaVersion: 3,
+          schemaVersion: 4,
           archetypes: [
             createArchetype({
-              levels: [
-                { level: 2, upgradeCostGold: 0, damage: 20, range: 6, attackCooldownMs: 800 },
-              ],
+              levels: createBaseLevelsFixture().map((level, index) => ({
+                ...level,
+                level: [2, 1, 3][index],
+              })),
             }),
           ],
         },
@@ -175,7 +182,7 @@ describe('parseTowerContentFile', () => {
       loadTowerArchetypeContent({
         file: 'content/towers/archetypes.json',
         data: {
-          schemaVersion: 3,
+          schemaVersion: 4,
           archetypes: [createArchetype({ attackKind: undefined })],
         },
       }),
@@ -234,10 +241,7 @@ function createArchetype(overrides: AuthoredEntry = {}): AuthoredEntry {
     damage: 20,
     range: 6,
     attackCooldownMs: 800,
-    levels: [
-      { level: 1, upgradeCostGold: 0, damage: 20, range: 6, attackCooldownMs: 800 },
-      { level: 2, upgradeCostGold: 40, damage: 30, range: 6.4, attackCooldownMs: 750 },
-    ],
+    levels: createBaseLevelsFixture(),
     description: 'Single target.',
     ...overrides,
   };
@@ -270,7 +274,7 @@ describe('tower content schema version', () => {
   it('rejects an untyped-damage version 2 file and names the first tower to migrate', () => {
     expect(() => parse(createFile([createTower()], { schemaVersion: 2 }))).toThrow(
       `${FILE} [undead_bone_archer_tower]: schemaVersion 2 has no damage types; ` +
-        'add a "damageType" (physical, magical or percent) to every archetype and set schemaVersion 3',
+        'add a "damageType" (physical, magical or percent) to every archetype, add "talentBranches"',
     );
     expect(() =>
       loadTowerArchetypeContent({
@@ -281,8 +285,8 @@ describe('tower content schema version', () => {
   });
 
   it('rejects any other unknown version at file level', () => {
-    expect(() => parse(createFile([createTower()], { schemaVersion: 4 }))).toThrow(
-      `${FILE}: unsupported schemaVersion 4, expected 3`,
+    expect(() => parse(createFile([createTower()], { schemaVersion: 5 }))).toThrow(
+      `${FILE}: unsupported schemaVersion 5, expected 4`,
     );
   });
 });
@@ -293,7 +297,7 @@ describe('loadTowerArchetypeContent', () => {
       loadTowerArchetypeContent({
         file: 'content/towers/archetypes.json',
         data: {
-          schemaVersion: 3,
+          schemaVersion: 4,
           archetypes: [createArchetype()],
         },
       }),
@@ -306,7 +310,7 @@ describe('loadTowerArchetypeContent', () => {
     expect(() =>
       loadTowerArchetypeContent({
         file: 'content/towers/archetypes.json',
-        data: { schemaVersion: 3, archetypes: [archetype, archetype] },
+        data: { schemaVersion: 4, archetypes: [archetype, archetype] },
       }),
     ).toThrow(/duplicate archetype id/);
   });

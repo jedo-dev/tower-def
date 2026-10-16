@@ -9,6 +9,7 @@ import {
 import {
   countLeakedSentCreeps,
   createInitialDuelMatchState,
+  recordTowerBranchChoice,
   reconcileBattlefieldsForNextRound,
   refreshOpponentRoutesForWaveStart,
   startRound,
@@ -110,6 +111,7 @@ import {
   trySellTowerAtHoveredCell,
   type TowerCommandDeps,
 } from '../runtime/build/gameSceneTowerCommands';
+import { handleChooseTowerBranchCommand } from '../runtime/build/towerBranchCommands';
 import { applyComputerBuildPhaseStrategies } from '../runtime/duel/gameSceneComputerStrategy';
 import {
   handleSendCreepCommand,
@@ -406,6 +408,15 @@ export class GameScene extends Phaser.Scene {
     getGridModel: () => this.gridModel,
     getBuilderFactionId: () => this.selectedBuilderFactionId,
     getPlayerGold: () => this.playerGold,
+    getTowerBranchChoices: () => this.duelMatchState.player.towerBranchChoices,
+    onTowerBranchChosen: (buildableTowerId, branchId) => {
+      this.duelMatchState = recordTowerBranchChoice(
+        this.duelMatchState,
+        'player',
+        buildableTowerId,
+        branchId,
+      );
+    },
     onGoldUpdated: (nextGold) => {
       this.playerGold = nextGold;
       this.registry.set('economy.gold', nextGold);
@@ -757,6 +768,9 @@ export class GameScene extends Phaser.Scene {
       }),
       onCommand('upgrade-tower', (payload) => {
         handleUpgradeTowerCommand(this.towerCommandDeps, payload.towerId);
+      }),
+      onCommand('choose-tower-branch', (payload) => {
+        handleChooseTowerBranchCommand(this.towerCommandDeps, payload.towerId, payload.branchId);
       }),
       onCommand('sell-tower', (payload) => {
         handleSellTowerCommand(this.towerCommandDeps, payload.towerId);
@@ -1539,6 +1553,7 @@ export class GameScene extends Phaser.Scene {
         this.playerField.creeps.filter((c) => c.entity.status === 'alive').length,
       isPaused: this.gameClock.isPaused,
       gameSpeed: this.gameClock.speed,
+      towerBranchChoices: { ...this.duelMatchState.player.towerBranchChoices },
     };
 
     publishGameHudSnapshot(snapshot);

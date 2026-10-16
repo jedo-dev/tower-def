@@ -64,6 +64,7 @@ export {
 } from './model/lifeSteal';
 export type { LifeStealAccrual, SentCreepLeaks } from './model/lifeSteal';
 export { createInitialDuelMatchState, DEFAULT_ENTRANCE, DEFAULT_EXIT } from './model/state';
+export { recordTowerBranchChoice } from './model/towerBranchChoices';
 export type { BattlefieldInitParams } from './model/state';
 export type {
   DuelIncomePayoutResult,

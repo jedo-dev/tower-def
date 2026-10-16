@@ -20,6 +20,7 @@ import {
   type ContentLocation,
 } from '../../../../shared/lib/content/contentValidation';
 import { resolveEffectDefinition } from '../../../../shared/constants/effects';
+import { TowerTalentRule } from '../../../../shared/constants/towerTalents';
 import type { TowerCombatStats, TowerOnHitEffect } from '../types';
 import {
   TOWER_AURA_BOUNDS,
@@ -196,8 +197,12 @@ export function parseLevels(
 ): TowerLevelDefinition[] {
   const rawLevels = readArray(entry, 'levels', location);
 
-  if (rawLevels.length === 0) {
-    throw new ContentValidationError(location, 'an archetype must declare at least one level');
+  if (rawLevels.length !== TowerTalentRule.BRANCH_UNLOCK_GRADE) {
+    throw new ContentValidationError(
+      location,
+      `a level curve must list levels 1-${TowerTalentRule.BRANCH_UNLOCK_GRADE}, ` +
+        `talent branches add the grades above; found ${rawLevels.length} levels`,
+    );
   }
 
   return rawLevels.map((rawLevel, index) => {
@@ -213,10 +218,6 @@ export function parseLevels(
       );
     }
 
-    const splashRadius = parseOptionalStat(level, 'splashRadius', location);
-    const aura = parseAura(level, location);
-    const onHitEffects = parseOnHitEffects(level, location);
-
     return {
       level: declaredLevel,
       upgradeCostGold: readNumber(
@@ -225,19 +226,34 @@ export function parseLevels(
         location,
         TOWER_LEVEL_BOUNDS.upgradeCostGold,
       ),
-      stats: {
-        damage: readNumber(level, 'damage', location, TOWER_STAT_BOUNDS.damage),
-        range: readNumber(level, 'range', location, TOWER_STAT_BOUNDS.range),
-        attackCooldownMs: readNumber(
-          level,
-          'attackCooldownMs',
-          location,
-          TOWER_STAT_BOUNDS.attackCooldownMs,
-        ),
-        ...(splashRadius === undefined ? {} : { splashRadius }),
-        ...(onHitEffects.length === 0 ? {} : { onHitEffects }),
-        ...(aura === undefined ? {} : { aura }),
-      },
+      stats: parseLevelStats(level, location),
     };
   });
+}
+
+/**
+ * Combat stats of one curve level or talent grade: the numbers every level
+ * carries plus the optional splash, effects and aura it may change.
+ */
+export function parseLevelStats(
+  level: Record<string, unknown>,
+  location: ContentLocation,
+): TowerCombatStats {
+  const splashRadius = parseOptionalStat(level, 'splashRadius', location);
+  const aura = parseAura(level, location);
+  const onHitEffects = parseOnHitEffects(level, location);
+
+  return {
+    damage: readNumber(level, 'damage', location, TOWER_STAT_BOUNDS.damage),
+    range: readNumber(level, 'range', location, TOWER_STAT_BOUNDS.range),
+    attackCooldownMs: readNumber(
+      level,
+      'attackCooldownMs',
+      location,
+      TOWER_STAT_BOUNDS.attackCooldownMs,
+    ),
+    ...(splashRadius === undefined ? {} : { splashRadius }),
+    ...(onHitEffects.length === 0 ? {} : { onHitEffects }),
+    ...(aura === undefined ? {} : { aura }),
+  };
 }

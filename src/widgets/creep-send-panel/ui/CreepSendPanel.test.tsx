@@ -31,6 +31,7 @@ const snapshot: GameHudSnapshot = {
   pendingCreepCount: 0,
   isPaused: false,
   gameSpeed: 1,
+  towerBranchChoices: {},
 };
 
 vi.mock('../../../shared/lib/game-bridge/useGameHudSnapshot', () => ({

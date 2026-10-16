@@ -35,6 +35,7 @@ import {
   TOWER_STAT_BOUNDS,
 } from './towerContent.types';
 import { assertTowerSchemaVersion } from './assertTowerSchemaVersion';
+import { parseTalentBranches } from './towerTalentContent';
 import {
   parseAllowedTargets,
   parseAura,
@@ -48,6 +49,7 @@ import {
   type TowerLevelDefinition,
 } from './towerContentFields';
 
+export type { TowerTalentBranchDefinition } from './towerTalentContent';
 export type {
   TowerAuraDefinition,
   TowerChainDefinition,
@@ -127,6 +129,7 @@ function parseTowerEntry(
     spriteKey: readString(entry, 'spriteKey', location),
     description: readString(entry, 'description', location),
     ...(lore === undefined ? {} : { lore }),
+    talentBranches: parseTalentBranches(entry, location, id),
   };
 }
 

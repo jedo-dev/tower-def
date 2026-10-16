@@ -1,5 +1,5 @@
 import type { TowerOnHitEffect } from './types';
-import type { TowerAuraDefinition } from './content/loadTowerContent';
+import type { TowerAuraDefinition, TowerChainDefinition } from './content/loadTowerContent';
 
 /**
  * Upgrade curves live in `src/content/towers/archetypes.json`, one per
@@ -16,6 +16,16 @@ export type TowerLevelStats = {
   onHitEffects?: TowerOnHitEffect[];
   /** Aura this level projects; only support archetypes declare one. */
   aura?: TowerAuraDefinition;
+  /**
+   * Chain shape of a talent grade. Combat still reads the archetype's shape;
+   * the combat mechanics task wires the per-grade one.
+   */
+  chain?: TowerChainDefinition;
+  /**
+   * Named numeric modifiers a talent grade declares (keys from
+   * `TOWER_GRADE_ABILITY_KEYS`), read by the combat mechanics that own them.
+   */
+  abilities?: Readonly<Record<string, number>>;
 };
 
 export type TowerUpgradeLevel = {
@@ -30,5 +40,6 @@ export type TowerTypeUpgradeConfig = {
 };
 
 export enum TowerUpgradeBalance {
+  /** Top of the base curve; a chosen talent branch extends it to grade 7. */
   MAX_LEVEL = 3,
 }
