@@ -4,7 +4,23 @@
     {
       "name": "tower-def-dev",
       "runtimeExecutable": "C:/Users/jedo/AppData/Roaming/nvm/v22.13.0/node.exe",
-      "runtimeArgs": ["node_modules/vite/bin/vite.js", "--port", "5199", "--strictPort"],
+      "runtimeArgs": [
+        "node_modules/vite/bin/vite.js",
+        "--port",
+        "5199",
+        "--strictPort"
+      ],
+      "port": 5199
+    },
+    {
+      "name": "tower-def-dev-path-node",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "node_modules/vite/bin/vite.js",
+        "--port",
+        "5199",
+        "--strictPort"
+      ],
       "port": 5199
     }
   ]

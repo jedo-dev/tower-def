@@ -18,6 +18,7 @@ export function CreatureTalentMarks({ talent }: CreatureTalentMarksProps) {
       {talent.chosenBranch && (
         <BranchGlyph
           glyph={talent.chosenBranch.glyph}
+          branchId={talent.chosenBranch.id}
           title={talent.chosenBranch.name}
           className={styles.glyph}
         />

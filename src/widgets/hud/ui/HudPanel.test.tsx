@@ -12,6 +12,7 @@ import { BUILD_PHASE_ONLY_HINT, HudPanel } from './HudPanel';
 import styles from './HudPanel.module.css';
 import hudPanelCss from './HudPanel.module.css?raw';
 import { injectCssModule } from '../../../shared/test/injectCssModule';
+import { toTalentIconSource } from '../../../shared/ui/branch-glyph';
 
 function createSnapshot(overrides?: Partial<GameHudSnapshot>): GameHudSnapshot {
   return {
@@ -134,7 +135,9 @@ describe('HudPanel build bar', () => {
       name: new RegExp(`^${plague.name},`),
     });
 
-    expect(within(archerButton).getByTestId('branch-glyph').textContent).toBe('II');
+    expect(
+      within(archerButton).getByTestId('branch-glyph').querySelector('img')?.getAttribute('src'),
+    ).toBe(toTalentIconSource(branch.id));
     expect(archerButton.getAttribute('title')).toBe(`${archer.name} — ${branch.name}`);
     expect(archerButton.getAttribute('aria-label')).toContain(`branch ${branch.name}`);
     expect(within(plagueButton).queryByTestId('branch-glyph')).toBeNull();

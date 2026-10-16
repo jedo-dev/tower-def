@@ -5,6 +5,7 @@ import type {
   TowerUpgradeLevel,
 } from '../../../entities/tower';
 import { DamageScope, DamageType } from '../../../shared/types/content-ids';
+import { toBranchGlyph } from '../../../shared/ui/branch-glyph';
 import { formatPercentOfMaxHealth } from './combatTypeDisplay';
 import { describeOnHitEffect, formatCells, formatPercent, formatSeconds } from './towerEffectLines';
 import type { TowerBranchGradeViewModel, TowerBranchViewModel } from './types';
@@ -173,11 +174,13 @@ function mapGrade(grade: TowerUpgradeLevel, damageType: DamageType): TowerBranch
 
 export function mapTalentBranch(
   branch: TowerTalentBranchDefinition,
+  branchIndex: number,
   damageType: DamageType,
 ): TowerBranchViewModel {
   return {
     id: branch.id,
     name: branch.name,
+    glyph: toBranchGlyph(branchIndex),
     description: branch.description,
     grades: branch.grades.map((grade) => mapGrade(grade, damageType)),
   };

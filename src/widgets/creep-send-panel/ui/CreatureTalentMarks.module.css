@@ -3,8 +3,6 @@
   position: absolute;
   top: var(--space-2xs);
   left: var(--space-2xs);
-  min-width: 16px;
-  height: 16px;
 }
 
 .grade {

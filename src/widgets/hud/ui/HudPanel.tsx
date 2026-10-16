@@ -192,6 +192,7 @@ function HudPanelComponent({
                   {option.chosenBranch && (
                     <BranchGlyph
                       glyph={option.chosenBranch.glyph}
+                      branchId={option.chosenBranch.id}
                       className={styles.towerBtnBranch}
                     />
                   )}

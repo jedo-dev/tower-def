@@ -92,7 +92,11 @@ function TowerActionPanelComponent() {
         <span className={styles.title}>{towerName}</span>
         {chosenBranch && (
           <span className={styles.branch} aria-label={`Branch: ${chosenBranch.name}`} role="note">
-            <BranchGlyph glyph={chosenBranch.glyph} title={chosenBranch.name} />
+            <BranchGlyph
+              glyph={chosenBranch.glyph}
+              branchId={chosenBranch.id}
+              title={chosenBranch.name}
+            />
           </span>
         )}
         <span className={styles.level} aria-label={`Level ${level} of ${branchState.maxGrade}`}>

@@ -117,9 +117,11 @@ describe('talent branch cards', () => {
           },
         ],
       },
+      0,
       DamageType.PHYSICAL,
     );
 
+    expect(branch.glyph).toBe('I');
     expect(branch.grades).toEqual([
       {
         level: 4,

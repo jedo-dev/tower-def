@@ -25,7 +25,7 @@ export type HudBuildOptionViewModel = {
   isAffordable: boolean;
   isSelected: boolean;
   /** The talent branch this tower type took this match; `null` while open. */
-  chosenBranch: { name: string; glyph: string } | null;
+  chosenBranch: { id: string; name: string; glyph: string } | null;
   /** Hover hint: the tower name, plus its branch once chosen. */
   tooltip: string;
   ariaLabel: string;
@@ -76,7 +76,9 @@ function resolveChosenBranch(
   const branches = tower.talentBranches;
   const index =
     chosenId === undefined ? -1 : branches.findIndex((branch) => branch.id === chosenId);
-  return index < 0 ? null : { name: branches[index].name, glyph: toBranchGlyph(index) };
+  return index < 0
+    ? null
+    : { id: branches[index].id, name: branches[index].name, glyph: toBranchGlyph(index) };
 }
 
 export function mapRaceRosterToBuildOptions(input: MapRaceRosterInput): HudBuildOptionViewModel[] {

@@ -52,6 +52,8 @@ export type CreepBranchGradeViewModel = {
 export type CreepBranchViewModel = {
   id: string;
   name: string;
+  /** Fallback mark when the branch icon fails to load. */
+  glyph: string;
   description: string;
   grades: CreepBranchGradeViewModel[];
 };
@@ -93,6 +95,8 @@ export type TowerBranchGradeViewModel = {
 export type TowerBranchViewModel = {
   id: string;
   name: string;
+  /** Fallback mark when the branch icon fails to load. */
+  glyph: string;
   description: string;
   grades: TowerBranchGradeViewModel[];
 };

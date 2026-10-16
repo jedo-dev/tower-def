@@ -21,7 +21,7 @@ function BranchCard({ card, isSelected, onSelect }: BranchCardProps) {
       aria-labelledby={titleId}
     >
       <header className={styles.cardHeader}>
-        <BranchGlyph glyph={card.glyph} />
+        <BranchGlyph glyph={card.glyph} branchId={card.id} size="large" />
         <h3 id={titleId} className={styles.cardTitle}>
           {card.name}
         </h3>

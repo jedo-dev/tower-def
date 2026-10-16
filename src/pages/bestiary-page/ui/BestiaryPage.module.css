@@ -394,6 +394,12 @@
   background: var(--glass-bg-soft);
 }
 
+.branchHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
 .branchName {
   margin: 0;
   font-family: var(--font-family-display);

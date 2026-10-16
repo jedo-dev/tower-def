@@ -173,6 +173,10 @@
   /* Sizing */
   --touch-target-min: 44px;
 
+  /* Talent branch icons: badge on cards and buttons, header of chooser and bestiary cards. */
+  --talent-icon-size-sm: 22px;
+  --talent-icon-size-lg: 48px;
+
   /* Game page layout: how much of the viewport the control strip and the
    * HUD may claim, so the battlefield always keeps the rest. */
   --game-controls-max-height: 42dvh;

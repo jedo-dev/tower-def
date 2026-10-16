@@ -94,25 +94,29 @@ describe('creature branches on the creep card', () => {
   });
 
   it('writes the grade abilities into the special line', () => {
-    const branch = mapCreatureBranch({
-      id: 'undead_gargoyle_dive',
-      name: 'Dive',
-      description: 'Dives.',
-      grades: [
-        { level: 1, health: 115, speed: 1.85, physicalArmor: 4, magicalArmor: 8 },
-        {
-          level: 2,
-          health: 118,
-          speed: 2,
-          physicalArmor: 4,
-          magicalArmor: 8,
-          abilities: { leakLivesTaken: 2 },
-        },
-        { level: 3, health: 122, speed: 2.1, physicalArmor: 4, magicalArmor: 8 },
-        { level: 4, health: 130, speed: 2.2, physicalArmor: 4, magicalArmor: 9 },
-      ],
-    });
+    const branch = mapCreatureBranch(
+      {
+        id: 'undead_gargoyle_dive',
+        name: 'Dive',
+        description: 'Dives.',
+        grades: [
+          { level: 1, health: 115, speed: 1.85, physicalArmor: 4, magicalArmor: 8 },
+          {
+            level: 2,
+            health: 118,
+            speed: 2,
+            physicalArmor: 4,
+            magicalArmor: 8,
+            abilities: { leakLivesTaken: 2 },
+          },
+          { level: 3, health: 122, speed: 2.1, physicalArmor: 4, magicalArmor: 8 },
+          { level: 4, health: 130, speed: 2.2, physicalArmor: 4, magicalArmor: 9 },
+        ],
+      },
+      1,
+    );
 
+    expect(branch.glyph).toBe('II');
     expect(branch.grades.map((grade) => grade.special)).toEqual([
       NO_CREATURE_SPECIAL,
       'a leak takes 2 lives',

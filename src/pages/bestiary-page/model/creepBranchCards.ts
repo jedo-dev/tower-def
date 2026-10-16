@@ -1,4 +1,5 @@
 import type { CreatureTalentBranchDefinition } from '../../../entities/unit';
+import { toBranchGlyph } from '../../../shared/ui/branch-glyph';
 import { describeCreatureAbilities } from './creatureAbilityLines';
 import type { CreepBranchViewModel } from './types';
 
@@ -7,10 +8,14 @@ import type { CreepBranchViewModel } from './types';
  * health, speed and both armors, plus a plain-language line of the grade's
  * abilities.
  */
-export function mapCreatureBranch(branch: CreatureTalentBranchDefinition): CreepBranchViewModel {
+export function mapCreatureBranch(
+  branch: CreatureTalentBranchDefinition,
+  branchIndex: number,
+): CreepBranchViewModel {
   return {
     id: branch.id,
     name: branch.name,
+    glyph: toBranchGlyph(branchIndex),
     description: branch.description,
     grades: branch.grades.map((grade) => ({
       level: grade.level,

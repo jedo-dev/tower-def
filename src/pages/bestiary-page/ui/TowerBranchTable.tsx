@@ -1,5 +1,6 @@
 import { Fragment } from 'react';
 import type { TowerBranchViewModel } from '../model/types';
+import { BranchGlyph } from '../../../shared/ui/branch-glyph';
 import styles from './BestiaryPage.module.css';
 
 export type TowerBranchTableProps = {
@@ -12,7 +13,10 @@ const COLUMN_COUNT = 5;
 export function TowerBranchTable({ branch }: TowerBranchTableProps) {
   return (
     <section className={styles.branch} aria-label={branch.name} data-talent-branch={branch.id}>
-      <h4 className={styles.branchName}>{branch.name}</h4>
+      <header className={styles.branchHeader}>
+        <BranchGlyph glyph={branch.glyph} branchId={branch.id} size="large" />
+        <h4 className={styles.branchName}>{branch.name}</h4>
+      </header>
       <p className={styles.branchDescription}>{branch.description}</p>
       <table className={styles.branchTable} aria-label={`${branch.name} grades`}>
         <thead>

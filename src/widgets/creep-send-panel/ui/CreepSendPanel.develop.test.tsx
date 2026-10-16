@@ -13,6 +13,7 @@ import { RaceId } from '../../../shared/types/content-ids';
 import type { GameSetupConfig } from '../../../shared/config/game-setup';
 import { formatCreatureBranchLockWarning } from '../model/mapCreatureTalentState';
 import { CreepSendPanel } from './CreepSendPanel';
+import { toTalentIconSource } from '../../../shared/ui/branch-glyph';
 
 const SETUP: GameSetupConfig = {
   builderFaction: RaceId.UNDEAD,
@@ -89,7 +90,9 @@ describe('CreepSendPanel talents in send mode', () => {
     show();
 
     const skeleton = screen.getByRole('button', { name: /^Send Skeleton/ });
-    expect(within(skeleton).getByTestId('branch-glyph').textContent).toBe('II');
+    expect(
+      within(skeleton).getByTestId('branch-glyph').querySelector('img')?.getAttribute('src'),
+    ).toBe(toTalentIconSource(SKELETON_B.id));
     expect(skeleton.querySelector('[data-creature-grade]')?.textContent).toBe('G2/4');
     expect(skeleton.querySelector('[data-creature-xp]')).not.toBeNull();
     expect(skeleton.getAttribute('aria-label')).toContain(
@@ -179,7 +182,9 @@ describe('CreepSendPanel develop mode', () => {
 
     const upgrade = screen.getByRole('button', { name: 'Upgrade Skeleton to grade 3 for 16 XP' });
     expect(upgrade.getAttribute('data-sound')).toBe('ui.success');
-    expect(within(upgrade).getByTestId('branch-glyph').textContent).toBe('II');
+    expect(
+      within(upgrade).getByTestId('branch-glyph').querySelector('img')?.getAttribute('src'),
+    ).toBe(toTalentIconSource(SKELETON_B.id));
     fireEvent.click(upgrade);
 
     expect(handler).toHaveBeenCalledWith({ unitId: SKELETON.id });
@@ -289,7 +294,9 @@ describe('CreepSendPanel creature branch chooser', () => {
 
     const ghoul = screen.getByRole('button', { name: 'Upgrade Ghoul to grade 1 for 6 XP' });
     expect(ghoul.querySelector('[data-creature-grade]')?.textContent).toBe('G0/4');
-    expect(within(ghoul).getByTestId('branch-glyph').textContent).toBe('I');
+    expect(
+      within(ghoul).getByTestId('branch-glyph').querySelector('img')?.getAttribute('src'),
+    ).toBe(toTalentIconSource(GHOUL_A.id));
   });
 
   it('is driven by the keyboard end to end', () => {
