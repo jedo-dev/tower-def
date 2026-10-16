@@ -3,7 +3,10 @@ import { RaceId } from '../../../shared/types/content-ids';
 import type { GameSetupConfig } from '../../../shared/config/game-setup';
 import type { GameHudSnapshot } from '../../../shared/lib/game-bridge/types';
 import { Difficulty } from '../../../entities/difficulty';
+import { resolveUnitConfigById } from '../../../entities/unit';
 import { mapCreepSendPanelToViewModel } from './mapCreepSendPanelToViewModel';
+
+const SKELETON_BRANCH_B = resolveUnitConfigById('undead_skeleton').talentBranches[1];
 
 function createSnapshot(overrides: Partial<GameHudSnapshot> = {}): GameHudSnapshot {
   return {
@@ -66,7 +69,7 @@ describe('mapCreepSendPanelToViewModel', () => {
       isAffordable: true,
       isDisabled: false,
       disabledReason: null,
-      ariaLabel: 'Send Skeleton for 50 gold and gain 10 income',
+      ariaLabel: 'Send Skeleton for 50 gold and gain 10 income. No branch. 0 of 4 XP',
     });
   });
 
@@ -79,7 +82,9 @@ describe('mapCreepSendPanelToViewModel', () => {
     expect(viewModel.buttons[0].isAffordable).toBe(false);
     expect(viewModel.buttons[0].isDisabled).toBe(true);
     expect(viewModel.buttons[0].disabledReason).toBe('requires 50 gold');
-    expect(viewModel.buttons[0].ariaLabel).toBe('Cannot send Skeleton: requires 50 gold');
+    expect(viewModel.buttons[0].ariaLabel).toBe(
+      'Cannot send Skeleton: requires 50 gold. No branch. 0 of 4 XP',
+    );
   });
 
   it('disables send buttons during active battle phase', () => {
@@ -91,7 +96,9 @@ describe('mapCreepSendPanelToViewModel', () => {
     expect(viewModel.isBattleActive).toBe(true);
     expect(viewModel.buttons.every((button) => button.isDisabled)).toBe(true);
     expect(viewModel.buttons[0].disabledReason).toBe('locked in battle');
-    expect(viewModel.buttons[0].ariaLabel).toBe('Cannot send Grunt: locked in battle');
+    expect(viewModel.buttons[0].ariaLabel).toBe(
+      'Cannot send Grunt: locked in battle. No branch. 0 of 4 XP',
+    );
   });
 
   it('summarizes queued player sends from the event-driven snapshot', () => {
@@ -154,5 +161,34 @@ describe('mapCreepSendPanelToViewModel', () => {
 
     expect(viewModel.raceName).toBe('Undead');
     expect(viewModel.buttons[0].creepTypeId).toBe('undead_skeleton');
+  });
+
+  it('names the branch, grade and tier experience on the send chip', () => {
+    const viewModel = mapCreepSendPanelToViewModel(
+      createSnapshot({
+        creatureXpByTier: { 1: 7, 2: 3 },
+        creatureBranchChoices: { undead_skeleton: SKELETON_BRANCH_B.id },
+        creatureGrades: { undead_skeleton: 2 },
+      }),
+      createSetup(RaceId.UNDEAD),
+    );
+    const [skeleton, ghoul] = viewModel.buttons;
+
+    const talent = `Grade 2 of 4, ${SKELETON_BRANCH_B.name}. 7 of 16 XP`;
+    expect(skeleton.ariaLabel).toContain(talent);
+    expect(skeleton.tooltip).toBe(`Skeleton: ${talent}`);
+    expect(ghoul.tooltip).toBe('Ghoul: No branch. 7 of 4 XP');
+    expect(viewModel.hasAffordableTalent).toBe(true);
+    expect(viewModel.xpByTier).toEqual([
+      { tier: 1, xp: 7, label: 'T1 7 XP', ariaLabel: 'Tier 1: 7 XP' },
+      { tier: 2, xp: 3, label: 'T2 3 XP', ariaLabel: 'Tier 2: 3 XP' },
+      { tier: 3, xp: 0, label: 'T3 0 XP', ariaLabel: 'Tier 3: 0 XP' },
+    ]);
+  });
+
+  it('has nothing affordable to develop without experience', () => {
+    const viewModel = mapCreepSendPanelToViewModel(createSnapshot(), createSetup(RaceId.UNDEAD));
+
+    expect(viewModel.hasAffordableTalent).toBe(false);
   });
 });

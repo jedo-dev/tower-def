@@ -1,0 +1,47 @@
+/* A creature card in develop mode: emerald frame, XP price instead of gold stats. */
+.card {
+  box-shadow: inset 0 0 0 1px var(--glow-emerald);
+}
+
+.cardBlocked {
+  cursor: not-allowed;
+  filter: grayscale(0.5) brightness(0.7);
+}
+
+.action {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1px var(--space-xs);
+  font-family: var(--font-family-stats);
+  font-size: 9px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.verb {
+  color: var(--color-text-success);
+}
+
+.cost {
+  color: var(--color-accent-gold);
+}
+
+.cardBlocked .cost {
+  color: var(--color-text-danger);
+}
+
+/* The blocked reason, read through aria-describedby; the dimmed card and red price show it. */
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
