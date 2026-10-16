@@ -55,10 +55,24 @@ export type DamageTypeViewModel = {
   hint: string;
 };
 
-/** A talent branch the tower opens at grade 3; grade tables come with the authored branches. */
+/** One talent grade (4-7) as the card's branch table shows it. */
+export type TowerBranchGradeViewModel = {
+  level: number;
+  upgradeCost: number;
+  /** Hit damage as shown: points, a share of max HP, or a dash for a support grade. */
+  damage: string;
+  range: string;
+  cooldown: string;
+  /** Everything else the grade does in one line, or a dash. */
+  special: string;
+};
+
+/** A talent branch the tower opens at grade 3, with its grade 4-7 table. */
 export type TowerBranchViewModel = {
   id: string;
   name: string;
+  description: string;
+  grades: TowerBranchGradeViewModel[];
 };
 
 export type TowerCardViewModel = {

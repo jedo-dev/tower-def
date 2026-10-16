@@ -99,8 +99,10 @@ describe('BestiaryPage', () => {
     const card = within(screen.getByRole('article', { name: frostNest.name }));
 
     expect(card.getByText('Frost')).toBeDefined();
-    expect(card.getByText('Cost').nextElementSibling?.textContent).toBe(`${frostNest.costGold}g`);
-    expect(card.getByText('Range').nextElementSibling?.textContent).toBe(
+    expect(card.getByText('Cost', { selector: 'dt' }).nextElementSibling?.textContent).toBe(
+      `${frostNest.costGold}g`,
+    );
+    expect(card.getByText('Range', { selector: 'dt' }).nextElementSibling?.textContent).toBe(
       `${frostNest.range} cells`,
     );
     const specials = within(card.getByRole('list', { name: 'Specials' }));
@@ -108,10 +110,33 @@ describe('BestiaryPage', () => {
     expect(specials.getByText('35% slower for 2.0s')).toBeDefined();
     const levels = within(card.getByRole('list', { name: 'Upgrade levels' }));
     expect(levels.getAllByRole('listitem')).toHaveLength(3);
-    const branches = within(card.getByRole('list', { name: 'Talent branches' }));
-    expect(branches.getAllByRole('listitem').map((item) => item.textContent)).toEqual(
-      frostNest.talentBranches.map((branch) => branch.name),
+    expect(consoleError).not.toHaveBeenCalled();
+  });
+
+  it('shows both talent branches of a tower with a grade 4-7 table each', () => {
+    render(<BestiaryPage onNavigate={() => undefined} />);
+    const frostNest = resolveBuildableTowerById('undead_frost_wyrm_nest');
+    const card = within(screen.getByRole('article', { name: frostNest.name }));
+    const branches = within(card.getByRole('group', { name: 'Talent branches' }));
+
+    expect(
+      branches.getAllByRole('heading', { level: 4 }).map((heading) => heading.textContent),
+    ).toEqual(frostNest.talentBranches.map((branch) => branch.name));
+
+    for (const branch of frostNest.talentBranches) {
+      const section = within(branches.getByRole('region', { name: branch.name }));
+      expect(section.getByText(branch.description)).toBeDefined();
+      const table = within(section.getByRole('table', { name: `${branch.name} grades` }));
+      const gradeHeaders = table.getAllByRole('rowheader').map((header) => header.textContent);
+      expect(gradeHeaders).toEqual(['G4', 'G5', 'G6', 'G7']);
+      const gradeFour = table.getByRole('rowheader', { name: 'G4' }).closest('tr');
+      expect(gradeFour?.textContent).toContain(String(branch.grades[0].stats.damage));
+    }
+
+    const permafrost = within(
+      branches.getByRole('table', { name: `${frostNest.talentBranches[0].name} grades` }),
     );
+    expect(permafrost.getByText(/every 3 hits freeze 1\.2s/)).toBeDefined();
     expect(consoleError).not.toHaveBeenCalled();
   });
 

@@ -22,25 +22,92 @@
       "lore": "Lashed logs, a platform and a pile of spears heavy enough to pin a kodo. The orc on top throws until he runs out of arms.",
       "talentBranches": [
         {
-          "id": "orc_spear_watchtower_branch_i",
-          "name": "Spear Watchtower I",
-          "description": "Placeholder branch: each grade adds 8% damage and 0.2 range.",
+          "id": "orc_spear_watchtower_throwers",
+          "name": "Spear Throwers",
+          "description": "More throwers on the tower: fast spears that start running through the line at grade 6.",
           "grades": [
-            { "level": 4, "damage": 45, "range": 7, "attackCooldownMs": 700 },
-            { "level": 5, "damage": 49, "range": 7.2, "attackCooldownMs": 700 },
-            { "level": 6, "damage": 52, "range": 7.4, "attackCooldownMs": 700 },
-            { "level": 7, "damage": 55, "range": 7.6, "attackCooldownMs": 700 }
+            { "level": 4, "damage": 44, "range": 6.8, "attackCooldownMs": 550 },
+            { "level": 5, "damage": 46, "range": 6.8, "attackCooldownMs": 450 },
+            {
+              "level": 6,
+              "damage": 48,
+              "range": 7,
+              "attackCooldownMs": 350,
+              "abilities": { "pierceLine": 0.3 }
+            },
+            {
+              "level": 7,
+              "damage": 52,
+              "range": 7,
+              "attackCooldownMs": 300,
+              "abilities": { "pierceLine": 0.5 }
+            }
           ]
         },
         {
-          "id": "orc_spear_watchtower_branch_ii",
-          "name": "Spear Watchtower II",
-          "description": "Placeholder branch: each grade adds 8% damage and 0.2 range.",
+          "id": "orc_spear_watchtower_heavy",
+          "name": "Heavy Spear",
+          "description": "One slow, heavy spear that cracks physical armor and punishes large creeps.",
           "grades": [
-            { "level": 4, "damage": 45, "range": 7, "attackCooldownMs": 700 },
-            { "level": 5, "damage": 49, "range": 7.2, "attackCooldownMs": 700 },
-            { "level": 6, "damage": 52, "range": 7.4, "attackCooldownMs": 700 },
-            { "level": 7, "damage": 55, "range": 7.6, "attackCooldownMs": 700 }
+            {
+              "level": 4,
+              "damage": 56,
+              "range": 7.2,
+              "attackCooldownMs": 800,
+              "onHitEffects": [
+                {
+                  "effectId": "armor_break",
+                  "magnitude": 5,
+                  "durationMs": 1000,
+                  "armorKind": "physical"
+                }
+              ]
+            },
+            {
+              "level": 5,
+              "damage": 72,
+              "range": 7.6,
+              "attackCooldownMs": 850,
+              "onHitEffects": [
+                {
+                  "effectId": "armor_break",
+                  "magnitude": 10,
+                  "durationMs": 1000,
+                  "armorKind": "physical"
+                }
+              ]
+            },
+            {
+              "level": 6,
+              "damage": 92,
+              "range": 8,
+              "attackCooldownMs": 900,
+              "onHitEffects": [
+                {
+                  "effectId": "armor_break",
+                  "magnitude": 15,
+                  "durationMs": 1000,
+                  "armorKind": "physical"
+                }
+              ],
+              "abilities": { "largeTargetMultiplier": 1.3 }
+            },
+            {
+              "level": 7,
+              "damage": 120,
+              "range": 8.4,
+              "attackCooldownMs": 900,
+              "onHitEffects": [
+                {
+                  "effectId": "armor_break",
+                  "magnitude": 20,
+                  "durationMs": 1000,
+                  "armorKind": "physical"
+                },
+                { "effectId": "stun", "durationMs": 400 }
+              ],
+              "abilities": { "largeTargetMultiplier": 1.6 }
+            }
           ]
         }
       ]
@@ -61,60 +128,70 @@
       "lore": "Pitch, bone and the fire the shamans keep hungry. It flings a splash of it and the pack learns to scream together.",
       "talentBranches": [
         {
-          "id": "orc_burning_pit_branch_i",
-          "name": "Burning Pit I",
-          "description": "Placeholder branch: each grade adds 8% damage and 0.2 range.",
+          "id": "orc_burning_pit_napalm",
+          "name": "Napalm",
+          "description": "The blast sets the ground crowd alight: magical burn that stacks at higher grades.",
           "grades": [
-            { "level": 4, "damage": 41, "range": 6, "attackCooldownMs": 1100, "splashRadius": 3.4 },
+            {
+              "level": 4,
+              "damage": 40,
+              "range": 5.8,
+              "attackCooldownMs": 1100,
+              "splashRadius": 3.6,
+              "onHitEffects": [{ "effectId": "burn", "magnitude": 2.5, "durationMs": 3000 }]
+            },
             {
               "level": 5,
-              "damage": 44,
-              "range": 6.2,
-              "attackCooldownMs": 1100,
-              "splashRadius": 3.4
+              "damage": 42,
+              "range": 5.8,
+              "attackCooldownMs": 1050,
+              "splashRadius": 3.8,
+              "onHitEffects": [{ "effectId": "burn", "magnitude": 3.5, "durationMs": 3000 }]
             },
             {
               "level": 6,
-              "damage": 47,
-              "range": 6.4,
-              "attackCooldownMs": 1100,
-              "splashRadius": 3.4
+              "damage": 44,
+              "range": 5.8,
+              "attackCooldownMs": 1000,
+              "splashRadius": 4.2,
+              "onHitEffects": [{ "effectId": "burn", "magnitude": 5, "durationMs": 4000 }]
             },
             {
               "level": 7,
-              "damage": 50,
-              "range": 6.6,
-              "attackCooldownMs": 1100,
-              "splashRadius": 3.4
+              "damage": 48,
+              "range": 5.8,
+              "attackCooldownMs": 900,
+              "splashRadius": 4.6,
+              "onHitEffects": [
+                { "effectId": "burn", "magnitude": 7, "durationMs": 4000 },
+                { "effectId": "chill", "magnitude": 0.1, "durationMs": 2000 }
+              ]
             }
           ]
         },
         {
-          "id": "orc_burning_pit_branch_ii",
-          "name": "Burning Pit II",
-          "description": "Placeholder branch: each grade adds 8% damage and 0.2 range.",
+          "id": "orc_burning_pit_mortar",
+          "name": "Mortar",
+          "description": "Long-range artillery: huge reach and blast, a slow reload and a dead zone up close.",
           "grades": [
-            { "level": 4, "damage": 41, "range": 6, "attackCooldownMs": 1100, "splashRadius": 3.4 },
-            {
-              "level": 5,
-              "damage": 44,
-              "range": 6.2,
-              "attackCooldownMs": 1100,
-              "splashRadius": 3.4
-            },
+            { "level": 4, "damage": 55, "range": 7, "attackCooldownMs": 1400, "splashRadius": 3.8 },
+            { "level": 5, "damage": 68, "range": 8, "attackCooldownMs": 1450, "splashRadius": 4.2 },
             {
               "level": 6,
-              "damage": 47,
-              "range": 6.4,
-              "attackCooldownMs": 1100,
-              "splashRadius": 3.4
+              "damage": 86,
+              "range": 9,
+              "attackCooldownMs": 1550,
+              "splashRadius": 4.6,
+              "abilities": { "minRangeCells": 2 }
             },
             {
               "level": 7,
-              "damage": 50,
-              "range": 6.6,
-              "attackCooldownMs": 1100,
-              "splashRadius": 3.4
+              "damage": 110,
+              "range": 10,
+              "attackCooldownMs": 1650,
+              "splashRadius": 5,
+              "abilities": { "minRangeCells": 2 },
+              "onHitEffects": [{ "effectId": "stun", "durationMs": 300 }]
             }
           ]
         }
@@ -135,25 +212,93 @@
       "lore": "Carved by a shaman who owed the storm a debt. The bolt jumps from skull to skull until the debt is paid.",
       "talentBranches": [
         {
-          "id": "orc_lightning_totem_branch_i",
-          "name": "Lightning Totem I",
-          "description": "Placeholder branch: each grade adds 8% damage and 0.2 range.",
+          "id": "orc_lightning_totem_storm",
+          "name": "Thunderstorm",
+          "description": "Longer chains that lose less on every jump.",
           "grades": [
-            { "level": 4, "damage": 48, "range": 7, "attackCooldownMs": 900 },
-            { "level": 5, "damage": 51, "range": 7.2, "attackCooldownMs": 900 },
-            { "level": 6, "damage": 55, "range": 7.4, "attackCooldownMs": 900 },
-            { "level": 7, "damage": 58, "range": 7.6, "attackCooldownMs": 900 }
+            {
+              "level": 4,
+              "damage": 46,
+              "range": 6.8,
+              "attackCooldownMs": 900,
+              "chain": { "bounces": 4, "bounceRangeCells": 4, "damageFalloff": 0.2 }
+            },
+            {
+              "level": 5,
+              "damage": 50,
+              "range": 6.8,
+              "attackCooldownMs": 850,
+              "chain": { "bounces": 5, "bounceRangeCells": 4, "damageFalloff": 0.18 }
+            },
+            {
+              "level": 6,
+              "damage": 53,
+              "range": 6.8,
+              "attackCooldownMs": 800,
+              "chain": { "bounces": 6, "bounceRangeCells": 4, "damageFalloff": 0.15 }
+            },
+            {
+              "level": 7,
+              "damage": 59,
+              "range": 6.8,
+              "attackCooldownMs": 750,
+              "chain": { "bounces": 6, "bounceRangeCells": 5, "damageFalloff": 0.1 }
+            }
           ]
         },
         {
-          "id": "orc_lightning_totem_branch_ii",
-          "name": "Lightning Totem II",
-          "description": "Placeholder branch: each grade adds 8% damage and 0.2 range.",
+          "id": "orc_lightning_totem_thunder",
+          "name": "Thunder Strike",
+          "description": "Short, heavy chains that stun; stunned creeps take extra damage from grade 6.",
           "grades": [
-            { "level": 4, "damage": 48, "range": 7, "attackCooldownMs": 900 },
-            { "level": 5, "damage": 51, "range": 7.2, "attackCooldownMs": 900 },
-            { "level": 6, "damage": 55, "range": 7.4, "attackCooldownMs": 900 },
-            { "level": 7, "damage": 58, "range": 7.6, "attackCooldownMs": 900 }
+            {
+              "level": 4,
+              "damage": 51,
+              "range": 6.8,
+              "attackCooldownMs": 900,
+              "chain": { "bounces": 2, "bounceRangeCells": 4, "damageFalloff": 0.25 },
+              "onHitEffects": [{ "effectId": "stun", "durationMs": 300 }]
+            },
+            {
+              "level": 5,
+              "damage": 61,
+              "range": 6.8,
+              "attackCooldownMs": 900,
+              "chain": { "bounces": 2, "bounceRangeCells": 4, "damageFalloff": 0.25 },
+              "onHitEffects": [{ "effectId": "stun", "durationMs": 400 }]
+            },
+            {
+              "level": 6,
+              "damage": 72,
+              "range": 6.8,
+              "attackCooldownMs": 850,
+              "chain": { "bounces": 3, "bounceRangeCells": 4, "damageFalloff": 0.25 },
+              "onHitEffects": [
+                { "effectId": "stun", "durationMs": 500 },
+                {
+                  "effectId": "vulnerability",
+                  "magnitude": 0.2,
+                  "durationMs": 500,
+                  "damageKind": "all"
+                }
+              ]
+            },
+            {
+              "level": 7,
+              "damage": 86,
+              "range": 6.8,
+              "attackCooldownMs": 800,
+              "chain": { "bounces": 3, "bounceRangeCells": 4, "damageFalloff": 0.25 },
+              "onHitEffects": [
+                { "effectId": "stun", "durationMs": 700 },
+                {
+                  "effectId": "vulnerability",
+                  "magnitude": 0.35,
+                  "durationMs": 700,
+                  "damageKind": "all"
+                }
+              ]
+            }
           ]
         }
       ]
@@ -180,72 +325,108 @@
       "lore": "Boiling black earth the horde learned to aim. Whatever walks through it keeps walking, slower, with the horde laughing.",
       "talentBranches": [
         {
-          "id": "orc_tar_pit_branch_i",
-          "name": "Tar Pit I",
-          "description": "Placeholder branch: each grade adds 8% damage and 0.2 range.",
+          "id": "orc_tar_pit_quagmire",
+          "name": "Quagmire",
+          "description": "Tar splashes onto the creeps nearest the pit, slowing more of them for longer.",
           "grades": [
             {
               "level": 4,
               "damage": 33,
-              "range": 7,
+              "range": 6.8,
               "attackCooldownMs": 800,
-              "onHitEffects": [{ "effectId": "chill", "magnitude": 0.55, "durationMs": 2000 }]
+              "onHitEffects": [{ "effectId": "chill", "magnitude": 0.55, "durationMs": 3000 }],
+              "abilities": { "extraTargets": 1, "extraTargetDamageShare": 0.5 }
             },
             {
               "level": 5,
-              "damage": 36,
-              "range": 7.2,
+              "damage": 35,
+              "range": 7,
               "attackCooldownMs": 800,
-              "onHitEffects": [{ "effectId": "chill", "magnitude": 0.55, "durationMs": 2000 }]
+              "onHitEffects": [{ "effectId": "chill", "magnitude": 0.65, "durationMs": 4000 }],
+              "abilities": { "extraTargets": 2, "extraTargetDamageShare": 0.5 }
             },
             {
               "level": 6,
-              "damage": 38,
-              "range": 7.4,
-              "attackCooldownMs": 800,
-              "onHitEffects": [{ "effectId": "chill", "magnitude": 0.55, "durationMs": 2000 }]
+              "damage": 37,
+              "range": 7.2,
+              "attackCooldownMs": 750,
+              "onHitEffects": [{ "effectId": "chill", "magnitude": 0.7, "durationMs": 5000 }],
+              "abilities": { "extraTargets": 3, "extraTargetDamageShare": 0.5 }
             },
             {
               "level": 7,
-              "damage": 41,
+              "damage": 40,
               "range": 7.6,
-              "attackCooldownMs": 800,
-              "onHitEffects": [{ "effectId": "chill", "magnitude": 0.55, "durationMs": 2000 }]
+              "attackCooldownMs": 700,
+              "onHitEffects": [{ "effectId": "chill", "magnitude": 0.75, "durationMs": 6000 }],
+              "abilities": { "extraTargets": 4, "extraTargetDamageShare": 0.5 }
             }
           ]
         },
         {
-          "id": "orc_tar_pit_branch_ii",
-          "name": "Tar Pit II",
-          "description": "Placeholder branch: each grade adds 8% damage and 0.2 range.",
+          "id": "orc_tar_pit_sticky",
+          "name": "Sticky Tar",
+          "description": "Tarred creeps take more damage from every tower: physical first, then everything.",
           "grades": [
             {
               "level": 4,
-              "damage": 33,
-              "range": 7,
-              "attackCooldownMs": 800,
-              "onHitEffects": [{ "effectId": "chill", "magnitude": 0.55, "durationMs": 2000 }]
-            },
-            {
-              "level": 5,
               "damage": 36,
               "range": 7.2,
               "attackCooldownMs": 800,
-              "onHitEffects": [{ "effectId": "chill", "magnitude": 0.55, "durationMs": 2000 }]
+              "onHitEffects": [
+                { "effectId": "chill", "magnitude": 0.55, "durationMs": 2000 },
+                {
+                  "effectId": "vulnerability",
+                  "magnitude": 0.1,
+                  "durationMs": 3000,
+                  "damageKind": "physical"
+                }
+              ]
+            },
+            {
+              "level": 5,
+              "damage": 42,
+              "range": 7.6,
+              "attackCooldownMs": 800,
+              "onHitEffects": [
+                { "effectId": "chill", "magnitude": 0.55, "durationMs": 2000 },
+                {
+                  "effectId": "vulnerability",
+                  "magnitude": 0.15,
+                  "durationMs": 3000,
+                  "damageKind": "physical"
+                }
+              ]
             },
             {
               "level": 6,
-              "damage": 38,
-              "range": 7.4,
-              "attackCooldownMs": 800,
-              "onHitEffects": [{ "effectId": "chill", "magnitude": 0.55, "durationMs": 2000 }]
+              "damage": 50,
+              "range": 8,
+              "attackCooldownMs": 750,
+              "onHitEffects": [
+                { "effectId": "chill", "magnitude": 0.55, "durationMs": 2000 },
+                {
+                  "effectId": "vulnerability",
+                  "magnitude": 0.2,
+                  "durationMs": 4000,
+                  "damageKind": "all"
+                }
+              ]
             },
             {
               "level": 7,
-              "damage": 41,
-              "range": 7.6,
-              "attackCooldownMs": 800,
-              "onHitEffects": [{ "effectId": "chill", "magnitude": 0.55, "durationMs": 2000 }]
+              "damage": 60,
+              "range": 8.4,
+              "attackCooldownMs": 700,
+              "onHitEffects": [
+                { "effectId": "chill", "magnitude": 0.55, "durationMs": 2000 },
+                {
+                  "effectId": "vulnerability",
+                  "magnitude": 0.3,
+                  "durationMs": 4000,
+                  "damageKind": "all"
+                }
+              ]
             }
           ]
         }

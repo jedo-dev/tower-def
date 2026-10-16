@@ -167,14 +167,16 @@ describe('tower cards', () => {
     expect(card.levels[1].summary).toBe('30 dmg, 6.2 range, 0.8s');
   });
 
-  it('names both talent branches the tower opens at grade 3', () => {
+  it('shows both talent branches the tower opens at grade 3 with a grade 4-7 table', () => {
     const tower = resolveBuildableTowerById('undead_bone_archer_tower');
     const card = mapTowerToTowerCard(tower);
 
-    expect(card.talentBranches).toEqual(
-      tower.talentBranches.map((branch) => ({ id: branch.id, name: branch.name })),
-    );
-    expect(card.talentBranches).toHaveLength(2);
+    expect(
+      card.talentBranches.map(({ id, name, description }) => ({ id, name, description })),
+    ).toEqual(tower.talentBranches.map(({ id, name, description }) => ({ id, name, description })));
+    for (const branch of card.talentBranches) {
+      expect(branch.grades.map((grade) => grade.level)).toEqual([4, 5, 6, 7]);
+    }
   });
 });
 

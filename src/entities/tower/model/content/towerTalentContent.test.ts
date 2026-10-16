@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { loadTowerArchetypeContent, parseTowerContentFile } from './loadTowerContent';
 import { buildableTowers } from '../config/buildableTowers';
 import { resolveTowerUpgradeConfig } from '../upgrade';
+import type { TowerTalentBranchDefinition } from './towerTalentContent';
 import {
   TOWER_TALENT_GRADE_LEVELS,
   TowerTalentPricing,
@@ -170,7 +171,59 @@ describe('talent branch content', () => {
   });
 });
 
+const AURA_MECHANIC_KEYS = [
+  'damagePercentBonus',
+  'goldPerKill',
+  'incomePerRound',
+  'sellRefundBonus',
+] as const;
+
+/**
+ * The mechanics a branch uses, ignoring numbers: ability keys, on-hit effects
+ * (with their armor or damage kind) and the aura extensions it grants.
+ */
+function branchMechanics(branch: TowerTalentBranchDefinition): Set<string> {
+  const mechanics = new Set<string>();
+
+  for (const { stats } of branch.grades) {
+    for (const key of Object.keys(stats.abilities ?? {})) {
+      mechanics.add(`ability:${key}`);
+    }
+    for (const effect of stats.onHitEffects ?? []) {
+      const kind = effect.armorKind ?? effect.damageKind ?? '';
+      mechanics.add(`effect:${effect.effectId}:${kind}`);
+    }
+    for (const key of AURA_MECHANIC_KEYS) {
+      if ((stats.aura?.[key] ?? 0) > 0) {
+        mechanics.add(`aura:${key}`);
+      }
+    }
+  }
+
+  return mechanics;
+}
+
 describe('shipped talent branches', () => {
+  it('gives every race tower two branches that differ in a mechanic, not only in numbers', () => {
+    for (const tower of buildableTowers) {
+      const [first, second] = tower.talentBranches.map(branchMechanics);
+      const onlyInOne = [...first, ...second].filter(
+        (mechanic) => !first.has(mechanic) || !second.has(mechanic),
+      );
+
+      expect(onlyInOne.length, tower.id).toBeGreaterThan(0);
+    }
+  });
+
+  it('replaces every placeholder branch with an authored one', () => {
+    for (const tower of buildableTowers) {
+      for (const branch of tower.talentBranches) {
+        expect(branch.name, branch.id).not.toMatch(/ I{1,2}$/);
+        expect(branch.description, branch.id).not.toMatch(/placeholder/i);
+      }
+    }
+  });
+
   it('gives every race tower two branches that extend its grade 3 stats', () => {
     for (const tower of buildableTowers) {
       const gradeThree = resolveTowerUpgradeConfig({
