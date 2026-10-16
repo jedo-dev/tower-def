@@ -246,11 +246,9 @@ describe('shipped talent branches', () => {
   // docs/11 stack caps below the balance default (tower-def-bge.8), per grade 4-7.
   const AUTHORED_LOW_CAPS: readonly [string, string, readonly (number | undefined)[]][] = [
     ['undead_bone_archer_tower_cursed', 'armor_break', [1, 1, 2, 2]],
-    ['undead_plague_tower_cloud', 'poison', [1, 1, 1, 1]],
     ['orc_spear_watchtower_heavy', 'armor_break', [1, 1, 1, 1]],
     ['orc_burning_pit_napalm', 'burn', [1, 1, 2, 3]],
     ['human_alchemist_tower_acid', 'armor_break', [1, 1, 2, 2]],
-    ['elf_wisp_bloom_spores', 'poison', [undefined, undefined, 1, 1]],
   ];
 
   it.each(AUTHORED_LOW_CAPS)('authors the docs stack caps on %s %s', (branchId, effectId, caps) => {

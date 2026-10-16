@@ -1,8 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { TowerTypeId } from '../../../../shared/types/content-ids';
+import { DamageType, TowerTypeId, UnitMoveType } from '../../../../shared/types/content-ids';
 import { TOWER_COMBAT_STATS_BY_TYPE } from '../../../tower/model/types';
 import { U_TURN_ROUTE } from './damagePlacementFixtures';
-import { computeConeExtraHitShare, computeCorpseExplosionFactor } from './deferredMechanicsValue';
+import {
+  computeConeExtraHitShare,
+  computeCorpseExplosionFactor,
+  computeGroundZoneDps,
+} from './deferredMechanicsValue';
 import { createRouteGeometry } from './routeGeometry';
 import {
   computeSampleDamageRate,
@@ -59,5 +63,35 @@ describe('corpse explosion valuation', () => {
     const plain = computeSampleDamageRate(frostTower(undefined), geometry, TURN_SAMPLE);
     const corpse = computeSampleDamageRate(frostTower(blast), geometry, TURN_SAMPLE);
     expect(corpse).toBeGreaterThan(plain);
+  });
+});
+
+describe('ground zone valuation', () => {
+  const zone = {
+    radiusCells: 2,
+    durationMs: 3_000,
+    tickMs: 500,
+    damage: 5,
+    damageType: DamageType.MAGICAL,
+  };
+
+  it('values the tick rate on the ground lane only', () => {
+    const ground = computeGroundZoneDps({ groundZone: zone }, geometry, TURN_SAMPLE);
+    expect(ground).toBeGreaterThanOrEqual(5);
+    expect(
+      computeGroundZoneDps(
+        { groundZone: zone },
+        geometry,
+        TURN_SAMPLE,
+        undefined,
+        UnitMoveType.AIR,
+      ),
+    ).toBe(0);
+  });
+
+  it('is nothing for a zone that only slows', () => {
+    expect(
+      computeGroundZoneDps({ groundZone: { ...zone, damage: 0, chill: 0.5 } }, geometry, 0),
+    ).toBe(0);
   });
 });

@@ -38,7 +38,7 @@ export {
   resolveShotDamageMultiplier,
   resolveTargetDamageMultiplier,
 } from './model/abilities';
-export type { TowerAbilities } from './model/abilities';
+export type { TowerAbilities, TowerGroundZone } from './model/abilities';
 export {
   getTowerKillBonusGold,
   getTowersIncomePerRound,

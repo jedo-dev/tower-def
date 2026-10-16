@@ -12,6 +12,10 @@ export const TOWER_ABILITY_BALANCE = {
   defaultVolleyDamageShare: 1,
   /** Generations of corpse explosions one kill sets off when `corpseExplosionChainLimit` is omitted. */
   defaultCorpseExplosionChainLimit: 1,
+  /** A ground zone's chill outlasts its tick by this much, so a creep inside never flickers free. */
+  groundZoneChillLingerMs: 250,
+  /** Most live ground zones on one battlefield; a new zone past this is dropped. */
+  maxGroundZonesPerField: 64,
   /** Ceiling on a tower's sell refund ratio after aura bonuses. */
   maxSellRefundRatio: 1,
 } as const;

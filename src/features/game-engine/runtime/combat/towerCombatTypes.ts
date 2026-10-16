@@ -2,6 +2,7 @@ import type { CreepEntity } from '../../../../entities/creep';
 import type { TowerCombatRuntime, TowerEntity } from '../../../../entities/tower';
 import type { EffectId } from '../../../../shared/types/content-ids';
 import type { GridPosition } from '../../../../shared/types/pathfinding';
+import type { GroundZoneStore } from './towerGroundZones';
 
 /** Splash radius, in fine-grid cells, for a splash tower whose content omits one. */
 export const DEFAULT_SPLASH_RADIUS_CELLS = 3;
@@ -14,6 +15,8 @@ export type CombatTower = { entity: TowerEntity; runtime: TowerCombatRuntime };
 export type CombatField<C extends CombatCreep, T extends CombatTower> = {
   creeps: C[];
   towers: T[];
+  /** Ground zones left by towers (`abilities.groundZone`); a field without one spawns none. */
+  groundZones?: GroundZoneStore;
 };
 
 export type DamageNumberSource = 'hit' | 'effect';

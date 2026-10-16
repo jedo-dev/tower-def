@@ -18,10 +18,12 @@ import {
 } from '../../../../shared/lib/content/contentValidation';
 import type { TowerAbilities } from '../abilities';
 import type { TowerOnHitEffect } from '../types';
+import { parseGroundZone } from './towerGroundZoneFields';
 import {
   TOWER_ABILITY_BOUNDS,
   TOWER_ABILITY_INTEGER_KEYS,
   TOWER_ABILITY_KEYS,
+  TOWER_ABILITY_NUMBER_KEYS,
   TOWER_AURA_EXTENSION_BOUNDS,
   TOWER_AURA_EXTENSION_NUMBER_KEYS,
   TOWER_FREEZE_BOUNDS,
@@ -75,13 +77,18 @@ export function parseAbilities(
 
   const abilities: TowerAbilities = {};
 
-  for (const key of TOWER_ABILITY_KEYS) {
+  for (const key of TOWER_ABILITY_NUMBER_KEYS) {
     if (raw[key] === undefined) {
       continue;
     }
     abilities[key] = TOWER_ABILITY_INTEGER_KEYS.includes(key)
       ? readBoundedInteger(raw, key, location, TOWER_ABILITY_BOUNDS[key])
       : readNumber(raw, key, location, TOWER_ABILITY_BOUNDS[key]);
+  }
+
+  const groundZone = parseGroundZone(raw, location);
+  if (groundZone !== undefined) {
+    abilities.groundZone = groundZone;
   }
 
   assertAbilityRequirements(abilities, location);

@@ -50,6 +50,14 @@ export function describeTowerAbilities(abilities: TowerAbilities | undefined): s
 
   const phrases: string[] = [];
 
+  if (abilities.groundZone !== undefined) {
+    const { radiusCells, durationMs, damage, tickMs, chill } = abilities.groundZone;
+    const seconds = (durationMs / MILLISECONDS_PER_SECOND).toFixed(1);
+    const perSecond = Math.round((damage * MILLISECONDS_PER_SECOND) / tickMs);
+    const damagePart = damage > 0 ? ` ${perSecond}/s` : '';
+    const chillPart = chill === undefined ? '' : ` -${formatPercent(chill)}`;
+    phrases.push(`Zone r${radiusCells} ${seconds}s${damagePart}${chillPart}`);
+  }
   if (abilities.critEveryNthShot !== undefined) {
     const multiplier = formatMultiplier(abilities.critMultiplier ?? 1);
     phrases.push(`Crit ${multiplier} every ${abilities.critEveryNthShot}`);

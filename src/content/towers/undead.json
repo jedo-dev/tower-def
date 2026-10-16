@@ -157,9 +157,15 @@
               "range": 5.8,
               "attackCooldownMs": 1100,
               "splashRadius": 3.8,
-              "onHitEffects": [
-                { "effectId": "poison", "magnitude": 3, "durationMs": 2000, "maxStacks": 1 }
-              ]
+              "abilities": {
+                "groundZone": {
+                  "radiusCells": 1.5,
+                  "durationMs": 2000,
+                  "tickMs": 500,
+                  "damage": 3,
+                  "damageType": "magical"
+                }
+              }
             },
             {
               "level": 5,
@@ -167,9 +173,15 @@
               "range": 5.8,
               "attackCooldownMs": 1050,
               "splashRadius": 4.2,
-              "onHitEffects": [
-                { "effectId": "poison", "magnitude": 4, "durationMs": 3000, "maxStacks": 1 }
-              ]
+              "abilities": {
+                "groundZone": {
+                  "radiusCells": 1.75,
+                  "durationMs": 3000,
+                  "tickMs": 500,
+                  "damage": 4,
+                  "damageType": "magical"
+                }
+              }
             },
             {
               "level": 6,
@@ -177,10 +189,16 @@
               "range": 5.8,
               "attackCooldownMs": 1000,
               "splashRadius": 4.6,
-              "onHitEffects": [
-                { "effectId": "poison", "magnitude": 5, "durationMs": 3000, "maxStacks": 1 },
-                { "effectId": "chill", "magnitude": 0.15, "durationMs": 2000 }
-              ]
+              "abilities": {
+                "groundZone": {
+                  "radiusCells": 2,
+                  "durationMs": 3000,
+                  "tickMs": 500,
+                  "damage": 5,
+                  "damageType": "magical",
+                  "chill": 0.15
+                }
+              }
             },
             {
               "level": 7,
@@ -188,10 +206,16 @@
               "range": 5.8,
               "attackCooldownMs": 900,
               "splashRadius": 5,
-              "onHitEffects": [
-                { "effectId": "poison", "magnitude": 7, "durationMs": 4000, "maxStacks": 1 },
-                { "effectId": "chill", "magnitude": 0.25, "durationMs": 2000 }
-              ]
+              "abilities": {
+                "groundZone": {
+                  "radiusCells": 2.25,
+                  "durationMs": 4000,
+                  "tickMs": 500,
+                  "damage": 7,
+                  "damageType": "magical",
+                  "chill": 0.25
+                }
+              }
             }
           ]
         },

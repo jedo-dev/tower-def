@@ -1,7 +1,25 @@
 import { TOWER_ABILITY_BALANCE } from '../../../shared/constants/towerAbilities';
 import { UnitMoveType, UnitSizeClass } from '../../../shared/types/content-ids';
+import type { DamageType } from '../../../shared/types/content-ids';
 import type { GridPoint } from '../../../shared/types/grid';
 import type { CreepEntity } from '../../creep';
+
+/**
+ * A zone a tower leaves on the ground where its shot lands (tower-def-bge.9:
+ * Plague Cloud, Spores, Quagmire). Every `tickMs` it deals `damage` of
+ * `damageType` to every ground creep inside (grounded fliers too) and chills
+ * them by `chill`, for `durationMs`.
+ */
+export type TowerGroundZone = {
+  radiusCells: number;
+  durationMs: number;
+  tickMs: number;
+  /** Damage per tick per creep inside; 0 for a zone that only slows. */
+  damage: number;
+  damageType: DamageType;
+  /** Slow put on creeps inside each tick, lasting just past the next tick. */
+  chill?: number;
+};
 
 /**
  * Optional abilities a tower level (1-7) may carry under `abilities`. Every
@@ -52,6 +70,8 @@ export type TowerAbilities = {
   corpseExplosionRadiusCells?: number;
   /** Generations of explosions one kill may set off (1 = no chain); 1 when omitted. */
   corpseExplosionChainLimit?: number;
+  /** Leaves a ground zone where each shot lands (the primary target's footprint centre). */
+  groundZone?: TowerGroundZone;
 };
 
 type TargetedCreep = Pick<CreepEntity, 'moveType' | 'sizeClass' | 'hp' | 'maxHp'>;

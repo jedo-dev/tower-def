@@ -23,7 +23,11 @@ import {
   computeVolleyDps,
 } from './abilityDamageModel';
 import { MAX_EXPECTED_SPLASH_TARGETS, POISON_STACK_UPTIME } from './constants';
-import { computeConeExtraHitShare, computeCorpseExplosionFactor } from './deferredMechanicsValue';
+import {
+  computeConeExtraHitShare,
+  computeCorpseExplosionFactor,
+  computeGroundZoneDps,
+} from './deferredMechanicsValue';
 import { expectedCreepsAround } from './routeDensity';
 import type { RouteGeometry } from './routeGeometry';
 
@@ -262,5 +266,12 @@ export function computeSampleDamageRate(
     hitFactor *
     computeTargetsPerShot(tower, geometry, sampleIndex) *
     (1 + computeCorpseExplosionFactor(tower.stats.abilities, geometry, sampleIndex));
-  return shots + volley + computeDamageOverTimeDps(tower, efficiency);
+  const zone = computeGroundZoneDps(
+    tower.stats.abilities,
+    geometry,
+    sampleIndex,
+    efficiency,
+    moveType,
+  );
+  return shots + volley + computeDamageOverTimeDps(tower, efficiency) + zone;
 }

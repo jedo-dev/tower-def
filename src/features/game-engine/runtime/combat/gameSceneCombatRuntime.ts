@@ -30,6 +30,7 @@ export type { CombatRuntimeConfig, CombatRuntimeDependencies } from './combatRun
 export { updateDamageNumbers } from './damageNumbers';
 export { updateImpactEffects } from './impactEffects';
 export { updateProjectiles } from './projectiles';
+export { renderGroundZones } from './groundZoneRenderer';
 
 function handleCreepKill(
   deps: CombatRuntimeDependencies,
@@ -161,7 +162,7 @@ export function updateCreepEffects(
   config: CombatRuntimeConfig,
   deltaMs: number,
 ): void {
-  if (battlefield.creeps.length === 0) {
+  if (battlefield.creeps.length === 0 && battlefield.groundZones.count === 0) {
     return;
   }
 

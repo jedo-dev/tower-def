@@ -11,6 +11,7 @@ import { TowerAttackKind, type DamageType } from '../../../../shared/types/conte
 import { applyChainDamage, applySingleTargetDamage, applySplashDamage } from './towerAreaAttacks';
 import type { CombatCreep, CombatField, CombatTower, TowerCombatHooks } from './towerCombatTypes';
 import { resolveCorpseExplosions } from './towerCorpseExplosions';
+import { spawnTowerGroundZone } from './towerGroundZones';
 import {
   applyCone,
   applyExtraTargets,
@@ -34,6 +35,7 @@ export {
 } from './towerCombatTypes';
 export { applyTowerEffect } from './towerStrike';
 export { tickFieldCreepEffects } from './towerCreepEffects';
+export { clearGroundZones, createGroundZoneStore, type GroundZoneStore } from './towerGroundZones';
 
 /**
  * Counts the shot for `critEveryNthShot` and returns the shot-wide damage
@@ -213,6 +215,9 @@ export function resolveTowerAttacks<C extends CombatCreep, T extends CombatTower
     }
 
     resolveCorpseExplosions(field, hooks);
+    if (tower.entity.combatStats.abilities?.groundZone !== undefined) {
+      spawnTowerGroundZone(field, tower, target);
+    }
     consumeAttackInPlace(tower);
     hooks.onTowerFired(tower, target, isSplashTower);
   }

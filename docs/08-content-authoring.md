@@ -514,7 +514,23 @@ brings the next level's object (or none).
 | `corpseExplosionShare` | 0.01-1 | A creep a hit of this tower kills (any shape: shot, splash, arc, extra, pierce, cone, volley) explodes for this share of its maximum health, of the tower's damage type, on every other valid creep (in the tower's target scope, not hidden) within `corpseExplosionRadiusCells` of its footprint centre. Needs the radius. Kills are queued and resolved when the attack is done, first in first out, each explosion walking the field in order (tower-def-bge.9, Corpse Blast). Explosion kills are credited to the tower. |
 | `corpseExplosionRadiusCells` | 0.5-6 | Radius of the explosion. Needs `corpseExplosionShare`. |
 | `corpseExplosionChainLimit` | whole, 1-20 | Generations of explosions one kill may set off: creeps an explosion kills explode in turn while the chain is within the limit. 1 (no chain) when omitted (`TOWER_ABILITY_BALANCE.defaultCorpseExplosionChainLimit`). Needs `corpseExplosionShare`. |
+| `groundZone` | object, see below | Leaves a zone on the ground where each shot lands (the primary target's footprint centre; splash and single-target towers alike). Every `tickMs` it deals `damage` of `damageType` to every ground creep inside (grounded fliers too, hidden ones not) and chills them by `chill`, for `durationMs`; the first tick lands on the zone's first step, `durationMs / tickMs` ticks in all (tower-def-bge.9: Plague Cloud, Spores, Quagmire). Zone kills are credited to the tower. |
 | `coneDegrees` | 10-180 | A single-target shot also hits every other valid creep in range whose footprint centre lies inside a cone of this opening from the tower centre toward the target, at full damage (tower-def-bge.9, Wyrm Breath). Field order, deterministic. |
+
+`groundZone` fields (`TOWER_GROUND_ZONE_BOUNDS`; unknown keys fail on load):
+
+| Field | Value | Meaning |
+| --- | --- | --- |
+| `radiusCells` | 0.5-6 | Radius from the landing point, measured to creep footprint centres. |
+| `durationMs` | 500-20000 | How long the zone lies. |
+| `tickMs` | 100-5000, at most `durationMs` | Time between ticks. |
+| `damage` | 0-500 | Damage per tick per creep inside, before armor (damage over time shape). |
+| `damageType` | `physical`, `magical`, `percent` | Type of the tick damage (percent is per mille of maximum health). |
+| `chill` | 0.01-0.75, optional | Slow put on every creep inside each tick, lasting `tickMs` plus `TOWER_ABILITY_BALANCE.groundZoneChillLingerMs`, so it wears off just after a creep leaves. |
+
+A zone must deal damage or chill. Zones live in a per-battlefield store of
+reused records (at most `maxGroundZonesPerField`, a new zone past that is
+dropped) and the game draws each as a subtle circle under the towers.
 
 Target multipliers multiply together and apply to every hit of the tower
 (primary, splash, arcs, extra, pierce, volley), before armor and
@@ -727,10 +743,12 @@ curve (or its archetype's), 4-7 from the chosen branch. The curve tops out at
 
 **Shipped branches** (tower-def-bge.3) follow docs/11 with English names, read
 against the shipped grade 3 stats. Where docs/11 asks for a mechanic that does
-not exist yet (ground zones, cones, knockback, corpse explosions, fliers
-falling, a target scope that changes at a grade) the grade uses the closest
-existing ability or a number buff; every such substitution is listed in
-docs/07 "Tower talents authoring (tower-def-bge.3)". A content test asserts
+not exist yet the grade uses the closest existing ability or a number buff;
+every such substitution is listed in docs/07 "Tower talents authoring
+(tower-def-bge.3)". tower-def-bge.9 added ground zones (`groundZone`), cones
+(`coneDegrees`), knockback (`knockbackCells`), corpse explosions
+(`corpseExplosion*`), fliers falling (`groundsFliersMs`) and per-grade
+`allowedTargets`, and swapped the affected rows back (marked "restored"). A content test asserts
 the two branches of each tower differ in at least one ability, effect or aura
 mechanic, not only in numbers; the bestiary card shows each branch with its
 grade 4-7 table.

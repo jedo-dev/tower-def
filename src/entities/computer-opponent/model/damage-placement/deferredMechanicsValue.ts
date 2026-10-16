@@ -1,4 +1,6 @@
+import { UnitMoveType } from '../../../../shared/types/content-ids';
 import type { TowerAbilities } from '../../../tower/model/abilities';
+import { NEUTRAL_DAMAGE_EFFICIENCY, type DamageTypeEfficiency } from '../damage-profile';
 import { expectedCreepsAround } from './routeDensity';
 import type { RouteGeometry } from './routeGeometry';
 
@@ -15,7 +17,13 @@ export const DEFERRED_MECHANICS_VALUATION = {
   corpseExplosionRealism: 0.5,
   /** Most creeps one corpse explosion is expected to reach. */
   maxCorpseExplosionTargets: 4,
+  /** Share of a ground zone's ticks a creep inside is expected to sit through. */
+  groundZoneRealism: 0.5,
+  /** Most creeps one ground zone is expected to hold at once. */
+  maxGroundZoneTargets: 4,
 } as const;
+
+const MS_PER_SECOND = 1000;
 
 /**
  * Extra creeps (in shares of a full hit) a cone shot at `sampleIndex` also
@@ -58,4 +66,33 @@ export function computeCorpseExplosionFactor(
     Math.max(0, expectedCreepsAround(geometry, sampleIndex, radius) - 1),
   );
   return share * others * DEFERRED_MECHANICS_VALUATION.corpseExplosionRealism;
+}
+
+/**
+ * Damage per second a ground zone adds at `sampleIndex` on the ground lane,
+ * in hit points of the wave `efficiency` describes: one zone's tick rate on
+ * the creeps the route packs inside it, halved because creeps walk through
+ * rather than stand. Overlapping zones and the zone's chill are not counted.
+ */
+export function computeGroundZoneDps(
+  abilities: TowerAbilities | undefined,
+  geometry: RouteGeometry,
+  sampleIndex: number,
+  efficiency: DamageTypeEfficiency = NEUTRAL_DAMAGE_EFFICIENCY,
+  moveType: UnitMoveType = UnitMoveType.GROUND,
+): number {
+  const zone = abilities?.groundZone;
+  if (zone === undefined || zone.damage <= 0 || moveType !== UnitMoveType.GROUND) {
+    return 0;
+  }
+  const creeps = Math.min(
+    DEFERRED_MECHANICS_VALUATION.maxGroundZoneTargets,
+    expectedCreepsAround(geometry, sampleIndex, zone.radiusCells),
+  );
+  return (
+    ((zone.damage * MS_PER_SECOND) / zone.tickMs) *
+    creeps *
+    DEFERRED_MECHANICS_VALUATION.groundZoneRealism *
+    efficiency[zone.damageType]
+  );
 }

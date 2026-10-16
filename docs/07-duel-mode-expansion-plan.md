@@ -806,12 +806,15 @@ The shipped guard keeps grade 4 damage and range at or above grade 3, and a
 test asserts the two branches of every tower differ in at least one ability,
 effect or aura mechanic (`towerTalentContent.test.ts`).
 
-**Substitutions** (revisit when the deferred mechanic lands):
+**Substitutions** (revisit when the deferred mechanic lands). tower-def-bge.9
+landed ground zones, cones, grounded fliers, knockback, corpse explosions and
+per-grade `allowedTargets`; the rows it swapped back to the docs/11 intent are
+marked **restored** (numbers read against the shipped grade 3 as above):
 
 | Tower / branch | Doc (grade) | Authored instead |
 | --- | --- | --- |
 | Bone Archer / Bone Volley | every 3rd / 2nd shot hits two targets (5 / 6) | `extraTargets` 1 at `extraTargetDamageShare` 0.33 / 0.5 (the average) |
-| Plague Tower / Plague Cloud | poison cloud left on the ground, slowing at 6-7 | on-hit magical `poison` and `chill` on everything the blast hits |
+| Plague Tower / Plague Cloud | poison cloud left on the ground, slowing at 6-7 | **restored** (tower-def-bge.9): `groundZone` under the primary target, magical 3 / 4 / 5 / 7 per 500 ms tick (the doc's 6-14 per second) for 2 / 3 / 3 / 4 s, chill 0.15 / 0.25 at 6-7; cloud radius 1.5 / 1.75 / 2 / 2.25 (the doc gives none); the on-hit poison and chill are gone |
 | Plague Tower / Corpse Blast | killed creeps explode for 20-50% of their max health, chaining | **restored** (tower-def-bge.9): `corpseExplosionShare` 0.2 / 0.3 / 0.4 / 0.5 within `corpseExplosionRadiusCells` 2 / 2.5 / 3 / 3.5, `corpseExplosionChainLimit` 1 / 1 / 3 / 20 (20 stands for the doc's "no limit"); damage and blast back to the doc read on grade 3 (44 / 50 / 58 / 68, splash 3.4 / 3.4 / 3.6 / 3.8), so the tower-def-bge.6 buff of the substitute is gone |
 | Frost Wyrm Nest / Permafrost | slow 45-65% (doc steps over the shipped 0.55 would pass the floor) | chill 0.6 / 0.65 / 0.7 / 0.75 |
 | Frost Wyrm Nest / Permafrost | frozen fliers fall and become ground targets (7) | **restored** (tower-def-bge.9): chill `groundsFliersMs` 1200 (the freeze length); the `airDamageMultiplier` is gone |
@@ -828,7 +831,7 @@ effect or aura mechanic (`towerTalentContent.test.ts`).
 | Lightning Totem / both | per-grade jumps, falloff and jump range | authored on every grade, but combat still reads the archetype chain (3 jumps, 4 cells, -25%); live once combat reads the grade chain |
 | Lightning Totem / Thunder Strike | stun only on the first target (4) | the stun is on-hit, so every creep in the chain is stunned |
 | Lightning Totem / Thunder Strike | stunned creeps take +20% / +35% (6 / 7) | on-hit `vulnerability` lasting as long as the stun |
-| Tar Pit / Quagmire | tar puddle (radius 1.5-3) slows all inside, ground only | `extraTargets` 1-4 at 0.5 share carrying the chill (1 / 1 / 2 / 2 and a shorter, weaker chill since tower-def-bge.6); the pit still reaches fliers |
+| Tar Pit / Quagmire | tar puddle (radius 1.5-3) slows all inside, ground only | **restored** (tower-def-bge.9): `groundZone` radius 1.5 / 2 / 2.5 / 3 for 3 / 4 / 5 / 6 s, no damage, chill 0.55 / 0.65 / 0.7 / 0.75 (the doc's steps over the shipped 0.55, at most the 0.75 floor); the shot keeps the grade 3 chill (0.55, 2 s) and still reaches fliers; `extraTargets` are gone |
 | Tar Pit / Quagmire | large creeps stuck harder (-65% / -75%) | dropped: the chill is already at the 0.75 floor and there is no per-size slow |
 | Tar Pit / Sticky Tar | +20% physical and magical (6) | `vulnerability` with `damageKind` `all` (covers percent too); keeps the grade 3 chill |
 | Guard Archer / Crossbowmen | air priority (6) | none (no targeting priority field) |
@@ -840,7 +843,7 @@ effect or aura mechanic (`towerTalentContent.test.ts`).
 | Alchemist Tower / Acid | armor can go negative at 2 stacks (7) | always true: broken armor already goes down to -25 |
 | Guard Post / Headquarters | +5% crit to every neighbour (7) | physical damage bonus 0.25 instead of 0.20 |
 | Moon Archer / Sniper | sees the whole row or column (7) | range +1 (13.2 cells) |
-| Wisp Bloom / Spores | spore zone on the ground | on-hit `chill` (and magical `poison` at 6-7) on everything the blast hits |
+| Wisp Bloom / Spores | spore zone on the ground | **restored** (tower-def-bge.9): `groundZone` radius 1.5 / 1.75 / 2 / 2.25 for 2 / 3 / 3 / 4 s, chill 0.15 / 0.25 / 0.3 / 0.35, magical 1.5 / 3 per 500 ms tick at 6-7 (the doc's 3 / 6 per second); the on-hit chill and poison are gone |
 | Wisp Bloom / Wild Growth | targets air too (4) | **restored** (tower-def-bge.9): grade `allowedTargets` `both` on grades 4-7, grade 4 damage back to the doc's 44 |
 | Wisp Bloom / Wild Growth | roots only at the blast centre (5-7) | on-hit `stun` on the whole blast |
 | Wisp Bloom / Wild Growth | fliers pulled down for 1 s (7) | **restored** (tower-def-bge.9): `groundsFliersMs` 1000 (the blast reaches fliers since grade 4) |
@@ -852,7 +855,7 @@ effect or aura mechanic (`towerTalentContent.test.ts`).
 | Thorn Spire / Thornbite | large creeps take x1.5 (7) | `largeTargetMultiplier` 1.5 (applies to hits, not to poison ticks) |
 | Thorn Spire / Grasping Vine | +20% / +35% damage while held (6 / 7) | on-hit `vulnerability` lasting as long as the stun |
 
-| Every tower | stack caps below 3 ("does not stack" or "stacks up to 2": Cursed Arrow, Heavy Spear, Napalm 4-6, Acid, the cloud and spore poison) | authored since tower-def-bge.8, which made an on-hit `maxStacks` the cap (1-10) instead of only raising the balance cap: Cursed Arrow breaks 1 / 1 / 2 / 2 (both breaks at 7), Heavy Spear 1, Napalm burn 1 / 1 / 2 / 3, Acid break 1 / 1 / 2 / 2, Plague Cloud poison 1, Spores poison 1 (grades 6-7). Grades 4-5 read "does not stack" where the doc names no stacks. A creep's running instance keeps the highest cap among the towers feeding it, so a no-stack tower adds to another tower's stacks without cutting them. Heavy Spear's 1 s break lasts just past its reload, so it mostly helps its own next spear |
+| Every tower | stack caps below 3 ("does not stack" or "stacks up to 2": Cursed Arrow, Heavy Spear, Napalm 4-6, Acid, the cloud and spore poison) | authored since tower-def-bge.8, which made an on-hit `maxStacks` the cap (1-10) instead of only raising the balance cap: Cursed Arrow breaks 1 / 1 / 2 / 2 (both breaks at 7), Heavy Spear 1, Napalm burn 1 / 1 / 2 / 3, Acid break 1 / 1 / 2 / 2 (Plague Cloud and Spores poisoned with a no-stack on-hit `poison` until tower-def-bge.9 moved them to ground zones). Grades 4-5 read "does not stack" where the doc names no stacks. A creep's running instance keeps the highest cap among the towers feeding it, so a no-stack tower adds to another tower's stacks without cutting them. Heavy Spear's 1 s break lasts just past its reload, so it mostly helps its own next spear |
 
 Bounds clamped: Thunderstorm jumps (8 to 6). No other doc number exceeded
 `TOWER_STAT_BOUNDS`, `TOWER_CHAIN_BOUNDS` or `TOWER_ABILITY_BOUNDS`.
@@ -877,6 +880,7 @@ expected wave, never a roll:
 | `extraTargets` (+ share) | up to N more creeps of those the route packs within the tower's range, at their share |
 | `pierceLine` | its share on the creeps within 2 cells of the target on the route |
 | `coneDegrees` (tower-def-bge.9, `deferredMechanicsValue.ts`) | `coneDegrees / 360` of the other creeps the route packs within range, at full damage |
+| `groundZone` (tower-def-bge.9) | on the ground lane: the tick rate (`damage / tickMs`) on the creeps the route packs inside the zone (at most 4), halved for creeps walking through, at the zone's damage type; overlapping zones and the zone's chill are not valued |
 | `corpseExplosionShare` (+ radius, chain) (tower-def-bge.9) | half its share of the shot on the other creeps the route packs within the explosion radius (at most 4): a kill's explosion is worth `share * maxHp`, and the shot's damage turns into kills at `damage / maxHp`, so the health cancels; one generation only |
 | `knockbackCells`, `groundsFliersMs`, chill `groundsFliersMs` (tower-def-bge.9) | not valued (0): a conservative floor, like a stun |
 | `volleyEveryMs` (+ share) | `damage * share / interval` on the creeps in range around the target (at most 6); support towers too |

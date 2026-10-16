@@ -77,3 +77,31 @@ describe('coneDegrees', () => {
     expectRejection({ coneDegrees: 200 }, /coneDegrees/);
   });
 });
+
+describe('groundZone', () => {
+  const zone = {
+    radiusCells: 2,
+    durationMs: 3_000,
+    tickMs: 500,
+    damage: 4,
+    damageType: 'magical',
+    chill: 0.15,
+  };
+
+  it('reads the zone object', () => {
+    expect(parseAbilities({ groundZone: zone })).toEqual({ groundZone: zone });
+  });
+
+  it('rejects unknown keys, bad types and out-of-bound numbers', () => {
+    expectRejection({ groundZone: { ...zone, colour: 'green' } }, /colour/);
+    expectRejection({ groundZone: { ...zone, damageType: 'fire' } }, /damageType/);
+    expectRejection({ groundZone: { ...zone, radiusCells: 10 } }, /radiusCells/);
+    expectRejection({ groundZone: { ...zone, chill: 0.9 } }, /chill/);
+  });
+
+  it('needs damage or chill, and a tick within its duration', () => {
+    const { chill: _chill, ...noChill } = zone;
+    expectRejection({ groundZone: { ...noChill, damage: 0 } }, /must deal damage or chill/);
+    expectRejection({ groundZone: { ...zone, tickMs: 4_000 } }, /tickMs/);
+  });
+});
