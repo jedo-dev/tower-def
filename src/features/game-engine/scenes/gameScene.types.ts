@@ -28,8 +28,11 @@ export type CreepRenderState = {
   race?: RaceId;
   /** Status pips shown while several effects run at once. */
   effectPips?: Phaser.GameObjects.Text;
-  /** Effect set the sprite currently reflects, so repaints stay change-driven. */
-  effectVisualSignature?: string;
+  /**
+   * Numeric signature (`computeEffectSignature`) of the effect set the sprite
+   * currently reflects, so repaints stay change-driven.
+   */
+  effectVisualSignature?: number;
   /** Sheet carries walk rows per direction and a death row. */
   isDirectional?: boolean;
   /** Row currently playing, so a direction change does not restart the walk every frame. */

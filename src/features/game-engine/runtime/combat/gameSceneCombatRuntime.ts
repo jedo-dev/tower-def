@@ -383,57 +383,64 @@ export function updateCreepEffects(
   );
 }
 
+/**
+ * Advances death animations and fades, destroys finished creeps and compacts
+ * `activeCreeps` in place (order kept), so the frame allocates no new list.
+ * Every holder reads the list through the battlefield, so its identity stays.
+ */
 export function removeDeadCreepsFromActiveWave(
   activeCreeps: CreepRenderState[],
   deltaMs: number,
   deathFadeDurationMs: number,
   deathAnimationDurationMs = deathFadeDurationMs,
-): CreepRenderState[] {
-  const aliveCreeps: CreepRenderState[] = [];
+): void {
+  let writeIndex = 0;
 
-  for (const creep of activeCreeps) {
-    if (!isCreepDead(creep.entity)) {
-      aliveCreeps.push(creep);
-      continue;
-    }
-
-    // A sheet with a death row plays it out; a legacy strip has nothing to play,
-    // so it keeps fading instead.
-    if (creep.isDirectional) {
-      if (!creep.isDeathAnimationPlaying) {
-        creep.isDeathAnimationPlaying = true;
-        creep.deathFadeRemainingMs = deathAnimationDurationMs;
-        creep.sprite.play(getCreepDeathAnimationKey(creep.sprite), true);
-      }
-
-      creep.deathFadeRemainingMs = Math.max(0, creep.deathFadeRemainingMs - deltaMs);
-
-      if (creep.deathFadeRemainingMs > 0) {
-        aliveCreeps.push(creep);
-        continue;
-      }
-
-      destroyCreepRenderState(creep);
-      continue;
-    }
-
-    if (creep.deathFadeRemainingMs <= 0) {
-      creep.deathFadeRemainingMs = deathFadeDurationMs;
-    }
-
-    creep.deathFadeRemainingMs = Math.max(0, creep.deathFadeRemainingMs - deltaMs);
-    const alpha = creep.deathFadeRemainingMs / deathFadeDurationMs;
-    creep.sprite.setAlpha(alpha);
-
-    if (creep.deathFadeRemainingMs > 0) {
-      aliveCreeps.push(creep);
+  for (let readIndex = 0; readIndex < activeCreeps.length; readIndex += 1) {
+    const creep = activeCreeps[readIndex];
+    if (isCreepStillShown(creep, deltaMs, deathFadeDurationMs, deathAnimationDurationMs)) {
+      activeCreeps[writeIndex] = creep;
+      writeIndex += 1;
       continue;
     }
 
     destroyCreepRenderState(creep);
   }
 
-  return aliveCreeps;
+  activeCreeps.length = writeIndex;
+}
+
+/** Steps a dead creep's death row or fade; false once it should be destroyed. */
+function isCreepStillShown(
+  creep: CreepRenderState,
+  deltaMs: number,
+  deathFadeDurationMs: number,
+  deathAnimationDurationMs: number,
+): boolean {
+  if (!isCreepDead(creep.entity)) {
+    return true;
+  }
+
+  // A sheet with a death row plays it out; a legacy strip has nothing to play,
+  // so it keeps fading instead.
+  if (creep.isDirectional) {
+    if (!creep.isDeathAnimationPlaying) {
+      creep.isDeathAnimationPlaying = true;
+      creep.deathFadeRemainingMs = deathAnimationDurationMs;
+      creep.sprite.play(getCreepDeathAnimationKey(creep.sprite), true);
+    }
+
+    creep.deathFadeRemainingMs = Math.max(0, creep.deathFadeRemainingMs - deltaMs);
+    return creep.deathFadeRemainingMs > 0;
+  }
+
+  if (creep.deathFadeRemainingMs <= 0) {
+    creep.deathFadeRemainingMs = deathFadeDurationMs;
+  }
+
+  creep.deathFadeRemainingMs = Math.max(0, creep.deathFadeRemainingMs - deltaMs);
+  creep.sprite.setAlpha(creep.deathFadeRemainingMs / deathFadeDurationMs);
+  return creep.deathFadeRemainingMs > 0;
 }
 
 export function updateProjectiles(

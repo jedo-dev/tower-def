@@ -62,8 +62,9 @@ describe('creep death', () => {
   it('plays the death row once for a sheet that has one', () => {
     const creep = createCreep(UNIT_DIRECTIONAL_FRAME_COUNT, true);
 
-    let creeps = removeDeadCreepsFromActiveWave([creep], 16, FADE_MS, DEATH_MS);
-    creeps = removeDeadCreepsFromActiveWave(creeps, 16, FADE_MS, DEATH_MS);
+    const creeps: CreepRenderState[] = [creep];
+    removeDeadCreepsFromActiveWave(creeps, 16, FADE_MS, DEATH_MS);
+    removeDeadCreepsFromActiveWave(creeps, 16, FADE_MS, DEATH_MS);
 
     expect(creep.played).toEqual([`${UNIT_SPRITE_KEYS.ORC_GRUNT}.death`]);
     expect(creep.alphas).toEqual([]);
@@ -72,17 +73,17 @@ describe('creep death', () => {
 
   it('destroys the sprite only after the death row has played out', () => {
     const creep = createCreep(UNIT_DIRECTIONAL_FRAME_COUNT, true);
-    let creeps: CreepRenderState[] = [creep];
+    const creeps: CreepRenderState[] = [creep];
 
     const ticksBeforeTheEnd = Math.floor(DEATH_MS / 16);
 
     for (let tick = 0; tick < ticksBeforeTheEnd; tick += 1) {
-      creeps = removeDeadCreepsFromActiveWave(creeps, 16, FADE_MS, DEATH_MS);
+      removeDeadCreepsFromActiveWave(creeps, 16, FADE_MS, DEATH_MS);
     }
 
     expect(creep.destroyed).toBe(false);
 
-    creeps = removeDeadCreepsFromActiveWave(creeps, 16, FADE_MS, DEATH_MS);
+    removeDeadCreepsFromActiveWave(creeps, 16, FADE_MS, DEATH_MS);
 
     expect(creep.destroyed).toBe(true);
     expect(creeps).toHaveLength(0);
@@ -90,10 +91,10 @@ describe('creep death', () => {
 
   it('keeps fading a legacy sheet, which has no death row', () => {
     const creep = createCreep(4, true);
-    let creeps: CreepRenderState[] = [creep];
+    const creeps: CreepRenderState[] = [creep];
 
     for (let elapsed = 0; elapsed <= FADE_MS; elapsed += 60) {
-      creeps = removeDeadCreepsFromActiveWave(creeps, 60, FADE_MS, DEATH_MS);
+      removeDeadCreepsFromActiveWave(creeps, 60, FADE_MS, DEATH_MS);
     }
 
     expect(creep.played).toEqual([]);
@@ -104,7 +105,8 @@ describe('creep death', () => {
   it('leaves living creeps alone', () => {
     const creep = createCreep(UNIT_DIRECTIONAL_FRAME_COUNT, false);
 
-    const creeps = removeDeadCreepsFromActiveWave([creep], 16, FADE_MS, DEATH_MS);
+    const creeps: CreepRenderState[] = [creep];
+    removeDeadCreepsFromActiveWave(creeps, 16, FADE_MS, DEATH_MS);
 
     expect(creeps).toHaveLength(1);
     expect(creep.played).toEqual([]);
