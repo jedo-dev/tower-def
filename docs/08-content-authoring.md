@@ -118,6 +118,26 @@ with `armorKind: 'physical' | 'magical' | 'both'`
 (`shared/constants/effects.ts`). Broken armor goes negative but never below
 `-25`.
 
+## Race armor profiles
+
+Each race leans on one armor axis, so the defender's tower mix matters per
+opponent. Averages are over the whole roster (eight creatures per race) and
+are recorded in `entities/unit/model/config/raceIdentity.test.ts`; change both
+together.
+
+| Race | Profile | Avg `physicalArmor` | Avg `magicalArmor` |
+| --- | --- | --- | --- |
+| Undead | Bones and spirits: low physical, highest magical | 1.875 | 8.625 |
+| Orc | Hide and iron: highest physical, lowest magical | 6.125 | 1.125 |
+| Human | Balanced; footmen, knights and siege lean physical | 5.125 | 4.0 |
+| Elf | Unarmored and fey: lowest physical, mid magical | 1.125 | 5.125 |
+
+Authoring rules the test enforces: tier 1 carries 0 to 3 on either axis, and
+nothing exceeds 25 (tier 6 sits at 8 to 20 on its race's strong axis). The weak
+axis may be 0 or slightly negative for unarmored or ethereal creatures (the
+banshee carries -5 physical, the dryad -2). Keep the full `-25..75` range for
+effects; authored values stay modest.
+
 ## Creature schema versions
 
 | Version | Meaning |
@@ -128,8 +148,8 @@ with `armorKind: 'physical' | 'magical' | 'both'`
 A version 1 file fails on load naming the file and its first creature. To
 migrate one, set both armors to `max(0, armor + armorType bonus)` (what the
 creature effectively carried before), drop `armorType` and set `schemaVersion`
-to 3. The shipped rosters were migrated exactly this way; giving each race its
-own physical/magical profile is a separate balance task (tower-def-6nf.2).
+to 3. The shipped rosters were migrated exactly this way, then re-authored to
+the race armor profiles above (tower-def-6nf.2).
 
 ## Lore voice
 
