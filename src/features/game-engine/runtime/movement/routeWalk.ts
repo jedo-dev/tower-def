@@ -1,8 +1,10 @@
 import {
   getAbilitySpeedMultiplier,
   getEffectiveSpeedMultiplier,
+  takePendingKnockbackCells,
   type CreepEntity,
 } from '../../../../entities/creep';
+import { GRID_DIMENSIONS } from '../../../../shared/constants/grid';
 import type { GridPosition } from '../../../../shared/types/pathfinding';
 import { getRemainingRouteDistance } from '../../../../shared/lib/pathfinding/routeProgress';
 import {
@@ -145,6 +147,77 @@ export function advanceCreepAlongRoute(
 }
 
 /**
+ * Walks one creep `distancePx` back along its route (knockback), moving
+ * `position` in place and never past the route start. Mirrors
+ * `advanceCreepAlongRoute`: `pathIndex` and `position` name the waypoint the
+ * creep last passed, so retreating past a waypoint steps them back.
+ */
+export function retreatCreepAlongRoute(
+  creep: RouteWalker,
+  route: WaveRoute,
+  writeCellCenter: WriteCellCenter,
+  position: MutablePoint,
+  distancePx: number,
+): void {
+  const footprintCenterOffsetPx = creep.footprintCenterOffsetPx ?? 0;
+  let remainingPx = distancePx;
+
+  while (remainingPx > 0) {
+    const backIndex = creep.entity.pathIndex;
+    writeCellCenter(route[backIndex], waypointPx);
+    const dx = waypointPx.x + footprintCenterOffsetPx - position.x;
+    const dy = waypointPx.y + footprintCenterOffsetPx - position.y;
+    const distanceToBack = Math.hypot(dx, dy);
+
+    if (distanceToBack > remainingPx) {
+      const ratio = remainingPx / distanceToBack;
+      position.x += dx * ratio;
+      position.y += dy * ratio;
+      break;
+    }
+
+    position.x += dx;
+    position.y += dy;
+    remainingPx -= distanceToBack;
+
+    if (backIndex === 0) {
+      break;
+    }
+    creep.entity.pathIndex = backIndex - 1;
+    const passed = route[backIndex - 1];
+    creep.entity.position = { x: passed.x, y: passed.y };
+  }
+
+  writeCellCenter(route[creep.entity.pathIndex + 1], waypointPx);
+  const pixelsToNextWaypoint = Math.hypot(
+    waypointPx.x + footprintCenterOffsetPx - position.x,
+    waypointPx.y + footprintCenterOffsetPx - position.y,
+  );
+  writeRemainingRouteDistance(creep.entity, route, writeCellCenter, pixelsToNextWaypoint);
+}
+
+/** Applies a queued knockback (`pendingKnockbackCells`) before the creep's step. */
+function applyPendingKnockback<C extends RouteWalker>(
+  creep: C,
+  route: WaveRoute,
+  motion: RouteWalkMotion<C>,
+): void {
+  const cells = takePendingKnockbackCells(creep.entity);
+  if (cells <= 0 || creep.entity.pathIndex + 1 >= route.length) {
+    return;
+  }
+  motion.readPositionPx(creep, positionPx);
+  retreatCreepAlongRoute(
+    creep,
+    route,
+    motion.writeCellCenter,
+    positionPx,
+    cells * GRID_DIMENSIONS.cellSize,
+  );
+  motion.commitMove(creep, positionPx, route);
+}
+
+/**
  * Moves every alive creep along the wave route for its move type and size
  * class (air creeps fly the straight air route over the maze) and reports
  * each one that reaches the exit. `deltaMs` is used as given; clamping frame
@@ -169,6 +242,10 @@ export function walkCreepsAlongRoutes<C extends RouteWalker>(
     const route = selectWaveRoute(routes, creep.entity);
     if (route.length === 0) {
       continue;
+    }
+
+    if (creep.entity.pendingKnockbackCells !== undefined) {
+      applyPendingKnockback(creep, route, motion);
     }
 
     // A stunned creep holds its ground but must still be able to leak once it

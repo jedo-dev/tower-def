@@ -39,6 +39,11 @@ export type TowerAbilities = {
    * cone of this many degrees toward the target, at full damage (Wyrm Breath).
    */
   coneDegrees?: number;
+  /**
+   * Each hit pushes a small or medium creep this many cells back along its own
+   * route (large creeps stand firm); movement applies it on its next step.
+   */
+  knockbackCells?: number;
 };
 
 type TargetedCreep = Pick<CreepEntity, 'moveType' | 'sizeClass' | 'hp' | 'maxHp'>;

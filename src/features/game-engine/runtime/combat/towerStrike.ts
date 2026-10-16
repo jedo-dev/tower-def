@@ -1,6 +1,7 @@
 import {
   applyDamageToCreep,
   applyEffectToCreep,
+  queueCreepKnockback,
   type ApplyEffectInput,
 } from '../../../../entities/creep';
 import {
@@ -117,10 +118,8 @@ export function strikeCreep<C extends CombatCreep, T extends CombatTower>(
   damageType: DamageType,
   hooks: TowerCombatHooks<C, T>,
 ): StrikeResult {
-  const targetMultiplier = resolveTargetDamageMultiplier(
-    tower.entity.combatStats.abilities,
-    creep.entity,
-  );
+  const abilities = tower.entity.combatStats.abilities;
+  const targetMultiplier = resolveTargetDamageMultiplier(abilities, creep.entity);
   const damageResult = applyDamageToCreep(
     creep.entity,
     damage * targetMultiplier,
@@ -132,6 +131,9 @@ export function strikeCreep<C extends CombatCreep, T extends CombatTower>(
     hooks.onCreepRevived?.(creep);
   }
   applyOnHitEffects(tower, creep, hooks);
+  if (abilities?.knockbackCells !== undefined) {
+    queueCreepKnockback(creep.entity, abilities.knockbackCells);
+  }
   hooks.onCreepHit(creep);
   return { damageApplied: damageResult.damageApplied, killed: damageResult.killed };
 }

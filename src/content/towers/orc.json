@@ -219,8 +219,7 @@
               "range": 10,
               "attackCooldownMs": 1650,
               "splashRadius": 5,
-              "abilities": { "minRangeCells": 2 },
-              "onHitEffects": [{ "effectId": "stun", "durationMs": 300 }],
+              "abilities": { "minRangeCells": 2, "knockbackCells": 1 },
               "allowedTargets": "both"
             }
           ]

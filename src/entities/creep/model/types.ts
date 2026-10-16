@@ -130,4 +130,10 @@ export type CreepAbilityRuntime = {
   isOnSecondLife?: boolean;
   /** Route length in cells when it spawned, for `speedBoostLastRouteShare`. */
   routeDistanceAtSpawn?: number;
+  /**
+   * Cells a tower knocked the creep back since its last movement step
+   * (`knockbackCells`, tower-def-bge.9); movement walks it back along its own
+   * route and clears it. Absent means none.
+   */
+  pendingKnockbackCells?: number;
 };

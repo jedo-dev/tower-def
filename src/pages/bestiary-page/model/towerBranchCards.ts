@@ -43,6 +43,9 @@ function describeAbilities(abilities: TowerAbilities): string[] {
   if (abilities.coneDegrees !== undefined) {
     parts.push(`hits all in a ${abilities.coneDegrees}° cone`);
   }
+  if (abilities.knockbackCells !== undefined) {
+    parts.push(`knocks small and medium back ${formatCells(abilities.knockbackCells)}`);
+  }
   if (abilities.airDamageMultiplier !== undefined) {
     parts.push(`${formatMultiplier(abilities.airDamageMultiplier)} vs air`);
   }

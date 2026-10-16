@@ -823,7 +823,7 @@ effect or aura mechanic (`towerTalentContent.test.ts`).
 | Spear Watchtower / Heavy Spear | ignores 5-20 physical armor | on-hit physical `armor_break` 5-20 for 1 s (a debuff other towers also profit from) |
 | Burning Pit / Napalm | burning creeps run 10% slower (7) | on-hit `chill` 0.1 |
 | Burning Pit / Mortar | targets air too (4) | **restored** (tower-def-bge.9): grade `allowedTargets` `both` on grades 4-7, damage back to the doc's 50 / 62 / 78 / 100 |
-| Burning Pit / Mortar | knocks small creeps back a cell (7) | on-hit `stun` 300 ms |
+| Burning Pit / Mortar | knocks small creeps back a cell (7) | **restored** (tower-def-bge.9): `knockbackCells` 1 (small and medium creeps, as Grapeshot; large ones stand firm) |
 | Lightning Totem / Thunderstorm | 8 jumps (7) | 6, the `TOWER_CHAIN_BOUNDS` maximum |
 | Lightning Totem / both | per-grade jumps, falloff and jump range | authored on every grade, but combat still reads the archetype chain (3 jumps, 4 cells, -25%); live once combat reads the grade chain |
 | Lightning Totem / Thunder Strike | stun only on the first target (4) | the stun is on-hit, so every creep in the chain is stunned |
@@ -835,7 +835,7 @@ effect or aura mechanic (`towerTalentContent.test.ts`).
 | Guard Archer / Crossbowmen | a flier hit loses 10% max health (7) | `airDamageMultiplier` 2.2 instead of 2.0 |
 | Cannon Bastion / Siege Cannon | +10-30 per mille of max health per target, large x1.5 / x2 | `largeTargetMultiplier` 1.15 / 1.25 / 1.5 / 2 on the physical blast |
 | Cannon Bastion / Grapeshot | damage 36 at 4-5, below grade 3's 38 | 38 / 38 / 40 / 42 (keeps grade 4 at or above grade 3) |
-| Cannon Bastion / Grapeshot | small and medium creeps knocked back 0.5 / 1 cell (6 / 7) | on-hit `stun` 200 / 300 ms (hits large creeps too) |
+| Cannon Bastion / Grapeshot | small and medium creeps knocked back 0.5 / 1 cell (6 / 7) | **restored** (tower-def-bge.9): `knockbackCells` 0.5 / 1 |
 | Alchemist Tower / Plague Flasks | poison jumps to one / two neighbours on death (6 / 7) | `extraTargets` 1 / 2 at 0.5 share (neighbours are poisoned directly) |
 | Alchemist Tower / Acid | armor can go negative at 2 stacks (7) | always true: broken armor already goes down to -25 |
 | Guard Post / Headquarters | +5% crit to every neighbour (7) | physical damage bonus 0.25 instead of 0.20 |
@@ -876,6 +876,7 @@ expected wave, never a roll:
 | `extraTargets` (+ share) | up to N more creeps of those the route packs within the tower's range, at their share |
 | `pierceLine` | its share on the creeps within 2 cells of the target on the route |
 | `coneDegrees` (tower-def-bge.9, `deferredMechanicsValue.ts`) | `coneDegrees / 360` of the other creeps the route packs within range, at full damage |
+| `knockbackCells` (tower-def-bge.9) | not valued (0): a conservative floor, like a stun |
 | `volleyEveryMs` (+ share) | `damage * share / interval` on the creeps in range around the target (at most 6); support towers too |
 | `airDamageMultiplier` / `groundDamageMultiplier` | in full on the lane whose creeps fly / walk (the ledger knows its lane) |
 | `largeTargetMultiplier` / `fullHealthBonusMultiplier` | on 20% / 25% of hits |

@@ -509,6 +509,7 @@ brings the next level's object (or none).
 | `minRangeCells` | 0-12, below `range` | Targeting ignores creeps closer than this (mortar dead zone). |
 | `volleyEveryMs` | 500-60000 | Every this many ms the tower hits every valid creep in range once, besides its normal attack (support towers too). A ready volley waits for a target; a new tower starts ready. |
 | `volleyDamageShare` | 0-5 | Share of the tower's damage a volley deals; 1 when omitted. Needs `volleyEveryMs`. |
+| `knockbackCells` | 0.1-3 | Every hit pushes a small or medium creep this many cells back along its own route (air creeps along the air line); large creeps stand firm. The push is queued on the creep (`pendingKnockbackCells`, the strongest of the frame's pushes) and the movement step walks it back, never past the route start, raising its remaining route distance (tower-def-bge.9, Mortar, Grapeshot). |
 | `coneDegrees` | 10-180 | A single-target shot also hits every other valid creep in range whose footprint centre lies inside a cone of this opening from the tower centre toward the target, at full damage (tower-def-bge.9, Wyrm Breath). Field order, deterministic. |
 
 Target multipliers multiply together and apply to every hit of the tower

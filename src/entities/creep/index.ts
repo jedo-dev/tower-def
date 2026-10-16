@@ -47,3 +47,4 @@ export {
   tickCreepAbilities,
 } from './model/abilities';
 export { getIncomingDamageMultiplier } from './model/abilityDamage';
+export { queueCreepKnockback, takePendingKnockbackCells } from './model/knockback';

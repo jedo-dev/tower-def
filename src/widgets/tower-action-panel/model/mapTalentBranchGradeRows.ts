@@ -65,6 +65,9 @@ export function describeTowerAbilities(abilities: TowerAbilities | undefined): s
   if (abilities.coneDegrees !== undefined) {
     phrases.push(`Cone ${abilities.coneDegrees}°`);
   }
+  if (abilities.knockbackCells !== undefined) {
+    phrases.push(`Knockback ${abilities.knockbackCells}`);
+  }
   if (abilities.airDamageMultiplier !== undefined) {
     phrases.push(`${formatMultiplier(abilities.airDamageMultiplier)} vs air`);
   }
