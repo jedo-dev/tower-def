@@ -5,7 +5,7 @@ import { createInitialDuelMatchState } from './state';
 import { recordTowerBranchChoice } from './towerBranchChoices';
 
 const ARCHER = 'undead_bone_archer_tower';
-const ARCHER_BRANCH = 'undead_bone_archer_tower_branch_i';
+const ARCHER_BRANCH = 'undead_bone_archer_tower_volley';
 
 function createStateWithPick() {
   const state = createInitialDuelMatchState(RaceId.UNDEAD, RaceId.ORC);
