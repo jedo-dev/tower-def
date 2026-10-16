@@ -10,7 +10,7 @@ import type { SoundId } from '../../../../shared/lib/sound-registry/audio.types'
 import { CreepSoundSlot } from '../../../../shared/types/sound-ids';
 import type { GameSoundRouter } from '../audio/gameSoundRouting';
 import type { CreepRenderState } from '../../scenes/gameScene.types';
-import { walkCreepsAlongRoutes, type MutablePoint } from './routeWalk';
+import { walkCreepsAlongRoutes, type MutablePoint, type RouteWalkMotion } from './routeWalk';
 
 export type MovementRuntimeConfig = {
   creepMaxSimulationDeltaMs: number;
@@ -53,10 +53,17 @@ function markCreepEscaped(
   deps.playSound('economy.life_lost');
   deps.onHudChanged();
 
-  const escapedCount = state.activeCreeps.filter(
-    (candidate) => candidate.entity.status === 'escaped',
-  ).length;
-  deps.onEscapedCountUpdated(escapedCount);
+  deps.onEscapedCountUpdated(countEscapedCreeps(state.activeCreeps));
+}
+
+function countEscapedCreeps(creeps: readonly CreepRenderState[]): number {
+  let escapedCount = 0;
+  for (let index = 0; index < creeps.length; index += 1) {
+    if (creeps[index].entity.status === 'escaped') {
+      escapedCount += 1;
+    }
+  }
+  return escapedCount;
 }
 
 /**
@@ -105,16 +112,47 @@ export function moveCreepsAlongPath(
 
   const normalizedDeltaMs = Math.min(deltaMs, config.creepMaxSimulationDeltaMs);
 
-  walkCreepsAlongRoutes(
-    state.activeCreeps,
-    state.activeCreepRoutes,
-    {
-      writeCellCenter: deps.writeCellCenter,
-      baseMoveSpeedPxPerSec: config.creepBaseMoveSpeedPxPerSec,
-      readPositionPx: readSpritePosition,
-      commitMove: commitSpriteMove,
-    },
-    normalizedDeltaMs,
-    (creep) => markCreepEscaped(state, deps, creep),
-  );
+  // One motion object and one exit callback for every call instead of a fresh
+  // pair per frame. The call's field is parked in `escapeContext` for the
+  // callback and the previous one restored afterwards, so a nested call
+  // (none exists today) would still see its own field.
+  const previousState = escapeContext.state;
+  const previousDeps = escapeContext.deps;
+  spriteMotion.writeCellCenter = deps.writeCellCenter;
+  spriteMotion.baseMoveSpeedPxPerSec = config.creepBaseMoveSpeedPxPerSec;
+  escapeContext.state = state;
+  escapeContext.deps = deps;
+  try {
+    walkCreepsAlongRoutes(
+      state.activeCreeps,
+      state.activeCreepRoutes,
+      spriteMotion,
+      normalizedDeltaMs,
+      markContextCreepEscaped,
+    );
+  } finally {
+    escapeContext.state = previousState;
+    escapeContext.deps = previousDeps;
+  }
+}
+
+function writeNoCellCenter(): void {}
+
+/** Reused by every `moveCreepsAlongPath` call; the per-call fields are set on entry. */
+const spriteMotion: RouteWalkMotion<CreepRenderState> = {
+  writeCellCenter: writeNoCellCenter,
+  baseMoveSpeedPxPerSec: 0,
+  readPositionPx: readSpritePosition,
+  commitMove: commitSpriteMove,
+};
+
+/** The field `markContextCreepEscaped` reports to, set for the duration of a move. */
+const escapeContext: { state?: MovementRuntimeState; deps?: MovementRuntimeDeps } = {};
+
+function markContextCreepEscaped(creep: CreepRenderState): void {
+  const { state, deps } = escapeContext;
+  if (state === undefined || deps === undefined) {
+    return;
+  }
+  markCreepEscaped(state, deps, creep);
 }

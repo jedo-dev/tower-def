@@ -43,6 +43,20 @@ export type ReadyWaveSpawns = {
   pending: PendingWaveSpawn[];
 };
 
+/**
+ * Whether any spawn is due at `nowMs`. Callers check this every frame before
+ * `takeReadyWaveSpawns`, so the frames between spawns (nearly all of them)
+ * keep the schedule as is instead of copying it.
+ */
+export function hasReadyWaveSpawn(spawns: readonly PendingWaveSpawn[], nowMs: number): boolean {
+  for (let index = 0; index < spawns.length; index += 1) {
+    if (spawns[index].spawnAtMs <= nowMs) {
+      return true;
+    }
+  }
+  return false;
+}
+
 /** Splits the schedule into spawns due at `nowMs` and those still waiting. */
 export function takeReadyWaveSpawns(
   spawns: readonly PendingWaveSpawn[],

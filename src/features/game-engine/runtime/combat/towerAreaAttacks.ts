@@ -31,6 +31,70 @@ export function applySingleTargetDamage<C extends CombatCreep, T extends CombatT
   }
 }
 
+/**
+ * Creeps a splash shot hits, collected before any of them is struck (a kill
+ * during the strikes must not change who the blast caught). Used as a stack:
+ * a shot claims the slots from `splashTargetTop` up and releases them when it
+ * is done, so a splash fired from inside another one's hooks cannot clobber
+ * the outer selection. Slots are cleared on release so dead creeps are not
+ * retained; the array itself is reused, so a splash shot allocates nothing
+ * once it has grown to the largest blast.
+ */
+const splashTargets: (CombatCreep | undefined)[] = [];
+let splashTargetTop = 0;
+
+/** The module-wide splash target stack; exposed so tests can check reuse. */
+export function getSplashTargetBuffer(): readonly (CombatCreep | undefined)[] {
+  return splashTargets;
+}
+
+function isInSplash<C extends CombatCreep, T extends CombatTower>(
+  creep: C,
+  tower: T,
+  hooks: TowerCombatHooks<C, T>,
+  towerCenterPx: { x: number; y: number },
+  splashRadiusPx: number,
+): boolean {
+  if (
+    creep.entity.status !== 'alive' ||
+    isCreepHidden(creep.entity) ||
+    !canTowerTargetCreep(tower.entity, creep.entity)
+  ) {
+    return false;
+  }
+  const creepCenter = hooks.toCellCenter(getCreepFootprintCenter(creep.entity));
+  const distance = Math.hypot(creepCenter.x - towerCenterPx.x, creepCenter.y - towerCenterPx.y);
+  return distance <= splashRadiusPx;
+}
+
+/** Pushes the creeps the blast catches onto the stack; returns the new top. */
+function collectSplashTargets<C extends CombatCreep, T extends CombatTower>(
+  creeps: readonly C[],
+  tower: T,
+  hooks: TowerCombatHooks<C, T>,
+  start: number,
+): number {
+  const splashRadius = tower.entity.combatStats.splashRadius ?? DEFAULT_SPLASH_RADIUS_CELLS;
+  const splashRadiusPx = splashRadius * GRID_DIMENSIONS.cellSize;
+  const towerCenterPx = hooks.toCellCenter(getTowerCenter(tower.entity));
+  let end = start;
+
+  for (let index = 0; index < creeps.length; index += 1) {
+    const creep = creeps[index];
+    if (!isInSplash(creep, tower, hooks, towerCenterPx, splashRadiusPx)) {
+      continue;
+    }
+    if (end < splashTargets.length) {
+      splashTargets[end] = creep;
+    } else {
+      splashTargets.push(creep);
+    }
+    end += 1;
+  }
+
+  return end;
+}
+
 export function applySplashDamage<C extends CombatCreep, T extends CombatTower>(
   field: CombatField<C, T>,
   tower: T,
@@ -39,32 +103,28 @@ export function applySplashDamage<C extends CombatCreep, T extends CombatTower>(
   damageType: DamageType,
   hooks: TowerCombatHooks<C, T>,
 ): void {
-  const splashRadius = tower.entity.combatStats.splashRadius ?? DEFAULT_SPLASH_RADIUS_CELLS;
-  const splashRadiusPx = splashRadius * GRID_DIMENSIONS.cellSize;
-  const towerCenterPx = hooks.toCellCenter(getTowerCenter(tower.entity));
-
   // A ground-only splash never touches a flier over its blast; a both-scope one does.
-  const creepsInSplashRadius = field.creeps.filter((creep) => {
-    if (
-      creep.entity.status !== 'alive' ||
-      isCreepHidden(creep.entity) ||
-      !canTowerTargetCreep(tower.entity, creep.entity)
-    ) {
-      return false;
-    }
-    const creepCenter = hooks.toCellCenter(getCreepFootprintCenter(creep.entity));
-    const distance = Math.hypot(creepCenter.x - towerCenterPx.x, creepCenter.y - towerCenterPx.y);
-    return distance <= splashRadiusPx;
-  });
+  const start = splashTargetTop;
+  const end = collectSplashTargets(field.creeps, tower, hooks, start);
+  splashTargetTop = end;
 
   let totalDamageDealt = 0;
-  for (const creep of creepsInSplashRadius) {
-    const result = strikeCreep(tower, creep, shotDamage, damageType, hooks);
-    totalDamageDealt += result.damageApplied;
+  try {
+    for (let index = start; index < end; index += 1) {
+      // Slots in [start, end) were filled from this field's creeps (type C).
+      const creep = splashTargets[index] as C;
+      const result = strikeCreep(tower, creep, shotDamage, damageType, hooks);
+      totalDamageDealt += result.damageApplied;
 
-    if (result.killed) {
-      hooks.onCreepKilled(creep, tower);
+      if (result.killed) {
+        hooks.onCreepKilled(creep, tower);
+      }
     }
+  } finally {
+    for (let index = start; index < end; index += 1) {
+      splashTargets[index] = undefined;
+    }
+    splashTargetTop = start;
   }
 
   hooks.onTargetStruck(tower);

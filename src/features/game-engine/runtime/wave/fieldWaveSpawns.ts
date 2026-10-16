@@ -16,6 +16,7 @@ import type { BattlefieldRenderState } from '../battlefield/battlefieldRenderSta
 import { destroyCreepRenderState } from '../combat/creepEffectVisuals';
 import {
   createWaveCreepEntity,
+  hasReadyWaveSpawn,
   scheduleWaveSpawns,
   takeReadyWaveSpawns,
   type WaveSpawnTiming,
@@ -132,6 +133,8 @@ export function processPendingWaveSpawns(
   nowMs: number,
 ): void {
   if (state.pendingWaveSpawns.length === 0 || !hasWaveRoute(state.activeCreepRoutes)) return;
+  // Between spawns the schedule stays as is: no per-frame copy of it.
+  if (!hasReadyWaveSpawn(state.pendingWaveSpawns, nowMs)) return;
 
   const { ready, pending } = takeReadyWaveSpawns(state.pendingWaveSpawns, nowMs);
   state.pendingWaveSpawns = pending;

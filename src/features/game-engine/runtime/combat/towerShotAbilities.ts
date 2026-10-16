@@ -12,7 +12,9 @@ import type { CombatCreep, CombatField, CombatTower, TowerCombatHooks } from './
 import { strikeAndReport } from './towerStrike';
 
 // Abilities that widen a single-target shot (extra targets, piercing line)
-// and the periodic volley. None allocates: selection walks the field in place.
+// and the periodic volley. None allocates: selection walks the field in place,
+// and the volley cooldown is written into the tower's runtime in place (each
+// runtime belongs to one tower and is only read through `tower.runtime`).
 
 /** Orders creeps by distance to the tower, then by id, so selection is deterministic. */
 function isCloserThan(
@@ -133,7 +135,7 @@ export function resolveTowerVolley<C extends CombatCreep, T extends CombatTower>
 
   if (remainingMs > 0 || !hasTargetInRange(field, tower)) {
     if (remainingMs !== tower.runtime.volleyCooldownRemainingMs) {
-      tower.runtime = { ...tower.runtime, volleyCooldownRemainingMs: remainingMs };
+      tower.runtime.volleyCooldownRemainingMs = remainingMs;
     }
     return;
   }
@@ -148,5 +150,5 @@ export function resolveTowerVolley<C extends CombatCreep, T extends CombatTower>
   }
 
   hooks.onTargetStruck(tower);
-  tower.runtime = { ...tower.runtime, volleyCooldownRemainingMs: volleyEveryMs };
+  tower.runtime.volleyCooldownRemainingMs = volleyEveryMs;
 }
