@@ -125,7 +125,7 @@ describe('upgrading an authored tower', () => {
   }
 
   it('follows the archetype curve when the tower declares none', () => {
-    const tower = createPlacedTower('elf_moonwell');
+    const tower = createPlacedTower('orc_tar_pit');
 
     expect(resolveTowerUpgradeConfig(tower)).toBe(TOWER_UPGRADE_CONFIG[tower.type]);
     expect(getTowerStatsForTowerLevel(tower, 2)).toEqual(
@@ -142,7 +142,7 @@ describe('upgrading an authored tower', () => {
   });
 
   it('prefers a curve the tower authors for itself', () => {
-    const tower = createPlacedTower('elf_moonwell');
+    const tower = createPlacedTower('orc_tar_pit');
     const authoredCurve = {
       ...tower,
       buildableTowerId: undefined,

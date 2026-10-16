@@ -658,6 +658,123 @@ raw damage of that mix it takes to kill it per gold, so the opponent sends the
 creep whose armor the defender's towers counter worst: plated creeps into an
 archer field, warded ones into a caster field.
 
+### Armor types rebalance (tower-def-6nf.4)
+
+Measured after two-axis armor with race profiles (docs/08 "Race armor
+profiles"), tower damage types (Thorn Spire in percent), damage over time
+through magical armor and the type-aware computer opponent (6nf.3 above).
+Same two tables as before: the standard batch (hard vs hard, six race pairs,
+seeds 1-10, classic and seeded maps, baseline undead, 60 duels per race, a
+draw counting half) and the game-faithful batch (each race in seat A with its
+own race as the baseline against the other three, hard vs hard, classic,
+seeds 1-10, 30 duels a row).
+
+Diagnosis of the state after 6nf.3:
+
+- **Human ran away with the standard table (97%).** The human archer's 25 /
+  37 / 50 was the anti-air dial of tower-def-xwc.5, set while armor was one
+  value. The undead baseline now carries its armor on the magical axis (1.9
+  physical, 8.6 magical on average), so the race whose kit is the most
+  physical (archer and cannon) met the softest armor with the hardest archer.
+- **Undead was last on both tables (24% / 18%).** Every undead row plays
+  against its own roster, and the undead kit is magical where that roster is
+  warded (plague tower, frost nest; the obelisk deals nothing).
+- **Orc and elf won at home (87% / 83%).** The orc roster is plated against
+  arrows and the orc kit is the one with two magical damage towers (lightning
+  totem, tar pit) facing kits built on physical archers. The elf roster is the
+  fastest, which the elf moonwell's chill answers, and Thorn Spire's percent
+  poison scales into its late heavies whatever their armor.
+
+Changes (content only; the planner and the waves are untouched):
+
+| Lever | File | Old | New |
+| --- | --- | --- | --- |
+| Human guard archer damage L1 / L2 / L3 | `towers/human.json` | 25 / 37 / 50 | 23 / 35 / 46 |
+| Undead bone archer damage L1 / L2 / L3 | `towers/undead.json` | 19 / 29 / 38 | 20 / 30 / 40 |
+| Undead bone archer range L1 / L2 / L3 | same | 6 / 6.4 / 6.8 | 5.7 / 6.2 / 6.6 |
+| Undead frost wyrm nest damage L1 (L2 / L3) | same, now authors `levels` | 19 (25 / 31) | 20 (25 / 31) |
+| Elf moon archer range L1 / L2 / L3 | `towers/elf.json`, now authors `levels` | 6 / 6.4 / 6.8 | 6.2 / 6.6 / 7 |
+| Elf moonwell chill L1 / L2 / L3 | same, now authors `levels` | 0.35 / 0.45 / 0.55 | 0.28 / 0.38 / 0.48 |
+| Thorn Spire poison stack cap L3 (per mille unchanged, 6 / 7 / 8) | same | 5 | 4 |
+| Chain damage L1 / L2 / L3 (orc lightning totem) | `towers/archetypes.json`, `towers/orc.json` | 24 / 35 / 48 | 22 / 32 / 44 |
+| Orc troll / wind rider / tauren armor (physical / magical) | `units/orc.json` | 7/1, 8/1, 16/2 | 6/2, 7/2, 13/4 |
+
+The orc roster averages move from 6.125 physical / 1.125 magical to 5.5 /
+1.625, still the highest physical and lowest magical of the four races
+(docs/08). The frost wyrm nest's level 1 damage of 20 came in with the archer
+pass and stayed because every table below was measured with it; the nest now
+authors its whole curve, as docs/08 "Per-race stats" requires.
+
+Standard batch:
+
+| Race | Before (classic / seeded) | After (classic / seeded) |
+| --- | --- | --- |
+| Undead | 24.2% (18 / 30) | 50.0% (43 / 57) |
+| Orc | 41.7% (53 / 30) | 51.7% (60 / 43) |
+| Human | 96.7% (97 / 97) | 43.3% (47 / 40) |
+| Elf | 37.5% (32 / 43) | 55.0% (50 / 60) |
+
+Pacing held: median 25 rounds (22-29) on the classic map and 28 (21-33) on
+seeded maps, before and after; towers at round 5 12-13 per side (8-15); draws
+3% / 0% before, 0% / 0% after; no round-cap hits; unspent gold after round 15
+about 88 of 543 income on classic and 166 of 723 on seeded maps.
+
+Game-faithful batch:
+
+| Player race | Before: wins / median rounds / unspent gold r16+ | After: wins / median rounds / unspent gold r16+ |
+| --- | --- | --- |
+| Undead | 5.5 of 30 / 25 / 89 | 13 of 30 / 25 / 90 |
+| Orc | 26 of 30 / 25 / 81 | 21 of 30 / 25.5 / 85 |
+| Human | 15.5 of 30 / 27.5 / 112 | 13 of 30 / 27 / 104 |
+| Elf | 25 of 30 / 30 / 244 | 20 of 30 / 30 / 251 |
+
+Difficulty order spot-check (`--seeds 1-3 --matchups hard:normal --maps
+classic`, four race pairs four ways): hard won 32/14/2, 69% (before this pass
+32/12/4, 71%).
+
+How the dials behave, for the next pass:
+
+- **Equal-difficulty duels are hair-triggers.** Both fields face the same
+  wave, so a matchup goes almost entirely to the kit that is marginally
+  stronger: one point of archer damage moved a race by 30-60 points (human 22
+  / 24 / 25: 7% / 63% / 97% on the classic map; elf archer 21: 72%; undead
+  21: 73%). Range is the finer dial (undead archer range 5.6 / 5.7 / 5.8:
+  undead 35% / 48% / 70% on seeded maps), which is why the archers differ by
+  range now as well as damage.
+- **Cooldowns snap to the simulation tick.** `sim:duel` steps 50 ms and a
+  tower's cooldown restarts on the tick it fires, so 760 or 780 ms fight like
+  800 ms in the batch (but not in the game, at about 16 ms a frame), while
+  the planner still values the authored number. Tune cooldowns in steps of
+  50 ms or not at all.
+- **Thorn Spire is a late-game scaler.** Raising its per mille to 8 / 9 / 10
+  did nothing on the standard table (its 0.6% of a 50-health creature is a
+  third of a point; the early waves are held by archers either way) and added
+  about ten points to elf at home, where it melts the mountain giants. The L3
+  stack cap is the lever that reaches the late game, where percent poison is
+  strongest.
+- **Chill is the elf home lever.** The elf roster is the fastest, so the
+  moonwell's chill is worth most there: 0.32 / 0.42 / 0.52 left elf at home
+  73-87%, 0.28 / 0.38 / 0.48 brings it to 67% and costs about one point on
+  the standard table.
+
+Tried and rejected: undead magical armor -2 on the necromancer, banshee and
+frost wyrm (moved nothing that the archer did not), an elf archer cooldown of
+750 or 740 ms (elf 73-75%), elf archer range 6.3 (68%), human archer cooldown
+850 ms (17%).
+
+Known gaps: orc at home sits on the edge of the band (70%) and elf at home
+at 67%; elf-baseline duels still run a median of 30 rounds with about 250
+unspent gold after round 15, because the elf roster is the lightest and its
+waves outgrow a full board last. Human is the weakest race on seeded maps
+(40%) and at home (43%) with one anti-air damage tower; the human archer is
+at its band edge in both directions (22 and 24 both leave the band).
+
+How to measure it: the standard batch as in "Race balance" on `--maps
+classic` and `--maps seeded`, the game-faithful rows as in "Baseline race on
+the match", and `npm run sim:duel-batch -- --seeds 1-3 --matchups hard:normal
+--maps classic`. Each full map of the standard batch takes about 85 seconds
+and each game-faithful row about 45; run them one at a time.
+
 ## Suggested Improvements
 
 - Add difficulty presets for the computer opponent: relaxed, normal, aggressive.

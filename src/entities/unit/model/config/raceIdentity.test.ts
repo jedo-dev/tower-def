@@ -46,7 +46,7 @@ function rosterAverageArmor(race: RaceId, axis: ArmorAxis): number {
 /** Authored averages, mirrored in docs/08 "Race armor profiles"; update both together. */
 const RACE_ARMOR_PROFILES: Record<RaceId, { physical: number; magical: number }> = {
   [RaceId.UNDEAD]: { physical: 1.875, magical: 8.625 },
-  [RaceId.ORC]: { physical: 6.125, magical: 1.125 },
+  [RaceId.ORC]: { physical: 5.5, magical: 1.625 },
   [RaceId.HUMAN]: { physical: 5.125, magical: 4 },
   [RaceId.ELF]: { physical: 1.125, magical: 5.125 },
 };

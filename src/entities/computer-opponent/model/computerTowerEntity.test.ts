@@ -64,17 +64,18 @@ describe('entities/computer-opponent authored race towers', () => {
   });
 
   it('keeps every race on its own archer curve', () => {
-    const damageByRace = Object.fromEntries(
+    const statsByRace = Object.fromEntries(
       [RaceId.UNDEAD, RaceId.ORC, RaceId.HUMAN, RaceId.ELF].map((raceId) => [
         raceId,
-        createComputerTowerEntity('t', TowerTypeId.SINGLE, anchor, 50, raceId).combatStats.damage,
+        createComputerTowerEntity('t', TowerTypeId.SINGLE, anchor, 50, raceId).combatStats,
       ]),
     );
 
-    // Human archers, the race's only lever against fliers, hit hardest; the
-    // undead, whose chill and aura stack on the air line, hit softest.
-    expect(damageByRace[RaceId.HUMAN]).toBeGreaterThan(damageByRace[RaceId.ELF]);
-    expect(damageByRace[RaceId.UNDEAD]).toBeLessThan(damageByRace[RaceId.ELF]);
-    expect(damageByRace[RaceId.ELF]).toBe(TOWER_COMBAT_STATS_BY_TYPE.single.damage);
+    // Human archers, the race's only lever against fliers, hit hardest; elf
+    // archers outrange the rest and undead ones fall short (tower-def-6nf.4).
+    expect(statsByRace[RaceId.HUMAN].damage).toBeGreaterThan(statsByRace[RaceId.ELF].damage);
+    expect(statsByRace[RaceId.ELF].damage).toBe(TOWER_COMBAT_STATS_BY_TYPE.single.damage);
+    expect(statsByRace[RaceId.ELF].range).toBeGreaterThan(TOWER_COMBAT_STATS_BY_TYPE.single.range);
+    expect(statsByRace[RaceId.UNDEAD].range).toBeLessThan(TOWER_COMBAT_STATS_BY_TYPE.single.range);
   });
 });
