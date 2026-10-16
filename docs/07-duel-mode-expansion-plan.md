@@ -235,6 +235,7 @@ Difficulty changes only how well the computer decides; stats, gold, income and l
 | Sends: max share / max creeps / economy rounds / base pressure | `sendTuning.ts` | 0.2 / 3 / 5 / 0.2 | 0.7 / 9 / 0 / 0.8 (was 0.35 / 5 / 4 / 0.4, see "Normal race balance") | 0.7 / 9 / 2 / 0.8 (was 0.5 / 7 / 3 / 0.6) | 0.7 / 7 / 4 / 0.5 (was 0.7 / 9 / 2 / 0.8) |
 | Defence margins: threatened / comfortable | `threat-budget/constants.ts` | 1.8 / 3.2 | 1.6 / 2.8 | 1.5 / 2.5 | 1.4 / 2.3 |
 | Leak reaction delay (build phases) | `decisionMistakes.ts` | 1 (new) | 0 | 0 | 0 |
+| Talent valuation (tower-def-bge.5) | `talent-development/constants.ts` | none (never develops) | coarse | full | full |
 
 What separates the steps:
 
@@ -853,6 +854,73 @@ effect or aura mechanic (`towerTalentContent.test.ts`).
 
 Bounds clamped: Thunderstorm jumps (8 to 6). No other doc number exceeded
 `TOWER_STAT_BOUNDS`, `TOWER_CHAIN_BOUNDS` or `TOWER_ABILITY_BOUNDS`.
+
+### AI talent development (tower-def-bge.5)
+
+The computer develops towers past grade 3 through the same rules as the
+player (`entities/tower/model/talents.ts`): a branch only for a race tower
+type with a tower at grade 3 and no pick yet, paid with
+`TowerTalentPricing.BRANCH_COST`, then grades 4-7 one at a time along that
+branch. The pick is recorded in the side's `towerBranchChoices`
+(`applyComputerBuildStrategy` runs `canChooseBranch` / `chooseBranch`, then
+upgrades read the branch curve), so the game, `sim:duel` and the batch agree.
+
+**Damage model of the abilities** (`damage-placement/abilityDamageModel.ts`,
+tuning in `ABILITY_VALUATION`). Everything is an expectation over the
+expected wave, never a roll:
+
+| Field | Valued as |
+| --- | --- |
+| `critEveryNthShot` / `critMultiplier` | shot damage times `1 + (multiplier - 1) / N` |
+| `extraTargets` (+ share) | up to N more creeps of those the route packs within the tower's range, at their share |
+| `pierceLine` | its share on the creeps within 2 cells of the target on the route |
+| `volleyEveryMs` (+ share) | `damage * share / interval` on the creeps in range around the target (at most 6); support towers too |
+| `airDamageMultiplier` / `groundDamageMultiplier` | in full on the lane whose creeps fly / walk (the ledger knows its lane) |
+| `largeTargetMultiplier` / `fullHealthBonusMultiplier` | on 20% / 25% of hits |
+| per-grade `chain` | the grade's chain shape when it has one, the archetype's otherwise |
+| `vulnerability` | its magnitude on the tower's own damage (when the scope covers its type) and on the field's damage over the samples it keeps marked (half for a single-type scope), over what a stronger mark already adds, times the share of the wave it reaches |
+| `armor_break` | the same, with the gain read off the combat mitigation curve: the wave's efficiency of that type turned back into an equivalent armor, minus the reachable stacks' points |
+| chill `freezeAtStacks` / `freezeMs` | the frozen share of the time as a full stop, a mean slow up to 0.85 |
+| aura `damagePercentBonus` (+ type) | added to the aura's attack speed bonus for neighbours whose damage type it covers |
+| aura `incomePerRound` / `goldPerKill` | gold back: what the grade pays over 5 rounds (6 kills a round for `goldPerKill`) lowers the branch path's price, never below 25% |
+
+**Branch valuation** (`talent-development/`). For each undeveloped type the
+computer values both branches on its most valuable grade-3 tower, on the same
+route damage ledger (ground and air lane, against the expected wave's armor
+profile) that prices walls and upgrades:
+
+```txt
+gain[g]   = ledger value at grade g - ledger value at grade 3   (g = 4..7)
+pathCost  = branch price + grade 4..7 prices (120 + 950)
+effective = max(0.25 * pathCost, pathCost - economy gold back)
+score     = mean(gain[4..7]) / effective    -> picks the branch
+ratio     = gain[7] / effective             -> ranks the pick in the round plan
+```
+
+The better branch enters `planRoundInvestments` as a `choose-branch`
+candidate next to walls, damage towers and upgrades: it ranks by its whole
+path's value per gold but spends only the branch price, and picking it opens
+grade 4 upgrades for every grade-3 tower of the type. A grade step along a
+chosen branch is worth at least its share of the rest of the path
+(`(value at grade 7 - value now) * step price / gold to grade 7`), so a
+branch picked for its grade 7 mechanic is climbed, not stalled at grade 4.
+The upgrade cap of a defending round does not block a pick. Grades come one a
+round per tower, in order, as the curve forces.
+
+**Difficulty.** Easy never develops (`TalentValuation.NONE`). Normal values
+branches coarsely: each grade's numbers only (damage, range, reload, splash)
+over the tower's grade 3 mechanics, blind to what the branch adds (abilities,
+effects, aura changes), so it develops later and picks on raw numbers. Hard
+and nightmare value every grade in full.
+
+**Spot check** (`npm run sim:duel -- --seed 1`, undead hard vs orc normal;
+the round line now reports the top grade per side and the final boards list
+grades and picks): hard develops its Frost Wyrm Nest along Permafrost,
+reaching grade 4 at round 12, grade 5 at 13 and grade 7 by 19, and its Bone
+Archers along Cursed Arrow (final board: one tower each at grades 4, 6 and
+7); normal picks Sticky Tar and Spear Throwers late and reaches grade 4 in
+the last round. Hard wins with 11 lives (9 without development). Balance is a
+later task.
 
 ## Suggested Improvements
 
