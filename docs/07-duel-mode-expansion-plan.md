@@ -601,6 +601,63 @@ classic` and `--maps seeded`, the game-faithful rows as in "Baseline race on
 the match", and `npm run sim:duel-batch -- --seeds 1-3 --matchups hard:normal
 --maps classic` for the difficulty order.
 
+### AI damage types against armor (tower-def-6nf.3)
+
+The computer opponent reads damage the way combat deals it (Decision 013):
+every estimate goes through `calculateDamageAgainst` in
+`entities/creep/model/damage.ts`, the same rule `resolveIncomingDamage`
+applies, so the mitigation curve exists once. The model lives in
+`entities/computer-opponent/model/damage-profile/`.
+
+**Wave armor profile.** Each expected creep (baseline draw plus enemy sends,
+at the health it spawns with in that wave) is tallied per damage type as the
+raw damage it takes to kill it:
+
+```txt
+killDamage[physical] = hp / mitigation(physicalArmor)
+killDamage[magical]  = hp / mitigation(magicalArmor)
+killDamage[percent]  = 1000                      (any hp: percent ignores armor)
+efficiency[type]     = sum(hp) / sum(killDamage[type])
+```
+
+`efficiency[type]` is the hit points one raw point of that type removes from
+the wave. Ground and air lanes get their own profile (`IncomingThreat.
+groundEfficiency` / `airEfficiency`, carried on `DefenceLaneAssessment.
+damageEfficiency`). Percent efficiency is the mean maximum health over 1000,
+so a percent tower is worth more the bigger the wave's creatures are.
+
+**Defence assessment.** The route damage ledger multiplies each tower's raw
+damage by the efficiency of its type: shots at the tower's damage type
+(authored override, archetype otherwise), each damage-over-time effect at its
+own tick type (`onHitEffects[].damageType`, magical by default; a percent
+poison counts its ticks as per mille of maximum health). Ledger values are
+therefore hit points of the expected wave, and the lane margin
+
+```txt
+waveDamage / incomingHealth = sum over types of damage[type] / effectiveHealth[type]
+```
+
+is the inverse of the wave's time-to-kill with every damage type working on
+it at once. With alike armors this equals the old armor-adjusted margin, so
+the threat tunings stand.
+
+**Damage placement.** `planRoundInvestments` values walls, damage towers and
+upgrades from that ledger, so between two otherwise equal archetypes it buys
+the one whose damage goes through the wave's weaker armor (magical against an
+orc roster plated against arrows, physical against warded undead). Route gain
+is priced with the ledger's effective firepower per cell, and the cheapest
+wall's damage in effective terms. Single-tower scoring (defending, coverage
+towers) multiplies a placement's value by `computeArmorCounterFactor`: the
+tower's effective damage against the wave over the same against the wave with
+its two armors averaged (1 for auras, pure percent damage and alike armors).
+
+**Sends.** `DecisionContext.enemyDamageMix` is the other duelist's towers as
+shares of raw damage per type (`computeDefenceDamageMix`; even
+physical/magical while the field is empty). A creep's pressure value is the
+raw damage of that mix it takes to kill it per gold, so the opponent sends the
+creep whose armor the defender's towers counter worst: plated creeps into an
+archer field, warded ones into a caster field.
+
 ## Suggested Improvements
 
 - Add difficulty presets for the computer opponent: relaxed, normal, aggressive.
