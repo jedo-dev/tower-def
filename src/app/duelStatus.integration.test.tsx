@@ -22,13 +22,16 @@ const PLAYER_SENDS = 6;
  * Duel statuses rendered by the real widgets against the real scene over the
  * typed bridge (tower-def-k7m.5): each one shows exactly while it is true.
  */
+const SCENE_PRELOAD_TIMEOUT_MS = 60_000;
+
 describe('duel statuses (live scene + widgets)', () => {
   const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
   let harness: GameSceneHarness | null = null;
 
+  // Loading the real scene and content under full-suite load can exceed the 10s hook default.
   beforeAll(async () => {
     await preloadGameScene();
-  });
+  }, SCENE_PRELOAD_TIMEOUT_MS);
 
   afterEach(() => {
     cleanup();
