@@ -2,9 +2,11 @@ import {
   ARMOR_KINDS,
   DAMAGE_SCOPES,
   EffectId,
+  EffectStackingRule,
   type ArmorKind,
   type DamageScope,
 } from '../../../../shared/types/content-ids';
+import { resolveEffectDefinition } from '../../../../shared/constants/effects';
 import {
   ContentValidationError,
   assertKnownKeys,
@@ -23,6 +25,7 @@ import {
   TOWER_AURA_EXTENSION_BOUNDS,
   TOWER_AURA_EXTENSION_NUMBER_KEYS,
   TOWER_FREEZE_BOUNDS,
+  TOWER_STACK_BOUNDS,
 } from './towerAbilities.types';
 
 /**
@@ -122,6 +125,28 @@ export function parseAuraExtensions(
   }
 
   return extensions;
+}
+
+/**
+ * `maxStacks` of an on-hit effect: the authoritative stack cap of the
+ * application (1 = does not stack), a whole number in `TOWER_STACK_BOUNDS`.
+ * Only a stacking effect has stacks to cap, so it fails on any other.
+ */
+export function parseOnHitEffectMaxStacks(
+  effect: Record<string, unknown>,
+  effectId: EffectId,
+  location: ContentLocation,
+): number | undefined {
+  if (effect.maxStacks === undefined) {
+    return undefined;
+  }
+  if (resolveEffectDefinition(effectId).stackingRule !== EffectStackingRule.STACK) {
+    throw new ContentValidationError(
+      location,
+      `effect "${effectId}" does not stack and cannot declare "maxStacks"`,
+    );
+  }
+  return readBoundedInteger(effect, 'maxStacks', location, TOWER_STACK_BOUNDS.maxStacks);
 }
 
 type OnHitEffectExtensions = Pick<

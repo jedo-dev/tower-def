@@ -850,7 +850,7 @@ effect or aura mechanic (`towerTalentContent.test.ts`).
 | Thorn Spire / Thornbite | large creeps take x1.5 (7) | `largeTargetMultiplier` 1.5 (applies to hits, not to poison ticks) |
 | Thorn Spire / Grasping Vine | +20% / +35% damage while held (6 / 7) | on-hit `vulnerability` lasting as long as the stun |
 
-| Every tower | stack caps below 3 ("does not stack" or "stacks up to 2": Cursed Arrow, Heavy Spear, Napalm 4-6, Acid, the cloud and spore poison) | left out: an on-hit `maxStacks` only raises the balance cap (3 for poison, burn and armor break), so these stack to 3; Heavy Spear's 1 s break lasts just past its reload, so it mostly helps its own next spear |
+| Every tower | stack caps below 3 ("does not stack" or "stacks up to 2": Cursed Arrow, Heavy Spear, Napalm 4-6, Acid, the cloud and spore poison) | authored since tower-def-bge.8, which made an on-hit `maxStacks` the cap (1-10) instead of only raising the balance cap: Cursed Arrow breaks 1 / 1 / 2 / 2 (both breaks at 7), Heavy Spear 1, Napalm burn 1 / 1 / 2 / 3, Acid break 1 / 1 / 2 / 2, Plague Cloud poison 1, Spores poison 1 (grades 6-7). Grades 4-5 read "does not stack" where the doc names no stacks. A creep's running instance keeps the highest cap among the towers feeding it, so a no-stack tower adds to another tower's stacks without cutting them. Heavy Spear's 1 s break lasts just past its reload, so it mostly helps its own next spear |
 
 Bounds clamped: Thunderstorm jumps (8 to 6). No other doc number exceeded
 `TOWER_STAT_BOUNDS`, `TOWER_CHAIN_BOUNDS` or `TOWER_ABILITY_BOUNDS`.

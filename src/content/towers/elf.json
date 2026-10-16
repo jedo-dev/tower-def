@@ -119,7 +119,7 @@
               "splashRadius": 4.6,
               "onHitEffects": [
                 { "effectId": "chill", "magnitude": 0.3, "durationMs": 3000 },
-                { "effectId": "poison", "magnitude": 1.5, "durationMs": 3000 }
+                { "effectId": "poison", "magnitude": 1.5, "durationMs": 3000, "maxStacks": 1 }
               ]
             },
             {
@@ -130,7 +130,7 @@
               "splashRadius": 5,
               "onHitEffects": [
                 { "effectId": "chill", "magnitude": 0.35, "durationMs": 4000 },
-                { "effectId": "poison", "magnitude": 3, "durationMs": 4000 }
+                { "effectId": "poison", "magnitude": 3, "durationMs": 4000, "maxStacks": 1 }
               ]
             }
           ]

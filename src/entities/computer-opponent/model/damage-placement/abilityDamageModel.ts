@@ -3,6 +3,7 @@ import {
   EFFECT_DEFINITIONS,
   resolveEffectArmorKind,
   resolveEffectDamageScope,
+  resolveEffectMaxStacks,
 } from '../../../../shared/constants/effects';
 import { TOWER_ABILITY_BALANCE } from '../../../../shared/constants/towerAbilities';
 import {
@@ -155,7 +156,7 @@ const NO_AMPLIFICATION: DefenceAmplification = { ownGain: 0, fieldGain: 0, durat
 function reachableStacks(effect: TowerOnHitEffect, attackCooldownMs: number): number {
   const definition = EFFECT_DEFINITIONS[effect.effectId];
   const durationMs = effect.durationMs ?? definition.durationMs;
-  const maxStacks = effect.maxStacks ?? definition.maxStacks;
+  const maxStacks = resolveEffectMaxStacks(effect.effectId, effect.maxStacks);
   return Math.min(maxStacks, Math.max(1, durationMs / Math.max(1, attackCooldownMs)));
 }
 

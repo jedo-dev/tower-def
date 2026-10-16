@@ -1,5 +1,5 @@
 import { DAMAGE_OVER_TIME_DAMAGE_TYPE } from '../../../../shared/constants/damage';
-import { EFFECT_DEFINITIONS } from '../../../../shared/constants/effects';
+import { EFFECT_DEFINITIONS, resolveEffectMaxStacks } from '../../../../shared/constants/effects';
 import {
   canTargetScopeHitMoveType,
   EffectKind,
@@ -95,7 +95,7 @@ export function computeDamageOverTimeDps(
     }
     const magnitude = effect.magnitude ?? definition.magnitude;
     const durationMs = effect.durationMs ?? definition.durationMs;
-    const maxStacks = effect.maxStacks ?? definition.maxStacks;
+    const maxStacks = resolveEffectMaxStacks(effect.effectId, effect.maxStacks);
     const reachableStacks = Math.min(
       maxStacks,
       Math.max(1, durationMs / Math.max(1, tower.stats.attackCooldownMs)),

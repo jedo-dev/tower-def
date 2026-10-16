@@ -1,5 +1,5 @@
 import type { TowerOnHitEffect } from '../../../entities/tower';
-import { resolveEffectDefinition } from '../../../shared/constants/effects';
+import { resolveEffectDefinition, resolveEffectMaxStacks } from '../../../shared/constants/effects';
 import { ArmorKind, DamageScope, DamageType, EffectId } from '../../../shared/types/content-ids';
 import { formatPercentOfMaxHealth } from './combatTypeDisplay';
 import type { TowerSpecialViewModel } from './types';
@@ -74,8 +74,8 @@ export function describeOnHitEffect(effect: TowerOnHitEffect): TowerSpecialViewM
   const definition = resolveEffectDefinition(effect.effectId);
   const magnitude = effect.magnitude ?? definition.magnitude;
   const durationMs = effect.durationMs ?? definition.durationMs;
-  // An authored cap only raises the balance cap, as in `applyEffectToCreep`.
-  const maxStacks = Math.max(definition.maxStacks, effect.maxStacks ?? definition.maxStacks);
+  // The authored cap when present, as in `applyEffectToCreep`.
+  const maxStacks = resolveEffectMaxStacks(effect.effectId, effect.maxStacks);
 
   switch (effect.effectId) {
     case EffectId.CHILL:

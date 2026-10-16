@@ -71,7 +71,8 @@
                   "effectId": "armor_break",
                   "magnitude": 4,
                   "durationMs": 3000,
-                  "armorKind": "magical"
+                  "armorKind": "magical",
+                  "maxStacks": 1
                 }
               ]
             },
@@ -85,7 +86,8 @@
                   "effectId": "armor_break",
                   "magnitude": 6,
                   "durationMs": 3000,
-                  "armorKind": "magical"
+                  "armorKind": "magical",
+                  "maxStacks": 1
                 }
               ]
             },
@@ -99,7 +101,8 @@
                   "effectId": "armor_break",
                   "magnitude": 8,
                   "durationMs": 4000,
-                  "armorKind": "magical"
+                  "armorKind": "magical",
+                  "maxStacks": 2
                 }
               ]
             },
@@ -113,13 +116,15 @@
                   "effectId": "armor_break",
                   "magnitude": 10,
                   "durationMs": 4000,
-                  "armorKind": "magical"
+                  "armorKind": "magical",
+                  "maxStacks": 2
                 },
                 {
                   "effectId": "armor_break",
                   "magnitude": 5,
                   "durationMs": 4000,
-                  "armorKind": "physical"
+                  "armorKind": "physical",
+                  "maxStacks": 2
                 }
               ]
             }
@@ -153,7 +158,9 @@
               "range": 5.8,
               "attackCooldownMs": 1100,
               "splashRadius": 3.8,
-              "onHitEffects": [{ "effectId": "poison", "magnitude": 3, "durationMs": 2000 }]
+              "onHitEffects": [
+                { "effectId": "poison", "magnitude": 3, "durationMs": 2000, "maxStacks": 1 }
+              ]
             },
             {
               "level": 5,
@@ -161,7 +168,9 @@
               "range": 5.8,
               "attackCooldownMs": 1050,
               "splashRadius": 4.2,
-              "onHitEffects": [{ "effectId": "poison", "magnitude": 4, "durationMs": 3000 }]
+              "onHitEffects": [
+                { "effectId": "poison", "magnitude": 4, "durationMs": 3000, "maxStacks": 1 }
+              ]
             },
             {
               "level": 6,
@@ -170,7 +179,7 @@
               "attackCooldownMs": 1000,
               "splashRadius": 4.6,
               "onHitEffects": [
-                { "effectId": "poison", "magnitude": 5, "durationMs": 3000 },
+                { "effectId": "poison", "magnitude": 5, "durationMs": 3000, "maxStacks": 1 },
                 { "effectId": "chill", "magnitude": 0.15, "durationMs": 2000 }
               ]
             },
@@ -181,7 +190,7 @@
               "attackCooldownMs": 900,
               "splashRadius": 5,
               "onHitEffects": [
-                { "effectId": "poison", "magnitude": 7, "durationMs": 4000 },
+                { "effectId": "poison", "magnitude": 7, "durationMs": 4000, "maxStacks": 1 },
                 { "effectId": "chill", "magnitude": 0.25, "durationMs": 2000 }
               ]
             }

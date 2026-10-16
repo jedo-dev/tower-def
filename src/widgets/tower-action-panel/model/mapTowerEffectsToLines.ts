@@ -3,7 +3,7 @@ import {
   type TowerCombatStats,
   type TowerOnHitEffect,
 } from '../../../entities/tower';
-import { resolveEffectDefinition } from '../../../shared/constants/effects';
+import { resolveEffectDefinition, resolveEffectMaxStacks } from '../../../shared/constants/effects';
 import { EffectId, TowerAttackKind, type TowerTypeId } from '../../../shared/types/content-ids';
 
 /**
@@ -31,7 +31,7 @@ function describeOnHitEffect(effect: TowerOnHitEffect): TowerEffectLine {
   const definition = resolveEffectDefinition(effect.effectId);
   const magnitude = effect.magnitude ?? definition.magnitude;
   const durationMs = effect.durationMs ?? definition.durationMs;
-  const maxStacks = Math.max(definition.maxStacks, effect.maxStacks ?? definition.maxStacks);
+  const maxStacks = resolveEffectMaxStacks(effect.effectId, effect.maxStacks);
 
   switch (effect.effectId) {
     case EffectId.CHILL:

@@ -253,7 +253,8 @@
                   "effectId": "armor_break",
                   "magnitude": 4,
                   "durationMs": 4000,
-                  "armorKind": "both"
+                  "armorKind": "both",
+                  "maxStacks": 1
                 }
               ]
             },
@@ -268,7 +269,8 @@
                   "effectId": "armor_break",
                   "magnitude": 7,
                   "durationMs": 4000,
-                  "armorKind": "both"
+                  "armorKind": "both",
+                  "maxStacks": 1
                 }
               ]
             },
@@ -283,7 +285,8 @@
                   "effectId": "armor_break",
                   "magnitude": 10,
                   "durationMs": 5000,
-                  "armorKind": "both"
+                  "armorKind": "both",
+                  "maxStacks": 2
                 }
               ]
             },
@@ -298,7 +301,8 @@
                   "effectId": "armor_break",
                   "magnitude": 14,
                   "durationMs": 5000,
-                  "armorKind": "both"
+                  "armorKind": "both",
+                  "maxStacks": 2
                 }
               ]
             }
