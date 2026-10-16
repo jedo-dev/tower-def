@@ -152,10 +152,9 @@ export function createRouteDamageLedger(
   }
 
   /**
-   * Share of the wave a tower's on-hit effect reaches at least once: creeps
-   * struck per second (every creep a shot strikes, averaged over its reach)
-   * spread over the creeps arriving per second, `1 - e^(-struck / arrivals)`,
-   * since strikes fall again on creeps already struck.
+   * Share of the wave a tower's on-hit effect reaches: creeps struck per
+   * second (every creep a shot strikes, averaged over its reach) against
+   * creeps arriving per second, at most all of them.
    */
   function struckShare(tower: LedgerTower, boost: number): number {
     const covered = geometry.coveredSamples(tower.anchor, tower.stats.range);
@@ -165,7 +164,7 @@ export function createRouteDamageLedger(
     }
     const perShot = covered.length > 0 ? struck / covered.length : 1;
     const shotsPerSecond = (computeShotDps(tower.stats) / Math.max(1, tower.stats.damage)) * boost;
-    return 1 - Math.exp((-shotsPerSecond * perShot) / CREEP_ARRIVALS_PER_SECOND);
+    return Math.min(1, (shotsPerSecond * perShot) / CREEP_ARRIVALS_PER_SECOND);
   }
 
   function frostBonus(tower: LedgerTower, excludeIndex: number, boost: number): number {

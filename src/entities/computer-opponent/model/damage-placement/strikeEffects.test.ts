@@ -92,22 +92,18 @@ describe('entities/computer-opponent/damage-placement strike effects', () => {
     );
   });
 
-  it('lets a long chain walk along the wave past its first jump', () => {
-    const tower = ledgerTower(BETWEEN_LANES_ANCHOR, CHAIN_TYPE);
-    const short = withStats(tower, {
-      chain: { bounces: 1, bounceRangeCells: 3, damageFalloff: 0 },
+  it('counts every chain arc whole for the on-hit effects', () => {
+    const tower = withStats(ledgerTower(BETWEEN_LANES_ANCHOR, CHAIN_TYPE), {
+      chain: { bounces: 3, bounceRangeCells: 4, damageFalloff: 0.5 },
     });
-    const long = withStats(tower, {
-      chain: { bounces: 6, bounceRangeCells: 3, damageFalloff: 0 },
-    });
-    const sample = denseSample(long);
+    const sample = denseSample(tower);
 
-    expect(computeCreepsStruckPerShot(long, geometry, sample)).toBeGreaterThan(
-      computeCreepsStruckPerShot(short, geometry, sample) + 1,
+    expect(computeCreepsStruckPerShot(tower, geometry, sample)).toBeGreaterThan(
+      computeTargetsPerShot(tower, geometry, sample),
     );
   });
 
-  it('stops crediting a deeper slow once a held creep is in reach twice as long', () => {
+  it('stops crediting a deeper slow once a held creep is in reach three times as long', () => {
     const frost = ledgerTower(BETWEEN_LANES_ANCHOR, FROST_TYPE);
     const partner = ledgerTower({ x: 9, y: 3 });
     const at = (magnitude: number) =>
@@ -115,8 +111,8 @@ describe('entities/computer-opponent/damage-placement strike effects', () => {
         withStats(frost, { onHitEffects: [{ effectId: EffectId.CHILL, magnitude }] }),
       );
 
-    expect(at(0.5)).toBeGreaterThan(at(0.3));
-    expect(at(0.75)).toBeCloseTo(at(0.5));
+    expect(at(0.6)).toBeGreaterThan(at(0.4));
+    expect(at(0.75)).toBeCloseTo(at(0.7));
   });
 
   it('chills more of the wave when each shot strikes more creeps', () => {

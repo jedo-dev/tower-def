@@ -11,18 +11,14 @@ import type { DamageModelTower } from './towerDamageModel';
 // each takes (`computeTargetsPerShot`) or counted whole, for the on-hit effects
 // every struck creep takes in full (`computeCreepsStruckPerShot`).
 
-/**
- * Chance (0..1) the chain's `bounce`-th arc finds a creep: each arc jumps
- * from the creep the previous one hit, so the chain walks along the wave and
- * its `bounce`-th arc reaches the creeps within `bounce` jumps of the target.
- */
+/** Chance (0..1) the chain's `bounce`-th arc finds a creep within a jump of the target. */
 function chainBounceReach(
   chain: TowerChainDefinition,
   geometry: RouteGeometry,
   sampleIndex: number,
   bounce: number,
 ): number {
-  const available = expectedCreepsAround(geometry, sampleIndex, chain.bounceRangeCells * bounce);
+  const available = expectedCreepsAround(geometry, sampleIndex, chain.bounceRangeCells);
   return Math.min(1, Math.max(0, available - bounce));
 }
 

@@ -46,11 +46,12 @@ export const CREEP_ARRIVALS_PER_SECOND = 1 / WAVE_SPAWN_INTERVAL_SECONDS;
 
 /**
  * Most extra time in reach the model credits a slowed creep, in multiples of
- * its unslowed time (1: twice as long, a 50% slow). A wave streams through:
- * past that, the towers that reach a held creep are busy with the creeps
- * behind it, so a deeper slow or a longer stun stops adding damage.
+ * its unslowed time (2: three times as long, a 67% slow). A wave streams
+ * through: past that, the towers that reach a held creep are busy with the
+ * creeps behind it, so a deeper slow, a freeze or a longer stun stops adding
+ * damage. Every untalented chill sits below it (0.55 at most).
  */
-export const MAX_SLOW_TIME_GAIN = 1;
+export const MAX_SLOW_TIME_GAIN = 2;
 
 /**
  * What one extra route cell is worth, in multiples of the field's average
