@@ -165,7 +165,9 @@ diminishing curve:
 - positive armor removes `share` of the hit, never more than 90%;
 - negative armor adds the same `share`, at most +60% at -25;
 - `percent` damage takes `damage / 1000` of maximum health and ignores armor;
-- damage over time is magical and goes through magical armor.
+- damage over time is magical and goes through magical armor, unless the
+  tower's on-hit effect entry types it (tower-def-6nf.2: Thorn Spire poisons in
+  percent).
 
 The single `armor` value with its `armorType` bonus and the "damage over time
 ignores armor" rule are gone; the shipped creatures were migrated to the armor

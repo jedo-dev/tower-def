@@ -25,7 +25,7 @@
       "id": "undead_plague_tower",
       "name": "Plague Tower",
       "archetype": "splash",
-
+      "damageType": "magical",
       "allowedTargets": "ground",
       "costGold": 75,
       "damage": 18,

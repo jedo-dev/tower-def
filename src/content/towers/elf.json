@@ -20,7 +20,7 @@
       "id": "elf_wisp_bloom",
       "name": "Wisp Bloom",
       "archetype": "splash",
-
+      "damageType": "magical",
       "allowedTargets": "ground",
       "costGold": 75,
       "damage": 18,
@@ -56,18 +56,69 @@
       "id": "elf_thorn_spire",
       "name": "Thorn Spire",
       "archetype": "poison",
-
+      "damageType": "percent",
       "allowedTargets": "both",
       "costGold": 70,
-      "damage": 8,
+      "damage": 6,
       "range": 6,
       "attackCooldownMs": 1000,
       "onHitEffects": [
         {
           "effectId": "poison",
-          "magnitude": 4,
+          "magnitude": 6,
           "durationMs": 4000,
-          "maxStacks": 3
+          "maxStacks": 3,
+          "damageType": "percent"
+        }
+      ],
+      "levels": [
+        {
+          "level": 1,
+          "upgradeCostGold": 0,
+          "damage": 6,
+          "range": 6,
+          "attackCooldownMs": 1000,
+          "onHitEffects": [
+            {
+              "effectId": "poison",
+              "magnitude": 6,
+              "durationMs": 4000,
+              "maxStacks": 3,
+              "damageType": "percent"
+            }
+          ]
+        },
+        {
+          "level": 2,
+          "upgradeCostGold": 50,
+          "damage": 7,
+          "range": 6.4,
+          "attackCooldownMs": 950,
+          "onHitEffects": [
+            {
+              "effectId": "poison",
+              "magnitude": 7,
+              "durationMs": 4000,
+              "maxStacks": 4,
+              "damageType": "percent"
+            }
+          ]
+        },
+        {
+          "level": 3,
+          "upgradeCostGold": 95,
+          "damage": 8,
+          "range": 6.8,
+          "attackCooldownMs": 900,
+          "onHitEffects": [
+            {
+              "effectId": "poison",
+              "magnitude": 8,
+              "durationMs": 4000,
+              "maxStacks": 5,
+              "damageType": "percent"
+            }
+          ]
         }
       ],
       "spriteKey": "tower.elf.thorn_spire",

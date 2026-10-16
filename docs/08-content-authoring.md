@@ -111,7 +111,8 @@ A `percent` tower with `damage` 30 removes 3% of maximum health with every
 hit (maximum health is the wave-scaled health the creature spawned with),
 whatever its armor. Damage over time (poison, burn) is magical
 (`DAMAGE_OVER_TIME_DAMAGE_TYPE`), so a warded creature shrugs part of it off
-and a creature with negative magical armor takes more.
+and a creature with negative magical armor takes more. An on-hit effect may
+type its ticks differently (see "Damage over time type" below).
 
 Armor break lowers both armors by default; an effect definition narrows it
 with `armorKind: 'physical' | 'magical' | 'both'`
@@ -288,7 +289,33 @@ view reads it through `resolveBuildableTowerDamageType`.
 | `single`, `splash`, `chain` | `physical` |
 | `frost`, `poison`, `support` | `magical` |
 
-No race tower overrides its archetype yet.
+Shipped race towers (`entities/tower/model/damageType.test.ts` pins this
+table; overrides are in bold):
+
+| Race | Single | Splash | Frost | Poison | Chain | Support |
+| --- | --- | --- | --- | --- | --- | --- |
+| Undead | Bone Archer `physical` | Plague Tower **`magical`** | Frost Wyrm Nest `magical` | | | Bone Obelisk `magical` |
+| Orc | Spear Watchtower `physical` | Burning Pit `physical` | Tar Pit `magical` | | Lightning Totem **`magical`** | |
+| Human | Guard Archer `physical` | Cannon Bastion `physical` | | Alchemist Tower `magical` | | Guard Post `magical` |
+| Elf | Moon Archer `physical` | Wisp Bloom **`magical`** | Moonwell `magical` | Thorn Spire **`percent`** | | |
+
+Every race fields at least one physical and one magical damage tower.
+
+### Damage over time type
+
+Poison and burn ticks are magical unless the on-hit effect says otherwise: an
+`onHitEffects` entry of a damage-over-time effect may declare `damageType`
+(`physical`, `magical` or `percent`). A type on a slow, stun or armor break
+fails on load. With `percent`, `magnitude` is per mille of maximum health per
+tick per stack, like a percent hit.
+
+The type belongs to the effect entry, not to the tower, so a race tower whose
+poison differs from its archetype authors its own `levels` with the typed
+effect at every level (the archetype curve would bring back magical poison on
+upgrade). Thorn Spire does this: hits and poison ticks of 6, 7 and 8 per mille
+(0.6% to 0.8% of maximum health) at levels 1 to 3. When two towers poison the
+same creep, the latest application sets the tick type, as it sets the
+remaining duration.
 
 ## Units
 

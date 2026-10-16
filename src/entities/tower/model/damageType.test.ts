@@ -116,6 +116,65 @@ describe('tower damage type content', () => {
   });
 });
 
+describe('shipped race tower damage types (docs/08 "Damage type")', () => {
+  const EXPECTED_TOWER_DAMAGE_TYPES: Record<string, DamageType> = {
+    undead_bone_archer_tower: DamageType.PHYSICAL,
+    undead_plague_tower: DamageType.MAGICAL,
+    undead_frost_wyrm_nest: DamageType.MAGICAL,
+    undead_bone_obelisk: DamageType.MAGICAL,
+    orc_spear_watchtower: DamageType.PHYSICAL,
+    orc_burning_pit: DamageType.PHYSICAL,
+    orc_lightning_totem: DamageType.MAGICAL,
+    orc_tar_pit: DamageType.MAGICAL,
+    human_guard_archer_tower: DamageType.PHYSICAL,
+    human_cannon_bastion: DamageType.PHYSICAL,
+    human_alchemist_tower: DamageType.MAGICAL,
+    human_guard_post: DamageType.MAGICAL,
+    elf_moon_archer_tower: DamageType.PHYSICAL,
+    elf_wisp_bloom: DamageType.MAGICAL,
+    elf_moonwell: DamageType.MAGICAL,
+    elf_thorn_spire: DamageType.PERCENT,
+  };
+
+  it('deals the damage type each race tower is authored with', () => {
+    const actual = Object.fromEntries(
+      buildableTowers.map((tower) => [tower.id, resolveBuildableTowerDamageType(tower)]),
+    );
+
+    expect(actual).toEqual(EXPECTED_TOWER_DAMAGE_TYPES);
+  });
+
+  it('gives every race at least one physical and one magical damage tower', () => {
+    const typesByRace = new Map<string, Set<DamageType>>();
+
+    for (const tower of buildableTowers) {
+      const types = typesByRace.get(tower.faction) ?? new Set<DamageType>();
+      types.add(resolveBuildableTowerDamageType(tower));
+      typesByRace.set(tower.faction, types);
+    }
+
+    for (const [race, types] of typesByRace) {
+      expect(types.has(DamageType.PHYSICAL), `${race} physical`).toBe(true);
+      expect(types.has(DamageType.MAGICAL), `${race} magical`).toBe(true);
+    }
+  });
+
+  it('makes the percent tower poison in percent at every level', () => {
+    const thornSpire = buildableTowers.find((tower) => tower.id === 'elf_thorn_spire');
+    const levelEffects = (thornSpire?.levels ?? []).flatMap(
+      (level) => level.stats.onHitEffects ?? [],
+    );
+
+    expect(levelEffects.length).toBeGreaterThan(0);
+    for (const effect of [...(thornSpire?.onHitEffects ?? []), ...levelEffects]) {
+      expect(effect.damageType).toBe(DamageType.PERCENT);
+      // Each tick per stack takes 0.6% to 0.8% of maximum health.
+      expect(effect.magnitude).toBeGreaterThanOrEqual(6);
+      expect(effect.magnitude).toBeLessThanOrEqual(8);
+    }
+  });
+});
+
 describe('resolveTowerDamageType', () => {
   it('falls back to the archetype for a tower built without content', () => {
     expect(resolveTowerDamageType(createTowerEntity({ type: TowerTypeId.POISON }))).toBe(
