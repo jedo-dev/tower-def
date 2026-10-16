@@ -2,18 +2,30 @@ import type { RaceId } from '../../../shared/types/content-ids';
 import type { UnitId } from '../../unit/model/types';
 import type { UnitTier } from '../../unit/model/types';
 import type { TowerBranchChoices } from '../../tower/model/talents';
+import type { CreatureGrade, CreatureTalentLedger } from '../../unit/model/talents';
 import type { BattlefieldState } from './battlefield';
 
 export type DuelRoundNumber = number;
 
 export type DuelPhase = 'build' | 'battle';
 
-export type DuelistState = {
+/**
+ * One side of a duel. The creature talent ledger (`creatureXpByTier`,
+ * `creatureBranchChoices`, `creatureGrades`) lasts the whole match like the
+ * tower branch picks: round settles keep it, a new match state starts empty.
+ */
+export type DuelistState = CreatureTalentLedger & {
   hp: number;
   gold: number;
   income: number;
   raceId: RaceId;
   sendQueue: UnitId[];
+  /**
+   * The creature grade each queued send was bought at, index for index with
+   * `sendQueue`. A send spawns at the grade it was sent with, so a grade bought
+   * after queuing applies to the next send only. Missing entries mean grade 0.
+   */
+  sendQueueGrades: CreatureGrade[];
   battlefield: BattlefieldState;
   /** Lives this side's sends took that have not yet made a whole stolen life. */
   lifeStealRemainder: number;

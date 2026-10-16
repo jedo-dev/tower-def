@@ -4,7 +4,7 @@ import {
   getTowerOnHitEffects,
 } from '../../../../entities/tower';
 import Phaser from 'phaser';
-import { isCreepDead, type ApplyEffectInput } from '../../../../entities/creep';
+import { isCreepDead, type ApplyEffectInput, type CreepEntity } from '../../../../entities/creep';
 import { getKillGoldPenalty } from '../../../../entities/duel-match';
 import {
   TOWER_BONE_ARCHER_EFFECT_FRAMES,
@@ -83,6 +83,11 @@ export type CombatRuntimeDependencies = {
    */
   awardKillBounty: (bonusGold?: number) => void;
   /**
+   * Notes the kill for the round settle (a sent creep's death earns its sender
+   * creature experience). Absent where nothing settles a duel round.
+   */
+  recordCreepDeath?: (creep: CreepEntity) => void;
+  /**
    * Charges the side that owns this battlefield a creature's kill penalty
    * (`killGoldPenaltyToDefender`), never below 0 gold. Called only when the
    * killed creature carries one.
@@ -97,6 +102,7 @@ function handleCreepKill(
   killer: TowerRenderState | undefined,
 ): void {
   deps.awardKillBounty(killer ? getTowerKillBonusGold(killer.entity) : 0);
+  deps.recordCreepDeath?.(creep.entity);
   const penaltyGold = getKillGoldPenalty(creep.entity);
   if (penaltyGold > 0) {
     deps.chargeKillPenalty?.(penaltyGold);

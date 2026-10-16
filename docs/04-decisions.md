@@ -215,3 +215,36 @@ a modifier language. One ladder instead of per-branch prices makes the
 balance dial; authoring prices per branch would invite 128 numbers drifting
 apart. A curve capped at 3 until a branch is chosen means no code path needs
 to know about talents to stay correct: the cap simply moves.
+
+## Decision 015: Creature talents run on per-tier experience, snapshotted at send time
+
+Every creature authors two talent branches of grades 1-4 (unit content schema
+4), mirroring tower talents (Decision 014) but paid in experience, not gold. A
+side earns experience per tier when a creature it sent dies on the other field
+(1 x tier) or leaks (3 x tier, +2 when the leak took a life), credited at the
+round settle. Experience of a tier buys one branch per creature for the match
+and then its grades; prices are one ladder scaled by tier
+(`CreatureTalentPricing`: branch 4, grades 6 / 10 / 16 / 26, times the tier)
+and content cannot declare them. Grades replace health, speed and both armors
+(plus an open `abilities` object for the creature mechanics that land
+separately); they never change send price, send caps or reward.
+
+A grade applies to sends queued after the purchase: each queued send records
+the grade it was bought at (`sendQueueGrades`) and spawns at it, so creatures
+already queued or walking keep theirs. Deaths are tallied as they happen and
+leaks read at the settle, so the scene and the headless simulation feed the
+same `settleRound` outcomes.
+
+Reason:
+
+Experience from the creatures themselves keeps the send economy and the talent
+economy apart: gold stays the tower-versus-send trade-off, and developing a
+creature requires actually sending it, which is the design doc's point (a tier
+nobody sends never grows). Per-tier ledgers stop cheap tier 1 spam from
+funding the tier 6 ladder, and scaling one ladder by the tier keeps every tier
+about ten waves from a full branch. Snapshotting the grade when the send is
+queued, not when it spawns, makes "after the purchase" unambiguous in a duel
+where sends are bought during the build phase and spawn at wave start: what
+the player paid for is what walks. Settling experience at the round end
+reuses the leak and life-steal accounting that already decides who took which
+life, so the life bonus never disagrees with the HP change.

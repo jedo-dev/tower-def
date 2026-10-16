@@ -1,6 +1,7 @@
 import type { UnitMoveType, UnitSizeClass } from '../../../shared/types/content-ids';
 import { RaceId } from '../../../shared/types/content-ids';
 import type { CreatureAbilities } from '../../../shared/types/creatureAbilities';
+import type { CreatureTalentBranchDefinition } from './content/creatureTalentContent';
 
 export { RaceId as Faction };
 
@@ -84,9 +85,12 @@ export type UnitConfig = {
   /** Resolved traits: content may omit them, the loader fills the defaults. */
   moveType: UnitMoveType;
   sizeClass: UnitSizeClass;
+  /** The two talent branches (grades 1-4) a side may develop with experience. */
+  talentBranches: readonly CreatureTalentBranchDefinition[];
   /**
    * Optional creature abilities (tower-def-716.2); absent means none. Copied
-   * onto the creep at spawn. See docs/08, "Creature abilities".
+   * onto the creep at spawn. See docs/08, "Creature abilities". A send
+   * resolved at a talent grade carries that grade's abilities instead.
    */
   abilities?: CreatureAbilities;
 };

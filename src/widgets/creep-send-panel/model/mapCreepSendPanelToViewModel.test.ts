@@ -32,6 +32,9 @@ function createSnapshot(overrides: Partial<GameHudSnapshot> = {}): GameHudSnapsh
     isPaused: false,
     gameSpeed: 1,
     towerBranchChoices: {},
+    creatureXpByTier: {},
+    creatureBranchChoices: {},
+    creatureGrades: {},
     ...overrides,
   };
 }
@@ -114,7 +117,17 @@ describe('mapCreepSendPanelToViewModel', () => {
         owner: 'player',
         waveSendCap: 12,
         waveSendsRemaining: 4,
-        units: [{ creepTypeId: 'undead_skeleton', cap: 6, remaining: 0 }],
+        units: [
+          {
+            creepTypeId: 'undead_skeleton',
+            cap: 6,
+            remaining: 0,
+            availableBranches: [],
+            branchCostXp: 4,
+            grade: 0,
+            nextUpgradeCostXp: 6,
+          },
+        ],
       },
     );
 

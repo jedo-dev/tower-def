@@ -1,11 +1,11 @@
 import {
   getSendCapPerWave,
   getUnitTypeSendCapByTier,
+  resolveNextSendUnit,
   sendCreep,
   type DuelMatchState,
 } from '../../../../entities/duel-match';
 import { getRaceRegistry } from '../../../../entities/race-registry';
-import { resolveUnitConfigById } from '../../../../entities/unit';
 import type { RaceId } from '../../../../shared/types/content-ids';
 import { publishGameEvent } from '../../../../shared/lib/game-bridge/bridge';
 import { toSendQueueItems } from './duelSideEvents';
@@ -55,7 +55,8 @@ export function handleSendCreepCommand(deps: SendCreepCommandDeps, creepTypeId: 
     return;
   }
 
-  const unit = resolveUnitConfigById(sendableCreepTypeId);
+  // At the creature grade the player owns now: a graded `freeNthSend` counts.
+  const unit = resolveNextSendUnit(deps.getDuelMatchState().player, sendableCreepTypeId);
   const result = sendCreep(deps.getDuelMatchState(), true, unit.id, unit.tier, {
     freeNthSend: unit.abilities?.freeNthSend,
   });

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { parseUnitContentFile } from './loadUnitContent';
 import { parseCreatureAbilities } from './unitAbilityFields';
+import { createTalentBranches } from './fixtures/talentBranchFixture';
 
 const FILE = 'content/units/undead.json';
 const LOCATION = { file: FILE, entityId: 'undead_skeleton' };
@@ -17,6 +18,7 @@ function createEntry(abilities?: unknown): Record<string, unknown> {
     damage: 12,
     rewardGold: 6,
     spriteKey: 'unit.undead.skeleton',
+    talentBranches: createTalentBranches('undead_skeleton'),
     ...(abilities === undefined ? {} : { abilities }),
   };
 }
@@ -24,7 +26,7 @@ function createEntry(abilities?: unknown): Record<string, unknown> {
 function parseEntry(abilities?: unknown) {
   const [unit] = parseUnitContentFile({
     file: FILE,
-    data: { schemaVersion: 3, race: 'UNDEAD', units: [createEntry(abilities)] },
+    data: { schemaVersion: 4, race: 'UNDEAD', units: [createEntry(abilities)] },
   });
   return unit;
 }

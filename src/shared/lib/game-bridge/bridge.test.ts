@@ -73,6 +73,9 @@ function createTestHudSnapshot(overrides?: Partial<GameHudSnapshot>): GameHudSna
     isPaused: false,
     gameSpeed: 1,
     towerBranchChoices: {},
+    creatureXpByTier: {},
+    creatureBranchChoices: {},
+    creatureGrades: {},
     ...overrides,
   };
 }

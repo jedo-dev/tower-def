@@ -30,6 +30,7 @@ import {
   type UnitTraits,
 } from './unitContent.types';
 import { assertUnitSchemaVersion } from './assertUnitSchemaVersion';
+import { parseCreatureTalentBranches } from './creatureTalentContent';
 import { parseUnitAbilities } from './unitAbilityFields';
 
 export type UnitContentSource = {
@@ -98,6 +99,7 @@ function parseUnitEntry(
     description: readOptionalString(entry, 'description', location),
     lore: readOptionalBoundedString(entry, 'lore', location, CONTENT_LORE_MAX_LENGTH),
     ...parseTraits(entry, location),
+    talentBranches: parseCreatureTalentBranches(entry, location, id),
     ...(abilities === undefined ? {} : { abilities }),
   };
 }

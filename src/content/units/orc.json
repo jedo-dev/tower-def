@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 4,
   "race": "ORC",
   "units": [
     {
@@ -14,7 +14,79 @@
       "rewardGold": 7,
       "spriteKey": "unit.orc.grunt",
       "description": "Brutish warrior that trades footwork for raw bulk.",
-      "lore": "Axe, hide, teeth. A grunt needs nothing else and asks for nothing else, and the warchief never has to ask twice."
+      "lore": "Axe, hide, teeth. A grunt needs nothing else and asks for nothing else, and the warchief never has to ask twice.",
+      "talentBranches": [
+        {
+          "id": "orc_grunt_i",
+          "name": "Grunt I",
+          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "grades": [
+            {
+              "level": 1,
+              "health": 76,
+              "speed": 1.15,
+              "physicalArmor": 4,
+              "magicalArmor": 0
+            },
+            {
+              "level": 2,
+              "health": 81,
+              "speed": 1.2,
+              "physicalArmor": 5,
+              "magicalArmor": 0
+            },
+            {
+              "level": 3,
+              "health": 87,
+              "speed": 1.25,
+              "physicalArmor": 6,
+              "magicalArmor": 0
+            },
+            {
+              "level": 4,
+              "health": 92,
+              "speed": 1.3,
+              "physicalArmor": 7,
+              "magicalArmor": 0
+            }
+          ]
+        },
+        {
+          "id": "orc_grunt_ii",
+          "name": "Grunt II",
+          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "grades": [
+            {
+              "level": 1,
+              "health": 76,
+              "speed": 1.15,
+              "physicalArmor": 4,
+              "magicalArmor": 0
+            },
+            {
+              "level": 2,
+              "health": 81,
+              "speed": 1.2,
+              "physicalArmor": 5,
+              "magicalArmor": 0
+            },
+            {
+              "level": 3,
+              "health": 87,
+              "speed": 1.25,
+              "physicalArmor": 6,
+              "magicalArmor": 0
+            },
+            {
+              "level": 4,
+              "health": 92,
+              "speed": 1.3,
+              "physicalArmor": 7,
+              "magicalArmor": 0
+            }
+          ]
+        }
+      ]
     },
     {
       "id": "orc_peon",
@@ -29,7 +101,79 @@
       "sizeClass": "small",
       "spriteKey": "unit.orc.peon",
       "description": "Labourer with a shovel, thrown at the wall before the warriors.",
-      "lore": "Not a warrior, just a body with a shovel and nowhere else to be. The horde throws peons first and counts them last."
+      "lore": "Not a warrior, just a body with a shovel and nowhere else to be. The horde throws peons first and counts them last.",
+      "talentBranches": [
+        {
+          "id": "orc_peon_i",
+          "name": "Peon I",
+          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "grades": [
+            {
+              "level": 1,
+              "health": 54,
+              "speed": 1.25,
+              "physicalArmor": 2,
+              "magicalArmor": 0
+            },
+            {
+              "level": 2,
+              "health": 58,
+              "speed": 1.3,
+              "physicalArmor": 3,
+              "magicalArmor": 0
+            },
+            {
+              "level": 3,
+              "health": 62,
+              "speed": 1.35,
+              "physicalArmor": 4,
+              "magicalArmor": 0
+            },
+            {
+              "level": 4,
+              "health": 66,
+              "speed": 1.4,
+              "physicalArmor": 5,
+              "magicalArmor": 0
+            }
+          ]
+        },
+        {
+          "id": "orc_peon_ii",
+          "name": "Peon II",
+          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "grades": [
+            {
+              "level": 1,
+              "health": 54,
+              "speed": 1.25,
+              "physicalArmor": 2,
+              "magicalArmor": 0
+            },
+            {
+              "level": 2,
+              "health": 58,
+              "speed": 1.3,
+              "physicalArmor": 3,
+              "magicalArmor": 0
+            },
+            {
+              "level": 3,
+              "health": 62,
+              "speed": 1.35,
+              "physicalArmor": 4,
+              "magicalArmor": 0
+            },
+            {
+              "level": 4,
+              "health": 66,
+              "speed": 1.4,
+              "physicalArmor": 5,
+              "magicalArmor": 0
+            }
+          ]
+        }
+      ]
     },
     {
       "id": "orc_wolf_rider",
@@ -43,7 +187,79 @@
       "rewardGold": 13,
       "spriteKey": "unit.orc.wolf_rider",
       "description": "Swift mounted raider that punishes gaps in the line.",
-      "lore": "The wolf chose the rider, not the other way around. Together they outrun the arrow and bite before the bow is drawn."
+      "lore": "The wolf chose the rider, not the other way around. Together they outrun the arrow and bite before the bow is drawn.",
+      "talentBranches": [
+        {
+          "id": "orc_wolf_rider_i",
+          "name": "Wolf Rider I",
+          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "grades": [
+            {
+              "level": 1,
+              "health": 97,
+              "speed": 1.9,
+              "physicalArmor": 5,
+              "magicalArmor": 0
+            },
+            {
+              "level": 2,
+              "health": 104,
+              "speed": 1.95,
+              "physicalArmor": 6,
+              "magicalArmor": 0
+            },
+            {
+              "level": 3,
+              "health": 112,
+              "speed": 2,
+              "physicalArmor": 7,
+              "magicalArmor": 0
+            },
+            {
+              "level": 4,
+              "health": 119,
+              "speed": 2.05,
+              "physicalArmor": 8,
+              "magicalArmor": 0
+            }
+          ]
+        },
+        {
+          "id": "orc_wolf_rider_ii",
+          "name": "Wolf Rider II",
+          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "grades": [
+            {
+              "level": 1,
+              "health": 97,
+              "speed": 1.9,
+              "physicalArmor": 5,
+              "magicalArmor": 0
+            },
+            {
+              "level": 2,
+              "health": 104,
+              "speed": 1.95,
+              "physicalArmor": 6,
+              "magicalArmor": 0
+            },
+            {
+              "level": 3,
+              "health": 112,
+              "speed": 2,
+              "physicalArmor": 7,
+              "magicalArmor": 0
+            },
+            {
+              "level": 4,
+              "health": 119,
+              "speed": 2.05,
+              "physicalArmor": 8,
+              "magicalArmor": 0
+            }
+          ]
+        }
+      ]
     },
     {
       "id": "orc_troll",
@@ -58,7 +274,79 @@
       "sizeClass": "large",
       "spriteKey": "unit.orc.troll",
       "description": "Lumbering berserker that soaks a whole volley.",
-      "lore": "Trolls heal what they lose and forget what they healed. Hit it hard the first time, because it will not remember to fall."
+      "lore": "Trolls heal what they lose and forget what they healed. Hit it hard the first time, because it will not remember to fall.",
+      "talentBranches": [
+        {
+          "id": "orc_troll_i",
+          "name": "Troll I",
+          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "grades": [
+            {
+              "level": 1,
+              "health": 194,
+              "speed": 1,
+              "physicalArmor": 7,
+              "magicalArmor": 2
+            },
+            {
+              "level": 2,
+              "health": 209,
+              "speed": 1.05,
+              "physicalArmor": 8,
+              "magicalArmor": 2
+            },
+            {
+              "level": 3,
+              "health": 223,
+              "speed": 1.1,
+              "physicalArmor": 9,
+              "magicalArmor": 2
+            },
+            {
+              "level": 4,
+              "health": 238,
+              "speed": 1.15,
+              "physicalArmor": 10,
+              "magicalArmor": 2
+            }
+          ]
+        },
+        {
+          "id": "orc_troll_ii",
+          "name": "Troll II",
+          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "grades": [
+            {
+              "level": 1,
+              "health": 194,
+              "speed": 1,
+              "physicalArmor": 7,
+              "magicalArmor": 2
+            },
+            {
+              "level": 2,
+              "health": 209,
+              "speed": 1.05,
+              "physicalArmor": 8,
+              "magicalArmor": 2
+            },
+            {
+              "level": 3,
+              "health": 223,
+              "speed": 1.1,
+              "physicalArmor": 9,
+              "magicalArmor": 2
+            },
+            {
+              "level": 4,
+              "health": 238,
+              "speed": 1.15,
+              "physicalArmor": 10,
+              "magicalArmor": 2
+            }
+          ]
+        }
+      ]
     },
     {
       "id": "orc_headhunter",
@@ -72,7 +360,79 @@
       "rewardGold": 23,
       "spriteKey": "unit.orc.headhunter",
       "description": "Elite skirmisher hitting far harder than its bulk suggests.",
-      "lore": "Every skull on his belt was a warning nobody listened to. The spear is for the ones who still will not."
+      "lore": "Every skull on his belt was a warning nobody listened to. The spear is for the ones who still will not.",
+      "talentBranches": [
+        {
+          "id": "orc_headhunter_i",
+          "name": "Headhunter I",
+          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "grades": [
+            {
+              "level": 1,
+              "health": 178,
+              "speed": 1.4,
+              "physicalArmor": 7,
+              "magicalArmor": 0
+            },
+            {
+              "level": 2,
+              "health": 191,
+              "speed": 1.45,
+              "physicalArmor": 8,
+              "magicalArmor": 0
+            },
+            {
+              "level": 3,
+              "health": 205,
+              "speed": 1.5,
+              "physicalArmor": 9,
+              "magicalArmor": 0
+            },
+            {
+              "level": 4,
+              "health": 218,
+              "speed": 1.55,
+              "physicalArmor": 10,
+              "magicalArmor": 0
+            }
+          ]
+        },
+        {
+          "id": "orc_headhunter_ii",
+          "name": "Headhunter II",
+          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "grades": [
+            {
+              "level": 1,
+              "health": 178,
+              "speed": 1.4,
+              "physicalArmor": 7,
+              "magicalArmor": 0
+            },
+            {
+              "level": 2,
+              "health": 191,
+              "speed": 1.45,
+              "physicalArmor": 8,
+              "magicalArmor": 0
+            },
+            {
+              "level": 3,
+              "health": 205,
+              "speed": 1.5,
+              "physicalArmor": 9,
+              "magicalArmor": 0
+            },
+            {
+              "level": 4,
+              "health": 218,
+              "speed": 1.55,
+              "physicalArmor": 10,
+              "magicalArmor": 0
+            }
+          ]
+        }
+      ]
     },
     {
       "id": "orc_shaman",
@@ -86,7 +446,79 @@
       "rewardGold": 28,
       "spriteKey": "unit.orc.shaman",
       "description": "Storm-caller worth gold to whoever drops him first.",
-      "lore": "He speaks to the storm and the storm answers. Lightning is cheap when the spirits still owe you."
+      "lore": "He speaks to the storm and the storm answers. Lightning is cheap when the spirits still owe you.",
+      "talentBranches": [
+        {
+          "id": "orc_shaman_i",
+          "name": "Shaman I",
+          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "grades": [
+            {
+              "level": 1,
+              "health": 184,
+              "speed": 1.15,
+              "physicalArmor": 5,
+              "magicalArmor": 5
+            },
+            {
+              "level": 2,
+              "health": 197,
+              "speed": 1.2,
+              "physicalArmor": 6,
+              "magicalArmor": 5
+            },
+            {
+              "level": 3,
+              "health": 211,
+              "speed": 1.25,
+              "physicalArmor": 7,
+              "magicalArmor": 5
+            },
+            {
+              "level": 4,
+              "health": 224,
+              "speed": 1.3,
+              "physicalArmor": 8,
+              "magicalArmor": 5
+            }
+          ]
+        },
+        {
+          "id": "orc_shaman_ii",
+          "name": "Shaman II",
+          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "grades": [
+            {
+              "level": 1,
+              "health": 184,
+              "speed": 1.15,
+              "physicalArmor": 5,
+              "magicalArmor": 5
+            },
+            {
+              "level": 2,
+              "health": 197,
+              "speed": 1.2,
+              "physicalArmor": 6,
+              "magicalArmor": 5
+            },
+            {
+              "level": 3,
+              "health": 211,
+              "speed": 1.25,
+              "physicalArmor": 7,
+              "magicalArmor": 5
+            },
+            {
+              "level": 4,
+              "health": 224,
+              "speed": 1.3,
+              "physicalArmor": 8,
+              "magicalArmor": 5
+            }
+          ]
+        }
+      ]
     },
     {
       "id": "orc_wind_rider",
@@ -101,7 +533,79 @@
       "moveType": "air",
       "spriteKey": "unit.orc.wind_rider",
       "description": "Wyvern and rider sweeping over the maze instead of through it.",
-      "lore": "A wyvern broken with meat and scars. The rider screams louder than the beast, and both of them like it that way."
+      "lore": "A wyvern broken with meat and scars. The rider screams louder than the beast, and both of them like it that way.",
+      "talentBranches": [
+        {
+          "id": "orc_wind_rider_i",
+          "name": "Wind Rider I",
+          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "grades": [
+            {
+              "level": 1,
+              "health": 173,
+              "speed": 1.5,
+              "physicalArmor": 8,
+              "magicalArmor": 2
+            },
+            {
+              "level": 2,
+              "health": 186,
+              "speed": 1.55,
+              "physicalArmor": 9,
+              "magicalArmor": 2
+            },
+            {
+              "level": 3,
+              "health": 198,
+              "speed": 1.6,
+              "physicalArmor": 10,
+              "magicalArmor": 2
+            },
+            {
+              "level": 4,
+              "health": 211,
+              "speed": 1.65,
+              "physicalArmor": 11,
+              "magicalArmor": 2
+            }
+          ]
+        },
+        {
+          "id": "orc_wind_rider_ii",
+          "name": "Wind Rider II",
+          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "grades": [
+            {
+              "level": 1,
+              "health": 173,
+              "speed": 1.5,
+              "physicalArmor": 8,
+              "magicalArmor": 2
+            },
+            {
+              "level": 2,
+              "health": 186,
+              "speed": 1.55,
+              "physicalArmor": 9,
+              "magicalArmor": 2
+            },
+            {
+              "level": 3,
+              "health": 198,
+              "speed": 1.6,
+              "physicalArmor": 10,
+              "magicalArmor": 2
+            },
+            {
+              "level": 4,
+              "health": 211,
+              "speed": 1.65,
+              "physicalArmor": 11,
+              "magicalArmor": 2
+            }
+          ]
+        }
+      ]
     },
     {
       "id": "orc_tauren",
@@ -116,7 +620,79 @@
       "sizeClass": "large",
       "spriteKey": "unit.orc.tauren",
       "description": "Horned colossus that walks through what others walk around.",
-      "lore": "The earth shakes when the tauren charges and keeps shaking after. A wall is a suggestion it chooses to ignore."
+      "lore": "The earth shakes when the tauren charges and keeps shaking after. A wall is a suggestion it chooses to ignore.",
+      "talentBranches": [
+        {
+          "id": "orc_tauren_i",
+          "name": "Tauren I",
+          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "grades": [
+            {
+              "level": 1,
+              "health": 367,
+              "speed": 0.9,
+              "physicalArmor": 14,
+              "magicalArmor": 4
+            },
+            {
+              "level": 2,
+              "health": 394,
+              "speed": 0.95,
+              "physicalArmor": 15,
+              "magicalArmor": 4
+            },
+            {
+              "level": 3,
+              "health": 422,
+              "speed": 1,
+              "physicalArmor": 16,
+              "magicalArmor": 4
+            },
+            {
+              "level": 4,
+              "health": 449,
+              "speed": 1.05,
+              "physicalArmor": 17,
+              "magicalArmor": 4
+            }
+          ]
+        },
+        {
+          "id": "orc_tauren_ii",
+          "name": "Tauren II",
+          "description": "Placeholder branch: a little tougher and faster with every grade.",
+          "grades": [
+            {
+              "level": 1,
+              "health": 367,
+              "speed": 0.9,
+              "physicalArmor": 14,
+              "magicalArmor": 4
+            },
+            {
+              "level": 2,
+              "health": 394,
+              "speed": 0.95,
+              "physicalArmor": 15,
+              "magicalArmor": 4
+            },
+            {
+              "level": 3,
+              "health": 422,
+              "speed": 1,
+              "physicalArmor": 16,
+              "magicalArmor": 4
+            },
+            {
+              "level": 4,
+              "health": 449,
+              "speed": 1.05,
+              "physicalArmor": 17,
+              "magicalArmor": 4
+            }
+          ]
+        }
+      ]
     }
   ]
 }

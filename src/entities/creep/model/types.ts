@@ -104,6 +104,11 @@ export type CreepEntity = CreepCombatTraits & {
   activeEffects?: ActiveEffect[];
   /** Set only on creeps a duel side sent; absent on baseline wave creeps. */
   sender?: CreepSenderSide;
+  /**
+   * Tier of the sent creature, set with `sender`: its death or leak earns the
+   * sender creature experience of this tier (docs/08 "Creature talents").
+   */
+  sentTier?: number;
   /** The creature's abilities, copied at spawn; absent means none. */
   abilities?: CreatureAbilities;
 } & CreepAbilityRuntime;

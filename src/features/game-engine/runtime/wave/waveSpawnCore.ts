@@ -83,7 +83,7 @@ export function createWaveCreepEntity(
     position: { x: route[0].x, y: route[0].y },
     pathIndex: 0,
     remainingRouteDistance: routeDistance,
-    ...(spawn.sender === undefined ? {} : { sender: spawn.sender }),
+    ...(spawn.sender === undefined ? {} : { sender: spawn.sender, sentTier: spawn.unit.tier }),
     ...(abilities === undefined
       ? {}
       : { abilities, ...createCreepAbilityRuntime(abilities, routeDistance) }),

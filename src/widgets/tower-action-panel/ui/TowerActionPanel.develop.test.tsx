@@ -42,6 +42,9 @@ function hud(gold: number, towerBranchChoices: Record<string, string> = {}): Gam
     isPaused: false,
     gameSpeed: 1,
     towerBranchChoices,
+    creatureXpByTier: {},
+    creatureBranchChoices: {},
+    creatureGrades: {},
   };
 }
 

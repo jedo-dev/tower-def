@@ -1,10 +1,12 @@
 import type Phaser from 'phaser';
+import type { CreepEntity } from '../../../entities/creep';
 import {
   addKillBounty,
   awardKillBounty,
   chargeGold,
   chargeSideGold,
   type DuelMatchState,
+  type DuelSide,
 } from '../../../entities/duel-match';
 import type { UnitConfig } from '../../../entities/unit';
 import type { SoundId } from '../../../shared/lib/sound-registry/audio.types';
@@ -52,6 +54,8 @@ export type GameSceneWiringHost = {
   publishHudSnapshot: () => void;
   handleGameOverUpdated: (isGameOver: boolean) => void;
   syncOpponentDuelCreepsFromField: () => void;
+  /** A creep died on `field`; the round settle credits sent creeps' experience. */
+  recordSentCreepDeath: (field: DuelSide, creep: CreepEntity) => void;
 };
 
 export type GameSceneRuntimeWiring = {
@@ -81,6 +85,7 @@ function createPlayerCombatDeps(host: GameSceneWiringHost): CombatRuntimeDepende
       host.runState.waveKillBountyEarned += goldAfter - goldBefore;
       updatePlayerGold(host, goldAfter);
     },
+    recordCreepDeath: (creep) => host.recordSentCreepDeath('player', creep),
     chargeKillPenalty: (penaltyGold) =>
       updatePlayerGold(host, chargeGold(host.runState.playerGold, penaltyGold)),
     onHudChanged: () => host.publishHudSnapshot(),
@@ -98,6 +103,7 @@ function createOpponentCombatDeps(host: GameSceneWiringHost): CombatRuntimeDepen
     // Kills on the computer's own battlefield pay the computer.
     awardKillBounty: (bonusGold) =>
       host.setDuelMatchState(awardKillBounty(host.getDuelMatchState(), 'opponent', bonusGold)),
+    recordCreepDeath: (creep) => host.recordSentCreepDeath('opponent', creep),
     chargeKillPenalty: (penaltyGold) =>
       host.setDuelMatchState(chargeSideGold(host.getDuelMatchState(), 'opponent', penaltyGold)),
     onHudChanged: () => host.publishHudSnapshot(),

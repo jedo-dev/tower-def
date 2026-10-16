@@ -17,7 +17,7 @@ src/content/
 
 ```json
 {
-  "schemaVersion": 3,
+  "schemaVersion": 4,
   "race": "UNDEAD",
   "units": [
     {
@@ -32,7 +32,11 @@ src/content/
       "rewardGold": 7,
       "sizeClass": "small",
       "spriteKey": "unit.undead.ghoul",
-      "description": "Feral clawed scavenger that outruns slow defenses."
+      "description": "Feral clawed scavenger that outruns slow defenses.",
+      "talentBranches": [
+        { "id": "undead_ghoul_i", "...": "see Creature talents" },
+        { "id": "undead_ghoul_ii", "...": "..." }
+      ]
     }
   ]
 }
@@ -64,6 +68,7 @@ src/content/
 | `lore` | no | Bestiary text, one or two sentences in the race's voice, at most `CONTENT_LORE_MAX_LENGTH` (160) characters. Cosmetic only; the loader rejects longer text. |
 | `moveType` | no | `ground` (default) or `air`. Air creatures ignore the maze: they fly the straight line from the entrance to the exit at their own speed, towers never block them, and only towers whose `allowedTargets` is `air` or `both` can shoot them. A flier costs `WAVE_AIR_UNIT_BUDGET_MULTIPLIER` times its tier value of the wave budget (`entities/wave/model/waveBalance.ts`). |
 | `sizeClass` | no | `small`, `medium` (default) or `large`. Decides the footprint and the route a creature walks. |
+| `talentBranches` | yes | Exactly two branches of grades 1-4 a side develops with experience. See "Creature talents" below. |
 | `abilities` | no | Optional creature mechanics; see "Creature abilities" below. |
 
 Unknown fields are rejected: add the field to the schema first
@@ -183,12 +188,16 @@ effects; authored values stay modest.
 | Version | Meaning |
 | --- | --- |
 | 1 | Retired. A single `armor` plus an `armorType` bonus (unarmored -1, light 0, heavy 2). |
-| 3 | Current. `physicalArmor` and `magicalArmor`, shared version number with towers. |
+| 3 | Retired. `physicalArmor` and `magicalArmor`, shared version number with towers. |
+| 4 | Current. Every creature declares two `talentBranches` (grades 1-4); see "Creature talents". |
 
 A version 1 file fails on load naming the file and its first creature. To
 migrate one, set both armors to `max(0, armor + armorType bonus)` (what the
-creature effectively carried before), drop `armorType` and set `schemaVersion`
-to 3. The shipped rosters were migrated exactly this way, then re-authored to
+creature effectively carried before), drop `armorType`, add `talentBranches`
+and set `schemaVersion` to 4. A version 3 file fails the same way
+(`content/units/undead.json [undead_skeleton]: schemaVersion 3 has no talent
+branches; ...`): add `talentBranches` to every creature and set
+`schemaVersion` to 4. The shipped rosters were migrated exactly this way, then re-authored to
 the race armor profiles above (tower-def-6nf.2).
 
 ## Lore voice
@@ -259,10 +268,108 @@ baseline-only: it is not in `sendableCreepIds`, so each race sends four creeps.
 A second tier-1 send only gives the computer twelve cheap income buys a wave
 (see "Roster completion" in `docs/07-duel-mode-expansion-plan.md`).
 
+## Creature talents
+
+Design source: `docs/12-unit-talents-ru.md` ("Общие правила"). Every creature
+authors two branches. A side earns **experience per tier** from its sends,
+picks one branch per creature for the whole match (the other is locked) and
+then buys grades 1 -> 2 -> 3 -> 4 along it. A grade applies to the creatures of
+that type **sent after the purchase**; queued and walking ones keep theirs.
+Experience, picks and grades are per side and per match: round settles keep
+them, a restart, a faction change or a new setup starts with none.
+
+```json
+"talentBranches": [
+  {
+    "id": "undead_crypt_fiend_i",
+    "name": "Crypt Fiend I",
+    "description": "Placeholder branch: a little tougher and faster with every grade.",
+    "grades": [
+      { "level": 1, "health": 113, "speed": 1.1, "physicalArmor": 4, "magicalArmor": 7 },
+      { "level": 2, "health": 122, "speed": 1.15, "physicalArmor": 4, "magicalArmor": 8 },
+      { "level": 3, "health": 130, "speed": 1.2, "physicalArmor": 4, "magicalArmor": 9 },
+      { "level": 4, "health": 139, "speed": 1.25, "physicalArmor": 4, "magicalArmor": 10,
+        "abilities": {} }
+    ]
+  },
+  { "id": "undead_crypt_fiend_ii", "...": "..." }
+]
+```
+
+| Field | Rule |
+| --- | --- |
+| `id` | Starts with the creature id and `_`; the two ids differ. Errors name `file [unitId/branchId]`. |
+| `name`, `description` | Non-empty; shown by the send panel's develop chooser. |
+| `grades` | Exactly levels 1, 2, 3, 4 in that order. |
+| grade `health`, `speed`, `physicalArmor`, `magicalArmor` | Required, same bounds as the creature's own. Health is the wave 1 value; wave growth still applies on spawn. |
+| grade `abilities` | Optional creature abilities object, same fields and parser as a creature's own (`parseCreatureAbilities`, see "Creature abilities"); unknown keys fail on load. |
+
+A grade replaces the four stats and the abilities of the sent creature: a
+grade without `abilities` sends the creature without any, so carry base
+abilities forward explicitly. Tier, reward, size, move type and the base send
+price stay; a graded `freeNthSend` counts from the next send
+(`resolveNextSendUnit`). Grade 0 is the authored
+creature. docs/12 caps grade 4 health at +40% of the base; a content test
+enforces it.
+
+**Experience** (`CreatureXpRewards` in `src/shared/constants/creatureTalents.ts`),
+credited to the sender at the round settle:
+
+| Sent creature on the other field | Experience to its tier |
+| --- | --- |
+| died | 1 x tier |
+| leaked | 3 x tier |
+| leaked and took a life | +2 |
+
+A leak "took a life" while the defender still had one: walking the round's
+sent leaks in field order, each leak gets the bonus while lives taken by the
+sends (`countLivesTakenBySends`) remain, and spends its `leakLivesTaken`. Deaths are tallied as they happen (the scene drops a corpse
+long before the settle) and leaks read from the field at the settle
+(`settleRound(..., sentOutcomes)`, `entities/duel-match/model/creatureXp.ts`);
+the headless duel simulation passes the same outcomes. Baseline creeps earn
+nothing. A sent creep carries `sender` and `sentTier` from its spawn.
+
+**Price ladder** (`CreatureTalentPricing`), experience of the creature's tier,
+multiplied by the tier; content never prices a grade:
+
+| Step | Branch | 1 | 2 | 3 | 4 |
+| --- | --- | --- | --- | --- | --- |
+| Experience | 4 x tier | 6 x tier | 10 x tier | 16 x tier | 26 x tier |
+
+**Grade at send time.** Sends are queued in the build phase but spawn at wave
+start, so a send snapshots the creature grade when it is queued
+(`DuelistState.sendQueueGrades`, index for index with `sendQueue`) and spawns
+at it (`resolveQueuedSendUnits`, used by the scene for both fields and by the
+headless simulation). The chosen branch is fixed for the match, so the grade
+alone pins the stats.
+
+**Rules** (`src/entities/unit/model/talents.ts`): `canChooseCreatureBranch`
+refuses with `unknown_branch`, `already_chosen` or `not_enough_xp`;
+`canUpgradeCreature` with `no_branch`, `max_grade` or `not_enough_xp`.
+`chooseCreatureBranch` / `upgradeCreature` check, spend and record on a
+`CreatureTalentLedger` (`creatureXpByTier`, `creatureBranchChoices`,
+`creatureGrades`); `resolveCreatureStatsForGrade` / `applyCreatureGrade` read
+the stats. The duel state wraps them per side (`recordCreatureBranchChoice`,
+`recordCreatureUpgrade`).
+
+**Bridge.** Commands `choose-creature-branch { unitId, branchId }` and
+`upgrade-creature { unitId }` (any phase of a running match, the player's
+sendable creatures only; a refusal plays the error sound). The HUD snapshot
+carries `creatureXpByTier`, `creatureBranchChoices` and `creatureGrades`;
+each unit of `send-limits-updated` carries `availableBranches`,
+`branchCostXp`, `grade` and `nextUpgradeCostXp` (`null` at grade 4). The
+computer earns experience but spends none yet.
+
+**Shipped branches** are placeholders ("<Name> I" and "<Name> II": +8% health,
++0.05 speed and +1 armor on the race's strong axis per grade; magical for
+undead and elves, physical for orcs and humans) until the docs/12 branches
+are authored.
+
 ## Adding a creature
 
 1. Add the id to `UNIT_IDS` in `src/entities/unit/model/types.ts`.
-2. Add the entry to the race file in `src/content/units/`.
+2. Add the entry to the race file in `src/content/units/`, with its two
+   `talentBranches`.
 3. Give it a `spriteKey`. If the art does not exist yet, the placeholder
    pipeline renders it as a question mark until you register the asset.
 4. If the race should be able to send it in duel mode, add the id to
@@ -297,6 +404,9 @@ in `docs/07-duel-mode-expansion-plan.md` (Duel Balance).
 | Schema and bounds | `src/entities/unit/model/content/unitContent.types.ts` |
 | Validation primitives | `src/shared/lib/content/contentValidation.ts` |
 | Creature loader | `src/entities/unit/model/content/loadUnitContent.ts` |
+| Talent branch parser | `src/entities/unit/model/content/creatureTalentContent.ts` |
+| Talent rules | `src/entities/unit/model/talents.ts` |
+| Experience accrual | `src/entities/duel-match/model/creatureXp.ts` |
 | Registered content files | `src/entities/unit/model/content/unitContentSources.ts` |
 | Roster lookups | `src/entities/unit/model/registry.ts` |
 | Creature abilities: schema and parser | `src/entities/unit/model/content/unitAbilities.types.ts`, `unitAbilityFields.ts` |

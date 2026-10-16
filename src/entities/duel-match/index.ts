@@ -81,6 +81,27 @@ export {
 export type { LifeStealAccrual, SentCreepLeaks } from './model/lifeSteal';
 export { createInitialDuelMatchState, DEFAULT_ENTRANCE, DEFAULT_EXIT } from './model/state';
 export { recordTowerBranchChoice } from './model/towerBranchChoices';
+export {
+  recordCreatureBranchChoice,
+  recordCreatureUpgrade,
+  resolveNextSendUnit,
+  resolveQueuedSendUnits,
+} from './model/creatureTalents';
+export type { DuelCreatureTalentResult } from './model/creatureTalents';
+export {
+  accrueSentCreepXp,
+  collectSentDeathTiers,
+  collectSentLeaks,
+  getSentCreepTier,
+  NO_SENT_CREEP_OUTCOMES,
+  NO_SENT_CREEP_OUTCOMES_ON_FIELD,
+} from './model/creatureXp';
+export type {
+  LivesTakenBySendsByField,
+  SentCreepLeak,
+  SentCreepOutcomes,
+  SentCreepOutcomesByField,
+} from './model/creatureXp';
 export type { BattlefieldInitParams } from './model/state';
 export type {
   DuelIncomePayoutResult,

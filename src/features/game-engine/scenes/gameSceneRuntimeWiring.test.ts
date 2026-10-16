@@ -33,6 +33,7 @@ function createHost(): GameSceneWiringHost & { duelState: () => DuelMatchState }
     publishHudSnapshot: vi.fn(),
     handleGameOverUpdated: vi.fn(),
     syncOpponentDuelCreepsFromField: vi.fn(),
+    recordSentCreepDeath: vi.fn(),
     duelState: () => duelMatchState,
   };
 }

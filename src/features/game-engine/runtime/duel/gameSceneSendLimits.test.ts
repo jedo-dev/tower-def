@@ -4,6 +4,7 @@ import {
   getSendCapPerWave,
   type DuelMatchState,
 } from '../../../../entities/duel-match';
+import { resolveUnitConfigById } from '../../../../entities/unit';
 import { RaceId } from '../../../../shared/types/content-ids';
 import { onGameEvent } from '../../../../shared/lib/game-bridge/bridge';
 import type { CreepSendLimitsSnapshot } from '../../../../shared/lib/game-bridge/types';
@@ -102,5 +103,28 @@ describe('send limits bridge events', () => {
     expect(skeletonCap).toBeGreaterThan(0);
     expect(skeleton?.remaining).toBe(0);
     expect(limits.waveSendsRemaining).toBe(getSendCapPerWave() - skeletonCap);
+  });
+
+  it('shows each creature branches, grade and experience prices', () => {
+    const fiend = resolveUnitConfigById('undead_crypt_fiend');
+    const [branchA, branchB] = fiend.talentBranches;
+    const limits = buildPlayerSendLimits([], RaceId.UNDEAD, {
+      creatureBranchChoices: { undead_crypt_fiend: branchB.id },
+      creatureGrades: { undead_crypt_fiend: 4 },
+    });
+    const skeleton = limits.units.find((unit) => unit.creepTypeId === 'undead_skeleton');
+    const fiendLimits = limits.units.find((unit) => unit.creepTypeId === 'undead_crypt_fiend');
+
+    expect(skeleton).toMatchObject({ grade: 0, branchCostXp: 4, nextUpgradeCostXp: 6 });
+    expect(skeleton?.availableBranches.every((branch) => !branch.isChosen)).toBe(true);
+    expect(fiendLimits).toMatchObject({
+      availableBranches: [
+        { id: branchA.id, name: branchA.name, description: branchA.description, isChosen: false },
+        { id: branchB.id, name: branchB.name, description: branchB.description, isChosen: true },
+      ],
+      branchCostXp: 8,
+      grade: 4,
+      nextUpgradeCostXp: null,
+    });
   });
 });

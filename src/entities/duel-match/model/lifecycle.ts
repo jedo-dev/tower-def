@@ -14,6 +14,12 @@ import {
   type SentCreepLeaks,
 } from './lifeSteal';
 import { resolveDuelMatchOutcome } from './matchOutcome';
+import {
+  accrueSentCreepXp,
+  NO_SENT_CREEP_OUTCOMES,
+  type SentCreepOutcomesByField,
+} from './creatureXp';
+import { getCreatureGrade } from '../../unit/model/talents';
 import type {
   DuelIncomePayoutResult,
   DuelMatchState,
@@ -93,12 +99,15 @@ function resolveWinnerRace(
  * them were sent by the other side, which is what steals lives for the sender.
  * A side that hits 0 HP is out even if its own sends stole lives this round.
  * When both hit 0 on the same wave, `resolveDuelMatchOutcome` breaks the tie.
+ * `sentOutcomes` lists the tiers of the sent creeps that died or leaked on
+ * each field; their senders earn creature experience (`accrueSentCreepXp`).
  */
 export function endRound(
   state: DuelMatchState,
   playerLeakedCreeps: number,
   opponentLeakedCreeps: number,
   sentLeaks: SentCreepLeaks = NO_SENT_CREEP_LEAKS,
+  sentOutcomes: SentCreepOutcomesByField = NO_SENT_CREEP_OUTCOMES,
 ): DuelRoundEndResult {
   const playerHpLost = playerLeakedCreeps * DUEL_MATCH_BALANCE.hpLossPerLeakedCreep;
   const opponentHpLost = opponentLeakedCreeps * DUEL_MATCH_BALANCE.hpLossPerLeakedCreep;
@@ -109,13 +118,21 @@ export function endRound(
   const isPlayerDead = newPlayerHp <= 0;
   const isOpponentDead = newOpponentHp <= 0;
 
+  const livesTakenBySends = {
+    onPlayerField: countLivesTakenBySends(state.player.hp, newPlayerHp, sentLeaks.onPlayerField),
+    onOpponentField: countLivesTakenBySends(
+      state.opponent.hp,
+      newOpponentHp,
+      sentLeaks.onOpponentField,
+    ),
+  };
   const playerSteal = accrueStolenLives(
     state.player.lifeStealRemainder,
-    countLivesTakenBySends(state.opponent.hp, newOpponentHp, sentLeaks.onOpponentField),
+    livesTakenBySends.onOpponentField,
   );
   const opponentSteal = accrueStolenLives(
     state.opponent.lifeStealRemainder,
-    countLivesTakenBySends(state.player.hp, newPlayerHp, sentLeaks.onPlayerField),
+    livesTakenBySends.onPlayerField,
   );
   const playerLivesStolen = isPlayerDead ? 0 : playerSteal.livesGained;
   const opponentLivesStolen = isOpponentDead ? 0 : opponentSteal.livesGained;
@@ -129,22 +146,23 @@ export function endRound(
   });
   const isMatchOver = outcome.reason !== null;
   const winner = resolveWinnerRace(state, outcome.winningSide);
+  const settledState: DuelMatchState = {
+    ...state,
+    phase: 'build',
+    player: {
+      ...state.player,
+      hp: newPlayerHp + playerLivesStolen,
+      lifeStealRemainder: playerSteal.remainder,
+    },
+    opponent: {
+      ...state.opponent,
+      hp: newOpponentHp + opponentLivesStolen,
+      lifeStealRemainder: opponentSteal.remainder,
+    },
+  };
 
   return {
-    state: {
-      ...state,
-      phase: 'build',
-      player: {
-        ...state.player,
-        hp: newPlayerHp + playerLivesStolen,
-        lifeStealRemainder: playerSteal.remainder,
-      },
-      opponent: {
-        ...state.opponent,
-        hp: newOpponentHp + opponentLivesStolen,
-        lifeStealRemainder: opponentSteal.remainder,
-      },
-    },
+    state: accrueSentCreepXp(settledState, sentOutcomes, livesTakenBySends),
     playerHpLost,
     opponentHpLost,
     playerLivesStolen,
@@ -172,8 +190,9 @@ export function settleRound(
   opponentLeakedCreeps: number,
   sentLeaks: SentCreepLeaks = NO_SENT_CREEP_LEAKS,
   towerIncome: DuelTowerIncome = NO_TOWER_INCOME,
+  sentOutcomes: SentCreepOutcomesByField = NO_SENT_CREEP_OUTCOMES,
 ): DuelRoundSettlement {
-  const result = endRound(state, playerLeakedCreeps, opponentLeakedCreeps, sentLeaks);
+  const result = endRound(state, playerLeakedCreeps, opponentLeakedCreeps, sentLeaks, sentOutcomes);
   if (result.isMatchOver) {
     return { ...result, playerIncomePaid: 0, opponentIncomePaid: 0 };
   }
@@ -232,6 +251,11 @@ export function sendCreep(
     gold: duelist.gold - cost,
     income: duelist.income + incomeBonus,
     sendQueue: [...duelist.sendQueue, creepId],
+    // The grade at send time travels with the send (docs/08 "Creature talents").
+    sendQueueGrades: [
+      ...duelist.sendQueueGrades,
+      getCreatureGrade(creepId, duelist.creatureGrades),
+    ],
   };
 
   return {
@@ -261,10 +285,12 @@ export function clearSendQueue(state: DuelMatchState): DuelMatchState {
     player: {
       ...state.player,
       sendQueue: [],
+      sendQueueGrades: [],
     },
     opponent: {
       ...state.opponent,
       sendQueue: [],
+      sendQueueGrades: [],
     },
   };
 }

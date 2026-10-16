@@ -16,5 +16,43 @@ export {
   resolveUnitConfigById,
   tryResolveUnitConfigById,
 } from './model/registry';
+export type {
+  CreatureGradeStats,
+  CreatureTalentBranchDefinition,
+} from './model/content/creatureTalentContent';
+export {
+  addCreatureXp,
+  applyCreatureGrade,
+  canChooseCreatureBranch,
+  canUpgradeCreature,
+  chooseCreatureBranch,
+  getChosenCreatureBranchId,
+  getCreatureBranchCost,
+  getCreatureDeathXp,
+  getCreatureGrade,
+  getCreatureLeakXp,
+  getCreatureXp,
+  getNextCreatureGradeCost,
+  NO_CREATURE_BRANCH_CHOICES,
+  NO_CREATURE_GRADES,
+  NO_CREATURE_XP,
+  resolveChosenCreatureBranch,
+  resolveCreatureStatsAtGrade,
+  resolveCreatureStatsForGrade,
+  upgradeCreature,
+} from './model/talents';
+export type {
+  CreatureBranchChoices,
+  CreatureBranchRejectionReason,
+  CreatureGrade,
+  CreatureGrades,
+  CreatureTalentBranchId,
+  CreatureTalentCheck,
+  CreatureTalentLedger,
+  CreatureTalentRef,
+  CreatureTalentResult,
+  CreatureUpgradeRejectionReason,
+  CreatureXpByTier,
+} from './model/talents';
 export type { CreatureAbilities } from '../../shared/types/creatureAbilities';
 export { parseCreatureAbilities, parseUnitAbilities } from './model/content/unitAbilityFields';

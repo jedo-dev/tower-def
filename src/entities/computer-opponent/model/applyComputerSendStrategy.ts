@@ -1,6 +1,6 @@
 import { sendCreep } from '../../duel-match/model/lifecycle';
 import type { DuelMatchState } from '../../duel-match/model/types';
-import { resolveUnitConfigById } from '../../unit/model/registry';
+import { resolveNextSendUnit } from '../../duel-match/model/creatureTalents';
 import type { ComputerDecisionDebugRecorder } from './decisionDebugSnapshots';
 import { planSendCreeps, type SendPlannerOutput } from './planSendCreeps';
 import type { DecisionContext } from './types';
@@ -32,7 +32,8 @@ export function applyComputerSendStrategy(
   let incomeGained = 0;
 
   for (const action of decision.actions) {
-    const unitConfig = resolveUnitConfigById(action.creepTypeId);
+    // At the computer's current creature grade (none bought yet).
+    const unitConfig = resolveNextSendUnit(state.opponent, action.creepTypeId);
     const result = sendCreep(state, false, action.creepTypeId, unitConfig.tier, {
       freeNthSend: unitConfig.abilities?.freeNthSend,
     });

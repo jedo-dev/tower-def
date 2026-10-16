@@ -12,11 +12,12 @@ import {
   recordTowerBranchChoice,
   reconcileBattlefieldsForNextRound,
   refreshOpponentRoutesForWaveStart,
+  resolveQueuedSendUnits,
   startRound,
   type DuelMatchState,
 } from '../../../entities/duel-match';
 import { DEFAULT_DIFFICULTY, type Difficulty } from '../../../entities/difficulty';
-import { resolveUnitConfigById, type UnitConfig } from '../../../entities/unit';
+import type { UnitConfig } from '../../../entities/unit';
 import { getTowersIncomePerRound, resolveTowerSellRefundRatio } from '../../../entities/tower';
 import { calculateWaveRoutes, EMPTY_WAVE_ROUTES, hasWaveRoute } from '../../../entities/wave';
 import { RaceId, UnitMoveType } from '../../../shared/types/content-ids';
@@ -113,6 +114,17 @@ import {
   type TowerCommandDeps,
 } from '../runtime/build/gameSceneTowerCommands';
 import { handleChooseTowerBranchCommand } from '../runtime/build/towerBranchCommands';
+import {
+  handleChooseCreatureBranchCommand,
+  handleUpgradeCreatureCommand,
+  type CreatureTalentCommandDeps,
+} from '../runtime/duel/creatureTalentCommands';
+import {
+  buildSentCreepOutcomes,
+  createSentCreepDeathTally,
+  recordSentCreepDeath,
+  resetSentCreepDeathTally,
+} from '../runtime/duel/sentCreepOutcomeTally';
 import { summarizeFieldLeaks } from '../runtime/duel/fieldLeakSettlement';
 import { applyComputerBuildPhaseStrategies } from '../runtime/duel/gameSceneComputerStrategy';
 import {
@@ -294,6 +306,8 @@ export class GameScene extends Phaser.Scene {
     RaceId.UNDEAD,
   );
   private opponentLeakHistory: LeakHistoryEntry[] = [];
+  /** Sent creeps that died this wave, by field; read by the round settle. */
+  private readonly sentCreepDeaths = createSentCreepDeathTally();
   /** The computer's sends for the running wave; its live queue is drained at wave start. */
   private opponentSendsThisWave: readonly string[] = [];
   private readonly computerDecisionRecorder = createComputerDecisionDebugRecorder();
@@ -397,6 +411,8 @@ export class GameScene extends Phaser.Scene {
     publishHudSnapshot: () => this.publishHudSnapshot(),
     handleGameOverUpdated: (isGameOver) => this.handleGameOverUpdated(isGameOver),
     syncOpponentDuelCreepsFromField: () => this.syncOpponentDuelCreepsFromField(),
+    recordSentCreepDeath: (field, creep) =>
+      recordSentCreepDeath(this.sentCreepDeaths, field, creep),
   });
 
   private readonly towerCommandDeps: TowerCommandDeps = {
@@ -458,6 +474,17 @@ export class GameScene extends Phaser.Scene {
       this.playerGold = nextGold;
       this.registry.set('economy.gold', nextGold);
     },
+    onHudChanged: () => this.publishHudSnapshot(),
+  };
+
+  private readonly creatureTalentCommandDeps: CreatureTalentCommandDeps = {
+    getDuelMatchState: () => this.duelMatchState,
+    setDuelMatchState: (state) => {
+      this.duelMatchState = state;
+    },
+    isMatchOver: () => this.isGameOver || this.matchOutcomeStatus !== 'active',
+    getBuilderFactionId: () => this.selectedBuilderFactionId,
+    playSound: (soundId: SoundId) => this.soundManager?.play(soundId),
     onHudChanged: () => this.publishHudSnapshot(),
   };
 
@@ -773,6 +800,16 @@ export class GameScene extends Phaser.Scene {
       }),
       onCommand('choose-tower-branch', (payload) => {
         handleChooseTowerBranchCommand(this.towerCommandDeps, payload.towerId, payload.branchId);
+      }),
+      onCommand('choose-creature-branch', (payload) => {
+        handleChooseCreatureBranchCommand(
+          this.creatureTalentCommandDeps,
+          payload.unitId,
+          payload.branchId,
+        );
+      }),
+      onCommand('upgrade-creature', (payload) => {
+        handleUpgradeCreatureCommand(this.creatureTalentCommandDeps, payload.unitId);
       }),
       onCommand('sell-tower', (payload) => {
         handleSellTowerCommand(this.towerCommandDeps, payload.towerId);
@@ -1157,6 +1194,11 @@ export class GameScene extends Phaser.Scene {
         player: getTowersIncomePerRound(this.playerField.towers.map((tower) => tower.entity)),
         opponent: getTowersIncomePerRound(this.opponentField.towers.map((tower) => tower.entity)),
       },
+      sentOutcomes: buildSentCreepOutcomes(
+        this.sentCreepDeaths,
+        this.playerField.creeps.map((creep) => creep.entity),
+        this.opponentField.creeps.map((creep) => creep.entity),
+      ),
     });
 
     const previousOpponentHp = this.duelMatchState.opponent.hp;
@@ -1220,6 +1262,7 @@ export class GameScene extends Phaser.Scene {
   private resetRunToInitialState(): void {
     this.opponentLeakHistory = [];
     this.opponentSendsThisWave = [];
+    resetSentCreepDeathTally(this.sentCreepDeaths);
     this.computerDecisionRecorder.clear();
     this.computerMazePlanMemory.plan = null;
     destroyBattlefieldCreeps(this.playerField);
@@ -1284,7 +1327,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   private getComputerSendWaveUnits(): UnitConfig[] {
-    return this.duelMatchState.opponent.sendQueue.map((unitId) => resolveUnitConfigById(unitId));
+    return resolveQueuedSendUnits(this.duelMatchState.opponent);
   }
 
   private handlePointerMove(pointer: Phaser.Input.Pointer): void {
@@ -1424,6 +1467,7 @@ export class GameScene extends Phaser.Scene {
     // From here on this is the wave being fought; the HUD counts it as such.
     this.runState.currentWaveNumber += 1;
     this.runState.waveKillBountyEarned = 0;
+    resetSentCreepDeathTally(this.sentCreepDeaths);
     this.registry.set('wave.number', this.runState.currentWaveNumber);
     this.runState.activeCreepRoutes = waveRoutes;
     // The path preview shows the single-cell route; large creeps may walk wider.
@@ -1482,9 +1526,8 @@ export class GameScene extends Phaser.Scene {
       routes: this.duelMatchState.opponent.battlefield.routes,
       waveNumber,
       baselineUnits,
-      sentUnits: this.duelMatchState.player.sendQueue.map((unitId) =>
-        resolveUnitConfigById(unitId),
-      ),
+      // Each send spawns at the creature grade it was sent with.
+      sentUnits: resolveQueuedSendUnits(this.duelMatchState.player),
       timing: resolveWaveSpawnTiming(this.gameClock.nowMs, WAVE_RUNTIME_CONFIG),
     });
     // The duel state mirrors the field; the old wave's creeps are gone.
@@ -1572,6 +1615,9 @@ export class GameScene extends Phaser.Scene {
       isPaused: this.gameClock.isPaused,
       gameSpeed: this.gameClock.speed,
       towerBranchChoices: { ...this.duelMatchState.player.towerBranchChoices },
+      creatureXpByTier: { ...this.duelMatchState.player.creatureXpByTier },
+      creatureBranchChoices: { ...this.duelMatchState.player.creatureBranchChoices },
+      creatureGrades: { ...this.duelMatchState.player.creatureGrades },
     };
 
     publishGameHudSnapshot(snapshot);

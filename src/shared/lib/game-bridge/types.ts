@@ -49,12 +49,29 @@ export type CreepSendQueueItem = {
   index: number;
 };
 
+/** One talent branch of a sendable creature, as the send panel's develop chooser shows it. */
+export type CreatureBranchOptionSnapshot = {
+  id: string;
+  name: string;
+  description: string;
+  /** This branch is the one chosen for the creature; the other is then locked for the match. */
+  isChosen: boolean;
+};
+
 export type CreepSendUnitLimit = {
   creepTypeId: string;
   /** Per-type cap for this unit this wave (by tier). */
   cap: number;
   /** How many more of this unit fit this wave under both the type and the wave cap. */
   remaining: number;
+  /** Both talent branches of the creature. */
+  availableBranches: CreatureBranchOptionSnapshot[];
+  /** Experience of the creature's tier a branch pick costs. */
+  branchCostXp: number;
+  /** Grade bought along the chosen branch, 0-4; the next send spawns at it. */
+  grade: number;
+  /** Experience the next grade costs; `null` at grade 4. */
+  nextUpgradeCostXp: number | null;
 };
 
 /** A side's send capacity for the current wave; published on change, never per frame. */
@@ -142,6 +159,12 @@ export type GameHudSnapshot = {
    * missing here has no branch yet; restart and faction change clear it.
    */
   towerBranchChoices: Readonly<Record<string, string>>;
+  /** The player's unspent creature experience per tier (1-6); a missing tier has 0. */
+  creatureXpByTier: Readonly<Partial<Record<number, number>>>;
+  /** The player's creature branch picks this match, unit id to branch id. */
+  creatureBranchChoices: Readonly<Record<string, string>>;
+  /** The player's bought creature grades, unit id to grade 1-4; missing means 0. */
+  creatureGrades: Readonly<Record<string, number>>;
 };
 
 export type BoardZoomAction = 'in' | 'out' | 'reset';
@@ -154,6 +177,10 @@ export type GameCommandMap = {
   'upgrade-tower': { towerId: string };
   /** Choose a talent branch for the type of this grade-3 tower; locks the other branch. */
   'choose-tower-branch': { towerId: string; branchId: string };
+  /** Choose a talent branch for one of the player's sendable creatures, for experience. */
+  'choose-creature-branch': { unitId: string; branchId: string };
+  /** Buy the next grade of a creature along its chosen branch; applies to later sends. */
+  'upgrade-creature': { unitId: string };
   'sell-tower': { towerId: string };
   'switch-battlefield-view': { view: BattlefieldView };
   'restart-match': undefined;
