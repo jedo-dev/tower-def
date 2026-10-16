@@ -37,6 +37,7 @@ import {
   parseAbilities,
   parseAuraExtensions,
   parseOnHitEffectExtensions,
+  parseOnHitEffectMaxStacks,
 } from './towerAbilityFields';
 
 /**
@@ -96,8 +97,7 @@ export function parseOnHitEffects(
         effect.magnitude === undefined ? undefined : readNumber(effect, 'magnitude', location),
       durationMs:
         effect.durationMs === undefined ? undefined : readNumber(effect, 'durationMs', location),
-      maxStacks:
-        effect.maxStacks === undefined ? undefined : readNumber(effect, 'maxStacks', location),
+      maxStacks: parseOnHitEffectMaxStacks(effect, effectId, location),
       ...(damageType === undefined ? {} : { damageType }),
       ...parseOnHitEffectExtensions(effect, effectId, location),
     };

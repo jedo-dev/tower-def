@@ -85,6 +85,29 @@ describe('entities/computer-opponent/damage-placement ability valuation', () => 
     expect(amplification.fieldGain).toBeGreaterThan(0);
   });
 
+  it('reaches only the authored stack cap of an armor break, the balance cap when absent', () => {
+    const ownGainWithCap = (maxStacks?: number) =>
+      computeDefenceAmplification(
+        [
+          {
+            effectId: EffectId.ARMOR_BREAK,
+            magnitude: 10,
+            durationMs: 3000,
+            armorKind: ArmorKind.PHYSICAL,
+            ...(maxStacks === undefined ? {} : { maxStacks }),
+          },
+        ],
+        DamageType.PHYSICAL,
+        500,
+        PLATED,
+      ).ownGain;
+    const gainOf = (points: number) => computeArmorBreakGain(PLATED[DamageType.PHYSICAL], points);
+
+    expect(ownGainWithCap(1)).toBeCloseTo(gainOf(10));
+    expect(ownGainWithCap(2)).toBeCloseTo(gainOf(20));
+    expect(ownGainWithCap()).toBeCloseTo(gainOf(30));
+  });
+
   it('values a vulnerability mark by the damage of the towers around it', () => {
     const marker = withStats({
       onHitEffects: [

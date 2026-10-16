@@ -44,7 +44,7 @@ export type TowerOnHitEffect = {
   /** Overrides the balance magnitude for this tower; undefined keeps the default. */
   magnitude?: number;
   durationMs?: number;
-  /** Raises the stack cap for this tower; undefined keeps the balance cap. */
+  /** Stack cap of this tower's application (1 = no stack); undefined keeps the balance cap. */
   maxStacks?: number;
   /**
    * Damage over time only: the type its ticks deal. Undefined keeps

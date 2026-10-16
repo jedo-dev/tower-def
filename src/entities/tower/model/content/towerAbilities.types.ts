@@ -72,6 +72,11 @@ export const TOWER_AURA_EXTENSION_BOUNDS: Record<TowerAuraExtensionNumberKey, Nu
   sellRefundBonus: { min: 0, max: 1 },
 };
 
+/** Bound of an on-hit effect's authored stack cap; 1 means it does not stack. */
+export const TOWER_STACK_BOUNDS = {
+  maxStacks: { min: 1, max: 10 },
+} as const;
+
 /** Bounds of the chill freeze fields on an on-hit effect entry. */
 export const TOWER_FREEZE_BOUNDS = {
   freezeAtStacks: { min: 2, max: 20 },

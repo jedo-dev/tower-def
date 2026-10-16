@@ -2,6 +2,7 @@ import {
   resolveEffectArmorKind,
   resolveEffectDamageScope,
   resolveEffectDefinition,
+  resolveEffectMaxStacks,
   type EffectDefinition,
 } from '../../../shared/constants/effects';
 import {
@@ -31,7 +32,7 @@ export type ApplyEffectInput = {
   magnitude?: number;
   /** Overrides the balance duration. */
   durationMs?: number;
-  /** Raises the stack cap for this application; never lowers the balance cap. */
+  /** Stack cap of this application; the balance cap when absent (`resolveEffectMaxStacks`). */
   maxStacks?: number;
   /** Damage over time only: the type its ticks deal; `DAMAGE_OVER_TIME_DAMAGE_TYPE` when absent. */
   damageType?: DamageType;
@@ -76,7 +77,7 @@ function createEffect(definition: EffectDefinition, input: ApplyEffectInput): Ac
     magnitude: input.magnitude ?? definition.magnitude,
     remainingMs: input.durationMs ?? definition.durationMs,
     stacks: 1,
-    maxStacks: Math.max(definition.maxStacks, input.maxStacks ?? definition.maxStacks),
+    maxStacks: resolveEffectMaxStacks(definition.id, input.maxStacks),
     nextTickInMs: definition.tickIntervalMs,
     ...(input.damageType === undefined ? {} : { damageType: input.damageType }),
     ...(input.armorKind === undefined ? {} : { armorKind: input.armorKind }),
@@ -103,8 +104,9 @@ function mergeEffect(
 
   switch (definition.stackingRule) {
     case EffectStackingRule.STACK: {
-      // The stronger tower also sets the cap, so upgrading one poison tower
-      // lifts the ceiling instead of being ignored by the older stacks.
+      // The running instance keeps the highest cap any contributor authored:
+      // upgrading one poison tower lifts the ceiling instead of being ignored
+      // by the older stacks, and a no-stack tower never cuts another's stacks.
       const maxStacks = Math.max(existing.maxStacks, incoming.maxStacks);
 
       return withIncomingDamageType(

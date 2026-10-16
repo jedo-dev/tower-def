@@ -55,8 +55,8 @@ describe('talent branch cards', () => {
 
     expect(volley.grades[1].special).toBe('+1 target at 50%');
     expect(cursed.grades[3].special).toBe(
-      'armor break -10 magical armor for 4.0s, up to 3 stacks; ' +
-        'armor break -5 physical armor for 4.0s, up to 3 stacks',
+      'armor break -10 magical armor for 4.0s, up to 2 stacks; ' +
+        'armor break -5 physical armor for 4.0s, up to 2 stacks',
     );
     expect(moonfall.grades[3].special).toBe('every 3 shots crit x2');
   });

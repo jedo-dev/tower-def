@@ -65,7 +65,8 @@
                   "effectId": "armor_break",
                   "magnitude": 5,
                   "durationMs": 1000,
-                  "armorKind": "physical"
+                  "armorKind": "physical",
+                  "maxStacks": 1
                 }
               ]
             },
@@ -79,7 +80,8 @@
                   "effectId": "armor_break",
                   "magnitude": 10,
                   "durationMs": 1000,
-                  "armorKind": "physical"
+                  "armorKind": "physical",
+                  "maxStacks": 1
                 }
               ]
             },
@@ -93,7 +95,8 @@
                   "effectId": "armor_break",
                   "magnitude": 15,
                   "durationMs": 1000,
-                  "armorKind": "physical"
+                  "armorKind": "physical",
+                  "maxStacks": 1
                 }
               ],
               "abilities": { "largeTargetMultiplier": 1.3 }
@@ -108,7 +111,8 @@
                   "effectId": "armor_break",
                   "magnitude": 20,
                   "durationMs": 1000,
-                  "armorKind": "physical"
+                  "armorKind": "physical",
+                  "maxStacks": 1
                 },
                 { "effectId": "stun", "durationMs": 400 }
               ],
@@ -144,7 +148,9 @@
               "range": 6,
               "attackCooldownMs": 1100,
               "splashRadius": 3.6,
-              "onHitEffects": [{ "effectId": "burn", "magnitude": 4, "durationMs": 3000 }]
+              "onHitEffects": [
+                { "effectId": "burn", "magnitude": 4, "durationMs": 3000, "maxStacks": 1 }
+              ]
             },
             {
               "level": 5,
@@ -152,7 +158,9 @@
               "range": 6.2,
               "attackCooldownMs": 1050,
               "splashRadius": 3.8,
-              "onHitEffects": [{ "effectId": "burn", "magnitude": 5, "durationMs": 3000 }]
+              "onHitEffects": [
+                { "effectId": "burn", "magnitude": 5, "durationMs": 3000, "maxStacks": 1 }
+              ]
             },
             {
               "level": 6,
@@ -160,7 +168,9 @@
               "range": 6.4,
               "attackCooldownMs": 1000,
               "splashRadius": 4.2,
-              "onHitEffects": [{ "effectId": "burn", "magnitude": 6.5, "durationMs": 4000 }]
+              "onHitEffects": [
+                { "effectId": "burn", "magnitude": 6.5, "durationMs": 4000, "maxStacks": 2 }
+              ]
             },
             {
               "level": 7,
@@ -169,7 +179,7 @@
               "attackCooldownMs": 900,
               "splashRadius": 4.6,
               "onHitEffects": [
-                { "effectId": "burn", "magnitude": 8, "durationMs": 4000 },
+                { "effectId": "burn", "magnitude": 8, "durationMs": 4000, "maxStacks": 3 },
                 { "effectId": "chill", "magnitude": 0.1, "durationMs": 2000 }
               ]
             }

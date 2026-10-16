@@ -115,6 +115,27 @@ describe('entities/computer-opponent/damage-placement armor-aware investments', 
     );
   });
 
+  it('values a no-stack poison at one stack and an uncapped one at the balance cap', () => {
+    const poisonWithCap = (maxStacks?: number) =>
+      computeDamageOverTimeDps({
+        ...ledgerTower(STRAIGHT_ANCHOR, POISON_TYPE),
+        stats: {
+          ...POISON_TYPE.stats,
+          attackCooldownMs: 500,
+          onHitEffects: [
+            {
+              effectId: EffectId.POISON,
+              durationMs: 4000,
+              ...(maxStacks === undefined ? {} : { maxStacks }),
+            },
+          ],
+        },
+      });
+
+    expect(poisonWithCap(1)).toBeLessThan(poisonWithCap());
+    expect(poisonWithCap(6)).toBeGreaterThan(poisonWithCap());
+  });
+
   it('scores the type that goes through the weaker armor above 1, the other below', () => {
     const magical = { ...ledgerTower(STRAIGHT_ANCHOR, WALL_TYPE), damageType: DamageType.MAGICAL };
     const physical = ledgerTower(STRAIGHT_ANCHOR, WALL_TYPE);

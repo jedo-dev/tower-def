@@ -511,10 +511,11 @@ On-hit effect fields (in `onHitEffects[]` entries, at any level):
 | `freezeAtStacks` | `chill` only, whole 2-20. | Every Nth chilling hit on a creep (counted while its chill runs, weaker chills included) freezes it: a `stun`. |
 | `freezeMs` | `chill` only, with `freezeAtStacks`, 100-10000 ms. | Freeze length; the stun balance duration when omitted. |
 | `damageType` | `poison` and `burn`. | See "Damage over time type". |
+| `maxStacks` | Stacking effects only (`poison`, `burn`, `armor_break`), whole 1-10. | The stack cap of this tower's application, below or above the balance default (3); 1 means it does not stack. The balance cap when omitted. A running instance keeps the highest cap among the towers feeding it. |
 
 `stun` and `burn` are ordinary on-hit effects (`{ "effectId": "stun",
 "durationMs": 400 }`). Burn deals magical ticks by default and stacks like
-poison (up to 3, `maxStacks` raises it).
+poison (up to 3; `maxStacks` sets another cap).
 
 Aura extensions (optional fields on any `aura` shape):
 

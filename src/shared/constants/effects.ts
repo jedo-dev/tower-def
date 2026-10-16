@@ -56,7 +56,7 @@ export const EFFECT_DEFINITIONS: Record<EffectId, EffectDefinition> = {
     magnitude: 6,
     durationMs: 4_000,
     tickIntervalMs: 500,
-    // Default cap; an upgraded poison tower declares a higher one.
+    // Default cap when a tower authors none; an authored cap replaces it.
     maxStacks: 3,
     stackingRule: EffectStackingRule.STACK,
   },
@@ -66,7 +66,7 @@ export const EFFECT_DEFINITIONS: Record<EffectId, EffectDefinition> = {
     magnitude: 14,
     durationMs: 2_000,
     tickIntervalMs: 500,
-    // Stacks like poison (tower-def-bge.2); a talent grade raises the cap.
+    // Stacks like poison (tower-def-bge.2); a talent grade may author its own cap.
     maxStacks: 3,
     stackingRule: EffectStackingRule.STACK,
   },
@@ -123,4 +123,14 @@ export function resolveEffectDamageScope(effectId: EffectId): DamageScope {
 
 export function resolveEffectDefinition(effectId: EffectId): EffectDefinition {
   return EFFECT_DEFINITIONS[effectId];
+}
+
+/**
+ * Stack cap of one application: the tower's authored `maxStacks` when it has
+ * one (below or above the balance default alike, tower-def-bge.8), the
+ * balance cap otherwise. How stacks merge (stack, refresh, strongest) is
+ * still the definition's.
+ */
+export function resolveEffectMaxStacks(effectId: EffectId, authoredMaxStacks?: number): number {
+  return authoredMaxStacks ?? EFFECT_DEFINITIONS[effectId].maxStacks;
 }

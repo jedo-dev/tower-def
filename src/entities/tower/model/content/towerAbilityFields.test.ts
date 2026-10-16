@@ -173,6 +173,22 @@ describe('on-hit effect extensions', () => {
     );
   });
 
+  it('reads an authored stack cap on a stacking effect, 1 included', () => {
+    expect(effectEntry({ effectId: 'armor_break', maxStacks: 1 })).toMatchObject({ maxStacks: 1 });
+    expect(effectEntry({ effectId: 'burn', maxStacks: 2 })).toMatchObject({ maxStacks: 2 });
+    expect(effectEntry({ effectId: 'poison' })?.maxStacks).toBeUndefined();
+  });
+
+  it('rejects a stack cap out of bounds, fractional or on a non-stacking effect', () => {
+    expectRejection({ onHitEffects: [{ effectId: 'poison', maxStacks: 0 }] }, /maxStacks/);
+    expectRejection({ onHitEffects: [{ effectId: 'poison', maxStacks: 11 }] }, /maxStacks/);
+    expectRejection({ onHitEffects: [{ effectId: 'burn', maxStacks: 1.5 }] }, /whole number/);
+    expectRejection(
+      { onHitEffects: [{ effectId: 'chill', maxStacks: 2 }] },
+      /"chill" does not stack and cannot declare "maxStacks"/,
+    );
+  });
+
   it('rejects unknown kinds and a freeze duration without a freeze count', () => {
     expectRejection(
       { onHitEffects: [{ effectId: 'armor_break', armorKind: 'percent' }] },
