@@ -1,11 +1,6 @@
 import type { GridPoint } from '../../../../shared/types/grid';
 import { UnitMoveType } from '../../../../shared/types/content-ids';
-import {
-  CREEP_ARRIVALS_PER_SECOND,
-  CREEP_CELLS_PER_SECOND_AT_UNIT_SPEED,
-  MAX_SLOW_TIME_GAIN,
-  REFERENCE_CREEP_SPEED,
-} from './constants';
+import { CREEP_CELLS_PER_SECOND_AT_UNIT_SPEED, REFERENCE_CREEP_SPEED } from './constants';
 import { NEUTRAL_DAMAGE_EFFICIENCY, type DamageTypeEfficiency } from '../damage-profile';
 import type { RouteGeometry } from './routeGeometry';
 import { computeDefenceAmplification } from './abilityDamageModel';
@@ -13,14 +8,12 @@ import {
   canDamageModelTowerHit,
   computeAura,
   computeAuraBoostFor,
-  computeChill,
   computeSampleDamageRate,
-  computeShotDps,
   resolveDamageModelDamageType,
   resolveOnHitEffects,
   type DamageModelTower,
 } from './towerDamageModel';
-import { computeCreepsStruckPerShot } from './shotReach';
+import { createLedgerSlowTerms } from './ledgerSlowTerms';
 
 const MS_PER_SECOND = 1000;
 
@@ -57,11 +50,6 @@ export type RouteDamageLedger = {
 };
 
 const NO_INDEX = -1;
-
-/** Extra time a slowed creep spends in reach, capped at `MAX_SLOW_TIME_GAIN`. */
-function slowTimeGain(slow: number): number {
-  return slow > 0 ? Math.min(MAX_SLOW_TIME_GAIN, 1 / (1 - slow) - 1) : 0;
-}
 
 export function createRouteDamageLedger(
   geometry: RouteGeometry,
@@ -122,66 +110,15 @@ export function createRouteDamageLedger(
     isFieldStale = false;
   }
 
-  /** Strongest slow on every sample, from every frost tower except `excludeIndex`. */
-  function slowBySample(excludeIndex: number): Float64Array {
-    const slow = new Float64Array(geometry.length);
-    towers.forEach((tower, index) => {
-      if (index === excludeIndex) {
-        return;
-      }
-      const window = chillWindow(tower);
-      for (let sample = window.from; sample <= window.to; sample += 1) {
-        slow[sample] = Math.max(slow[sample], window.magnitude);
-      }
-    });
-    return slow;
-  }
-
-  /** Samples a frost tower keeps chilled: its reach plus the distance a chill lasts. */
-  function chillWindow(tower: LedgerTower): { from: number; to: number; magnitude: number } {
-    const chill = computeChill(tower);
-    const covered = geometry.coveredSamples(tower.anchor, tower.stats.range);
-    if (chill.magnitude <= 0 || covered.length === 0 || !canDamageModelTowerHit(tower, moveType)) {
-      return { from: 0, to: -1, magnitude: 0 };
-    }
-    const chilledSpeed =
-      CREEP_CELLS_PER_SECOND_AT_UNIT_SPEED * REFERENCE_CREEP_SPEED * (1 - chill.magnitude);
-    const tail = Math.ceil((chill.durationMs / MS_PER_SECOND) * chilledSpeed);
-    const to = Math.min(geometry.length - 1, covered[covered.length - 1] + tail);
-    return { from: covered[0], to, magnitude: chill.magnitude };
-  }
-
-  /**
-   * Share of the wave a tower's on-hit effect reaches: creeps struck per
-   * second (every creep a shot strikes, averaged over its reach) against
-   * creeps arriving per second, at most all of them.
-   */
-  function struckShare(tower: LedgerTower, boost: number): number {
-    const covered = geometry.coveredSamples(tower.anchor, tower.stats.range);
-    let struck = 0;
-    for (const sample of covered) {
-      struck += computeCreepsStruckPerShot(tower, geometry, sample);
-    }
-    const perShot = covered.length > 0 ? struck / covered.length : 1;
-    const shotsPerSecond = (computeShotDps(tower.stats) / Math.max(1, tower.stats.damage)) * boost;
-    return Math.min(1, (shotsPerSecond * perShot) / CREEP_ARRIVALS_PER_SECOND);
-  }
-
-  function frostBonus(tower: LedgerTower, excludeIndex: number, boost: number): number {
-    const window = chillWindow(tower);
-    if (window.magnitude <= 0) {
-      return 0;
-    }
-    refreshField();
-    const slow = slowBySample(excludeIndex);
-    const chilledShare = struckShare(tower, boost);
-    const gain = slowTimeGain(window.magnitude);
-    let bonus = 0;
-    for (let sample = window.from; sample <= window.to; sample += 1) {
-      bonus += field[sample] * Math.max(0, gain - slowTimeGain(slow[sample]));
-    }
-    return bonus * chilledShare;
-  }
+  const { frostBonus, struckShare } = createLedgerSlowTerms({
+    geometry,
+    moveType,
+    towers,
+    field: () => {
+      refreshField();
+      return field;
+    },
+  });
 
   function supportBonus(tower: LedgerTower, excludeIndex: number): number {
     const aura = computeAura(tower);
