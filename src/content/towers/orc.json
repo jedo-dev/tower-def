@@ -23,7 +23,7 @@
         {
           "id": "orc_spear_watchtower_throwers",
           "name": "Spear Throwers",
-          "description": "More throwers on the tower: fast spears that start running through the line at grade 6.",
+          "description": "More throwers on the tower: fast spears that run through the line, deeper with every grade.",
           "grades": [
             {
               "level": 4,

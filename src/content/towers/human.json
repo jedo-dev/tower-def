@@ -378,7 +378,7 @@
         {
           "id": "human_guard_post_treasury",
           "name": "Treasury",
-          "description": "Stops sharpening towers and pays gold instead: per kill nearby, per round, and on resale.",
+          "description": "Sharpens the towers around it less than Headquarters and pays gold: per kill nearby, per round, and on resale.",
           "grades": [
             {
               "level": 4,

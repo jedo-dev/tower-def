@@ -817,7 +817,7 @@ marked **restored** (numbers read against the shipped grade 3 as above):
 | Plague Tower / Plague Cloud | poison cloud left on the ground, slowing at 6-7 | **restored** (tower-def-bge.9): `groundZone` under the primary target, magical 3 / 4 / 5 / 7 per 500 ms tick (the doc's 6-14 per second) for 2 / 3 / 3 / 4 s, chill 0.15 / 0.25 at 6-7; cloud radius 1.5 / 1.75 / 2 / 2.25 (the doc gives none); the on-hit poison and chill are gone |
 | Plague Tower / Corpse Blast | killed creeps explode for 20-50% of their max health, chaining | **restored** (tower-def-bge.9): `corpseExplosionShare` 0.2 / 0.3 / 0.4 / 0.5 within `corpseExplosionRadiusCells` 2 / 2.5 / 3 / 3.5, `corpseExplosionChainLimit` 1 / 1 / 3 / 20 (20 stands for the doc's "no limit"); damage and blast back to the doc read on grade 3 (44 / 50 / 58 / 68, splash 3.4 / 3.4 / 3.6 / 3.8), so the tower-def-bge.6 buff of the substitute is gone |
 | Frost Wyrm Nest / Permafrost | slow 45-65% (doc steps over the shipped 0.55 would pass the floor) | chill 0.6 / 0.65 / 0.7 / 0.75 |
-| Frost Wyrm Nest / Permafrost | frozen fliers fall and become ground targets (7) | **restored** (tower-def-bge.9): chill `groundsFliersMs` 1200 (the freeze length); the `airDamageMultiplier` is gone |
+| Frost Wyrm Nest / Permafrost | frozen fliers fall and become ground targets (7) | **restored** (tower-def-bge.9): chill `groundsFliersMs` 1200 (the freeze length; 1400 with the freeze since tower-def-716.7); the `airDamageMultiplier` is gone |
 | Frost Wyrm Nest / Wyrm Breath | cone of 30-60 degrees hitting everything in it | **restored** (tower-def-bge.9): `coneDegrees` 30 / 40 / 50 / 60, full damage to every valid creep in range inside the cone |
 | Frost Wyrm Nest / Wyrm Breath | frozen creeps take +25% / +50% (6 / 7) | on-hit `vulnerability` (all types, 2 s) on every breath target |
 | Bone Obelisk / Necromancer's Whisper | two obelisk auras stack at half (7) | magical damage bonus 0.25 instead of 0.20 |
@@ -1560,6 +1560,116 @@ comes from seeing the fliers at all, not from how much each one counts; at
 72 duels a race the shifts are within about one standard deviation of a
 batch, but undead up and human down held at both seed ranges. Human's
 air-lane kit is the content follow-up the air passes already name.
+
+### Tower branch balance (tower-def-716.7)
+
+Content pass on the `talentBranches` of the four race files after the
+02k.11 / 02k.12 valuation work: no base stats, levels 1-3, AI code or
+constants changed. Goals: Wyrm Breath stops winning its pair every time, the
+branches flagged in "AI branch valuation" get picked, and no race moves more
+than about 5 points on the standard table.
+
+**Measure.** The standard batch with all six race pairs (`--difficulties hard
+--pairs undead:orc,human:elf,orc:human,elf:undead,undead:human,orc:elf`,
+seeds 1-10, `--maps classic` and `--maps seeded` run one at a time, 60 duels
+per race). While iterating, a temporary local log in `selectBestBranch` (never
+committed) printed both branch scores of every call, so each lever was read
+as the ratio of the pair's value per gold over the boards of the batch: a
+branch is picked in a share of cases only once that ratio straddles 1.
+
+**Changes** (grades 4 / 5 / 6 / 7):
+
+| Branch | Lever | Old | New |
+| --- | --- | --- | --- |
+| Undead Frost Wyrm / Wyrm Breath | `vulnerability` (grades 6 / 7) | 0.25 / 0.5 | 0.2 / 0.4 |
+| Undead Frost Wyrm / Permafrost | damage | 40 / 48 / 56 / 66 | 46 / 58 / 70 / 86 |
+| same | chill `freezeMs` (6 / 7); `groundsFliersMs` (7) | 800 / 1200; 1200 | 1000 / 1400; 1400 |
+| Undead Obelisk / Soul Harvest | damage (pulse); range | 16 / 22 / 30 / 40; 5 / 5 / 5.5 / 6 | 22 / 30 / 40 / 52; 5.5 / 6 / 6.5 / 6.5 |
+| Orc Spear / Spear Throwers | damage | 46 / 48 / 50 / 54 | 54 / 60 / 66 / 72 |
+| same | `pierceLine` | - / 0.2 / 0.35 / 0.5 | 0.2 / 0.3 / 0.4 / 0.5 |
+| Orc Lightning Totem / Thunderstorm | damage | 50 / 56 / 62 / 70 | 56 / 65 / 74 / 84 |
+| Human Guard Post / Treasury | aura attack speed | 0.34 (all) | 0.38 / 0.42 / 0.46 / 0.5 |
+| same | aura range bonus | 1.4 (all) | 1.6 / 1.8 / 2 / 2.2 |
+| same | aura `incomePerRound` | - / 5 / 10 / 15 | 20 / 30 / 45 / 60 |
+| Elf Moonwell / Living Water | damage | 33 / 36 / 40 / 46 | 34 / 38 / 44 / 52 |
+| same | aura radius; attack speed | 4-5.5; 0.1 / 0.15 / 0.22 / 0.3 | 5-6.5; 0.24 / 0.3 / 0.4 / 0.5 |
+| Elf Thorn Spire / Thornbite | reload (ms) | 900 / 850 / 800 / 750 | 850 / 800 / 750 / 700 |
+| same | percent poison per mille; stacks | 10 / 12 / 14 / 16; 4 / 5 / 5 / 6 | 12 / 14 / 17 / 20; 5 / 5 / 6 / 6 |
+| Elf Thorn Spire / Grasping Vine | stun (ms) = vulnerability length (6 / 7) | 300 / 400 / 500 / 600 | 250 / 300 / 400 / 500 |
+
+Treasury keeps its grade 4-7 aura below Headquarters (no damage bonus, the
+same speed and range curve) and pays its gold on top; Permafrost's longer
+freeze and grounding (the bge.9 substitution row now reads 1400) give it real
+strength the valuation barely sees (the slow gain is capped), so a side that
+takes it is not the weaker undead it was in the 02k.11 A/B. The two branch
+descriptions that named a grade (Treasury, Spear Throwers) were reworded.
+
+**Wyrm Breath is undead's lead.** With the vulnerability at 0.25 / 0.5 Breath
+won all 60 picks and undead 78%. On the classic map (30 duels a race, with
+the Permafrost buff): at 0.25 / 0.45 Breath still took every pick and undead
+won 70%; at 0.2 / 0.35 Breath fell to 80% and undead to 60%; at 0.15 / 0.25
+Permafrost took 80% and undead fell to 52%. The shipped
+0.2 / 0.4 with the Permafrost buff is the step that ends the auto-pick and
+holds undead within the limit; bringing undead into the 40-60% band is a
+race-level lever (Breath further, or undead base towers), not this pass.
+
+**Pick shares** (picks over the sides that developed the type, standard batch
+classic + seeded, seeds 1-10):
+
+| Tower type | Before | After |
+| --- | --- | --- |
+| Undead Frost Wyrm Nest | Wyrm Breath 59/60 (98%), Permafrost 1 (2%) | Wyrm Breath 52/60 (87%), Permafrost 8 (13%) |
+| Undead Bone Archer | Bone Volley 49/53 (92%), Cursed Arrow 4 (8%) | Bone Volley 40/53 (75%), Cursed Arrow 13 (25%) |
+| Undead Bone Obelisk | Whisper 48/48, Soul Harvest 0 | Whisper 41/48 (85%), Soul Harvest 7 (15%) |
+| Undead Plague Tower | not developed | Corpse Blast 1/1 |
+| Orc Tar Pit | Sticky Tar 60/60, Quagmire 0 | Sticky Tar 60/60, Quagmire 0 |
+| Orc Spear Watchtower | Heavy Spear 60/60, Spear Throwers 0 | Heavy Spear 35/60 (58%), Spear Throwers 25 (42%) |
+| Orc Lightning Totem | Thunder Strike 18/20 (90%), Thunderstorm 2 (10%) | Thunder Strike 10/18 (56%), Thunderstorm 8 (44%) |
+| Orc Burning Pit | Mortar 1/1, Napalm 0 | not developed |
+| Human Guard Post | Headquarters 54/54, Treasury 0 | Headquarters 34/53 (64%), Treasury 19 (36%) |
+| Human Guard Archer | Company 53/60 (88%), Crossbowmen 7 (12%) | Company 53/60 (88%), Crossbowmen 7 (12%) |
+| Human Alchemist | Plague Flasks 10/16 (62%), Acid 6 | Plague Flasks 14/20 (70%), Acid 6 |
+| Human Cannon | not developed | not developed |
+| Elf Moonwell | Moonlight 60/60, Living Water 0 | Moonlight 47/60 (78%), Living Water 13 (22%) |
+| Elf Thorn Spire | Grasping Vine 42/42, Thornbite 0 | Grasping Vine 21/43 (49%), Thornbite 22 (51%) |
+| Elf Moon Archer | Moonfall 38/46 (83%), Sniper 8 (17%) | Moonfall 35/44 (80%), Sniper 9 (20%) |
+
+Sticky Tar, flagged slightly weaker by the 02k.11 A/B, has been the pick of
+every orc side since the air lane weight (02k.12) and needs no lift.
+
+**Not reaching 10%, and why:**
+
+- **Quagmire** (0 of 60, Sticky Tar valued 3.5-5.6 times higher on every
+  board). Its grades are a no-damage tar zone whose chill the valuation does
+  not count ("AI talent development": overlapping zones and the zone's chill
+  are not valued), so the branch reads as a grade 3 Tar Pit with a little more
+  range. No content number closes a 4-5x gap without giving the puddle damage
+  docs/11 does not ask for or bringing back the extra targets that made it run
+  away in bge.6. The fix is a valuation one (value a ground zone's chill like
+  an on-hit chill on the creeps the route packs inside it), outside this pass.
+- **Napalm, Siege Cannon, Plague Cloud, Corpse Blast**: deliberate niche for
+  the computer. Their types (Burning Pit, Cannon Bastion, Plague Tower, the
+  splash archetype) reach grade 3 on 0-1 of 120 sides a batch, so there is no
+  pick to share; for a player they stay real choices.
+
+**Standard batch** (hard vs hard, six pairs, seeds 1-10, 60 duels per race; a
+draw counts half; before is main at the start of this task):
+
+| Race | Before (classic / seeded) | After (classic / seeded) | Change |
+| --- | --- | --- | --- |
+| Undead | 78.3% (76.7 / 80.0) | 74.2% (71.7 / 76.7) | -4.2 |
+| Orc | 46.7% (50.0 / 43.3) | 48.3% (50.0 / 46.7) | +1.7 |
+| Human | 25.8% (26.7 / 25.0) | 30.8% (26.7 / 35.0) | +5.0 |
+| Elf | 49.2% (46.7 / 51.7) | 46.7% (51.7 / 41.7) | -2.5 |
+
+Pacing: median 26 rounds (23-36) on the classic map as before, 30 (23-40) on
+seeded maps (before 31); one draw per map (before 0 / 1), no round cap hit
+(before 0 / 1). Undead reaches grade 4+ by round 20 on 29-30 of 30 sides with
+an average top grade of 6.0-6.2 (before 6.5-6.8); the other races develop as
+before. At 60 duels a race a batch's standard deviation is about 6 points, so
+only undead's step down (the Breath trim) reads as a real shift; human's
+seeded gain comes from human against elf (seeds 2, 7, 8), where elf sides now
+take Thornbite and Living Water about half the time.
 
 
 ## Suggested Improvements
