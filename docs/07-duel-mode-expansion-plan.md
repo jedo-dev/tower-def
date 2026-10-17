@@ -1284,7 +1284,8 @@ value     = rawPool x (reference exposure / targetable exposure) x (1 + (lives -
 
 Armor goes through `calculateDamageAgainst` (via `computeMixedEffectiveHealth`),
 so plated creatures gain against archers and nothing against casters;
-`startInvisibleMs` removes its seconds from the targetable exposure; a
+`startInvisibleMs` removes its share of the route in tower reach from the
+targetable exposure (see "AI start invisibility value (tower-def-02k.14)"); a
 regeneration paused by poison counts half when the field poisons.
 
 **Branch choice** (`valueCreatureBranch`): `gain[g] = value(grade g) -
@@ -1875,6 +1876,69 @@ branch split is unchanged.
 30 duels per race): undead 80.0%, orc 46.7%, human 26.7%, elf 46.7%, before
 and after (no race moved; one seeded orc against elf duel ended two rounds
 earlier with the same winner).
+
+### AI start invisibility value (tower-def-02k.14)
+
+Archer / Evasion was never picked (Creature branch balance): the valuation
+took `startInvisibleMs` as seconds off the 40-cell relative exposure route,
+about 4.7 s for the Archer, so Forest Shadow's 2-5 s hid 40-100% of the
+exposure (floored at 10%) and scored 11.5-13.9 times Evasion. That route
+is a relative scale for speed and slows; the real route under fire is
+much longer. No content changed.
+
+**Geometry** (measured once on the hard boards, elf pairs, seeds 1-3, by a
+throwaway probe on the headless battlefield: route cells walked before the
+first tower can reach the creep, and route cells in any tower's reach):
+
+| Rounds | Classic first reach / in reach | Seeded first reach / in reach |
+| --- | --- | --- |
+| 1-4 | 4.2 / 25 | 0 / 24 |
+| 5-9 | 1.9 / 53 | 0 / 47 |
+| 10-14 | 0.2 / 78 | 0 / 81 |
+| 15-19 | 0 / 98 | 0 / 112 |
+| 20-24 | 0 / 104 | 0 / 117 |
+
+Towers reach the entrance almost at once; what the old model missed was the
+length of the route under fire. The profile carries no geometry, so the
+valuation uses two constants from this table (`CREATURE_VALUATION`).
+
+**Formula** (`computeInvisibleExposureShare` in `creatureValue.ts`):
+
+```txt
+unseen cells   = startInvisibleMs / 1000 x speed x 5 cells/s   (nothing slows an untargetable creep)
+hidden share   = min(0.9, max(0, unseen cells - 4 approach cells) / 110 route cells in reach)
+targetable     = exposure x (1 - hidden share)
+```
+
+A window that ends inside the 4 approach cells is worth nothing; longer
+windows grow linearly and saturate at 90% of the exposure. 110 cells is the
+route in reach in rounds 15-25, when the dearer grades that dominate a
+branch's mean gain are bought.
+
+**A/B** (test-only override of `selectBestCreatureBranch`, never committed;
+elf pairs undead:elf, orc:elf, human:elf, hard vs hard, seeds 1-5):
+
+| Forced | Elf wins (classic / seeded) | Leaks the elf sends cause per side (classic / seeded) |
+| --- | --- | --- |
+| Forest Shadow | 13 of 30 (8 / 5) | 4.9 / 5.3 |
+| Evasion | 12 of 30 (9 / 3) | 4.9 / 3.3 |
+
+Forest Shadow is the slightly stronger branch in the sim: one win in 30 and
+about 25% more leaks from the elf's sends (even on classic, +60% on seeded).
+The new score ratio Forest Shadow / Evasion is 1.15 against physical
+single-target fields (with or without a frost tower) and 1.26 against a
+splash-heavy one, down from 11.5-13.9. Wind Walk / Tower Hunter (orc
+Headhunter) falls from 2.7-2.8 to 1.23-1.25; Invisibility / Polymorph
+(human Sorceress) from 4.2-5 to 1.7-1.75 (still the pick).
+
+**Pick shares** (elf pairs above, 15 developed sides per map): Forest Shadow
+15/15 on both maps before and after; Evasion stays at 0. That matches the
+A/B, which also favours Forest Shadow; the gap is now within the range a
+tower or content change can tip.
+
+**Standard batch** (six pairs, hard vs hard, seeds 1-5, classic + seeded,
+30 duels per race): undead 80.0%, orc 43.3%, human 30.0%, elf 43.3%, before
+and after; the batch output is identical (no branch pick changed).
 
 ## Suggested Improvements
 
