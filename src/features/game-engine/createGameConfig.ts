@@ -1,13 +1,19 @@
 import Phaser from 'phaser';
-import { GRID_DIMENSIONS } from '../../shared/constants/grid';
+import {
+  bindCanvasResolutionToGame,
+  measureCanvasResolution,
+} from './runtime/camera/canvasResolutionRuntime';
 import { GameScene } from './scenes/GameScene';
 
 export function createGameConfig(container: HTMLDivElement): Phaser.Types.Core.GameConfig {
+  // Booted at its final backing size, so the first frame is already sharp.
+  const initialResolution = measureCanvasResolution(container);
+
   return {
     type: Phaser.AUTO,
     parent: container,
-    width: GRID_DIMENSIONS.cols * GRID_DIMENSIONS.cellSize,
-    height: GRID_DIMENSIONS.rows * GRID_DIMENSIONS.cellSize,
+    width: initialResolution.backingWidth,
+    height: initialResolution.backingHeight,
     pixelArt: true,
     roundPixels: true,
     antialias: false,
@@ -15,9 +21,14 @@ export function createGameConfig(container: HTMLDivElement): Phaser.Types.Core.G
     backgroundColor: '#1a1f2c',
     scene: [GameScene],
     scale: {
-      // Single scaling pipeline: Phaser resizes the canvas to its parent,
+      // Single scaling pipeline: the canvas resolution runtime sizes the
+      // backing store to CSS size x device pixel ratio (Phaser 4 has no
+      // resolution option, and RESIZE mode would pin it to the CSS size);
       // registerResponsiveCamera re-fits the world zoom on each RESIZE event.
-      mode: Phaser.Scale.RESIZE,
+      mode: Phaser.Scale.NONE,
+    },
+    callbacks: {
+      postBoot: (game) => bindCanvasResolutionToGame(game, container),
     },
   };
 }

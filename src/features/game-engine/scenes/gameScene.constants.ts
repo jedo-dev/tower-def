@@ -34,6 +34,12 @@ export const BOARD_ZOOM_MAX_FACTOR = 3;
 export const BOARD_ZOOM_KEY_STEP_FACTOR = 1.25;
 /** Wheel delta (pixels) to zoom factor: exp(-deltaY * sensitivity). */
 export const BOARD_WHEEL_ZOOM_SENSITIVITY = 0.0015;
+/**
+ * Highest backing-store pixels per CSS pixel the game canvas renders at.
+ * DPR 3 phones render at 2.5x: visually indistinguishable from 3x at phone
+ * viewing distance, ~30% fewer pixels to fill (see docs/04, Decision 016).
+ */
+export const MAX_CANVAS_PIXEL_RATIO = 2.5;
 export const DEV_FPS_REPORT_INTERVAL_MS = 500;
 export const PREVIEW_VALID_FILL = 0x3ecf78;
 export const PREVIEW_VALID_STROKE = 0xaaf5c8;

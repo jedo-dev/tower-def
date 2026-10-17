@@ -15,6 +15,7 @@ import {
   type AudioClipCache,
 } from '../../../shared/lib/audio/audioClipCache';
 import { preloadGameAudioClips } from './gameAudioClipPreloader';
+import { getCanvasResolution } from '../runtime/camera/canvasResolutionRuntime';
 
 /** `Game#pendingDestroy` is set by `destroy()` but missing from Phaser's typings. */
 function isGamePendingDestroy(game: Phaser.Game): boolean {
@@ -224,7 +225,9 @@ export class GameAudioManager {
           position.x,
           position.y,
         );
-        const maxDistance = Math.max(this.scene.scale.width, this.scene.scale.height);
+        // CSS size, not the DPR-scaled backing size, so falloff is DPR-independent.
+        const { cssWidth, cssHeight } = getCanvasResolution(this.scene.game, this.scene.scale);
+        const maxDistance = Math.max(cssWidth, cssHeight);
         const volumeFalloff = Math.max(0, 1 - distance / maxDistance);
         volume = volume * volumeFalloff;
       }
