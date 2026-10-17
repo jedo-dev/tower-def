@@ -36,6 +36,11 @@
   scrollbar-width: thin;
 }
 
+/* The full lines, wrapped: the collapsed row clips them to one line each. */
+.feedExpanded .entry {
+  white-space: normal;
+}
+
 .entry,
 .empty {
   font-family: var(--font-family-ui);

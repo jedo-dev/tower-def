@@ -40,11 +40,11 @@ const SETUP: GameSetupConfig = {
  * measured in Chrome at 390x844: the board is the viewport minus the control
  * strip (minus the plate, the event row and the gaps). The strip's natural
  * height differs with the sheet open (status bar + sheet 174) from the
- * dock's (status bar + dock 193); only the lock keeps the board still.
+ * dock's (status bar + dock 191); only the lock keeps the board still.
  */
 const VIEWPORT_HEIGHT = 832;
 const PLATE_FEED_ROW_AND_GAPS = 122;
-const DOCK_STRIP_HEIGHT = 257;
+const DOCK_STRIP_HEIGHT = 255;
 const SHEET_STRIP_HEIGHT = 238;
 
 function stripHeight(strip: HTMLElement): number {

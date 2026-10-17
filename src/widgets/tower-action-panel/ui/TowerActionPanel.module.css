@@ -6,7 +6,7 @@
  * The attribute lifts it over .ui-panel's `position: relative`.
  */
 .sheet[data-tower-sheet] {
-  /* Size queries: a short slot (build drawer was open) drops the NEXT line. */
+  /* Size queries: a short slot (a short dock) drops the NEXT line. */
   container: tower-sheet / size;
   position: absolute;
   inset: 0;
@@ -231,7 +231,7 @@
   content: ' · ';
 }
 
-/* Below the full sheet (the slot of an open build drawer) the forecast goes:
+/* Below the full sheet (a dock slot shorter than the sheet) the forecast goes:
  * the tiles already show the next values. The query reads the content box:
  * handle, header, tiles, NEXT line and actions need ~156px of it. */
 @container tower-sheet (max-height: 150px) {

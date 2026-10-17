@@ -26,8 +26,8 @@
 .coin,
 .heart {
   flex: 0 0 auto;
-  width: 30px;
-  height: 30px;
+  width: var(--match-status-icon-size);
+  height: var(--match-status-icon-size);
 }
 
 .stack {
@@ -146,7 +146,7 @@
   border: 0;
   border-image-source: url('/assets/ui/kit/btn-primary-normal.png');
   border-image-slice: 36 fill;
-  border-image-width: 12px;
+  border-image-width: var(--match-kit-button-rim);
   border-image-repeat: stretch;
   background: transparent;
   color: var(--color-action-label);
@@ -216,7 +216,7 @@
   }
 
   .action {
-    flex-basis: 116px;
+    flex-basis: var(--match-start-button-width-narrow);
     padding: 0 var(--space-xs);
   }
 }

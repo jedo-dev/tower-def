@@ -25,9 +25,9 @@
 /* The tier's experience toward its next purchase: "exp" and a thin bar. */
 .xpRow {
   position: absolute;
-  right: var(--space-sm);
-  bottom: var(--space-xs);
-  left: var(--space-sm);
+  right: var(--space-md);
+  bottom: var(--space-md);
+  left: var(--space-md);
   display: flex;
   align-items: center;
   gap: var(--space-xs);

@@ -66,7 +66,7 @@
   gap: var(--space-2xs);
   min-height: var(--touch-target-min);
   /* The bottom padding holds the experience row (CreatureTalentMarks). */
-  padding: var(--space-sm) var(--space-2xs) calc(var(--space-md) + var(--space-sm));
+  padding: var(--space-sm) var(--space-2xs) calc(var(--space-md) + var(--space-lg));
   color: var(--color-text-primary);
   cursor: pointer;
   font: inherit;
@@ -190,7 +190,7 @@
   border: 0;
   border-image-source: url('/assets/ui/kit/btn-secondary-normal.png');
   border-image-slice: 36 fill;
-  border-image-width: 12px;
+  border-image-width: var(--match-kit-button-rim);
   border-image-repeat: stretch;
   background: transparent;
   color: var(--color-text-success);

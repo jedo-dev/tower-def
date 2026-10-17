@@ -271,16 +271,20 @@
    * the next-wave plate, the framed board, the event row, the status bar
    * and the tabbed dock. Frames are kit 9-slices at --match-frame-rim. */
   --match-frame-rim: 14px;
+  /* Rim of the kit's 9-slice buttons (tabs, Start Wave, DEVELOP). */
+  --match-kit-button-rim: 12px;
   --match-plate-height: 48px;
   --match-plate-emblem-size: 34px;
   --match-plate-portrait-size: 30px;
   --match-status-height: 58px;
   --match-stat-value-size: 24px;
+  --match-status-icon-size: 30px;
   --match-start-button-width: 132px;
+  --match-start-button-width-narrow: 116px;
   --match-tab-width: 112px;
   --match-tab-underline-height: 2px;
   --match-dock-note-height: 16px;
-  --match-card-height: 108px;
+  --match-card-height: 106px;
   --match-card-icon-size: 56px;
   --match-xp-bar-height: 4px;
   --match-board-vignette: inset 0 0 28px 10px rgba(0, 0, 0, 0.78);

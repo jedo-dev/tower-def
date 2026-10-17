@@ -39,7 +39,7 @@
   border: 0;
   border-image-source: url('/assets/ui/kit/btn-secondary-normal.png');
   border-image-slice: 36 fill;
-  border-image-width: 12px;
+  border-image-width: var(--match-kit-button-rim);
   border-image-repeat: stretch;
   background: transparent;
   color: var(--color-text-secondary);

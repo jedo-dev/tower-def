@@ -125,7 +125,7 @@ ${viewModel.duelTooltip}`
           }
         >
           <span className={styles.actionLabel}>{battlefieldViewToggle.label}</span>
-          <span className={styles.actionSub}>field</span>
+          <span className={styles.actionSub}>battlefield</span>
         </button>
       ) : (
         <button
