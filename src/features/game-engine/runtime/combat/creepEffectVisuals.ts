@@ -10,6 +10,7 @@ import {
   CREEP_EFFECT_TINTS,
 } from '../../scenes/gameScene.constants';
 import type { CreepRenderState } from '../../scenes/gameScene.types';
+import { releaseCreepAdornments } from '../creep/creepAdornments';
 
 const PIP_GLYPH = '•';
 
@@ -130,8 +131,9 @@ export function refreshCreepEffectVisuals(
   syncCreepEffectPipPosition(creep);
 }
 
-/** Single teardown point for a creep, so status pips cannot outlive their sprite. */
+/** Single teardown point for a creep, so pips and adornments cannot outlive their sprite. */
 export function destroyCreepRenderState(creep: CreepRenderState): void {
+  releaseCreepAdornments(creep);
   creep.effectPips?.destroy();
   creep.effectPips = undefined;
   creep.sprite.destroy();

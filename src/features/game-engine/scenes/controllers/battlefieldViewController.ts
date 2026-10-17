@@ -2,6 +2,7 @@ import { publishGameEvent } from '../../../../shared/lib/game-bridge/bridge';
 import type { GameEventMap } from '../../../../shared/lib/game-bridge/types';
 import { setBattlefieldRenderStateVisible } from '../../runtime/battlefield/battlefieldRenderState';
 import { rebuildOpponentBattlefieldRenderState } from '../../runtime/battlefield/battlefieldSpriteFactory';
+import { syncCreepListAdornments } from '../../runtime/creep/creepAdornments';
 import { getPlayerPathRoute, redrawTerrainTiles } from './boardRenderController';
 import type { GameSceneState } from './gameSceneState';
 import { publishHudSnapshot } from './hudSnapshotPublisher';
@@ -11,6 +12,9 @@ export function applyBattlefieldViewVisibility(state: GameSceneState): void {
   const showOpponent = state.activeBattlefieldView === 'opponent';
   setBattlefieldRenderStateVisible(state.playerField, !showOpponent);
   setBattlefieldRenderStateVisible(state.opponentField, showOpponent);
+  // Last pass of the frame: adornments follow the moved, now visible or hidden sprites.
+  syncCreepListAdornments(state.playerField.creeps);
+  syncCreepListAdornments(state.opponentField.creeps);
 }
 
 export function syncOpponentBattlefieldRenderStateFromDuel({ scene, state }: GameSceneCore): void {

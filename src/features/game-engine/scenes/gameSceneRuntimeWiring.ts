@@ -22,6 +22,8 @@ import {
 } from '../runtime/battlefield/battlefieldSpriteFactory';
 import type { BattlefieldUpdateContext } from '../runtime/battlefield/battlefieldUpdateRuntime';
 import type { CombatRuntimeDependencies } from '../runtime/combat/gameSceneCombatRuntime';
+import { attachCreepAdornments, type CreepAdornmentPool } from '../runtime/creep/creepAdornments';
+import { resolveSenderRingColor } from '../runtime/creep/creepAdornmentStyle';
 import type { DuelMatchRuntimeDeps } from '../runtime/duel/gameSceneDuelRuntime';
 import type {
   MovementRuntimeDeps,
@@ -42,6 +44,8 @@ export type GameSceneWiringHost = {
   runState: WaveRuntimeState;
   playerField: BattlefieldRenderState;
   opponentField: BattlefieldRenderState;
+  /** Pooled creep shadows, rings and health bars shared by both fields. */
+  creepAdornmentPool: CreepAdornmentPool;
   getSoundManager: () => GameAudioManager | null;
   /** Tower and creature sounds for the player's battlefield. */
   soundRouter: GameSoundRouter;
@@ -128,6 +132,11 @@ function createWaveRuntimeDeps(host: GameSceneWiringHost): WaveRuntimeDependenci
     createCreepSprite: (x, y, spriteKey) => {
       const resolved = resolveSpriteKey(host.scene.textures, 'unit', spriteKey);
       return host.scene.add.sprite(x, y, resolved.spriteKey, 0);
+    },
+    attachCreepAdornments: (creep) => {
+      const { player, opponent } = host.getDuelMatchState();
+      const ringColor = resolveSenderRingColor(creep.entity.sender, player.raceId, opponent.raceId);
+      attachCreepAdornments(host.scene, host.creepAdornmentPool, creep, ringColor);
     },
     playSound: (soundId: SoundId) => host.getSoundManager()?.play(soundId),
   };

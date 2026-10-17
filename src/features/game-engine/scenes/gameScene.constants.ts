@@ -174,14 +174,20 @@ export const TOWER_RENDER_DEPTH = 40;
 export const CREEP_RENDER_DEPTH = 45;
 /**
  * Creep sprites overhang their footprint so the art stays readable on 16px
- * cells: single-cell creatures read at a bit over one cell, large ones fill and
- * slightly exceed their 2x2 footprint.
+ * cells. These are the wanted sizes (a third above the first pass, so creeps
+ * read on phones); `getCreepVisualMetrics` snaps them to the pixel-art scale
+ * rule and caps them with `CREEP_VISUAL_MAX_SIZE_IN_CELLS`.
  */
 export const CREEP_VISUAL_SIZE_IN_CELLS_BY_SIZE_CLASS: Readonly<Record<UnitSizeClass, number>> = {
-  [UnitSizeClass.SMALL]: 1.4,
-  [UnitSizeClass.MEDIUM]: 1.6,
-  [UnitSizeClass.LARGE]: 2.4,
+  [UnitSizeClass.SMALL]: 1.86,
+  [UnitSizeClass.MEDIUM]: 2.13,
+  [UnitSizeClass.LARGE]: 3.2,
 };
+/**
+ * No creep is drawn wider than this: a large creep on its 2-cell lane may
+ * overhang half a cell on each side, not crowd the towers lining it.
+ */
+export const CREEP_VISUAL_MAX_SIZE_IN_CELLS = 3;
 /** Status pips float this far above the top edge of the creep sprite. */
 export const CREEP_EFFECT_PIP_GAP_PX = 2;
 export const TERRAIN_BASE_TILE_ALPHA = 0.72;
