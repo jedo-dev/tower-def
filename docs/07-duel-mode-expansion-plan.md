@@ -2140,6 +2140,98 @@ Breath 32 / Two-Headed 7 -> 20 / 6, fewer Chimeras developed).
   unchanged); Thunderstorm, Quagmire, Treasury, Sniper and Soul Harvest stay
   at 17-30%, no change made.
 
+### AI air coverage in sends (tower-def-4qe)
+
+716.6 left elf against undead elf-favoured: the send planner ranked creatures
+by health per gold against the defender's overall damage mix and never looked
+at its air line. The Chimera is elf's best pressure send per gold even then,
+and a third of the Chimeras sent at undead leaked (59 leaks in the seeds 1-5
+probe, against 2 at human), while the undead never sent a Gargoyle (1.3 times
+short of the Crypt Fiend per gold).
+
+**Defender lanes** (`model/air-coverage/laneDefence.ts`,
+`DecisionContext.enemyLanes`, built in `buildDecisionContext`). The other
+duelist's towers on two lanes: the route its maze makes today and the straight
+air line. Each lane is a route damage ledger of the towers whose
+`allowedTargets` (per level and grade, `canDamageModelTowerHit`) reach its
+creeps, with the lane's target multipliers (archer `airDamageMultiplier`) and
+damage worth against the lane's expected armor, turned into the damage it deals
+to its share of the wave by `estimateDefenceCapability` (the same helper as
+the own-side assessment). The wave is the defender's next one: the shared
+baseline plus what we already queued (`estimateIncomingThreat`), split by its
+expected flier share of hit points. Each lane also carries its damage types
+(direct sample damage of the towers that reach it, split by type). One extra
+maze search per build-phase decision; no per-frame work.
+
+**Survival factor** (`computeAirSurvivalFactor`):
+
+```txt
+load(lane) = (lane incoming HP + one mean creep of the wave) / lane wave damage
+relative   = load(air) / load(ground)                  (infinite with no anti-air)
+factor     = clamp(relative ^ 1, 1/2.5, 2.5)            full reading
+             1.5 at relative >= 2, 1/1.5 at <= 0.5, else 1   coarse reading
+```
+
+A flier's pressure value per gold (`computeSendPressureEfficiency`) is
+multiplied by the factor; walkers are unchanged. 1 when the field does no
+ground damage yet. In the standard batch `relative` sits at 1.4-1.5 against
+human, 1.6-2.3 against elf and 2.0-2.1 against undead from round 10: every
+air line is more loaded than its maze, which matches the leaks (sent walkers
+almost never leak, fliers do).
+
+**Damage types per lane** (the existing armor lever, extended): with the full
+reading a flier's effective health is taken against the air line's damage
+mix and a walker's against the maze's (`SendValuation.laneDamageMix`), instead
+of the whole field's mix for both.
+
+**Difficulty** (`SendTuning.airCoverage`): easy ignores the air line, normal
+reads it coarsely (three steps, no lane mixes), hard and nightmare read it in
+full.
+
+**Measure.** Standard batch, hard vs hard, the six pairs, classic and seeded,
+baseline undead, seeds 1-10 (120 duels, 60 a race, a draw half), one sim at a
+time in calls of at most ten duels a pair. Elf against undead and human
+against elf are the same duels from either seat (the batch is seat-symmetric),
+so "both seats" is one row.
+
+| Race | Before | After | Change |
+| --- | --- | --- | --- |
+| Undead | 46.7% | 60.8% | +14.1 |
+| Orc | 50.0% | 38.3% | -11.7 |
+| Human | 60.0% | 54.2% | -5.8 |
+| Elf | 43.3% | 46.7% | +3.4 |
+
+| Pair (first race's wins, 20 duels) | Before (classic / seeded) | After (classic / seeded) |
+| --- | --- | --- |
+| Elf vs undead | 70% (8 / 6) | 50% (7 / 3) |
+| Elf vs human | 10% (1 / 1) | 20% (0 / 4) |
+| Elf vs orc | 50% (6 / 4) | 70% (8 / 6) |
+| Human vs orc | 35% (4 / 3) | 35% (4 / 3) |
+| Human vs undead | 55% (5 / 6) | 47.5% (5.5 / 4) |
+| Orc vs undead | 35% (4 / 3) | 20% (1 / 3) |
+
+Sends and leaks (stderr probe, never committed; elf against undead and
+against human, seeds 1-5, 20 duels): the elf sends more Chimeras (252 -> 356;
+the undead air line is the weakest it meets), leaking 61 -> 63 times; the
+undead now sends Gargoyles at elf (1 -> 196), which leak about half the time
+(0 -> 95), so the Chimera is no longer the only send leak source in the pair. Pacing: row medians classic 24-28
+(23-30 before), seeded 26-35 (28-36); round cap 0 of 120 (3 before).
+Difficulty spot-check (`--matchups hard:normal`, classic, seeds 1-3): hard wins
+23 of 24 distinct duels.
+
+Tried: exponent 0.5 (elf against undead 80% at seeds 1-5: the Chimera gains
+at once, the Gargoyle only past 1.69) and 0.75 (65% at seeds 1-10, orc 35%).
+
+**Regressed / follow-ups:**
+
+- Orc falls 11.7 points (just past 10): it has no flier among its sends, so
+  it gains nothing, and its anti-air lets Gargoyles and Chimeras through (orc
+  against undead 35% -> 20%, elf against orc 50% -> 70%, both pairs past
+  +-10 at 20 duels a pair, about one standard deviation). The lever is
+  content (orc air coverage or the Gargoyle's price), for the balance pass.
+- The sends still pour the pressure half into the single best creep; a mixed
+  buy that stops once a lane is saturated is not modelled.
+
 ## Suggested Improvements
 
 - Add difficulty presets for the computer opponent: relaxed, normal, aggressive.

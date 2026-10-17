@@ -8,6 +8,9 @@ import type { DuelMatchState, DuelistState } from '../../duel-match/model/types'
 import { computeDefenceDamageMix, toLedgerTowers } from './damage-placement';
 import { assessDefence } from './threat-budget/assessDefence';
 import { computeDefenceProfile } from './creature-development';
+import { computeDefenderLaneProfile } from './air-coverage';
+import { estimateIncomingThreat } from './threat-budget/estimateIncomingThreat';
+import { getUnitsByFaction, resolveUnitConfigById } from '../../unit/model/registry';
 import type { TowerEntity } from '../../tower/model/types';
 import type { TowerBranchChoices } from '../../tower/model/talents';
 import { canAffordUpgrade } from '../../tower/model/upgrade';
@@ -147,6 +150,17 @@ export function buildDecisionContext(input: OpponentSnapshotInput): DecisionCont
     defence: assessDefence(matchState),
     enemyDamageMix: computeDefenceDamageMix(enemyTowers),
     enemyDefenceProfile: computeDefenceProfile(enemyTowers),
+    enemyLanes: computeDefenderLaneProfile(
+      matchState.player.battlefield.grid,
+      enemyTowers,
+      estimateIncomingThreat({
+        waveNumber: matchState.round,
+        baselineFactionUnits: getUnitsByFaction(matchState.baselineRaceId),
+        observedSends: opponent.sendQueue.map((unitId) => resolveUnitConfigById(unitId)),
+        expectedSendGold: 0,
+        enemySendables: [],
+      }),
+    ),
     creatureTalents: {
       creatureXpByTier: opponent.creatureXpByTier,
       creatureBranchChoices: opponent.creatureBranchChoices,

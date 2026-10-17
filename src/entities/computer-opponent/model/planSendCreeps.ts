@@ -3,11 +3,10 @@ import {
   countRemainingSendsOfUnit,
   countRemainingWaveSends,
 } from '../../duel-match/model/sendLimits';
-import { getWaveHealthMultiplier } from '../../wave/model/waveHealth';
 import type { DecisionContext, SendCreepAction } from './types';
 import { createSendDecisionOutput } from './decisionDebugSnapshots';
-import { EVEN_DAMAGE_MIX } from './damage-profile';
 import { createSendCandidates, type SendCandidate } from './sendCandidates';
+import { createContextSendValuation } from './contextSendValuation';
 import { SEND_TUNING_BY_DIFFICULTY, type SendTuning } from './sendTuning';
 import { computeContextThreatSplit } from './contextThreatSplit';
 import { planContextDevelopment, type CreatureDevelopmentAction } from './creature-development';
@@ -171,11 +170,10 @@ function selectCreepsToSend(
   tuning: SendTuning,
 ): { selected: SendCandidate[]; pressureWeight: number } {
   // Our creeps are valued against the damage types the defender's towers deal.
-  const candidates = createSendCandidates(context.raceId, {
-    defenderDamageMix: context.enemyDamageMix ?? EVEN_DAMAGE_MIX,
-    healthMultiplier: getWaveHealthMultiplier(context.round),
-    ...(context.creatureTalents === undefined ? {} : { creatureTalents: context.creatureTalents }),
-  });
+  const candidates = createSendCandidates(
+    context.raceId,
+    createContextSendValuation(context, tuning),
+  );
   if (candidates.length === 0) {
     return { selected: [], pressureWeight: 0 };
   }

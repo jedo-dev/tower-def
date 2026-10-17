@@ -1,4 +1,5 @@
 import { Difficulty } from '../../difficulty/model/types';
+import { AirCoverageReading } from './air-coverage/airSurvivalFactor';
 
 /** How the computer opponent spends on sends, per difficulty. */
 export type SendTuning = {
@@ -18,6 +19,8 @@ export type SendTuning = {
   economyRounds: number;
   /** Share of the budget that goes to pressure once the opening is over. */
   basePressureWeight: number;
+  /** How closely fliers are valued against the defender's air coverage (tower-def-4qe). */
+  airCoverage: AirCoverageReading;
 };
 
 export const SEND_TUNING_BY_DIFFICULTY: Readonly<Record<Difficulty, Readonly<SendTuning>>> = {
@@ -26,23 +29,27 @@ export const SEND_TUNING_BY_DIFFICULTY: Readonly<Record<Difficulty, Readonly<Sen
     maxSendsPerRound: 3,
     economyRounds: 5,
     basePressureWeight: 0.2,
+    airCoverage: AirCoverageReading.IGNORE,
   },
   [Difficulty.NORMAL]: {
     maxSendRatioPerRound: 0.7,
     maxSendsPerRound: 9,
     economyRounds: 0,
     basePressureWeight: 0.8,
+    airCoverage: AirCoverageReading.COARSE,
   },
   [Difficulty.HARD]: {
     maxSendRatioPerRound: 0.7,
     maxSendsPerRound: 9,
     economyRounds: 2,
     basePressureWeight: 0.8,
+    airCoverage: AirCoverageReading.FULL,
   },
   [Difficulty.NIGHTMARE]: {
     maxSendRatioPerRound: 0.7,
     maxSendsPerRound: 7,
     economyRounds: 4,
     basePressureWeight: 0.5,
+    airCoverage: AirCoverageReading.FULL,
   },
 };
