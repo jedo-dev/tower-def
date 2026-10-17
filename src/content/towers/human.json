@@ -9,12 +9,33 @@
       "allowedTargets": "both",
       "costGold": 50,
       "damage": 23,
-      "range": 6.4,
+      "range": 6.6,
       "attackCooldownMs": 800,
       "levels": [
-        { "level": 1, "upgradeCostGold": 0, "damage": 23, "range": 6.4, "attackCooldownMs": 800 },
-        { "level": 2, "upgradeCostGold": 40, "damage": 35, "range": 6.6, "attackCooldownMs": 750 },
-        { "level": 3, "upgradeCostGold": 80, "damage": 46, "range": 6.8, "attackCooldownMs": 700 }
+        {
+          "level": 1,
+          "upgradeCostGold": 0,
+          "damage": 23,
+          "range": 6.6,
+          "attackCooldownMs": 800,
+          "abilities": { "airDamageMultiplier": 1.2 }
+        },
+        {
+          "level": 2,
+          "upgradeCostGold": 40,
+          "damage": 35,
+          "range": 6.7,
+          "attackCooldownMs": 750,
+          "abilities": { "airDamageMultiplier": 1.2 }
+        },
+        {
+          "level": 3,
+          "upgradeCostGold": 80,
+          "damage": 46,
+          "range": 6.8,
+          "attackCooldownMs": 700,
+          "abilities": { "airDamageMultiplier": 1.2 }
+        }
       ],
       "spriteKey": "tower.human.guard_archer",
       "description": "Disciplined marksmen watch over fortified walls.",

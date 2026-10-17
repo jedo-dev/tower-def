@@ -40,7 +40,8 @@ export const WAVE_AIR_UNIT_BUDGET_MULTIPLIER = 4;
  * per wave. Tuned in tower-def-716.9 (docs/07, "Roster balance").
  */
 export const WAVE_AIR_UNIT_BUDGET_MULTIPLIER_BY_RACE: Readonly<Partial<Record<RaceId, number>>> = {
-  [RaceId.ELF]: 2,
+  [RaceId.ELF]: 1.5,
+  [RaceId.HUMAN]: 5,
 };
 
 /**

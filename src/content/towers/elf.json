@@ -218,7 +218,7 @@
       "damage": 19,
       "range": 6,
       "attackCooldownMs": 900,
-      "onHitEffects": [{ "effectId": "chill", "magnitude": 0.28, "durationMs": 2000 }],
+      "onHitEffects": [{ "effectId": "chill", "magnitude": 0.32, "durationMs": 2000 }],
       "levels": [
         {
           "level": 1,
@@ -226,7 +226,7 @@
           "damage": 19,
           "range": 6,
           "attackCooldownMs": 900,
-          "onHitEffects": [{ "effectId": "chill", "magnitude": 0.28, "durationMs": 2000 }]
+          "onHitEffects": [{ "effectId": "chill", "magnitude": 0.32, "durationMs": 2000 }]
         },
         {
           "level": 2,
@@ -234,7 +234,7 @@
           "damage": 25,
           "range": 6.4,
           "attackCooldownMs": 850,
-          "onHitEffects": [{ "effectId": "chill", "magnitude": 0.38, "durationMs": 2000 }]
+          "onHitEffects": [{ "effectId": "chill", "magnitude": 0.41, "durationMs": 2000 }]
         },
         {
           "level": 3,

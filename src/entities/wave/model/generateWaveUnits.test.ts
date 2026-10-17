@@ -1,14 +1,16 @@
 import { describe, expect, it } from 'vitest';
-import { UnitMoveType } from '../../../shared/types/content-ids';
+import { RACE_IDS, UnitMoveType } from '../../../shared/types/content-ids';
 import { UnitTier, undeadUnits } from '../../unit';
 import {
   generateWaveUnits,
+  getWaveAirUnitBudgetMultiplier,
   getWaveBudget,
   getWaveUnitCap,
   getWaveUnitValue,
 } from './generateWaveUnits';
 import {
   WAVE_AIR_UNIT_BUDGET_MULTIPLIER,
+  WAVE_AIR_UNIT_BUDGET_MULTIPLIER_BY_RACE,
   WAVE_TIER_UNLOCK_WAVE,
   WAVE_UNIT_COUNT_BOUNDS,
 } from './waveBalance';
@@ -103,5 +105,22 @@ describe('generateWaveUnits curve', () => {
     const fliers = generateWaveUnits({ waveNumber, factionUnits: [gargoyle], random: roll });
     const walkers = generateWaveUnits({ waveNumber, factionUnits: [grounded], random: roll });
     expect(fliers.length).toBeLessThan(walkers.length);
+  });
+
+  it('charges a flier its roster override of the air multiplier', () => {
+    const gargoyle = undeadUnits.find((unit) => unit.id === 'undead_gargoyle');
+    if (!gargoyle) throw new Error('undead_gargoyle missing');
+    const grounded = { ...gargoyle, moveType: UnitMoveType.GROUND };
+
+    for (const raceId of RACE_IDS) {
+      const multiplier = getWaveAirUnitBudgetMultiplier(raceId);
+      expect(multiplier, raceId).toBe(
+        WAVE_AIR_UNIT_BUDGET_MULTIPLIER_BY_RACE[raceId] ?? WAVE_AIR_UNIT_BUDGET_MULTIPLIER,
+      );
+      expect(getWaveUnitValue({ ...gargoyle, faction: raceId }), raceId).toBe(
+        getWaveUnitValue(grounded) * multiplier,
+      );
+    }
+    expect(getWaveAirUnitBudgetMultiplier(undefined)).toBe(WAVE_AIR_UNIT_BUDGET_MULTIPLIER);
   });
 });
