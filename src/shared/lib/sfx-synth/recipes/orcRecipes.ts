@@ -1,51 +1,14 @@
-import type { SfxLayer } from '../sfxRecipe.types';
 import { WHITE, bandpass, burst, highpass, hit, lowpass, shaped, thump } from './recipeKit';
+import { ORC_EARLY_CREATURE_RECIPES } from './orcEarlyCreatureRecipes';
+import { ORC_LATE_CREATURE_RECIPES } from './orcLateCreatureRecipes';
+import { bark, breath, drum, woodSnap } from './orcRecipeKit';
+import { ORC_TOWER_RECIPES } from './orcTowerRecipes';
 import type { RaceSfxRecipeGroup } from './recipeGroups';
 
-/** War drum: low skin and a puff of air. */
-function drum(startSec: number, gain: number): SfxLayer[] {
-  return [thump(startSec, 82, 44, 0.16, gain), burst(startSec, 0.04, gain * 0.45, [lowpass(400)])];
-}
-
-/** Hoarse orc throat: driven saw through a vowel-like band. */
-function bark(
-  startSec: number,
-  durationSec: number,
-  fromHz: number,
-  toHz: number,
-  gain: number,
-): SfxLayer {
-  return {
-    waveform: 'saw',
-    startSec,
-    durationSec,
-    frequencyHz: fromHz,
-    frequencyEndHz: toHz,
-    drive: 2.2,
-    envelope: shaped(0.01, durationSec * 0.6, 0.35, durationSec * 0.3),
-    gain,
-    filters: [bandpass(750, undefined, 1.8)],
-  };
-}
-
-/** Rough breath under a shout or groan. */
-function breath(startSec: number, durationSec: number, gain: number): SfxLayer {
-  return {
-    waveform: 'noise',
-    startSec,
-    durationSec,
-    frequencyHz: WHITE,
-    envelope: shaped(0.02, durationSec * 0.7, 0, durationSec * 0.2),
-    gain,
-    filters: [bandpass(1100, 600, 1.2)],
-  };
-}
-
-/** Dry wooden crack: a short band of crunchy noise and a clipped knock. */
-function woodSnap(startSec: number, gain: number): SfxLayer {
-  return burst(startSec, 0.03, gain, [bandpass(1700, undefined, 2.5)], 9000);
-}
-
+/**
+ * Every orc recipe (seeds 6xx). Race-wide fallbacks, the Grunt and the Spear
+ * Watchtower live here; the other creatures and towers in the files spread in.
+ */
 export const ORC_RECIPES: RaceSfxRecipeGroup<'orc'> = {
   'combat.attack.single.orc': {
     seed: 601,
@@ -189,4 +152,7 @@ export const ORC_RECIPES: RaceSfxRecipeGroup<'orc'> = {
       burst(0, 0.03, 0.3, [lowpass(500)]),
     ],
   },
+  ...ORC_EARLY_CREATURE_RECIPES,
+  ...ORC_LATE_CREATURE_RECIPES,
+  ...ORC_TOWER_RECIPES,
 };

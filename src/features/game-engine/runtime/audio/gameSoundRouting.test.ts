@@ -114,7 +114,8 @@ describe('createGameSoundRouter', () => {
     router.playCreepSound(grunt, CreepSoundSlot.DEATH);
     router.playCreepSound(grunt, CreepSoundSlot.ESCAPE);
     router.playCreepSound(grunt, CreepSoundSlot.SPAWN);
-    router.playCreepSound({ unitId: 'orc_peon', race: RaceId.ORC }, CreepSoundSlot.DEATH);
+    // A creep drawn without content falls back to the orc race profile.
+    router.playCreepSound({ race: RaceId.ORC }, CreepSoundSlot.DEATH);
     const spear = createTower({ buildableTowerId: 'orc_spear_watchtower' });
     router.playTowerSound(spear, TowerSoundSlot.ATTACK);
     router.playTowerSound(spear, TowerSoundSlot.IMPACT);

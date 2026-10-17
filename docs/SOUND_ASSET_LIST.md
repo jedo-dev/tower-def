@@ -28,7 +28,7 @@ file; a test fails if two ids share one.
   | --- | --- | --- | --- |
   | core | `ui/`, `system/`, `economy/`, `combat/default/`, `combat/effects/` | 800 KB | ~448 KB |
   | undead | `combat/undead/` | 900 KB | ~63 KB |
-  | orc | `combat/orc/` | 900 KB | ~130 KB |
+  | orc | `combat/orc/` | 900 KB | ~622 KB |
   | human | `combat/human/` | 900 KB | ~59 KB |
   | elf | `combat/elf/` | 900 KB | ~70 KB |
   | total | | 4400 KB | ~770 KB |
@@ -163,8 +163,42 @@ Dark fantasy around D minor: low-mid, soft attacks, short tails. Frequent cues
 | `combat.creep.orc_grunt.death` | Long wavering death groan falling into a body drop. |
 | `combat.creep.orc_grunt.escape` | Two hoarse taunting barks over a drum. |
 | `combat.creep.orc_grunt.spawn` | Rising hoarse bark and a war drum. |
+| `combat.creep.orc_peon.hit` | Light tool clank over a small thump and a clipped yelp. |
+| `combat.creep.orc_peon.death` | Thin yelp falling away, then the shovel clattering down. |
+| `combat.creep.orc_peon.escape` | Two quick rising yelps with tool clanks. |
+| `combat.creep.orc_peon.spawn` | Two tool clanks and a rising yelp. |
+| `combat.creep.orc_wolf_rider.hit` | Short snarling growl on a body thud. |
+| `combat.creep.orc_wolf_rider.death` | Falling wolf whine, stumbling paws and a drop. |
+| `combat.creep.orc_wolf_rider.escape` | Galloping paws into a short rising howl. |
+| `combat.creep.orc_wolf_rider.spawn` | Wolf howl over a gallop. |
+| `combat.creep.orc_troll.hit` | Rubbery, wobbling thump. |
+| `combat.creep.orc_troll.death` | Cackle sinking into a wet gurgle and a rubbery drop. |
+| `combat.creep.orc_troll.escape` | Rising cackling laugh over a gurgle. |
+| `combat.creep.orc_troll.spawn` | Rising regeneration gurgle, two rubbery thumps and a cackle. |
+| `combat.creep.orc_headhunter.hit` | Sharp, clipped yip. |
+| `combat.creep.orc_headhunter.death` | High yip falling away and spears clattering to the ground. |
+| `combat.creep.orc_headhunter.escape` | Falling spear whistle and two sharp yips. |
+| `combat.creep.orc_headhunter.spawn` | Rising spear whistle, a yip and a war drum. |
+| `combat.creep.orc_shaman.hit` | Fast gourd rattle with a spark crackle. |
+| `combat.creep.orc_shaman.death` | Two-voice chant sinking, a slowing rattle and a fizzling spark. |
+| `combat.creep.orc_shaman.escape` | Two chanted notes stepping up over a rattle. |
+| `combat.creep.orc_shaman.spawn` | Spark crackle, a rising chant, rattle and drum. |
+| `combat.creep.orc_wind_rider.hit` | Short wyvern chirp and a wing flap. |
+| `combat.creep.orc_wind_rider.death` | Long falling screech, faltering wingbeats and a heavy drop. |
+| `combat.creep.orc_wind_rider.escape` | Three quickening wingbeats and a rising screech. |
+| `combat.creep.orc_wind_rider.spawn` | Rising wyvern screech and two wingbeats. |
+| `combat.creep.orc_tauren.hit` | Deep, heavy body thud with a low grunt. |
+| `combat.creep.orc_tauren.death` | Long deep bellow falling into a ground-shaking stomp. |
+| `combat.creep.orc_tauren.escape` | Two stomps and a short rising bellow. |
+| `combat.creep.orc_tauren.spawn` | Two stomps and a deep rising bellow. |
 | `combat.tower.orc_spear_watchtower.attack` | Heavy shaft whoosh and a wooden snap. |
 | `combat.tower.orc_spear_watchtower.impact` | Double wooden crack on a thunk. |
+| `combat.tower.orc_burning_pit.attack` | Fire whoomp opening up over a deep drop. |
+| `combat.tower.orc_burning_pit.impact` | Crackling flames with a muffled splash. |
+| `combat.tower.orc_lightning_totem.attack` | Charged rising hum snapping into a thunder crack. |
+| `combat.tower.orc_lightning_totem.impact` | Fizzing, sizzling crackle. |
+| `combat.tower.orc_tar_pit.attack` | Two thick wobbling glugs. |
+| `combat.tower.orc_tar_pit.impact` | Sticky splat with a small sucking pop. |
 
 ### Human - steel, powder and glass
 
