@@ -5,6 +5,7 @@ import {
   createGroundZoneStore,
   type GroundZoneStore,
 } from '../combat/towerGroundZones';
+import { releaseFloatingLabel } from '../labels/floatingLabelPool';
 import type {
   CreepRenderState,
   DamageNumberState,
@@ -48,7 +49,7 @@ export function setBattlefieldRenderStateVisible(
   battlefield.creeps.forEach((creep) => creep.sprite.setVisible(visible));
   battlefield.projectiles.forEach((projectile) => projectile.sprite.setVisible(visible));
   battlefield.impactEffects.forEach((effect) => effect.sprite.setVisible(visible));
-  battlefield.damageNumbers.forEach((numberState) => numberState.text.setVisible(visible));
+  battlefield.damageNumbers.forEach((numberState) => numberState.label.setVisible(visible));
   battlefield.groundZoneGraphics?.setVisible(visible);
 }
 
@@ -72,8 +73,11 @@ export function destroyBattlefieldImpactEffects(battlefield: BattlefieldRenderSt
   battlefield.impactEffects = [];
 }
 
+/** Hands every live number's label back to its pool. */
 export function destroyBattlefieldDamageNumbers(battlefield: BattlefieldRenderState): void {
-  battlefield.damageNumbers.forEach((numberState) => numberState.text.destroy());
+  battlefield.damageNumbers.forEach((numberState) =>
+    releaseFloatingLabel(numberState.labels, numberState.label),
+  );
   battlefield.damageNumbers = [];
 }
 

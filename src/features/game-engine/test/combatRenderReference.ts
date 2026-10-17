@@ -13,6 +13,7 @@ import {
   CREEP_EFFECT_PIP_RENDER_DEPTH,
 } from '../scenes/gameScene.constants';
 import type { CreepRenderState } from '../scenes/gameScene.types';
+import { LABEL_TEXTURE_FILTER_LINEAR } from '../scenes/floatingLabel.constants';
 
 // Verbatim copies of the creep render paths tower-def-5rh rewrote to stop
 // allocating every frame. Tests run them next to the live code on seeded
@@ -70,7 +71,10 @@ export function referenceRefreshCreepEffectVisuals(
       fontFamily: 'Exo 2, Segoe UI, Tahoma, sans-serif',
       fontSize: `${CREEP_EFFECT_PIP_FONT_SIZE_PX}px`,
       color: toCssColor(restingTint),
+      // tower-def-0zc: pips are rasterised at the label scale and sample LINEAR.
+      resolution: 1,
     });
+    creep.effectPips.texture.setFilter(LABEL_TEXTURE_FILTER_LINEAR);
     creep.effectPips.setOrigin(0.5, 1);
     creep.effectPips.setDepth(CREEP_EFFECT_PIP_RENDER_DEPTH);
   } else {

@@ -279,3 +279,60 @@ keeping one CSS-pixel camera view means the responsive fit, pinch zoom, pan,
 two-tap placement and pointer-to-cell mapping are unchanged code at any DPR;
 only the last step to the Phaser camera knows about device pixels. A cap
 rather than the raw DPR bounds the worst-case fill rate on dense screens.
+
+## Decision 017: Damage numbers are pooled BitmapText over a DPR-scaled atlas
+
+In-world texts were Phaser `Text` objects at resolution 1. The game config is
+`pixelArt` (NEAREST sampling), so on the DPR-scaled canvas (Decision 016) a
+1x text texture was blown up about 2-4x by the camera and read blocky. Damage
+numbers were also the worst case for cost: each hit created a `Text` (canvas
+rasterise + texture upload, its own texture so it broke sprite batching) and
+destroyed it 420 ms later, dozens of times a second in a busy wave.
+
+Damage numbers now use `BitmapText` (tower-def-0zc, `runtime/labels`):
+
+- One glyph atlas per raster scale: digits, `+-%×.!?:` and A-Z drawn once
+  from the UI font (Exo 2, white fill, dark outline) onto a canvas texture
+  that samples LINEAR, registered as a bitmap font. It is redrawn when the
+  web font finishes loading and when the raster scale changes.
+- Raster scale = canvas pixel ratio x `LABEL_RASTER_OVERSAMPLE` (1.5),
+  snapped to 0.25 steps. A world pixel spans ~0.9 CSS px at the board fit
+  zoom and ~2.8 at the 3x zoom cap; 1.5 is near the geometric middle, so a
+  glyph is resampled by at most ~1.7x either way, which linear filtering
+  hides. The scale is re-resolved on every scale RESIZE (host resize, DPR
+  change); only a changed scale builds a new atlas, re-points the labels with
+  `setFont` and drops the old atlas.
+- A fixed pool of `DAMAGE_LABEL_POOL_SIZE` (96) labels is created with the
+  scene and shared by both fields. A hit takes a hidden label and sets size,
+  text (cached strings for values < 2048), tint (hit / effect colour) and
+  position; expiry hides it and returns it. No text object is created or
+  destroyed during play; a hit that finds the pool empty shows no number.
+- Numbers draw at depth 76, above creeps and their bars (they used to sit
+  at depth 0, under the creep sprites).
+
+Creep effect pips stay plain `Text`: they change only when a creep's set of
+effects changes. They are rasterised at the same raster scale with LINEAR
+sampling and re-rasterised (`setResolution`) when the scale changes. The
+grid entrance/exit labels (runtime/grid) are still resolution 1.
+
+Measured in headless Chrome, 390x844 at DPR 3 (backing 925x1118), a wave
+running and numbers injected through `spawnDamageNumber`, interleaved runs:
+
+- per hit (spawn + expire, median of 25 x 40): 0.14-0.18 ms before,
+  0.0025 ms after;
+- Phaser step at 120 hits/s (mean / p99): 1.08-1.91 / 1.7-3.7 ms before,
+  0.68-0.90 / 1.3-1.5 ms after (idle 0.6-1.3 ms in both; desktop GPU, so the
+  absolute numbers are indicative only);
+- an in-page microbench of pooled `Text.setText` at resolution 3.75 cost
+  0.033 ms per change against 0.002 ms for `BitmapText.setText`, before the
+  per-label texture upload and draw call a `Text` adds at render.
+
+Screenshots: `docs/screenshots/crisp-labels/`.
+
+Reason:
+
+Text at a higher resolution alone fixes the blur but not the churn: changing
+a pooled `Text` still re-rasterises and re-uploads a texture per hit, each
+label keeps its own texture (one draw call each), and memory grows with the
+resolution squared. A bitmap atlas makes a hit a few quads over one shared
+texture, so frequent numbers are crisp at any DPR for almost no cost.

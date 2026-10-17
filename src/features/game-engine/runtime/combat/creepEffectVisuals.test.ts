@@ -24,6 +24,7 @@ function createTextStub(label: string): TextStub {
     text: label,
     color: '',
     destroyed: false,
+    texture: { setFilter: vi.fn() },
     setOrigin: vi.fn(),
     setDepth: vi.fn(),
     setPosition: vi.fn(),

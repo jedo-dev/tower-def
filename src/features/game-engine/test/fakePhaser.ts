@@ -67,7 +67,7 @@ function withChainableFallback<T extends object>(target: T): T {
   return proxy;
 }
 
-export type FakeGameObjectKind = 'graphics' | 'sprite' | 'image' | 'text';
+export type FakeGameObjectKind = 'graphics' | 'sprite' | 'image' | 'text' | 'bitmapText';
 
 export class FakeGameObject extends FakeEventEmitter {
   public visible = true;
@@ -84,6 +84,9 @@ export class FakeGameObject extends FakeEventEmitter {
   public height = 0;
   public tint = 0xffffff;
   public text = '';
+  /** Bitmap font key and size of a bitmapText object. */
+  public font = '';
+  public fontSize = 0;
   public currentAnimationKey: string | null = null;
   /** Rectangles a Graphics object filled since its last clear(), in call order. */
   public readonly fillRects: Array<{ x: number; y: number; width: number; height: number }> = [];
@@ -163,6 +166,16 @@ export class FakeGameObject extends FakeEventEmitter {
     return this;
   }
 
+  public setFont(font: string): this {
+    this.font = font;
+    return this;
+  }
+
+  public setFontSize(fontSize: number): this {
+    this.fontSize = fontSize;
+    return this;
+  }
+
   public setData(key: string, value: unknown): this {
     this.dataByKey.set(key, value);
     return this;
@@ -212,6 +225,13 @@ export class FakeObjectFactory {
 
   public text(x: number, y: number, text: string): FakeGameObject {
     return this.create(new FakeGameObject('text', x, y).setText(text));
+  }
+
+  public bitmapText(x: number, y: number, font: string, text = '', size = 0): FakeGameObject {
+    const gameObject = new FakeGameObject('bitmapText', x, y, font).setText(text);
+    gameObject.font = font;
+    gameObject.fontSize = size;
+    return this.create(gameObject);
   }
 
   private create(gameObject: FakeGameObject): FakeGameObject {

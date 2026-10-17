@@ -10,6 +10,7 @@ import type { GridModel } from '../../../shared/types/grid';
 import type { GridPosition } from '../../../shared/types/pathfinding';
 import type { BattlefieldRenderState } from '../runtime/battlefield/battlefieldRenderState';
 import type { CameraView } from '../runtime/camera/cameraViewMapping';
+import type { FloatingLabelPool } from '../runtime/labels/floatingLabelPool';
 import type { CreepAdornments } from '../runtime/creep/creepAdornments';
 import type { GridRendererState } from '../runtime/grid/gameSceneGridRenderer';
 
@@ -81,7 +82,9 @@ export type ImpactEffectState = {
 };
 
 export type DamageNumberState = {
-  text: Phaser.GameObjects.Text;
+  /** Borrowed from `labels`; handed back when the number expires. */
+  label: Phaser.GameObjects.BitmapText;
+  labels: FloatingLabelPool;
   startY: number;
   remainingMs: number;
 };

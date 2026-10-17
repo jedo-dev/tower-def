@@ -31,6 +31,10 @@ import {
 } from '../../runtime/battlefield/sideScenery';
 import type { BoardCameraState } from '../../runtime/camera/gameSceneCameraRuntime';
 import {
+  createFloatingLabelPool,
+  type FloatingLabelPool,
+} from '../../runtime/labels/floatingLabelPool';
+import {
   createCreepAdornmentPool,
   type CreepAdornmentPool,
 } from '../../runtime/creep/creepAdornments';
@@ -94,6 +98,8 @@ export type GameSceneState = {
   readonly sideScenery: SideSceneryLayer;
   /** Released creep shadows, rings and health bars of both fields, for the next spawns. */
   readonly creepAdornmentPool: CreepAdornmentPool;
+  /** Pre-created damage number labels shared by both fields (tower-def-0zc). */
+  readonly floatingLabelPool: FloatingLabelPool;
   /**
    * Long-lived state owned by the wave/movement runtime modules; the player
    * creep list is shared with playerField (see createPlayerWaveRuntimeState).
@@ -161,6 +167,7 @@ export function createGameSceneState(): GameSceneState {
     opponentField,
     sideScenery: createSideSceneryLayer(),
     creepAdornmentPool: createCreepAdornmentPool(),
+    floatingLabelPool: createFloatingLabelPool(),
     runState: createPlayerWaveRuntimeState(playerField),
     opponentWave: createOpponentFieldWaveState(opponentField),
     opponentFieldCreepsPublisher: createOpponentFieldCreepsPublisher((remaining) =>

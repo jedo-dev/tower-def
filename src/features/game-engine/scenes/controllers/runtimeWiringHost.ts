@@ -26,6 +26,7 @@ export function createWiringHost(context: GameSceneContext): GameSceneWiringHost
     playerField: state.playerField,
     opponentField: state.opponentField,
     creepAdornmentPool: state.creepAdornmentPool,
+    floatingLabelPool: state.floatingLabelPool,
     getSoundManager: () => state.soundManager,
     soundRouter: context.soundRouter,
     getDuelMatchState: () => state.duelMatchState,
