@@ -25,6 +25,10 @@ import {
   createBattlefieldRenderState,
   type BattlefieldRenderState,
 } from '../../runtime/battlefield/battlefieldRenderState';
+import {
+  createSideSceneryLayer,
+  type SideSceneryLayer,
+} from '../../runtime/battlefield/sideScenery';
 import type { BoardCameraState } from '../../runtime/camera/gameSceneCameraRuntime';
 import {
   createCreepAdornmentPool,
@@ -86,6 +90,8 @@ export type GameSceneState = {
   readonly placedTowerCostsByCellKey: Map<string, number>;
   readonly playerField: BattlefieldRenderState;
   readonly opponentField: BattlefieldRenderState;
+  /** Painted strips beside the board, in the race of the field in view. */
+  readonly sideScenery: SideSceneryLayer;
   /** Released creep shadows, rings and health bars of both fields, for the next spawns. */
   readonly creepAdornmentPool: CreepAdornmentPool;
   /**
@@ -153,6 +159,7 @@ export function createGameSceneState(): GameSceneState {
     placedTowerCostsByCellKey: new Map<string, number>(),
     playerField,
     opponentField,
+    sideScenery: createSideSceneryLayer(),
     creepAdornmentPool: createCreepAdornmentPool(),
     runState: createPlayerWaveRuntimeState(playerField),
     opponentWave: createOpponentFieldWaveState(opponentField),

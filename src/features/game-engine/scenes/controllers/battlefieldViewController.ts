@@ -2,11 +2,21 @@ import { publishGameEvent } from '../../../../shared/lib/game-bridge/bridge';
 import type { GameEventMap } from '../../../../shared/lib/game-bridge/types';
 import { setBattlefieldRenderStateVisible } from '../../runtime/battlefield/battlefieldRenderState';
 import { rebuildOpponentBattlefieldRenderState } from '../../runtime/battlefield/battlefieldSpriteFactory';
+import { syncSideScenery } from '../../runtime/battlefield/sideScenery';
+import type { SideSceneryBoardSize } from '../../runtime/battlefield/sideSceneryLayout';
 import { syncCreepListAdornments } from '../../runtime/creep/creepAdornments';
+import { GRID_PIXEL_HEIGHT, GRID_PIXEL_WIDTH, TERRAIN_RENDER_DEPTH } from '../gameScene.constants';
 import { getPlayerPathRoute, redrawTerrainTiles } from './boardRenderController';
 import type { GameSceneState } from './gameSceneState';
 import { publishHudSnapshot } from './hudSnapshotPublisher';
-import type { GameSceneCore } from './sceneQueries';
+import { getVisibleBuilderFactionId, type GameSceneCore } from './sceneQueries';
+
+const SIDE_SCENERY_BOARD_SIZE: SideSceneryBoardSize = {
+  width: GRID_PIXEL_WIDTH,
+  height: GRID_PIXEL_HEIGHT,
+};
+/** Under the ground tiles, so the strips' grid overlap stays hidden. */
+const SIDE_SCENERY_RENDER_DEPTH = TERRAIN_RENDER_DEPTH - 10;
 
 export function applyBattlefieldViewVisibility(state: GameSceneState): void {
   const showOpponent = state.activeBattlefieldView === 'opponent';
@@ -65,6 +75,16 @@ export function renderVisibleBattlefield(core: GameSceneCore): void {
   if (!showOpponent) state.arePathTilesStale = false;
   state.pathCellKeys = new Set(visiblePath.map((cell) => `${cell.x}:${cell.y}`));
   redrawTerrainTiles(core);
+  syncVisibleSideScenery(core);
+}
+
+/** Frames the board with the side scenery of the field in view (tower-def-jsl). */
+export function syncVisibleSideScenery({ scene, state }: GameSceneCore): void {
+  syncSideScenery(scene, state.sideScenery, {
+    raceId: getVisibleBuilderFactionId(state),
+    board: SIDE_SCENERY_BOARD_SIZE,
+    depth: SIDE_SCENERY_RENDER_DEPTH,
+  });
 }
 
 export function handleBattlefieldViewChanged(
