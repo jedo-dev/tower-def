@@ -377,12 +377,12 @@ describe('shipped tower content', () => {
   });
 
   it('keeps world-space reach unchanged by the fine-grid migration', () => {
-    const guardArcher = buildableTowers.find((tower) => tower.id === 'human_guard_archer_tower');
+    // The archer archetype keeps the migrated reach; race archers tune range
+    // per race since tower-def-6nf.4 / tower-def-716.9.
     const cannon = buildableTowers.find((tower) => tower.id === 'human_cannon_bastion');
 
-    expect(guardArcher).toBeDefined();
     expect(cannon).toBeDefined();
-    expect((guardArcher?.range ?? 0) * GRID_DIMENSIONS.cellSize).toBe(
+    expect(TOWER_COMBAT_STATS_BY_TYPE.single.range * GRID_DIMENSIONS.cellSize).toBe(
       COARSE_GRID_RANGE.guardArcher * COARSE_CELL_SIZE_PX,
     );
     expect((cannon?.splashRadius ?? 0) * GRID_DIMENSIONS.cellSize).toBe(

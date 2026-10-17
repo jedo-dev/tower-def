@@ -1,14 +1,19 @@
 import { describe, expect, it } from 'vitest';
-import { UnitMoveType } from '../../../shared/types/content-ids';
-import { UnitTier, undeadUnits } from '../../unit';
+import { RACE_IDS, UnitMoveType } from '../../../shared/types/content-ids';
+import { UnitTier, elfUnits, undeadUnits } from '../../unit';
 import {
   generateWaveUnits,
+  getBaselineHealthMultiplier,
+  getWaveAirUnitBudgetMultiplier,
   getWaveBudget,
   getWaveUnitCap,
   getWaveUnitValue,
+  toBaselineUnit,
 } from './generateWaveUnits';
 import {
   WAVE_AIR_UNIT_BUDGET_MULTIPLIER,
+  WAVE_AIR_UNIT_BUDGET_MULTIPLIER_BY_RACE,
+  WAVE_BASELINE_HEALTH_MULTIPLIER_BY_RACE,
   WAVE_TIER_UNLOCK_WAVE,
   WAVE_UNIT_COUNT_BOUNDS,
 } from './waveBalance';
@@ -103,5 +108,37 @@ describe('generateWaveUnits curve', () => {
     const fliers = generateWaveUnits({ waveNumber, factionUnits: [gargoyle], random: roll });
     const walkers = generateWaveUnits({ waveNumber, factionUnits: [grounded], random: roll });
     expect(fliers.length).toBeLessThan(walkers.length);
+  });
+
+  it('charges a flier its roster override of the air multiplier', () => {
+    const gargoyle = undeadUnits.find((unit) => unit.id === 'undead_gargoyle');
+    if (!gargoyle) throw new Error('undead_gargoyle missing');
+    const grounded = { ...gargoyle, moveType: UnitMoveType.GROUND };
+
+    for (const raceId of RACE_IDS) {
+      const multiplier = getWaveAirUnitBudgetMultiplier(raceId);
+      expect(multiplier, raceId).toBe(
+        WAVE_AIR_UNIT_BUDGET_MULTIPLIER_BY_RACE[raceId] ?? WAVE_AIR_UNIT_BUDGET_MULTIPLIER,
+      );
+      expect(getWaveUnitValue({ ...gargoyle, faction: raceId }), raceId).toBe(
+        getWaveUnitValue(grounded) * multiplier,
+      );
+    }
+    expect(getWaveAirUnitBudgetMultiplier(undefined)).toBe(WAVE_AIR_UNIT_BUDGET_MULTIPLIER);
+  });
+
+  it('fields baseline creatures at their roster health scale', () => {
+    for (const units of [undeadUnits, elfUnits]) {
+      const faction = units[0].faction;
+      const scale = WAVE_BASELINE_HEALTH_MULTIPLIER_BY_RACE[faction] ?? 1;
+      expect(getBaselineHealthMultiplier(faction), faction).toBe(scale);
+      const wave = generateWaveUnits({ waveNumber: 20, factionUnits: units, random: () => 0.3 });
+      for (const unit of wave) {
+        const authored = units.find((candidate) => candidate.id === unit.id);
+        expect(unit.health, unit.id).toBe(Math.round((authored?.health ?? 0) * scale));
+        if (scale === 1) expect(unit).toBe(authored);
+      }
+    }
+    expect(toBaselineUnit(elfUnits[0])).toBe(toBaselineUnit(elfUnits[0]));
   });
 });

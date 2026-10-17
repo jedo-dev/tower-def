@@ -1940,6 +1940,87 @@ tower or content change can tip.
 30 duels per race): undead 80.0%, orc 43.3%, human 30.0%, elf 43.3%, before
 and after; the batch output is identical (no branch pick changed).
 
+### Roster balance (tower-def-716.9)
+
+Race-level pass on base tower stats (levels 1-3, tower-level abilities) and
+the baseline wave levers in `entities/wave`; no `talentBranches`, unit base
+stats or AI code changed. Absorbs oy5 (race rosters), 98p (elf round cap)
+and ebq (human anti-air). Before is main at 16c7d3e.
+
+**Measure.** Standard batch: hard vs hard, the six pairs, seeds 1-10,
+`--maps classic` and `--maps seeded`, baseline undead, 60 duels a race.
+Game-faithful batch: each race in seat A against the other three with its
+own `--baseline-race`, classic map, seeds 1-10, 30 duels a race. Both are
+assembled from short single-pair or three-pair calls (`timeout 110`), one sim
+at a time. A draw counts half.
+
+**Changes** (old -> new):
+
+| Lever | Where | Old | New |
+| --- | --- | --- | --- |
+| Baseline air budget multiplier, elf roster | `WAVE_AIR_UNIT_BUDGET_MULTIPLIER_BY_RACE` | 4 (shared) | 2.5 |
+| Baseline air budget multiplier, human roster | same | 4 (shared) | 5 |
+| Baseline health scale, elf / human / orc roster (sends keep authored health) | `WAVE_BASELINE_HEALTH_MULTIPLIER_BY_RACE` | 1 / 1 / 1 | 1.2 / 1.1 / 1.1 |
+| Human Guard Archer levels 1-3 | `towers/human.json` | no air bonus | `airDamageMultiplier` 1.2 |
+| Elf Moon Archer levels 1-3 | `towers/elf.json` | no air bonus | `airDamageMultiplier` 1.15 |
+| Elf Moonwell chill, base / L1 / L2 | same | 0.28 / 0.28 / 0.38 | 0.32 / 0.32 / 0.41 |
+| Orc Spear Watchtower range, base / L1 / L2 | `towers/orc.json` | 6 / 6 / 6.4 | 6.4 / 6.4 / 6.6 |
+| Orc Lightning Totem cost; damage | same | 85; 22 | 75; 25 |
+
+Why:
+
+- **Elf round cap.** On its own roster (the lightest armored, two light
+  fliers and no tier 6 flier) a full board of physical archers held the late
+  waves forever: 13 of 30 game-faithful elf duels hit the 40-round cap (9 of
+  10 against undead). More fliers per wave (air budget 2.5) and 20% more
+  baseline health end that; the Moonwell chill and the Moon Archer's air bonus
+  keep elf defending its new air-heavier waves.
+- **Human anti-air.** The Guard Archer's 1.2 air bonus answers fliers without
+  a new tower; human waves carry fewer gryphons (air budget 5).
+- **Orc and human on their own roster.** Both lost most game-faithful duels
+  (orc 20%, human 27-30%): their waves are physically armored and their
+  defences physical. A cheaper, harder-hitting Lightning Totem (magical
+  chain, the answer to orc armor) and heavier human and orc baseline waves
+  (1.1) lift both; the heavier waves hurt the opponent seat more than the
+  roster's own race.
+
+Tried and rejected: orc Spear damage 21 -> 23 (orc game-faithful only 20 ->
+28%, and orc against human in the standard batch went 10-0); Alchemist poison
+4 -> 5 (the computer overbuilds it: human against elf on classic 8-2 -> 2-8);
+human baseline scale 0.9 (human game-faithful 0 of 20 against elf and
+undead, the opposite direction); removing the Moon Archer's air bonus (no
+change in human against elf on human waves, 0-10 either way).
+
+**Standard batch** (60 duels a race):
+
+| Race | Before (classic / seeded) | After (classic / seeded) | Change |
+| --- | --- | --- | --- |
+| Undead | 74.2% (78.3 / 70.0) | 51.7% (43.3 / 60.0) | -22.5 |
+| Orc | 49.2% (45.0 / 53.3) | 50.0% (60.0 / 40.0) | +0.8 |
+| Human | 33.3% (26.7 / 40.0) | 43.3% (43.3 / 43.3) | +10.0 |
+| Elf | 43.3% (50.0 / 36.7) | 55.0% (53.3 / 56.7) | +11.7 |
+
+Undead falls mostly through elf (elf against undead 6-4 / 5-5 -> 8-2 / 7-3)
+and orc on classic; Wyrm Breath is untouched and still picked on most undead
+boards. Round cap: 0 before, 1 of 60 duels after (seeded orc against human).
+Towers at round 5 (median per row): 11-14 before, 10-14 after.
+
+**Game-faithful batch** (classic, 30 duels a race; round-cap hits in brackets):
+
+| Race in seat A | Before | After |
+| --- | --- | --- |
+| Undead | 78.3% (0) | 43.3% (0) |
+| Orc | 20.0% (0) | 56.7% (0) |
+| Human | 30.0% (0) | 36.7% (0) |
+| Elf | 43.3% (13: 9 / 2 / 2) | 43.3% (1, against human) |
+
+Every row is now within 30-70% and no row hits the round cap more than once
+in 30. Human remains the weakest seat: it loses 1-9 to elf on its own waves
+(elf's percent-damage Thorn Spire against knights and gryphons).
+
+**Difficulty spot-check** (`--matchups hard:normal`, seeds 1-3, classic,
+every race on every race, 48 duels): hard wins 46, normal 2 (96%).
+
 ## Suggested Improvements
 
 - Add difficulty presets for the computer opponent: relaxed, normal, aggressive.
