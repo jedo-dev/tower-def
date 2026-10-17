@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { GameHudSnapshot } from '../../../shared/lib/game-bridge/types';
-import { mapWaveQueueToViewModel } from './mapWaveQueueToViewModel';
+import { groupWaveQueueIcons, mapWaveQueueToViewModel } from './mapWaveQueueToViewModel';
 
 function createSnapshot(overrides?: Partial<GameHudSnapshot>): GameHudSnapshot {
   return {
@@ -119,5 +119,44 @@ describe('mapWaveQueueToViewModel', () => {
     const vm = mapWaveQueueToViewModel(createSnapshot({ phase: 'build' }), 2);
 
     expect(vm.enemyFieldStatus).toBeNull();
+  });
+
+  it('words the plate subtitle for each phase', () => {
+    const send = (creepTypeId: string, index: number) => ({ creepTypeId, index });
+    expect(mapWaveQueueToViewModel(createSnapshot({ phase: 'build' })).subtitle).toBe(
+      'Baseline wave',
+    );
+    expect(
+      mapWaveQueueToViewModel(
+        createSnapshot({ phase: 'build', opponentSendQueue: [send('orc_grunt', 0)] }),
+      ).subtitle,
+    ).toBe('baseline + 1 enemy send');
+    expect(
+      mapWaveQueueToViewModel(
+        createSnapshot({
+          phase: 'build',
+          opponentSendQueue: [send('orc_grunt', 0), send('orc_troll', 1), send('orc_grunt', 2)],
+        }),
+      ).subtitle,
+    ).toBe('baseline + 3 enemy sends');
+    expect(
+      mapWaveQueueToViewModel(createSnapshot({ phase: 'wave', pendingCreepCount: 6 })).subtitle,
+    ).toBe('6 creeps');
+    expect(mapWaveQueueToViewModel(createSnapshot({ phase: 'wave' })).subtitle).toBe('No enemies');
+  });
+});
+
+describe('groupWaveQueueIcons', () => {
+  it('folds a queue into one entry per creature type with its count, first seen first', () => {
+    const icon = (creepTypeId: string) => ({ creepTypeId, name: creepTypeId, faction: undefined });
+    const groups = groupWaveQueueIcons(
+      ['orc_grunt', 'orc_troll', 'orc_grunt', 'orc_grunt', 'orc_troll', 'orc_tauren'].map(icon),
+    );
+
+    expect(groups.map((group) => [group.creepTypeId, group.count, group.countLabel])).toEqual([
+      ['orc_grunt', 3, '×3'],
+      ['orc_troll', 2, '×2'],
+      ['orc_tauren', 1, '×1'],
+    ]);
   });
 });

@@ -53,6 +53,16 @@ function createSetup(builderFaction: RaceId): GameSetupConfig {
 
 const consoleErrorSpy = vi.spyOn(console, 'error');
 
+function renderPanel(isDevelopMode = false): void {
+  render(
+    <CreepSendPanel
+      setup={createSetup(RaceId.ORC)}
+      isDevelopMode={isDevelopMode}
+      onDevelopModeChange={() => undefined}
+    />,
+  );
+}
+
 afterEach(() => {
   cleanup();
   expect(consoleErrorSpy).not.toHaveBeenCalled();
@@ -75,7 +85,7 @@ function publishOrcSendLimits(
 
 describe('CreepSendPanel send limits', () => {
   it('shows remaining wave capacity and per-type counters from the bridge event', () => {
-    render(<CreepSendPanel setup={createSetup(RaceId.ORC)} />);
+    renderPanel();
     publishOrcSendLimits(9, [
       {
         creepTypeId: 'orc_grunt',
@@ -97,7 +107,10 @@ describe('CreepSendPanel send limits', () => {
       },
     ]);
 
-    expect(screen.getByLabelText('9 of 12 sends left this wave').textContent).toBe('9/12 left');
+    // The tab rail prints "SEND 9/12"; the panel keeps the sentence for screen readers.
+    expect(document.querySelector('[data-send-capacity]')?.textContent).toBe(
+      '9 of 12 sends left this wave',
+    );
     const grunt = screen.getByRole('button', { name: /Send Grunt/ });
     expect(grunt.getAttribute('aria-label')).toContain('3 of 6 left');
     expect(grunt.querySelector('[data-send-remaining]')?.textContent).toBe('3/6');
@@ -105,7 +118,7 @@ describe('CreepSendPanel send limits', () => {
   });
 
   it('disables a creep whose type cap is reached', () => {
-    render(<CreepSendPanel setup={createSetup(RaceId.ORC)} />);
+    renderPanel();
     publishOrcSendLimits(6, [
       {
         creepTypeId: 'orc_grunt',
@@ -123,7 +136,7 @@ describe('CreepSendPanel send limits', () => {
   });
 
   it('disables every creep once the wave cap is reached', () => {
-    render(<CreepSendPanel setup={createSetup(RaceId.ORC)} />);
+    renderPanel();
     publishOrcSendLimits(0, [
       {
         creepTypeId: 'orc_grunt',
@@ -139,13 +152,13 @@ describe('CreepSendPanel send limits', () => {
     const buttons = screen.getAllByRole('button', { name: /send/i });
     expect(buttons.length).toBe(4);
     expect(buttons.every((button) => (button as HTMLButtonElement).disabled)).toBe(true);
-    expect(screen.getByLabelText('0 of 12 sends left this wave')).toBeDefined();
+    expect(screen.getByText('0 of 12 sends left this wave')).toBeDefined();
   });
 });
 
 describe('CreepSendPanel', () => {
   it('shows the painted creep portrait on a send chip', () => {
-    render(<CreepSendPanel setup={createSetup(RaceId.ORC)} />);
+    renderPanel();
 
     const icon = screen.getByRole('img', { name: 'Grunt' });
 
@@ -153,7 +166,7 @@ describe('CreepSendPanel', () => {
   });
 
   it('falls back to the battlefield sprite when the portrait fails to load', () => {
-    render(<CreepSendPanel setup={createSetup(RaceId.ORC)} />);
+    renderPanel();
 
     const portrait = screen.getByRole('img', { name: 'Grunt' }).querySelector('img');
     if (!portrait) throw new Error('portrait not rendered');
@@ -165,33 +178,25 @@ describe('CreepSendPanel', () => {
   });
 });
 
-describe('CreepSendPanel heading', () => {
-  it('leads the heading with the race emblem in full and compact mode', () => {
-    const { container, rerender } = render(<CreepSendPanel setup={createSetup(RaceId.ORC)} />);
-    const emblemSource = () =>
-      container.querySelector('.ui-heading img')?.getAttribute('src') ?? null;
+describe('CreepSendPanel note line', () => {
+  it('says what is queued in send mode and lists tier experience in develop mode', () => {
+    renderPanel();
+    const note = document.querySelector('[data-send-queue]');
+    expect(note?.firstElementChild?.textContent).toBe('No sends queued');
+    expect(screen.queryByRole('list', { name: 'Creature experience by tier' })).toBeNull();
+    cleanup();
 
-    expect(emblemSource()).toBe(toFactionEmblemSource(RaceId.ORC));
-    rerender(<CreepSendPanel setup={createSetup(RaceId.ORC)} isCompact />);
-    expect(emblemSource()).toBe(toFactionEmblemSource(RaceId.ORC));
-    expect(screen.getByText('Send Orc')).toBeDefined();
-  });
-});
-
-describe('CreepSendPanel compact mode', () => {
-  it('folds to its header while the build drawer owns the strip', () => {
-    render(<CreepSendPanel setup={createSetup(RaceId.ORC)} isCompact />);
-
-    expect(screen.getByText('Send Orc')).toBeDefined();
-    expect(screen.getByLabelText('Gold 1000, income 50')).toBeDefined();
-    expect(screen.queryByText('No sends queued')).toBeNull();
-    expect(screen.queryAllByRole('button')).toHaveLength(0);
+    renderPanel(true);
+    expect(document.querySelector('[data-send-queue]')).toBeNull();
+    expect(screen.getByRole('list', { name: 'Creature experience by tier' })).toBeDefined();
   });
 
-  it('shows the send cards again once the drawer closes', () => {
-    const { rerender } = render(<CreepSendPanel setup={createSetup(RaceId.ORC)} isCompact />);
-    rerender(<CreepSendPanel setup={createSetup(RaceId.ORC)} isCompact={false} />);
+  it('carries no heading or gold line of its own: the dock rail and status bar show them', () => {
+    renderPanel();
 
-    expect(screen.getAllByRole('button').length).toBeGreaterThan(0);
+    expect(document.querySelector('.ui-heading')).toBeNull();
+    expect(document.querySelector(`img[src="${toFactionEmblemSource(RaceId.ORC)}"]`)).toBeNull();
+    expect(screen.queryByLabelText(/^Gold /)).toBeNull();
+    expect(screen.getAllByRole('button')).toHaveLength(4);
   });
 });

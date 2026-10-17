@@ -1,0 +1,228 @@
+/*
+ * Status bar (docs/design/match-screen-concept.webp): one row in the kit
+ * frame. Gold on the left, lives against lives in the middle, the crimson
+ * wave button on the right. Fixed height, so a countdown tick or a gold
+ * change never moves the board.
+ */
+.bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  height: var(--match-status-height);
+  padding: var(--space-xs) var(--space-lg);
+  border-image-width: var(--match-frame-rim);
+  color: var(--color-text-primary);
+  font-family: var(--font-family-ui);
+}
+
+.gold {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  min-width: 0;
+}
+
+.coin,
+.heart {
+  flex: 0 0 auto;
+  width: var(--match-status-icon-size);
+  height: var(--match-status-icon-size);
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  line-height: 1;
+}
+
+.value {
+  font-family: var(--font-family-stats);
+  font-size: var(--match-stat-value-size);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  color: var(--color-text-gold);
+  text-shadow: var(--shadow-codex-drop);
+}
+
+.sub {
+  margin-top: var(--space-2xs);
+  font-size: var(--font-size-xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
+/* Lives against lives over the pressure line, with a divider each side. */
+.duel {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2xs);
+  padding: 0 var(--space-xs);
+  border-inline: 1px solid var(--color-codex-line);
+}
+
+.lives {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.lives .value {
+  color: var(--color-text-primary);
+}
+
+.lives .enemyValue {
+  color: var(--status-enemy-color, var(--color-text-danger));
+}
+
+.versus {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  font-size: var(--font-size-2xs);
+  color: var(--color-text-muted);
+}
+
+.swords {
+  font-size: var(--font-size-md);
+  color: var(--color-faction-human);
+}
+
+/* The enemy-sends / incoming line, coloured by pressure. */
+.pressure {
+  max-width: 100%;
+  overflow: hidden;
+  font-family: var(--font-family-display);
+  font-size: var(--font-size-2xs);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--color-text-muted);
+}
+
+.pressureLow {
+  color: var(--color-pressure-low);
+}
+.pressureMedium {
+  color: var(--color-pressure-medium);
+}
+.pressureHigh {
+  color: var(--color-pressure-high);
+}
+
+/* The detail stays in the status text for screen readers; the plate above
+ * the board already lists the enemy sends. */
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Wave action: a kit 9-slice button, two lines, full touch target. */
+.action {
+  flex: 0 0 var(--match-start-button-width);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  min-height: var(--touch-target-min);
+  height: var(--touch-target-min);
+  padding: 0 var(--space-md);
+  border: 0;
+  border-image-source: url('/assets/ui/kit/btn-primary-normal.png');
+  border-image-slice: 36 fill;
+  border-image-width: var(--match-kit-button-rim);
+  border-image-repeat: stretch;
+  background: transparent;
+  color: var(--color-action-label);
+  cursor: pointer;
+  touch-action: manipulation;
+  text-shadow: var(--shadow-codex-drop);
+}
+
+.action:hover:not(:disabled) {
+  border-image-source: url('/assets/ui/kit/btn-primary-hover.png');
+}
+
+.action:active:not(:disabled) {
+  border-image-source: url('/assets/ui/kit/btn-primary-pressed.png');
+  transform: translateY(1px);
+}
+
+.action:focus-visible {
+  outline: var(--focus-ring-outline);
+  outline-offset: var(--focus-ring-outline-offset);
+}
+
+.action:disabled {
+  cursor: not-allowed;
+  filter: grayscale(0.6) brightness(0.65);
+}
+
+.actionLabel {
+  font-family: var(--font-family-display);
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  line-height: 1.1;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.actionSub {
+  font-size: var(--font-size-xs);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+.viewToggle {
+  border-image-source: url('/assets/ui/kit/btn-secondary-normal.png');
+  color: var(--color-text-primary);
+}
+
+.viewToggle:hover:not(:disabled) {
+  border-image-source: url('/assets/ui/kit/btn-secondary-hover.png');
+}
+
+.viewToggle:active:not(:disabled) {
+  border-image-source: url('/assets/ui/kit/btn-secondary-pressed.png');
+}
+
+.viewToggleActive {
+  box-shadow: 0 0 12px var(--glow-emerald);
+}
+
+/* 360px phones: the button narrows before the lives block wraps. */
+@media (max-width: 370px) {
+  .bar {
+    gap: var(--space-sm);
+    padding-inline: var(--space-md);
+  }
+
+  .action {
+    flex-basis: var(--match-start-button-width-narrow);
+    padding: 0 var(--space-xs);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .action:active:not(:disabled) {
+    transform: none;
+  }
+}

@@ -66,32 +66,36 @@ function MatchControlsComponent() {
       <div className={styles.strip} role="group" aria-label="Match controls">
         <button
           type="button"
-          className={joinClassNames(styles.button, isPaused && styles.buttonActive)}
+          className={joinClassNames('ui-slot', styles.button, isPaused && styles.buttonActive)}
           aria-label={isPaused ? 'Resume game' : 'Pause game'}
           aria-pressed={isPaused}
           aria-keyshortcuts="Space P"
           title={isPaused ? 'Resume (Space / P)' : 'Pause (Space / P)'}
           onClick={togglePause}
         >
-          <span aria-hidden="true">{isPaused ? '▶' : '‖'}</span>
+          <span aria-hidden="true">{isPaused ? '▶' : 'II'}</span>
         </button>
         {SPEED_OPTIONS.map((speed) => (
           <button
             key={speed}
             type="button"
-            className={joinClassNames(styles.button, gameSpeed === speed && styles.buttonActive)}
+            className={joinClassNames(
+              'ui-slot',
+              styles.button,
+              gameSpeed === speed && styles.buttonActive,
+            )}
             aria-label={`Game speed ${speed}x`}
             aria-pressed={gameSpeed === speed}
             aria-keyshortcuts={String(speed)}
             title={`Speed ${speed}x (${speed})`}
             onClick={() => sendGameCommand('set-game-speed', { speed })}
           >
-            {speed}x
+            {speed}×
           </button>
         ))}
         <button
           type="button"
-          className={joinClassNames(styles.button, styles.buttonQuit)}
+          className={joinClassNames('ui-slot', styles.button, styles.buttonQuit)}
           aria-label="Quit to menu"
           aria-keyshortcuts="Escape"
           title="Quit to menu (Esc)"

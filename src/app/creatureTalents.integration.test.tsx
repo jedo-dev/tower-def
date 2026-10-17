@@ -12,7 +12,7 @@ import {
   preloadGameScene,
   type GameSceneHarness,
 } from '../features/game-engine/test/sceneHarness';
-import { CreepSendPanel } from '../widgets/creep-send-panel';
+import { MatchDock } from '../pages/game-page/ui/MatchDock';
 
 const SCENE_PRELOAD_TIMEOUT_MS = 60_000;
 const FIEND = resolveUnitConfigById('undead_crypt_fiend');
@@ -25,7 +25,7 @@ const STARTING_XP =
   3;
 
 /**
- * The send panel's develop mode against the real scene over the typed bridge
+ * The dock's SEND tab in develop mode against the real scene over the typed bridge
  * (tower-def-716.4): Develop -> choose -> confirm and two upgrades reach the
  * engine, and the next send spawns at the bought grade.
  */
@@ -47,7 +47,8 @@ describe('creature develop UI (live scene + send panel)', () => {
   it('chooses a branch, upgrades twice and sends the creature at grade 2', async () => {
     const game = await createGameSceneHarness();
     harness = game;
-    render(<CreepSendPanel setup={HARNESS_DEFAULT_SETUP} />);
+    render(<MatchDock setup={HARNESS_DEFAULT_SETUP} />);
+    fireEvent.click(screen.getByRole('tab', { name: /^Send/ }));
     act(() => {
       game.setPlayerCreatureXp({ [FIEND.tier]: STARTING_XP });
       game.tick(1);
@@ -55,7 +56,7 @@ describe('creature develop UI (live scene + send panel)', () => {
     expect(game.latestHud().creatureXpByTier).toEqual({ [FIEND.tier]: STARTING_XP });
 
     const panel = screen.getByRole('region', { name: 'Creep sending panel' });
-    fireEvent.click(within(panel).getByRole('button', { name: /^Develop creatures/ }));
+    fireEvent.click(screen.getByRole('button', { name: /^Develop creatures/ }));
     fireEvent.click(within(panel).getByRole('button', { name: /^Develop Crypt Fiend/ }));
     const dialog = screen.getByRole('dialog', { name: 'Develop Crypt Fiend' });
     fireEvent.click(
@@ -88,7 +89,7 @@ describe('creature develop UI (live scene + send panel)', () => {
     expect(upgrade.getAttribute('aria-disabled')).toBe('true');
     expect(upgrade.querySelector('[data-creature-grade]')?.textContent).toBe('G2/4');
 
-    fireEvent.click(within(panel).getByRole('button', { name: /^Develop creatures/ }));
+    fireEvent.click(screen.getByRole('button', { name: /^Develop creatures/ }));
     const send = within(panel).getByRole('button', { name: /^Send Crypt Fiend/ });
     expect(send.getAttribute('aria-label')).toContain(`Grade 2 of 4, ${FIEND_B.name}`);
     act(() => {

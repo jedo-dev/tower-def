@@ -1,132 +1,108 @@
-/* Compact floating strip: one row over the battlefield, never a panel. */
-.queue {
-  position: absolute;
-  top: var(--space-md);
-  left: var(--space-md);
-  right: var(--space-md);
-  z-index: var(--z-index-canvas-strip);
+/*
+ * The next-wave plate above the board: kit iron frame, race emblem, gold
+ * Cinzel title over a steel subtitle, creature portraits with counts on the
+ * right. A fixed-height flow row, never over the board's cells.
+ */
+.plate {
   display: flex;
   align-items: center;
   gap: var(--space-md);
-  min-height: 40px;
-  padding: 8px 14px;
-  border: 0;
-  border-image-source: url('/assets/ui/kit/panel-wide.png');
-  border-image-slice: 22 fill;
-  border-image-width: 16px;
-  border-image-repeat: stretch;
-  background: transparent;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5);
-  pointer-events: none;
+  height: var(--match-plate-height);
+  padding: var(--space-xs) var(--space-lg);
+  border-image-width: var(--match-frame-rim);
+  box-shadow: var(--shadow-codex-bar);
 }
 
-.header {
+.emblem {
+  flex: 0 0 var(--match-plate-emblem-size);
+  filter: drop-shadow(0 0 6px var(--color-accent-gold-glow));
+}
+
+.titles {
+  flex: 1 1 auto;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 1px;
-  flex: 0 0 auto;
 }
 
-.content {
-  display: flex;
-  align-items: center;
-  gap: var(--space-xs);
-  flex: 1 1 auto;
-  min-width: 0;
+.title {
+  margin: 0;
   overflow: hidden;
-}
-
-.empty {
-  display: flex;
-  align-items: center;
-  flex: 1 1 auto;
-  justify-content: flex-end;
-}
-
-.label {
   font-family: var(--font-family-display);
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-lg);
   font-weight: 700;
   letter-spacing: 0.06em;
+  line-height: 1.1;
+  text-overflow: ellipsis;
   text-transform: uppercase;
-  color: #e8c25f;
-  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.9);
   white-space: nowrap;
+  color: var(--color-accent-gold);
+  text-shadow: var(--shadow-codex-drop);
 }
 
-.count,
-.emptyText,
-.enemyFieldStatus,
-.baselineHint,
-.sectionLabel {
+.subtitle {
+  margin: 0;
+  overflow: hidden;
   font-family: var(--font-family-ui);
-  font-size: var(--font-size-2xs);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  font-size: var(--font-size-xs);
+  line-height: 1.2;
+  text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.count {
   color: var(--color-text-secondary);
 }
-.emptyText {
-  color: var(--color-text-label);
-}
+
 .enemyFieldStatus {
   color: var(--color-text-warning);
 }
-.baselineHint {
-  color: var(--color-text-muted);
-  flex: 0 0 auto;
-}
-.sectionLabel {
-  color: var(--color-text-danger);
-  flex: 0 0 auto;
-}
 
-/* Sections sit inline in the strip instead of stacking into rows. */
-.section {
+/* Portrait strip: a framed square per creature type, "×4" on its corner. */
+.groups {
+  flex: 0 0 auto;
   display: flex;
   align-items: center;
   gap: var(--space-xs);
-  min-width: 0;
-  overflow: hidden;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
-.icon {
-  width: 28px;
-  height: 28px;
-  flex: 0 0 auto;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 0;
-  border-image-source: url('/assets/ui/kit/slot-empty.png');
-  border-image-slice: 14 fill;
-  border-image-width: 6px;
-  border-image-repeat: stretch;
-}
-
+.group,
 .more {
-  flex: 0 0 auto;
-  display: flex;
+  position: relative;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
-  border: 0;
-  border-image-source: url('/assets/ui/kit/slot-empty.png');
-  border-image-slice: 14 fill;
-  border-image-width: 6px;
-  border-image-repeat: stretch;
+  width: var(--match-plate-portrait-size);
+  height: var(--match-plate-portrait-size);
+  box-shadow: 0 0 0 1px var(--color-gold-trim);
+  border-radius: var(--radius-sm);
+}
+
+.portrait {
+  --unit-icon-size: var(--match-plate-portrait-size);
+  --placeholder-icon-size: var(--match-plate-portrait-size);
+}
+
+.count {
+  position: absolute;
+  right: calc(var(--space-2xs) * -1);
+  bottom: calc(var(--space-2xs) * -1);
+  padding: 0 var(--space-2xs);
+  border-radius: var(--radius-sm);
+  background: var(--color-codex-pressed);
   font-family: var(--font-family-stats);
   font-size: var(--font-size-2xs);
   font-weight: 700;
-  color: #e6e9ef;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+  color: var(--color-text-primary);
 }
 
-/* Creature portrait inset in the slot frame. */
-.portrait {
-  --unit-icon-size: 22px;
-  --placeholder-icon-size: 22px;
+.more {
+  background: var(--color-codex-pressed);
+  font-family: var(--font-family-stats);
+  font-size: var(--font-size-2xs);
+  font-weight: 700;
+  color: var(--color-text-primary);
 }

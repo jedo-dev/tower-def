@@ -3,6 +3,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { act, render, screen } from '@testing-library/react';
 import { publishGameEvent, publishGameHudSnapshot } from '../../../shared/lib/game-bridge/bridge';
 import type { GameHudSnapshot } from '../../../shared/lib/game-bridge/types';
+import { RaceId } from '../../../shared/types/content-ids';
+import { toFactionEmblemSource } from '../../../shared/ui/faction-emblem';
 import { WaveQueue } from './WaveQueue';
 
 function createSnapshot(overrides?: Partial<GameHudSnapshot>): GameHudSnapshot {
@@ -64,13 +66,18 @@ describe('WaveQueue render', () => {
     const portraitSources = screen
       .getAllByRole('img')
       .map((icon) => icon.querySelector('img')?.getAttribute('src'));
+    // One portrait per creature type, in order of first appearance, with its count.
     expect(portraitSources).toEqual([
       '/assets/ui/portraits/undead_ghoul.webp',
-      '/assets/ui/portraits/undead_ghoul.webp',
       '/assets/ui/portraits/undead_skeleton.webp',
-      '/assets/ui/portraits/undead_ghoul.webp',
       '/assets/ui/portraits/undead_gargoyle.webp',
     ]);
+    expect(screen.getAllByRole('listitem').map((item) => item.getAttribute('aria-label'))).toEqual([
+      '3 Ghoul',
+      '1 Skeleton',
+      '1 Gargoyle',
+    ]);
+    expect(screen.getByText('×3')).toBeDefined();
     expect(consoleError).not.toHaveBeenCalled();
   });
 
@@ -108,10 +115,45 @@ describe('WaveQueue render', () => {
 
     render(<WaveQueue />);
 
-    expect(screen.getByText('Next: Wave 4')).toBeDefined();
+    expect(screen.getByRole('heading', { name: 'Next: Wave 4' })).toBeDefined();
+    expect(screen.getByText('baseline + 2 enemy sends')).toBeDefined();
+    expect(screen.getByRole('listitem', { name: '1 Ghoul' })).toBeDefined();
+    expect(screen.getByRole('listitem', { name: '1 Gargoyle' })).toBeDefined();
+    expect(consoleError).not.toHaveBeenCalled();
+  });
+
+  it('leads the plate with the player race emblem and names a quiet build phase', () => {
+    publishGameHudSnapshot(createSnapshot({ phase: 'build' }));
+
+    const { container } = render(<WaveQueue race={RaceId.ELF} />);
+
+    expect(container.querySelector('img')?.getAttribute('src')).toBe(
+      toFactionEmblemSource(RaceId.ELF),
+    );
     expect(screen.getByText('Baseline wave')).toBeDefined();
-    expect(screen.getByText('Enemy sends')).toBeDefined();
-    expect(screen.getByText('+2 enemy sends')).toBeDefined();
+    expect(screen.queryByRole('list')).toBeNull();
+    expect(consoleError).not.toHaveBeenCalled();
+  });
+
+  it('folds creature types past the fourth into a "+N" tile', () => {
+    publishGameHudSnapshot(
+      createSnapshot({
+        phase: 'wave',
+        pendingCreepCount: 5,
+        waveQueue: [
+          'undead_skeleton',
+          'undead_ghoul',
+          'undead_crypt_fiend',
+          'undead_gargoyle',
+          'orc_grunt',
+        ].map((creepTypeId, index) => ({ creepTypeId, index })),
+      }),
+    );
+
+    render(<WaveQueue />);
+
+    expect(screen.getAllByRole('listitem')).toHaveLength(5);
+    expect(screen.getByRole('listitem', { name: '1 more creature types' }).textContent).toBe('+1');
     expect(consoleError).not.toHaveBeenCalled();
   });
 

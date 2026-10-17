@@ -11,6 +11,7 @@ import {
 import { publishGameHudSnapshot, resetGameBridgeState } from '../../shared/lib/game-bridge/bridge';
 import type { GameHudSnapshot } from '../../shared/lib/game-bridge/types';
 import { RaceId } from '../../shared/types/content-ids';
+import { MATCH_STATUS_LABEL } from '../../widgets/hud';
 import { QUIT_DIALOG_TITLE } from '../../widgets/match-controls';
 import { GamePage } from './GamePage';
 
@@ -110,7 +111,7 @@ describe('GamePage', () => {
     expect(consoleError).not.toHaveBeenCalled();
   });
 
-  it('keeps the duel event feed beside the board, not over it, and folds the send cards behind the build drawer', () => {
+  it('lays the screen out as plate, board, event row and strip, never over the board', () => {
     publishGameHudSnapshot(createActiveSnapshot());
     render(<AppShell />);
 
@@ -122,15 +123,24 @@ describe('GamePage', () => {
     expect(feedRow?.className).toBe('game-feed-row');
     expect(feedRow?.parentElement?.className).toBe('game-viewport');
 
-    const sendPanel = screen.getByRole('region', { name: 'Creep sending panel' });
-    expect(within(sendPanel).getAllByRole('button').length).toBeGreaterThan(0);
-
-    fireEvent.click(screen.getByRole('button', { name: 'Expand HUD' }));
-    expect(screen.getByRole('group', { name: 'Buildable towers' })).toBeDefined();
-    expect(within(sendPanel).queryAllByRole('button')).toHaveLength(0);
-
-    fireEvent.click(screen.getByRole('button', { name: 'Collapse HUD' }));
-    expect(within(sendPanel).getAllByRole('button').length).toBeGreaterThan(0);
+    // Document order is the portrait layout order.
+    const viewportChildren = Array.from(feedRow?.parentElement?.children ?? []);
+    const plate = screen.getByRole('region', { name: 'Wave queue' });
+    const strip = document.querySelector('.game-panels');
+    expect(board?.contains(plate)).toBe(false);
+    expect(viewportChildren.map((child) => child.className)).toEqual(
+      expect.arrayContaining(['game-plate-slot', 'game-canvas-area', 'game-feed-row']),
+    );
+    expect(viewportChildren.indexOf(plate.parentElement as Element)).toBe(0);
+    expect(viewportChildren.indexOf(strip as Element)).toBe(
+      viewportChildren.indexOf(feedRow as Element) + 1,
+    );
+    // The strip: the status bar over the dock.
+    const status = screen.getByRole('region', { name: MATCH_STATUS_LABEL });
+    const dock = screen.getByRole('region', { name: 'Action dock' });
+    expect(status.parentElement).toBe(strip);
+    expect(status.compareDocumentPosition(dock) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(within(dock).getAllByRole('tab')).toHaveLength(2);
     expect(consoleError).not.toHaveBeenCalled();
   });
 

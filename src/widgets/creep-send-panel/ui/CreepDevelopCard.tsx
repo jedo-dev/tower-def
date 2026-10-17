@@ -72,7 +72,7 @@ export function CreepDevelopCard({ creature, faction }: CreepDevelopCardProps) {
     <>
       <button
         type="button"
-        className={`ui-slot ${panelStyles.button} ${styles.card}${isBlocked ? ` ${styles.cardBlocked}` : ''}`}
+        className={`ui-slot ${panelStyles.card} ${styles.card}${isBlocked ? ` ${styles.cardBlocked}` : ''}`}
         aria-label={label}
         aria-disabled={isBlocked || undefined}
         aria-haspopup={action.kind === 'develop' ? 'dialog' : undefined}
@@ -82,13 +82,15 @@ export function CreepDevelopCard({ creature, faction }: CreepDevelopCardProps) {
         data-develop-card={action.kind}
         onClick={handleClick}
       >
-        <UnitIcon
-          unitId={creature.creepTypeId}
-          label={creature.name}
-          faction={faction}
-          className={panelStyles.buttonIcon}
-        />
-        <span className={panelStyles.buttonName}>{creature.name}</span>
+        <span className={panelStyles.portrait}>
+          <UnitIcon
+            unitId={creature.creepTypeId}
+            label={creature.name}
+            faction={faction}
+            className={panelStyles.portraitIcon}
+          />
+        </span>
+        <span className={panelStyles.name}>{creature.name}</span>
         <span className={styles.action} aria-hidden="true">
           <span className={styles.verb}>{verb}</span>
           {cost !== null && <span className={styles.cost}>{cost} XP</span>}

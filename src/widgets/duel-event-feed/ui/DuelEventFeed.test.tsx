@@ -115,8 +115,12 @@ describe('DuelEventFeed render', () => {
     expect(stripStyle.background).toContain('var(--color-surface-feed)');
     expect(stripStyle.minHeight).toBe('var(--touch-target-min)');
 
+    // The whole well is the toggle: at least one touch target tall, as wide as the strip.
     const toggle = screen.getByRole('button', { name: 'Show all duel events' });
-    expect(getComputedStyle(toggle).width).toBe('var(--touch-target-min)');
+    const toggleStyle = getComputedStyle(toggle);
+    expect(toggleStyle.position).toBe('absolute');
+    expect(toggleStyle.inset).toBe('0px');
+    expect(toggleStyle.minHeight).toBe('var(--touch-target-min)');
     injected.remove();
     expect(consoleError).not.toHaveBeenCalled();
   });
