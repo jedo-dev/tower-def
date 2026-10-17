@@ -9,6 +9,7 @@ import { applySpriteSheetFiltering } from '../../runtime/assets/gameSceneAssetLo
 import { startMissingArtReport, stopMissingArtReport } from '../../runtime/assets/missingArtReport';
 import { ensurePlaceholderTextures } from '../../runtime/assets/placeholderTexture';
 import { destroyBattlefieldRenderState } from '../../runtime/battlefield/battlefieldRenderState';
+import { destroySideScenery } from '../../runtime/battlefield/sideScenery';
 import { registerResponsiveCamera } from '../../runtime/camera/gameSceneCameraRuntime';
 import { drainCreepAdornmentPool } from '../../runtime/creep/creepAdornments';
 import { ensureCreepAdornmentTextures } from '../../runtime/creep/creepAdornmentTextures';
@@ -28,6 +29,7 @@ import {
 import { createInputControllerState } from '../../runtime/input/gameSceneInputController';
 import { clearFieldWaveSchedule } from '../../runtime/wave/fieldWaveSpawns';
 import { BUILD_PREVIEW_RENDER_DEPTH, ROUTE_PREVIEW_RENDER_DEPTH } from '../gameScene.constants';
+import { syncVisibleSideScenery } from './battlefieldViewController';
 import { updateBuildPreview, updateGridOverlayVisualState } from './boardRenderController';
 import { registerBridgeCommandHandlers } from './bridgeCommandRegistry';
 import type { GameSceneContext } from './gameSceneContext';
@@ -81,6 +83,7 @@ export function createScene(context: GameSceneContext): void {
   state.boardCamera = null;
   state.teardownCallbacks.push(registerResponsiveCamera(scene, getBoardCamera(context)));
   drawGrid(context);
+  syncVisibleSideScenery(context);
   registerInput(context);
   state.buildPreviewOverlay = scene.add.graphics();
   state.buildPreviewOverlay.setDepth(BUILD_PREVIEW_RENDER_DEPTH);
@@ -111,6 +114,7 @@ function destroyBoardGraphics(context: GameSceneContext): void {
   const { state } = context;
   destroyBattlefieldRenderState(state.playerField);
   destroyBattlefieldRenderState(state.opponentField);
+  destroySideScenery(state.sideScenery);
   // After both fields released their creeps' adornments into the pool.
   drainCreepAdornmentPool(state.creepAdornmentPool);
   state.buildPreviewOverlay?.destroy();

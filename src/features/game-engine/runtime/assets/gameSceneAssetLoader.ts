@@ -8,6 +8,7 @@ import {
   UNIT_SPRITE_KEYS,
   UNIT_SPRITE_SHEET_FRAME,
 } from '../../../../shared/constants/sprites';
+import { TERRAIN_SIDE_SCENERY_ASSETS } from '../../../../shared/constants/terrain';
 import { resolveSpriteSheetFilter, type SpriteSheetFilter } from '../creep/creepSpriteScale';
 
 function forEachTerrainTextureKey(callback: (textureKey: string, url: string) => void): void {
@@ -20,15 +21,33 @@ function forEachTerrainTextureKey(callback: (textureKey: string, url: string) =>
   });
 }
 
+/**
+ * Side-scenery strips of every race (tower-def-jsl): the opponent's race is
+ * only known once the match is set up, and the eight strips weigh ~860 KB, so
+ * they are preloaded with the rest of the terrain rather than lazily.
+ */
+function forEachSideSceneryTexture(callback: (textureKey: string, url: string) => void): void {
+  Object.values(TERRAIN_SIDE_SCENERY_ASSETS).forEach((strips) => {
+    callback(strips.left.key, strips.left.path);
+    callback(strips.right.key, strips.right.path);
+  });
+}
+
+function forEachLinearTerrainTexture(callback: (textureKey: string, url: string) => void): void {
+  forEachTerrainTextureKey(callback);
+  forEachSideSceneryTexture(callback);
+}
+
 export function preloadGameSceneAssets(scene: Phaser.Scene): void {
-  forEachTerrainTextureKey((textureKey, url) => {
+  forEachLinearTerrainTexture((textureKey, url) => {
     if (!scene.textures.exists(textureKey)) {
       scene.load.image(textureKey, url);
     }
   });
 
   scene.load.once(Phaser.Loader.Events.COMPLETE, () => {
-    forEachTerrainTextureKey((textureKey) => {
+    // Painted art is downscaled: sample it smoothly despite the pixel-art default.
+    forEachLinearTerrainTexture((textureKey) => {
       if (scene.textures.exists(textureKey)) {
         scene.textures.get(textureKey).setFilter(Phaser.Textures.FilterMode.LINEAR);
       }
