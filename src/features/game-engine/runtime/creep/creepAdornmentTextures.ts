@@ -3,6 +3,7 @@ import {
   CREEP_ADORNMENT_TEXTURE_HEIGHT_PX,
   CREEP_ADORNMENT_TEXTURE_KEYS,
   CREEP_ADORNMENT_TEXTURE_WIDTH_PX,
+  CREEP_RING_TEXTURE_LINE_WIDTH_PX,
 } from '../../scenes/creepReadability.constants';
 
 type CanvasPainter = (context: CanvasRenderingContext2D, width: number, height: number) => void;
@@ -22,6 +23,16 @@ function paintShadow(context: CanvasRenderingContext2D, width: number, height: n
   context.arc(0, 0, radius, 0, Math.PI * 2);
   context.fill();
   context.restore();
+}
+
+/** A thin white ellipse outline, tinted per sender race. */
+function paintRing(context: CanvasRenderingContext2D, width: number, height: number): void {
+  const inset = CREEP_RING_TEXTURE_LINE_WIDTH_PX / 2 + 1;
+  context.strokeStyle = '#ffffff';
+  context.lineWidth = CREEP_RING_TEXTURE_LINE_WIDTH_PX;
+  context.beginPath();
+  context.ellipse(width / 2, height / 2, width / 2 - inset, height / 2 - inset, 0, 0, Math.PI * 2);
+  context.stroke();
 }
 
 function createCanvasTexture(
@@ -54,5 +65,12 @@ export function ensureCreepAdornmentTextures(scene: Phaser.Scene): void {
     CREEP_ADORNMENT_TEXTURE_WIDTH_PX,
     CREEP_ADORNMENT_TEXTURE_HEIGHT_PX,
     paintShadow,
+  );
+  createCanvasTexture(
+    scene,
+    CREEP_ADORNMENT_TEXTURE_KEYS.RING,
+    CREEP_ADORNMENT_TEXTURE_WIDTH_PX,
+    CREEP_ADORNMENT_TEXTURE_HEIGHT_PX,
+    paintRing,
   );
 }

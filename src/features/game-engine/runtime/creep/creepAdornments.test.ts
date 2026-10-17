@@ -53,6 +53,10 @@ function shadowOf(creep: CreepRenderState): FakeGameObject {
   return creep.adornments?.shadow as unknown as FakeGameObject;
 }
 
+function ringOf(creep: CreepRenderState): FakeGameObject {
+  return creep.adornments?.ring as unknown as FakeGameObject;
+}
+
 describe('writeCreepShadowLayout', () => {
   it('puts a ground creep shadow under its feet', () => {
     const layout = writeCreepShadowLayout(32, UnitMoveType.GROUND, createCreepShadowLayout());
@@ -76,7 +80,7 @@ describe('creep adornments', () => {
   it('draws the shadow below the creep and follows the sprite', () => {
     const factory = new FakeObjectFactory();
     const creep = createCreep(factory);
-    attachCreepAdornments(createScene(factory), createCreepAdornmentPool(), creep);
+    attachCreepAdornments(createScene(factory), createCreepAdornmentPool(), creep, undefined);
     const shadow = shadowOf(creep);
 
     expect(shadow.depth).toBe(CREEP_SHADOW_RENDER_DEPTH);
@@ -91,7 +95,7 @@ describe('creep adornments', () => {
   it('hides with the sprite and once the creep is dead', () => {
     const factory = new FakeObjectFactory();
     const creep = createCreep(factory);
-    attachCreepAdornments(createScene(factory), createCreepAdornmentPool(), creep);
+    attachCreepAdornments(createScene(factory), createCreepAdornmentPool(), creep, undefined);
 
     creep.sprite.setVisible(false);
     syncCreepAdornments(creep);
@@ -103,12 +107,36 @@ describe('creep adornments', () => {
     expect(shadowOf(creep).visible).toBe(false);
   });
 
+  it('rings a sent creep in the sender colour and leaves a baseline creep bare', () => {
+    const factory = new FakeObjectFactory();
+    const scene = createScene(factory);
+    const pool = createCreepAdornmentPool();
+    const sent = createCreep(factory, { sender: 'opponent' });
+    const baseline = createCreep(factory);
+    attachCreepAdornments(scene, pool, sent, 0xec7048);
+    attachCreepAdornments(scene, pool, baseline, undefined);
+    const sentRing = ringOf(sent);
+
+    expect(sentRing.visible).toBe(true);
+    expect(sentRing.tint).toBe(0xec7048);
+    expect(sentRing.depth).toBeGreaterThan(shadowOf(sent).depth);
+    expect(sentRing.depth).toBeLessThan(CREEP_RENDER_DEPTH);
+    expect(ringOf(baseline).visible).toBe(false);
+
+    // A pooled record that carried a ring loses it on a baseline creep.
+    releaseCreepAdornments(sent);
+    const next = createCreep(factory);
+    attachCreepAdornments(scene, pool, next, undefined);
+    expect(ringOf(next)).toBe(sentRing);
+    expect(sentRing.visible).toBe(false);
+  });
+
   it('reuses released records instead of creating new images', () => {
     const factory = new FakeObjectFactory();
     const scene = createScene(factory);
     const pool = createCreepAdornmentPool();
     const first = createCreep(factory);
-    attachCreepAdornments(scene, pool, first);
+    attachCreepAdornments(scene, pool, first, undefined);
     const firstShadow = shadowOf(first);
     releaseCreepAdornments(first);
 
@@ -117,7 +145,7 @@ describe('creep adornments', () => {
 
     const second = createCreep(factory);
     const createdBefore = factory.createdObjects.length;
-    attachCreepAdornments(scene, pool, second);
+    attachCreepAdornments(scene, pool, second, undefined);
 
     expect(factory.createdObjects.length).toBe(createdBefore);
     expect(shadowOf(second)).toBe(firstShadow);
@@ -127,7 +155,7 @@ describe('creep adornments', () => {
     const factory = new FakeObjectFactory();
     const pool = createCreepAdornmentPool();
     const creep = createCreep(factory);
-    attachCreepAdornments(createScene(factory), pool, creep);
+    attachCreepAdornments(createScene(factory), pool, creep, undefined);
     const shadow = shadowOf(creep);
     releaseCreepAdornments(creep);
     drainCreepAdornmentPool(pool);
