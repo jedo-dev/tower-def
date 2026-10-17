@@ -25,13 +25,13 @@ function side(
 
 describe('features/duel-simulation/duelBatchCreatureDevelopment', () => {
   it('prices a branch and its bought grades by the creature tier', () => {
-    // Skeleton is tier 1: branch 4, grades 6 + 10.
+    // Skeleton is tier 1: branch 6, grades 2 + 5.
     expect(
       computeCreatureXpSpent(
         { undead_skeleton: 'undead_skeleton_bone_legion' },
         { undead_skeleton: 2 },
       ),
-    ).toBe(20);
+    ).toBe(13);
     expect(computeCreatureXpSpent({}, {})).toBe(0);
   });
 

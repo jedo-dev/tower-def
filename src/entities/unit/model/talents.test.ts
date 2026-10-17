@@ -47,23 +47,23 @@ describe('creature experience', () => {
   });
 
   it('prices the branch and grades by tier, with no grade past 4', () => {
-    expect(getCreatureBranchCost(UnitTier.TIER_2)).toBe(8);
+    expect(getCreatureBranchCost(UnitTier.TIER_2)).toBe(12);
     expect(
       [0, 1, 2, 3, 4].map((grade) => getNextCreatureGradeCost(UnitTier.TIER_2, grade as 0)),
-    ).toEqual([12, 20, 32, 52, null]);
+    ).toEqual([4, 10, 20, 36, null]);
   });
 });
 
 describe('canChooseCreatureBranch', () => {
   it('allows a branch of a creature without one for the branch price', () => {
     expect(
-      canChooseCreatureBranch(FIEND, BRANCH_A.id, NO_CREATURE_BRANCH_CHOICES, { 2: 8 }),
-    ).toEqual({ allowed: true, cost: 8 });
+      canChooseCreatureBranch(FIEND, BRANCH_A.id, NO_CREATURE_BRANCH_CHOICES, { 2: 12 }),
+    ).toEqual({ allowed: true, cost: 12 });
   });
 
   it('refuses one experience short, counting only the creature tier', () => {
     expect(
-      canChooseCreatureBranch(FIEND, BRANCH_A.id, NO_CREATURE_BRANCH_CHOICES, { 1: 100, 2: 7 }),
+      canChooseCreatureBranch(FIEND, BRANCH_A.id, NO_CREATURE_BRANCH_CHOICES, { 1: 100, 2: 11 }),
     ).toEqual({ allowed: false, reason: 'not_enough_xp' });
   });
 
@@ -91,9 +91,9 @@ describe('canChooseCreatureBranch', () => {
 
 describe('chooseCreatureBranch and upgradeCreature', () => {
   it('spends the tier experience and records the pick', () => {
-    const result = chooseCreatureBranch(ledgerWithXp(10), FIEND, BRANCH_B.id);
+    const result = chooseCreatureBranch(ledgerWithXp(14), FIEND, BRANCH_B.id);
 
-    expect(result.check).toEqual({ allowed: true, cost: 8 });
+    expect(result.check).toEqual({ allowed: true, cost: 12 });
     expect(result.ledger.creatureXpByTier).toEqual({ 2: 2 });
     expect(result.ledger.creatureBranchChoices).toEqual({ undead_crypt_fiend: BRANCH_B.id });
   });
@@ -111,7 +111,7 @@ describe('chooseCreatureBranch and upgradeCreature', () => {
 
   it('climbs grades 1-4 along the branch, each for its price, then stops', () => {
     let ledger = chooseCreatureBranch(
-      ledgerWithXp(8 + 12 + 20 + 32 + 52),
+      ledgerWithXp(12 + 4 + 10 + 20 + 36),
       FIEND,
       BRANCH_A.id,
     ).ledger;
@@ -132,7 +132,7 @@ describe('chooseCreatureBranch and upgradeCreature', () => {
   });
 
   it('refuses a grade the tier cannot afford', () => {
-    const ledger = chooseCreatureBranch(ledgerWithXp(8 + 11), FIEND, BRANCH_A.id).ledger;
+    const ledger = chooseCreatureBranch(ledgerWithXp(12 + 3), FIEND, BRANCH_A.id).ledger;
 
     expect(upgradeCreature(ledger, FIEND).check).toEqual({
       allowed: false,

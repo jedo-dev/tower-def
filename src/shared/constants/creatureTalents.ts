@@ -23,8 +23,8 @@ export type CreatureTalentGradeLevel = (typeof CREATURE_TALENT_GRADE_LEVELS)[num
  */
 export const CreatureTalentPricing = {
   /** Paid once per creature per match, when its branch is chosen. */
-  BRANCH_COST_PER_TIER: 4,
-  GRADE_COSTS_PER_TIER: { 1: 6, 2: 10, 3: 16, 4: 26 },
+  BRANCH_COST_PER_TIER: 6,
+  GRADE_COSTS_PER_TIER: { 1: 2, 2: 5, 3: 10, 4: 18 },
 } as const satisfies {
   BRANCH_COST_PER_TIER: number;
   GRADE_COSTS_PER_TIER: Readonly<Record<CreatureTalentGradeLevel, number>>;

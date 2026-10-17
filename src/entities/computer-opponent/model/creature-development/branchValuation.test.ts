@@ -78,7 +78,7 @@ describe('creature branch valuation', () => {
     const context = fullContext(PHYSICAL_SINGLE_FIELD);
     const value = valueCreatureBranch(grunt, grunt.talentBranches[1]!, context);
     expect(value.gains[3]!).toBeGreaterThan(value.gains[0]!);
-    expect(value.pathXpCost).toBe(62);
+    expect(value.pathXpCost).toBe(41);
     expect(valueCreatureBranch(grunt, grunt.talentBranches[1]!, context)).toEqual(value);
   });
 });

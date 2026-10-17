@@ -69,7 +69,7 @@ describe('mapCreepSendPanelToViewModel', () => {
       isAffordable: true,
       isDisabled: false,
       disabledReason: null,
-      ariaLabel: 'Send Skeleton for 50 gold and gain 10 income. No branch. 0 of 4 XP',
+      ariaLabel: 'Send Skeleton for 50 gold and gain 10 income. No branch. 0 of 6 XP',
     });
   });
 
@@ -83,7 +83,7 @@ describe('mapCreepSendPanelToViewModel', () => {
     expect(viewModel.buttons[0].isDisabled).toBe(true);
     expect(viewModel.buttons[0].disabledReason).toBe('requires 50 gold');
     expect(viewModel.buttons[0].ariaLabel).toBe(
-      'Cannot send Skeleton: requires 50 gold. No branch. 0 of 4 XP',
+      'Cannot send Skeleton: requires 50 gold. No branch. 0 of 6 XP',
     );
   });
 
@@ -97,7 +97,7 @@ describe('mapCreepSendPanelToViewModel', () => {
     expect(viewModel.buttons.every((button) => button.isDisabled)).toBe(true);
     expect(viewModel.buttons[0].disabledReason).toBe('locked in battle');
     expect(viewModel.buttons[0].ariaLabel).toBe(
-      'Cannot send Grunt: locked in battle. No branch. 0 of 4 XP',
+      'Cannot send Grunt: locked in battle. No branch. 0 of 6 XP',
     );
   });
 
@@ -174,10 +174,10 @@ describe('mapCreepSendPanelToViewModel', () => {
     );
     const [skeleton, ghoul] = viewModel.buttons;
 
-    const talent = `Grade 2 of 4, ${SKELETON_BRANCH_B.name}. 7 of 16 XP`;
+    const talent = `Grade 2 of 4, ${SKELETON_BRANCH_B.name}. 7 of 10 XP`;
     expect(skeleton.ariaLabel).toContain(talent);
     expect(skeleton.tooltip).toBe(`Skeleton: ${talent}`);
-    expect(ghoul.tooltip).toBe('Ghoul: No branch. 7 of 4 XP');
+    expect(ghoul.tooltip).toBe('Ghoul: No branch. 7 of 6 XP');
     expect(viewModel.hasAffordableTalent).toBe(true);
     expect(viewModel.xpByTier).toEqual([
       { tier: 1, xp: 7, label: 'T1 7 XP', ariaLabel: 'Tier 1: 7 XP' },

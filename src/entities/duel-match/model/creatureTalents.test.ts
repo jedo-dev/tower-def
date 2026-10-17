@@ -33,15 +33,15 @@ describe('duel creature talents', () => {
 
   it('records a branch and a grade for one side, paying its experience', () => {
     const chosen = recordCreatureBranchChoice(
-      stateWithFiendXp(20),
+      stateWithFiendXp(16),
       'player',
       FIEND.id,
       BRANCH_A.id,
     );
     const upgraded = recordCreatureUpgrade(chosen.state, 'player', FIEND.id);
 
-    expect(chosen.check).toEqual({ allowed: true, cost: 8 });
-    expect(upgraded.check).toEqual({ allowed: true, cost: 12 });
+    expect(chosen.check).toEqual({ allowed: true, cost: 12 });
+    expect(upgraded.check).toEqual({ allowed: true, cost: 4 });
     expect(upgraded.state.player.creatureXpByTier).toEqual({ 2: 0 });
     expect(upgraded.state.player.creatureBranchChoices).toEqual({ [FIEND.id]: BRANCH_A.id });
     expect(upgraded.state.player.creatureGrades).toEqual({ [FIEND.id]: 1 });

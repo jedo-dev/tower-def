@@ -29,7 +29,7 @@ const SKELETON_B = SKELETON.talentBranches[1];
 const GARGOYLE_A = GARGOYLE.talentBranches[0];
 const TOGGLE_LABEL = /^Develop creatures/;
 
-/** Tier 1: 25 XP, tier 2: 3 XP (short of the fiend's 8), tier 3: 12 XP. */
+/** Tier 1: 25 XP, tier 2: 3 XP (short of the fiend's 12), tier 3: 12 XP. */
 function hud(overrides: Partial<GameHudSnapshot> = {}): GameHudSnapshot {
   return {
     gold: 1000,
@@ -96,14 +96,14 @@ describe('CreepSendPanel talents in send mode', () => {
     expect(skeleton.querySelector('[data-creature-grade]')?.textContent).toBe('G2/4');
     expect(skeleton.querySelector('[data-creature-xp]')).not.toBeNull();
     expect(skeleton.getAttribute('aria-label')).toContain(
-      `Grade 2 of 4, ${SKELETON_B.name}. 25 of 16 XP`,
+      `Grade 2 of 4, ${SKELETON_B.name}. 25 of 10 XP`,
     );
     expect(skeleton.getAttribute('title')).toContain(SKELETON_B.name);
 
     const ghoul = screen.getByRole('button', { name: /^Send Ghoul/ });
     expect(within(ghoul).queryByTestId('branch-glyph')).toBeNull();
     expect(ghoul.querySelector('[data-creature-grade]')).toBeNull();
-    expect(ghoul.getAttribute('aria-label')).toContain('No branch. 25 of 4 XP');
+    expect(ghoul.getAttribute('aria-label')).toContain('No branch. 25 of 6 XP');
   });
 
   it('still sends on the main tap', () => {
@@ -154,8 +154,8 @@ describe('CreepSendPanel develop mode', () => {
     enterDevelopMode();
 
     const develop = screen.getByRole('button', { name: /^Develop Ghoul/ });
-    expect(develop.getAttribute('aria-label')).toBe('Develop Ghoul: choose a branch for 4 XP');
-    expect(develop.textContent).toContain('4 XP');
+    expect(develop.getAttribute('aria-label')).toBe('Develop Ghoul: choose a branch for 6 XP');
+    expect(develop.textContent).toContain('6 XP');
     expect(develop.getAttribute('aria-disabled')).toBeNull();
     expect(develop.getAttribute('aria-haspopup')).toBe('dialog');
     expect(develop.getAttribute('data-sound')).toBe('ui.open');
@@ -168,7 +168,7 @@ describe('CreepSendPanel develop mode', () => {
     const develop = screen.getByRole('button', { name: /^Develop Crypt Fiend/ });
     expect(develop.getAttribute('aria-disabled')).toBe('true');
     expect(develop.getAttribute('data-sound')).toBe('ui.error');
-    expect(describedReason(develop)).toBe(`Needs ${FIEND.tier * 4} XP`);
+    expect(describedReason(develop)).toBe(`Needs ${FIEND.tier * 6} XP`);
 
     fireEvent.click(develop);
     expect(screen.queryByRole('dialog')).toBeNull();
@@ -180,7 +180,7 @@ describe('CreepSendPanel develop mode', () => {
     show();
     enterDevelopMode();
 
-    const upgrade = screen.getByRole('button', { name: 'Upgrade Skeleton to grade 3 for 16 XP' });
+    const upgrade = screen.getByRole('button', { name: 'Upgrade Skeleton to grade 3 for 10 XP' });
     expect(upgrade.getAttribute('data-sound')).toBe('ui.success');
     expect(
       within(upgrade).getByTestId('branch-glyph').querySelector('img')?.getAttribute('src'),
@@ -194,12 +194,12 @@ describe('CreepSendPanel develop mode', () => {
   it('blocks the upgrade with a reason when XP is short', () => {
     const handler = vi.fn();
     const unsubscribe = onGameCommand('upgrade-creature', handler);
-    show(hud({ creatureXpByTier: { 1: 10 } }));
+    show(hud({ creatureXpByTier: { 1: 9 } }));
     enterDevelopMode();
 
     const upgrade = screen.getByRole('button', { name: /^Upgrade Skeleton/ });
     expect(upgrade.getAttribute('aria-disabled')).toBe('true');
-    expect(describedReason(upgrade)).toBe('Needs 16 XP');
+    expect(describedReason(upgrade)).toBe('Needs 10 XP');
     fireEvent.click(upgrade);
     expect(handler).not.toHaveBeenCalled();
     unsubscribe();
@@ -248,7 +248,7 @@ describe('CreepSendPanel creature branch chooser', () => {
       const rowHeaders = within(table).getAllByRole('rowheader');
       expect(rowHeaders.map((cell) => cell.textContent)).toEqual(['1', '2', '3', '4']);
       expect(
-        within(card).getByRole('button', { name: `Choose ${branch.name} for 4 XP` }),
+        within(card).getByRole('button', { name: `Choose ${branch.name} for 6 XP` }),
       ).toBeDefined();
     }
     expect(within(dialog).getByText(formatCreatureBranchLockWarning('Ghoul'))).toBeDefined();
@@ -264,10 +264,10 @@ describe('CreepSendPanel creature branch chooser', () => {
     const confirm = within(dialog).getByRole('button', { name: 'Confirm branch' });
     expect((confirm as HTMLButtonElement).disabled).toBe(true);
     fireEvent.click(
-      within(dialog).getByRole('button', { name: `Choose ${GHOUL_B.name} for 4 XP` }),
+      within(dialog).getByRole('button', { name: `Choose ${GHOUL_B.name} for 6 XP` }),
     );
     fireEvent.click(
-      within(dialog).getByRole('button', { name: `Confirm ${GHOUL_B.name} for 4 XP` }),
+      within(dialog).getByRole('button', { name: `Confirm ${GHOUL_B.name} for 6 XP` }),
     );
 
     expect(handler).toHaveBeenCalledTimes(1);
@@ -292,7 +292,7 @@ describe('CreepSendPanel creature branch chooser', () => {
       );
     });
 
-    const ghoul = screen.getByRole('button', { name: 'Upgrade Ghoul to grade 1 for 6 XP' });
+    const ghoul = screen.getByRole('button', { name: 'Upgrade Ghoul to grade 1 for 2 XP' });
     expect(ghoul.querySelector('[data-creature-grade]')?.textContent).toBe('G0/4');
     expect(
       within(ghoul).getByTestId('branch-glyph').querySelector('img')?.getAttribute('src'),
@@ -315,7 +315,7 @@ describe('CreepSendPanel creature branch chooser', () => {
     expect(document.activeElement).toBe(dialog);
     fireEvent.keyDown(dialog, { key: 'Tab' });
     const firstChoose = within(dialog).getByRole('button', {
-      name: `Choose ${GHOUL_A.name} for 4 XP`,
+      name: `Choose ${GHOUL_A.name} for 6 XP`,
     });
     expect(document.activeElement).toBe(firstChoose);
     fireEvent.keyDown(dialog, { key: 'Tab', shiftKey: true });
