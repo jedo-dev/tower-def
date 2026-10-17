@@ -91,6 +91,9 @@ export class FakeGameObject extends FakeEventEmitter {
   /** Rectangles a Graphics object filled since its last clear(), in call order. */
   public readonly fillRects: Array<{ x: number; y: number; width: number; height: number }> = [];
   public readonly texture: { key: string };
+  /** Sheet frame set through `setTexture(key, frame)`, if any. */
+  public frameName: string | number | null = null;
+  public name = '';
   private readonly dataByKey = new Map<string, unknown>();
 
   public constructor(
@@ -156,8 +159,14 @@ export class FakeGameObject extends FakeEventEmitter {
     return this;
   }
 
-  public setTexture(key: string): this {
+  public setTexture(key: string, frame?: string | number): this {
     this.texture.key = key;
+    this.frameName = frame ?? null;
+    return this;
+  }
+
+  public setName(name: string): this {
+    this.name = name;
     return this;
   }
 

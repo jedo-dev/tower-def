@@ -163,18 +163,16 @@ export const GRID_LINE_WIDTH = 1;
 export const GRID_MINOR_LINE_ALPHA = 0.35;
 export const GRID_MAJOR_LINE_ALPHA = 0.85;
 export const GRID_MAJOR_LINE_EVERY_CELLS = TowerFootprint.SIZE;
-export const ENTRANCE_EXIT_LABEL_FONT_FAMILY = 'Arial';
-export const ENTRANCE_EXIT_LABEL_FONT_SIZE_PX = '10px';
-export const ENTRANCE_EXIT_LABEL_COLOR = '#ffffff';
 export const TERRAIN_RENDER_DEPTH = -20;
 /** The route's trail: above the ground tiles, below the props (terrain + 1). */
 export const PATH_RIBBON_RENDER_DEPTH = TERRAIN_RENDER_DEPTH + 0.5;
 export const GRID_OVERLAY_RENDER_DEPTH = 10;
-export const ENTRANCE_EXIT_LABEL_RENDER_DEPTH = 20;
-export const ENDPOINT_ENTRANCE_MARKER_COLOR = 0x2ecc71;
-export const ENDPOINT_EXIT_MARKER_COLOR = 0xe74c3c;
-export const ENDPOINT_MARKER_FILL_ALPHA = 0.22;
-export const ENDPOINT_MARKER_LINE_WIDTH = 2;
+/**
+ * Faction gates on the entrance and exit (tower-def-alq): above the trail, the
+ * ground and the grid lines, below towers and creeps, so creeps walk out of
+ * the entrance gate and into the exit gate.
+ */
+export const ENDPOINT_GATE_RENDER_DEPTH = 20;
 /** Tint over every cell a tower stands on, drawn on the grid overlay layer. */
 export const OCCUPIED_CELL_FILL_COLOR = 0x263347;
 export const OCCUPIED_CELL_FILL_ALPHA = 0.55;

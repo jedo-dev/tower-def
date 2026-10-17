@@ -47,6 +47,7 @@ import {
   type BuildRoutePreviewRuntime,
 } from '../../runtime/grid/buildRoutePreviewRuntime';
 import type { GridRendererState } from '../../runtime/grid/gameSceneGridRenderer';
+import { createEndpointGateLayer } from '../../runtime/grid/endpointGates';
 import { createPathRibbonState } from '../../runtime/grid/pathRibbonRenderer';
 import {
   createInputControllerState,
@@ -156,8 +157,7 @@ export function createGameSceneState(): GameSceneState {
       gridGraphics: null,
       occupancyGraphics: null,
       terrainSprites: [],
-      gridLabels: [],
-      endpointMarkers: [],
+      endpointGates: createEndpointGateLayer(),
       pathRibbon: createPathRibbonState(),
     },
     buildPreviewOverlay: null,

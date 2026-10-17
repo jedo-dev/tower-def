@@ -33,7 +33,9 @@ import { mapEnemyFactionToHudFaction, mapHudFactionToRaceId } from '../gameScene
 import { GRID_RENDERER_CONFIG, WAVE_RUNTIME_CONFIG } from '../gameScene.runtimeConfigs';
 import {
   getGridRendererDeps,
+  getPlayerPathRoute,
   refreshBuildPhasePathTiles,
+  syncShownEndpointGates,
   updateGridOverlayVisualState,
 } from './boardRenderController';
 import type { GameSceneContext } from './gameSceneContext';
@@ -122,6 +124,8 @@ export function drawGrid(context: GameSceneContext): void {
   markRoutePreviewLayoutChanged(state.routePreview);
   state.arePathTilesStale = true;
   refreshBuildPhasePathTiles(context);
+  // Gates stand from the first frame, whatever the phase (no-op if just synced).
+  syncShownEndpointGates(context, getPlayerPathRoute(state));
 }
 
 function clearMatchRuntime(state: GameSceneState): void {
