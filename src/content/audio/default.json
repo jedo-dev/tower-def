@@ -8,6 +8,7 @@
     "upgrade": "combat.upgrade",
     "creepHit": "combat.creep_hit",
     "creepDeath": "combat.creep_death",
-    "creepEscape": "combat.creep_escape"
+    "creepEscape": "combat.creep_escape",
+    "creepSpawn": "combat.creep_spawn"
   }
 }

@@ -30,7 +30,7 @@ function createEntry(overrides: AuthoredEntry = {}): AuthoredEntry {
 
 function createFile(units: unknown[], overrides: AuthoredEntry = {}): AuthoredEntry {
   return {
-    schemaVersion: 4,
+    schemaVersion: 5,
     race: 'UNDEAD',
     units,
     ...overrides,
@@ -136,7 +136,24 @@ describe('parseUnitContentFile', () => {
 
   it('rejects an unsupported schema version', () => {
     expect(() => parse(createFile([createEntry()], { schemaVersion: 2 }))).toThrow(
-      `${FILE}: unsupported schemaVersion 2, expected 4`,
+      `${FILE}: unsupported schemaVersion 2, expected 5`,
+    );
+  });
+
+  it('migrates a version 4 file: it is a version 5 file without creature sounds', () => {
+    const [unit] = parse(createFile([createEntry()], { schemaVersion: 4 }));
+
+    expect(unit.id).toBe('undead_skeleton');
+    expect(unit.sounds).toBeUndefined();
+  });
+
+  it('rejects creature sounds in a version 4 file, naming the creature', () => {
+    const legacy = createFile([createEntry({ sounds: { creepHit: 'combat.creep_hit' } })], {
+      schemaVersion: 4,
+    });
+
+    expect(() => parse(legacy)).toThrow(
+      `${FILE} [undead_skeleton]: "sounds" needs schemaVersion 5; this file declares schemaVersion 4`,
     );
   });
 
@@ -156,6 +173,39 @@ describe('parseUnitContentFile', () => {
     expect(() => parse(legacy)).toThrow(
       `${FILE} [undead_skeleton]: schemaVersion 1 has a single "armor" and an "armorType"; ` +
         'replace them with "physicalArmor" and "magicalArmor"',
+    );
+  });
+
+  it('reads the creature own sounds, every creature slot optional', () => {
+    const sounds = {
+      creepHit: 'combat.creep_hit',
+      creepDeath: 'combat.creep_death.undead',
+      creepEscape: 'combat.creep_escape',
+      creepSpawn: 'combat.creep_spawn',
+    };
+    const [unit] = parse(createFile([createEntry({ sounds })]));
+    const [partial] = parse(createFile([createEntry({ sounds: { creepSpawn: 'ui.click' } })]));
+    const [silent] = parse(createFile([createEntry()]));
+
+    expect(unit.sounds).toEqual(sounds);
+    expect(partial.sounds).toEqual({ creepSpawn: 'ui.click' });
+    expect(silent).not.toHaveProperty('sounds');
+  });
+
+  it('fails on an unknown creature sound id with the file and creature', () => {
+    expect(() =>
+      parse(createFile([createEntry({ sounds: { creepDeath: 'combat.creep.skeleton.boom' } })])),
+    ).toThrow(
+      `${FILE} [undead_skeleton]: "creepDeath" names an unknown sound id "combat.creep.skeleton.boom"`,
+    );
+  });
+
+  it('rejects tower slots and unknown slots in creature sounds', () => {
+    expect(() =>
+      parse(createFile([createEntry({ sounds: { attack: 'combat.attack.default' } })])),
+    ).toThrow(`${FILE} [undead_skeleton]: unknown field "attack"`);
+    expect(() => parse(createFile([createEntry({ sounds: { roar: 'ui.click' } })]))).toThrow(
+      'unknown field "roar"',
     );
   });
 

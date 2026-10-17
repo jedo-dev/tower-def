@@ -48,6 +48,11 @@ export type FieldSpawnDeps = {
   ) => Phaser.GameObjects.Sprite;
   /** Adds the shadow, sender ring and health bar to a spawned creep. */
   attachCreepAdornments?: (creep: CreepRenderState) => void;
+  /**
+   * A creature someone sent (player or computer) entered this board. Baseline
+   * wave creeps never call it, so only sends announce themselves.
+   */
+  onSentCreepSpawned?: (creep: CreepRenderState) => void;
 };
 
 export type WaveSpawnCadence = {
@@ -142,7 +147,11 @@ export function processPendingWaveSpawns(
   state.pendingWaveSpawns = pending;
 
   for (const spawn of ready) {
-    state.activeCreeps.push(createSpawnedCreep(state, deps, spawn));
+    const creep = createSpawnedCreep(state, deps, spawn);
+    state.activeCreeps.push(creep);
+    if (spawn.sender !== undefined) {
+      deps.onSentCreepSpawned?.(creep);
+    }
   }
 }
 

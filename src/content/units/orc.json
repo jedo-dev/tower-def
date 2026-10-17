@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 4,
+  "schemaVersion": 5,
   "race": "ORC",
   "units": [
     {
@@ -15,6 +15,12 @@
       "spriteKey": "unit.orc.grunt",
       "description": "Brutish warrior that trades footwork for raw bulk.",
       "lore": "Axe, hide, teeth. A grunt needs nothing else and asks for nothing else, and the warchief never has to ask twice.",
+      "sounds": {
+        "creepHit": "combat.creep.orc_grunt.hit",
+        "creepDeath": "combat.creep.orc_grunt.death",
+        "creepEscape": "combat.creep.orc_grunt.escape",
+        "creepSpawn": "combat.creep.orc_grunt.spawn"
+      },
       "talentBranches": [
         {
           "id": "orc_grunt_rage",

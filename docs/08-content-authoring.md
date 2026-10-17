@@ -17,7 +17,7 @@ src/content/
 
 ```json
 {
-  "schemaVersion": 4,
+  "schemaVersion": 5,
   "race": "UNDEAD",
   "units": [
     {
@@ -70,6 +70,7 @@ src/content/
 | `sizeClass` | no | `small`, `medium` (default) or `large`. Decides the footprint and the route a creature walks. |
 | `talentBranches` | yes | Exactly two branches of grades 1-4 a side develops with experience. See "Creature talents" below. |
 | `abilities` | no | Optional creature mechanics; see "Creature abilities" below. |
+| `sounds` | no | The creature's own clips: `creepHit`, `creepDeath`, `creepEscape`, `creepSpawn`, each a registered sound id. A slot left out falls back to the race profile. See "Sound Profiles" below. |
 
 Unknown fields are rejected: add the field to the schema first
 (`src/entities/unit/model/content/unitContent.types.ts`), then to content.
@@ -189,7 +190,8 @@ effects; authored values stay modest.
 | --- | --- |
 | 1 | Retired. A single `armor` plus an `armorType` bonus (unarmored -1, light 0, heavy 2). |
 | 3 | Retired. `physicalArmor` and `magicalArmor`, shared version number with towers. |
-| 4 | Current. Every creature declares two `talentBranches` (grades 1-4); see "Creature talents". |
+| 4 | Accepted and migrated on load: a version 5 file without creature `sounds`. |
+| 5 | Current. A creature may carry its own `sounds`; see "Sound Profiles". |
 
 A version 1 file fails on load naming the file and its first creature. To
 migrate one, set both armors to `max(0, armor + armorType bonus)` (what the
@@ -197,8 +199,14 @@ creature effectively carried before), drop `armorType`, add `talentBranches`
 and set `schemaVersion` to 4. A version 3 file fails the same way
 (`content/units/undead.json [undead_skeleton]: schemaVersion 3 has no talent
 branches; ...`): add `talentBranches` to every creature and set
-`schemaVersion` to 4. The shipped rosters were migrated exactly this way, then re-authored to
+`schemaVersion` to 4 (then 5). The shipped rosters were migrated exactly this way, then re-authored to
 the race armor profiles above (tower-def-6nf.2).
+
+A version 4 file still loads: the loader upgrades it to version 5 in place,
+since the only difference is the optional `sounds`. A version 4 file that
+already authors `sounds` fails (`content/units/orc.json [orc_grunt]: "sounds"
+needs schemaVersion 5; this file declares schemaVersion 4`): set
+`schemaVersion` to 5.
 
 ## Lore voice
 
@@ -860,7 +868,8 @@ stay silent until their wav lands. See `docs/SOUND_ASSET_LIST.md`.
 # Sound Profiles
 
 Which clip a tower or creature plays is authored data, like its stats. Clips
-are registered once in code; profiles in `src/content/audio/` pick them.
+are registered once in code; profiles in `src/content/audio/` pick them, and a
+single tower or creature can override them in its own content entry.
 
 ```txt
 src/content/audio/
@@ -870,15 +879,29 @@ src/content/audio/
     orc.json
     human.json
     elf.json
+src/content/towers/<race>.json   per-tower "sounds"
+src/content/units/<race>.json    per-creature "sounds"
 ```
 
 ## Clips and ids
 
-A sound id (`SOUND_IDS` in `src/shared/types/sound-ids.ts`) names exactly one
+A sound id (`SOUND_IDS` in `src/shared/types/sound-ids/`) names exactly one
 clip, and every clip has its own file (`SOUND_CLIPS` in
 `src/shared/lib/sound-registry/registry/`). Two ids never point at the same file;
 a test enforces it. When two races should sound alike, their profiles name the
 same id, so the sharing is visible in content instead of hidden in a path map.
+
+Ids are declared in one file per group: `core.ts` for race-neutral sounds and
+`undead.ts`, `orc.ts`, `human.ts`, `elf.ts` for each race. Ids of a single
+creature or tower follow one scheme:
+
+| Kind | Id | File |
+| --- | --- | --- |
+| Creature | `combat.creep.<unitId>.<hit\|death\|escape\|spawn>` | `combat/<race>/creeps/<unitId>_<slot>.wav` |
+| Tower | `combat.tower.<towerId>.<attack\|impact\|upgrade>` | `combat/<race>/towers/<towerId>_<slot>.wav` |
+
+A test checks that every such id names a real creature or tower of the race
+whose file declares it.
 
 ## Slots
 
@@ -889,12 +912,17 @@ same id, so the sharing is visible in content instead of hidden in a path map.
 | `build` | a tower is placed | tower |
 | `sell` | a tower is sold | tower |
 | `upgrade` | a tower levels up | tower |
-| `creepHit` | a creature takes a tower hit (throttled) | creature race |
-| `creepDeath` | a creature dies | creature race |
-| `creepEscape` | a creature reaches the exit | creature race |
+| `creepHit` | a creature takes a tower hit (throttled) | creature |
+| `creepDeath` | a creature dies | creature |
+| `creepEscape` | a creature reaches the exit | creature |
+| `creepSpawn` | a **sent** creature (player or computer send) enters the receiving board; baseline wave creeps are silent | creature |
 
 UI, economy, wave and status-effect cues are not slots: they sound the same for
 every race and are played by id.
+
+`creepSpawn` clips use `CREEP_SPAWN_SOUND_COOLDOWN_MS` (1.2 s) in the registry.
+Sends leave the entrance every 350 ms, so a batch of six sends of one creature
+plays its spawn cue once or twice; a test holds every spawn clip to that.
 
 ## Fallback order
 
@@ -906,8 +934,14 @@ For a tower slot the first match wins:
 4. the default profile's `archetypes.<archetype>` entry,
 5. the default profile's `sounds` (always set).
 
-A tower's race is the race of its content file. Creature slots use the
-creature's race profile, then the default.
+A tower's race is the race of its content file. For a creature slot:
+
+1. the creature's own `sounds` entry in `src/content/units/<race>.json`,
+2. the creature's race profile `sounds`,
+3. the default profile's `sounds`.
+
+Creature clips are resolved once per creature when the game's sound router is
+created (`createCreepSoundTable`), so a hit only looks its clip up by unit id.
 
 ## File format
 
@@ -926,46 +960,73 @@ creature's race profile, then the default.
 ```
 
 `default.json` has the same shape without `race`, and its `sounds` must set
-every slot. Archetype entries accept tower slots only.
+every slot (including `creepSpawn`). Archetype entries accept tower slots only.
 
-A tower override sits on the tower entry:
+A tower override sits on the tower entry and accepts any tower slot,
+`upgrade` included:
 
 ```json
 {
-  "id": "orc_lightning_totem",
-  "archetype": "chain",
-  "sounds": { "attack": "combat.attack.chain.orc" }
+  "id": "orc_spear_watchtower",
+  "archetype": "single",
+  "sounds": {
+    "attack": "combat.tower.orc_spear_watchtower.attack",
+    "impact": "combat.tower.orc_spear_watchtower.impact"
+  }
+}
+```
+
+A creature override sits on the unit entry (unit `schemaVersion` 5) and accepts
+creature slots only:
+
+```json
+{
+  "id": "orc_grunt",
+  "sounds": {
+    "creepHit": "combat.creep.orc_grunt.hit",
+    "creepDeath": "combat.creep.orc_grunt.death",
+    "creepEscape": "combat.creep.orc_grunt.escape",
+    "creepSpawn": "combat.creep.orc_grunt.spawn"
+  }
 }
 ```
 
 ## Validation
 
-Profiles load and validate with the module, like stats. Each of these fails
-fast, naming the file and the race, archetype (`ORC/chain`) or tower id:
+Profiles and overrides load and validate with their module, like stats. Each
+of these fails fast, naming the file and the race, archetype (`ORC/chain`),
+tower id or unit id:
 
 - an unknown sound id, e.g. `content/audio/races/orc.json [ORC/chain]:
-  "attack" names an unknown sound id "combat.zap"`,
+  "attack" names an unknown sound id "combat.zap"`, or
+  `content/units/orc.json [orc_grunt]: "creepDeath" names an unknown sound id
+  "combat.creep.orc_grunt.dead"`,
 - an unknown slot, archetype or field,
-- a creature slot on an archetype entry or tower,
+- a creature slot on an archetype entry or tower, a tower slot on a creature,
+- creature `sounds` in a unit file still on `schemaVersion` 4,
 - a default profile missing a slot,
 - a race with no profile file, or two files for one race.
 
-## Giving a race or tower its own sound
+## Giving a race, tower or creature its own sound
 
-1. Create the clip: add a recipe for it (see `docs/SOUND_ASSET_LIST.md`) or
-   drop an authored wav under `public/assets/audio/sfx/<category>/`.
-2. Register the id in `SOUND_IDS` and its clip (file, volume, cooldown) in the
-   matching file under `src/shared/lib/sound-registry/registry/`.
-3. Point the profile at it: race-wide in `sounds`, for one archetype under
-   `archetypes`, or for a single tower in that tower's `sounds`.
-4. Run `npm run check`.
+1. Create the clip: add a recipe for it (see `docs/SOUND_ASSET_LIST.md`,
+   "Authoring a race").
+2. Register the id in the race's `src/shared/types/sound-ids/<race>.ts` and its
+   clip (file, playback preset) in
+   `src/shared/lib/sound-registry/registry/combatSounds.<race>.ts`.
+3. Point content at it: race-wide in the race profile `sounds`, for one
+   archetype under `archetypes`, for a single tower in that tower's `sounds`,
+   for a single creature in that creature's `sounds`.
+4. Run `npm run gen:sfx -- --race <race>`, then `npm run check`.
 
 ## Where the code lives
 
 | Concern | File |
 | --- | --- |
-| Ids and slots | `src/shared/types/sound-ids.ts` |
+| Ids and slots | `src/shared/types/sound-ids/` |
 | Clip registry | `src/shared/lib/sound-registry/registry/` |
 | Profile schema and loader | `src/entities/sound-profile/model/` |
+| Creature `sounds` schema | `src/entities/unit/model/content/` |
 | Resolver | `src/entities/sound-profile/model/resolveSound.ts` |
 | Game wiring | `src/features/game-engine/runtime/audio/gameSoundRouting.ts` |
+| Spawn cue for sends | `src/features/game-engine/runtime/wave/fieldWaveSpawns.ts` (`onSentCreepSpawned`) |

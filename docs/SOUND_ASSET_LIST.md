@@ -6,12 +6,13 @@ which `npm run encode:ambient` cuts and compresses from the full recordings.
 
 | Kind | Source | Location |
 | --- | --- | --- |
-| Generated SFX (57 clips) | recipes in `src/shared/lib/sfx-synth/recipes/` | `public/assets/audio/sfx/{ui,system,economy,combat}/` |
+| Generated SFX (64 clips) | recipes in `src/shared/lib/sfx-synth/recipes/` | `public/assets/audio/sfx/{ui,system,economy,combat}/`, race clips under `combat/<race>/` |
 | Ambience (2 loops) | recordings in `assets-src/audio/ambient/` (not shipped) | `public/assets/audio/sfx/ambient/` as `.ogg` + `.m4a` |
 
 Which tower or creature plays which clip is decided by the sound profiles in
-`src/content/audio/` (tower -> archetype -> race -> default). See "Sound
-Profiles" in `docs/08-content-authoring.md`. Every sound id owns exactly one
+`src/content/audio/` (tower -> archetype -> race -> default, creature -> race
+-> default) and by per-tower and per-creature `sounds` in their content. See
+"Sound Profiles" in `docs/08-content-authoring.md`. Every sound id owns exactly one
 file; a test fails if two ids share one.
 
 ## Format
@@ -19,8 +20,18 @@ file; a test fails if two ids share one.
 - WAV, PCM 16-bit, mono, 22050 Hz.
 - Normalized towards one loudness (RMS 0.2, peak ceiling 0.95), so registry
   volumes in `src/shared/lib/sound-registry/registry/` are the real mix controls.
-- Budget: all generated clips together stay under 1.5 MB (currently ~700 KB).
-  The generator and a test both enforce it.
+- Budget per authoring group, enforced by the generator and
+  `generatedSfx.node.test.ts` (`SFX_GROUP_BUDGET_BYTES` in
+  `src/shared/lib/sfx-synth/sfxGroups.ts`). At ~44 KB per second of sound:
+
+  | Group | Files | Budget | Now |
+  | --- | --- | --- | --- |
+  | core | `ui/`, `system/`, `economy/`, `combat/default/`, `combat/effects/` | 800 KB | ~448 KB |
+  | undead | `combat/undead/` | 900 KB | ~63 KB |
+  | orc | `combat/orc/` | 900 KB | ~130 KB |
+  | human | `combat/human/` | 900 KB | ~59 KB |
+  | elf | `combat/elf/` | 900 KB | ~70 KB |
+  | total | | 4400 KB | ~770 KB |
 
 ### Ambience
 
@@ -41,7 +52,9 @@ file; a test fails if two ids share one.
 ## Regenerating
 
 ```bash
-npm run gen:sfx
+npm run gen:sfx                  # every group
+npm run gen:sfx -- --race orc    # one race: undead, orc, human or elf
+npm run gen:sfx -- --race core   # the race-neutral clips
 ```
 
 The ambience loops are cut and encoded separately:
@@ -61,7 +74,8 @@ loop points.
 
 The generator renders every recipe to the path its id is registered with,
 deletes generated wav files no id points at, and prints duration and size per
-clip. It is deterministic: the same recipe and seed give the same bytes on
+clip and per group. With `--race` it renders, deletes and budgets only that
+group's files; the other groups' files are never touched. It is deterministic: the same recipe and seed give the same bytes on
 every machine. `generatedSfx.node.test.ts` re-renders each recipe and compares
 it with the committed file, so a recipe edit without regenerating fails the
 suite.
@@ -118,6 +132,7 @@ Dark fantasy around D minor: low-mid, soft attacks, short tails. Frequent cues
 | `combat.creep_hit` | Very short soft body thump, layered under impacts. |
 | `combat.creep_death` | Low growl falling away. |
 | `combat.creep_escape` | Two-tone low warning, A then F. |
+| `combat.creep_spawn` | Short low rush with a dull drum and a rising D-A tone (sent creature arrives). |
 | `combat.effect_applied.chill` | Icy high shimmer with frost crackle. |
 | `combat.effect_applied.poison` | Wet hiss with little bubbles. |
 | `combat.effect_applied.stun` | Dull concussive drop. |
@@ -144,6 +159,12 @@ Dark fantasy around D minor: low-mid, soft attacks, short tails. Frequent cues
 | `combat.impact.orc` | War drum thud. |
 | `combat.build.orc` | Double drum hit and a wood knock. |
 | `combat.creep_death.orc` | Gritty grunt and a thud. |
+| `combat.creep.orc_grunt.hit` | Meaty thud with a clipped hoarse grunt. |
+| `combat.creep.orc_grunt.death` | Long wavering death groan falling into a body drop. |
+| `combat.creep.orc_grunt.escape` | Two hoarse taunting barks over a drum. |
+| `combat.creep.orc_grunt.spawn` | Rising hoarse bark and a war drum. |
+| `combat.tower.orc_spear_watchtower.attack` | Heavy shaft whoosh and a wooden snap. |
+| `combat.tower.orc_spear_watchtower.impact` | Double wooden crack on a thunk. |
 
 ### Human - steel, powder and glass
 
@@ -186,12 +207,66 @@ as `bell`, `thump` and `burst` in `recipes/recipeKit.ts`.
 
 ## Adding or changing a sound
 
-1. Register the id in `SOUND_IDS` (`src/shared/types/sound-ids.ts`) and its
-   clip in `src/shared/lib/sound-registry/registry/`.
+1. Register the id in its group file under `src/shared/types/sound-ids/`
+   (`core.ts` or the race file) and its clip in the matching registry file
+   under `src/shared/lib/sound-registry/registry/`.
 2. Add its recipe to the matching file in `src/shared/lib/sfx-synth/recipes/`
-   (the recipe map is typed, so a missing recipe does not compile).
-3. If a tower or creature should use it, point a sound profile at it.
-4. Run `npm run gen:sfx`, listen, and commit the recipe and the wav together.
+   (the recipe maps are typed, so a missing recipe does not compile).
+3. If a tower or creature should use it, point a sound profile or the
+   tower's / creature's `sounds` at it.
+4. Run `npm run gen:sfx` (or `-- --race <group>`), listen, and commit the
+   recipe and the wav together.
+
+## Authoring a race
+
+Each race is authored in its own five files, so four authors can work at once
+without touching the same file. For race `<race>` (`undead`, `orc`, `human`,
+`elf`):
+
+| # | File | What goes in |
+| --- | --- | --- |
+| 1 | `src/shared/types/sound-ids/<race>.ts` | The ids. |
+| 2 | `src/shared/lib/sound-registry/registry/combatSounds.<race>.ts` | One clip per id: file and playback preset from `combatPlayback.ts`. |
+| 3 | `src/shared/lib/sfx-synth/recipes/<race>Recipes.ts` | One recipe per id. |
+| 4 | `src/content/units/<race>.json` | Each creature's `sounds` (only that field). |
+| 5 | `src/content/towers/<race>.json` | Each tower's `sounds` (only that field). |
+
+Checklist:
+
+1. Name ids `combat.creep.<unitId>.<hit|death|escape|spawn>` and
+   `combat.tower.<towerId>.<attack|impact|upgrade>`. A test fails on an id
+   that names another race's creature or tower, or no real one.
+2. Put files under `combat/<race>/creeps/<unitId>_<slot>.wav` and
+   `combat/<race>/towers/<towerId>_<slot>.wav`: register with
+   `raceCombatClip.bind(null, '<race>')` (the file's `clip` helper), which
+   prefixes `combat/<race>/` for you.
+3. Pick playback presets by slot: `CREEP_HIT`, `CREEP_DEATH`, `CREEP_ESCAPE`,
+   `CREEP_SPAWN` (its 1.2 s cooldown is what throttles a batch of sends),
+   `ATTACK` or `HEAVY_ATTACK`, `IMPACT`, `UPGRADE`.
+4. Give each recipe a fresh seed in the race's range (undead 5xx, orc 6xx,
+   human 7xx, elf 8xx). Keep frequent cues short: hits under 0.1 s, attacks
+   and impacts under 0.2 s, deaths and spawns under 0.6 s.
+5. Render only your group: `npm run gen:sfx -- --race <race>`. It prints each
+   clip and your group's size against its 900 KB budget.
+6. Listen: open the wavs in `public/assets/audio/sfx/combat/<race>/` (any
+   player), and play a match with that race to hear them in the mix.
+7. Add a row per id to this file's race table, run `npm run check`, commit
+   recipes and wavs together.
+
+A race author must not:
+
+- edit another race's five files, `core.ts`, `combatSounds.core.ts`,
+  `combatRecipes.ts` or the shared helpers in `recipeKit.ts` (copy a helper
+  into the race recipe file instead);
+- change an existing recipe without meaning to: committed wavs are compared
+  byte for byte, so an unintended change fails `generatedSfx.node.test.ts`;
+- run `npm run gen:sfx` without `--race` while others are authoring, and
+  commit wavs of other groups;
+- touch any content field other than `sounds`, or bump `schemaVersion`;
+- put two ids on one file, or reuse an id of another race (point content at
+  it instead);
+- change the race profiles in `src/content/audio/` or `default.json` unless
+  the race-wide fallback itself should change.
 
 ## Playback rules
 

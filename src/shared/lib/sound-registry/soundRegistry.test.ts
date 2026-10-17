@@ -1,10 +1,39 @@
 import { describe, expect, it } from 'vitest';
-import { SOUND_IDS } from '../../types/sound-ids';
+import { SOUND_GROUP_IDS, SOUND_IDS, SOUND_IDS_BY_GROUP } from '../../types/sound-ids';
 import { SFX_ASSET_ROOT, SOUND_ASSET_PATHS, SOUND_CLIPS } from './audio.constants';
 
 describe('sound registry', () => {
   it('registers a clip for every sound id and nothing else', () => {
     expect(Object.keys(SOUND_CLIPS).sort()).toEqual([...SOUND_IDS].sort());
+  });
+
+  it('declares every id in exactly one group file', () => {
+    const seen = new Map<string, string>();
+    const duplicates: string[] = [];
+    for (const group of SOUND_GROUP_IDS) {
+      for (const soundId of SOUND_IDS_BY_GROUP[group]) {
+        const owner = seen.get(soundId);
+        if (owner !== undefined) {
+          duplicates.push(`${soundId} in ${owner} and ${group}`);
+        }
+        seen.set(soundId, group);
+      }
+    }
+
+    expect(duplicates).toEqual([]);
+    expect(new Set(SOUND_IDS).size).toBe(SOUND_IDS.length);
+  });
+
+  it('names per-creature and per-tower ids by the documented scheme', () => {
+    const perEntity = SOUND_IDS.filter(
+      (soundId) => soundId.startsWith('combat.creep.') || soundId.startsWith('combat.tower.'),
+    );
+
+    for (const soundId of perEntity) {
+      expect(soundId).toMatch(
+        /^combat\.(creep\.[a-z_]+\.(hit|death|escape|spawn)|tower\.[a-z_]+\.(attack|impact|upgrade))$/,
+      );
+    }
   });
 
   it('never lets two ids share a file; sharing belongs in the sound profiles', () => {

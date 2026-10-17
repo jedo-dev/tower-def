@@ -135,6 +135,31 @@ export const COMBAT_RECIPES: SfxRecipeGroup<'combat'> = {
     seed: 408,
     layers: [warningTone(NOTE.A3, 0), warningTone(NOTE.F3, 0.16), thump(0, 70, 50, 0.3, 0.3)],
   },
+  // A sent creature enters the board: a short low rush with a dull drum under it.
+  'combat.creep_spawn': {
+    seed: 412,
+    layers: [
+      {
+        waveform: 'noise',
+        durationSec: 0.24,
+        frequencyHz: WHITE,
+        envelope: shaped(0.06, 0.12, 0, 0.05),
+        gain: 0.4,
+        filters: [bandpass(350, 1300, 1.2)],
+      },
+      thump(0.08, 110, 60, 0.16, 0.55),
+      {
+        waveform: 'triangle',
+        startSec: 0.06,
+        durationSec: 0.2,
+        frequencyHz: NOTE.D3,
+        frequencyEndHz: NOTE.A3,
+        envelope: shaped(0.03, 0.12, 0, 0.04),
+        gain: 0.18,
+        filters: [lowpass(900)],
+      },
+    ],
+  },
   'combat.effect_applied.chill': {
     seed: 409,
     layers: [

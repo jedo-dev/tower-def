@@ -73,6 +73,8 @@ export type WaveRuntimeDependencies = {
   ) => Phaser.GameObjects.Sprite;
   /** Adds the shadow, sender ring and health bar to a spawned creep. */
   attachCreepAdornments?: (creep: CreepRenderState) => void;
+  /** A sent creature (not a baseline wave creep) entered a board: plays its spawn cue. */
+  onSentCreepSpawned?: (creep: CreepRenderState) => void;
   playSound: (soundId: SoundId) => void;
 };
 

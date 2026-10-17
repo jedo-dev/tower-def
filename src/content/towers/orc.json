@@ -19,6 +19,10 @@
       "spriteKey": "tower.orc.spear_watchtower",
       "description": "A rugged platform hurling heavy spears.",
       "lore": "Lashed logs, a platform and a pile of spears heavy enough to pin a kodo. The orc on top throws until he runs out of arms.",
+      "sounds": {
+        "attack": "combat.tower.orc_spear_watchtower.attack",
+        "impact": "combat.tower.orc_spear_watchtower.impact"
+      },
       "talentBranches": [
         {
           "id": "orc_spear_watchtower_throwers",

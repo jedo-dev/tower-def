@@ -19,6 +19,8 @@ import {
   readStringFrom,
   type ContentLocation,
 } from '../../../../shared/lib/content/contentValidation';
+import { readSoundSlotSet } from '../../../../shared/lib/content/soundSlotValidation';
+import { CREEP_SOUND_SLOTS } from '../../../../shared/types/sound-ids';
 import { UNIT_IDS, UNIT_TIERS, type UnitConfig, type UnitId } from '../types';
 import {
   UNIT_CONTENT_FILE_KEYS,
@@ -29,7 +31,7 @@ import {
   UNIT_TRAIT_DEFAULTS,
   type UnitTraits,
 } from './unitContent.types';
-import { assertUnitSchemaVersion } from './assertUnitSchemaVersion';
+import { migrateUnitContentFile } from './assertUnitSchemaVersion';
 import { parseCreatureTalentBranches } from './creatureTalentContent';
 import { parseUnitAbilities } from './unitAbilityFields';
 
@@ -73,6 +75,7 @@ function parseUnitEntry(
   }
 
   const abilities = parseUnitAbilities(entry, location);
+  const sounds = readSoundSlotSet(entry, 'sounds', CREEP_SOUND_SLOTS, location);
 
   return {
     id,
@@ -101,16 +104,17 @@ function parseUnitEntry(
     ...parseTraits(entry, location),
     talentBranches: parseCreatureTalentBranches(entry, location, id),
     ...(abilities === undefined ? {} : { abilities }),
+    ...(sounds === undefined ? {} : { sounds }),
   };
 }
 
 /** Validates one authored race file and returns its creatures. */
 export function parseUnitContentFile(source: UnitContentSource): UnitConfig[] {
   const location: ContentLocation = { file: source.file };
-  const file = readRecord(source.data, location);
+  const authoredFile = readRecord(source.data, location);
 
-  assertKnownKeys(file, UNIT_CONTENT_FILE_KEYS, location);
-  assertUnitSchemaVersion(file, location);
+  assertKnownKeys(authoredFile, UNIT_CONTENT_FILE_KEYS, location);
+  const file = migrateUnitContentFile(authoredFile, location);
 
   const race = readStringFrom(file, 'race', location, RACE_IDS);
   const rawUnits = readArray(file, 'units', location);

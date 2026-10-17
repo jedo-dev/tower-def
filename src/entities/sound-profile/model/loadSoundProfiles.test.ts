@@ -25,6 +25,7 @@ function createDefault(overrides: Authored = {}): Authored {
       creepHit: 'ui.hover',
       creepDeath: 'ui.open',
       creepEscape: 'ui.error',
+      creepSpawn: 'ui.wave_start',
     },
     ...overrides,
   };
