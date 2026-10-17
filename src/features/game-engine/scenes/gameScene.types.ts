@@ -10,6 +10,7 @@ import type { GridModel } from '../../../shared/types/grid';
 import type { GridPosition } from '../../../shared/types/pathfinding';
 import type { BattlefieldRenderState } from '../runtime/battlefield/battlefieldRenderState';
 import type { CameraView } from '../runtime/camera/cameraViewMapping';
+import type { CreepAdornments } from '../runtime/creep/creepAdornments';
 import type { GridRendererState } from '../runtime/grid/gameSceneGridRenderer';
 
 export type CreepRenderState = {
@@ -45,6 +46,8 @@ export type CreepRenderState = {
   facingFlipped?: boolean;
   /** Set once the death row started, so it is not restarted while it plays out. */
   isDeathAnimationPlaying?: boolean;
+  /** Shadow, sender ring and health bar; absent on bare test fixtures. */
+  adornments?: CreepAdornments;
 };
 
 export type TowerRenderState = {

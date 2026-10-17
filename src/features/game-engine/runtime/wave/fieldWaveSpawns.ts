@@ -46,6 +46,8 @@ export type FieldSpawnDeps = {
     spriteKey: string,
     animationKey: string,
   ) => Phaser.GameObjects.Sprite;
+  /** Adds the shadow, sender ring and health bar to a spawned creep. */
+  attachCreepAdornments?: (creep: CreepRenderState) => void;
 };
 
 export type WaveSpawnCadence = {
@@ -178,7 +180,7 @@ function createSpawnedCreep(
   // on screen, a legacy strip keeps the rotate-and-fade behaviour.
   const isDirectional = isDirectionalCreepSprite(sprite);
 
-  return {
+  const creep: CreepRenderState = {
     entity: waveCreep,
     sprite,
     hitFlashRemainingMs: 0,
@@ -191,4 +193,6 @@ function createSpawnedCreep(
     facing: isDirectional ? 'side' : undefined,
     facingFlipped: false,
   };
+  deps.attachCreepAdornments?.(creep);
+  return creep;
 }

@@ -10,6 +10,8 @@ import { startMissingArtReport, stopMissingArtReport } from '../../runtime/asset
 import { ensurePlaceholderTextures } from '../../runtime/assets/placeholderTexture';
 import { destroyBattlefieldRenderState } from '../../runtime/battlefield/battlefieldRenderState';
 import { registerResponsiveCamera } from '../../runtime/camera/gameSceneCameraRuntime';
+import { drainCreepAdornmentPool } from '../../runtime/creep/creepAdornments';
+import { ensureCreepAdornmentTextures } from '../../runtime/creep/creepAdornmentTextures';
 import {
   attachRoutePreviewGraphics,
   destroyRoutePreviewGraphics,
@@ -71,6 +73,7 @@ export function createScene(context: GameSceneContext): void {
   state.isSceneCleanedUp = false;
   startMissingArtReport();
   ensurePlaceholderTextures(scene);
+  ensureCreepAdornmentTextures(scene);
   loadSetupConfig(context);
   scene.cameras.main.setBackgroundColor('#1a1f2c');
   scene.cameras.main.roundPixels = true;
@@ -108,6 +111,8 @@ function destroyBoardGraphics(context: GameSceneContext): void {
   const { state } = context;
   destroyBattlefieldRenderState(state.playerField);
   destroyBattlefieldRenderState(state.opponentField);
+  // After both fields released their creeps' adornments into the pool.
+  drainCreepAdornmentPool(state.creepAdornmentPool);
   state.buildPreviewOverlay?.destroy();
   state.buildPreviewOverlay = null;
   destroyRoutePreviewGraphics(state.routePreview);

@@ -27,6 +27,10 @@ import {
 } from '../../runtime/battlefield/battlefieldRenderState';
 import type { BoardCameraState } from '../../runtime/camera/gameSceneCameraRuntime';
 import {
+  createCreepAdornmentPool,
+  type CreepAdornmentPool,
+} from '../../runtime/creep/creepAdornments';
+import {
   createSentCreepDeathTally,
   type SentCreepDeathTally,
 } from '../../runtime/duel/sentCreepOutcomeTally';
@@ -82,6 +86,8 @@ export type GameSceneState = {
   readonly placedTowerCostsByCellKey: Map<string, number>;
   readonly playerField: BattlefieldRenderState;
   readonly opponentField: BattlefieldRenderState;
+  /** Released creep shadows, rings and health bars of both fields, for the next spawns. */
+  readonly creepAdornmentPool: CreepAdornmentPool;
   /**
    * Long-lived state owned by the wave/movement runtime modules; the player
    * creep list is shared with playerField (see createPlayerWaveRuntimeState).
@@ -147,6 +153,7 @@ export function createGameSceneState(): GameSceneState {
     placedTowerCostsByCellKey: new Map<string, number>(),
     playerField,
     opponentField,
+    creepAdornmentPool: createCreepAdornmentPool(),
     runState: createPlayerWaveRuntimeState(playerField),
     opponentWave: createOpponentFieldWaveState(opponentField),
     opponentFieldCreepsPublisher: createOpponentFieldCreepsPublisher((remaining) =>

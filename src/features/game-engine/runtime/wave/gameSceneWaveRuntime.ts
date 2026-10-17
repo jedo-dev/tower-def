@@ -71,6 +71,8 @@ export type WaveRuntimeDependencies = {
     spriteKey: string,
     animationKey: string,
   ) => Phaser.GameObjects.Sprite;
+  /** Adds the shadow, sender ring and health bar to a spawned creep. */
+  attachCreepAdornments?: (creep: CreepRenderState) => void;
   playSound: (soundId: SoundId) => void;
 };
 
