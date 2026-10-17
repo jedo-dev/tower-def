@@ -5,6 +5,9 @@ import orcWolfRiderSprite from '../sprite/orc_wolf_rider.png';
 import orcTrollSprite from '../sprite/orc_troll.png';
 import orcHeadhunterSprite from '../sprite/orc_headhunter.png';
 import orcPeonSprite from '../sprite/orc_peon.png';
+import orcTaurenSprite from '../sprite/orc_tauren.png';
+import orcWindRiderSprite from '../sprite/orc_wind_rider.png';
+import orcShamanSprite from '../sprite/orc_shaman.png';
 import bansheeSprite from '../sprite/undead_banshee.png';
 import frostWyrmSprite from '../sprite/undead_frost_wyrm.png';
 import ghoulSprite from '../sprite/ghoul.svg';
@@ -21,6 +24,9 @@ export const UNIT_SPRITE_KEYS = {
   ORC_TROLL: 'unit.orc.troll',
   ORC_HEADHUNTER: 'unit.orc.headhunter',
   ORC_PEON: 'unit.orc.peon',
+  ORC_TAUREN: 'unit.orc.tauren',
+  ORC_WIND_RIDER: 'unit.orc.wind_rider',
+  ORC_SHAMAN: 'unit.orc.shaman',
   UNDEAD_BANSHEE: 'unit.undead.banshee',
   UNDEAD_FROST_WYRM: 'unit.undead.frost_wyrm',
 } as const;
@@ -38,6 +44,9 @@ export const UNIT_SPRITE_ASSETS: Record<
   [UNIT_SPRITE_KEYS.ORC_TROLL]: orcTrollSprite,
   [UNIT_SPRITE_KEYS.ORC_HEADHUNTER]: orcHeadhunterSprite,
   [UNIT_SPRITE_KEYS.ORC_PEON]: orcPeonSprite,
+  [UNIT_SPRITE_KEYS.ORC_TAUREN]: orcTaurenSprite,
+  [UNIT_SPRITE_KEYS.ORC_WIND_RIDER]: orcWindRiderSprite,
+  [UNIT_SPRITE_KEYS.ORC_SHAMAN]: orcShamanSprite,
   [UNIT_SPRITE_KEYS.UNDEAD_BANSHEE]: bansheeSprite,
   [UNIT_SPRITE_KEYS.UNDEAD_FROST_WYRM]: frostWyrmSprite,
 };
@@ -57,6 +66,9 @@ export const UNIT_SPRITE_KEY_BY_UNIT_ID: Record<string, string> = {
   orc_troll: UNIT_SPRITE_KEYS.ORC_TROLL,
   orc_headhunter: UNIT_SPRITE_KEYS.ORC_HEADHUNTER,
   orc_peon: UNIT_SPRITE_KEYS.ORC_PEON,
+  orc_tauren: UNIT_SPRITE_KEYS.ORC_TAUREN,
+  orc_wind_rider: UNIT_SPRITE_KEYS.ORC_WIND_RIDER,
+  orc_shaman: UNIT_SPRITE_KEYS.ORC_SHAMAN,
   undead_banshee: UNIT_SPRITE_KEYS.UNDEAD_BANSHEE,
   undead_frost_wyrm: UNIT_SPRITE_KEYS.UNDEAD_FROST_WYRM,
 };
@@ -83,6 +95,9 @@ export const UNIT_SPRITE_SHEET_LAYOUTS: Record<string, UnitSpriteSheetLayout> = 
   [UNIT_SPRITE_KEYS.ORC_TROLL]: DIRECTIONAL_SHEET_LAYOUT,
   [UNIT_SPRITE_KEYS.ORC_HEADHUNTER]: DIRECTIONAL_SHEET_LAYOUT,
   [UNIT_SPRITE_KEYS.ORC_PEON]: DIRECTIONAL_SHEET_LAYOUT,
+  [UNIT_SPRITE_KEYS.ORC_TAUREN]: DIRECTIONAL_SHEET_LAYOUT,
+  [UNIT_SPRITE_KEYS.ORC_WIND_RIDER]: DIRECTIONAL_SHEET_LAYOUT,
+  [UNIT_SPRITE_KEYS.ORC_SHAMAN]: DIRECTIONAL_SHEET_LAYOUT,
   [UNIT_SPRITE_KEYS.UNDEAD_BANSHEE]: DIRECTIONAL_SHEET_LAYOUT,
   [UNIT_SPRITE_KEYS.UNDEAD_FROST_WYRM]: DIRECTIONAL_SHEET_LAYOUT,
 };
