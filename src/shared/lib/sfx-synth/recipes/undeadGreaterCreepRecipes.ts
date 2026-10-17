@@ -1,21 +1,35 @@
 import type { UndeadSoundId } from '../../../types/sound-ids';
-import type { SfxRecipe } from '../sfxRecipe.types';
-import { NOTE, bandpass, bell, burst, highpass, lowpass, thump } from './recipeKit';
+import type { SfxEcho, SfxRecipe } from '../sfxRecipe.types';
+import { NOTE, bandpass, bell, burst, highpass, lowpass, shaped, swell, thump } from './recipeKit';
+import {
+  VOWEL_MURMUR_AH,
+  VOWEL_MURMUR_EE,
+  VOWEL_MURMUR_OH,
+  VOWEL_MURMUR_UH,
+  VOWEL_SOPRANO_AH,
+  breathVowel,
+  consonant,
+  murmur,
+  soprano,
+  voicedVowel,
+} from './undeadVocalTract';
 import {
   airyBreath,
   bellow,
   chainClink,
-  chant,
   coldRoar,
   gurgle,
   iceCrackle,
-  shimmer,
   staffTap,
-  wail,
   wetTear,
-  whisper,
   wingbeat,
 } from './undeadVoices';
+
+/** The necromancer speaks under his breath: quieter than the default RMS 0.2. */
+const NECROMANCER_LOUDNESS = 0.12;
+
+/** A short hall behind the banshee's voice. */
+const BANSHEE_HALL: SfxEcho = { delaySec: 0.037, feedback: 0.55, mix: 0.3 };
 
 type UndeadGreaterCreepSoundId = Extract<
   UndeadSoundId,
@@ -67,76 +81,109 @@ export const UNDEAD_GREATER_CREEP_RECIPES: Record<UndeadGreaterCreepSoundId, Sfx
     ],
   },
 
-  // Necromancer (T5): a whispering necrotic chant and a staff tap.
+  // Necromancer (T5): a quiet, tired male voice, murmuring and breathy.
   'combat.creep.undead_necromancer.hit': {
-    seed: 561,
-    layers: [
-      { ...whisper(0, 0.07, 1300, 0.5), tremolo: { rateHz: 30, depth: 0.5 } },
-      thump(0, 150, 85, 0.06, 0.45),
-      burst(0, 0.02, 0.2, [bandpass(1200, undefined, 3)], 8000),
-    ],
+    seed: 565,
+    loudness: NECROMANCER_LOUDNESS,
+    layers: [...murmur(0, 0.1, 118, 92, VOWEL_MURMUR_UH, 0.9, 0.5), thump(0, 130, 80, 0.05, 0.2)],
   },
   'combat.creep.undead_necromancer.death': {
-    seed: 562,
+    seed: 566,
+    loudness: NECROMANCER_LOUDNESS,
+    // A last exhale "haaah..." with a faint tonal sigh under it.
     layers: [
-      whisper(0, 0.38, 2700, 0.5),
-      { ...chant(0, 0.4, NOTE.A3, 0.3), frequencyEndHz: NOTE.D3 },
-      ...staffTap(0.4, 0.5),
-      ...staffTap(0.46, 0.3),
-      airyBreath(0.3, 0.24, 900, 0.2),
+      breathVowel({
+        startSec: 0,
+        durationSec: 0.64,
+        vowel: VOWEL_MURMUR_AH,
+        vowelEnd: VOWEL_MURMUR_UH,
+        envelope: shaped(0.05, 0.25, 0.55, 0.3),
+        gain: 1.1,
+      }),
+      voicedVowel({
+        startSec: 0.06,
+        durationSec: 0.46,
+        fromHz: 112,
+        toHz: 78,
+        vowel: VOWEL_MURMUR_AH,
+        vowelEnd: VOWEL_MURMUR_UH,
+        envelope: shaped(0.08, 0.2, 0.5, 0.18),
+        gain: 1.1,
+        jitter: { rateHz: 9, depth: 0.05 },
+        brightnessHz: 2200,
+      }),
     ],
   },
   'combat.creep.undead_necromancer.escape': {
-    seed: 563,
+    seed: 567,
+    loudness: NECROMANCER_LOUDNESS,
+    // Murmured incantation: four syllables "mo-ta-nis-ul".
     layers: [
-      ...staffTap(0, 0.5),
-      chant(0.03, 0.2, NOTE.D3, 0.3),
-      chant(0.21, 0.24, NOTE.F3, 0.3),
-      whisper(0.03, 0.42, 1900, 0.4),
+      ...murmur(0, 0.13, 104, 100, VOWEL_MURMUR_OH, 0.7, 0.6),
+      consonant(0.145, 0.025, 2600),
+      ...murmur(0.15, 0.12, 110, 104, VOWEL_MURMUR_AH, 0.75, 0.6),
+      ...murmur(0.29, 0.12, 100, 98, VOWEL_MURMUR_EE, 0.65, 0.6),
+      consonant(0.39, 0.07, 5200),
+      ...murmur(0.47, 0.16, 98, 84, VOWEL_MURMUR_UH, 0.7, 0.65),
     ],
   },
   'combat.creep.undead_necromancer.spawn': {
-    seed: 564,
+    seed: 568,
+    loudness: NECROMANCER_LOUDNESS,
+    // A whispered word "sha-ah", then the staff touches the ground.
     layers: [
-      ...staffTap(0, 0.55),
-      chant(0.05, 0.42, NOTE.D3, 0.28),
-      chant(0.12, 0.35, NOTE.A3, 0.18),
-      whisper(0.05, 0.44, 2800, 0.45),
+      consonant(0, 0.09, 3200),
+      breathVowel({
+        startSec: 0.06,
+        durationSec: 0.3,
+        vowel: VOWEL_MURMUR_AH,
+        vowelEnd: VOWEL_MURMUR_EE,
+        envelope: shaped(0.04, 0.12, 0.6, 0.12),
+        gain: 1.6,
+      }),
+      ...staffTap(0.4, 0.35),
     ],
   },
 
-  // Banshee (T5, flier): an airy wail and a glassy shimmer.
+  // Banshee (T5, flier): an operatic soprano singing "aah" with vibrato.
   'combat.creep.undead_banshee.hit': {
-    seed: 571,
-    layers: [
-      shimmer(0, 0.08, NOTE.D6, 0.35),
-      airyBreath(0, 0.07, 4800, 0.4),
-      wail(0, 0.07, NOTE.A5, NOTE.F4 * 2, 0.2),
-    ],
+    seed: 575,
+    echo: { delaySec: 0.03, feedback: 0.3, mix: 0.25 },
+    tailSec: 0.03,
+    // A wail cut off short.
+    layers: soprano(0, 0.085, 880, 800, shaped(0.012, 0.04, 0.6, 0.02), 0.05),
   },
   'combat.creep.undead_banshee.death': {
-    seed: 572,
-    layers: [
-      wail(0, 0.52, NOTE.A5, NOTE.A4, 0.45),
-      airyBreath(0, 0.5, 2400, 0.3),
-      shimmer(0.05, 0.45, NOTE.D6, 0.2),
-      shimmer(0.12, 0.4, NOTE.A6 * 0.985, 0.12),
-    ],
+    seed: 576,
+    echo: BANSHEE_HALL,
+    tailSec: 0.17,
+    // A long wail sliding down an octave as her vibrato comes apart.
+    layers: soprano(0, 0.72, 698, 349, shaped(0.06, 0.25, 0.75, 0.14), 0.2, {
+      sweepCurve: 1.1,
+      vibrato: { rateHz: 5.5, depth: 0.02, depthEnd: 0.075 },
+    }),
   },
   'combat.creep.undead_banshee.escape': {
-    seed: 573,
-    layers: [
-      wail(0, 0.44, NOTE.A4, NOTE.D5, 0.45),
-      airyBreath(0, 0.42, 2000, 0.25),
-      shimmer(0.18, 0.26, NOTE.A6, 0.18),
-    ],
+    seed: 577,
+    echo: BANSHEE_HALL,
+    tailSec: 0.15,
+    // A lament rising a fifth.
+    layers: soprano(0, 0.54, 523, 784, shaped(0.08, 0.2, 0.8, 0.16), 0.2, { sweepCurve: 1.8 }),
   },
   'combat.creep.undead_banshee.spawn': {
-    seed: 574,
+    seed: 578,
+    echo: BANSHEE_HALL,
+    tailSec: 0.14,
+    // A breath swelling into a held note.
     layers: [
-      airyBreath(0, 0.5, 2000, 0.4),
-      wail(0.08, 0.4, NOTE.D5, NOTE.F4 * 2, 0.35),
-      shimmer(0.2, 0.3, NOTE.D6, 0.2),
+      breathVowel({
+        startSec: 0,
+        durationSec: 0.5,
+        vowel: VOWEL_SOPRANO_AH,
+        envelope: shaped(0.18, 0.15, 0.5, 0.15),
+        gain: 0.9,
+      }),
+      ...soprano(0.1, 0.46, 659, 659, swell(0.26, 0.14), 0.15),
     ],
   },
 

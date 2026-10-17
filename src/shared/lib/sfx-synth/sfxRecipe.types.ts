@@ -50,6 +50,18 @@ export type SfxFilter = {
   q?: number;
 };
 
+/**
+ * One resonance of a vocal tract: a band-pass peak the layer's source is fed
+ * through. `frequencyEndHz` glides it over the layer, like a vowel changing.
+ */
+export type SfxFormant = {
+  frequencyHz: number;
+  frequencyEndHz?: number;
+  /** Resonance sharpness; around 5-10 for a voice. */
+  q: number;
+  gain: number;
+};
+
 export type SfxLayer = {
   waveform: SfxWaveform;
   /** Offset of the layer inside the clip. */
@@ -62,8 +74,17 @@ export type SfxLayer = {
   sweepCurve?: number;
   /** Square duty cycle, 0.5 by default. */
   dutyCycle?: number;
-  /** Periodic pitch wobble; `depth` is a share of the frequency. */
-  vibrato?: { rateHz: number; depth: number };
+  /**
+   * Periodic pitch wobble; `depth` is a share of the frequency. `depthEnd`
+   * widens or narrows it evenly over the layer (a singer's failing vibrato).
+   */
+  vibrato?: { rateHz: number; depth: number; depthEnd?: number };
+  /**
+   * Unsteady pitch: a smooth random drift that picks a new target `rateHz`
+   * times a second, at most `depth` (a share of the frequency) away. Seeded,
+   * so it stays deterministic. Gives a tired or hoarse voice its wobble.
+   */
+  jitter?: { rateHz: number; depth: number };
   /** Periodic volume wobble; `depth` 0..1. */
   tremolo?: { rateHz: number; depth: number };
   /** Modulator for `fm`: frequency ratio and modulation index (decays to `indexEnd`). */
@@ -71,6 +92,12 @@ export type SfxLayer = {
   envelope: SfxEnvelope;
   gain: number;
   filters?: SfxFilter[];
+  /**
+   * Parallel formant bank applied after `drive` and before `filters`: the
+   * source is replaced by the sum of its band-passed copies, so a saw reads
+   * as a sung or spoken vowel.
+   */
+  formants?: SfxFormant[];
   /** Soft saturation; 0 is clean, 3 is gritty. */
   drive?: number;
 };

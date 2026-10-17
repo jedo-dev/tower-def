@@ -22,6 +22,7 @@ export {
   SFX_SAMPLE_RATE,
   type SfxEnvelope,
   type SfxFilter,
+  type SfxFormant,
   type SfxLayer,
   type SfxRecipe,
   type SfxWaveform,

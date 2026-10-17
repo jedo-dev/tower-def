@@ -1,20 +1,9 @@
 import type { SfxLayer } from '../sfxRecipe.types';
-import {
-  WHITE,
-  bandpass,
-  bell,
-  burst,
-  highpass,
-  hit,
-  lowpass,
-  shaped,
-  swell,
-  thump,
-} from './recipeKit';
+import { WHITE, bandpass, bell, burst, highpass, hit, lowpass, shaped, thump } from './recipeKit';
 
 /**
  * Sound vocabulary of the undead: bones, wet flesh, chitin, stone, chains,
- * whispers, wails and ice. Each helper returns plain layer data for the
+ * breath and ice (voices live in `undeadVocalTract.ts`). Each helper returns plain layer data for the
  * undead recipe files.
  */
 
@@ -33,46 +22,6 @@ export function hiss(startSec: number, durationSec: number, gain: number): SfxLa
     envelope: shaped(0.02, durationSec * 0.7, 0, 0.03),
     gain,
     filters: [highpass(3500)],
-  };
-}
-
-/** Dry rattle: a run of unevenly spaced bone clicks that fades out. */
-export function rattle(
-  startSec: number,
-  count: number,
-  spacingSec: number,
-  holdHz: number,
-  gain: number,
-): SfxLayer[] {
-  return Array.from({ length: count }, (_, index) =>
-    boneClick(
-      startSec + spacingSec * index + (index % 2) * spacingSec * 0.3,
-      holdHz + ((index * 3) % 5) * 220,
-      gain * (1 - (index * 0.5) / count),
-    ),
-  );
-}
-
-/** Hungry snarl: a driven saw fluttering in the throat, through a vowel band. */
-export function snarl(
-  startSec: number,
-  durationSec: number,
-  fromHz: number,
-  toHz: number,
-  gain: number,
-  bandHz = 850,
-): SfxLayer {
-  return {
-    waveform: 'saw',
-    startSec,
-    durationSec,
-    frequencyHz: fromHz,
-    frequencyEndHz: toHz,
-    drive: 2.5,
-    tremolo: { rateHz: 32, depth: 0.5 },
-    envelope: shaped(0.01, durationSec * 0.6, 0.4, durationSec * 0.3),
-    gain,
-    filters: [bandpass(bandHz, undefined, 2)],
   };
 }
 
@@ -201,71 +150,12 @@ export function bellow(
   };
 }
 
-/** Whisper: breathy noise in a narrow formant, pulsing like syllables. */
-export function whisper(
-  startSec: number,
-  durationSec: number,
-  formantHz: number,
-  gain: number,
-): SfxLayer {
-  return {
-    waveform: 'noise',
-    startSec,
-    durationSec,
-    frequencyHz: WHITE,
-    tremolo: { rateHz: 8, depth: 0.8 },
-    envelope: shaped(0.04, durationSec * 0.5, 0.6, durationSec * 0.3),
-    gain,
-    filters: [bandpass(formantHz, formantHz * 1.3, 4), highpass(900)],
-  };
-}
-
-/** Chant: a soft hummed note under a whisper. */
-export function chant(
-  startSec: number,
-  durationSec: number,
-  frequencyHz: number,
-  gain: number,
-): SfxLayer {
-  return {
-    waveform: 'triangle',
-    startSec,
-    durationSec,
-    frequencyHz,
-    vibrato: { rateHz: 5, depth: 0.015 },
-    envelope: swell(0.05, durationSec * 0.4),
-    gain,
-    filters: [lowpass(900)],
-  };
-}
-
 /** Staff tap: hard wood on stone. */
 export function staffTap(startSec: number, gain: number): SfxLayer[] {
   return [
     thump(startSec, 420, 260, 0.05, gain),
     burst(startSec, 0.02, gain * 0.6, [bandpass(1400, undefined, 3)], 8000),
   ];
-}
-
-/** Wail: a high, airy voice with a slow quaver. */
-export function wail(
-  startSec: number,
-  durationSec: number,
-  fromHz: number,
-  toHz: number,
-  gain: number,
-): SfxLayer {
-  return {
-    waveform: 'sine',
-    startSec,
-    durationSec,
-    frequencyHz: fromHz,
-    frequencyEndHz: toHz,
-    vibrato: { rateHz: 5.5, depth: 0.035 },
-    envelope: shaped(durationSec * 0.2, durationSec * 0.4, 0.6, durationSec * 0.3),
-    gain,
-    filters: [lowpass(3500)],
-  };
 }
 
 /** Airy breath: soft wind around a centre band. */
@@ -283,19 +173,6 @@ export function airyBreath(
     envelope: shaped(durationSec * 0.3, durationSec * 0.3, 0.5, durationSec * 0.3),
     gain,
     filters: [bandpass(centerHz, centerHz * 0.7, 1.5)],
-  };
-}
-
-/** Glassy shimmer: a bright, trembling FM tone. */
-export function shimmer(
-  startSec: number,
-  durationSec: number,
-  frequencyHz: number,
-  gain: number,
-): SfxLayer {
-  return {
-    ...bell(frequencyHz, startSec, durationSec, gain, { ratio: 3.5, index: 1.2, attackSec: 0.01 }),
-    tremolo: { rateHz: 14, depth: 0.4 },
   };
 }
 
