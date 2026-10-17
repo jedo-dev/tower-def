@@ -4,11 +4,15 @@ import { sendGameCommand } from '../../../shared/lib/game-bridge/bridge';
 import { useGameHudSnapshot } from '../../../shared/lib/game-bridge/useGameHudSnapshot';
 import { useModalFocus } from '../../../shared/lib/modal-focus';
 import { FantasyButton } from '../../../shared/ui/fantasy-button';
+import { FactionEmblem } from '../../../shared/ui/faction-emblem';
 import { mapMatchOutcomeToViewModel } from '../model/mapMatchOutcomeToViewModel';
 
 export type MatchOutcomeOverlayProps = {
   onExit: () => void;
 };
+
+/** Side of the winner's race emblem above the title, in px. */
+const WINNER_EMBLEM_SIZE = 72;
 
 const TONE_CLASS = {
   victory: styles.titleVictory,
@@ -38,6 +42,13 @@ function MatchOutcomeOverlayComponent({ onExit }: MatchOutcomeOverlayProps) {
       onKeyDown={modalFocus.onKeyDown}
     >
       <div className={styles.panel}>
+        {viewModel.winnerRace !== null && (
+          <FactionEmblem
+            race={viewModel.winnerRace}
+            size={WINNER_EMBLEM_SIZE}
+            className={styles.winnerEmblem}
+          />
+        )}
         <p className={`${styles.title} ${TONE_CLASS[viewModel.tone]}`}>{viewModel.title}</p>
         <p className={styles.detail}>{viewModel.detail}</p>
 

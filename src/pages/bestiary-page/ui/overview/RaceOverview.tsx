@@ -9,6 +9,10 @@ import { SectionHead } from '../codex/SectionHead';
 import { racePanelId } from '../raceTabIds';
 import { UnitTile } from './UnitTile';
 import styles from './Overview.module.css';
+import { FactionEmblem } from '../../../../shared/ui/faction-emblem';
+
+/** Side of the race emblem beside the race description, in px. */
+const HEADER_EMBLEM_SIZE = 44;
 
 export type RaceOverviewProps = {
   race: RaceBestiaryViewModel;
@@ -31,7 +35,15 @@ export function RaceOverview({ race, onOpenEntry }: RaceOverviewProps) {
 
   return (
     <div className={styles.overview}>
-      <p className={styles.raceDescription}>{race.description}</p>
+      <header className={styles.raceHeader}>
+        <FactionEmblem
+          race={race.raceId}
+          size={HEADER_EMBLEM_SIZE}
+          decorative
+          className={styles.raceEmblem}
+        />
+        <p className={styles.raceDescription}>{race.description}</p>
+      </header>
 
       <section className={styles.section} aria-labelledby={`${panelId}-towers`}>
         <SectionHead

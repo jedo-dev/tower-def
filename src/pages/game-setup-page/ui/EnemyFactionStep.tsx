@@ -2,6 +2,10 @@ import type { CSSProperties } from 'react';
 import { EnemyFaction, enemyFactions } from '../../../entities/enemy-faction';
 import { getEnemyThemeColor } from './enemyThemeColor';
 import { handleRadioGroupKeyDown } from '../../../shared/lib/radio-group';
+import { FactionEmblem } from '../../../shared/ui/faction-emblem';
+
+/** Side of the race emblem on an enemy faction card, in px. */
+const ENEMY_EMBLEM_SIZE = 56;
 
 export const ENEMY_FACTION_GROUP_LABEL = 'Enemy faction';
 
@@ -35,7 +39,12 @@ export function EnemyFactionStep({ selected, onSelect }: EnemyFactionStepProps) 
             style={{ '--card-theme': getEnemyThemeColor(faction.id) } as CSSProperties}
             data-sound="ui.faction_select"
           >
-            <span className="setup-card-icon" aria-hidden="true" />
+            <FactionEmblem
+              race={faction.id}
+              size={ENEMY_EMBLEM_SIZE}
+              decorative
+              className="setup-card-icon"
+            />
             <span className="setup-card-name">{faction.name}</span>
             <span className="setup-card-desc">{faction.description}</span>
             <span className="setup-card-tower">Creeps: {faction.creepStyle.split(',')[0]}</span>

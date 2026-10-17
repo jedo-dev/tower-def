@@ -92,13 +92,8 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-.tabGem {
-  flex: none;
-  width: var(--codex-gem-size);
-  height: var(--codex-gem-size);
-  transform: rotate(45deg);
-  background: var(--race-accent);
-  box-shadow: 0 0 0 1px var(--color-iron-black);
+.tabEmblem {
+  opacity: 0.7;
 }
 
 .tabLabel {
@@ -117,10 +112,9 @@
   color: var(--color-accent-gold);
 }
 
-.tabSelected .tabGem {
-  box-shadow:
-    0 0 0 1px var(--color-iron-black),
-    0 0 6px var(--race-accent);
+.tabSelected .tabEmblem {
+  opacity: 1;
+  filter: drop-shadow(0 0 4px var(--race-accent));
 }
 
 .tab:focus-visible {

@@ -227,8 +227,11 @@
 
 .duelSide {
   flex: 1 1 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
   white-space: nowrap;
-  text-align: center;
 }
 
 .duelSide + .duelSide {

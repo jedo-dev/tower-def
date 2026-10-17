@@ -6,6 +6,10 @@ import type { GameSetupConfig } from '../../../shared/config/game-setup';
 import { mapCreepSendPanelToViewModel } from '../model/mapCreepSendPanelToViewModel';
 import { CreepDevelopCard } from './CreepDevelopCard';
 import { CreepSendCard } from './CreepSendCard';
+import { FactionEmblem } from '../../../shared/ui/faction-emblem';
+
+/** Side of the race emblem in the panel heading, in px; fits the heading line. */
+const TITLE_EMBLEM_SIZE = 20;
 
 export type CreepSendPanelProps = {
   setup: GameSetupConfig | null;
@@ -44,7 +48,10 @@ function CreepSendPanelComponent({ setup, isCompact = false }: CreepSendPanelPro
     >
       <div className={styles.header}>
         <span className={`ui-heading ${styles.title}`}>
-          {isDeveloping ? 'Develop' : 'Send'} {viewModel.raceName}
+          <FactionEmblem race={viewModel.raceId} size={TITLE_EMBLEM_SIZE} decorative />
+          <span className={styles.titleText}>
+            {isDeveloping ? 'Develop' : 'Send'} {viewModel.raceName}
+          </span>
         </span>
         {!isCompact && (
           <button

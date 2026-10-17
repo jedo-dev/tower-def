@@ -53,6 +53,27 @@ describe('GameSetupPage selection semantics', () => {
     expect(consoleError).not.toHaveBeenCalled();
   });
 
+  it('shows each race emblem on the carousel and the enemy cards', () => {
+    renderPage();
+    const firstRace = builderFactions[0];
+
+    expect(document.querySelector('.setup-race-emblem')?.getAttribute('src')).toBe(
+      `/assets/ui/factions/${firstRace.id.toLowerCase()}.webp`,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Choose' }));
+
+    const group = screen.getByRole('radiogroup', { name: ENEMY_FACTION_GROUP_LABEL });
+    const sources = within(group)
+      .getAllByRole('radio')
+      .map((radio) => radio.querySelector('img')?.getAttribute('src'));
+    expect(sources).toEqual(
+      enemyFactions.map((faction) => `/assets/ui/factions/${faction.id.toLowerCase()}.webp`),
+    );
+    // The card's own name labels it; the emblem stays silent.
+    expect(within(group).queryAllByRole('img')).toHaveLength(0);
+    expect(consoleError).not.toHaveBeenCalled();
+  });
+
   it('moves the enemy selection and focus with the arrow keys', () => {
     renderPage();
     fireEvent.click(screen.getByRole('button', { name: 'Choose' }));
