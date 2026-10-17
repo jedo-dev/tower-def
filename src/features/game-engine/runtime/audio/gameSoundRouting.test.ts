@@ -35,7 +35,11 @@ const LIBRARY: SoundProfileLibrary = {
       race,
       {
         race,
-        sounds: { attack: RACE_ATTACK[race], creepDeath: RACE_ATTACK[race] },
+        sounds: {
+          attack: RACE_ATTACK[race],
+          build: RACE_ATTACK[race],
+          creepDeath: RACE_ATTACK[race],
+        },
         archetypes: {},
       },
     ]),
@@ -56,9 +60,10 @@ function createTower(overrides: Partial<TowerEntity> = {}): TowerEntity {
 
 describe('resolveTowerEntitySound', () => {
   it('takes the race from the authored tower, not from the fallback', () => {
+    // Build: a slot the tower's own content leaves to its race.
     const elfTower = createTower({ buildableTowerId: 'elf_moon_archer_tower' });
 
-    expect(resolveTowerEntitySound(elfTower, RaceId.UNDEAD, TowerSoundSlot.ATTACK, LIBRARY)).toBe(
+    expect(resolveTowerEntitySound(elfTower, RaceId.UNDEAD, TowerSoundSlot.BUILD, LIBRARY)).toBe(
       RACE_ATTACK[RaceId.ELF],
     );
   });

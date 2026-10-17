@@ -16,6 +16,12 @@
       "spriteKey": "unit.elf.archer",
       "description": "Swift sentinel striking from the shadows of the forest.",
       "lore": "She learned the bow before she learned to speak, and the forest taught her both. The arrow is loosed before the leaf lands.",
+      "sounds": {
+        "creepHit": "combat.creep.elf_archer.hit",
+        "creepDeath": "combat.creep.elf_archer.death",
+        "creepEscape": "combat.creep.elf_archer.escape",
+        "creepSpawn": "combat.creep.elf_archer.spawn"
+      },
       "talentBranches": [
         {
           "id": "elf_archer_evasion",
@@ -133,6 +139,12 @@
       "spriteKey": "unit.elf.wisp",
       "description": "Grove spirit that darts past slow towers and dies to one hit.",
       "lore": "A spirit of the grove, more light than body. It drifts where the forest wants to look and ends where it must.",
+      "sounds": {
+        "creepHit": "combat.creep.elf_wisp.hit",
+        "creepDeath": "combat.creep.elf_wisp.death",
+        "creepEscape": "combat.creep.elf_wisp.escape",
+        "creepSpawn": "combat.creep.elf_wisp.spawn"
+      },
       "talentBranches": [
         {
           "id": "elf_wisp_firefly",
@@ -245,6 +257,12 @@
       "spriteKey": "unit.elf.huntress",
       "description": "Mounted glaive rider that crosses the map before towers reload.",
       "lore": "Glaive and nightsaber move as one shadow under the moon. What she hunts does not hear the branches part.",
+      "sounds": {
+        "creepHit": "combat.creep.elf_huntress.hit",
+        "creepDeath": "combat.creep.elf_huntress.death",
+        "creepEscape": "combat.creep.elf_huntress.escape",
+        "creepSpawn": "combat.creep.elf_huntress.spawn"
+      },
       "talentBranches": [
         {
           "id": "elf_huntress_moon_blade",
@@ -362,6 +380,12 @@
       "spriteKey": "unit.elf.dryad",
       "description": "Half-spirit creature that slips through unarmored and quick.",
       "lore": "Daughter of the grove, half bark and half breeze. Spells slide off her like rain off a leaf.",
+      "sounds": {
+        "creepHit": "combat.creep.elf_dryad.hit",
+        "creepDeath": "combat.creep.elf_dryad.death",
+        "creepEscape": "combat.creep.elf_dryad.escape",
+        "creepSpawn": "combat.creep.elf_dryad.spawn"
+      },
       "talentBranches": [
         {
           "id": "elf_dryad_spell_immunity",
@@ -512,6 +536,12 @@
       "spriteKey": "unit.elf.chimera",
       "description": "Twin-headed beast too heavy to keep up with its own kin.",
       "lore": "Two heads grown from one old grudge of the wild. It is too heavy for the canopy, so it comes the long way, and it still comes.",
+      "sounds": {
+        "creepHit": "combat.creep.elf_chimera.hit",
+        "creepDeath": "combat.creep.elf_chimera.death",
+        "creepEscape": "combat.creep.elf_chimera.escape",
+        "creepSpawn": "combat.creep.elf_chimera.spawn"
+      },
       "talentBranches": [
         {
           "id": "elf_chimera_acid_breath",
@@ -650,6 +680,12 @@
       "spriteKey": "unit.elf.druid_of_the_claw",
       "description": "Bear-shaped druid, the broadest thing the forest sends on foot.",
       "lore": "He slept a thousand years as a bear and woke as one. The claw remembers what the druid chose to forget.",
+      "sounds": {
+        "creepHit": "combat.creep.elf_druid_of_the_claw.hit",
+        "creepDeath": "combat.creep.elf_druid_of_the_claw.death",
+        "creepEscape": "combat.creep.elf_druid_of_the_claw.escape",
+        "creepSpawn": "combat.creep.elf_druid_of_the_claw.spawn"
+      },
       "talentBranches": [
         {
           "id": "elf_druid_of_the_claw_bear_form",
@@ -786,6 +822,12 @@
       "spriteKey": "unit.elf.hippogryph",
       "description": "Crag flyer that crosses the board before towers turn.",
       "lore": "Half eagle, half stag, wholly of the high crags. It stoops like a thought and is gone before the string sings.",
+      "sounds": {
+        "creepHit": "combat.creep.elf_hippogryph.hit",
+        "creepDeath": "combat.creep.elf_hippogryph.death",
+        "creepEscape": "combat.creep.elf_hippogryph.escape",
+        "creepSpawn": "combat.creep.elf_hippogryph.spawn"
+      },
       "talentBranches": [
         {
           "id": "elf_hippogryph_whirlwind",
@@ -893,6 +935,12 @@
       "spriteKey": "unit.elf.mountain_giant",
       "description": "Walking crag with trees on its back and no reason to hurry.",
       "lore": "The mountain grew tired of being climbed and stood up. Trees ride on its shoulders, and it does not hurry for anyone.",
+      "sounds": {
+        "creepHit": "combat.creep.elf_mountain_giant.hit",
+        "creepDeath": "combat.creep.elf_mountain_giant.death",
+        "creepEscape": "combat.creep.elf_mountain_giant.escape",
+        "creepSpawn": "combat.creep.elf_mountain_giant.spawn"
+      },
       "talentBranches": [
         {
           "id": "elf_mountain_giant_stone_flesh",
