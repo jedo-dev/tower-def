@@ -10,6 +10,8 @@ import {
 /** A stat the next level changes: its new value and the signed difference. */
 export type TowerStatDelta = TowerStatLine & {
   delta: string;
+  /** Next minus current, in the stat's own unit (cooldown in ms). */
+  difference: number;
 };
 
 /**
@@ -63,7 +65,7 @@ function mapStatDeltas(current: TowerCombatStats, next: TowerCombatStats): Tower
     const currentValue = reading.read(current) ?? 0;
     const difference = nextValue - currentValue;
     if (Math.abs(difference) > STAT_EPSILON) {
-      deltas.push({ ...line, delta: reading.formatDelta(difference) });
+      deltas.push({ ...line, delta: reading.formatDelta(difference), difference });
     }
   }
 

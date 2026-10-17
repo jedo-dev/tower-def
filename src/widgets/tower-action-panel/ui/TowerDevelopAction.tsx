@@ -13,7 +13,8 @@ export type TowerDevelopActionProps = {
 /**
  * The grade-3 "Develop" button and the branch chooser it opens. Unaffordable,
  * it stays focusable (aria-disabled) so the reason is read out and a tap
- * answers with the error sound instead of silence.
+ * answers with the error sound instead of silence. The reason sits under the
+ * label inside the 44px button: the sheet has no spare row for it.
  */
 export function TowerDevelopAction({ towerId, towerName, develop }: TowerDevelopActionProps) {
   const [isChooserOpen, setIsChooserOpen] = useState(false);
@@ -35,7 +36,7 @@ export function TowerDevelopAction({ towerId, towerName, develop }: TowerDevelop
     <>
       <button
         type="button"
-        className={`fantasy-button fantasy-button--emerald fantasy-button--compact ${styles.actionBtn} ${isBlocked ? styles.actionBtnBlocked : ''}`}
+        className={`fantasy-button fantasy-button--steel ${styles.actionBtn} ${styles.developBtn} ${isBlocked ? styles.actionBtnBlocked : ''}`}
         aria-disabled={isBlocked || undefined}
         aria-haspopup="dialog"
         aria-label={`Develop tower: choose a branch for ${develop.cost} gold`}
@@ -43,14 +44,13 @@ export function TowerDevelopAction({ towerId, towerName, develop }: TowerDevelop
         data-sound={isBlocked ? 'ui.error' : 'ui.open'}
         onClick={handleOpen}
       >
-        <span>Develop</span>
-        <span className={styles.btnCost}>${develop.cost}</span>
+        <span className={styles.actionLabel}>Develop ${develop.cost}</span>
+        {develop.blockedReason !== null && (
+          <span id={reasonId} className={styles.actionReason}>
+            {develop.blockedReason}
+          </span>
+        )}
       </button>
-      {develop.blockedReason !== null && (
-        <p id={reasonId} className={styles.blockedReason}>
-          {develop.blockedReason}
-        </p>
-      )}
       {isChooserOpen && (
         <BranchChooserDialog
           towerName={towerName}

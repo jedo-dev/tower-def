@@ -74,6 +74,36 @@
 }
 
 /*
+ * Dock slot: the send panel (the dock) and, while a tower is selected, the
+ * tower sheet standing in for it. The dock stays mounted and laid out under
+ * the sheet (hidden, inert), so its tab, mode and scroll come back exactly.
+ * Open in portrait, the strip is locked at the dock's measured height (see
+ * useStripHeightLock) and the slot takes whatever the collapsed HUD leaves;
+ * unlocked (no measurement yet) it falls back to the sheet's own height.
+ */
+.game-dock-slot {
+  position: relative;
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.game-panels--sheet-open .game-dock-slot {
+  flex: 1 1 var(--tower-sheet-height);
+  min-height: 0;
+  overflow: hidden;
+}
+
+.game-panels--sheet-open .game-dock {
+  visibility: hidden;
+}
+
+/* Only the slot gives way to the lock; the HUD keeps its rows. */
+.game-panels--sheet-open > :not(.game-dock-slot) {
+  flex-shrink: 0;
+}
+
+/*
  * Landscape phones (the class comes from useLandscapeLayout, one breakpoint
  * in shared/constants/layout): the board fills the height on the left and
  * the send panel + HUD become a scrollable column on the right, so nothing
@@ -123,4 +153,10 @@
  * squashing the HUD into its own inner scroller next to the board. */
 .game-page--landscape .game-panels > * {
   flex-shrink: 0;
+}
+
+/* Landscape: the column is not locked; the sheet takes its own height at the
+ * top of the right column and the HUD follows. */
+.game-page--landscape .game-panels--sheet-open .game-dock-slot {
+  flex: 0 0 var(--tower-sheet-height);
 }
