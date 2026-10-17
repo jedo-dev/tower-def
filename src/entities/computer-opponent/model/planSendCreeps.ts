@@ -172,6 +172,7 @@ function selectCreepsToSend(
   // Our creeps are valued against the damage types the defender's towers deal.
   const candidates = createSendCandidates(
     context.raceId,
+    context.round,
     createContextSendValuation(context, tuning),
   );
   if (candidates.length === 0) {

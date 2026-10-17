@@ -1,6 +1,8 @@
 import {
   getSendCapPerWave,
+  getSendUnlockWave,
   getUnitTypeSendCapByTier,
+  isSendTierUnlocked,
   resolveNextSendUnit,
   sendCreep,
   type DuelMatchState,
@@ -57,6 +59,16 @@ export function handleSendCreepCommand(deps: SendCreepCommandDeps, creepTypeId: 
 
   // At the creature grade the player owns now: a graded `freeNthSend` counts.
   const unit = resolveNextSendUnit(deps.getDuelMatchState().player, sendableCreepTypeId);
+  if (!isSendTierUnlocked(unit.tier, deps.getDuelMatchState().round)) {
+    publishGameEvent('creep-send-rejected', {
+      creepTypeId,
+      reason: 'tier_locked',
+      gold: deps.getDuelMatchState().player.gold,
+      unlockWave: getSendUnlockWave(unit.tier),
+    });
+    return;
+  }
+
   const result = sendCreep(deps.getDuelMatchState(), true, unit.id, unit.tier, {
     freeNthSend: unit.abilities?.freeNthSend,
   });

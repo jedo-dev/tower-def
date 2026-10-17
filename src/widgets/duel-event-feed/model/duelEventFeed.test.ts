@@ -122,6 +122,9 @@ describe('duel event feed model', () => {
         sendLimit: 2,
       }),
     ).toBe('Send failed: 2 of this creep per wave');
+    expect(
+      formatSendRejected({ creepTypeId: 'x', reason: 'tier_locked', gold: 10, unlockWave: 8 }),
+    ).toBe('Send failed: unlocks from wave 8');
   });
 });
 

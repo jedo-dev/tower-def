@@ -94,6 +94,8 @@ export type GameSceneHarness = {
   setPlayerGold: (gold: number) => void;
   /** Test-only: replaces the player's creature experience ledger. */
   setPlayerCreatureXp: (xpByTier: CreatureXpByTier) => void;
+  /** Test-only: sets the duel rounds fought, so the send unlock schedule opens later tiers. */
+  setDuelRound: (round: number) => void;
   switchBattlefieldView: (view: BattlefieldView) => void;
   /** Left mouse click on the tile that anchors a tower footprint at `anchor`. */
   clickBuildAnchor: (anchor: GridPosition) => void;
@@ -192,6 +194,11 @@ export async function createGameSceneHarness(
         ...host.duelMatchState,
         player: { ...host.duelMatchState.player, creatureXpByTier: xpByTier },
       };
+    },
+    setDuelRound: (round) => {
+      // Test-only seam: the send unlock gate reads the rounds fought; this skips them.
+      const host = scene as unknown as { duelMatchState: DuelMatchState };
+      host.duelMatchState = { ...host.duelMatchState, round };
     },
     switchBattlefieldView: (view) => sendGameCommand('switch-battlefield-view', { view }),
     clickBuildAnchor: (anchor) => pointers.clickAt(toAnchorScreenPoint(systems, anchor)),

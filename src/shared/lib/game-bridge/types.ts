@@ -23,7 +23,8 @@ export type CreepSendRejectionReason =
   | 'not_build_phase'
   | 'match_over'
   | 'wave_send_cap'
-  | 'unit_type_send_cap';
+  | 'unit_type_send_cap'
+  | 'tier_locked';
 /**
  * Why a tower build was refused. The two path reasons tell the builder which
  * creep size class the block would cut off: a small block seals everything,
@@ -212,6 +213,8 @@ export type GameEventMap = {
     requiredGold?: number;
     /** The cap that was hit, for the send-limit reasons. */
     sendLimit?: number;
+    /** `tier_locked`: the first wave the creature's tier can be sent into. */
+    unlockWave?: number;
   };
   'send-queue-updated': {
     owner: DuelistSide;

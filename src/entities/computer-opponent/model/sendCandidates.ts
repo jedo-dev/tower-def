@@ -1,5 +1,6 @@
 import { UnitMoveType, type RaceId } from '../../../shared/types/content-ids';
 import { getIncomeBonusByTier, getSendCostByTier } from '../../duel-match/model/sendEconomy';
+import { isSendTierUnlocked } from '../../duel-match/model/sendUnlock';
 import { getRaceRegistry } from '../../race-registry/model/registries';
 import { resolveUnitConfigById } from '../../unit/model/registry';
 import {
@@ -72,11 +73,23 @@ export function computeSendPressureEfficiency(
   return (computeEffectiveHealth(unit, mix, valuation.healthMultiplier) * survival) / cost;
 }
 
+/**
+ * What the race can send in the build phase after `round` waves: a tier the
+ * send unlock schedule still locks (`CREATURE_SEND_UNLOCK_WAVE_BY_TIER`) is no
+ * candidate, so the computer plays by the player's rule.
+ */
+export function listUnlockedSendableIds(raceId: RaceId, round: number): UnitId[] {
+  return getRaceRegistry(raceId).sendableCreepIds.filter((id) =>
+    isSendTierUnlocked(resolveUnitConfigById(id).tier, round),
+  );
+}
+
 export function createSendCandidates(
   raceId: RaceId,
+  round: number,
   valuation: SendValuation = NEUTRAL_VALUATION,
 ): SendCandidate[] {
-  return getRaceRegistry(raceId).sendableCreepIds.map((id) => {
+  return listUnlockedSendableIds(raceId, round).map((id) => {
     const talents = valuation.creatureTalents;
     const config =
       talents === undefined

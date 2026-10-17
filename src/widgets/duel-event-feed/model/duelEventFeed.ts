@@ -114,6 +114,8 @@ export function formatSendRejected(payload: GameEventMap['creep-send-rejected'])
       return `Send failed: ${payload.sendLimit ?? '?'} sends per wave`;
     case 'unit_type_send_cap':
       return `Send failed: ${payload.sendLimit ?? '?'} of this creep per wave`;
+    case 'tier_locked':
+      return `Send failed: unlocks from wave ${payload.unlockWave ?? '?'}`;
     default:
       return 'Send failed';
   }

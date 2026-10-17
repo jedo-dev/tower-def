@@ -4,6 +4,7 @@ import {
   getSendCapPerWave,
   type DuelMatchState,
 } from '../../../../entities/duel-match';
+import { getRaceRegistry } from '../../../../entities/race-registry';
 import { resolveUnitConfigById } from '../../../../entities/unit';
 import { RaceId } from '../../../../shared/types/content-ids';
 import { onGameEvent } from '../../../../shared/lib/game-bridge/bridge';
@@ -44,13 +45,12 @@ describe('send limits bridge events', () => {
 
     expect(limits.waveSendCap).toBe(getSendCapPerWave());
     expect(limits.waveSendsRemaining).toBe(getSendCapPerWave());
-    expect(limits.units.map((unit) => unit.creepTypeId)).toEqual([
-      'undead_skeleton',
-      'undead_ghoul',
-      'undead_crypt_fiend',
-      'undead_gargoyle',
-    ]);
-    expect(limits.units.every((unit) => unit.remaining === unit.cap)).toBe(true);
+    // Every creature of the race, locked tiers included: the dock plans ahead.
+    expect(limits.units.map((unit) => unit.creepTypeId)).toEqual(
+      getRaceRegistry(RaceId.UNDEAD).sendableCreepIds,
+    );
+    expect(limits.units).toHaveLength(8);
+    expect(limits.units.every((unit) => unit.remaining === unit.cap && unit.cap > 0)).toBe(true);
   });
 
   it('publishes the reduced capacity after a successful send', () => {
