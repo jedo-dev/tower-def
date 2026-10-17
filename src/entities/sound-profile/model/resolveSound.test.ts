@@ -7,7 +7,7 @@ import {
   TowerSoundSlot,
   type SoundId,
 } from '../../../shared/types/sound-ids';
-import { resolveCreepSound, resolveTowerSound } from './resolveSound';
+import { createCreepSoundTable, resolveCreepSound, resolveTowerSound } from './resolveSound';
 import { SOUND_PROFILE_LIBRARY } from './soundProfileLibrary';
 import type { RaceSoundProfile, SoundProfileLibrary } from './soundProfile.types';
 
@@ -18,6 +18,7 @@ const STEP = {
   race: 'ui.open',
   defaultArchetype: 'ui.close',
   defaultBase: 'ui.error',
+  creature: 'ui.wave_start',
   creepRace: 'ui.success',
   creepDefault: 'ui.victory',
 } as const satisfies Record<string, SoundId>;
@@ -43,6 +44,7 @@ function createLibrary(orcProfile: Partial<RaceSoundProfile> = {}): SoundProfile
         creepHit: STEP.creepDefault,
         creepDeath: STEP.creepDefault,
         creepEscape: STEP.creepDefault,
+        creepSpawn: STEP.creepDefault,
       },
       archetypes: { [TowerTypeId.FROST]: { attack: STEP.defaultArchetype } },
     },
@@ -108,22 +110,60 @@ describe('resolveTowerSound fallback chain', () => {
 });
 
 describe('resolveCreepSound fallback chain', () => {
-  it('uses the creature race profile first', () => {
-    const library = createLibrary(ORC_WITH_EVERY_LAYER);
+  const ORC_WITH_EVERY_CREEP_SLOT: Partial<RaceSoundProfile> = {
+    sounds: {
+      creepHit: STEP.creepRace,
+      creepDeath: STEP.creepRace,
+      creepEscape: STEP.creepRace,
+      creepSpawn: STEP.creepRace,
+    },
+  };
 
-    expect(resolveCreepSound(library, RaceId.ORC, CreepSoundSlot.DEATH)).toBe(STEP.creepRace);
+  it.each(CREEP_SOUND_SLOTS)('1. prefers the creature override for %s', (slot) => {
+    const library = createLibrary(ORC_WITH_EVERY_CREEP_SLOT);
+
+    expect(resolveCreepSound(library, RaceId.ORC, { [slot]: STEP.creature }, slot)).toBe(
+      STEP.creature,
+    );
   });
 
-  it('falls back to the default when the race does not set the slot', () => {
-    const library = createLibrary(ORC_WITH_EVERY_LAYER);
+  it.each(CREEP_SOUND_SLOTS)('2. uses the race profile for %s without an override', (slot) => {
+    const library = createLibrary(ORC_WITH_EVERY_CREEP_SLOT);
 
-    expect(resolveCreepSound(library, RaceId.ORC, CreepSoundSlot.ESCAPE)).toBe(STEP.creepDefault);
+    expect(resolveCreepSound(library, RaceId.ORC, {}, slot)).toBe(STEP.creepRace);
+  });
+
+  it.each(CREEP_SOUND_SLOTS)('3. ends at the default for %s', (slot) => {
+    const library = createLibrary();
+
+    expect(resolveCreepSound(library, RaceId.ORC, undefined, slot)).toBe(STEP.creepDefault);
   });
 
   it('uses the default for a creature with no known race', () => {
     const library = createLibrary(ORC_WITH_EVERY_LAYER);
 
-    expect(resolveCreepSound(library, undefined, CreepSoundSlot.DEATH)).toBe(STEP.creepDefault);
+    expect(resolveCreepSound(library, undefined, undefined, CreepSoundSlot.DEATH)).toBe(
+      STEP.creepDefault,
+    );
+  });
+});
+
+describe('createCreepSoundTable', () => {
+  it('resolves every slot of every creature once, keyed by creature id', () => {
+    const library = createLibrary(ORC_WITH_EVERY_LAYER);
+    const table = createCreepSoundTable(library, [
+      { id: 'orc_grunt', faction: RaceId.ORC, sounds: { creepSpawn: STEP.creature } },
+      { id: 'elf_wisp', faction: RaceId.ELF },
+    ]);
+
+    expect(table.get('orc_grunt')).toEqual({
+      creepHit: STEP.creepDefault,
+      creepDeath: STEP.creepRace,
+      creepEscape: STEP.creepDefault,
+      creepSpawn: STEP.creature,
+    });
+    expect(table.get('elf_wisp')?.creepDeath).toBe(STEP.creepDefault);
+    expect(Object.isFrozen(table.get('orc_grunt'))).toBe(true);
   });
 });
 
@@ -138,7 +178,9 @@ describe('authored sound profiles', () => {
         }
       }
       for (const slot of CREEP_SOUND_SLOTS) {
-        expect(resolveCreepSound(SOUND_PROFILE_LIBRARY, race, slot)).toBeTypeOf('string');
+        expect(resolveCreepSound(SOUND_PROFILE_LIBRARY, race, undefined, slot)).toBeTypeOf(
+          'string',
+        );
       }
     }
   });

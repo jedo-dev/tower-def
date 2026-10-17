@@ -191,3 +191,32 @@ describe('isFieldWaveResolved', () => {
     expect(isFieldWaveResolved({ pendingWaveSpawns: [], activeCreeps: [] })).toBe(true);
   });
 });
+
+describe('sent creature spawn cue', () => {
+  it('announces sends on the receiving board, never baseline wave creeps', () => {
+    const { state } = scheduleComputerField();
+    const announced: (string | undefined)[] = [];
+    const deps: FieldSpawnDeps = {
+      ...SPAWN_DEPS,
+      onSentCreepSpawned: (creep) => announced.push(creep.unitId),
+    };
+
+    processPendingWaveSpawns(state, deps, Number.MAX_SAFE_INTEGER);
+
+    expect(state.activeCreeps).toHaveLength(BASELINE.length + PLAYER_SENDS.length);
+    expect(announced).toEqual(PLAYER_SENDS.map((unit) => unit.id));
+  });
+
+  it('announces the computer sends on the player board', () => {
+    const state = schedulePlayerField();
+    const announced: (string | undefined)[] = [];
+
+    processPendingWaveSpawns(
+      state,
+      { ...SPAWN_DEPS, onSentCreepSpawned: (creep) => announced.push(creep.unitId) },
+      Number.MAX_SAFE_INTEGER,
+    );
+
+    expect(announced).toEqual(COMPUTER_SENDS.map((unit) => unit.id));
+  });
+});

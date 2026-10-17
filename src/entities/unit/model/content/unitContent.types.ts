@@ -15,9 +15,16 @@ import { UnitMoveType, UnitSizeClass } from '../../../../shared/types/content-id
  * Bumped whenever the authored creature format changes shape. Version 3 (shared
  * with towers, which gained damage types in the same change) replaced the
  * single `armor` and the `armorType` bonus with `physicalArmor` and
- * `magicalArmor`. Version 4 added the required `talentBranches`.
+ * `magicalArmor`. Version 4 added the required `talentBranches`. Version 5
+ * added the optional per-creature `sounds`.
  */
-export const UNIT_CONTENT_SCHEMA_VERSION = 4;
+export const UNIT_CONTENT_SCHEMA_VERSION = 5;
+
+/**
+ * The format before creature sounds. It is a version 5 file without `sounds`,
+ * so the loader migrates it in place instead of rejecting it.
+ */
+export const UNIT_CONTENT_NO_SOUNDS_SCHEMA_VERSION = 4;
 
 /** The two-armor format without talent branches, recognised to explain the migration. */
 export const UNIT_CONTENT_NO_TALENTS_SCHEMA_VERSION = 3;
@@ -44,6 +51,11 @@ export type UnitContentEntry = {
   /** Optional creature abilities, validated by `parseUnitAbilities`. */
   abilities?: unknown;
   talentBranches: UnitTalentBranchContentEntry[];
+  /**
+   * Optional per-creature sounds `{ creepHit, creepDeath, creepEscape,
+   * creepSpawn }`, each a registered sound id (schemaVersion 5).
+   */
+  sounds?: unknown;
 };
 
 /** One authored grade (1-4) of a creature talent branch. */
@@ -131,6 +143,7 @@ export const UNIT_CONTENT_OPTIONAL_KEYS: readonly (keyof UnitContentEntry)[] = [
   'moveType',
   'sizeClass',
   'abilities',
+  'sounds',
 ];
 
 export const UNIT_CONTENT_FILE_KEYS: readonly (keyof UnitContentFile)[] = [

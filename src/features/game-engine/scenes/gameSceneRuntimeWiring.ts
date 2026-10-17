@@ -10,6 +10,7 @@ import {
 } from '../../../entities/duel-match';
 import type { UnitConfig } from '../../../entities/unit';
 import type { SoundId } from '../../../shared/lib/sound-registry/audio.types';
+import { CreepSoundSlot } from '../../../shared/types/sound-ids';
 import type { GameAudioManager } from '../sound/GameAudioManager';
 import { SILENT_SOUND_ROUTER, type GameSoundRouter } from '../runtime/audio/gameSoundRouting';
 import type { BattlefieldRenderState } from '../runtime/battlefield/battlefieldRenderState';
@@ -138,6 +139,7 @@ function createWaveRuntimeDeps(host: GameSceneWiringHost): WaveRuntimeDependenci
       const ringColor = resolveSenderRingColor(creep.entity.sender, player.raceId, opponent.raceId);
       attachCreepAdornments(host.scene, host.creepAdornmentPool, creep, ringColor);
     },
+    onSentCreepSpawned: (creep) => host.soundRouter.playCreepSound(creep, CreepSoundSlot.SPAWN),
     playSound: (soundId: SoundId) => host.getSoundManager()?.play(soundId),
   };
 }

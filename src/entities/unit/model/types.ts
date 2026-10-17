@@ -1,6 +1,7 @@
 import type { UnitMoveType, UnitSizeClass } from '../../../shared/types/content-ids';
 import { RaceId } from '../../../shared/types/content-ids';
 import type { CreatureAbilities } from '../../../shared/types/creatureAbilities';
+import type { CreepSoundSet } from '../../../shared/types/sound-ids';
 import type { CreatureTalentBranchDefinition } from './content/creatureTalentContent';
 
 export { RaceId as Faction };
@@ -93,4 +94,9 @@ export type UnitConfig = {
    * resolved at a talent grade carries that grade's abilities instead.
    */
   abilities?: CreatureAbilities;
+  /**
+   * The creature's own sounds (docs/08, "Sound Profiles"); any slot it leaves
+   * out falls back to its race profile, then the default profile.
+   */
+  sounds?: CreepSoundSet;
 };
