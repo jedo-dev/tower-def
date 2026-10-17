@@ -39,6 +39,7 @@ import {
   type BuildRoutePreviewRuntime,
 } from '../../runtime/grid/buildRoutePreviewRuntime';
 import type { GridRendererState } from '../../runtime/grid/gameSceneGridRenderer';
+import { createPathRibbonState } from '../../runtime/grid/pathRibbonRenderer';
 import {
   createInputControllerState,
   type InputControllerState,
@@ -145,6 +146,7 @@ export function createGameSceneState(): GameSceneState {
       terrainSprites: [],
       gridLabels: [],
       endpointMarkers: [],
+      pathRibbon: createPathRibbonState(),
     },
     buildPreviewOverlay: null,
     routePreview: createBuildRoutePreviewRuntime(),

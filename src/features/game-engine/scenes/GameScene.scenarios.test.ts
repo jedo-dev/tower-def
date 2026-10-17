@@ -5,7 +5,6 @@ import { resolveUnitConfigById } from '../../../entities/unit';
 import { GRID_DIMENSIONS } from '../../../shared/constants/grid';
 import { RaceId, TowerTypeId, UnitMoveType } from '../../../shared/types/content-ids';
 import type { GridCell, GridPoint } from '../../../shared/types/grid';
-import type { FakeGameObject } from '../test/fakePhaser';
 import {
   createGameSceneHarness,
   HARNESS_DEFAULT_SETUP,
@@ -169,19 +168,9 @@ describe('GameScene scenarios (headless harness)', () => {
 
       const toCellKeys = (points: readonly GridPoint[]) =>
         new Set(points.map((point) => `${point.x}:${point.y}`));
+      // The trail ribbon's signature lists the route cells it is drawn along.
       const drawnPathCellKeys = () =>
-        toCellKeys(
-          game
-            .inspect()
-            .gridRenderer.terrainSprites.filter(
-              (sprite) => !(sprite as unknown as FakeGameObject).isDestroyed,
-            )
-            .filter((sprite) => sprite.texture.key.endsWith('/path.png'))
-            .map((sprite) => ({
-              x: sprite.getData('cellX') as number,
-              y: sprite.getData('cellY') as number,
-            })),
-        );
+        new Set((game.inspect().gridRenderer.pathRibbon.signature ?? '').split('|').slice(1));
       const drawnOccupiedCellKeys = () => {
         const overlays = game
           .createdObjects()

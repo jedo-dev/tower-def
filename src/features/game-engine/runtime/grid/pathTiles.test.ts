@@ -5,6 +5,7 @@ import {
   refreshPathTiles,
   selectPlayerPathRoute,
   toPathCellKeys,
+  toTrailCellKeys,
 } from './pathTiles';
 
 function createRow(length: number): GridCell[] {
@@ -78,6 +79,27 @@ describe('refreshPathTiles', () => {
     refreshPathTiles(cells, toPathCellKeys(route), route, () => undefined, drawCell);
 
     expect(drawCell).not.toHaveBeenCalled();
+  });
+});
+
+describe('toTrailCellKeys', () => {
+  it('adds the two cells flanking each diagonal step, which the ribbon brushes', () => {
+    const keys = toTrailCellKeys([
+      { x: 0, y: 0 },
+      { x: 1, y: 0 },
+      { x: 2, y: 1 },
+    ]);
+
+    expect([...keys].sort()).toEqual(['0:0', '1:0', '1:1', '2:0', '2:1']);
+  });
+
+  it('is the route itself when the route has no diagonal step', () => {
+    const route = [
+      { x: 0, y: 0 },
+      { x: 0, y: 1 },
+    ];
+
+    expect(toTrailCellKeys(route)).toEqual(toPathCellKeys(route));
   });
 });
 

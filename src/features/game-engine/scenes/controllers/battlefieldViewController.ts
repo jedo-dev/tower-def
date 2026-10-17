@@ -3,7 +3,7 @@ import type { GameEventMap } from '../../../../shared/lib/game-bridge/types';
 import { setBattlefieldRenderStateVisible } from '../../runtime/battlefield/battlefieldRenderState';
 import { rebuildOpponentBattlefieldRenderState } from '../../runtime/battlefield/battlefieldSpriteFactory';
 import { syncCreepListAdornments } from '../../runtime/creep/creepAdornments';
-import { getPlayerPathRoute, redrawTerrainTiles } from './boardRenderController';
+import { getPlayerPathRoute, showPathRoute } from './boardRenderController';
 import type { GameSceneState } from './gameSceneState';
 import { publishHudSnapshot } from './hudSnapshotPublisher';
 import type { GameSceneCore } from './sceneQueries';
@@ -63,8 +63,7 @@ export function renderVisibleBattlefield(core: GameSceneCore): void {
     ? state.duelMatchState.opponent.battlefield.routes.small
     : getPlayerPathRoute(state);
   if (!showOpponent) state.arePathTilesStale = false;
-  state.pathCellKeys = new Set(visiblePath.map((cell) => `${cell.x}:${cell.y}`));
-  redrawTerrainTiles(core);
+  showPathRoute(core, visiblePath);
 }
 
 export function handleBattlefieldViewChanged(

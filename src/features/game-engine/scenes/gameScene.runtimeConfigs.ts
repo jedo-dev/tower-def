@@ -1,7 +1,10 @@
 import type { CombatRuntimeConfig } from '../runtime/combat/gameSceneCombatRuntime';
 import type { GridPreviewConfig } from '../runtime/grid/gameSceneGridPreviewRuntime';
 import type { GridRendererConfig } from '../runtime/grid/gameSceneGridRenderer';
+import type { PathRibbonConfig } from '../runtime/grid/pathRibbonRenderer';
 import type { RoutePreviewConfig } from '../runtime/grid/routePreviewRenderer';
+import { GRID_DIMENSIONS } from '../../../shared/constants/grid';
+import { PATH_RIBBON_STYLE } from '../../../shared/constants/terrain';
 import type { InputControllerConfig } from '../runtime/input/gameSceneInputController';
 import type { MovementRuntimeConfig } from '../runtime/movement/gameSceneMovementRuntime';
 import type { WaveRuntimeConfig } from '../runtime/wave/gameSceneWaveRuntime';
@@ -59,7 +62,10 @@ import {
   GRID_MAJOR_LINE_EVERY_CELLS,
   GRID_MINOR_LINE_ALPHA,
   IMPACT_EFFECT_LIFETIME_MS,
+  GRID_PIXEL_HEIGHT,
+  GRID_PIXEL_WIDTH,
   IMPACT_EFFECT_RENDER_DEPTH,
+  PATH_RIBBON_RENDER_DEPTH,
   PREVIEW_INVALID_FILL,
   PREVIEW_INVALID_STROKE,
   PREVIEW_VALID_FILL,
@@ -168,6 +174,17 @@ export const GRID_RENDERER_CONFIG: GridRendererConfig = {
   endpointMarkerLineWidth: ENDPOINT_MARKER_LINE_WIDTH,
   occupiedCellFillColor: OCCUPIED_CELL_FILL_COLOR,
   occupiedCellFillAlpha: OCCUPIED_CELL_FILL_ALPHA,
+};
+
+export const PATH_RIBBON_CONFIG: PathRibbonConfig = {
+  ...PATH_RIBBON_STYLE,
+  cellSize: GRID_DIMENSIONS.cellSize,
+  boardWidth: GRID_PIXEL_WIDTH,
+  boardHeight: GRID_PIXEL_HEIGHT,
+  renderDepth: PATH_RIBBON_RENDER_DEPTH,
+  // The trail keeps the look the per-cell path tiles had.
+  alpha: TERRAIN_BASE_TILE_ALPHA,
+  tint: TERRAIN_BASE_TILE_TINT,
 };
 
 export const MOVEMENT_RUNTIME_CONFIG: MovementRuntimeConfig = {

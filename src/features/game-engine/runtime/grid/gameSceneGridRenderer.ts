@@ -12,6 +12,7 @@ import {
   type GridOccupancyOverlayConfig,
   type GridOccupancyOverlayState,
 } from './gridOccupancyOverlay';
+import type { PathRibbonState } from './pathRibbonRenderer';
 
 export type GridRendererConfig = GridOccupancyOverlayConfig & {
   terrainRenderDepth: number;
@@ -40,6 +41,8 @@ export type GridRendererState = GridOccupancyOverlayState & {
   terrainSprites: Phaser.GameObjects.Image[];
   gridLabels: Phaser.GameObjects.Text[];
   endpointMarkers: Phaser.GameObjects.Graphics[];
+  /** The shown route's worn trail, above the ground tiles. */
+  pathRibbon: PathRibbonState;
 };
 
 export type GridRendererDeps = {
@@ -62,8 +65,15 @@ export function clearGridLabels(state: GridRendererState): void {
   state.endpointMarkers = [];
 }
 
+/** Cells under (or brushed by) the trail: ground tile, but no prop. */
 function isPathCell(cell: GridCell, deps: GridRendererDeps): boolean {
   return deps.pathCellKeys.has(`${cell.x}:${cell.y}`);
+}
+
+/** Texture key of a race's seamless path tile, which the trail is filled with. */
+export function resolvePathTextureKey(builderFactionId: BuilderFaction): string {
+  const faction = builderFactionToTerrainFaction(builderFactionId);
+  return `terrain:${faction}:${TILES[faction].path}`;
 }
 
 function renderFallbackTerrainCell(state: GridRendererState, cell: GridCell): void {
@@ -98,8 +108,8 @@ export function drawGridCell(
   const x = cell.x * GRID_DIMENSIONS.cellSize;
   const y = cell.y * GRID_DIMENSIONS.cellSize;
   const faction = builderFactionToTerrainFaction(deps.selectedBuilderFactionId);
-  const tile = isPathCell(cell, deps) ? TILES[faction].path : TILES[faction].ground;
-  const terrainKey = `terrain:${faction}:${tile}`;
+  // Ground everywhere: the route is painted on top as one ribbon (pathRibbonRenderer).
+  const terrainKey = `terrain:${faction}:${TILES[faction].ground}`;
 
   if (!deps.scene.textures.exists(terrainKey)) {
     renderFallbackTerrainCell(state, cell);
