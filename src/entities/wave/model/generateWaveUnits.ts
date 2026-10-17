@@ -1,7 +1,8 @@
-import { UnitMoveType } from '../../../shared/types/content-ids';
+import { UnitMoveType, type RaceId } from '../../../shared/types/content-ids';
 import { UnitTier, type UnitConfig } from '../../unit';
 import {
   WAVE_AIR_UNIT_BUDGET_MULTIPLIER,
+  WAVE_AIR_UNIT_BUDGET_MULTIPLIER_BY_RACE,
   WAVE_BUDGET_CURVE,
   WAVE_TIER_UNLOCK_WAVE,
   WAVE_TIER_VALUE_BY_TIER,
@@ -26,11 +27,23 @@ export function getWaveUnitCap(waveNumber: number): number {
   return Math.min(max, Math.floor(capBase + capPerWave * waveNumber));
 }
 
-/** Tier points a creature consumes; fliers cost more (`WAVE_AIR_UNIT_BUDGET_MULTIPLIER`). */
-export function getWaveUnitValue(unit: Pick<UnitConfig, 'tier' | 'moveType'>): number {
+/** Budget multiplier of a flier of `faction`: the roster's override, else the shared one. */
+export function getWaveAirUnitBudgetMultiplier(faction: RaceId | undefined): number {
+  const override =
+    faction === undefined ? undefined : WAVE_AIR_UNIT_BUDGET_MULTIPLIER_BY_RACE[faction];
+  return override ?? WAVE_AIR_UNIT_BUDGET_MULTIPLIER;
+}
+
+/**
+ * Tier points a creature consumes; fliers cost more
+ * (`WAVE_AIR_UNIT_BUDGET_MULTIPLIER`, per roster `WAVE_AIR_UNIT_BUDGET_MULTIPLIER_BY_RACE`).
+ */
+export function getWaveUnitValue(
+  unit: Pick<UnitConfig, 'tier' | 'moveType'> & { faction?: RaceId },
+): number {
   const tierValue = WAVE_TIER_VALUE_BY_TIER[unit.tier];
   return unit.moveType === UnitMoveType.AIR
-    ? tierValue * WAVE_AIR_UNIT_BUDGET_MULTIPLIER
+    ? tierValue * getWaveAirUnitBudgetMultiplier(unit.faction)
     : tierValue;
 }
 

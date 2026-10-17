@@ -1,3 +1,4 @@
+import { RaceId } from '../../../shared/types/content-ids';
 import { UnitTier } from '../../unit';
 
 // Baseline wave curve. Every field faces the same rolled baseline each round,
@@ -30,6 +31,17 @@ export const WAVE_TIER_VALUE_BY_TIER: Readonly<Record<UnitTier, number>> = {
  * Tuned in tower-def-xwc.4 (docs/07, "Air creeps").
  */
 export const WAVE_AIR_UNIT_BUDGET_MULTIPLIER = 4;
+
+/**
+ * Per-roster override of `WAVE_AIR_UNIT_BUDGET_MULTIPLIER` for baseline
+ * waves. A roster whose fliers are few and light (elf: two, no tier 6 flier)
+ * fields fewer flying hit points at the shared multiplier, and its late waves
+ * stop leaking against full boards; a lower multiplier buys it more fliers
+ * per wave. Tuned in tower-def-716.9 (docs/07, "Roster balance").
+ */
+export const WAVE_AIR_UNIT_BUDGET_MULTIPLIER_BY_RACE: Readonly<Partial<Record<RaceId, number>>> = {
+  [RaceId.ELF]: 2,
+};
 
 /**
  * First wave a tier may appear in. Early waves are fodder an opening defence
