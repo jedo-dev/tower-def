@@ -1,6 +1,11 @@
 import { UnitMoveType } from '../../../../shared/types/content-ids';
 import type { TowerAbilities } from '../../../tower/model/abilities';
 import { NEUTRAL_DAMAGE_EFFICIENCY, type DamageTypeEfficiency } from '../damage-profile';
+import {
+  CREEP_CELLS_PER_SECOND_AT_UNIT_SPEED,
+  REFERENCE_CREEP_SPEED,
+  WAVE_SPAWN_INTERVAL_SECONDS,
+} from './constants';
 import { expectedCreepsAround } from './routeDensity';
 import type { RouteGeometry } from './routeGeometry';
 
@@ -72,7 +77,8 @@ export function computeCorpseExplosionFactor(
  * Damage per second a ground zone adds at `sampleIndex` on the ground lane,
  * in hit points of the wave `efficiency` describes: one zone's tick rate on
  * the creeps the route packs inside it, halved because creeps walk through
- * rather than stand. Overlapping zones and the zone's chill are not counted.
+ * rather than stand. Overlapping zones are not counted; the zone's chill is
+ * valued by the ledger (`computeGroundZoneChillWindow`).
  */
 export function computeGroundZoneDps(
   abilities: TowerAbilities | undefined,
@@ -95,4 +101,75 @@ export function computeGroundZoneDps(
     DEFERRED_MECHANICS_VALUATION.groundZoneRealism *
     efficiency[zone.damageType]
   );
+}
+
+/**
+ * Route samples a tower's ground zones keep chilled, the zone's slow, and the
+ * share of the wave that walks through a live zone there (tower-def-02k.13).
+ */
+export type ZoneChillWindow = {
+  readonly from: number;
+  readonly to: number;
+  readonly magnitude: number;
+  readonly share: number;
+};
+
+export const NO_ZONE_CHILL: ZoneChillWindow = { from: 0, to: -1, magnitude: 0, share: 0 };
+
+/**
+ * Route samples one creep spacing covers: the stream's gap between two
+ * creeps, the distance a tower's lead target walks before the next one leads.
+ */
+const CREEP_SPACING_SAMPLES =
+  WAVE_SPAWN_INTERVAL_SECONDS * CREEP_CELLS_PER_SECOND_AT_UNIT_SPEED * REFERENCE_CREEP_SPEED;
+
+/**
+ * Where and on what share of the wave a ground zone's chill holds. Zones land
+ * at the target's feet and towers shoot the creep nearest its exit, so while
+ * a wave streams past they land in the last creep spacing of the reach
+ * (`covered`), and the footprint is that band widened by the zone's radius.
+ * A zone chills every tick for `durationMs / tickMs` ticks, and the tower
+ * lays one per shot, so `shotsPerSecond` times that time zones lie at once,
+ * each over the route samples within its radius of the landing point (more
+ * at a turn). Their route coverage of the footprint, at most 1, is the share
+ * of the creeps walking there that walk through a live zone: the zone's
+ * counterpart of the struck share of an on-hit chill.
+ */
+export function computeGroundZoneChillWindow(
+  abilities: TowerAbilities | undefined,
+  geometry: RouteGeometry,
+  covered: readonly number[],
+  shotsPerSecond: number,
+  moveType: UnitMoveType = UnitMoveType.GROUND,
+): ZoneChillWindow {
+  const zone = abilities?.groundZone;
+  const chill = zone?.chill ?? 0;
+  if (
+    zone === undefined ||
+    chill <= 0 ||
+    moveType !== UnitMoveType.GROUND ||
+    covered.length === 0 ||
+    shotsPerSecond <= 0
+  ) {
+    return NO_ZONE_CHILL;
+  }
+  const last = covered[covered.length - 1];
+  const footprints = geometry.neighbourCounts(zone.radiusCells);
+  let firstLanding = last;
+  let footprint = 0;
+  let landings = 0;
+  for (const sample of covered) {
+    if (sample >= last - CREEP_SPACING_SAMPLES) {
+      firstLanding = Math.min(firstLanding, sample);
+      footprint += footprints[sample];
+      landings += 1;
+    }
+  }
+  const radiusSamples = Math.ceil(zone.radiusCells);
+  const from = Math.max(0, firstLanding - radiusSamples);
+  const to = Math.min(geometry.length - 1, last + radiusSamples);
+  const chilledMs = Math.floor(zone.durationMs / zone.tickMs) * zone.tickMs;
+  const zonesAlive = (chilledMs / MS_PER_SECOND) * shotsPerSecond;
+  const share = Math.min(1, (zonesAlive * (footprint / landings)) / (to - from + 1));
+  return { from, to, magnitude: chill, share };
 }
