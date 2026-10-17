@@ -1,13 +1,11 @@
 import { burst, hit, lowpass, thump } from './recipeKit';
+import { ORC_TAUREN_RECIPES } from './orcTrollTaurenRecipes';
 import {
-  bellow,
-  breath,
   chant,
   drum,
   rattle,
   screech,
   spark,
-  stomp,
   wingbeat,
   type OrcCreatureRecipes,
 } from './orcRecipeKit';
@@ -85,32 +83,8 @@ const WIND_RIDER: OrcCreatureRecipes<'orc_wind_rider'> = {
   },
 };
 
-/** Ground-shaking stomps and a deep bovine bellow: the heaviest orc. */
-const TAUREN: OrcCreatureRecipes<'orc_tauren'> = {
-  'combat.creep.orc_tauren.hit': {
-    seed: 691,
-    layers: [
-      thump(0, 78, 38, 0.09, 0.9),
-      { ...burst(0, 0.06, 0.35, [lowpass(260)]), envelope: hit(0.05) },
-      { ...bellow(0.005, 0.07, 82, 74, 0.2), envelope: hit(0.06, 0.004) },
-    ],
-  },
-  'combat.creep.orc_tauren.death': {
-    seed: 692,
-    layers: [bellow(0, 0.46, 92, 50, 0.6), breath(0, 0.3, 0.06), ...stomp(0.36, 0.85)],
-  },
-  'combat.creep.orc_tauren.escape': {
-    seed: 693,
-    layers: [...stomp(0, 0.7), ...stomp(0.18, 0.75), bellow(0.22, 0.32, 78, 96, 0.5)],
-  },
-  'combat.creep.orc_tauren.spawn': {
-    seed: 694,
-    layers: [...stomp(0, 0.7), ...stomp(0.14, 0.7), bellow(0.16, 0.4, 70, 92, 0.55)],
-  },
-};
-
 export const ORC_LATE_CREATURE_RECIPES = {
   ...SHAMAN,
   ...WIND_RIDER,
-  ...TAUREN,
+  ...ORC_TAUREN_RECIPES,
 };

@@ -108,74 +108,6 @@ export function footfall(startSec: number, gain: number, pitchHz = 130): SfxLaye
   ];
 }
 
-/** Wolf howl: a breathy tone that glides up and wavers. */
-export function howl(
-  startSec: number,
-  durationSec: number,
-  fromHz: number,
-  toHz: number,
-  gain: number,
-): SfxLayer {
-  return {
-    waveform: 'triangle',
-    startSec,
-    durationSec,
-    frequencyHz: fromHz,
-    frequencyEndHz: toHz,
-    sweepCurve: 0.4,
-    vibrato: { rateHz: 6, depth: 0.025 },
-    drive: 0.8,
-    envelope: shaped(durationSec * 0.25, durationSec * 0.3, 0.6, durationSec * 0.35),
-    gain,
-    filters: [bandpass(900, undefined, 1.2)],
-  };
-}
-
-/** Rubbery gurgle: a low sine wobbling fast, like a throat full of water. */
-export function gurgle(
-  startSec: number,
-  durationSec: number,
-  fromHz: number,
-  toHz: number,
-  gain: number,
-): SfxLayer {
-  return {
-    waveform: 'sine',
-    startSec,
-    durationSec,
-    frequencyHz: fromHz,
-    frequencyEndHz: toHz,
-    vibrato: { rateHz: 24, depth: 0.3 },
-    tremolo: { rateHz: 17, depth: 0.6 },
-    drive: 1.2,
-    envelope: shaped(0.02, durationSec * 0.6, 0.4, durationSec * 0.3),
-    gain,
-    filters: [lowpass(1400)],
-  };
-}
-
-/** Chopped falsetto laugh: a driven saw gated into syllables. */
-export function cackle(
-  startSec: number,
-  durationSec: number,
-  fromHz: number,
-  toHz: number,
-  gain: number,
-): SfxLayer {
-  return {
-    waveform: 'saw',
-    startSec,
-    durationSec,
-    frequencyHz: fromHz,
-    frequencyEndHz: toHz,
-    drive: 1.6,
-    tremolo: { rateHz: 12, depth: 1 },
-    envelope: shaped(0.005, durationSec * 0.5, 0.6, durationSec * 0.3),
-    gain,
-    filters: [bandpass(1300, undefined, 2)],
-  };
-}
-
 /** Gourd rattle: crunchy high noise shaken in fast pulses. */
 export function rattle(startSec: number, durationSec: number, gain: number, rateHz = 26): SfxLayer {
   return {
@@ -260,36 +192,6 @@ export function wingbeat(startSec: number, durationSec: number, gain: number): S
     gain,
     filters: [bandpass(380, 220, 1.1)],
   };
-}
-
-/** Bovine bellow: a very low driven saw through a dark, open vowel. */
-export function bellow(
-  startSec: number,
-  durationSec: number,
-  fromHz: number,
-  toHz: number,
-  gain: number,
-): SfxLayer {
-  return {
-    waveform: 'saw',
-    startSec,
-    durationSec,
-    frequencyHz: fromHz,
-    frequencyEndHz: toHz,
-    vibrato: { rateHz: 4.5, depth: 0.03 },
-    drive: 1.8,
-    envelope: shaped(durationSec * 0.15, durationSec * 0.35, 0.55, durationSec * 0.3),
-    gain,
-    filters: [bandpass(300, undefined, 1.4)],
-  };
-}
-
-/** Ground-shaking stomp: a sub-bass drop and a rumble of earth. */
-export function stomp(startSec: number, gain: number): SfxLayer[] {
-  return [
-    thump(startSec, 64, 30, 0.22, gain),
-    { ...burst(startSec, 0.14, gain * 0.5, [lowpass(220)]), envelope: hit(0.13, 0.004) },
-  ];
 }
 
 /** Thrown spear through the air: a narrow whistling band of noise. */

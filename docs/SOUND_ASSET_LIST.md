@@ -28,10 +28,10 @@ file; a test fails if two ids share one.
   | --- | --- | --- | --- |
   | core | `ui/`, `system/`, `economy/`, `combat/default/`, `combat/effects/` | 800 KB | ~482 KB |
   | undead | `combat/undead/` | 900 KB | ~687 KB |
-  | orc | `combat/orc/` | 900 KB | ~622 KB |
+  | orc | `combat/orc/` | 900 KB | ~752 KB |
   | human | `combat/human/` | 900 KB | ~583 KB |
   | elf | `combat/elf/` | 900 KB | ~579 KB |
-  | total | | 4400 KB | ~2952 KB |
+  | total | | 4400 KB | ~3082 KB |
 
 ### Ambience
 
@@ -203,18 +203,18 @@ Dark fantasy around D minor: low-mid, soft attacks, short tails. Frequent cues
 | `combat.creep.orc_grunt.death` | Long wavering death groan falling into a body drop. |
 | `combat.creep.orc_grunt.escape` | Two hoarse taunting barks over a drum. |
 | `combat.creep.orc_grunt.spawn` | Rising hoarse bark and a war drum. |
-| `combat.creep.orc_peon.hit` | Light tool clank over a small thump and a clipped yelp. |
-| `combat.creep.orc_peon.death` | Thin yelp falling away, then the shovel clattering down. |
-| `combat.creep.orc_peon.escape` | Two quick rising yelps with tool clanks. |
-| `combat.creep.orc_peon.spawn` | Two tool clanks and a rising yelp. |
-| `combat.creep.orc_wolf_rider.hit` | Short snarling growl on a body thud. |
-| `combat.creep.orc_wolf_rider.death` | Falling wolf whine, stumbling paws and a drop. |
-| `combat.creep.orc_wolf_rider.escape` | Galloping paws into a short rising howl. |
-| `combat.creep.orc_wolf_rider.spawn` | Wolf howl over a gallop. |
-| `combat.creep.orc_troll.hit` | Rubbery, wobbling thump. |
-| `combat.creep.orc_troll.death` | Cackle sinking into a wet gurgle and a rubbery drop. |
-| `combat.creep.orc_troll.escape` | Rising cackling laugh over a gurgle. |
-| `combat.creep.orc_troll.spawn` | Rising regeneration gurgle, two rubbery thumps and a cackle. |
+| `combat.creep.orc_peon.hit` | Short nasal "ugh" (lazy male orc, F0 ~165→125 Hz, nasal formants 250/1000/2400 Hz) over a tool clank. |
+| `combat.creep.orc_peon.death` | Whiny nasal "eh-oh" falling into a groan (185→95 Hz, wobbling), then the tools clatter down. |
+| `combat.creep.orc_peon.escape` | Two-syllable nasal grumble ("mm-uh, mm-oh") over shuffling feet. |
+| `combat.creep.orc_peon.spawn` | Lazy, drawn-out nasal hum lifting into a questioning "hmm?" (118→180 Hz), pick-axe taps. |
+| `combat.creep.orc_wolf_rider.hit` | Sharp wolf bark (520→380 Hz) ending in snapping jaws. |
+| `combat.creep.orc_wolf_rider.death` | Wolf yelp (900→1150→800 Hz) sliding into a sobbing whimper, then the body drops. |
+| `combat.creep.orc_wolf_rider.escape` | Full sung wolf howl, rising then falling (360→500→380 Hz, slow vibrato), over a three-beat gallop. |
+| `combat.creep.orc_wolf_rider.spawn` | Low fluttering growl into a short howl (380→480→420 Hz), the rider's war cry quietly underneath. |
+| `combat.creep.orc_troll.hit` | Hoarse, nasal "hah!": aspirated onset into a short falling vowel (205→160 Hz). |
+| `combat.creep.orc_troll.death` | Three gurgling "hah"s collapsing into a bubbling groan (165→90 Hz) and a drop. |
+| `combat.creep.orc_troll.escape` | Mocking four-pulse "heh-heh-heh-heh" cackle in a sing-song contour, then a regeneration gurgle. |
+| `combat.creep.orc_troll.spawn` | Sing-song two-tone call ("ya-mon" contour): high rising "ya" (175→225 Hz), low falling nasal "mon" (185→150 Hz). |
 | `combat.creep.orc_headhunter.hit` | Sharp, clipped yip. |
 | `combat.creep.orc_headhunter.death` | High yip falling away and spears clattering to the ground. |
 | `combat.creep.orc_headhunter.escape` | Falling spear whistle and two sharp yips. |
@@ -227,10 +227,10 @@ Dark fantasy around D minor: low-mid, soft attacks, short tails. Frequent cues
 | `combat.creep.orc_wind_rider.death` | Long falling screech, faltering wingbeats and a heavy drop. |
 | `combat.creep.orc_wind_rider.escape` | Three quickening wingbeats and a rising screech. |
 | `combat.creep.orc_wind_rider.spawn` | Rising wyvern screech and two wingbeats. |
-| `combat.creep.orc_tauren.hit` | Deep, heavy body thud with a low grunt. |
-| `combat.creep.orc_tauren.death` | Long deep bellow falling into a ground-shaking stomp. |
-| `combat.creep.orc_tauren.escape` | Two stomps and a short rising bellow. |
-| `combat.creep.orc_tauren.spawn` | Two stomps and a deep rising bellow. |
+| `combat.creep.orc_tauren.hit` | Nasal snort on a heavy hoof stomp. |
+| `combat.creep.orc_tauren.death` | Long bovine "mooo" sinking away (100→58 Hz, formants ~400/800 Hz, slow vibrato), then the body lands. |
+| `combat.creep.orc_tauren.escape` | Two hoof stomps and a bellowing "mooo" (80→98→82 Hz). |
+| `combat.creep.orc_tauren.spawn` | A chain of four hoof stomps under a rising bellow (70→100 Hz). |
 | `combat.tower.orc_spear_watchtower.attack` | Heavy shaft whoosh and a wooden snap. |
 | `combat.tower.orc_spear_watchtower.impact` | Double wooden crack on a thunk. |
 | `combat.tower.orc_burning_pit.attack` | Fire whoomp opening up over a deep drop. |
