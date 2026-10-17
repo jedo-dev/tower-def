@@ -16,6 +16,12 @@
       "spriteKey": "unit.human.militia",
       "description": "Common folk pressed into service with pitchforks and hope.",
       "lore": "Farmers with pitchforks and a bell that would not stop ringing. They hold the line because the line runs through their fields.",
+      "sounds": {
+        "creepHit": "combat.creep.human_militia.hit",
+        "creepDeath": "combat.creep.human_militia.death",
+        "creepEscape": "combat.creep.human_militia.escape",
+        "creepSpawn": "combat.creep.human_militia.spawn"
+      },
       "talentBranches": [
         {
           "id": "human_militia_levy",
@@ -136,6 +142,12 @@
       "spriteKey": "unit.human.peasant",
       "description": "Conscript with a hoe, slow and easily spent.",
       "lore": "Conscripted at harvest with a hoe and a hymn. He was promised the war would be over before the fields needed him.",
+      "sounds": {
+        "creepHit": "combat.creep.human_peasant.hit",
+        "creepDeath": "combat.creep.human_peasant.death",
+        "creepEscape": "combat.creep.human_peasant.escape",
+        "creepSpawn": "combat.creep.human_peasant.spawn"
+      },
       "talentBranches": [
         {
           "id": "human_peasant_tithe",
@@ -251,6 +263,12 @@
       "spriteKey": "unit.human.footman",
       "description": "Shielded soldier that blunts light towers on its own.",
       "lore": "Drilled until the shield is heavier to drop than to carry. The footman does not break; he is relieved.",
+      "sounds": {
+        "creepHit": "combat.creep.human_footman.hit",
+        "creepDeath": "combat.creep.human_footman.death",
+        "creepEscape": "combat.creep.human_footman.escape",
+        "creepSpawn": "combat.creep.human_footman.spawn"
+      },
       "talentBranches": [
         {
           "id": "human_footman_defensive_stance",
@@ -387,6 +405,12 @@
       "spriteKey": "unit.human.rifleman",
       "description": "Sharpshooter with a dwarven rifle and little protection.",
       "lore": "A dwarven rifle, a flask of black powder and a grudge against anything taller than him. He shoots before the sermon ends.",
+      "sounds": {
+        "creepHit": "combat.creep.human_rifleman.hit",
+        "creepDeath": "combat.creep.human_rifleman.death",
+        "creepEscape": "combat.creep.human_rifleman.escape",
+        "creepSpawn": "combat.creep.human_rifleman.spawn"
+      },
       "talentBranches": [
         {
           "id": "human_rifleman_long_shot",
@@ -496,6 +520,12 @@
       "spriteKey": "unit.human.siege_engine",
       "description": "Plated war machine that crawls forward and refuses to die.",
       "lore": "Iron, oak and a crew that stopped flinching years ago. It does not storm the gate; it arrives at it and waits.",
+      "sounds": {
+        "creepHit": "combat.creep.human_siege_engine.hit",
+        "creepDeath": "combat.creep.human_siege_engine.death",
+        "creepEscape": "combat.creep.human_siege_engine.escape",
+        "creepSpawn": "combat.creep.human_siege_engine.spawn"
+      },
       "talentBranches": [
         {
           "id": "human_siege_engine_armored_wagon",
@@ -617,6 +647,12 @@
       "spriteKey": "unit.human.knight",
       "description": "Plated cavalry that shrugs off light arrows at a canter.",
       "lore": "Plate forged in the capital, oath sworn in the chapel. He does not stop for arrows; he has stopped for nothing yet.",
+      "sounds": {
+        "creepHit": "combat.creep.human_knight.hit",
+        "creepDeath": "combat.creep.human_knight.death",
+        "creepEscape": "combat.creep.human_knight.escape",
+        "creepSpawn": "combat.creep.human_knight.spawn"
+      },
       "talentBranches": [
         {
           "id": "human_knight_paladin",
@@ -731,6 +767,12 @@
       "spriteKey": "unit.human.sorceress",
       "description": "Quick arcane caster with no armor to speak of.",
       "lore": "Trained in the tower at Dalaran, she can turn a volley into mist. Just not two volleys.",
+      "sounds": {
+        "creepHit": "combat.creep.human_sorceress.hit",
+        "creepDeath": "combat.creep.human_sorceress.death",
+        "creepEscape": "combat.creep.human_sorceress.escape",
+        "creepSpawn": "combat.creep.human_sorceress.spawn"
+      },
       "talentBranches": [
         {
           "id": "human_sorceress_invisibility",
@@ -846,6 +888,12 @@
       "spriteKey": "unit.human.gryphon_rider",
       "description": "Dwarven hammer-wielder on a gryphon, the kingdom's answer from above.",
       "lore": "A dwarf, a storm hammer and a gryphon that answers to no one else. The sky is the only wall the kingdom could not build.",
+      "sounds": {
+        "creepHit": "combat.creep.human_gryphon_rider.hit",
+        "creepDeath": "combat.creep.human_gryphon_rider.death",
+        "creepEscape": "combat.creep.human_gryphon_rider.escape",
+        "creepSpawn": "combat.creep.human_gryphon_rider.spawn"
+      },
       "talentBranches": [
         {
           "id": "human_gryphon_rider_sky_hammer",

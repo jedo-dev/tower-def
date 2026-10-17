@@ -40,6 +40,10 @@
       "spriteKey": "tower.human.guard_archer",
       "description": "Disciplined marksmen watch over fortified walls.",
       "lore": "A watchtower with a roster, a bell and a sergeant. Shifts change at dawn and the arrows never stop.",
+      "sounds": {
+        "attack": "combat.tower.human_guard_archer_tower.attack",
+        "impact": "combat.tower.human_guard_archer_tower.impact"
+      },
       "talentBranches": [
         {
           "id": "human_guard_archer_tower_company",
@@ -114,6 +118,10 @@
       "spriteKey": "tower.human.cannon_bastion",
       "description": "Dwarven powder and iron shot, loud and wide.",
       "lore": "Dwarven powder packed into kingdom stone. One shot is heard in three valleys and felt in the whole line.",
+      "sounds": {
+        "attack": "combat.tower.human_cannon_bastion.attack",
+        "impact": "combat.tower.human_cannon_bastion.impact"
+      },
       "talentBranches": [
         {
           "id": "human_cannon_bastion_siege",
@@ -202,6 +210,10 @@
       "spriteKey": "tower.human.alchemist_tower",
       "description": "Flasks of slow-working blight that ignore armor.",
       "lore": "A university tower with the windows bricked up. The flasks that leave it keep working long after the lecture.",
+      "sounds": {
+        "attack": "combat.tower.human_alchemist_tower.attack",
+        "impact": "combat.tower.human_alchemist_tower.impact"
+      },
       "talentBranches": [
         {
           "id": "human_alchemist_tower_flasks",
@@ -334,6 +346,10 @@
       "spriteKey": "tower.human.guard_post",
       "description": "A captain barking orders sharpens the whole wall.",
       "lore": "A captain, a banner and a voice that carries. Every wall within earshot stands straighter and fires faster.",
+      "sounds": {
+        "attack": "combat.tower.human_guard_post.attack",
+        "impact": "combat.tower.human_guard_post.impact"
+      },
       "talentBranches": [
         {
           "id": "human_guard_post_headquarters",

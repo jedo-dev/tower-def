@@ -176,6 +176,46 @@ Dark fantasy around D minor: low-mid, soft attacks, short tails. Frequent cues
 | `combat.impact.human` | Steel clang. |
 | `combat.build.human` | Hammer on anvil, two strikes. |
 | `combat.creep_death.human` | Armour clatter and a fall. |
+| `combat.creep.human_militia.hit` | Light leather slap with a clipped grunt. |
+| `combat.creep.human_militia.death` | Low falling shout and two leather slaps. |
+| `combat.creep.human_militia.escape` | Two short rising shouts over a slap. |
+| `combat.creep.human_militia.spawn` | Two marching slaps under a rising shout. |
+| `combat.creep.human_peasant.hit` | Wooden tool knock with a tiny yelp. |
+| `combat.creep.human_peasant.death` | High yelp breaking down, the tool clattering twice. |
+| `combat.creep.human_peasant.escape` | Three nervous rising yelps and a knock. |
+| `combat.creep.human_peasant.spawn` | Three tool knocks and a small "hup". |
+| `combat.creep.human_footman.hit` | Shield thunk with a steel clink. |
+| `combat.creep.human_footman.death` | Grunt, chainmail shiver, a clang and the shield falling. |
+| `combat.creep.human_footman.escape` | Two shield thunks, a clink and chainmail. |
+| `combat.creep.human_footman.spawn` | Chainmail shake, a sword drawn and a clink. |
+| `combat.creep.human_rifleman.hit` | Dull thud with a brass ting. |
+| `combat.creep.human_rifleman.death` | Powder crack, a falling groan and brass casings tinkling. |
+| `combat.creep.human_rifleman.escape` | Powder crack and two brass jingles. |
+| `combat.creep.human_rifleman.spawn` | Ramrod rasp in and out, a brass click and a crack. |
+| `combat.creep.human_siege_engine.hit` | Low wooden crunch. |
+| `combat.creep.human_siege_engine.death` | Heavy boom with splintering timber. |
+| `combat.creep.human_siege_engine.escape` | Creaking timber over rattling iron wheels and a clank. |
+| `combat.creep.human_siege_engine.spawn` | Rumbling wheels rolling in under a creak. |
+| `combat.creep.human_knight.hit` | Heavy plate clang. |
+| `combat.creep.human_knight.death` | Three descending plate clangs and a heavy fall. |
+| `combat.creep.human_knight.escape` | Two-note trumpet call (D, A) over hooves. |
+| `combat.creep.human_knight.spawn` | Galloping hooves ending on a plate ring. |
+| `combat.creep.human_sorceress.hit` | Glassy chime tick. |
+| `combat.creep.human_sorceress.death` | Descending shimmering chimes and a falling glide. |
+| `combat.creep.human_sorceress.escape` | Rising arcane whoosh with an upward glide. |
+| `combat.creep.human_sorceress.spawn` | Falling whoosh into two glassy chimes. |
+| `combat.creep.human_gryphon_rider.hit` | Wing flap with a tiny chirp. |
+| `combat.creep.human_gryphon_rider.death` | Falling hawk screech, faltering wings and a thud. |
+| `combat.creep.human_gryphon_rider.escape` | Two-part screech over wingbeats. |
+| `combat.creep.human_gryphon_rider.spawn` | Three wingbeats and a rising screech. |
+| `combat.tower.human_guard_archer_tower.attack` | Longbow twang with a release swish. |
+| `combat.tower.human_guard_archer_tower.impact` | Arrow thud with a quivering shaft. |
+| `combat.tower.human_cannon_bastion.attack` | Deep cannon boom. |
+| `combat.tower.human_cannon_bastion.impact` | Thud and falling rubble. |
+| `combat.tower.human_alchemist_tower.attack` | Glass clink and fizz. |
+| `combat.tower.human_alchemist_tower.impact` | Acid splash, breaking glass and a sizzle. |
+| `combat.tower.human_guard_post.attack` | Short low horn cue on D with a fifth. |
+| `combat.tower.human_guard_post.impact` | Ringing steel and a bell. |
 
 ### Elf - bowstrings, air and chimes
 
