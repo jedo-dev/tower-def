@@ -23,6 +23,8 @@ import {
   type ScreenPoint,
   type WorldPoint,
 } from './cameraViewMapping';
+import { toBackingCameraView, toCssScreenPoint } from './canvasResolution';
+import { getCanvasResolution } from './canvasResolutionRuntime';
 
 const GRID_WORLD_SIZE = { width: GRID_PIXEL_WIDTH, height: GRID_PIXEL_HEIGHT };
 
@@ -33,7 +35,8 @@ export const BOARD_ZOOM_LIMITS: BoardZoomLimits = {
 
 /**
  * The one camera view the board is rendered with and pointers are mapped
- * through. `fitView` shows the whole board; `view` is where zoom and pan
+ * through, in CSS pixels; only `applyCameraView` converts it to the canvas'
+ * backing-store pixels (see canvasResolution). `fitView` shows the whole board; `view` is where zoom and pan
  * left it. The Phaser camera is written from here, never read back.
  */
 export type BoardCameraState = {
@@ -47,8 +50,10 @@ export type BoardCameraState = {
  * resizes a camera whose size still equals the previous game size; this way
  * zoom, scroll and viewport always come from one computation.
  */
-function applyCameraView(scene: Phaser.Scene, view: CameraView): void {
+function applyCameraView(scene: Phaser.Scene, cssView: CameraView): void {
   const camera = scene.cameras.main;
+  const { pixelRatio } = getCanvasResolution(scene.game, scene.scale);
+  const view = toBackingCameraView(cssView, pixelRatio);
 
   // No camera bounds: with bounds the camera clamps scroll to the grid edge and
   // the grid ends up pinned to the left/top whenever the viewport is wider or
@@ -60,7 +65,8 @@ function applyCameraView(scene: Phaser.Scene, view: CameraView): void {
 }
 
 function computeFitView(scene: Phaser.Scene): CameraView {
-  return computeResponsiveCameraView(scene.scale.width, scene.scale.height, GRID_WORLD_SIZE);
+  const { cssWidth, cssHeight } = getCanvasResolution(scene.game, scene.scale);
+  return computeResponsiveCameraView(cssWidth, cssHeight, GRID_WORLD_SIZE);
 }
 
 /** Fits the grid into the current scale size and applies it. */
@@ -159,9 +165,11 @@ function readCanvasPageOffset(canvas: HTMLCanvasElement): CanvasOffset {
 }
 
 /**
- * The pointer's canvas position re-based onto the canvas' live page offset.
- * Phaser computes `pointer.x/y` from canvas bounds that are only re-read on
- * window resize or a 500ms parent poll, so after a layout shift they lag.
+ * The pointer's canvas position in CSS pixels, re-based onto the canvas' live
+ * page offset. Phaser computes `pointer.x/y` in backing-store pixels from
+ * canvas bounds that are only re-read on window resize or a 500ms parent
+ * poll, so after a layout shift they lag; dividing by the same display scale
+ * Phaser multiplied with lands back in CSS pixels exactly.
  */
 export function resolvePointerScreenPoint(
   scene: Phaser.Scene,
@@ -176,12 +184,13 @@ export function resolvePointerScreenPoint(
     scale.dirty = true;
   }
 
-  return rebaseScreenPoint(
+  const backingPoint = rebaseScreenPoint(
     { x: pointer.x, y: pointer.y },
     staleOffset,
     currentOffset,
     scale.displayScale,
   );
+  return toCssScreenPoint(backingPoint, scale.displayScale);
 }
 
 /**
