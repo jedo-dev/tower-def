@@ -19,6 +19,10 @@
       "spriteKey": "tower.undead.bone_archer",
       "description": "Necromantic archer nest built from cursed remains.",
       "lore": "Archers who died at their posts and were not relieved. The bowstrings are sinew; the arrows do not care who they were.",
+      "sounds": {
+        "attack": "combat.tower.undead_bone_archer_tower.attack",
+        "impact": "combat.tower.undead_bone_archer_tower.impact"
+      },
       "talentBranches": [
         {
           "id": "undead_bone_archer_tower_volley",
@@ -145,6 +149,10 @@
       "spriteKey": "tower.undead.plague",
       "description": "Launches toxic clouds that burst over everything nearby.",
       "lore": "A cauldron of the last plague, kept warm. Each burst is a village that will never need burying.",
+      "sounds": {
+        "attack": "combat.tower.undead_plague_tower.attack",
+        "impact": "combat.tower.undead_plague_tower.impact"
+      },
       "talentBranches": [
         {
           "id": "undead_plague_tower_cloud",
@@ -307,6 +315,10 @@
       "spriteKey": "tower.undead.frost_wyrm_nest",
       "description": "A wyrm hatchling breathes killing cold over the path.",
       "lore": "The hatchling was dead before it hatched. It breathes the grave's cold and the path slows to listen.",
+      "sounds": {
+        "attack": "combat.tower.undead_frost_wyrm_nest.attack",
+        "impact": "combat.tower.undead_frost_wyrm_nest.impact"
+      },
       "talentBranches": [
         {
           "id": "undead_frost_wyrm_nest_permafrost",
@@ -428,6 +440,10 @@
       "spriteKey": "tower.undead.bone_obelisk",
       "description": "Grave-magic pillar that quickens every tower around it.",
       "lore": "A spire of spines humming with grave-song. Around it the dead work faster, because the dead do not rest.",
+      "sounds": {
+        "attack": "combat.tower.undead_bone_obelisk.attack",
+        "impact": "combat.tower.undead_bone_obelisk.impact"
+      },
       "talentBranches": [
         {
           "id": "undead_bone_obelisk_whisper",
