@@ -34,9 +34,10 @@ function toBranchChooserCard(
     glyph: branch.glyph,
     price: { label: `${develop.cost} XP`, accessibleLabel: `${develop.cost} XP` },
     isDisabled: !develop.isAffordable,
+    disabledReason: develop.blockedReason ?? undefined,
     grades: {
       ariaLabel: `${branch.name} grades 1 to 4`,
-      gradeColumnLabel: 'G',
+      gradeColumnLabel: 'Grade',
       statColumns: CREATURE_GRADE_COLUMNS,
       specialColumnLabel: 'Special',
       rows: branch.rows.map((row) => ({

@@ -1,36 +1,55 @@
-import styles from './BranchChooserDialog.module.css';
+import styles from './BranchCard.module.css';
+import { toGradeTableView } from '../model/toGradeTableView';
 import type { BranchGradeTableData } from '../model/types';
 
 type BranchGradeTableProps = {
   table: BranchGradeTableData;
 };
 
-/** Per-grade stat deltas of one branch, with a trailing free-text "Special" column. */
+/**
+ * Compact grade table of one branch card: a column per grade, a row per stat
+ * that changes, then the grade specials as short lines under the table.
+ */
 export function BranchGradeTable({ table }: BranchGradeTableProps) {
+  const view = toGradeTableView(table);
+
   return (
-    <table className={styles.grades} aria-label={table.ariaLabel}>
-      <thead>
-        <tr>
-          <th scope="col">{table.gradeColumnLabel}</th>
-          {table.statColumns.map((column) => (
-            <th key={column.label} scope="col" title={column.title}>
-              {column.label}
+    <div className={styles.gradesBlock}>
+      <table className={styles.grades} aria-label={table.ariaLabel}>
+        <thead>
+          <tr>
+            <th scope="col" className={styles.gradesCorner}>
+              {table.gradeColumnLabel}
             </th>
-          ))}
-          <th scope="col">{table.specialColumnLabel}</th>
-        </tr>
-      </thead>
-      <tbody>
-        {table.rows.map((row) => (
-          <tr key={row.grade}>
-            <th scope="row">{row.grade}</th>
-            {row.stats.map((stat, index) => (
-              <td key={table.statColumns[index]?.label ?? index}>{stat}</td>
+            {view.grades.map((grade) => (
+              <th key={grade} scope="col">
+                {grade}
+              </th>
             ))}
-            <td className={styles.special}>{row.special}</td>
           </tr>
-        ))}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {view.statRows.map((statRow) => (
+            <tr key={statRow.label}>
+              <th scope="row" title={statRow.title}>
+                {statRow.label}
+              </th>
+              {statRow.values.map((value, index) => (
+                <td key={view.grades[index] ?? index}>{value}</td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      {view.specials.length > 0 && (
+        <ul className={styles.specials} aria-label={table.specialColumnLabel}>
+          {view.specials.map((special) => (
+            <li key={special.gradesLabel}>
+              <span className={styles.specialGrades}>{special.gradesLabel}</span> {special.text}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   );
 }
