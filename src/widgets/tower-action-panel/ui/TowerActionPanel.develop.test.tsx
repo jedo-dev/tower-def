@@ -157,8 +157,8 @@ describe('TowerActionPanel branch chooser', () => {
       const card = within(dialog).getByRole('article', { name: branch.name });
       expect(within(card).getAllByText(branch.description).length).toBeGreaterThan(0);
       const table = within(card).getByRole('table', { name: `${branch.name} grades 4 to 7` });
-      const rowHeaders = within(table).getAllByRole('rowheader');
-      expect(rowHeaders.map((cell) => cell.textContent)).toEqual(['4', '5', '6', '7']);
+      const gradeHeaders = within(table).getAllByRole('columnheader');
+      expect(gradeHeaders.map((cell) => cell.textContent)).toEqual(['Grade', '4', '5', '6', '7']);
       expect(
         within(card).getByRole('button', {
           name: `Choose ${branch.name} for ${TowerTalentPricing.BRANCH_COST} gold`,
@@ -199,10 +199,10 @@ describe('TowerActionPanel branch chooser', () => {
 
     expect(document.activeElement).toBe(dialog);
     fireEvent.keyDown(dialog, { key: 'Tab' });
+    expect(document.activeElement).toBe(within(dialog).getByRole('button', { name: 'Close' }));
     const firstChoose = within(dialog).getByRole('button', {
       name: new RegExp(`^Choose ${BRANCH_A.name} for`),
     });
-    expect(document.activeElement).toBe(firstChoose);
     fireEvent.keyDown(dialog, { key: 'Tab', shiftKey: true });
     expect(document.activeElement).toBe(within(dialog).getByRole('button', { name: 'Cancel' }));
 

@@ -1,0 +1,168 @@
+/* One branch card of the chooser: icon, name, blurb, grade table, price. */
+.card {
+  position: relative;
+  box-sizing: border-box;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-md) var(--space-sm);
+  border-radius: var(--radius-sm);
+  background: var(--color-codex-panel);
+  box-shadow: inset 0 0 0 1px var(--color-codex-line);
+  text-align: center;
+  transition: opacity var(--duration-fast) var(--ease-out);
+}
+
+.cardSelected {
+  background: var(--color-codex-panel-raised);
+  box-shadow:
+    inset 0 0 0 2px var(--color-accent-gold),
+    0 0 12px var(--color-accent-gold-glow);
+}
+
+.cardDimmed {
+  opacity: 0.7;
+}
+
+/* Transparent tap target over the whole card; it is what Tab reaches. */
+.pick {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: inherit;
+  background: none;
+  cursor: pointer;
+}
+
+.pick:focus-visible {
+  outline: var(--focus-ring-outline);
+  outline-offset: var(--focus-ring-outline-offset);
+}
+
+.chosen {
+  position: absolute;
+  top: var(--space-sm);
+  right: var(--space-sm);
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 0 5px 0 3px;
+  border-radius: 2px;
+  background: var(--color-codex-pressed);
+  box-shadow: inset 0 0 0 1px var(--color-accent-gold);
+  font-family: var(--font-family-display);
+  font-size: var(--font-size-2xs);
+  font-weight: 900;
+  line-height: 16px;
+  text-transform: uppercase;
+  color: var(--color-accent-gold);
+}
+
+.chosen::before {
+  content: '';
+  width: 10px;
+  height: 10px;
+  background: url('/assets/ui/kit/dot-on.png') center / contain no-repeat;
+}
+
+.icon {
+  box-shadow:
+    0 0 0 1px var(--color-codex-pressed),
+    0 0 0 2px var(--color-codex-line);
+}
+
+.name {
+  margin: 0;
+  font-family: var(--font-family-display);
+  font-size: var(--font-size-md);
+  font-weight: 900;
+  line-height: 1.15;
+  letter-spacing: 0.03em;
+  color: var(--color-text-gold);
+}
+
+.description {
+  margin: 0;
+  min-height: 28px;
+  font-size: var(--font-size-xs);
+  line-height: 14px;
+  color: var(--color-text-secondary);
+}
+
+.gradesBlock {
+  box-sizing: border-box;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  padding: var(--space-xs);
+  border-radius: 3px;
+  background: var(--color-codex-panel-sunken);
+  box-shadow: inset 0 0 0 1px var(--color-codex-line);
+}
+
+.grades {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: var(--font-size-2xs);
+  font-variant-numeric: tabular-nums;
+}
+
+.grades th,
+.grades td {
+  padding: 1px 0;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.grades th {
+  font-weight: 400;
+  color: var(--color-text-muted);
+}
+
+.grades th[scope='row'],
+.grades .gradesCorner {
+  width: 38px;
+  text-align: left;
+}
+
+.grades td {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--color-text-primary);
+}
+
+.specials {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--font-size-2xs);
+  line-height: 13px;
+  text-align: left;
+  color: var(--color-text-secondary);
+}
+
+.specialGrades {
+  color: var(--color-text-muted);
+}
+
+.price {
+  margin-top: auto;
+  font-family: var(--font-family-display);
+  font-size: var(--font-size-md);
+  font-weight: 900;
+  color: var(--color-accent-gold);
+}
+
+.unit {
+  color: var(--color-text-label);
+}

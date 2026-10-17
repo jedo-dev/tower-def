@@ -1,8 +1,10 @@
 import {
   BranchChooserDialog as SharedBranchChooserDialog,
   type BranchChooserCard,
+  type BranchChooserCountdown,
   type BranchGradeColumn,
 } from '../../../shared/ui/branch-chooser';
+import { useGameHudSnapshot } from '../../../shared/lib/game-bridge/useGameHudSnapshot';
 import {
   formatBranchLockWarning,
   type TalentBranchCardViewModel,
@@ -22,6 +24,19 @@ const TOWER_GRADE_COLUMNS: readonly BranchGradeColumn[] = [
   { label: 'SPD', title: 'Attack cooldown vs level 3' },
 ];
 
+const SECONDS_PER_MINUTE = 60;
+
+/** The HUD's build-phase auto-start timer as the chooser's header chip, e.g. "0:21". */
+function toAutoStartCountdown(secondsLeft: number): BranchChooserCountdown {
+  const safeSeconds = Math.max(0, Math.ceil(secondsLeft));
+  const minutes = Math.floor(safeSeconds / SECONDS_PER_MINUTE);
+  const seconds = safeSeconds % SECONDS_PER_MINUTE;
+  return {
+    label: `${minutes}:${String(seconds).padStart(2, '0')}`,
+    accessibleLabel: `Build phase ends in ${safeSeconds} seconds`,
+  };
+}
+
 function toBranchChooserCard(
   branch: TalentBranchCardViewModel,
   develop: TowerDevelopViewModel,
@@ -33,9 +48,10 @@ function toBranchChooserCard(
     glyph: branch.glyph,
     price: { label: `$${develop.cost}`, accessibleLabel: `${develop.cost} gold` },
     isDisabled: !develop.isAffordable,
+    disabledReason: develop.blockedReason ?? undefined,
     grades: {
       ariaLabel: `${branch.name} grades 4 to 7`,
-      gradeColumnLabel: 'Lv',
+      gradeColumnLabel: 'Grade',
       statColumns: TOWER_GRADE_COLUMNS,
       specialColumnLabel: 'Special',
       rows: branch.rows.map((row) => ({
@@ -57,9 +73,14 @@ export function BranchChooserDialog({
   onConfirm,
   onCancel,
 }: BranchChooserDialogProps) {
+  const { autoStartSecondsLeft } = useGameHudSnapshot();
+
   return (
     <SharedBranchChooserDialog
       title={`Develop ${towerName}`}
+      countdown={
+        autoStartSecondsLeft === null ? undefined : toAutoStartCountdown(autoStartSecondsLeft)
+      }
       cards={develop.branches.map((branch) => toBranchChooserCard(branch, develop))}
       lockWarning={formatBranchLockWarning(towerName)}
       onConfirm={onConfirm}
