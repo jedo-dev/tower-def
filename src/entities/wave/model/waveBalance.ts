@@ -43,7 +43,7 @@ export const WAVE_AIR_UNIT_BUDGET_MULTIPLIER = 4;
  */
 export const WAVE_BASELINE_HEALTH_MULTIPLIER_BY_RACE: Readonly<Partial<Record<RaceId, number>>> = {
   [RaceId.ELF]: 1.2,
-  [RaceId.HUMAN]: 1.1,
+  [RaceId.HUMAN]: 1.15,
   [RaceId.ORC]: 1.1,
 };
 

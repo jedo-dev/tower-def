@@ -406,7 +406,7 @@
                 { "effectId": "chill", "magnitude": 0.55, "durationMs": 2000 },
                 {
                   "effectId": "vulnerability",
-                  "magnitude": 0.4,
+                  "magnitude": 0.3,
                   "durationMs": 2000,
                   "damageKind": "all"
                 }
