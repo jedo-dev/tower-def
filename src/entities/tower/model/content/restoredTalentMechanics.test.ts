@@ -38,7 +38,7 @@ describe('restored talent mechanics (tower-def-bge.9)', () => {
 
   it('grounding: Permafrost freezes and Wild Growth pulls fliers down at grade 7', () => {
     const permafrost = grades('undead_frost_wyrm_nest_permafrost')[3];
-    expect(permafrost.onHitEffects?.[0].groundsFliersMs).toBe(1200);
+    expect(permafrost.onHitEffects?.[0].groundsFliersMs).toBe(1400);
     expect(permafrost.abilities?.airDamageMultiplier).toBeUndefined();
     expect(grades('elf_wisp_bloom_growth')[3].abilities?.groundsFliersMs).toBe(1000);
   });

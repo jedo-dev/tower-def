@@ -378,7 +378,7 @@
         {
           "id": "human_guard_post_treasury",
           "name": "Treasury",
-          "description": "Stops sharpening towers and pays gold instead: per kill nearby, per round, and on resale.",
+          "description": "Sharpens the towers around it less than Headquarters and pays gold: per kill nearby, per round, and on resale.",
           "grades": [
             {
               "level": 4,
@@ -387,10 +387,11 @@
               "attackCooldownMs": 1000,
               "aura": {
                 "radiusCells": 7,
-                "attackSpeedBonus": 0.34,
-                "rangeBonus": 1.4,
+                "attackSpeedBonus": 0.38,
+                "rangeBonus": 1.6,
                 "stacking": "strongest",
-                "goldPerKill": 1
+                "goldPerKill": 1,
+                "incomePerRound": 20
               }
             },
             {
@@ -400,11 +401,11 @@
               "attackCooldownMs": 1000,
               "aura": {
                 "radiusCells": 7.5,
-                "attackSpeedBonus": 0.34,
-                "rangeBonus": 1.4,
+                "attackSpeedBonus": 0.42,
+                "rangeBonus": 1.8,
                 "stacking": "strongest",
                 "goldPerKill": 2,
-                "incomePerRound": 5
+                "incomePerRound": 30
               }
             },
             {
@@ -414,11 +415,11 @@
               "attackCooldownMs": 1000,
               "aura": {
                 "radiusCells": 8,
-                "attackSpeedBonus": 0.34,
-                "rangeBonus": 1.4,
+                "attackSpeedBonus": 0.46,
+                "rangeBonus": 2,
                 "stacking": "strongest",
                 "goldPerKill": 3,
-                "incomePerRound": 10
+                "incomePerRound": 45
               }
             },
             {
@@ -428,11 +429,11 @@
               "attackCooldownMs": 1000,
               "aura": {
                 "radiusCells": 8.5,
-                "attackSpeedBonus": 0.34,
-                "rangeBonus": 1.4,
+                "attackSpeedBonus": 0.5,
+                "rangeBonus": 2.2,
                 "stacking": "strongest",
                 "goldPerKill": 4,
-                "incomePerRound": 15,
+                "incomePerRound": 60,
                 "sellRefundBonus": 0.25
               }
             }
