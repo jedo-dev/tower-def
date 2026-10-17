@@ -249,3 +249,33 @@ where sends are bought during the build phase and spawn at wave start: what
 the player paid for is what walks. Settling experience at the round end
 reuses the leak and life-steal accounting that already decides who took which
 life, so the life bonus never disagrees with the HP change.
+
+## Decision 016: The game canvas renders at device pixel ratio, capped at 2.5x
+
+Phaser 4 has no `resolution` option, and its `Scale.RESIZE` mode sizes the
+canvas backing store to the CSS size, so a DPR 3 phone upscaled a 1x bitmap
+and every sprite was soft. The game now runs in `Scale.NONE`: a canvas
+resolution runtime (`runtime/camera/canvasResolutionRuntime`) stretches the
+canvas over its host in CSS and resizes the game to CSS size x
+`min(devicePixelRatio, MAX_CANVAS_PIXEL_RATIO)` on host resize (ResizeObserver),
+window resize and DPR change (`matchMedia`). The board camera view, pointer
+positions and tap/pan thresholds stay in CSS pixels; only `applyCameraView`
+converts the view to backing pixels (`toBackingCameraView`), and pointers are
+divided back by Phaser's display scale (tower-def-vy8).
+
+`MAX_CANVAS_PIXEL_RATIO` is 2.5. DPR 2 devices render at full 2x; DPR 3
+devices render 2.5x, about 30% fewer pixels than 3x (945x1099 instead of
+1134x1319 for the 390x844 board host), and at phone viewing distance 2.5x is
+indistinguishable from 3x while fill rate is the first thing a mid-tier GPU
+runs out of. A headless Chrome A/B at 390x844 DPR 3 (1x vs 2.5x backing
+store, uncapped rAF, desktop GPU) showed no measurable difference, the run
+to run noise (800-1900 fps) dominating; on-device profiling should revisit
+the cap if a low-end phone drops below 60 FPS.
+
+Reason:
+
+Sizing the backing store ourselves is the only route Phaser 4 leaves, and
+keeping one CSS-pixel camera view means the responsive fit, pinch zoom, pan,
+two-tap placement and pointer-to-cell mapping are unchanged code at any DPR;
+only the last step to the Phaser camera knows about device pixels. A cap
+rather than the raw DPR bounds the worst-case fill rate on dense screens.
