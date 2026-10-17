@@ -1,9 +1,19 @@
+import { tryResolveUnitConfigById, type UnitId } from '../../../entities/unit';
+import type { FactionThemeName } from '../../../shared/constants/theme';
 import type { GameHudSnapshot, WaveQueueItem } from '../../../shared/lib/game-bridge/types';
+
+/** One creature portrait in the strip. */
+export type WaveQueueIcon = {
+  creepTypeId: string;
+  /** Display name for the portrait's label; the id when the unit is unknown. */
+  name: string;
+  faction: FactionThemeName | undefined;
+};
 
 export type WaveQueueSection = {
   key: 'live' | 'enemy-sends';
   label: string;
-  items: WaveQueueItem[];
+  items: WaveQueueIcon[];
 };
 
 export type WaveQueueViewModel = {
@@ -15,6 +25,15 @@ export type WaveQueueViewModel = {
   /** Set once the player's field is clear but the computer's is still fighting. */
   enemyFieldStatus: string | null;
 };
+
+export function toWaveQueueIcon(item: WaveQueueItem): WaveQueueIcon {
+  const unit = tryResolveUnitConfigById(item.creepTypeId as UnitId);
+  return {
+    creepTypeId: item.creepTypeId,
+    name: unit?.name ?? item.creepTypeId,
+    faction: unit ? (unit.faction.toLowerCase() as FactionThemeName) : undefined,
+  };
+}
 
 export function formatEnemyFieldStatus(remainingCreeps: number): string {
   return `Enemy field: ${remainingCreeps} left`;
@@ -31,7 +50,7 @@ export function mapWaveQueueToViewModel(
   const headerLabel = `Wave ${snapshot.waveNumber}`;
 
   if (snapshot.phase === 'wave') {
-    const items = snapshot.waveQueue ?? [];
+    const items = (snapshot.waveQueue ?? []).map(toWaveQueueIcon);
     const pendingCreepCount = snapshot.pendingCreepCount ?? 0;
     const isPlayerFieldClear = items.length === 0 && pendingCreepCount === 0;
     const isEnemyFieldFighting = isPlayerFieldClear && opponentFieldRemaining > 0;
@@ -48,10 +67,7 @@ export function mapWaveQueueToViewModel(
   }
 
   if (snapshot.phase === 'build') {
-    const enemySendItems = snapshot.opponentSendQueue.map((send, index) => ({
-      type: send.type,
-      index,
-    }));
+    const enemySendItems = snapshot.opponentSendQueue.map(toWaveQueueIcon);
     return {
       headerLabel: `Next: ${headerLabel}`,
       countLabel: enemySendItems.length > 0 ? `+${enemySendItems.length} enemy sends` : null,

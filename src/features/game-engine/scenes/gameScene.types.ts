@@ -24,6 +24,11 @@ export type CreepRenderState = {
   footprintCenterOffsetPx?: number;
   /** Faction tint to restore after a hit flash; white when untinted. */
   baseTint?: number;
+  /**
+   * Content id of the unit the creep was spawned from, for the HUD wave strip.
+   * Every spawn path sets it; bare test fixtures may leave it out.
+   */
+  unitId?: string;
   /** Race of the creature, so its hit, death and escape use its race sound profile. */
   race?: RaceId;
   /** Status pips shown while several effects run at once. */
@@ -84,11 +89,6 @@ export type PendingWaveSpawn = {
   sequenceIndex: number;
   /** The side that sent this creep; omitted for baseline wave creeps. */
   sender?: CreepSenderSide;
-};
-
-export type HudWaveQueueItem = {
-  type: 'skeleton' | 'ghoul' | 'crypt_fiend' | 'gargoyle';
-  index: number;
 };
 
 /**

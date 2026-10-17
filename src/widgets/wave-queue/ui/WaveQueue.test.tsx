@@ -48,11 +48,11 @@ describe('WaveQueue render', () => {
         phase: 'wave',
         pendingCreepCount: 6,
         waveQueue: [
-          { type: 'ghoul', index: 0 },
-          { type: 'ghoul', index: 1 },
-          { type: 'skeleton', index: 2 },
-          { type: 'ghoul', index: 3 },
-          { type: 'gargoyle', index: 4 },
+          { creepTypeId: 'undead_ghoul', index: 0 },
+          { creepTypeId: 'undead_ghoul', index: 1 },
+          { creepTypeId: 'undead_skeleton', index: 2 },
+          { creepTypeId: 'undead_ghoul', index: 3 },
+          { creepTypeId: 'undead_gargoyle', index: 4 },
         ],
       }),
     );
@@ -61,6 +61,16 @@ describe('WaveQueue render', () => {
 
     expect(screen.getByText('Wave 4')).toBeDefined();
     expect(screen.getByText('6 creeps')).toBeDefined();
+    const portraitSources = screen
+      .getAllByRole('img')
+      .map((icon) => icon.querySelector('img')?.getAttribute('src'));
+    expect(portraitSources).toEqual([
+      '/assets/ui/portraits/undead_ghoul.webp',
+      '/assets/ui/portraits/undead_ghoul.webp',
+      '/assets/ui/portraits/undead_skeleton.webp',
+      '/assets/ui/portraits/undead_ghoul.webp',
+      '/assets/ui/portraits/undead_gargoyle.webp',
+    ]);
     expect(consoleError).not.toHaveBeenCalled();
   });
 
@@ -72,10 +82,10 @@ describe('WaveQueue render', () => {
         phase: 'wave',
         pendingCreepCount: 4,
         waveQueue: [
-          { type: 'ghoul', index: 4 },
-          { type: 'ghoul', index: 4 },
-          { type: 'skeleton', index: 0 },
-          { type: 'skeleton', index: 0 },
+          { creepTypeId: 'undead_ghoul', index: 4 },
+          { creepTypeId: 'undead_ghoul', index: 4 },
+          { creepTypeId: 'undead_skeleton', index: 0 },
+          { creepTypeId: 'undead_skeleton', index: 0 },
         ],
       }),
     );
@@ -90,8 +100,8 @@ describe('WaveQueue render', () => {
       createSnapshot({
         phase: 'build',
         opponentSendQueue: [
-          { type: 'ghoul', index: 0 },
-          { type: 'gargoyle', index: 1 },
+          { creepTypeId: 'undead_ghoul', index: 0 },
+          { creepTypeId: 'undead_gargoyle', index: 1 },
         ],
       }),
     );

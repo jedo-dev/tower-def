@@ -38,8 +38,8 @@ describe('mapWaveQueueToViewModel', () => {
       createSnapshot({
         phase: 'build',
         opponentSendQueue: [
-          { type: 'ghoul', index: 0 },
-          { type: 'gargoyle', index: 1 },
+          { creepTypeId: 'undead_ghoul', index: 0 },
+          { creepTypeId: 'undead_gargoyle', index: 1 },
         ],
       }),
     );
@@ -49,7 +49,10 @@ describe('mapWaveQueueToViewModel', () => {
     expect(vm.countLabel).toBe('+2 enemy sends');
     expect(vm.sections).toHaveLength(1);
     expect(vm.sections[0].key).toBe('enemy-sends');
-    expect(vm.sections[0].items.map((item) => item.type)).toEqual(['ghoul', 'gargoyle']);
+    expect(vm.sections[0].items.map((item) => item.creepTypeId)).toEqual([
+      'undead_ghoul',
+      'undead_gargoyle',
+    ]);
   });
 
   it('shows no sends section when the enemy queued nothing', () => {
@@ -67,8 +70,8 @@ describe('mapWaveQueueToViewModel', () => {
         phase: 'wave',
         pendingCreepCount: 5,
         waveQueue: [
-          { type: 'skeleton', index: 0 },
-          { type: 'ghoul', index: 1 },
+          { creepTypeId: 'undead_skeleton', index: 0 },
+          { creepTypeId: 'undead_ghoul', index: 1 },
         ],
       }),
     );
@@ -103,7 +106,7 @@ describe('mapWaveQueueToViewModel', () => {
       createSnapshot({
         phase: 'wave',
         pendingCreepCount: 1,
-        waveQueue: [{ type: 'ghoul', index: 0 }],
+        waveQueue: [{ creepTypeId: 'undead_ghoul', index: 0 }],
       }),
       4,
     );

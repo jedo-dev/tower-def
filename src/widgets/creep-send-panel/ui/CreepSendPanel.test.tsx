@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { act, cleanup, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { publishGameEvent } from '../../../shared/lib/game-bridge/bridge';
 import type { CreepSendLimitsSnapshot } from '../../../shared/lib/game-bridge/types';
 import { CreepSendPanel } from './CreepSendPanel';
@@ -9,6 +9,7 @@ import { Difficulty } from '../../../entities/difficulty';
 import type { GameSetupConfig } from '../../../shared/config/game-setup';
 import type { GameHudSnapshot } from '../../../shared/lib/game-bridge/types';
 import { UNIT_SPRITE_ASSETS, UNIT_SPRITE_KEYS } from '../../../shared/constants/sprites';
+import { toUnitPortraitSource } from '../../../shared/ui/unit-icon';
 
 const snapshot: GameHudSnapshot = {
   gold: 1000,
@@ -142,19 +143,24 @@ describe('CreepSendPanel send limits', () => {
 });
 
 describe('CreepSendPanel', () => {
-  it('shows the creep portrait on a send chip that has art', () => {
+  it('shows the painted creep portrait on a send chip', () => {
     render(<CreepSendPanel setup={createSetup(RaceId.ORC)} />);
 
     const icon = screen.getByRole('img', { name: 'Grunt' });
 
-    expect(icon.style.backgroundImage).toContain(UNIT_SPRITE_ASSETS[UNIT_SPRITE_KEYS.ORC_GRUNT]);
+    expect(icon.querySelector('img')?.getAttribute('src')).toBe(toUnitPortraitSource('orc_grunt'));
   });
 
-  it('keeps the question chip for a race whose art is not drawn yet', () => {
-    render(<CreepSendPanel setup={createSetup(RaceId.HUMAN)} />);
+  it('falls back to the battlefield sprite when the portrait fails to load', () => {
+    render(<CreepSendPanel setup={createSetup(RaceId.ORC)} />);
 
-    expect(screen.getByRole('img', { name: 'Militia: artwork pending' })).toBeDefined();
-    expect(screen.queryByRole('img', { name: 'Militia' })).toBeNull();
+    const portrait = screen.getByRole('img', { name: 'Grunt' }).querySelector('img');
+    if (!portrait) throw new Error('portrait not rendered');
+    fireEvent.error(portrait);
+
+    expect(screen.getByRole('img', { name: 'Grunt' }).style.backgroundImage).toContain(
+      UNIT_SPRITE_ASSETS[UNIT_SPRITE_KEYS.ORC_GRUNT],
+    );
   });
 });
 

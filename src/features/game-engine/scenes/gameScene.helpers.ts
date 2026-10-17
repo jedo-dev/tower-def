@@ -1,6 +1,5 @@
 import { TowerTypeId } from '../../../shared/types/content-ids';
 import { builderFactions, type BuilderFactionConfig } from '../../../entities/builder-faction';
-import type { CreepEntity } from '../../../entities/creep';
 import type { DuelMatchEndReason, DuelSide } from '../../../entities/duel-match';
 import {
   buildableTowers,
@@ -16,9 +15,10 @@ import type {
   HudFactionType,
   MatchOutcomeReason,
   MatchOutcomeStatus,
+  WaveQueueItem,
 } from '../../../shared/lib/game-bridge/types';
 import { BONE_ARCHER_TOWER_CONFIG, PLAGUE_TOWER_CONFIG } from './gameScene.constants';
-import type { CreepRenderState, HudWaveQueueItem, PendingWaveSpawn } from './gameScene.types';
+import type { CreepRenderState, PendingWaveSpawn } from './gameScene.types';
 
 export function mapEnemyFactionToHudFaction(faction: string): HudFactionType {
   if (faction === 'ORC' || faction === 'HUMAN' || faction === 'ELF') {
@@ -28,79 +28,32 @@ export function mapEnemyFactionToHudFaction(faction: string): HudFactionType {
   return 'undead';
 }
 
-export function mapEntityToWaveQueueType(creep: CreepEntity): HudWaveQueueItem['type'] {
-  void creep;
-  return 'ghoul';
-}
-
 export function mapUnitToCreepType(unit: UnitConfig): 'basic' {
   void unit;
   return 'basic';
 }
 
-export function buildHudWaveQueue(activeCreeps: CreepRenderState[]): HudWaveQueueItem[] {
+export function buildHudWaveQueue(activeCreeps: CreepRenderState[]): WaveQueueItem[] {
   // Index the filtered list sequentially: positional indexes of the source
   // array leave gaps after dead creeps and collide with the pending-spawn
   // indexes appended in buildHudWaveQueueWithPending (queue.length-based).
-  return activeCreeps
-    .filter((creep) => creep.entity.status === 'alive')
-    .map((creep, index) => ({
-      type: mapEntityToWaveQueueType(creep.entity),
-      index,
-    }));
+  const queue: WaveQueueItem[] = [];
+  for (const creep of activeCreeps) {
+    if (creep.entity.status !== 'alive' || creep.unitId === undefined) continue;
+    queue.push({ creepTypeId: creep.unitId, index: queue.length });
+  }
+  return queue;
 }
 
 export function buildHudWaveQueueWithPending(
   activeCreeps: CreepRenderState[],
   pendingWaveSpawns: readonly PendingWaveSpawn[],
-): HudWaveQueueItem[] {
+): WaveQueueItem[] {
   const queue = buildHudWaveQueue(activeCreeps);
-
   for (const spawn of pendingWaveSpawns) {
-    if (spawn.unit.id.includes('ghoul')) {
-      queue.push({ type: 'ghoul', index: queue.length });
-      continue;
-    }
-    if (spawn.unit.id.includes('crypt_fiend')) {
-      queue.push({ type: 'crypt_fiend', index: queue.length });
-      continue;
-    }
-    if (spawn.unit.id.includes('gargoyle')) {
-      queue.push({ type: 'gargoyle', index: queue.length });
-      continue;
-    }
-    queue.push({ type: 'skeleton', index: queue.length });
+    queue.push({ creepTypeId: spawn.unit.id, index: queue.length });
   }
-
   return queue;
-}
-
-export function mapUnitIdToHudCreepType(unitId: string): HudWaveQueueItem['type'] {
-  if (
-    unitId.includes('ghoul') ||
-    unitId.includes('grunt') ||
-    unitId.includes('footman') ||
-    unitId.includes('huntress')
-  ) {
-    return 'ghoul';
-  }
-  if (
-    unitId.includes('crypt_fiend') ||
-    unitId.includes('troll') ||
-    unitId.includes('rifleman') ||
-    unitId.includes('dryad')
-  ) {
-    return 'crypt_fiend';
-  }
-  if (
-    unitId.includes('gargoyle') ||
-    unitId.includes('rider') ||
-    unitId.includes('engine') ||
-    unitId.includes('chimera')
-  ) {
-    return 'gargoyle';
-  }
-  return 'skeleton';
 }
 
 /**
@@ -118,11 +71,8 @@ export function resolveHudOpponentSends(
   return phase === 'wave' ? sentThisWave : queuedForNextWave;
 }
 
-export function buildHudSendQueue(sendQueue: readonly string[]): HudWaveQueueItem[] {
-  return sendQueue.map((unitId, index) => ({
-    type: mapUnitIdToHudCreepType(unitId),
-    index,
-  }));
+export function buildHudSendQueue(sendQueue: readonly string[]): WaveQueueItem[] {
+  return sendQueue.map((unitId, index) => ({ creepTypeId: unitId, index }));
 }
 
 export function mapHudFactionToRaceId(faction: HudFactionType): RaceId {
