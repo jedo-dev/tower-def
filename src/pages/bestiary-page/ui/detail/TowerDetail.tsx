@@ -6,6 +6,7 @@ import { CodexIcon } from '../codex/CodexIcon';
 import { Portrait } from '../codex/Portrait';
 import { StatChips } from '../codex/StatChips';
 import { DetailHeader, LevelColumns, LoreFold, SpecialLines } from './DetailParts';
+import { SoundCues } from './SoundCues';
 import { TalentSection, type TalentBranchView } from './TalentSection';
 
 export type TowerDetailProps = {
@@ -63,6 +64,7 @@ export function TowerDetail({ tower, raceName, faction, nameId }: TowerDetailPro
           branches={toTalentBranches(tower)}
         />
       )}
+      <SoundCues idPrefix={idPrefix} name={tower.name} cues={tower.soundCues} />
       <LoreFold description={tower.description} lore={tower.lore} />
     </>
   );

@@ -1,0 +1,40 @@
+/* Listen buttons: a row of small iron keys, a speaker over a cue name. */
+
+.row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-sm);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.button {
+  width: 100%;
+  min-width: var(--touch-target-min);
+  min-height: var(--touch-target-min);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2xs);
+  padding: var(--space-xs) var(--space-2xs);
+  color: var(--color-accent-gold);
+  text-align: center;
+}
+
+.button:hover {
+  color: var(--color-codex-focus);
+}
+
+.label {
+  max-width: 100%;
+  overflow: hidden;
+  color: var(--color-codex-text);
+  font-size: var(--font-size-2xs);
+  font-weight: 600;
+  letter-spacing: var(--codex-tracking-ui);
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
