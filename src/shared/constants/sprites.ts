@@ -178,6 +178,9 @@ export const TOWER_SPRITE_KEYS = {
   HUMAN_ALCHEMIST_TOWER: 'tower.human.alchemist_tower',
   HUMAN_GUARD_POST: 'tower.human.guard_post',
   ELF_MOON_ARCHER: 'tower.elf.moon_archer',
+  ELF_WISP_BLOOM: 'tower.elf.wisp_bloom',
+  ELF_MOONWELL: 'tower.elf.moonwell',
+  ELF_THORN_SPIRE: 'tower.elf.thorn_spire',
 } as const;
 
 export type TowerSpriteKey = (typeof TOWER_SPRITE_KEYS)[keyof typeof TOWER_SPRITE_KEYS];
@@ -263,10 +266,7 @@ export const TOWER_SHEET_CONTRACT_FRAMES: TowerSheetFrameLayout = {
 };
 
 /** Per-sheet deviations from the contract, checked against the shipped art; the rest follow it. */
-export const TOWER_SHEET_FRAME_LAYOUTS: Partial<Record<TowerSpriteKey, TowerSheetFrameLayout>> = {
-  // Slots 8, 9 and 14 are empty: no hit-reaction pose was drawn.
-  [TOWER_SPRITE_KEYS.ELF_MOON_ARCHER]: { ...TOWER_SHEET_CONTRACT_FRAMES, hitReaction: null },
-};
+export const TOWER_SHEET_FRAME_LAYOUTS: Partial<Record<TowerSpriteKey, TowerSheetFrameLayout>> = {};
 
 /** The frame layout of a tower sheet: its override, or the contract for every other key. */
 export function resolveTowerSheetFrameLayout(spriteKey: string): TowerSheetFrameLayout {

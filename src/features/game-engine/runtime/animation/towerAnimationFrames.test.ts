@@ -17,7 +17,6 @@ const EMPTY_SLOTS_BY_SHEET: Record<string, readonly number[]> = {
   ...Object.fromEntries(
     Object.values(TOWER_SPRITE_KEYS).map((spriteKey) => [spriteKey, CONTRACT_EMPTY_SLOTS]),
   ),
-  [TOWER_SPRITE_KEYS.ELF_MOON_ARCHER]: [8, 9, 14],
 };
 
 function allFrames(frames: TowerAnimationFrames): number[] {
@@ -31,9 +30,8 @@ describe('resolveTowerAnimationFrames', () => {
     ]);
   });
 
-  it('falls back to the first idle frame for a sheet without a hit-reaction pose', () => {
-    const frames = resolveTowerAnimationFrames(TOWER_SPRITE_KEYS.ELF_MOON_ARCHER);
-    expect(frames.hitReaction).toEqual([frames.idle[0]]);
+  it('plays the hit reaction of the regenerated elf sheets from slot 9', () => {
+    expect(resolveTowerAnimationFrames(TOWER_SPRITE_KEYS.ELF_MOONWELL).hitReaction).toEqual([9]);
   });
 
   it.each(Object.entries(EMPTY_SLOTS_BY_SHEET))(
@@ -88,7 +86,7 @@ describe('createTowerAnimations', () => {
   it.each([
     [TOWER_SPRITE_KEYS.UNDEAD_BONE_ARCHER, [9]],
     [TOWER_SPRITE_KEYS.ORC_TAR_PIT, [9]],
-    [TOWER_SPRITE_KEYS.ELF_MOON_ARCHER, [3]],
+    [TOWER_SPRITE_KEYS.ELF_MOON_ARCHER, [9]],
     [PLACEHOLDER_TEXTURE_KEYS.TOWER, [9]],
   ])('builds the %s hit reaction from frames %j', (spriteKey, expectedFrames) => {
     const { scene, created } = createSceneStub();
