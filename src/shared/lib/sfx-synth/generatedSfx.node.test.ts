@@ -3,12 +3,13 @@ import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { SOUND_IDS } from '../../types/sound-ids';
+import { SOUND_GROUP_IDS, SOUND_IDS, SOUND_IDS_BY_GROUP } from '../../types/sound-ids';
 import { SFX_ASSET_ROOT, SOUND_ASSET_PATHS } from '../sound-registry/audio.constants';
 import { readWavHeader } from './encodeWav';
-import { GENERATED_SOUND_IDS, SFX_RECIPES } from './recipes';
+import { GENERATED_SOUND_IDS, SFX_RECIPES, getGeneratedSoundIdsOfGroup } from './recipes';
 import { renderSfxRecipeToWav } from './renderRecipe';
-import { SFX_BIT_DEPTH, SFX_SAMPLE_RATE, SFX_SIZE_BUDGET_BYTES } from './sfxRecipe.types';
+import { SFX_BIT_DEPTH, SFX_SAMPLE_RATE } from './sfxRecipe.types';
+import { SFX_GROUP_BUDGET_BYTES, SFX_TOTAL_BUDGET_BYTES, getSfxGroupOfFile } from './sfxGroups';
 
 const PUBLIC_DIR = fileURLToPath(new URL('../../../../public', import.meta.url));
 const SFX_DIR = join(PUBLIC_DIR, SFX_ASSET_ROOT);
@@ -67,13 +68,38 @@ describe('generated sound effects', () => {
     }
   });
 
-  it('stay inside the size budget', () => {
-    const totalBytes = GENERATED_SOUND_IDS.reduce(
-      (sum, soundId) => sum + readClip(soundId).length,
-      0,
-    );
+  it('stay inside the size budget of their group and in total', () => {
+    let totalBytes = 0;
 
-    expect(totalBytes).toBeLessThan(SFX_SIZE_BUDGET_BYTES);
+    for (const group of SOUND_GROUP_IDS) {
+      const groupBytes = getGeneratedSoundIdsOfGroup(group).reduce(
+        (sum, soundId) => sum + readClip(soundId).length,
+        0,
+      );
+      totalBytes += groupBytes;
+
+      expect(groupBytes, group).toBeLessThan(SFX_GROUP_BUDGET_BYTES[group]);
+    }
+
+    expect(totalBytes).toBeLessThan(SFX_TOTAL_BUDGET_BYTES);
+  });
+
+  it('render each group from the recipes of its own ids', () => {
+    for (const group of SOUND_GROUP_IDS) {
+      const generated = SOUND_IDS_BY_GROUP[group].filter((id) => !id.startsWith('ambient.'));
+
+      expect([...getGeneratedSoundIdsOfGroup(group)].sort(), group).toEqual([...generated].sort());
+    }
+  });
+
+  it('keep race clips under combat/<race>/ and core clips outside every race folder', () => {
+    for (const group of SOUND_GROUP_IDS) {
+      for (const soundId of getGeneratedSoundIdsOfGroup(group)) {
+        const relativePath = SOUND_ASSET_PATHS[soundId].slice(SFX_ASSET_ROOT.length + 1);
+
+        expect(getSfxGroupOfFile(relativePath), soundId).toBe(group);
+      }
+    }
   });
 
   it('leave no orphaned wav next to them', () => {

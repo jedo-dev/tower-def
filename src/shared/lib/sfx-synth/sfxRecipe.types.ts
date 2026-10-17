@@ -9,9 +9,6 @@ export const SFX_SAMPLE_RATE = 22050;
 
 export const SFX_BIT_DEPTH = 16;
 
-/** All generated (non-ambient) clips together must stay below this size. */
-export const SFX_SIZE_BUDGET_BYTES = 1_500_000;
-
 /** Highest peak a clip may reach after normalization, about -0.4 dBFS. */
 export const SFX_DEFAULT_PEAK = 0.95;
 
