@@ -1,4 +1,3 @@
-import type { SfxLayer } from '../sfxRecipe.types';
 import {
   NOTE,
   WHITE,
@@ -12,26 +11,20 @@ import {
   thump,
 } from './recipeKit';
 import type { RaceSfxRecipeGroup } from './recipeGroups';
+import { UNDEAD_GREATER_CREEP_RECIPES } from './undeadGreaterCreepRecipes';
+import { UNDEAD_LESSER_CREEP_RECIPES } from './undeadLesserCreepRecipes';
+import { UNDEAD_TOWER_RECIPES } from './undeadTowerRecipes';
+import { boneClick, hiss } from './undeadVoices';
 
-/** A dry bone click: crunchy held noise at a few kHz. */
-function boneClick(startSec: number, holdHz: number, gain: number): SfxLayer {
-  return burst(startSec, 0.025, gain, [highpass(700)], holdHz);
-}
-
-/** Necrotic hiss: thin, airy noise that trails a shot. */
-function hiss(startSec: number, durationSec: number, gain: number): SfxLayer {
-  return {
-    waveform: 'noise',
-    startSec,
-    durationSec,
-    frequencyHz: WHITE,
-    envelope: shaped(0.02, durationSec * 0.7, 0, 0.03),
-    gain,
-    filters: [highpass(3500)],
-  };
-}
-
+/**
+ * Race-wide undead clips. Each creature's and tower's own clips live in the
+ * creep and tower recipe files, built from the vocabulary in `undeadVoices.ts`.
+ */
 export const UNDEAD_RECIPES: RaceSfxRecipeGroup<'undead'> = {
+  ...UNDEAD_LESSER_CREEP_RECIPES,
+  ...UNDEAD_GREATER_CREEP_RECIPES,
+  ...UNDEAD_TOWER_RECIPES,
+
   'combat.attack.single.undead': {
     seed: 501,
     layers: [

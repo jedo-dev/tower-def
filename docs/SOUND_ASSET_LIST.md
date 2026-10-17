@@ -6,7 +6,7 @@ which `npm run encode:ambient` cuts and compresses from the full recordings.
 
 | Kind | Source | Location |
 | --- | --- | --- |
-| Generated SFX (64 clips) | recipes in `src/shared/lib/sfx-synth/recipes/` | `public/assets/audio/sfx/{ui,system,economy,combat}/`, race clips under `combat/<race>/` |
+| Generated SFX (218 clips) | recipes in `src/shared/lib/sfx-synth/recipes/` | `public/assets/audio/sfx/{ui,system,economy,combat}/`, race clips under `combat/<race>/` |
 | Ambience (2 loops) | recordings in `assets-src/audio/ambient/` (not shipped) | `public/assets/audio/sfx/ambient/` as `.ogg` + `.m4a` |
 
 Which tower or creature plays which clip is decided by the sound profiles in
@@ -27,11 +27,11 @@ file; a test fails if two ids share one.
   | Group | Files | Budget | Now |
   | --- | --- | --- | --- |
   | core | `ui/`, `system/`, `economy/`, `combat/default/`, `combat/effects/` | 800 KB | ~448 KB |
-  | undead | `combat/undead/` | 900 KB | ~63 KB |
+  | undead | `combat/undead/` | 900 KB | ~581 KB |
   | orc | `combat/orc/` | 900 KB | ~622 KB |
-  | human | `combat/human/` | 900 KB | ~59 KB |
-  | elf | `combat/elf/` | 900 KB | ~70 KB |
-  | total | | 4400 KB | ~770 KB |
+  | human | `combat/human/` | 900 KB | ~583 KB |
+  | elf | `combat/elf/` | 900 KB | ~579 KB |
+  | total | | 4400 KB | ~3224 KB |
 
 ### Ambience
 
@@ -147,6 +147,46 @@ Dark fantasy around D minor: low-mid, soft attacks, short tails. Frequent cues
 | `combat.impact.undead` | Dry bone crack. |
 | `combat.build.undead` | Rattle of bones over a low hum. |
 | `combat.creep_death.undead` | Crumbling clicks and a hollow exhale. |
+| `combat.creep.undead_skeleton.hit` | Bright bone click on a small hollow knock. |
+| `combat.creep.undead_skeleton.death` | Dry rattle of bones collapsing into a clatter. |
+| `combat.creep.undead_skeleton.escape` | Chattering jaw rattle over two hollow knocks, A then F. |
+| `combat.creep.undead_skeleton.spawn` | Bones clicking together faster and faster, a small rising D-A tone. |
+| `combat.creep.undead_ghoul.hit` | Wet tear with a clipped snarl. |
+| `combat.creep.undead_ghoul.death` | Long snarl falling into wet tearing and a slump. |
+| `combat.creep.undead_ghoul.escape` | Two hungry snarls, each climbing. |
+| `combat.creep.undead_ghoul.spawn` | Claws tearing out of the ground into a rising snarl. |
+| `combat.creep.undead_crypt_fiend.hit` | Two hard chitin ticks, high and hollow. |
+| `combat.creep.undead_crypt_fiend.death` | Falling cascade of chitin clicks, a thin screech and a web hiss. |
+| `combat.creep.undead_crypt_fiend.escape` | Fast mandible chitter swelling into a web hiss. |
+| `combat.creep.undead_crypt_fiend.spawn` | Low burrowing rumble, three clicks and a sticky hiss. |
+| `combat.creep.undead_gargoyle.hit` | Gritty stone knock. |
+| `combat.creep.undead_gargoyle.death` | Last wingbeat, stone scrape and a crumbling fall. |
+| `combat.creep.undead_gargoyle.escape` | Two leathery wingbeats under a gravelly cry. |
+| `combat.creep.undead_gargoyle.spawn` | Stone cracking loose, then two wingbeats taking off. |
+| `combat.creep.undead_abomination.hit` | Heavy wet thud with a faint chain. |
+| `combat.creep.undead_abomination.death` | Gurgling bellow sinking, chains clinking, a huge body drop. |
+| `combat.creep.undead_abomination.escape` | Rising gurgling bellow with rattling chains. |
+| `combat.creep.undead_abomination.spawn` | Two heavy footfalls, chains swinging, a gurgle. |
+| `combat.creep.undead_necromancer.hit` | Sharp whispered gasp on a dull knock. |
+| `combat.creep.undead_necromancer.death` | Whispered chant falling A to D, the staff hitting the ground twice. |
+| `combat.creep.undead_necromancer.escape` | Staff tap, then a two-note chant D-F under whispers. |
+| `combat.creep.undead_necromancer.spawn` | Staff tap into a swelling D-A chant with whispers. |
+| `combat.creep.undead_banshee.hit` | Glassy ping with a breath of air. |
+| `combat.creep.undead_banshee.death` | Long wail falling an octave, fading shimmer. |
+| `combat.creep.undead_banshee.escape` | Quavering wail rising A to D with a shimmer. |
+| `combat.creep.undead_banshee.spawn` | Wind swelling into a wail and a high shimmer. |
+| `combat.creep.undead_frost_wyrm.hit` | Icy crackle on a deep thud. |
+| `combat.creep.undead_frost_wyrm.death` | Deep cold roar falling away, ice shattering, a heavy fall. |
+| `combat.creep.undead_frost_wyrm.escape` | Deep roar rising, frosty wind and crackle. |
+| `combat.creep.undead_frost_wyrm.spawn` | Two huge wingbeats, a cold roar and crackling frost. |
+| `combat.tower.undead_bone_archer_tower.attack` | Creaking sinew bow, dark twang with a bone click, hissing tail. |
+| `combat.tower.undead_bone_archer_tower.impact` | Bone-tipped arrow: two sharp clicks on a light knock. |
+| `combat.tower.undead_plague_tower.attack` | Three bubbles rising and a plague burst. |
+| `combat.tower.undead_plague_tower.impact` | Wet splat with popping bubbles. |
+| `combat.tower.undead_frost_wyrm_nest.attack` | Icy breath over a small cold growl. |
+| `combat.tower.undead_frost_wyrm_nest.impact` | Frost shatter: high glassy tones and crackle. |
+| `combat.tower.undead_bone_obelisk.attack` | Low resonant D hum, pulsing. |
+| `combat.tower.undead_bone_obelisk.impact` | Dark falling pulse. |
 
 ### Orc - thuds and drums
 

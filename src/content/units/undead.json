@@ -16,6 +16,12 @@
       "spriteKey": "unit.undead.skeleton",
       "description": "Restless bones marching from forgotten crypts.",
       "lore": "The grave gives back what it was lent. These bones answer the call long after the flesh forgot whose name they bore.",
+      "sounds": {
+        "creepHit": "combat.creep.undead_skeleton.hit",
+        "creepDeath": "combat.creep.undead_skeleton.death",
+        "creepEscape": "combat.creep.undead_skeleton.escape",
+        "creepSpawn": "combat.creep.undead_skeleton.spawn"
+      },
       "talentBranches": [
         {
           "id": "undead_skeleton_bone_legion",
@@ -138,6 +144,12 @@
       "spriteKey": "unit.undead.ghoul",
       "description": "Feral clawed scavenger that outruns slow defenses.",
       "lore": "It fed on the fallen until hunger was all that remained. It runs because the hunger does; nothing else is left to tire.",
+      "sounds": {
+        "creepHit": "combat.creep.undead_ghoul.hit",
+        "creepDeath": "combat.creep.undead_ghoul.death",
+        "creepEscape": "combat.creep.undead_ghoul.escape",
+        "creepSpawn": "combat.creep.undead_ghoul.spawn"
+      },
       "talentBranches": [
         {
           "id": "undead_ghoul_frenzy",
@@ -252,6 +264,12 @@
       "spriteKey": "unit.undead.crypt_fiend",
       "description": "A spider-like horror wrapped in deathly chitin.",
       "lore": "Woven from spider and corpse in the deep vaults, it carries the cold of the crypt in every joint of its chitin.",
+      "sounds": {
+        "creepHit": "combat.creep.undead_crypt_fiend.hit",
+        "creepDeath": "combat.creep.undead_crypt_fiend.death",
+        "creepEscape": "combat.creep.undead_crypt_fiend.escape",
+        "creepSpawn": "combat.creep.undead_crypt_fiend.spawn"
+      },
       "talentBranches": [
         {
           "id": "undead_crypt_fiend_carapace",
@@ -369,6 +387,12 @@
       "spriteKey": "unit.undead.gargoyle",
       "description": "Winged stone predator that dives past the front line.",
       "lore": "Stone that remembers being carved to watch. Its wings are dead weight it has learned to lift out of spite.",
+      "sounds": {
+        "creepHit": "combat.creep.undead_gargoyle.hit",
+        "creepDeath": "combat.creep.undead_gargoyle.death",
+        "creepEscape": "combat.creep.undead_gargoyle.escape",
+        "creepSpawn": "combat.creep.undead_gargoyle.spawn"
+      },
       "talentBranches": [
         {
           "id": "undead_gargoyle_stoneskin",
@@ -484,6 +508,12 @@
       "spriteKey": "unit.undead.abomination",
       "description": "Patchworked brute that soaks damage instead of dodging it.",
       "lore": "Three corpses, one purpose. Every stitch is a vow the dead made to keep walking while the living still have gold to lose.",
+      "sounds": {
+        "creepHit": "combat.creep.undead_abomination.hit",
+        "creepDeath": "combat.creep.undead_abomination.death",
+        "creepEscape": "combat.creep.undead_abomination.escape",
+        "creepSpawn": "combat.creep.undead_abomination.spawn"
+      },
       "talentBranches": [
         {
           "id": "undead_abomination_meat_mountain",
@@ -618,6 +648,12 @@
       "spriteKey": "unit.undead.necromancer",
       "description": "Dark acolyte worth killing early and worth gold when you do.",
       "lore": "He counts the dead the way the living count coin, and he is never short. Kill him before the ledger fills.",
+      "sounds": {
+        "creepHit": "combat.creep.undead_necromancer.hit",
+        "creepDeath": "combat.creep.undead_necromancer.death",
+        "creepEscape": "combat.creep.undead_necromancer.escape",
+        "creepSpawn": "combat.creep.undead_necromancer.spawn"
+      },
       "talentBranches": [
         {
           "id": "undead_necromancer_raise_dead",
@@ -734,6 +770,12 @@
       "spriteKey": "unit.undead.banshee",
       "description": "Wailing spirit drifting between life and oblivion.",
       "lore": "Her wail is the last breath of a village that burned for the cause. She remembers every name, and she is not finished.",
+      "sounds": {
+        "creepHit": "combat.creep.undead_banshee.hit",
+        "creepDeath": "combat.creep.undead_banshee.death",
+        "creepEscape": "combat.creep.undead_banshee.escape",
+        "creepSpawn": "combat.creep.undead_banshee.spawn"
+      },
       "talentBranches": [
         {
           "id": "undead_banshee_wail",
@@ -838,6 +880,12 @@
       "spriteKey": "unit.undead.frost_wyrm",
       "description": "Ancient dragon bound to ice and undeath.",
       "lore": "A dragon ten centuries dead, roused with ice where its heart was. The cold it breathes has forgotten what warmth was for.",
+      "sounds": {
+        "creepHit": "combat.creep.undead_frost_wyrm.hit",
+        "creepDeath": "combat.creep.undead_frost_wyrm.death",
+        "creepEscape": "combat.creep.undead_frost_wyrm.escape",
+        "creepSpawn": "combat.creep.undead_frost_wyrm.spawn"
+      },
       "talentBranches": [
         {
           "id": "undead_frost_wyrm_frost_breath",
