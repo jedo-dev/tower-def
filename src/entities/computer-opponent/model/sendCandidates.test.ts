@@ -10,7 +10,13 @@ import { getRaceRegistry } from '../../race-registry/model/registries';
 import { TOWER_COMBAT_STATS_BY_TYPE } from '../../tower/model/types';
 import { computeDefenceDamageMix, type DamageModelTower } from './damage-placement';
 import { EVEN_DAMAGE_MIX, type DamageTypeMix } from './damage-profile';
-import { computeSendPressureEfficiency, createSendCandidates } from './sendCandidates';
+import { CREATURE_SEND_UNLOCK_WAVE_BY_TIER } from '../../../shared/constants/creatureSendUnlock';
+import { resolveUnitConfigById } from '../../unit/model/registry';
+import {
+  computeSendPressureEfficiency,
+  createSendCandidates,
+  listUnlockedSendableIds,
+} from './sendCandidates';
 
 // Fixture creatures with lopsided armor; the shipped rosters are not the subject.
 const PLATED = { health: 300, physicalArmor: 30, magicalArmor: 0 };
@@ -76,12 +82,41 @@ describe('entities/computer-opponent send candidates against the defender damage
 
   it('ranks a real roster by the defender mix, deterministically', () => {
     const valuation = { defenderDamageMix: ARROWS, healthMultiplier: 1 };
-    const first = createSendCandidates(RaceId.ORC, valuation);
+    const first = createSendCandidates(RaceId.ORC, LATE_ROUND, valuation);
 
     expect(first.map((candidate) => candidate.id)).toEqual(
       getRaceRegistry(RaceId.ORC).sendableCreepIds,
     );
-    expect(createSendCandidates(RaceId.ORC, valuation)).toEqual(first);
+    expect(createSendCandidates(RaceId.ORC, LATE_ROUND, valuation)).toEqual(first);
+  });
+});
+
+// Sends queued after `round` waves join wave `round + 1`.
+const LATE_ROUND = CREATURE_SEND_UNLOCK_WAVE_BY_TIER[6] - 1;
+
+describe('entities/computer-opponent send candidates by the send unlock schedule (tower-def-qpb)', () => {
+  it.each([0, 1, 2, 3, 4, 6, 7, 10, 11, 20])(
+    'after %i rounds offers exactly the tiers unlocked for the next wave',
+    (round) => {
+      for (const raceId of [RaceId.UNDEAD, RaceId.ORC, RaceId.HUMAN, RaceId.ELF]) {
+        const tiers = createSendCandidates(raceId, round).map((candidate) => candidate.tier);
+        const expected = getRaceRegistry(raceId)
+          .sendableCreepIds.map((id) => resolveUnitConfigById(id).tier)
+          .filter((tier) => round + 1 >= CREATURE_SEND_UNLOCK_WAVE_BY_TIER[tier]);
+
+        expect(tiers).toEqual(expected);
+      }
+    },
+  );
+
+  it('skips every tier above 2 before wave 3 and offers all 8 creatures from wave 12', () => {
+    const opening = createSendCandidates(RaceId.UNDEAD, 0);
+    expect(opening.length).toBeGreaterThan(0);
+    expect(opening.every((candidate) => candidate.tier <= 2)).toBe(true);
+    expect(listUnlockedSendableIds(RaceId.UNDEAD, LATE_ROUND)).toHaveLength(8);
+    expect(listUnlockedSendableIds(RaceId.UNDEAD, LATE_ROUND - 1)).not.toContain(
+      'undead_frost_wyrm',
+    );
   });
 });
 

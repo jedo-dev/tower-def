@@ -6,6 +6,7 @@ import type { GameSetupConfig } from '../../../shared/config/game-setup';
 import { mapCreepSendPanelToViewModel } from '../model/mapCreepSendPanelToViewModel';
 import { CreepDevelopCard } from './CreepDevelopCard';
 import { CreepSendCard } from './CreepSendCard';
+import { SendCardRow } from './SendCardRow';
 
 export const CREEP_SEND_PANEL_LABEL = 'Creep sending panel';
 
@@ -17,11 +18,20 @@ export type CreepSendPanelProps = {
    */
   isDevelopMode: boolean;
   onDevelopModeChange: (isDevelopMode: boolean) => void;
+  /**
+   * The card row's scroll offset, owned by the dock: restored when the tab
+   * mounts again, reported on scroll. Defaults to the row's start.
+   */
+  initialScrollLeft?: number;
+  onScrollLeftChange?: (scrollLeft: number) => void;
 };
+
+function ignoreScrollLeft(): void {}
 
 /**
  * The SEND tab of the dock: a one-line note (the queue, or each tier's
- * experience while developing) over one row of creature cards. Send mode:
+ * experience while developing) over one sideways-scrolling row of every
+ * creature of the race, locked tiers included. Send mode:
  * a tap queues a send. Develop mode: a tap opens the branch chooser or buys
  * the next grade, so a send tap can never spend experience.
  */
@@ -29,6 +39,8 @@ function CreepSendPanelComponent({
   setup,
   isDevelopMode,
   onDevelopModeChange,
+  initialScrollLeft = 0,
+  onScrollLeftChange = ignoreScrollLeft,
 }: CreepSendPanelProps) {
   const snapshot = useGameHudSnapshot();
   const sendLimits = usePlayerSendLimits();
@@ -77,7 +89,7 @@ function CreepSendPanelComponent({
         </p>
       )}
 
-      <div className={styles.cards}>
+      <SendCardRow initialScrollLeft={initialScrollLeft} onScrollLeftChange={onScrollLeftChange}>
         {viewModel.buttons.map((creature) =>
           isDevelopMode ? (
             <CreepDevelopCard
@@ -93,7 +105,7 @@ function CreepSendPanelComponent({
             />
           ),
         )}
-      </div>
+      </SendCardRow>
     </section>
   );
 }

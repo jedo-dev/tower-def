@@ -3,7 +3,10 @@ import { RaceId } from '../../../shared/types/content-ids';
 import type { GameSetupConfig } from '../../../shared/config/game-setup';
 import type { GameHudSnapshot } from '../../../shared/lib/game-bridge/types';
 import { Difficulty } from '../../../entities/difficulty';
-import { resolveUnitConfigById } from '../../../entities/unit';
+import { resolveUnitConfigById, UnitTier } from '../../../entities/unit';
+import { getSendCostByTier } from '../../../entities/duel-match';
+import { getRaceRegistry } from '../../../entities/race-registry';
+import { getCreatureSendUnlockWave } from '../../../shared/constants/creatureSendUnlock';
 import { mapCreepSendPanelToViewModel } from './mapCreepSendPanelToViewModel';
 
 const SKELETON_BRANCH_B = resolveUnitConfigById('undead_skeleton').talentBranches[1];
@@ -55,12 +58,10 @@ describe('mapCreepSendPanelToViewModel', () => {
     const viewModel = mapCreepSendPanelToViewModel(createSnapshot(), createSetup(RaceId.UNDEAD));
 
     expect(viewModel.raceName).toBe('Undead');
-    expect(viewModel.buttons.map((button) => button.creepTypeId)).toEqual([
-      'undead_skeleton',
-      'undead_ghoul',
-      'undead_crypt_fiend',
-      'undead_gargoyle',
-    ]);
+    expect(viewModel.buttons.map((button) => button.creepTypeId)).toEqual(
+      getRaceRegistry(RaceId.UNDEAD).sendableCreepIds,
+    );
+    expect(viewModel.buttons).toHaveLength(8);
     expect(viewModel.buttons[0]).toMatchObject({
       name: 'Skeleton',
       tier: 1,
@@ -183,7 +184,48 @@ describe('mapCreepSendPanelToViewModel', () => {
       { tier: 1, xp: 7, label: 'T1 7 XP', ariaLabel: 'Tier 1: 7 XP' },
       { tier: 2, xp: 3, label: 'T2 3 XP', ariaLabel: 'Tier 2: 3 XP' },
       { tier: 3, xp: 0, label: 'T3 0 XP', ariaLabel: 'Tier 3: 0 XP' },
+      { tier: 4, xp: 0, label: 'T4 0 XP', ariaLabel: 'Tier 4: 0 XP' },
+      { tier: 5, xp: 0, label: 'T5 0 XP', ariaLabel: 'Tier 5: 0 XP' },
+      { tier: 6, xp: 0, label: 'T6 0 XP', ariaLabel: 'Tier 6: 0 XP' },
     ]);
+  });
+
+  it('locks a tier before its unlock wave and keeps its price for planning', () => {
+    const viewModel = mapCreepSendPanelToViewModel(
+      createSnapshot({ gold: 10_000 }),
+      createSetup(RaceId.UNDEAD),
+    );
+    const wyrm = viewModel.buttons.find((button) => button.creepTypeId === 'undead_frost_wyrm');
+    const unlockWave = getCreatureSendUnlockWave(6);
+
+    expect(wyrm).toMatchObject({
+      isLocked: true,
+      unlockWave,
+      isDisabled: true,
+      disabledReason: `from wave ${unlockWave}`,
+      cost: getSendCostByTier(UnitTier.TIER_6),
+    });
+    expect(wyrm?.ariaLabel).toMatch(
+      new RegExp(`^Frost Wyrm locked: sendable from wave ${unlockWave}, costs \\d+ gold`),
+    );
+    // Wave 1: every unlocked tier is sendable, every locked one waits for its wave.
+    for (const button of viewModel.buttons) {
+      expect(button.isLocked).toBe(button.unlockWave > 1);
+    }
+  });
+
+  it('unlocks a tier in the build phase before its wave, and mid-wave for the next one', () => {
+    const unlockWave = getCreatureSendUnlockWave(5);
+    const isNecromancerLocked = (overrides: Partial<GameHudSnapshot>) =>
+      mapCreepSendPanelToViewModel(
+        createSnapshot({ gold: 10_000, ...overrides }),
+        createSetup(RaceId.UNDEAD),
+      ).buttons.find((button) => button.creepTypeId === 'undead_necromancer')?.isLocked;
+
+    expect(isNecromancerLocked({ waveNumber: unlockWave - 1 })).toBe(true);
+    expect(isNecromancerLocked({ waveNumber: unlockWave })).toBe(false);
+    // Wave `unlockWave - 1` running: a send queued after it joins the unlock wave.
+    expect(isNecromancerLocked({ waveNumber: unlockWave - 1, phase: 'wave' })).toBe(false);
   });
 
   it('has nothing affordable to develop without experience', () => {

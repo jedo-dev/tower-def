@@ -286,6 +286,13 @@
   --match-dock-note-height: 16px;
   --match-card-height: 106px;
   --match-card-icon-size: 56px;
+  /* SEND row (tower-def-qpb): every creature of the race in one sideways
+   * scrolling row. A fixed card width: four fit at 390px, three and a half
+   * at 360px, so the cut card hints at more. The fades mark a hidden edge. */
+  --match-send-card-width: 86px;
+  --match-send-row-fade-width: 20px;
+  /* Opaque stop of a CSS mask: only its alpha matters. */
+  --color-mask-opaque: #000;
   --match-xp-bar-height: 4px;
   --match-board-vignette: inset 0 0 28px 10px rgba(0, 0, 0, 0.78);
   --color-match-card-selected-glow: rgba(116, 235, 172, 0.75);

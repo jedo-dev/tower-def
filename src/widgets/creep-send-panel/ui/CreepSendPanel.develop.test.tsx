@@ -166,7 +166,7 @@ describe('CreepSendPanel develop mode', () => {
       within(tiers)
         .getAllByRole('listitem')
         .map((item) => item.textContent),
-    ).toEqual(['T1 25 XP', 'T2 3 XP', 'T3 12 XP']);
+    ).toEqual(['T1 25 XP', 'T2 3 XP', 'T3 12 XP', 'T4 0 XP', 'T5 0 XP', 'T6 0 XP']);
   });
 
   it('offers Develop for XP on a creature without a branch', () => {

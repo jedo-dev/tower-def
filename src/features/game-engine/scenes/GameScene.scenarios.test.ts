@@ -1,4 +1,5 @@
 import { afterEach, beforeAll, describe, expect, it } from 'vitest';
+import { getSendUnlockWave } from '../../../entities/duel-match';
 import { EnemyFaction } from '../../../entities/enemy-faction';
 import { getRaceRegistry } from '../../../entities/race-registry';
 import { resolveUnitConfigById } from '../../../entities/unit';
@@ -71,7 +72,10 @@ describe('GameScene scenarios (headless harness)', () => {
       expect(flierId).toBeDefined();
       if (!flierId) return;
 
+      // The send unlock schedule opens the flier's tier only from a later wave.
+      game.setDuelRound(getSendUnlockWave(resolveUnitConfigById(flierId).tier) - 1);
       game.command('send-creep', { creepTypeId: flierId });
+      expect(game.eventsOf('creep-send-rejected')).toEqual([]);
       game.command('start-wave', undefined);
 
       const { grid, routes } = game.inspect().duelMatchState.opponent.battlefield;

@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { calculateAirRoute } from '../../../shared/lib/pathfinding/airRoute';
 import { RaceId, UnitMoveType } from '../../../shared/types/content-ids';
 import { Difficulty } from '../../difficulty/model/types';
-import { createInitialDuelMatchState } from '../../duel-match';
+import { createInitialDuelMatchState, getSendUnlockWave } from '../../duel-match';
+import { UnitTier } from '../../unit/model/types';
 import { getUnitsByFaction, resolveUnitConfigById } from '../../unit/model/registry';
 import { computeExpectedWaveHealth } from '../../wave/model/expectedWaveHealth';
 import { WAVE_TIER_UNLOCK_WAVE } from '../../wave/model/waveBalance';
@@ -195,9 +196,14 @@ describe('entities/computer-opponent air lane: defence assessment', () => {
     const orc = createInitialDuelMatchState(RaceId.ORC, RaceId.ORC);
     const late = (state: typeof undead) => ({ ...state, round: GARGOYLE_WAVE + 5 });
 
-    // Orc has no flier to field or send; undead can send a gargoyle from round 1.
-    expect(assessDefence(late(orc)).air).toBeUndefined();
-    expect(assessDefence(undead).air).toBeDefined();
+    // Orc's first flier is tier 5: before its send unlock (and its baseline
+    // wave) there is nothing to fly. Undead can send a gargoyle from the
+    // build phase before its tier's send unlock wave (tower-def-qpb).
+    const orcBeforeFliers = { ...orc, round: getSendUnlockWave(UnitTier.TIER_5) - 2 };
+    const gargoyleSendRound = getSendUnlockWave(resolveUnitConfigById('undead_gargoyle').tier) - 1;
+    expect(assessDefence(orcBeforeFliers).air).toBeUndefined();
+    expect(assessDefence(undead).air).toBeUndefined();
+    expect(assessDefence({ ...undead, round: gargoyleSendRound }).air).toBeDefined();
 
     const flanked = assessDefence(late(undead));
     expect(flanked.air).toBeDefined();
@@ -206,6 +212,6 @@ describe('entities/computer-opponent air lane: defence assessment', () => {
     expect(flanked.air?.waveDamage).toBe(0);
     expect(flanked.air?.damagePerGold).toBeGreaterThan(0);
     expect(flanked.expectedAirHealthShare).toBeGreaterThan(0);
-    expect(assessDefence(late(orc)).expectedAirHealthShare).toBe(0);
+    expect(assessDefence(orcBeforeFliers).expectedAirHealthShare).toBe(0);
   });
 });

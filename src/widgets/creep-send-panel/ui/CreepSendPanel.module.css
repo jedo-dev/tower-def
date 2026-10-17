@@ -1,6 +1,6 @@
 /*
  * The SEND tab of the dock (docs/design/match-screen-concept.webp): a
- * one-line note under the tab rail, then four creature cards. The dock owns
+ * one-line note under the tab rail, then the race's creature cards. The dock owns
  * the frame and the rail; this panel is only the tab's content, and it is
  * exactly as tall as the TOWERS tab so switching tabs never moves the board.
  */
@@ -49,17 +49,60 @@
   border: 0;
 }
 
-/* One row of four cards, equal widths. */
+/*
+ * One row of every creature of the race (tower-def-qpb): it scrolls sideways
+ * with a snap per card and momentum, hides its scrollbar (arrow keys walk
+ * it, see SendCardRow) and fades the edge that hides more cards. The row is
+ * exactly the TOWERS row's height, so switching tabs never moves the board.
+ */
 .cards {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  display: flex;
   gap: var(--space-sm);
   height: var(--match-card-height);
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.cards::-webkit-scrollbar {
+  display: none;
+}
+
+.cards[data-fade-start] {
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    var(--color-mask-opaque) var(--match-send-row-fade-width)
+  );
+}
+
+.cards[data-fade-end] {
+  mask-image: linear-gradient(
+    to left,
+    transparent,
+    var(--color-mask-opaque) var(--match-send-row-fade-width)
+  );
+}
+
+.cards[data-fade-start][data-fade-end] {
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    var(--color-mask-opaque) var(--match-send-row-fade-width),
+    var(--color-mask-opaque) calc(100% - var(--match-send-row-fade-width)),
+    transparent
+  );
 }
 
 .card {
   position: relative;
+  flex: 0 0 var(--match-send-card-width);
   min-width: 0;
+  scroll-snap-align: start;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -77,25 +120,62 @@
     transform var(--duration-fast) var(--ease-out);
 }
 
-.card:not(:disabled):hover,
-.card:not(:disabled):focus-visible {
+.card:not(.cardDisabled):hover,
+.card:not(.cardDisabled):focus-visible {
   filter: brightness(1.15);
 }
 
+/* Inset: the scroll row clips anything drawn outside a card. */
 .card:focus-visible {
   outline: var(--focus-ring-outline);
-  outline-offset: var(--focus-ring-outline-offset);
+  outline-offset: calc(var(--focus-ring-outline-offset) * -1);
 }
 
-.card:not(:disabled):active {
+.card:not(.cardDisabled):active {
   transform: translateY(1px);
 }
 
-.card:disabled {
+/* Disabled send cards stay focusable (aria-disabled) so the reason is read. */
+.cardDisabled {
   cursor: not-allowed;
 }
 
-.card:disabled .portrait {
+.cardDisabled .portrait {
+  filter: grayscale(1) brightness(0.6);
+}
+
+/* A tier the send unlock schedule still locks: padlock and "from wave N". */
+.lockBadge {
+  position: absolute;
+  bottom: calc(var(--space-2xs) * -1);
+  left: 50%;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  padding: 0 var(--space-xs);
+  border-radius: var(--radius-sm);
+  background: var(--color-codex-pressed);
+  font-family: var(--font-family-ui);
+  font-size: var(--font-size-2xs);
+  font-weight: 700;
+  line-height: 1.3;
+  white-space: nowrap;
+  color: var(--color-text-warning);
+  transform: translateX(-50%);
+}
+
+.lockGlyph {
+  width: var(--font-size-2xs);
+  height: var(--font-size-2xs);
+  flex: 0 0 auto;
+}
+
+/* The badge sits over the greyed portrait and keeps its own colours. */
+.cardLocked .portrait {
+  filter: none;
+}
+
+.cardLocked .portraitIcon {
   filter: grayscale(1) brightness(0.6);
 }
 
@@ -227,6 +307,10 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .cards {
+    scroll-behavior: auto;
+  }
+
   .card {
     transition: none;
   }

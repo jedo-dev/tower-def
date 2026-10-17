@@ -1,7 +1,6 @@
 import { UnitMoveType } from '../../../../shared/types/content-ids';
 import { calculateAirRoute } from '../../../../shared/lib/pathfinding/airRoute';
 import type { DuelMatchState } from '../../../duel-match/model/types';
-import { getRaceRegistry } from '../../../race-registry/model/registries';
 import { getUnitsByFaction, resolveUnitConfigById } from '../../../unit/model/registry';
 import { getRaceTowerTypes } from '../buildSpendBudget';
 import {
@@ -15,6 +14,7 @@ import {
 } from '../damage-placement';
 import type { DamageTypeEfficiency } from '../damage-profile';
 import { createMazeEvaluator } from '../maze-evaluation/createMazeEvaluator';
+import { listUnlockedSendableIds } from '../sendCandidates';
 import { ENEMY_SEND_INCOME_SHARE } from './constants';
 import { estimateDefenceCapability, type DefenceWallPrice } from './estimateDefenceCapability';
 import { estimateIncomingThreat } from './estimateIncomingThreat';
@@ -48,7 +48,8 @@ export function assessDefence(matchState: DuelMatchState): DefenceAssessment {
     baselineFactionUnits: getUnitsByFaction(matchState.baselineRaceId),
     observedSends: player.sendQueue.map((unitId) => resolveUnitConfigById(unitId)),
     expectedSendGold: player.income * ENEMY_SEND_INCOME_SHARE,
-    enemySendables: getRaceRegistry(player.raceId).sendableCreepIds.map((unitId) =>
+    // What the player can send into the coming wave: locked tiers are no threat yet.
+    enemySendables: listUnlockedSendableIds(player.raceId, matchState.round).map((unitId) =>
       resolveUnitConfigById(unitId),
     ),
   });

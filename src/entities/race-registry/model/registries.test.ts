@@ -112,6 +112,18 @@ describe('entities/race-registry', () => {
       }
     });
 
+    it('every race sends all 8 of its creatures, by tier then content order', () => {
+      for (const entry of getAllRaceRegistries()) {
+        const raceUnits = allUnits.filter((unit) => unit.faction === entry.raceId);
+        const expectedIds = [...raceUnits]
+          .sort((left, right) => left.tier - right.tier)
+          .map((unit) => unit.id);
+
+        expect(entry.sendableCreepIds).toHaveLength(8);
+        expect(entry.sendableCreepIds).toEqual(expectedIds);
+      }
+    });
+
     it('every buildable tower belongs to the correct race', () => {
       for (const entry of getAllRaceRegistries()) {
         for (const towerId of entry.buildableTowerIds) {
@@ -190,28 +202,28 @@ describe('entities/race-registry', () => {
           name: 'Undead',
           starterTower: 'undead_bone_archer_tower',
           towerCount: 4,
-          creepCount: 4,
+          creepCount: 8,
         },
         {
           raceId: 'ORC',
           name: 'Orc',
           starterTower: 'orc_spear_watchtower',
           towerCount: 4,
-          creepCount: 4,
+          creepCount: 8,
         },
         {
           raceId: 'HUMAN',
           name: 'Human',
           starterTower: 'human_guard_archer_tower',
           towerCount: 4,
-          creepCount: 4,
+          creepCount: 8,
         },
         {
           raceId: 'ELF',
           name: 'Elf',
           starterTower: 'elf_moon_archer_tower',
           towerCount: 4,
-          creepCount: 4,
+          creepCount: 8,
         },
       ]);
     });

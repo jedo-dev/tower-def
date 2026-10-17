@@ -114,7 +114,7 @@ describe('CreepSendPanel send limits', () => {
     const grunt = screen.getByRole('button', { name: /Send Grunt/ });
     expect(grunt.getAttribute('aria-label')).toContain('3 of 6 left');
     expect(grunt.querySelector('[data-send-remaining]')?.textContent).toBe('3/6');
-    expect((grunt as HTMLButtonElement).disabled).toBe(false);
+    expect(grunt.getAttribute('aria-disabled')).toBeNull();
   });
 
   it('disables a creep whose type cap is reached', () => {
@@ -132,7 +132,7 @@ describe('CreepSendPanel send limits', () => {
     ]);
 
     const grunt = screen.getByRole('button', { name: /^Cannot send Grunt: send limit reached/ });
-    expect((grunt as HTMLButtonElement).disabled).toBe(true);
+    expect(grunt.getAttribute('aria-disabled')).toBe('true');
   });
 
   it('disables every creep once the wave cap is reached', () => {
@@ -150,8 +150,8 @@ describe('CreepSendPanel send limits', () => {
     ]);
 
     const buttons = screen.getAllByRole('button', { name: /send/i });
-    expect(buttons.length).toBe(4);
-    expect(buttons.every((button) => (button as HTMLButtonElement).disabled)).toBe(true);
+    expect(buttons.length).toBe(8);
+    expect(buttons.every((button) => button.getAttribute('aria-disabled') === 'true')).toBe(true);
     expect(screen.getByText('0 of 12 sends left this wave')).toBeDefined();
   });
 });
@@ -197,6 +197,6 @@ describe('CreepSendPanel note line', () => {
     expect(document.querySelector('.ui-heading')).toBeNull();
     expect(document.querySelector(`img[src="${toFactionEmblemSource(RaceId.ORC)}"]`)).toBeNull();
     expect(screen.queryByLabelText(/^Gold /)).toBeNull();
-    expect(screen.getAllByRole('button')).toHaveLength(4);
+    expect(screen.getAllByRole('button')).toHaveLength(8);
   });
 });

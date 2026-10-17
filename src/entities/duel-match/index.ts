@@ -58,6 +58,7 @@ export {
   getUnitTypeSendCapByTier,
 } from './model/sendLimits';
 export type { SendLimitCheck } from './model/sendLimits';
+export { getSendUnlockWave, getSendWaveNumber, isSendTierUnlocked } from './model/sendUnlock';
 export {
   addKillBounty,
   awardBonusGold,
