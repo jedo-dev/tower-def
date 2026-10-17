@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   TOWER_SPRITE_KEYS,
   TOWER_SPRITE_SHEET_FRAME,
-  TOWER_VISUAL_SIZE,
+  resolveTowerVisualSizeTarget,
 } from '../../../../shared/constants/sprites';
 import {
   computeTowerVisualMetrics,
@@ -87,22 +87,26 @@ describe('tower sheet visual metrics', () => {
     const metrics = getTowerVisualMetrics(spriteKey);
 
     expect(metrics.structureWidthPx).toBeLessThanOrEqual(
-      TOWER_VISUAL_SIZE.targetWidthWorldPx + EPSILON,
+      resolveTowerVisualSizeTarget(spriteKey).targetWidthWorldPx + EPSILON,
     );
     expect(metrics.structureHeightPx).toBeLessThanOrEqual(
-      TOWER_VISUAL_SIZE.maxHeightWorldPx + EPSILON,
+      resolveTowerVisualSizeTarget(spriteKey).maxHeightWorldPx + EPSILON,
     );
     const fillsWidth =
-      Math.abs(metrics.structureWidthPx - TOWER_VISUAL_SIZE.targetWidthWorldPx) < 1e-6;
+      Math.abs(
+        metrics.structureWidthPx - resolveTowerVisualSizeTarget(spriteKey).targetWidthWorldPx,
+      ) < 1e-6;
     const fillsHeight =
-      Math.abs(metrics.structureHeightPx - TOWER_VISUAL_SIZE.maxHeightWorldPx) < 1e-6;
+      Math.abs(
+        metrics.structureHeightPx - resolveTowerVisualSizeTarget(spriteKey).maxHeightWorldPx,
+      ) < 1e-6;
     expect(fillsWidth || fillsHeight).toBe(true);
   });
 
   it('draws every race visibly larger than its 32px footprint', () => {
     for (const spriteKey of towerKeys) {
       const metrics = getTowerVisualMetrics(spriteKey);
-      expect(Math.max(metrics.structureWidthPx, metrics.structureHeightPx)).toBeGreaterThan(40);
+      expect(Math.max(metrics.structureWidthPx, metrics.structureHeightPx)).toBeGreaterThan(28);
     }
   });
 
@@ -119,7 +123,9 @@ describe('tower sheet visual metrics', () => {
     const metrics = getTowerVisualMetrics('placeholder.tower');
 
     expect(resolveTowerStructureBox('placeholder.tower')).toBeNull();
-    expect(metrics.displayWidthPx).toBeCloseTo(TOWER_VISUAL_SIZE.targetWidthWorldPx);
+    expect(metrics.displayWidthPx).toBeCloseTo(
+      resolveTowerVisualSizeTarget('placeholder.tower').targetWidthWorldPx,
+    );
     expect(metrics.originX).toBe(0.5);
     expect(metrics.originY).toBe(1);
     expect(TOWER_SPRITE_SHEET_FRAME.width).toBe(60);

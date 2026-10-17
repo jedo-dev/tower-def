@@ -8,6 +8,9 @@ import orcPeonSprite from '../sprite/orc_peon.png';
 import orcTaurenSprite from '../sprite/orc_tauren.png';
 import orcWindRiderSprite from '../sprite/orc_wind_rider.png';
 import orcShamanSprite from '../sprite/orc_shaman.png';
+import humanMilitiaSprite from '../sprite/human_militia.png';
+import humanPeasantSprite from '../sprite/human_peasant.png';
+import humanFootmanSprite from '../sprite/human_footman.png';
 import bansheeSprite from '../sprite/undead_banshee.png';
 import frostWyrmSprite from '../sprite/undead_frost_wyrm.png';
 import ghoulSprite from '../sprite/ghoul.svg';
@@ -27,6 +30,9 @@ export const UNIT_SPRITE_KEYS = {
   ORC_TAUREN: 'unit.orc.tauren',
   ORC_WIND_RIDER: 'unit.orc.wind_rider',
   ORC_SHAMAN: 'unit.orc.shaman',
+  HUMAN_MILITIA: 'unit.human.militia',
+  HUMAN_PEASANT: 'unit.human.peasant',
+  HUMAN_FOOTMAN: 'unit.human.footman',
   UNDEAD_BANSHEE: 'unit.undead.banshee',
   UNDEAD_FROST_WYRM: 'unit.undead.frost_wyrm',
 } as const;
@@ -47,6 +53,9 @@ export const UNIT_SPRITE_ASSETS: Record<
   [UNIT_SPRITE_KEYS.ORC_TAUREN]: orcTaurenSprite,
   [UNIT_SPRITE_KEYS.ORC_WIND_RIDER]: orcWindRiderSprite,
   [UNIT_SPRITE_KEYS.ORC_SHAMAN]: orcShamanSprite,
+  [UNIT_SPRITE_KEYS.HUMAN_MILITIA]: humanMilitiaSprite,
+  [UNIT_SPRITE_KEYS.HUMAN_PEASANT]: humanPeasantSprite,
+  [UNIT_SPRITE_KEYS.HUMAN_FOOTMAN]: humanFootmanSprite,
   [UNIT_SPRITE_KEYS.UNDEAD_BANSHEE]: bansheeSprite,
   [UNIT_SPRITE_KEYS.UNDEAD_FROST_WYRM]: frostWyrmSprite,
 };
@@ -69,6 +78,9 @@ export const UNIT_SPRITE_KEY_BY_UNIT_ID: Record<string, string> = {
   orc_tauren: UNIT_SPRITE_KEYS.ORC_TAUREN,
   orc_wind_rider: UNIT_SPRITE_KEYS.ORC_WIND_RIDER,
   orc_shaman: UNIT_SPRITE_KEYS.ORC_SHAMAN,
+  human_militia: UNIT_SPRITE_KEYS.HUMAN_MILITIA,
+  human_peasant: UNIT_SPRITE_KEYS.HUMAN_PEASANT,
+  human_footman: UNIT_SPRITE_KEYS.HUMAN_FOOTMAN,
   undead_banshee: UNIT_SPRITE_KEYS.UNDEAD_BANSHEE,
   undead_frost_wyrm: UNIT_SPRITE_KEYS.UNDEAD_FROST_WYRM,
 };
@@ -98,6 +110,9 @@ export const UNIT_SPRITE_SHEET_LAYOUTS: Record<string, UnitSpriteSheetLayout> = 
   [UNIT_SPRITE_KEYS.ORC_TAUREN]: DIRECTIONAL_SHEET_LAYOUT,
   [UNIT_SPRITE_KEYS.ORC_WIND_RIDER]: DIRECTIONAL_SHEET_LAYOUT,
   [UNIT_SPRITE_KEYS.ORC_SHAMAN]: DIRECTIONAL_SHEET_LAYOUT,
+  [UNIT_SPRITE_KEYS.HUMAN_MILITIA]: DIRECTIONAL_SHEET_LAYOUT,
+  [UNIT_SPRITE_KEYS.HUMAN_PEASANT]: DIRECTIONAL_SHEET_LAYOUT,
+  [UNIT_SPRITE_KEYS.HUMAN_FOOTMAN]: DIRECTIONAL_SHEET_LAYOUT,
   [UNIT_SPRITE_KEYS.UNDEAD_BANSHEE]: DIRECTIONAL_SHEET_LAYOUT,
   [UNIT_SPRITE_KEYS.UNDEAD_FROST_WYRM]: DIRECTIONAL_SHEET_LAYOUT,
 };
@@ -209,13 +224,33 @@ export const TOWER_SPRITE_SHEET_LAYOUT = {
  * How big a placed tower is drawn, measured on the painted structure (the
  * alpha box of its idle frames, see towerSheetMetrics.generated.ts), not on
  * the 60px frame. The structure is scaled until its width reaches the target
- * (1.4 tower footprints) unless its height would pass the cap first; it stands
+ * (about one tower footprint) unless its height would pass the cap first; it stands
  * on the footprint's bottom edge and overhangs upward, like a WC3 building.
  */
 export const TOWER_VISUAL_SIZE = {
+  targetWidthWorldPx: 31,
+  maxHeightWorldPx: 45,
+} as const;
+
+export type TowerVisualSizeTarget = { targetWidthWorldPx: number; maxHeightWorldPx: number };
+
+/**
+ * Human and elf sheets read right at the larger size the undead and orc
+ * keeps outgrew (user call, 2026-10-17): they keep 1.4 footprints.
+ */
+export const TOWER_VISUAL_SIZE_LARGE: TowerVisualSizeTarget = {
   targetWidthWorldPx: 44,
   maxHeightWorldPx: 64,
-} as const;
+};
+
+const LARGE_TOWER_KEY_PREFIXES = ['tower.human.', 'tower.elf.'] as const;
+
+/** The size target a tower texture is drawn to, by the race in its key. */
+export function resolveTowerVisualSizeTarget(textureKey: string): TowerVisualSizeTarget {
+  return LARGE_TOWER_KEY_PREFIXES.some((prefix) => textureKey.startsWith(prefix))
+    ? TOWER_VISUAL_SIZE_LARGE
+    : TOWER_VISUAL_SIZE;
+}
 
 export type TowerSpriteSheet = {
   spriteKey: TowerSpriteKey;

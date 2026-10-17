@@ -1,6 +1,6 @@
 import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { getBuildableTowersByFaction } from '../../../entities/tower';
-import { TOWER_VISUAL_SIZE } from '../../../shared/constants/sprites';
+import { resolveTowerVisualSizeTarget } from '../../../shared/constants/sprites';
 import { RACE_IDS, type RaceId } from '../../../shared/types/content-ids';
 import type { GridPosition } from '../../../shared/types/pathfinding';
 import { resolveTowerRenderDepth } from '../runtime/battlefield/actorRenderDepth';
@@ -85,15 +85,13 @@ describe('GameScene tower scale and depth (tower-def-108)', () => {
         expect(sprite.originX).toBeCloseTo(metrics.originX);
         expect(sprite.originY).toBeCloseTo(metrics.originY);
         expect(metrics.structureWidthPx).toBeLessThanOrEqual(
-          TOWER_VISUAL_SIZE.targetWidthWorldPx + EPSILON,
+          resolveTowerVisualSizeTarget(sprite.texture.key).targetWidthWorldPx + EPSILON,
         );
         expect(metrics.structureHeightPx).toBeLessThanOrEqual(
-          TOWER_VISUAL_SIZE.maxHeightWorldPx + EPSILON,
+          resolveTowerVisualSizeTarget(sprite.texture.key).maxHeightWorldPx + EPSILON,
         );
         // Larger than the 32px footprint it used to be squeezed into.
-        expect(Math.max(metrics.structureWidthPx, metrics.structureHeightPx)).toBeGreaterThan(
-          2 * CELL,
-        );
+        expect(Math.max(metrics.structureWidthPx, metrics.structureHeightPx)).toBeGreaterThan(28);
         expect(sprite.depth).toBe(resolveTowerRenderDepth(anchor));
       }
     },

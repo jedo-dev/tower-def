@@ -2,7 +2,7 @@ import { TOWER_FOOTPRINT } from '../../../../shared/constants/footprint';
 import { GRID_DIMENSIONS } from '../../../../shared/constants/grid';
 import {
   TOWER_SPRITE_SHEET_FRAME,
-  TOWER_VISUAL_SIZE,
+  resolveTowerVisualSizeTarget,
   resolveTowerSheetFrameLayout,
 } from '../../../../shared/constants/sprites';
 import {
@@ -123,7 +123,7 @@ export function getTowerVisualMetrics(textureKey: string): TowerVisualMetrics {
   const metrics = computeTowerVisualMetrics(
     resolveTowerStructureBox(textureKey) ?? WHOLE_FRAME_BOX,
     TOWER_SPRITE_SHEET_FRAME,
-    TOWER_VISUAL_SIZE,
+    resolveTowerVisualSizeTarget(textureKey),
   );
   metricsCache.set(textureKey, metrics);
   return metrics;
