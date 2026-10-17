@@ -38,7 +38,7 @@ export const WAVE_AIR_UNIT_BUDGET_MULTIPLIER = 4;
  * full board of physical archers held its late waves forever and duels on it
  * ran to the round cap. Human and orc waves were too light for their own
  * race: the computer in the player seat lost most game-faithful duels on its
- * roster, so they carry a smaller scale too.
+ * roster, so they carry a heavier scale too.
  * Tuned in tower-def-716.9 (docs/07, "Roster balance").
  */
 export const WAVE_BASELINE_HEALTH_MULTIPLIER_BY_RACE: Readonly<Partial<Record<RaceId, number>>> = {
