@@ -5,7 +5,7 @@ import {
   createTowerAnimations,
   createUnitWalkAnimations,
 } from '../../runtime/animation/gameSceneAnimationRuntime';
-import { applyNearestNeighborFiltering } from '../../runtime/assets/gameSceneAssetLoader';
+import { applySpriteSheetFiltering } from '../../runtime/assets/gameSceneAssetLoader';
 import { startMissingArtReport, stopMissingArtReport } from '../../runtime/assets/missingArtReport';
 import { ensurePlaceholderTextures } from '../../runtime/assets/placeholderTexture';
 import { destroyBattlefieldRenderState } from '../../runtime/battlefield/battlefieldRenderState';
@@ -74,7 +74,7 @@ export function createScene(context: GameSceneContext): void {
   loadSetupConfig(context);
   scene.cameras.main.setBackgroundColor('#1a1f2c');
   scene.cameras.main.roundPixels = true;
-  applyNearestNeighborFiltering(scene);
+  applySpriteSheetFiltering(scene);
   state.boardCamera = null;
   state.teardownCallbacks.push(registerResponsiveCamera(scene, getBoardCamera(context)));
   drawGrid(context);

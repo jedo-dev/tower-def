@@ -8,6 +8,7 @@ import {
   UNIT_SPRITE_KEYS,
   UNIT_SPRITE_SHEET_FRAME,
 } from '../../../../shared/constants/sprites';
+import { resolveSpriteSheetFilter, type SpriteSheetFilter } from '../creep/creepSpriteScale';
 
 function forEachTerrainTextureKey(callback: (textureKey: string, url: string) => void): void {
   const factions = Object.keys(TILES) as Faction[];
@@ -53,15 +54,39 @@ export function preloadGameSceneAssets(scene: Phaser.Scene): void {
   });
 }
 
-export function applyNearestNeighborFiltering(scene: Phaser.Scene): void {
-  Object.values(UNIT_SPRITE_KEYS).forEach((spriteKey) => {
+function toPhaserFilterMode(filter: SpriteSheetFilter): Phaser.Textures.FilterMode {
+  return filter === 'nearest'
+    ? Phaser.Textures.FilterMode.NEAREST
+    : Phaser.Textures.FilterMode.LINEAR;
+}
+
+function applySheetFilter(
+  scene: Phaser.Scene,
+  spriteKeys: readonly string[],
+  frameSizePx: number,
+): void {
+  const filterMode = toPhaserFilterMode(resolveSpriteSheetFilter(frameSizePx));
+  spriteKeys.forEach((spriteKey) => {
     if (scene.textures.exists(spriteKey)) {
-      scene.textures.get(spriteKey).setFilter(Phaser.Textures.FilterMode.NEAREST);
+      scene.textures.get(spriteKey).setFilter(filterMode);
     }
   });
-  Object.values(TOWER_SPRITE_KEYS).forEach((spriteKey) => {
-    if (scene.textures.exists(spriteKey)) {
-      scene.textures.get(spriteKey).setFilter(Phaser.Textures.FilterMode.NEAREST);
-    }
-  });
+}
+
+/**
+ * Per-texture sampling by frame size (`creepReadability.constants`): the 32px
+ * creep sheets are pixel art and stay NEAREST; the 60px painted tower sheets
+ * sample LINEAR so they downscale smoothly.
+ */
+export function applySpriteSheetFiltering(scene: Phaser.Scene): void {
+  applySheetFilter(
+    scene,
+    Object.values(UNIT_SPRITE_KEYS),
+    Math.max(UNIT_SPRITE_SHEET_FRAME.width, UNIT_SPRITE_SHEET_FRAME.height),
+  );
+  applySheetFilter(
+    scene,
+    Object.values(TOWER_SPRITE_KEYS),
+    Math.max(TOWER_SPRITE_SHEET_FRAME.width, TOWER_SPRITE_SHEET_FRAME.height),
+  );
 }
