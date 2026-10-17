@@ -21,10 +21,11 @@ export const LABEL_RASTER_SCALE_STEP = 0.25;
 
 /**
  * Damage number BitmapTexts pre-created per scene, shared by both fields.
- * At the 420 ms lifetime this covers ~150 hits a second; a hit that finds the
+ * At the 420 ms lifetime this covers ~220 hits a second (a busy headless wave
+ * measured ~65 live numbers at 120 hits/s); a hit that finds the
  * pool empty shows no number rather than allocating one.
  */
-export const DAMAGE_LABEL_POOL_SIZE = 64;
+export const DAMAGE_LABEL_POOL_SIZE = 96;
 /** Above creeps, their health bars and effect pips. */
 export const DAMAGE_LABEL_RENDER_DEPTH = 76;
 
