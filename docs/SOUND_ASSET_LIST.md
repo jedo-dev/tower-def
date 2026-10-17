@@ -31,7 +31,7 @@ file; a test fails if two ids share one.
   | orc | `combat/orc/` | 900 KB | ~622 KB |
   | human | `combat/human/` | 900 KB | ~583 KB |
   | elf | `combat/elf/` | 900 KB | ~579 KB |
-  | total | | 4400 KB | ~3224 KB |
+  | total | | 4400 KB | ~2812 KB |
 
 ### Ambience
 
