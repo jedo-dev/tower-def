@@ -379,15 +379,15 @@
               "level": 1,
               "health": 125,
               "speed": 1.7,
-              "physicalArmor": 4,
-              "magicalArmor": 9
+              "physicalArmor": 5,
+              "magicalArmor": 10
             },
             {
               "level": 2,
               "health": 135,
               "speed": 1.7,
-              "physicalArmor": 6,
-              "magicalArmor": 12,
+              "physicalArmor": 7,
+              "magicalArmor": 13,
               "abilities": {
                 "shieldHp": 30
               }
@@ -396,8 +396,8 @@
               "level": 3,
               "health": 145,
               "speed": 1.75,
-              "physicalArmor": 7,
-              "magicalArmor": 14,
+              "physicalArmor": 9,
+              "magicalArmor": 17,
               "abilities": {
                 "shieldHp": 50
               }
@@ -406,8 +406,8 @@
               "level": 4,
               "health": 160,
               "speed": 1.75,
-              "physicalArmor": 8,
-              "magicalArmor": 16,
+              "physicalArmor": 11,
+              "magicalArmor": 21,
               "abilities": {
                 "shieldHp": 70
               }

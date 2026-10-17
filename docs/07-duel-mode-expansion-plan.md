@@ -1561,6 +1561,139 @@ comes from seeing the fliers at all, not from how much each one counts; at
 batch, but undead up and human down held at both seed ranges. Human's
 air-lane kit is the content follow-up the air passes already name.
 
+### Creature branch balance (tower-def-716.8)
+
+A pass over the creature experience ladder and the authored creature
+branches only (`CreatureTalentPricing`, `CreatureXpRewards` and
+`talentBranches` in `src/content/units/*.json`); unit base stats, towers,
+waves and the valuation are untouched. Measured with the standard batch
+(hard vs hard, six race pairs, seeds 1-10, classic and seeded maps; the
+`creatures` block of tower-def-716.6). Before is main at 044e318.
+
+**Diagnosis.**
+
+- Creatures stalled at grade 1-2 by round 20 (classic: undead 1.7, orc 2.3,
+  human 1.2, elf 1.2): the full path cost 62 x tier and sends earn 1 x tier
+  per death, so a tier needed about 36 deaths for grade 3.
+- Every developed creature took one branch in every duel (12 branches at 0
+  picks where their creature was developed). The computer picks with
+  `valueCreatureBranch` against the defender profile, and the hard
+  computers' profiles are almost the same: 80-90% physical single-target
+  damage with a 10-20% chill share; only human differs (poison, 15-45% damage
+  over time, no chill). A tier 1 branch is picked in round 2 against the
+  round 1 board, which is the same on every seed and map. So a pair splits
+  only where one branch reads that difference (poison or damage over time,
+  chill, a little magic or splash) or where a flat gain (regeneration, a
+  shield) races the wave health multiplier, which makes the pick depend on
+  the round it is made in.
+- Most of the never-picked branches were simply weaker in the model:
+  evasion-style `dodgeEveryNthShot` substitutes stood in for local tower
+  debuffs at full strength (Siege Engine Ram: misses every 10 / 5 / 4 / 3 for
+  a slow on the towers within one cell), flat regeneration dominated a
+  40-health Ghoul, and Torches only answers splash, which these defences
+  barely build.
+
+**Ladder** (`CreatureTalentPricing`, times the tier): branch 4 -> 6, grades
+6 / 10 / 16 / 26 -> 2 / 5 / 10 / 18 (path 62 -> 41). Grade 1 now follows the
+branch almost at once, and the dearer branch moves the first pick from round
+2 to rounds 2-4, where the defender profiles have started to differ. The
+rewards (`CreatureXpRewards`: death 1, leak 3, life bonus 2) stay: grades 2 /
+4 / 8 / 16 lifted orc to 3.6 at round 20 and human only to 2.1, a reward
+change would move all races alike, and the human stall is that its sends
+are few, not their price.
+
+**Branch changes** (grades 1 / 2 / 3 / 4, old -> new; health stays within
++40% of base and armor within 25; where a row changes a substitute listed in
+"Creature talents authoring", this table supersedes its numbers):
+
+| Branch | Field | Old | New | Why |
+| --- | --- | --- | --- | --- |
+| Skeleton / Bone Legion | magical armor | 3 / 4 / 4 / 5 | 5 / 6 / 6 / 7 | the legion's shields: wins against a more magical first board |
+| Ghoul / Frenzy | health | 42 / 44 / 46 / 50 | 43 / 45 / 48 / 53 | |
+| Ghoul / Devourer | health; regeneration | 44 / 48 / 52 / 56; 2 / 3 / 4 / 6 | 45 / 49 / 53 / 56; 2 / 2.5 / 3.5 / 5 | flat regeneration on 40 health outvalued speed; now it wins on early picks only |
+| Crypt Fiend / Web | health | 105 / 110 / 115 / 125 | 110 / 118 / 126 / 136 | |
+| Gargoyle / Stoneskin | health; physical / magical armor; shield | 120 / 125 / 130 / 140; 4 / 5 / 5 / 6 and 9 / 10 / 11 / 12; - / 20 / 30 / 40 | 125 / 135 / 145 / 160; 5 / 7 / 9 / 11 and 10 / 13 / 17 / 21; - / 30 / 50 / 70 | the doc's +15-25 armor while petrified, part as armor; Dive is picked late, when a flat shield is worth little |
+| Grunt / Rage | health; speed; low-health speed | 72 / 75 / 78 / 85; 1.1 / 1.15 / 1.15 / 1.2; x1.15 / 1.25 / 1.35 / 1.5 | 74 / 78 / 84 / 92; 1.15 / 1.2 / 1.2 / 1.25; x1.25 / 1.4 / 1.55 / 1.75 | |
+| Grunt / Shieldbearer | physical armor; dodge | 5 / 7 / 9 / 12; - / 5 / 4 / 3 | 5 / 6 / 7 / 9; - / 8 / 6 / 5 | a dodge only stops single shots, so Rage wins against human poison |
+| Wolf Rider / Pack Hunters | health; chill resistance | 92 / 95 / 100 / 110; - / - / 0.5 / 0.25 | 93 / 97 / 103 / 114; - / 0.75 / 0.5 / 0.25 | |
+| Wolf Rider / Nets | dodge | 8 / 5 / 4 / 3 | 10 / 7 / 5 / 4 | one net silences one tower |
+| Troll / Regeneration | health; regeneration | 185 / 195 / 205 / 225; 4 / 7 / 10 / 17 | 190 / 205 / 220 / 240; 6 / 10 / 14 / 20 | flat, so it wins on earlier picks and Berserker on later ones |
+| Militia / Levy | physical armor | 4 / 5 / 6 / 7 | 3 / 4 / 5 / 6 | the formation substitute was +2 / +3 / +3 / +4 over the doc column, now +1 / +2 / +2 / +3 |
+| Militia / Torches | health; speed | 55 / 58 / 62 / 68; 1.3 / 1.3 / 1.35 / 1.35 | 57 / 61 / 67 / 73; 1.3 / 1.35 / 1.4 / 1.4 | |
+| Footman / Defensive Stance | tower damage | - / x0.92 / 0.88 / 0.8 | - / x0.95 / 0.92 / 0.85 | the low-health armor substitute applied always |
+| Footman / Captain's Shield | health | 102 / 106 / 112 / 120 | 106 / 112 / 120 / 130 | |
+| Siege Engine / Armored Wagon | physical armor | 11 / 12 / 13 / 15 | 11 / 13 / 15 / 17 | |
+| Siege Engine / Ram | dodge | 10 / 5 / 4 / 3 | 20 / 12 / 8 / 6 | the doc slows only the towers within one cell |
+| Huntress / Moon Blade | dodge | 10 / 7 / 5 / 3 | 10 / 7 / 5 / 4 | the doc's 25% at grade 4 |
+| Huntress / Owl Scout | health | 70 / 72 / 76 / 82 | 76 / 82 / 90 / 97 | its poison resistance makes it the pick against human |
+| Chimera / Two-Headed | health | 155 / 160 / 170 / 185 | 157 / 162 / 172 / 187 | Acid Breath does not cut damage over time, so Two-Headed wins against human |
+
+**Development** (average per side; xp spent, top creature grade after round
+10 / 20, leaks its sends caused / baseline leaks it suffered):
+
+| Race | Classic before | Classic after | Seeded before | Seeded after |
+| --- | --- | --- | --- | --- |
+| Undead | 72, 0.3 / 1.7, 0.9 / 12.8 | 75, 1.3 / 2.6, 1.3 / 12.3 | 134, 0.2 / 1.8, 2.9 / 9.2 | 114, 1.2 / 2.7, 3.5 / 8.4 |
+| Orc | 85, 1.4 / 2.3, 2.1 / 17.0 | 80, 2.2 / 3.0, 2.0 / 16.3 | 108, 1.4 / 2.3, 2.1 / 15.7 | 91, 2.1 / 3.1, 2.1 / 14.2 |
+| Human | 67, 1.0 / 1.2, 1.5 / 18.4 | 75, 1.7 / 2.0, 1.5 / 18.4 | 144, 0.9 / 1.4, 1.5 / 17.8 | 135, 1.4 / 2.1, 1.4 / 17.7 |
+| Elf | 100, 0.9 / 1.2, 5.0 / 18.2 | 99, 1.3 / 2.0, 5.1 / 18.1 | 131, 0.6 / 1.1, 5.1 / 17.7 | 132, 1.3 / 2.2, 5.0 / 17.3 |
+
+Every race now reaches grade 2-3 by round 20 and none maxes out by round 10.
+Sends still cause a small share of the leaks (1-5 a side against 8-18
+baseline leaks).
+
+**Pick shares** (classic and seeded, picks over the sides that developed the
+creature; the first branch is the one picked before):
+
+| Creature | Before | After |
+| --- | --- | --- |
+| Skeleton | Reassembly 60, Bone Legion 0 | Reassembly 44, Bone Legion 16 (27%) |
+| Ghoul | Devourer 60, Frenzy 0 | Frenzy 28, Devourer 6 (18%) |
+| Crypt Fiend | Carapace 60, Web 0 | Carapace 42, Web 17 (29%) |
+| Gargoyle | Dive 10, Stoneskin 0 | Dive 6, Stoneskin 3 (33%) |
+| Grunt | Shieldbearer 60, Rage 0 | Shieldbearer 43, Rage 17 (28%) |
+| Troll | Berserker 59, Regeneration 0 | Regeneration 37, Berserker 17 (31%) |
+| Wolf Rider | Nets 2, Pack Hunters 0 | Nets 1, Pack Hunters 0 |
+| Militia | Levy 60, Torches 0 | Torches 41, Levy 19 (32%) |
+| Footman | Defensive Stance 60, Captain's Shield 0 | Defensive Stance 40, Captain's Shield 19 (32%) |
+| Siege Engine | Ram 52, Armored Wagon 0 | Ram 30, Armored Wagon 16 (35%) |
+| Archer | Forest Shadow 60, Evasion 0 | Forest Shadow 60, Evasion 0 |
+| Huntress | Moon Blade 60, Owl Scout 0 | Moon Blade 43, Owl Scout 17 (28%) |
+| Chimera | Acid Breath 50, Two-Headed 4 | Acid Breath 40, Two-Headed 5 (11%) |
+
+Documented niches:
+
+- **Archer / Evasion** is never picked. Start invisibility is valued as time
+  off the exposure route (`startInvisibleMs`), and the Archer's walk is about
+  five seconds, so Forest Shadow's 2-5 s scores 11-13 times Evasion. No
+  number inside the doc's intent closes that; it needs the valuation to cap
+  invisibility (or the exposure model to know where the towers stand), an
+  AI change outside this task.
+- **Wolf Rider** is developed by one or two sides a batch (it is rarely
+  sent), so its split is not measurable here; the static scores put Pack
+  Hunters ahead against human and Nets elsewhere.
+- Splits that hang on the round-1 board (Militia, Skeleton, Grunt) and on
+  the Chimera's late pick are close to ties in the model, so a tower or wave
+  change that moves those boards can tip them back; recheck the pick shares
+  after balance passes on towers.
+
+**Race balance** (standard table, classic + seeded, 60 duels a race):
+
+| Race | Before | After | Delta |
+| --- | --- | --- | --- |
+| Undead | 78% | 78% | 0 |
+| Orc | 47% | 47% | 0 |
+| Human | 26% | 29% | +3 |
+| Elf | 49% | 46% | -3 |
+
+No race moves more than 3 points; on the classic map alone undead 77 -> 83,
+orc 50 -> 47, human 27 -> 32, elf 47 -> 38, on seeded 80 -> 73, 43 -> 47, 25
+-> 27, 52 -> 53 (30 duels a race, about one standard deviation each way).
+
+How to measure it: the standard batch on `--maps classic` and `--maps
+seeded`, one at a time (about 105 s each); the `creatures` block prints the
+grades, leaks and creature branch picks.
+
 
 ## Suggested Improvements
 
