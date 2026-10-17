@@ -100,20 +100,21 @@ describe('GameScene faction gates (tower-def-alq)', () => {
       sheetFrame: 5,
     });
     const entrance = findGate(game, 'entrance');
-    expect(entrance.displayWidth).toBe(32);
-    expect(entrance.displayHeight).toBe(32);
+    expect(entrance.displayWidth).toBe(48);
+    expect(entrance.displayHeight).toBe(48);
     expect(entrance.depth).toBeGreaterThan(PATH_RIBBON_RENDER_DEPTH);
     expect(entrance.depth).toBeLessThan(GROUND_ACTOR_RENDER_DEPTH_BASE);
   });
 
-  it('stands its base on the lower edge of the 2x2 entrance zone', async () => {
+  it('stands its base on the lower edge of the 2x2 entrance zone, shifted outward', async () => {
     const game = await start({ mode: 'fixed' });
     const anchor = game.inspect().gridModel?.entrance;
     const gate = findGate(game, 'entrance');
 
     expect(anchor).toBeDefined();
     if (!anchor) return;
-    expect(gate.x).toBe((anchor.x + 1) * GRID_DIMENSIONS.cellSize);
+    // The fixed entrance is on the left edge: the larger frame overhangs to the left.
+    expect(gate.x).toBe((anchor.x + 1) * GRID_DIMENSIONS.cellSize - 8);
     expect(gate.y).toBe((anchor.y + 2) * GRID_DIMENSIONS.cellSize);
   });
 
@@ -122,6 +123,11 @@ describe('GameScene faction gates (tower-def-alq)', () => {
 
     expect(readGate(game, 'entrance')).toMatchObject({ edge: 'top', frame: 0, sheetFrame: 0 });
     expect(readGate(game, 'exit')).toMatchObject({ edge: 'bottom', frame: 6, sheetFrame: 6 });
+    const grid = game.inspect().gridModel;
+    const cell = GRID_DIMENSIONS.cellSize;
+    // The top gate reaches up past the board, the bottom one down past it.
+    expect(findGate(game, 'entrance').y).toBe(((grid?.entrance.y ?? 0) + 2) * cell);
+    expect(findGate(game, 'exit').y - 3 * cell).toBe((grid?.exit.y ?? 0) * cell);
   });
 
   it("re-textures the same gates to the opponent's race on the enemy view and back", async () => {

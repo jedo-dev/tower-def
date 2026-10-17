@@ -91,8 +91,13 @@ export const TERRAIN_GATE_SHEET = {
   frameWidth: 96,
   frameHeight: 96,
   columns: 4,
-  /** Drawn width and height, in cells: the 2x2 endpoint footprint. */
-  displaySizeCells: 2,
+  /**
+   * Drawn width and height of a frame, in cells. The painted gate fills about
+   * half the frame's width and 70-85% of its height, so a 3-cell frame shows
+   * a gate a little taller than its 2x2 zone; the extra size overhangs away
+   * from the board (see computeGatePlacement).
+   */
+  displaySizeCells: 3,
 } as const;
 
 export const TERRAIN_GATE_SHEET_COLUMN_BY_EDGE: Readonly<Record<BoardEdge, number>> = {

@@ -157,15 +157,33 @@ function nearestBoardEdge(zone: GateZone, board: GateBoardSize): BoardEdge {
 }
 
 /**
- * The gate is drawn at the 2x2 footprint size, centred on the zone: on a 2x2
- * zone its base sits on the zone's lower edge and it covers the zone exactly;
- * a 1-cell opening gets the same size, centred on that cell.
+ * The gate frame is larger than its zone, and the extra size overhangs away
+ * from the board: a top or side gate stands its base on the zone's lower edge
+ * (a top gate reaches up past the board, a side gate also shifts outward into
+ * the side scenery), a bottom gate hangs its top from the zone's upper edge and
+ * reaches down past the board. Centred on the zone across the edge it stands
+ * on; a 1-cell opening gets the same size and rules.
  */
-export function computeGatePlacement(zone: GateZone, cellSize: number): GatePlacement {
+export function computeGatePlacement(
+  zone: GateZone,
+  edge: BoardEdge,
+  cellSize: number,
+): GatePlacement {
   const displaySize = TERRAIN_GATE_SHEET.displaySizeCells * cellSize;
+  const zoneWidth = zone.footprint.width * cellSize;
+  const zoneHeight = zone.footprint.height * cellSize;
+  const centerX = zone.anchor.x * cellSize + zoneWidth / 2;
+  const lowerEdgeY = zone.anchor.y * cellSize + zoneHeight;
+  const outwardShiftX = Math.max(0, (displaySize - zoneWidth) / 2);
+  const downwardShiftY = Math.max(0, displaySize - zoneHeight);
   return {
-    x: (zone.anchor.x + zone.footprint.width / 2) * cellSize,
-    y: (zone.anchor.y + zone.footprint.height / 2) * cellSize + displaySize / 2,
+    x:
+      edge === 'left'
+        ? centerX - outwardShiftX
+        : edge === 'right'
+          ? centerX + outwardShiftX
+          : centerX,
+    y: edge === 'bottom' ? lowerEdgeY + downwardShiftY : lowerEdgeY,
     displaySize,
   };
 }

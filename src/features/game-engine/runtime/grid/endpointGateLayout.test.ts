@@ -112,11 +112,41 @@ describe('resolveGateEdge', () => {
 });
 
 describe('computeGatePlacement', () => {
-  it('stands a 2x2 gate on the lower edge of its zone, covering it', () => {
-    expect(computeGatePlacement(zone(0, 14), 16)).toEqual({ x: 16, y: 256, displaySize: 32 });
+  it('draws the gate three cells wide and tall, larger than its 2x2 zone', () => {
+    expect(computeGatePlacement(zone(8, 0), 'top', 16).displaySize).toBe(48);
   });
 
-  it('centres the same-size gate on a 1-cell opening', () => {
-    expect(computeGatePlacement(zone(5, 0, CELL), 16)).toEqual({ x: 88, y: 24, displaySize: 32 });
+  it('stands a top gate on the lower edge of its zone, reaching up past the board', () => {
+    const placement = computeGatePlacement(zone(8, 0), 'top', 16);
+
+    expect(placement).toEqual({ x: 144, y: 32, displaySize: 48 });
+    // Origin is the bottom centre: the frame's top is above the board.
+    expect(placement.y - placement.displaySize).toBeLessThan(0);
+  });
+
+  it('stands a side gate on the lower edge and shifts it outward, off the board', () => {
+    const left = computeGatePlacement(zone(0, 14), 'left', 16);
+    const right = computeGatePlacement(zone(18, 14), 'right', 16);
+
+    expect(left).toEqual({ x: 8, y: 256, displaySize: 48 });
+    expect(right).toEqual({ x: 312, y: 256, displaySize: 48 });
+    // The inner frame edge stays on the zone's inner edge, never further into the board.
+    expect(left.x + left.displaySize / 2).toBe(32);
+    expect(right.x - right.displaySize / 2).toBe(288);
+  });
+
+  it('hangs a bottom gate from the upper edge of its zone, reaching down past the board', () => {
+    const placement = computeGatePlacement(zone(8, 28), 'bottom', 16);
+
+    expect(placement).toEqual({ x: 144, y: 496, displaySize: 48 });
+    expect(placement.y - placement.displaySize).toBe(28 * 16);
+  });
+
+  it('applies the same rules to a 1-cell opening', () => {
+    expect(computeGatePlacement(zone(5, 0, CELL), 'top', 16)).toEqual({
+      x: 88,
+      y: 16,
+      displaySize: 48,
+    });
   });
 });

@@ -74,7 +74,7 @@ function syncGate(
   });
   const frame = resolveGateFrameIndex(role, edge);
   const textureKey = TERRAIN_GATE_ASSETS[options.raceId].key;
-  const placement = computeGatePlacement(zone, options.cellSize);
+  const placement = computeGatePlacement(zone, edge, options.cellSize);
   const signature = `${textureKey}|${frame}|${placement.x}:${placement.y}`;
   const signatureKey = role === 'entrance' ? 'entranceSignature' : 'exitSignature';
   const existing = layer[role];
