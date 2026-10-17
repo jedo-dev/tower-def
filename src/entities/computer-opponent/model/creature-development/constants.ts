@@ -40,6 +40,21 @@ export const CREATURE_VALUATION = {
   STUN_SLOW: 1,
   /** Mean slow is capped below a full stop so the time factor stays finite. */
   MAX_MEAN_SLOW: 0.85,
+  /**
+   * Route cells a creep walks from the entrance before the first tower can
+   * reach it: start invisibility over these cells hides nothing. Measured on
+   * the hard boards (classic and seeded): 2-5 cells in rounds 1-9, 0 later.
+   */
+  INVISIBLE_APPROACH_CELLS: 4,
+  /**
+   * Route cells under fire that start invisibility is a share of: the
+   * defender's whole route in tower reach, not the relative exposure route.
+   * Measured on the hard boards: 50-80 cells in rounds 5-14, 100-117 in
+   * rounds 15-25, when the dearer grades that weigh most are bought.
+   */
+  INVISIBLE_ROUTE_CELLS_IN_REACH: 110,
+  /** Share of the time under fire start invisibility can hide at most. */
+  MAX_INVISIBLE_SHARE: 0.9,
   /** Economy gold never makes a send cheaper than this share of its price. */
   MIN_EFFECTIVE_COST_SHARE: 0.25,
 } as const;

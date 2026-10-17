@@ -16,8 +16,6 @@ import type { DefenceProfile } from './defenceProfile';
 const MS_PER_SECOND = 1000;
 const REFERENCE_EXPOSURE_SECONDS =
   V.EXPOSURE_ROUTE_CELLS / (REFERENCE_CREEP_SPEED * CREEP_CELLS_PER_SECOND_AT_UNIT_SPEED);
-/** Share of the walk the creature can still be shot at however long it stays invisible. */
-const MIN_TARGETABLE_SHARE = 0.1;
 
 export type CreatureValueInput = {
   stats: CreatureGradeStats;
@@ -102,6 +100,24 @@ export function computeExposureSeconds(
   return (walkSeconds * routeEndFactor * lowHealthFactor) / (1 - slow);
 }
 
+/**
+ * Share of the time under fire that start invisibility hides: the cells it
+ * walks unseen (at its own speed; nothing slows what cannot be targeted) past
+ * the approach before the first tower's reach, over the route cells in reach,
+ * capped at `MAX_INVISIBLE_SHARE`. A window that ends before the first reach
+ * is worth nothing.
+ */
+export function computeInvisibleExposureShare(
+  stats: Pick<CreatureGradeStats, 'speed'>,
+  abilities: CreatureAbilities,
+): number {
+  const invisibleSeconds = (abilities.startInvisibleMs ?? 0) / MS_PER_SECOND;
+  const unseenCells =
+    invisibleSeconds * Math.max(0, stats.speed) * CREEP_CELLS_PER_SECOND_AT_UNIT_SPEED;
+  const hiddenCellsInReach = Math.max(0, unseenCells - V.INVISIBLE_APPROACH_CELLS);
+  return Math.min(V.MAX_INVISIBLE_SHARE, hiddenCellsInReach / V.INVISIBLE_ROUTE_CELLS_IN_REACH);
+}
+
 /** Health points the creature soaks beyond its own: shield refills, regeneration, a second life. */
 function computeExtraLandedHealth(
   health: number,
@@ -157,11 +173,7 @@ export function computeCreatureValue(input: CreatureValueInput): number {
     health + computeExtraLandedHealth(health, abilities, profile, exposureSeconds);
   const rawPool =
     (landedHealth * (armoredHealth / health)) / computeIncomingDamageFactor(abilities, profile);
-  const invisibleSeconds = (abilities.startInvisibleMs ?? 0) / MS_PER_SECOND;
-  const targetableSeconds = Math.max(
-    exposureSeconds * MIN_TARGETABLE_SHARE,
-    exposureSeconds - invisibleSeconds,
-  );
+  const targetableSeconds = exposureSeconds * (1 - computeInvisibleExposureShare(stats, abilities));
   const livesFactor = 1 + ((abilities.leakLivesTaken ?? 1) - 1) * V.EXPECTED_LEAK_SHARE;
   return (
     (rawPool * (REFERENCE_EXPOSURE_SECONDS / targetableSeconds) * livesFactor) /
