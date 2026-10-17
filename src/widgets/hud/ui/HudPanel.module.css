@@ -330,6 +330,7 @@
 }
 
 .towerBtnPortrait {
+  --tower-icon-size: 36px;
   --placeholder-icon-size: 36px;
   position: relative;
   display: flex;

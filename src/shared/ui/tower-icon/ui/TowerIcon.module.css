@@ -1,5 +1,4 @@
-/* One frame of a tower sheet, scaled to the icon size. The sheet is pixel art,
-   so it is nearest-neighbour scaled instead of smoothed. */
+/* Square frame shared by the painted icon and the sprite fallback. */
 .icon {
   display: inline-block;
   box-sizing: border-box;
@@ -10,6 +9,24 @@
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-sm);
   background-color: var(--glass-bg-soft);
+}
+
+.painted {
+  overflow: hidden;
+}
+
+.paintedImage {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* One frame of a tower sheet, scaled to the icon size. The sheet is pixel art,
+   so it is nearest-neighbour scaled instead of smoothed. */
+.sprite {
   background-repeat: no-repeat;
   background-position: calc(var(--tower-icon-size, 28px) * var(--tower-icon-column) * -1)
     calc(var(--tower-icon-size, 28px) * var(--tower-icon-row) * -1);

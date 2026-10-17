@@ -7,6 +7,7 @@ import { getTowerStatsForCurveLevel, getTowerStatsForLevel } from '../../../enti
 import { TowerTypeId } from '../../../shared/types/content-ids';
 import { TowerActionPanel } from './TowerActionPanel';
 import { NEXT_LEVEL_PREVIEW_LABEL } from './NextLevelPreview';
+import { toTowerIconSource } from '../../../shared/ui/tower-icon';
 
 function createHudSnapshot(): GameHudSnapshot {
   return {
@@ -97,6 +98,40 @@ describe('TowerActionPanel effects', () => {
 
     expect(screen.queryByRole('group', { name: /^Next level/ })).toBeNull();
     expect(screen.getByText('MAX LEVEL')).toBeDefined();
+    expect(consoleError).not.toHaveBeenCalled();
+  });
+});
+
+describe('TowerActionPanel header icon', () => {
+  it('shows the painted icon of the selected race tower', () => {
+    publishGameHudSnapshot(createHudSnapshot());
+
+    render(<TowerActionPanel />);
+    act(() => {
+      publishGameEvent('selected-tower', {
+        tower: {
+          ...selectTower(TowerTypeId.SPLASH),
+          name: 'Tar Pit',
+          buildableTowerId: 'orc_tar_pit',
+        },
+      });
+    });
+
+    const icon = screen.getByRole('img', { name: 'Tar Pit' });
+
+    expect(icon.querySelector('img')?.getAttribute('src')).toBe(toTowerIconSource('orc_tar_pit'));
+    expect(consoleError).not.toHaveBeenCalled();
+  });
+
+  it('keeps the question chip for an archetype tower with no race id or sheet', () => {
+    publishGameHudSnapshot(createHudSnapshot());
+
+    render(<TowerActionPanel />);
+    act(() => {
+      publishGameEvent('selected-tower', { tower: selectTower(TowerTypeId.FROST) });
+    });
+
+    expect(screen.getByRole('img', { name: 'Frost Tower: artwork pending' })).toBeDefined();
     expect(consoleError).not.toHaveBeenCalled();
   });
 });

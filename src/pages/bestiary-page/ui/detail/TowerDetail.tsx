@@ -32,7 +32,12 @@ export function TowerDetail({ tower, raceName, faction, nameId }: TowerDetailPro
         name={tower.name}
         portrait={
           <Portrait size="large">
-            <TowerIcon spriteKey={tower.spriteKey} label={tower.name} faction={faction} />
+            <TowerIcon
+              towerId={tower.id}
+              spriteKey={tower.spriteKey}
+              label={tower.name}
+              faction={faction}
+            />
           </Portrait>
         }
         tags={[

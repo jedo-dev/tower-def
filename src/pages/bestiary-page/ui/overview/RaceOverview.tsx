@@ -54,6 +54,7 @@ export function RaceOverview({ race, onOpenEntry }: RaceOverviewProps) {
                     badge={<CodexIcon name={DAMAGE_STAT_KEYS[tower.damageType.type]} size="sm" />}
                   >
                     <TowerIcon
+                      towerId={tower.id}
                       spriteKey={tower.spriteKey}
                       label={tower.name}
                       faction={race.faction}

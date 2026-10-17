@@ -13,6 +13,7 @@ import styles from './HudPanel.module.css';
 import hudPanelCss from './HudPanel.module.css?raw';
 import { injectCssModule } from '../../../shared/test/injectCssModule';
 import { toTalentIconSource } from '../../../shared/ui/branch-glyph';
+import { toTowerIconSource } from '../../../shared/ui/tower-icon';
 
 function createSnapshot(overrides?: Partial<GameHudSnapshot>): GameHudSnapshot {
   return {
@@ -114,6 +115,11 @@ describe('HudPanel build bar', () => {
     expect(buttons.map((button) => button.getAttribute('aria-label'))).toEqual(
       getBuildableTowersByFaction(RaceId.ORC).map((tower) => expect.stringContaining(tower.name)),
     );
+    expect(
+      buttons.map((button) =>
+        within(button).getByRole('img').querySelector('img')?.getAttribute('src'),
+      ),
+    ).toEqual(getBuildableTowersByFaction(RaceId.ORC).map((tower) => toTowerIconSource(tower.id)));
     expect(consoleError).not.toHaveBeenCalled();
   });
 

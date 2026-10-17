@@ -13,7 +13,7 @@ import {
 import type { HudPressureLevel } from '../model/mapHudSnapshotToViewModel';
 import type { HudFactionType } from '../../../shared/lib/game-bridge/types';
 import type { GameSetupConfig } from '../../../shared/config/game-setup';
-import { PlaceholderIcon } from '../../../shared/ui/placeholder-icon';
+import { TowerIcon } from '../../../shared/ui/tower-icon';
 import { FantasyButton } from '../../../shared/ui/fantasy-button';
 import { BranchGlyph } from '../../../shared/ui/branch-glyph';
 import { getDifficultyConfig } from '../../../entities/difficulty';
@@ -188,7 +188,12 @@ function HudPanelComponent({
                 }}
               >
                 <span className={styles.towerBtnPortrait}>
-                  <PlaceholderIcon label={option.name} faction={builderFactionTheme} />
+                  <TowerIcon
+                    towerId={option.towerId}
+                    spriteKey={option.spriteKey}
+                    label={option.name}
+                    faction={builderFactionTheme}
+                  />
                   {option.chosenBranch && (
                     <BranchGlyph
                       glyph={option.chosenBranch.glyph}

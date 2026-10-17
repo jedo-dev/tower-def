@@ -18,6 +18,8 @@ import {
 export type HudBuildOptionViewModel = {
   towerId: BuildableTowerConfig['id'];
   towerType: TowerTypeId;
+  /** Battlefield sheet of the tower; the icon falls back to its idle frame. */
+  spriteKey: string;
   name: string;
   costGold: number;
   /** One-word summary of what the tower does beyond damage. */
@@ -91,6 +93,7 @@ export function mapRaceRosterToBuildOptions(input: MapRaceRosterInput): HudBuild
     return {
       towerId: tower.id,
       towerType: tower.towerType,
+      spriteKey: tower.spriteKey,
       name: tower.name,
       costGold: tower.costGold,
       effectHint,

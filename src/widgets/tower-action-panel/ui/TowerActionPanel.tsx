@@ -14,12 +14,13 @@ import {
   getUpgradeCost,
   isMaxLevel,
   toTowerUpgradeCurveRef,
+  tryResolveBuildableTowerById,
 } from '../../../entities/tower';
 import { mapTowerEffectsToLines } from '../model/mapTowerEffectsToLines';
 import { mapTowerNextLevelPreview } from '../model/mapTowerNextLevelPreview';
 import { mapTowerStatsToLines } from '../model/mapTowerStatsToLines';
 import type { HudTowerType } from '../../../shared/lib/game-bridge/types';
-import { PlaceholderIcon } from '../../../shared/ui/placeholder-icon';
+import { TowerIcon } from '../../../shared/ui/tower-icon';
 import { BranchGlyph } from '../../../shared/ui/branch-glyph';
 import { mapTowerBranchState } from '../model/mapTowerBranchState';
 import { NextLevelPreview } from './NextLevelPreview';
@@ -51,6 +52,10 @@ function TowerActionPanelComponent() {
   // Cost, cap, sell value and preview all follow the tower's resolved curve:
   // its authored levels 1-3, then the branch its type took (grades 4-7).
   const curve = toTowerUpgradeCurveRef(type, buildableTowerId);
+  // The curve ref carries the id only when it names an authored race tower.
+  const raceTowerId = curve.buildableTowerId;
+  const towerSpriteKey =
+    raceTowerId === undefined ? undefined : tryResolveBuildableTowerById(raceTowerId)?.spriteKey;
   const choices = snapshot.towerBranchChoices;
   const upgradeCost = getUpgradeCost(curve, level, choices);
   const maxed = isMaxLevel(curve, level, choices);
@@ -88,7 +93,12 @@ function TowerActionPanelComponent() {
   return (
     <section className={`ui-panel ${styles.panel}`} aria-label="Tower actions">
       <div className={styles.header}>
-        <PlaceholderIcon label={towerName} faction={snapshot.selectedFaction} />
+        <TowerIcon
+          towerId={raceTowerId}
+          spriteKey={towerSpriteKey}
+          label={towerName}
+          faction={snapshot.selectedFaction}
+        />
         <span className={styles.title}>{towerName}</span>
         {chosenBranch && (
           <span className={styles.branch} aria-label={`Branch: ${chosenBranch.name}`} role="note">

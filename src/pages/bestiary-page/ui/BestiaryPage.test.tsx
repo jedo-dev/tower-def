@@ -8,6 +8,7 @@ import { RaceId } from '../../../shared/types/content-ids';
 import { getAllRaceRegistries } from '../../../entities/race-registry';
 import { getUnitsByFaction, resolveUnitConfigById, type UnitConfig } from '../../../entities/unit';
 import { getBuildableTowersByFaction, resolveBuildableTowerById } from '../../../entities/tower';
+import { toTowerIconSource } from '../../../shared/ui/tower-icon';
 
 let consoleError: MockInstance;
 
@@ -50,6 +51,13 @@ describe('BestiaryPage overview', () => {
       );
       expect(panel.querySelectorAll('[data-tower-card]')).toHaveLength(
         getBuildableTowersByFaction(race.raceId).length,
+      );
+      expect(
+        Array.from(panel.querySelectorAll('[data-tower-card] img'), (image) =>
+          image.getAttribute('src'),
+        ),
+      ).toEqual(
+        getBuildableTowersByFaction(race.raceId).map((tower) => toTowerIconSource(tower.id)),
       );
     }
     expect(consoleError).not.toHaveBeenCalled();
@@ -108,6 +116,11 @@ describe('BestiaryPage detail', () => {
 
     expect(detail.getByRole('heading', { level: 2 }).textContent).toBe(nest.name);
     expect(detail.getByText('Undead · Tower')).toBeDefined();
+    expect(
+      screen
+        .getByRole('dialog', { name: nest.name })
+        .querySelector(`img[src="${toTowerIconSource(nest.id)}"]`),
+    ).not.toBeNull();
     const base = within(detail.getByRole('list', { name: 'Base stats' }));
     expect(base.getByTitle('Build cost, gold').textContent).toBe(
       `Build cost, gold: ${nest.costGold}`,
