@@ -207,6 +207,11 @@ export function App() {
       if (!button || (button as HTMLButtonElement).disabled) {
         return;
       }
+      // A sound preview button plays its own clip; the generic click would
+      // only smear over it.
+      if (button.hasAttribute('data-sound-preview')) {
+        return;
+      }
       const mapped = button.getAttribute('data-sound') as SoundId | null;
       playUiSound(mapped ?? 'ui.click', mapped ? 0.22 : 0.2);
     };

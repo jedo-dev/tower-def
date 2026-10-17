@@ -40,6 +40,7 @@ export function SoundCues({ idPrefix, name, cues }: SoundCuesProps) {
               className={`${codex.frame} ${codex.frameFlat} ${codex.pressable} ${sounds.button}`}
               aria-label={`Play ${name} ${cue.label.toLowerCase()} sound`}
               title={`${cue.label} sound`}
+              data-sound-preview=""
               onClick={() => menuSoundPreview.play(cue.soundId)}
             >
               <CodexIcon name="sound" size="sm" tinted={false} />
