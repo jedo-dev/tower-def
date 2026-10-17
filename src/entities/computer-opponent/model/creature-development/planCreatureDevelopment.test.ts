@@ -35,22 +35,22 @@ describe('planCreatureDevelopment', () => {
   });
 
   it('picks the branch first, then buys grades in order while the tier can pay', () => {
-    // Tier 1: branch 4, grades 6 / 10 / 16 / 26.
-    const plan = planCreatureDevelopment(input({ ledger: ledgerWith({ 1: 25 }) }));
+    // Tier 1: branch 6, grades 2 / 5 / 10 / 18.
+    const plan = planCreatureDevelopment(input({ ledger: ledgerWith({ 1: 15 }) }));
     expect(plan.actions).toEqual([
       { kind: 'choose_creature_branch', unitId: 'orc_grunt', branchId: 'orc_grunt_shieldbearer' },
       { kind: 'upgrade_creature', unitId: 'orc_grunt' },
       { kind: 'upgrade_creature', unitId: 'orc_grunt' },
     ]);
     expect(plan.ledger.creatureGrades.orc_grunt).toBe(2);
-    expect(plan.ledger.creatureXpByTier[1]).toBe(5);
+    expect(plan.ledger.creatureXpByTier[1]).toBe(2);
   });
 
   it('never drives experience negative and stops at grade 4', () => {
     const plan = planCreatureDevelopment(input({ ledger: ledgerWith({ 1: 1000, 2: 7, 3: 0 }) }));
     expect(plan.ledger.creatureGrades.orc_grunt).toBe(4);
-    expect(plan.ledger.creatureXpByTier[1]).toBe(1000 - 62);
-    // Tier 2 holds 7 < 8, the branch price: nothing bought.
+    expect(plan.ledger.creatureXpByTier[1]).toBe(1000 - 41);
+    // Tier 2 holds 7 < 12, the branch price: nothing bought.
     expect(plan.ledger.creatureBranchChoices.orc_wolf_rider).toBeUndefined();
     for (const xp of Object.values(plan.ledger.creatureXpByTier)) {
       expect(xp).toBeGreaterThanOrEqual(0);

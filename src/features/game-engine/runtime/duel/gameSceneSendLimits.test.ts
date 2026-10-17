@@ -115,14 +115,14 @@ describe('send limits bridge events', () => {
     const skeleton = limits.units.find((unit) => unit.creepTypeId === 'undead_skeleton');
     const fiendLimits = limits.units.find((unit) => unit.creepTypeId === 'undead_crypt_fiend');
 
-    expect(skeleton).toMatchObject({ grade: 0, branchCostXp: 4, nextUpgradeCostXp: 6 });
+    expect(skeleton).toMatchObject({ grade: 0, branchCostXp: 6, nextUpgradeCostXp: 2 });
     expect(skeleton?.availableBranches.every((branch) => !branch.isChosen)).toBe(true);
     expect(fiendLimits).toMatchObject({
       availableBranches: [
         { id: branchA.id, name: branchA.name, description: branchA.description, isChosen: false },
         { id: branchB.id, name: branchB.name, description: branchB.description, isChosen: true },
       ],
-      branchCostXp: 8,
+      branchCostXp: 12,
       grade: 4,
       nextUpgradeCostXp: null,
     });

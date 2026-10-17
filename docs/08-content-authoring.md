@@ -333,11 +333,12 @@ the headless duel simulation passes the same outcomes. Baseline creeps earn
 nothing. A sent creep carries `sender` and `sentTier` from its spawn.
 
 **Price ladder** (`CreatureTalentPricing`), experience of the creature's tier,
-multiplied by the tier; content never prices a grade:
+multiplied by the tier; content never prices a grade (tuned in tower-def-716.8,
+docs/07 "Creature branch balance"):
 
 | Step | Branch | 1 | 2 | 3 | 4 |
 | --- | --- | --- | --- | --- | --- |
-| Experience | 4 x tier | 6 x tier | 10 x tier | 16 x tier | 26 x tier |
+| Experience | 6 x tier | 2 x tier | 5 x tier | 10 x tier | 18 x tier |
 
 **Grade at send time.** Sends are queued in the build phase but spawn at wave
 start, so a send snapshots the creature grade when it is queued

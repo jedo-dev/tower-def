@@ -21,7 +21,7 @@ function branch(id: string, name: string): CreatureTalentBranchDefinition {
   };
 }
 
-/** A tier 2 fixture: branch 8 XP, grades 12 / 20 / 32 / 52 (docs/12). */
+/** A tier 2 fixture: branch 12 XP, grades 4 / 10 / 20 / 36. */
 const FIEND = {
   id: 'undead_crypt_fiend' as const,
   tier: UnitTier.TIER_2,
@@ -41,17 +41,17 @@ function snapshot(overrides: Partial<CreatureTalentSnapshot> = {}): CreatureTale
 
 describe('mapCreatureTalentState', () => {
   it('offers Develop for the tier-scaled branch price with both branch cards', () => {
-    const state = mapCreatureTalentState(FIEND, snapshot({ creatureXpByTier: { 2: 10 } }));
+    const state = mapCreatureTalentState(FIEND, snapshot({ creatureXpByTier: { 2: 14 } }));
 
     expect(state).toMatchObject({
-      xp: 10,
+      xp: 14,
       grade: 0,
       chosenBranch: null,
       gradeBadge: null,
       branchSummary: null,
       xpProgress: 1,
-      xpSummary: '10/8 XP',
-      action: { kind: 'develop', cost: 8, isAffordable: true, blockedReason: null },
+      xpSummary: '14/12 XP',
+      action: { kind: 'develop', cost: 12, isAffordable: true, blockedReason: null },
     });
     if (state.action.kind !== 'develop') throw new Error('expected develop');
     expect(state.action.branches.map((card) => [card.name, card.glyph])).toEqual([
@@ -67,14 +67,14 @@ describe('mapCreatureTalentState', () => {
   });
 
   it('blocks Develop with a reason when the tier lacks experience', () => {
-    const state = mapCreatureTalentState(FIEND, snapshot({ creatureXpByTier: { 1: 99, 2: 2 } }));
+    const state = mapCreatureTalentState(FIEND, snapshot({ creatureXpByTier: { 1: 99, 2: 3 } }));
 
     expect(state.xpProgress).toBe(0.25);
-    expect(state.xpSummary).toBe('2/8 XP');
+    expect(state.xpSummary).toBe('3/12 XP');
     expect(state.action).toMatchObject({
       kind: 'develop',
       isAffordable: false,
-      blockedReason: 'Needs 8 XP',
+      blockedReason: 'Needs 12 XP',
     });
   });
 
@@ -82,7 +82,7 @@ describe('mapCreatureTalentState', () => {
     const state = mapCreatureTalentState(
       FIEND,
       snapshot({
-        creatureXpByTier: { 2: 15 },
+        creatureXpByTier: { 2: 7 },
         creatureBranchChoices: { undead_crypt_fiend: 'undead_crypt_fiend_b' },
         creatureGrades: { undead_crypt_fiend: 1 },
       }),
@@ -93,10 +93,10 @@ describe('mapCreatureTalentState', () => {
       chosenBranch: { id: 'undead_crypt_fiend_b', name: 'Burrower', glyph: 'II' },
       gradeBadge: 'G1/4',
       branchSummary: 'Burrower G1/4',
-      xpSummary: '15/20 XP',
-      action: { kind: 'upgrade', cost: 20, nextGrade: 2, isAffordable: false },
+      xpSummary: '7/10 XP',
+      action: { kind: 'upgrade', cost: 10, nextGrade: 2, isAffordable: false },
     });
-    expect(state.action.blockedReason).toBe('Needs 20 XP');
+    expect(state.action.blockedReason).toBe('Needs 10 XP');
   });
 
   it('allows the upgrade once the experience covers it', () => {
@@ -111,7 +111,7 @@ describe('mapCreatureTalentState', () => {
     expect(state.gradeBadge).toBe('G0/4');
     expect(state.action).toEqual({
       kind: 'upgrade',
-      cost: 12,
+      cost: 4,
       nextGrade: 1,
       isAffordable: true,
       blockedReason: null,
