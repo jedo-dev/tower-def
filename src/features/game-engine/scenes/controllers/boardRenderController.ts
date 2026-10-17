@@ -1,3 +1,5 @@
+import { ENDPOINT_ZONE_FOOTPRINT } from '../../../../shared/constants/footprint';
+import { GRID_DIMENSIONS } from '../../../../shared/constants/grid';
 import { createGridModel } from '../../../../shared/lib/grid/createGridModel';
 import type { GridCell, GridPoint } from '../../../../shared/types/grid';
 import { canPerformBuildActions as canPerformBuildActionsByPhase } from '../../../wave-phase';
@@ -14,6 +16,7 @@ import {
   resolvePathTextureKey,
   type GridRendererDeps,
 } from '../../runtime/grid/gameSceneGridRenderer';
+import { syncEndpointGates } from '../../runtime/grid/endpointGates';
 import { drawGridOccupancyOverlay } from '../../runtime/grid/gridOccupancyOverlay';
 import { syncPathRibbon } from '../../runtime/grid/pathRibbonRenderer';
 import {
@@ -21,7 +24,7 @@ import {
   selectPlayerPathRoute,
   toTrailCellKeys,
 } from '../../runtime/grid/pathTiles';
-import { GRID_OVERLAY_RENDER_DEPTH } from '../gameScene.constants';
+import { ENDPOINT_GATE_RENDER_DEPTH, GRID_OVERLAY_RENDER_DEPTH } from '../gameScene.constants';
 import { resolveTowerRangeCells } from '../gameScene.helpers';
 import {
   GRID_PREVIEW_CONFIG,
@@ -127,12 +130,33 @@ function syncShownPathRibbon({ scene, state }: GameSceneCore, route: readonly Gr
 }
 
 /**
+ * Points the entrance and exit gates at the board in view: its race, and for
+ * a corner gate the edge `route` passes by. A no-op unless something changed.
+ */
+export function syncShownEndpointGates(
+  { scene, state }: GameSceneCore,
+  route: readonly GridPoint[],
+): void {
+  syncEndpointGates(scene, state.gridRendererState.endpointGates, {
+    raceId: getVisibleBuilderFactionId(state),
+    entrance: state.mapEndpoints.entrance,
+    exit: state.mapEndpoints.exit,
+    footprint: ENDPOINT_ZONE_FOOTPRINT,
+    board: GRID_DIMENSIONS,
+    cellSize: GRID_DIMENSIONS.cellSize,
+    route,
+    depth: ENDPOINT_GATE_RENDER_DEPTH,
+  });
+}
+
+/**
  * Shows `route` as the board's path: the trail ribbon follows it and every
  * terrain tile is redrawn against its trail cells (view switch, wave start).
  */
 export function showPathRoute(core: GameSceneCore, route: readonly GridPoint[]): void {
   core.state.pathCellKeys = toTrailCellKeys(route);
   syncShownPathRibbon(core, route);
+  syncShownEndpointGates(core, route);
   redrawTerrainTiles(core);
 }
 
@@ -170,6 +194,7 @@ export function refreshBuildPhasePathTiles(core: GameSceneCore): void {
     },
     (cell) => drawGridCell(core, cell),
   );
+  syncShownEndpointGates(core, route);
 }
 
 export function updateBuildPreview(core: GameSceneCore): void {

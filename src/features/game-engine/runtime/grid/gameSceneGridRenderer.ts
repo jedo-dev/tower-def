@@ -12,6 +12,7 @@ import {
   type GridOccupancyOverlayConfig,
   type GridOccupancyOverlayState,
 } from './gridOccupancyOverlay';
+import type { EndpointGateLayer } from './endpointGates';
 import type { PathRibbonState } from './pathRibbonRenderer';
 
 export type GridRendererConfig = GridOccupancyOverlayConfig & {
@@ -26,21 +27,13 @@ export type GridRendererConfig = GridOccupancyOverlayConfig & {
   gridMajorLineAlpha: number;
   /** Lines on multiples of this many cells are drawn brighter (the tower lattice). */
   gridMajorLineEveryCells: number;
-  entranceExitLabelFontFamily: string;
-  entranceExitLabelFontSizePx: string;
-  entranceExitLabelColor: string;
-  entranceExitLabelRenderDepth: number;
-  entranceMarkerColor: number;
-  exitMarkerColor: number;
-  endpointMarkerFillAlpha: number;
-  endpointMarkerLineWidth: number;
 };
 
 export type GridRendererState = GridOccupancyOverlayState & {
   gridGraphics: Phaser.GameObjects.Graphics | null;
   terrainSprites: Phaser.GameObjects.Image[];
-  gridLabels: Phaser.GameObjects.Text[];
-  endpointMarkers: Phaser.GameObjects.Graphics[];
+  /** Faction gates on the entrance and exit zones (endpointGates). */
+  endpointGates: EndpointGateLayer;
   /** The shown route's worn trail, above the ground tiles. */
   pathRibbon: PathRibbonState;
 };
@@ -56,13 +49,6 @@ export type GridRendererDeps = {
 export function clearTerrainSprites(state: GridRendererState): void {
   state.terrainSprites.forEach((sprite) => sprite.destroy());
   state.terrainSprites = [];
-}
-
-export function clearGridLabels(state: GridRendererState): void {
-  state.gridLabels.forEach((label) => label.destroy());
-  state.gridLabels = [];
-  state.endpointMarkers.forEach((marker) => marker.destroy());
-  state.endpointMarkers = [];
 }
 
 /** Cells under (or brushed by) the trail: ground tile, but no prop. */
@@ -210,43 +196,6 @@ function drawGridLines(
   strokeGridLinePass(state.gridGraphics, grid, columns.major, rows.major);
 }
 
-function drawEndpointZone(
-  state: GridRendererState,
-  deps: GridRendererDeps,
-  config: GridRendererConfig,
-  grid: GridModel,
-  role: 'entrance' | 'exit',
-): void {
-  const anchor = role === 'entrance' ? grid.entrance : grid.exit;
-  const { cellSize } = GRID_DIMENSIONS;
-  const x = anchor.x * cellSize;
-  const y = anchor.y * cellSize;
-  const width = grid.endpointZoneFootprint.width * cellSize;
-  const height = grid.endpointZoneFootprint.height * cellSize;
-
-  // Markers live on their own layer: the shared grid overlay is dimmed to
-  // gridIdleAlpha during waves, which would fade them out exactly when the
-  // player needs to read the lane.
-  const markerColor = role === 'entrance' ? config.entranceMarkerColor : config.exitMarkerColor;
-  const marker = deps.scene.add.graphics();
-  marker.setDepth(config.entranceExitLabelRenderDepth - 1);
-  marker.fillStyle(markerColor, config.endpointMarkerFillAlpha);
-  marker.fillRect(x + 1, y + 1, width - 2, height - 2);
-  marker.lineStyle(config.endpointMarkerLineWidth, markerColor, 1);
-  marker.strokeRect(x + 1, y + 1, width - 2, height - 2);
-  state.endpointMarkers.push(marker);
-
-  const label = deps.scene.add
-    .text(x + width / 2, y + height / 2, role === 'entrance' ? 'IN' : 'OUT', {
-      fontFamily: config.entranceExitLabelFontFamily,
-      fontSize: config.entranceExitLabelFontSizePx,
-      color: config.entranceExitLabelColor,
-    })
-    .setOrigin(0.5);
-  label.setDepth(config.entranceExitLabelRenderDepth);
-  state.gridLabels.push(label);
-}
-
 export function drawGrid(
   state: GridRendererState,
   deps: GridRendererDeps,
@@ -257,16 +206,12 @@ export function drawGrid(
   state.gridGraphics.clear();
   state.gridGraphics.setDepth(gridOverlayRenderDepth);
   clearTerrainSprites(state);
-  clearGridLabels(state);
 
   const grid = deps.createGridModel();
 
   for (const cell of grid.cells) {
     drawGridCell(state, deps, config, cell);
   }
-
-  drawEndpointZone(state, deps, config, grid, 'entrance');
-  drawEndpointZone(state, deps, config, grid, 'exit');
 
   drawGridLines(state, config, grid);
   drawGridOccupancyOverlay(state, deps.scene, config, grid.cells, gridOverlayRenderDepth);

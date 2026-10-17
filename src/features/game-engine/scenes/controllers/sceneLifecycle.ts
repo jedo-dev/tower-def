@@ -20,11 +20,9 @@ import {
   attachRoutePreviewGraphics,
   destroyRoutePreviewGraphics,
 } from '../../runtime/grid/buildRoutePreviewRuntime';
-import {
-  clearGridLabels as clearGridLabelsRuntime,
-  clearTerrainSprites as clearTerrainSpritesRuntime,
-} from '../../runtime/grid/gameSceneGridRenderer';
+import { clearTerrainSprites as clearTerrainSpritesRuntime } from '../../runtime/grid/gameSceneGridRenderer';
 import { destroyGridOccupancyOverlay } from '../../runtime/grid/gridOccupancyOverlay';
+import { destroyEndpointGates } from '../../runtime/grid/endpointGates';
 import { destroyPathRibbon } from '../../runtime/grid/pathRibbonRenderer';
 import {
   registerSceneAudioUnlock,
@@ -146,7 +144,7 @@ function destroyBoardGraphics(context: GameSceneContext): void {
   state.gridRendererState.gridGraphics = null;
   destroyGridOccupancyOverlay(state.gridRendererState);
   clearTerrainSpritesRuntime(state.gridRendererState);
-  clearGridLabelsRuntime(state.gridRendererState);
+  destroyEndpointGates(state.gridRendererState.endpointGates);
   destroyPathRibbon(state.gridRendererState.pathRibbon);
 }
 

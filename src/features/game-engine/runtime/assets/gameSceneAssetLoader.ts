@@ -8,7 +8,11 @@ import {
   UNIT_SPRITE_KEYS,
   UNIT_SPRITE_SHEET_FRAME,
 } from '../../../../shared/constants/sprites';
-import { TERRAIN_SIDE_SCENERY_ASSETS } from '../../../../shared/constants/terrain';
+import {
+  TERRAIN_GATE_ASSETS,
+  TERRAIN_GATE_SHEET,
+  TERRAIN_SIDE_SCENERY_ASSETS,
+} from '../../../../shared/constants/terrain';
 import { resolveSpriteSheetFilter, type SpriteSheetFilter } from '../creep/creepSpriteScale';
 
 function forEachTerrainTextureKey(callback: (textureKey: string, url: string) => void): void {
@@ -38,6 +42,21 @@ function forEachLinearTerrainTexture(callback: (textureKey: string, url: string)
   forEachSideSceneryTexture(callback);
 }
 
+/**
+ * Faction gate sheets of every race (tower-def-alq), ~250 KB together: like
+ * the side scenery, the opponent's race is only known at match setup.
+ */
+function preloadGateSheets(scene: Phaser.Scene): void {
+  Object.values(TERRAIN_GATE_ASSETS).forEach((sheet) => {
+    if (!scene.textures.exists(sheet.key)) {
+      scene.load.spritesheet(sheet.key, sheet.path, {
+        frameWidth: TERRAIN_GATE_SHEET.frameWidth,
+        frameHeight: TERRAIN_GATE_SHEET.frameHeight,
+      });
+    }
+  });
+}
+
 export function preloadGameSceneAssets(scene: Phaser.Scene): void {
   forEachLinearTerrainTexture((textureKey, url) => {
     if (!scene.textures.exists(textureKey)) {
@@ -45,9 +64,14 @@ export function preloadGameSceneAssets(scene: Phaser.Scene): void {
     }
   });
 
+  preloadGateSheets(scene);
+
   scene.load.once(Phaser.Loader.Events.COMPLETE, () => {
     // Painted art is downscaled: sample it smoothly despite the pixel-art default.
-    forEachLinearTerrainTexture((textureKey) => {
+    const smoothKeys: string[] = [];
+    forEachLinearTerrainTexture((textureKey) => smoothKeys.push(textureKey));
+    Object.values(TERRAIN_GATE_ASSETS).forEach((sheet) => smoothKeys.push(sheet.key));
+    smoothKeys.forEach((textureKey) => {
       if (scene.textures.exists(textureKey)) {
         scene.textures.get(textureKey).setFilter(Phaser.Textures.FilterMode.LINEAR);
       }

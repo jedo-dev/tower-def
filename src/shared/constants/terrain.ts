@@ -74,3 +74,42 @@ export const PATH_RIBBON_STYLE = {
   texturePixelsPerWorldUnit: 3,
   textureKey: 'terrain:path-ribbon',
 } as const;
+
+/** A board edge an entrance or exit gate stands on. */
+export type BoardEdge = 'top' | 'right' | 'bottom' | 'left';
+
+/** What a gate marks: where creeps come in, or where they leave. */
+export type GateRole = 'entrance' | 'exit';
+
+/**
+ * Painted faction gates (tower-def-alq): one 4x2 sheet per race. Row 0 is the
+ * entrance, row 1 the exit; columns are the edge the gate stands on (the top
+ * gate opens downwards, right leftwards, bottom upwards, left rightwards).
+ * Frames keep the structure's base on their bottom edge.
+ */
+export const TERRAIN_GATE_SHEET = {
+  frameWidth: 96,
+  frameHeight: 96,
+  columns: 4,
+  /** Drawn width and height, in cells: the 2x2 endpoint footprint. */
+  displaySizeCells: 2,
+} as const;
+
+export const TERRAIN_GATE_SHEET_COLUMN_BY_EDGE: Readonly<Record<BoardEdge, number>> = {
+  top: 0,
+  right: 1,
+  bottom: 2,
+  left: 3,
+};
+
+export const TERRAIN_GATE_SHEET_ROW_BY_ROLE: Readonly<Record<GateRole, number>> = {
+  entrance: 0,
+  exit: 1,
+};
+
+export const TERRAIN_GATE_ASSETS: Readonly<Record<RaceId, SideSceneryAsset>> = {
+  [RaceId.UNDEAD]: { key: 'terrain.undead.gates', path: '/assets/terrain/undead/gates.png' },
+  [RaceId.ORC]: { key: 'terrain.orc.gates', path: '/assets/terrain/orc/gates.png' },
+  [RaceId.HUMAN]: { key: 'terrain.human.gates', path: '/assets/terrain/human/gates.png' },
+  [RaceId.ELF]: { key: 'terrain.elf.gates', path: '/assets/terrain/elf/gates.png' },
+};
