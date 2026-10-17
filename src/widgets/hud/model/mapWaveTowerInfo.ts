@@ -11,7 +11,7 @@ export type WaveTowerInfo = {
 /** Shown for a tower built without authored content (no name in the snapshot). */
 export const WAVE_TOWER_FALLBACK_NAME = 'Tower';
 /** Upgrade, sell and develop are build-phase actions in the engine rules. */
-export const WAVE_TOWER_LOCKED_NOTE = 'Upgrade and sell in the build phase';
+export const WAVE_TOWER_LOCKED_NOTE = 'Upgrade after the wave';
 
 export function mapWaveTowerInfo(tower: SelectedTowerSnapshot): WaveTowerInfo {
   const name = tower.name ?? WAVE_TOWER_FALLBACK_NAME;

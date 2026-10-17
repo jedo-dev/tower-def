@@ -16,37 +16,33 @@
   flex: 1 1 auto;
   min-width: 0;
   display: flex;
-  align-items: baseline;
-  gap: var(--space-sm);
+  flex-direction: column;
+  justify-content: center;
   margin: 0;
   font-family: var(--font-family-ui);
   font-size: var(--font-size-xs);
-  line-height: 1.2;
+  line-height: 1.25;
+}
+
+.name,
+.facts {
   white-space: nowrap;
   overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .name {
-  flex: 0 1 auto;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
   font-weight: 700;
   color: var(--color-text-gold);
 }
 
-.detail {
-  flex: 0 0 auto;
-  color: var(--color-text-primary);
-  font-variant-numeric: tabular-nums;
+.facts {
+  color: var(--color-text-muted);
 }
 
-.note {
-  flex: 0 1 auto;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  color: var(--color-text-muted);
+.detail {
+  color: var(--color-text-primary);
+  font-variant-numeric: tabular-nums;
 }
 
 .close {
@@ -58,7 +54,8 @@
   border-radius: var(--radius-sm);
   background: transparent;
   color: var(--color-text-secondary);
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-xl);
+  line-height: 1;
   cursor: pointer;
   touch-action: manipulation;
 }

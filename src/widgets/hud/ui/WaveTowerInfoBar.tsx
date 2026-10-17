@@ -36,8 +36,9 @@ function WaveTowerInfoBarComponent({ tower, onClose }: WaveTowerInfoBarProps) {
     <section className={styles.bar} aria-label="Selected tower" data-wave-tower-info="">
       <p className={styles.line} role="status" aria-label={info.ariaLabel}>
         <span className={styles.name}>{info.name}</span>
-        <span className={styles.detail}>{info.detail}</span>
-        <span className={styles.note}>{info.note}</span>
+        <span className={styles.facts}>
+          <span className={styles.detail}>{info.detail}</span> · {info.note}
+        </span>
       </p>
       <button
         type="button"
