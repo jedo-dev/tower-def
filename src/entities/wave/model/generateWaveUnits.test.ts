@@ -1,16 +1,19 @@
 import { describe, expect, it } from 'vitest';
 import { RACE_IDS, UnitMoveType } from '../../../shared/types/content-ids';
-import { UnitTier, undeadUnits } from '../../unit';
+import { UnitTier, elfUnits, undeadUnits } from '../../unit';
 import {
   generateWaveUnits,
+  getBaselineHealthMultiplier,
   getWaveAirUnitBudgetMultiplier,
   getWaveBudget,
   getWaveUnitCap,
   getWaveUnitValue,
+  toBaselineUnit,
 } from './generateWaveUnits';
 import {
   WAVE_AIR_UNIT_BUDGET_MULTIPLIER,
   WAVE_AIR_UNIT_BUDGET_MULTIPLIER_BY_RACE,
+  WAVE_BASELINE_HEALTH_MULTIPLIER_BY_RACE,
   WAVE_TIER_UNLOCK_WAVE,
   WAVE_UNIT_COUNT_BOUNDS,
 } from './waveBalance';
@@ -122,5 +125,20 @@ describe('generateWaveUnits curve', () => {
       );
     }
     expect(getWaveAirUnitBudgetMultiplier(undefined)).toBe(WAVE_AIR_UNIT_BUDGET_MULTIPLIER);
+  });
+
+  it('fields baseline creatures at their roster health scale', () => {
+    for (const units of [undeadUnits, elfUnits]) {
+      const faction = units[0].faction;
+      const scale = WAVE_BASELINE_HEALTH_MULTIPLIER_BY_RACE[faction] ?? 1;
+      expect(getBaselineHealthMultiplier(faction), faction).toBe(scale);
+      const wave = generateWaveUnits({ waveNumber: 20, factionUnits: units, random: () => 0.3 });
+      for (const unit of wave) {
+        const authored = units.find((candidate) => candidate.id === unit.id);
+        expect(unit.health, unit.id).toBe(Math.round((authored?.health ?? 0) * scale));
+        if (scale === 1) expect(unit).toBe(authored);
+      }
+    }
+    expect(toBaselineUnit(elfUnits[0])).toBe(toBaselineUnit(elfUnits[0]));
   });
 });

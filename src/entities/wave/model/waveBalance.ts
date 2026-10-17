@@ -33,6 +33,16 @@ export const WAVE_TIER_VALUE_BY_TIER: Readonly<Record<UnitTier, number>> = {
 export const WAVE_AIR_UNIT_BUDGET_MULTIPLIER = 4;
 
 /**
+ * Per-roster scale of a baseline creature's authored health (sends keep the
+ * authored value); absent is 1. The elf roster is the lightest armored, so a
+ * full board of physical archers held its late waves forever and duels on it
+ * ran to the round cap. Tuned in tower-def-716.9 (docs/07, "Roster balance").
+ */
+export const WAVE_BASELINE_HEALTH_MULTIPLIER_BY_RACE: Readonly<Partial<Record<RaceId, number>>> = {
+  [RaceId.ELF]: 1.2,
+};
+
+/**
  * Per-roster override of `WAVE_AIR_UNIT_BUDGET_MULTIPLIER` for baseline
  * waves. A roster whose fliers are few and light (elf: two, no tier 6 flier)
  * fields fewer flying hit points at the shared multiplier, and its late waves
@@ -40,7 +50,7 @@ export const WAVE_AIR_UNIT_BUDGET_MULTIPLIER = 4;
  * per wave. Tuned in tower-def-716.9 (docs/07, "Roster balance").
  */
 export const WAVE_AIR_UNIT_BUDGET_MULTIPLIER_BY_RACE: Readonly<Partial<Record<RaceId, number>>> = {
-  [RaceId.ELF]: 1.5,
+  [RaceId.ELF]: 2.5,
   [RaceId.HUMAN]: 5,
 };
 

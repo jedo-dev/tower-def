@@ -1,6 +1,7 @@
 import { UnitMoveType } from '../../../shared/types/content-ids';
 import type { UnitConfig } from '../../unit';
 import {
+  getBaselineHealthMultiplier,
   getTierBiasWeights,
   getWaveBudget,
   getWaveFallbackUnit,
@@ -30,7 +31,7 @@ type BudgetLayer = Map<number, number>;
  * and the fallback padding to the minimum count where a draw ends short.
  * Fliers cost `WAVE_AIR_UNIT_BUDGET_MULTIPLIER` times their tier, so they
  * are rarer than walkers of their tier, which this counts as the wave does.
- * Health is authored (before the wave's growth, which scales every creature
+ * Health is authored times the roster's baseline scale (before the wave's growth, which scales every creature
  * alike). Pure and deterministic; a few thousand states at most.
  */
 export function computeExpectedWaveHealth(
@@ -74,5 +75,6 @@ export function computeExpectedWaveHealth(
     layer = next;
   }
 
-  return { totalHealth, airHealth };
+  const scale = getBaselineHealthMultiplier(factionUnits[0].faction);
+  return { totalHealth: totalHealth * scale, airHealth: airHealth * scale };
 }

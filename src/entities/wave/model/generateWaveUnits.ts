@@ -3,6 +3,7 @@ import { UnitTier, type UnitConfig } from '../../unit';
 import {
   WAVE_AIR_UNIT_BUDGET_MULTIPLIER,
   WAVE_AIR_UNIT_BUDGET_MULTIPLIER_BY_RACE,
+  WAVE_BASELINE_HEALTH_MULTIPLIER_BY_RACE,
   WAVE_BUDGET_CURVE,
   WAVE_TIER_UNLOCK_WAVE,
   WAVE_TIER_VALUE_BY_TIER,
@@ -115,5 +116,33 @@ export function generateWaveUnits(input: GenerateWaveUnitsInput): UnitConfig[] {
     units.push(fallbackUnit);
   }
 
-  return units;
+  return units.map(toBaselineUnit);
+}
+
+/** Baseline health scale of `faction`'s roster (`WAVE_BASELINE_HEALTH_MULTIPLIER_BY_RACE`), else 1. */
+export function getBaselineHealthMultiplier(faction: RaceId | undefined): number {
+  const override =
+    faction === undefined ? undefined : WAVE_BASELINE_HEALTH_MULTIPLIER_BY_RACE[faction];
+  return override ?? 1;
+}
+
+const baselineUnitCache = new WeakMap<UnitConfig, UnitConfig>();
+
+/**
+ * The creature as a baseline wave fields it: authored health times its
+ * roster's baseline scale (rounded), the same object when the scale is 1.
+ * Sends never pass through here, so they keep the authored health.
+ */
+export function toBaselineUnit(unit: UnitConfig): UnitConfig {
+  const multiplier = getBaselineHealthMultiplier(unit.faction);
+  if (multiplier === 1) {
+    return unit;
+  }
+  const cached = baselineUnitCache.get(unit);
+  if (cached !== undefined) {
+    return cached;
+  }
+  const scaled: UnitConfig = { ...unit, health: Math.round(unit.health * multiplier) };
+  baselineUnitCache.set(unit, scaled);
+  return scaled;
 }
