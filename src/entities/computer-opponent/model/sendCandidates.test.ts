@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { DamageType, EffectId, RaceId, TowerTypeId } from '../../../shared/types/content-ids';
+import {
+  DamageType,
+  EffectId,
+  RaceId,
+  TowerTypeId,
+  UnitMoveType,
+} from '../../../shared/types/content-ids';
 import { getRaceRegistry } from '../../race-registry/model/registries';
 import { TOWER_COMBAT_STATS_BY_TYPE } from '../../tower/model/types';
 import { computeDefenceDamageMix, type DamageModelTower } from './damage-placement';
@@ -76,5 +82,33 @@ describe('entities/computer-opponent send candidates against the defender damage
       getRaceRegistry(RaceId.ORC).sendableCreepIds,
     );
     expect(createSendCandidates(RaceId.ORC, valuation)).toEqual(first);
+  });
+});
+
+describe('entities/computer-opponent send candidates against each lane (tower-def-4qe)', () => {
+  const FLYING_PLATE = { ...PLATED, moveType: UnitMoveType.AIR };
+  const WALKING_PLATE = { ...PLATED, moveType: UnitMoveType.GROUND };
+  const lanes = {
+    defenderDamageMix: SPELLS,
+    healthMultiplier: 1,
+    laneDamageMix: { [UnitMoveType.AIR]: ARROWS, [UnitMoveType.GROUND]: SPELLS },
+  };
+
+  it('values a flier against the fire on the air line, a walker against the maze', () => {
+    const flier = computeSendPressureEfficiency(FLYING_PLATE, SEND_COST, lanes);
+    const walker = computeSendPressureEfficiency(WALKING_PLATE, SEND_COST, lanes);
+    // Plate turns the air line's arrows; the maze's spells go straight through it.
+    expect(flier).toBeGreaterThan(walker);
+  });
+
+  it('scales only the flier by its expected survival', () => {
+    const plain = { defenderDamageMix: EVEN_DAMAGE_MIX, healthMultiplier: 1 };
+    const surviving = { ...plain, airSurvivalFactor: 2 };
+    expect(computeSendPressureEfficiency(FLYING_PLATE, SEND_COST, surviving)).toBeCloseTo(
+      computeSendPressureEfficiency(FLYING_PLATE, SEND_COST, plain) * 2,
+    );
+    expect(computeSendPressureEfficiency(WALKING_PLATE, SEND_COST, surviving)).toBeCloseTo(
+      computeSendPressureEfficiency(WALKING_PLATE, SEND_COST, plain),
+    );
   });
 });
