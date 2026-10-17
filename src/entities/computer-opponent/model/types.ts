@@ -7,6 +7,7 @@ import type { CreatureTalentLedger } from '../../unit/model/talents';
 import type { UnitId } from '../../unit/model/types';
 import type { CreatureDevelopmentAction, DefenceProfile } from './creature-development';
 import type { DamageTypeMix } from './damage-profile';
+import type { DefenderLaneProfile } from './air-coverage';
 import type { DefenceAssessment } from './threat-budget/splitThreatBudget';
 
 export const StrategyIntent = {
@@ -93,6 +94,11 @@ export type DecisionContext = {
    * creature talents; an unknown single-target defence when omitted.
    */
   enemyDefenceProfile?: DefenceProfile;
+  /**
+   * The other duelist's fire lane by lane (its maze and its air line), for
+   * valuing fliers against its air coverage; unread when omitted.
+   */
+  enemyLanes?: DefenderLaneProfile;
   /** This side's creature experience, picks and grades; none when omitted. */
   creatureTalents?: CreatureTalentLedger;
 };

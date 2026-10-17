@@ -1,4 +1,4 @@
-import type { RaceId } from '../../../shared/types/content-ids';
+import { UnitMoveType, type RaceId } from '../../../shared/types/content-ids';
 import { getIncomeBonusByTier, getSendCostByTier } from '../../duel-match/model/sendEconomy';
 import { getRaceRegistry } from '../../race-registry/model/registries';
 import { resolveUnitConfigById } from '../../unit/model/registry';
@@ -33,6 +33,17 @@ export type SendValuation = {
   healthMultiplier: number;
   /** The sender's creature picks and grades: a creature is valued as it would spawn now. */
   creatureTalents?: Pick<CreatureTalentLedger, 'creatureBranchChoices' | 'creatureGrades'>;
+  /**
+   * Damage types each lane of the defender deals, when read lane by lane
+   * (tower-def-4qe): a flier meets only the towers that can shoot air, so its
+   * armor is valued against theirs. `defenderDamageMix` for a lane left out.
+   */
+  laneDamageMix?: Partial<Readonly<Record<UnitMoveType, DamageTypeMix>>>;
+  /**
+   * Expected survival of a flier relative to a walker against the defender's
+   * air coverage (`computeAirSurvivalFactor`); 1 when omitted.
+   */
+  airSurvivalFactor?: number;
 };
 
 const NEUTRAL_VALUATION: SendValuation = {
@@ -43,19 +54,22 @@ const NEUTRAL_VALUATION: SendValuation = {
 /**
  * Pressure value of sending `unit` for `cost`: the raw damage of the
  * defender's mix it takes to kill it (each share through its armor, percent
- * through its grown maximum health), per gold.
+ * through its grown maximum health), per gold. A flier's is scaled by its
+ * expected survival against the defender's air coverage.
  */
 export function computeSendPressureEfficiency(
-  unit: Pick<UnitConfig, 'health' | 'physicalArmor' | 'magicalArmor'>,
+  unit: Pick<UnitConfig, 'health' | 'physicalArmor' | 'magicalArmor'> &
+    Partial<Pick<UnitConfig, 'moveType'>>,
   cost: number,
   valuation: SendValuation = NEUTRAL_VALUATION,
 ): number {
   if (cost <= 0) {
     return 0;
   }
-  return (
-    computeEffectiveHealth(unit, valuation.defenderDamageMix, valuation.healthMultiplier) / cost
-  );
+  const moveType = unit.moveType ?? UnitMoveType.GROUND;
+  const mix = valuation.laneDamageMix?.[moveType] ?? valuation.defenderDamageMix;
+  const survival = moveType === UnitMoveType.AIR ? (valuation.airSurvivalFactor ?? 1) : 1;
+  return (computeEffectiveHealth(unit, mix, valuation.healthMultiplier) * survival) / cost;
 }
 
 export function createSendCandidates(
