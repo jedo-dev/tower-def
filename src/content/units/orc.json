@@ -148,6 +148,12 @@
       "spriteKey": "unit.orc.peon",
       "description": "Labourer with a shovel, thrown at the wall before the warriors.",
       "lore": "Not a warrior, just a body with a shovel and nowhere else to be. The horde throws peons first and counts them last.",
+      "sounds": {
+        "creepHit": "combat.creep.orc_peon.hit",
+        "creepDeath": "combat.creep.orc_peon.death",
+        "creepEscape": "combat.creep.orc_peon.escape",
+        "creepSpawn": "combat.creep.orc_peon.spawn"
+      },
       "talentBranches": [
         {
           "id": "orc_peon_workforce",
@@ -260,6 +266,12 @@
       "spriteKey": "unit.orc.wolf_rider",
       "description": "Swift mounted raider that punishes gaps in the line.",
       "lore": "The wolf chose the rider, not the other way around. Together they outrun the arrow and bite before the bow is drawn.",
+      "sounds": {
+        "creepHit": "combat.creep.orc_wolf_rider.hit",
+        "creepDeath": "combat.creep.orc_wolf_rider.death",
+        "creepEscape": "combat.creep.orc_wolf_rider.escape",
+        "creepSpawn": "combat.creep.orc_wolf_rider.spawn"
+      },
       "talentBranches": [
         {
           "id": "orc_wolf_rider_pack_hunters",
@@ -374,6 +386,12 @@
       "spriteKey": "unit.orc.troll",
       "description": "Lumbering berserker that soaks a whole volley.",
       "lore": "Trolls heal what they lose and forget what they healed. Hit it hard the first time, because it will not remember to fall.",
+      "sounds": {
+        "creepHit": "combat.creep.orc_troll.hit",
+        "creepDeath": "combat.creep.orc_troll.death",
+        "creepEscape": "combat.creep.orc_troll.escape",
+        "creepSpawn": "combat.creep.orc_troll.spawn"
+      },
       "talentBranches": [
         {
           "id": "orc_troll_regeneration",
@@ -502,6 +520,12 @@
       "spriteKey": "unit.orc.headhunter",
       "description": "Elite skirmisher hitting far harder than its bulk suggests.",
       "lore": "Every skull on his belt was a warning nobody listened to. The spear is for the ones who still will not.",
+      "sounds": {
+        "creepHit": "combat.creep.orc_headhunter.hit",
+        "creepDeath": "combat.creep.orc_headhunter.death",
+        "creepEscape": "combat.creep.orc_headhunter.escape",
+        "creepSpawn": "combat.creep.orc_headhunter.spawn"
+      },
       "talentBranches": [
         {
           "id": "orc_headhunter_tower_hunter",
@@ -637,6 +661,12 @@
       "spriteKey": "unit.orc.shaman",
       "description": "Storm-caller worth gold to whoever drops him first.",
       "lore": "He speaks to the storm and the storm answers. Lightning is cheap when the spirits still owe you.",
+      "sounds": {
+        "creepHit": "combat.creep.orc_shaman.hit",
+        "creepDeath": "combat.creep.orc_shaman.death",
+        "creepEscape": "combat.creep.orc_shaman.escape",
+        "creepSpawn": "combat.creep.orc_shaman.spawn"
+      },
       "talentBranches": [
         {
           "id": "orc_shaman_bloodlust",
@@ -755,6 +785,12 @@
       "spriteKey": "unit.orc.wind_rider",
       "description": "Wyvern and rider sweeping over the maze instead of through it.",
       "lore": "A wyvern broken with meat and scars. The rider screams louder than the beast, and both of them like it that way.",
+      "sounds": {
+        "creepHit": "combat.creep.orc_wind_rider.hit",
+        "creepDeath": "combat.creep.orc_wind_rider.death",
+        "creepEscape": "combat.creep.orc_wind_rider.escape",
+        "creepSpawn": "combat.creep.orc_wind_rider.spawn"
+      },
       "talentBranches": [
         {
           "id": "orc_wind_rider_bomber",
@@ -893,6 +929,12 @@
       "spriteKey": "unit.orc.tauren",
       "description": "Horned colossus that walks through what others walk around.",
       "lore": "The earth shakes when the tauren charges and keeps shaking after. A wall is a suggestion it chooses to ignore.",
+      "sounds": {
+        "creepHit": "combat.creep.orc_tauren.hit",
+        "creepDeath": "combat.creep.orc_tauren.death",
+        "creepEscape": "combat.creep.orc_tauren.escape",
+        "creepSpawn": "combat.creep.orc_tauren.spawn"
+      },
       "talentBranches": [
         {
           "id": "orc_tauren_battering_ram",

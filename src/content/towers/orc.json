@@ -144,6 +144,10 @@
       "spriteKey": "tower.orc.burning_pit",
       "description": "Flings burning pitch that splashes across the pack.",
       "lore": "Pitch, bone and the fire the shamans keep hungry. It flings a splash of it and the pack learns to scream together.",
+      "sounds": {
+        "attack": "combat.tower.orc_burning_pit.attack",
+        "impact": "combat.tower.orc_burning_pit.impact"
+      },
       "talentBranches": [
         {
           "id": "orc_burning_pit_napalm",
@@ -249,6 +253,10 @@
       "spriteKey": "tower.orc.lightning_totem",
       "description": "Shaman totem whose bolt leaps from creep to creep.",
       "lore": "Carved by a shaman who owed the storm a debt. The bolt jumps from skull to skull until the debt is paid.",
+      "sounds": {
+        "attack": "combat.tower.orc_lightning_totem.attack",
+        "impact": "combat.tower.orc_lightning_totem.impact"
+      },
       "talentBranches": [
         {
           "id": "orc_lightning_totem_storm",
@@ -355,6 +363,10 @@
       "spriteKey": "tower.orc.tar_pit",
       "description": "Boiling tar that leaves the pack crawling.",
       "lore": "Boiling black earth the horde learned to aim. Whatever walks through it keeps walking, slower, with the horde laughing.",
+      "sounds": {
+        "attack": "combat.tower.orc_tar_pit.attack",
+        "impact": "combat.tower.orc_tar_pit.impact"
+      },
       "talentBranches": [
         {
           "id": "orc_tar_pit_quagmire",
