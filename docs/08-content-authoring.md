@@ -239,6 +239,39 @@ budget a creature consumes, from which wave the baseline may field it
 (`WAVE_TIER_UNLOCK_WAVE`) and what it costs to send in duel mode. A cheap tier
 with heavy stats makes waves that cannot be answered.
 
+## Send unlock by wave
+
+Every creature of a race is sendable (`sendableCreepIds` lists all eight, by
+tier then content order), but a tier opens for sending only from a wave:
+
+| Tier | Sendable from wave |
+| --- | --- |
+| 1 | 1 |
+| 2 | 1 |
+| 3 | 3 |
+| 4 | 5 |
+| 5 | 8 |
+| 6 | 12 |
+
+The table is `CREATURE_SEND_UNLOCK_WAVE_BY_TIER` in
+`src/shared/constants/creatureSendUnlock.ts`; edit the numbers there and
+nothing else. The wave is the one the send spawns in: in the build phase
+after wave 2 a tier 3 creature can already be queued for wave 3. One rule
+for both sides:
+
+- the player's `send-creep` command refuses a locked tier with
+  `creep-send-rejected` reason `tier_locked` and its `unlockWave`;
+- the computer's send candidates (`listUnlockedSendableIds`,
+  `entities/computer-opponent/model/sendCandidates.ts`) skip locked tiers, and
+  its threat estimate counts only the player's unlocked tiers;
+- the dock's SEND row shows a locked creature with its portrait, name and
+  price, a padlock and "from wave N", disabled.
+
+This is a send rule only: the baseline wave draws tiers on its own schedule
+(`WAVE_TIER_UNLOCK_WAVE`, above), and the per-type send caps
+(`sendUnitTypeCapByTier`) apply once a tier is open. Creature development
+(branches, grades) is not gated: a tier earns experience only by being sent.
+
 ## Stat guard rails
 
 Two layers of bounds apply:
@@ -394,8 +427,10 @@ shows both branches with a grade 1-4 table (`pages/bestiary-page`,
    `talentBranches`.
 3. Give it a `spriteKey`. If the art does not exist yet, the placeholder
    pipeline renders it as a question mark until you register the asset.
-4. If the race should be able to send it in duel mode, add the id to
-   `sendableCreepIds` in `src/entities/race-registry/model/registries.ts`.
+4. Add the id to `sendableCreepIds` in
+   `src/entities/race-registry/model/registries.ts`, in tier order: every
+   creature of a race is sendable, from its tier's unlock wave (see "Send
+   unlock by wave").
 5. Run the checks below.
 
 ## Checking a change

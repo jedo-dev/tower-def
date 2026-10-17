@@ -94,7 +94,7 @@ describe('MatchDock tabs', () => {
     fireEvent.click(tab(/^Send/));
     expect(tab(/^Send/).getAttribute('aria-selected')).toBe('true');
     expect(towerCards()).toHaveLength(0);
-    expect(sendCards()).toHaveLength(4);
+    expect(sendCards()).toHaveLength(8);
     expectOneRow();
 
     fireEvent.click(tab(/^Towers/));
@@ -127,7 +127,7 @@ describe('MatchDock tabs', () => {
     expect(document.activeElement).toBe(tab(/^Send/));
     expect(tab(/^Send/).getAttribute('aria-selected')).toBe('true');
     expect(tab(/^Send/).tabIndex).toBe(0);
-    expect(sendCards()).toHaveLength(4);
+    expect(sendCards()).toHaveLength(8);
 
     fireEvent.keyDown(document.activeElement!, { key: 'ArrowRight' });
     expect(document.activeElement).toBe(tab(/^Towers/));
@@ -182,7 +182,7 @@ describe('MatchDock develop mode', () => {
     const panel = screen.getByRole('region', { name: 'Creep sending panel' });
     expect(panel.getAttribute('data-mode')).toBe('develop');
     expect(toggle.getAttribute('aria-pressed')).toBe('true');
-    expect(document.querySelectorAll('[data-develop-card]')).toHaveLength(4);
+    expect(document.querySelectorAll('[data-develop-card]')).toHaveLength(8);
     expect(document.querySelectorAll('[data-send-card]')).toHaveLength(0);
     expect(screen.getByRole('list', { name: 'Creature experience by tier' })).toBeDefined();
 

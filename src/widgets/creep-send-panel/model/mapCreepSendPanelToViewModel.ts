@@ -11,6 +11,10 @@ import { getIncomeBonusByTier, getSendCostByTier } from '../../../entities/duel-
 import { resolveUnitConfigById } from '../../../entities/unit';
 import type { UnitId } from '../../../entities/unit';
 import type { FactionThemeName } from '../../../shared/constants/theme';
+import {
+  getCreatureSendUnlockWave,
+  isCreatureTierUnlocked,
+} from '../../../shared/constants/creatureSendUnlock';
 import { mapCreatureTalentState, type CreatureTalentViewModel } from './mapCreatureTalentState';
 
 export type CreepSendButtonViewModel = {
@@ -24,6 +28,10 @@ export type CreepSendButtonViewModel = {
   remainingOfType: number | null;
   typeCap: number | null;
   isAtSendLimit: boolean;
+  /** The send unlock schedule still locks this tier for the coming wave. */
+  isLocked: boolean;
+  /** First wave this creature can be sent into (`CREATURE_SEND_UNLOCK_WAVE_BY_TIER`). */
+  unlockWave: number;
   isDisabled: boolean;
   disabledReason: string | null;
   ariaLabel: string;
@@ -77,14 +85,27 @@ function findUnitLimit(
   return limits?.units.find((unitLimit) => unitLimit.creepTypeId === creepTypeId) ?? null;
 }
 
-function resolveDisabledReason(
-  isBattleActive: boolean,
-  isWaveCapReached: boolean,
-  isAtTypeCap: boolean,
-  isAffordable: boolean,
-  cost: number,
-): string | null {
+type SendBlockers = {
+  lockedUntilWave: number | null;
+  isBattleActive: boolean;
+  isWaveCapReached: boolean;
+  isAtTypeCap: boolean;
+  isAffordable: boolean;
+  cost: number;
+};
+
+function resolveDisabledReason({
+  lockedUntilWave,
+  isBattleActive,
+  isWaveCapReached,
+  isAtTypeCap,
+  isAffordable,
+  cost,
+}: SendBlockers): string | null {
   // Short enough to fit two 9px lines on a creep card at 360px.
+  if (lockedUntilWave !== null) {
+    return `from wave ${lockedUntilWave}`;
+  }
   if (isBattleActive) {
     return 'locked in battle';
   }
@@ -127,6 +148,9 @@ export function mapCreepSendPanelToViewModel(
   const race = getRaceRegistry(raceId);
   const isBattleActive = snapshot.phase === 'wave';
   const isWaveCapReached = sendLimits !== null && sendLimits.waveSendsRemaining <= 0;
+  // The wave a send queued now joins: in the build phase the HUD already
+  // shows the coming wave; mid-wave the next send waits for the one after.
+  const sendWaveNumber = isBattleActive ? snapshot.waveNumber + 1 : snapshot.waveNumber;
   const buttons = race.sendableCreepIds.map((creepTypeId): CreepSendButtonViewModel => {
     const unit = resolveUnitConfigById(creepTypeId);
     const cost = getSendCostByTier(unit.tier);
@@ -134,13 +158,16 @@ export function mapCreepSendPanelToViewModel(
     const isAffordable = snapshot.gold >= cost;
     const unitLimit = findUnitLimit(sendLimits, creepTypeId);
     const isAtTypeCap = unitLimit !== null && unitLimit.remaining <= 0;
-    const disabledReason = resolveDisabledReason(
+    const unlockWave = getCreatureSendUnlockWave(unit.tier);
+    const isLocked = !isCreatureTierUnlocked(unit.tier, sendWaveNumber);
+    const disabledReason = resolveDisabledReason({
+      lockedUntilWave: isLocked ? unlockWave : null,
       isBattleActive,
       isWaveCapReached,
       isAtTypeCap,
       isAffordable,
       cost,
-    );
+    });
     const remainingSuffix = unitLimit ? `, ${unitLimit.remaining} of ${unitLimit.cap} left` : '';
     const talent = mapCreatureTalentState(unit, snapshot);
     const talentSuffix = describeTalentForLabel(talent);
@@ -155,11 +182,15 @@ export function mapCreepSendPanelToViewModel(
       remainingOfType: unitLimit?.remaining ?? null,
       typeCap: unitLimit?.cap ?? null,
       isAtSendLimit: isWaveCapReached || isAtTypeCap,
+      isLocked,
+      unlockWave,
       isDisabled: disabledReason !== null,
       disabledReason,
-      ariaLabel: disabledReason
-        ? `Cannot send ${unit.name}: ${disabledReason}. ${talentSuffix}`
-        : `Send ${unit.name} for ${cost} gold and gain ${incomeGain} income${remainingSuffix}. ${talentSuffix}`,
+      ariaLabel: isLocked
+        ? `${unit.name} locked: sendable from wave ${unlockWave}, costs ${cost} gold. ${talentSuffix}`
+        : disabledReason
+          ? `Cannot send ${unit.name}: ${disabledReason}. ${talentSuffix}`
+          : `Send ${unit.name} for ${cost} gold and gain ${incomeGain} income${remainingSuffix}. ${talentSuffix}`,
       tooltip: `${unit.name}: ${talentSuffix}`,
       talent,
     };

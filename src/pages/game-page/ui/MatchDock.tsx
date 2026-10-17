@@ -1,4 +1,11 @@
-import { memo, useId, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react';
+import {
+  memo,
+  useCallback,
+  useId,
+  useRef,
+  useState,
+  type KeyboardEvent as ReactKeyboardEvent,
+} from 'react';
 import styles from './MatchDock.module.css';
 import { CreepDevelopToggle, CreepSendPanel } from '../../../widgets/creep-send-panel';
 import { TowerBuildCards } from '../../../widgets/hud';
@@ -39,10 +46,22 @@ function MatchDockComponent({ setup }: MatchDockProps) {
   const tabRefs = useRef<Partial<Record<MatchDockTab, HTMLButtonElement | null>>>({});
   const tabId = (tab: MatchDockTab): string => `${baseId}-tab-${tab}`;
   const panelId = `${baseId}-panel`;
+  // The SEND row's scroll offset: a ref, not state (scrolling never
+  // re-renders the dock). The TOWERS tab unmounts the send panel; coming
+  // back restores the row where the player left it. The wave collapse and
+  // the tower sheet keep the dock mounted, so the row itself keeps it there.
+  const sendRowScrollLeftRef = useRef(0);
+  const [sendRowRestoreLeft, setSendRowRestoreLeft] = useState(0);
+  const rememberSendRowScrollLeft = useCallback((scrollLeft: number) => {
+    sendRowScrollLeftRef.current = scrollLeft;
+  }, []);
 
   function selectTab(tab: MatchDockTab): void {
     if (tab === activeTab) {
       return;
+    }
+    if (tab === 'send') {
+      setSendRowRestoreLeft(sendRowScrollLeftRef.current);
     }
     // Leaving the tower cards drops a picked tower, so no placement ghost
     // follows the player into the send cards.
@@ -120,6 +139,8 @@ function MatchDockComponent({ setup }: MatchDockProps) {
             setup={setup}
             isDevelopMode={isDevelopMode}
             onDevelopModeChange={setIsDevelopMode}
+            initialScrollLeft={sendRowRestoreLeft}
+            onScrollLeftChange={rememberSendRowScrollLeft}
           />
         )}
       </div>
