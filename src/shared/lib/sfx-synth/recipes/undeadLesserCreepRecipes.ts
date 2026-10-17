@@ -1,11 +1,11 @@
 import type { UndeadSoundId } from '../../../types/sound-ids';
 import type { SfxRecipe } from '../sfxRecipe.types';
-import { NOTE, bandpass, burst, hit, lowpass, shaped, thump } from './recipeKit';
+import { bandpass, burst, hit, lowpass, shaped, thump } from './recipeKit';
+import { VOWEL_ZOMBIE_OO, VOWEL_ZOMBIE_UH, boneKnock, vowelWithBreath } from './undeadVocalTract';
 import {
   boneClick,
   chitinClick,
-  rattle,
-  snarl,
+  gurgle,
   stoneScrape,
   webHiss,
   wetTear,
@@ -19,83 +19,144 @@ type UndeadLesserCreepSoundId = Extract<
 
 /** The lighter undead (tiers 1-3): skeleton, ghoul, crypt fiend and gargoyle. */
 export const UNDEAD_LESSER_CREEP_RECIPES: Record<UndeadLesserCreepSoundId, SfxRecipe> = {
-  // Skeleton (T1): bone clicks and dry rattles, light and short.
+  // Skeleton (T1): dry bones only, clicks and hollow knocks, no voice.
   'combat.creep.undead_skeleton.hit': {
-    seed: 511,
+    seed: 515,
     layers: [
-      boneClick(0, 3000, 0.6),
-      {
-        waveform: 'triangle',
-        durationSec: 0.04,
-        frequencyHz: 520,
-        frequencyEndHz: 380,
-        envelope: hit(0.035),
-        gain: 0.35,
-      },
-      boneClick(0.022, 2400, 0.3),
+      ...boneKnock(0, 1900, 0.7),
+      boneClick(0.018, 3200, 0.35),
+      ...boneKnock(0.03, 2600, 0.3, 800),
     ],
   },
   'combat.creep.undead_skeleton.death': {
-    seed: 512,
-    layers: [
-      ...rattle(0, 7, 0.035, 2600, 0.55),
-      thump(0.2, 190, 95, 0.08, 0.35),
-      burst(0.2, 0.09, 0.2, [bandpass(1800, 900, 1.5)], 3000),
-    ],
+    seed: 516,
+    // A pile collapsing: 12 hits over 0.4 s, dense first, thinning out.
+    layers: Array.from({ length: 12 }, (_, index) => {
+      const startSec = 0.4 * Math.pow(index / 11, 1.7);
+      const gain = 0.75 - index * 0.04;
+      return index % 3 === 1
+        ? [boneClick(startSec, 2600 + (index % 4) * 300, gain * 0.7)]
+        : boneKnock(startSec, 1200 + ((index * 7) % 9) * 200, gain, 500 + (index % 3) * 120);
+    }).flat(),
   },
   'combat.creep.undead_skeleton.escape': {
-    seed: 513,
-    layers: [
-      ...rattle(0, 6, 0.028, 3100, 0.45),
-      { ...thump(0.02, NOTE.A3 * 2, NOTE.A3 * 1.9, 0.09, 0.35), waveform: 'triangle' },
-      { ...thump(0.15, NOTE.F3 * 2, NOTE.F3 * 1.9, 0.11, 0.35), waveform: 'triangle' },
-    ],
+    seed: 517,
+    // A rattling trot: three gallop beats of knock, click, knock.
+    layers: [0, 0.17, 0.34].flatMap((beatSec, beat) => [
+      ...boneKnock(beatSec, 1500 + beat * 150, 0.6, 600),
+      boneClick(beatSec + 0.035, 3000, 0.35),
+      ...boneKnock(beatSec + 0.06, 2300 - beat * 100, 0.4, 750),
+      boneClick(beatSec + 0.085, 2600, 0.2),
+    ]),
   },
   'combat.creep.undead_skeleton.spawn': {
-    seed: 514,
+    seed: 518,
+    // Bones finding each other faster and faster, locking into one knock.
     layers: [
-      ...[0, 0.07, 0.12, 0.155, 0.18, 0.2].map((startSec, index) =>
-        boneClick(startSec, 2200 + index * 180, 0.3 + index * 0.05),
+      ...[0, 0.085, 0.155, 0.21, 0.255, 0.29, 0.318, 0.34].map((startSec, index) =>
+        boneClick(startSec, 2200 + index * 160, 0.25 + index * 0.04),
       ),
-      {
-        waveform: 'triangle',
-        startSec: 0.12,
-        durationSec: 0.16,
-        frequencyHz: NOTE.D4,
-        frequencyEndHz: NOTE.A4,
-        envelope: shaped(0.02, 0.1, 0.2, 0.04),
-        gain: 0.25,
-      },
+      ...boneKnock(0.37, 1100, 0.9, 420),
+      ...boneKnock(0.372, 2100, 0.3, 700),
     ],
   },
 
-  // Ghoul (T1): wet tearing and hungry snarls.
+  // Ghoul (T1): a zombie, wet low moans on an exhale and gurgling.
   'combat.creep.undead_ghoul.hit': {
-    seed: 521,
+    seed: 525,
     layers: [
-      wetTear(0, 0.06, 0.55),
-      snarl(0.005, 0.055, 190, 150, 0.3, 1300),
-      thump(0, 115, 60, 0.06, 0.45),
+      // Wet bite: a crunchy chomp and a teeth click.
+      burst(0, 0.045, 0.55, [lowpass(1400, 600)], 4000),
+      burst(0.004, 0.012, 0.3, [bandpass(2600, undefined, 3)], 9000),
+      thump(0, 120, 70, 0.05, 0.35),
+      ...vowelWithBreath(
+        {
+          startSec: 0.02,
+          durationSec: 0.09,
+          fromHz: 108,
+          toHz: 86,
+          vowel: VOWEL_ZOMBIE_UH,
+          envelope: shaped(0.008, 0.05, 0.4, 0.03),
+          gain: 1.1,
+          drive: 1.4,
+          jitter: { rateHz: 30, depth: 0.04 },
+        },
+        0.35,
+      ),
     ],
   },
   'combat.creep.undead_ghoul.death': {
-    seed: 522,
+    seed: 526,
+    // Choking: a moan that sinks while its throat closes and bubbles.
     layers: [
-      snarl(0, 0.34, 210, 80, 0.5, 950),
-      wetTear(0.02, 0.26, 0.4),
-      thump(0.3, 100, 45, 0.1, 0.5),
+      ...vowelWithBreath(
+        {
+          startSec: 0,
+          durationSec: 0.6,
+          fromHz: 105,
+          toHz: 55,
+          sweepCurve: 1.4,
+          vowel: VOWEL_ZOMBIE_UH,
+          vowelEnd: VOWEL_ZOMBIE_OO,
+          envelope: shaped(0.03, 0.3, 0.6, 0.2),
+          gain: 1.1,
+          drive: 1.2,
+          jitter: { rateHz: 14, depth: 0.05 },
+          tremolo: { rateHz: 13, depth: 0.55 },
+        },
+        0.45,
+      ),
+      gurgle(0.15, 0.4, 150, 80, 0.25),
+      burst(0.5, 0.12, 0.3, [lowpass(500)], 3000),
+      thump(0.52, 90, 45, 0.12, 0.4),
     ],
   },
   'combat.creep.undead_ghoul.escape': {
-    seed: 523,
-    layers: [snarl(0, 0.12, 160, 220, 0.5, 720), snarl(0.16, 0.15, 200, 260, 0.55, 780)],
+    seed: 527,
+    // Hungry drawn moan "uuuh-aah" on a long exhale.
+    layers: [
+      ...vowelWithBreath(
+        {
+          startSec: 0,
+          durationSec: 0.62,
+          fromHz: 84,
+          toHz: 100,
+          vowel: VOWEL_ZOMBIE_OO,
+          vowelEnd: VOWEL_ZOMBIE_UH,
+          envelope: shaped(0.12, 0.2, 0.75, 0.2),
+          gain: 1,
+          drive: 1,
+          vibrato: { rateHz: 3, depth: 0.02 },
+          jitter: { rateHz: 9, depth: 0.03 },
+        },
+        0.5,
+      ),
+      gurgle(0.32, 0.26, 120, 100, 0.12),
+    ],
   },
   'combat.creep.undead_ghoul.spawn': {
-    seed: 524,
+    seed: 528,
+    // Wet smack out of the ground, then a groan rising from the gut.
     layers: [
-      wetTear(0, 0.14, 0.25),
-      burst(0, 0.08, 0.3, [lowpass(500)]),
-      snarl(0.1, 0.24, 140, 210, 0.5, 520),
+      burst(0, 0.06, 0.6, [lowpass(900, 400)], 3500),
+      thump(0, 110, 55, 0.07, 0.5),
+      wetTear(0.01, 0.08, 0.2),
+      ...vowelWithBreath(
+        {
+          startSec: 0.06,
+          durationSec: 0.56,
+          fromHz: 72,
+          toHz: 106,
+          sweepCurve: 0.8,
+          vowel: VOWEL_ZOMBIE_OO,
+          vowelEnd: VOWEL_ZOMBIE_UH,
+          envelope: shaped(0.1, 0.2, 0.7, 0.18),
+          gain: 1,
+          drive: 1.3,
+          jitter: { rateHz: 11, depth: 0.04 },
+        },
+        0.45,
+      ),
     ],
   },
 

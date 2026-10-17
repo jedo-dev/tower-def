@@ -27,11 +27,11 @@ file; a test fails if two ids share one.
   | Group | Files | Budget | Now |
   | --- | --- | --- | --- |
   | core | `ui/`, `system/`, `economy/`, `combat/default/`, `combat/effects/` | 800 KB | ~448 KB |
-  | undead | `combat/undead/` | 900 KB | ~581 KB |
+  | undead | `combat/undead/` | 900 KB | ~687 KB |
   | orc | `combat/orc/` | 900 KB | ~622 KB |
   | human | `combat/human/` | 900 KB | ~583 KB |
   | elf | `combat/elf/` | 900 KB | ~579 KB |
-  | total | | 4400 KB | ~2812 KB |
+  | total | | 4400 KB | ~2918 KB |
 
 ### Ambience
 
@@ -147,14 +147,14 @@ Dark fantasy around D minor: low-mid, soft attacks, short tails. Frequent cues
 | `combat.impact.undead` | Dry bone crack. |
 | `combat.build.undead` | Rattle of bones over a low hum. |
 | `combat.creep_death.undead` | Crumbling clicks and a hollow exhale. |
-| `combat.creep.undead_skeleton.hit` | Bright bone click on a small hollow knock. |
-| `combat.creep.undead_skeleton.death` | Dry rattle of bones collapsing into a clatter. |
-| `combat.creep.undead_skeleton.escape` | Chattering jaw rattle over two hollow knocks, A then F. |
-| `combat.creep.undead_skeleton.spawn` | Bones clicking together faster and faster, a small rising D-A tone. |
-| `combat.creep.undead_ghoul.hit` | Wet tear with a clipped snarl. |
-| `combat.creep.undead_ghoul.death` | Long snarl falling into wet tearing and a slump. |
-| `combat.creep.undead_ghoul.escape` | Two hungry snarls, each climbing. |
-| `combat.creep.undead_ghoul.spawn` | Claws tearing out of the ground into a rising snarl. |
+| `combat.creep.undead_skeleton.hit` | Dry hollow bone knock with a joint click; no tone. |
+| `combat.creep.undead_skeleton.death` | A pile of bones collapsing: 12 clicks and knocks over 0.4 s, dense first, thinning out. |
+| `combat.creep.undead_skeleton.escape` | Rattling trot: three gallop beats of knock, click, knock. |
+| `combat.creep.undead_skeleton.spawn` | Bones clicking together faster and faster, locking into one deep knock. |
+| `combat.creep.undead_ghoul.hit` | Wet bite and teeth click with a short zombie grunt. |
+| `combat.creep.undead_ghoul.death` | Choking moan sinking 105 to 55 Hz, throat closing "uuh" to "oo", gurgling, a wet slump. |
+| `combat.creep.undead_ghoul.escape` | Hungry drawn moan "oo-uuh" on a long breathy exhale, a gurgle under it. |
+| `combat.creep.undead_ghoul.spawn` | Wet smack out of the ground into a groan rising from the gut. |
 | `combat.creep.undead_crypt_fiend.hit` | Two hard chitin ticks, high and hollow. |
 | `combat.creep.undead_crypt_fiend.death` | Falling cascade of chitin clicks, a thin screech and a web hiss. |
 | `combat.creep.undead_crypt_fiend.escape` | Fast mandible chitter swelling into a web hiss. |
@@ -167,14 +167,14 @@ Dark fantasy around D minor: low-mid, soft attacks, short tails. Frequent cues
 | `combat.creep.undead_abomination.death` | Gurgling bellow sinking, chains clinking, a huge body drop. |
 | `combat.creep.undead_abomination.escape` | Rising gurgling bellow with rattling chains. |
 | `combat.creep.undead_abomination.spawn` | Two heavy footfalls, chains swinging, a gurgle. |
-| `combat.creep.undead_necromancer.hit` | Sharp whispered gasp on a dull knock. |
-| `combat.creep.undead_necromancer.death` | Whispered chant falling A to D, the staff hitting the ground twice. |
-| `combat.creep.undead_necromancer.escape` | Staff tap, then a two-note chant D-F under whispers. |
-| `combat.creep.undead_necromancer.spawn` | Staff tap into a swelling D-A chant with whispers. |
-| `combat.creep.undead_banshee.hit` | Glassy ping with a breath of air. |
-| `combat.creep.undead_banshee.death` | Long wail falling an octave, fading shimmer. |
-| `combat.creep.undead_banshee.escape` | Quavering wail rising A to D with a shimmer. |
-| `combat.creep.undead_banshee.spawn` | Wind swelling into a wail and a high shimmer. |
+| `combat.creep.undead_necromancer.hit` | Short tired grunt, breathy, with a dull knock (quiet: RMS 0.12). |
+| `combat.creep.undead_necromancer.death` | A last exhale "haah" with a faint sigh falling under it (quiet). |
+| `combat.creep.undead_necromancer.escape` | Murmured incantation of four syllables "mo-ta-nis-ul", hoarse and breathy (quiet). |
+| `combat.creep.undead_necromancer.spawn` | A whispered word "sha-ah", then the staff touching the ground (quiet). |
+| `combat.creep.undead_banshee.hit` | Sung soprano "aah" cut off short, a small room behind it. |
+| `combat.creep.undead_banshee.death` | Long operatic wail sliding down an octave as her 5.5 Hz vibrato widens, ringing out. |
+| `combat.creep.undead_banshee.escape` | Rising sung lament, C to G, with a steady operatic vibrato. |
+| `combat.creep.undead_banshee.spawn` | A breath swelling into a held E with vibrato, ringing out. |
 | `combat.creep.undead_frost_wyrm.hit` | Icy crackle on a deep thud. |
 | `combat.creep.undead_frost_wyrm.death` | Deep cold roar falling away, ice shattering, a heavy fall. |
 | `combat.creep.undead_frost_wyrm.escape` | Deep roar rising, frosty wind and crackle. |
