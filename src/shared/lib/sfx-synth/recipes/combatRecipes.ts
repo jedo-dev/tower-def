@@ -11,6 +11,16 @@ import {
   shaped,
   thump,
 } from './recipeKit';
+import {
+  dullThud,
+  exhale,
+  grit,
+  mutedCoin,
+  pouch,
+  scrape,
+  stoneKnock,
+  thwip,
+} from './coreFoleyLayers';
 import type { SfxRecipeGroup } from './recipeGroups';
 
 function warningTone(frequencyHz: number, startSec: number): SfxLayer {
@@ -40,56 +50,53 @@ function bubble(fromHz: number, startSec: number, gain: number): SfxLayer {
 
 /** Fallback clips (default profile) and race-neutral status effect stingers. */
 export const COMBAT_RECIPES: SfxRecipeGroup<'combat'> = {
+  // Crossbow release: string snap and a short bolt hiss.
   'combat.attack.default': {
     seed: 401,
-    layers: [
-      {
-        waveform: 'triangle',
-        durationSec: 0.14,
-        frequencyHz: 190,
-        frequencyEndHz: 120,
-        envelope: hit(0.12),
-        gain: 0.5,
-        filters: [lowpass(2500)],
-      },
-      burst(0, 0.025, 0.35, [bandpass(2500)]),
-      { ...burst(0.01, 0.1, 0.2, [bandpass(1800, 900)]), envelope: hit(0.09, 0.02) },
-    ],
+    layers: thwip(0, 0.55),
   },
+  // Arrow into dirt: a short thud and a spray of grit.
   'combat.impact.default': {
     seed: 402,
-    layers: [burst(0, 0.06, 0.5, [lowpass(900)]), thump(0, 130, 65, 0.09, 0.6)],
+    layers: [
+      thump(0, 170, 85, 0.06, 0.7),
+      burst(0, 0.008, 0.4, [bandpass(2000, undefined, 2)], 9000),
+      grit(0.005, 0.11, 0.45, 1400),
+    ],
   },
+  // Stone set on stone, a smaller settling knock, then a trowel of mortar.
   'combat.build': {
     seed: 403,
     layers: [
-      burst(0, 0.04, 0.45, [bandpass(700, undefined, 1.5)]),
-      thump(0, 160, 95, 0.08, 0.5),
-      burst(0.12, 0.04, 0.45, [bandpass(650, undefined, 1.5)]),
-      thump(0.12, 140, 85, 0.08, 0.5),
-      bell(NOTE.D5, 0.22, 0.17, 0.25, { ratio: 2, index: 0.8 }),
+      ...stoneKnock(0, 0.8, 170),
+      ...stoneKnock(0.09, 0.45, 210),
+      scrape(0.15, 0.27, 0.4, 1200),
+      grit(0.16, 0.08, 0.2, 700),
     ],
   },
+  // Blocks tumble down, then a few coins drop into a pouch.
   'combat.sell': {
     seed: 404,
     layers: [
       {
         waveform: 'noise',
-        durationSec: 0.28,
-        frequencyHz: WHITE,
-        tremolo: { rateHz: 22, depth: 0.6 },
-        envelope: shaped(0.005, 0.2, 0.15, 0.08),
-        gain: 0.5,
-        filters: [lowpass(2200, 350)],
-      },
-      {
-        waveform: 'triangle',
-        durationSec: 0.25,
-        frequencyHz: 330,
-        frequencyEndHz: 165,
-        envelope: hit(0.22),
+        durationSec: 0.38,
+        frequencyHz: 1500,
+        envelope: shaped(0.01, 0.25, 0.2, 0.1),
         gain: 0.25,
+        filters: [lowpass(700)],
       },
+      ...[
+        { startSec: 0, fromHz: 190, gain: 0.7 },
+        { startSec: 0.07, fromHz: 160, gain: 0.6 },
+        { startSec: 0.15, fromHz: 210, gain: 0.5 },
+        { startSec: 0.23, fromHz: 150, gain: 0.45 },
+        { startSec: 0.31, fromHz: 180, gain: 0.3 },
+      ].flatMap(({ startSec, fromHz, gain }) => stoneKnock(startSec, gain, fromHz)),
+      mutedCoin(0.4, 0.28, 2100),
+      mutedCoin(0.44, 0.22, 2400),
+      mutedCoin(0.47, 0.18, 1900),
+      ...pouch(0.45, 0.35),
     ],
   },
   'combat.upgrade': {
@@ -114,21 +121,14 @@ export const COMBAT_RECIPES: SfxRecipeGroup<'combat'> = {
     seed: 406,
     layers: [burst(0, 0.04, 0.5, [lowpass(700)]), thump(0, 150, 90, 0.05, 0.5)],
   },
+  // A body drops, a limb settles, and the last breath leaves.
   'combat.creep_death': {
     seed: 407,
     layers: [
-      {
-        waveform: 'saw',
-        durationSec: 0.26,
-        frequencyHz: 130,
-        frequencyEndHz: 60,
-        drive: 1,
-        envelope: shaped(0.01, 0.2, 0.2, 0.05),
-        gain: 0.4,
-        filters: [lowpass(800, undefined, 1.5)],
-      },
-      burst(0, 0.08, 0.4, [lowpass(600)]),
-      thump(0, 90, 45, 0.12, 0.4),
+      ...dullThud(0, 0.9, 115),
+      grit(0, 0.07, 0.4, 600),
+      ...dullThud(0.11, 0.4, 140),
+      exhale(0.05, 0.32, 0.45, 900, 450),
     ],
   },
   'combat.creep_escape': {

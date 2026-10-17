@@ -10,7 +10,7 @@ import {
  * recipe stays a readable list of sound layers.
  */
 
-/** The palette sits around D minor: dark, but resolving to D major on victory. */
+/** The palette sits around D minor, dark even on victory (a held D over timpani). */
 export const NOTE = {
   D2: 73.42,
   A2: 110,

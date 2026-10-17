@@ -1,5 +1,6 @@
 import type { SfxLayer, SfxRecipe } from '../sfxRecipe.types';
-import { NOTE, WHITE, bandpass, bell, burst, hit, lowpass, shaped, thump } from './recipeKit';
+import { mutedCoin, pouch, sandHiss, woodClick } from './coreFoleyLayers';
+import { NOTE, bandpass, bell, burst, hit, lowpass, shaped, thump } from './recipeKit';
 import type { SfxRecipeGroup } from './recipeGroups';
 
 /** Small coin: harmonic FM keeps the shine below the Nyquist limit. */
@@ -33,27 +34,23 @@ function twoBlips(firstHz: number, secondHz: number, seed: number): SfxRecipe {
 export const SYSTEM_RECIPES: SfxRecipeGroup<'system'> = {
   'system.pause': twoBlips(660, NOTE.A4, 201),
   'system.unpause': twoBlips(NOTE.A4, 660, 202),
+  // Hourglass flip: the frame knocks over, sand hisses down, the frame settles.
   'system.restart': {
     seed: 203,
     layers: [
-      {
-        waveform: 'noise',
-        durationSec: 0.26,
-        frequencyHz: WHITE,
-        envelope: shaped(0.02, 0.1, 0.5, 0.12),
-        gain: 0.5,
-        filters: [bandpass(3000, 300)],
-      },
-      thump(0.18, 95, 48, 0.16, 0.8),
+      ...woodClick(0, 0.5),
+      sandHiss(0.03, 0.36, 0.45, 3200, 1400),
+      ...woodClick(0.38, 0.6, 360),
     ],
   },
 };
 
 export const ECONOMY_RECIPES: SfxRecipeGroup<'economy'> = {
+  // One muted coin into a leather pouch; plays on every kill, so it stays small.
   'economy.gold_gain': {
     seed: 301,
-    loudness: 0.15,
-    layers: [coin(NOTE.G6, 0, 0.4), coin(NOTE.A6, 0.035, 0.28)],
+    loudness: 0.1,
+    layers: [mutedCoin(0, 0.3, 2100), ...pouch(0.012, 0.4)],
   },
   'economy.gold_spent': {
     seed: 302,

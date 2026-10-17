@@ -26,12 +26,12 @@ file; a test fails if two ids share one.
 
   | Group | Files | Budget | Now |
   | --- | --- | --- | --- |
-  | core | `ui/`, `system/`, `economy/`, `combat/default/`, `combat/effects/` | 800 KB | ~448 KB |
+  | core | `ui/`, `system/`, `economy/`, `combat/default/`, `combat/effects/` | 800 KB | ~482 KB |
   | undead | `combat/undead/` | 900 KB | ~581 KB |
   | orc | `combat/orc/` | 900 KB | ~622 KB |
   | human | `combat/human/` | 900 KB | ~583 KB |
   | elf | `combat/elf/` | 900 KB | ~579 KB |
-  | total | | 4400 KB | ~2812 KB |
+  | total | | 4400 KB | ~2846 KB |
 
 ### Ambience
 
@@ -91,16 +91,16 @@ Dark fantasy around D minor: low-mid, soft attacks, short tails. Frequent cues
 | --- | --- |
 | `ui.click` | Short wooden tick. |
 | `ui.hover` | Faint, very short upward blip. |
-| `ui.open` | Rising breathy whoosh with a soft D-to-A glide. |
-| `ui.close` | The same whoosh falling back down. |
+| `ui.open` | Parchment rustle with a few crackles, ending on a soft wooden latch click (~0.22 s). |
+| `ui.close` | Leather cover flapping shut onto a dull wooden lid thud (~0.24 s). |
 | `ui.error` | Two low, beating buzz pulses. |
-| `ui.success` | Two-note chime, D then A. |
-| `ui.build_select` | Wooden knock with a low G tone. |
-| `ui.faction_select` | Small gong strike with a chime on top. |
+| `ui.success` | Wax-seal stamp: soft squish into a low wooden thump with a short low resonance, no chime (~0.24 s). |
+| `ui.build_select` | Tool lifted off its strap: small muted metal clink and a leather pat (~0.08 s). |
+| `ui.faction_select` | One deep war-drum hit with a breathy choir exhale under it (~0.53 s). |
 | `ui.wave_start` | War horn on D with a fifth and a drum hit. |
-| `ui.wave_complete` | Rising D minor bell arpeggio with a short echo. |
+| `ui.wave_complete` | Two distant, breathy horn calls held on D, ending in the tail of a drum roll (~1.0 s). |
 | `ui.game_over` | Low gong and a descending A-F-D dirge (~1.2 s). |
-| `ui.victory` | Brass D major fanfare ending on a held chord (~1.2 s). |
+| `ui.victory` | Dark fanfare: low D minor horns, a Bb chord, resolving to a held D over timpani; no bright brass (~1.5 s). |
 
 ### System
 
@@ -108,13 +108,13 @@ Dark fantasy around D minor: low-mid, soft attacks, short tails. Frequent cues
 | --- | --- |
 | `system.pause` | Two soft blips stepping down. |
 | `system.unpause` | Two soft blips stepping up. |
-| `system.restart` | Falling whoosh landing on a thump. |
+| `system.restart` | Hourglass flip: wooden click, a sweep of sand hiss, a wooden click as it settles (~0.42 s). |
 
 ### Economy
 
 | Sound ID | What to listen for |
 | --- | --- |
-| `economy.gold_gain` | Tiny double coin clink (every kill, kept quiet). |
+| `economy.gold_gain` | One muted coin into a leather pouch; very short and quiet (every kill, ~0.06 s). |
 | `economy.gold_spent` | Coin dropping into a pouch. |
 | `economy.refund` | Two rising clinks with a light swish. |
 | `economy.life_lost` | Heavy heartbeat thud under a dissonant low drone. |
@@ -124,13 +124,13 @@ Dark fantasy around D minor: low-mid, soft attacks, short tails. Frequent cues
 
 | Sound ID | What to listen for |
 | --- | --- |
-| `combat.attack.default` | Generic bow twang (any tower without a race sound). |
-| `combat.impact.default` | Dull thud. |
-| `combat.build` | Two stone knocks and a small chime. |
-| `combat.sell` | Rattling crumble with a falling tone. |
+| `combat.attack.default` | Short crossbow thwip: string snap and bolt hiss (any tower without a race sound, ~0.09 s). |
+| `combat.impact.default` | Arrow into dirt: short thud with a spray of grit (~0.12 s). |
+| `combat.build` | Stone block set on stone, a settling knock, then a gritty mortar scrape; no chime (~0.42 s). |
+| `combat.sell` | Stone blocks tumbling down, then a few muted coins into a pouch; no tone (~0.51 s). |
 | `combat.upgrade` | Rising three-bell shimmer with sparkle. |
 | `combat.creep_hit` | Very short soft body thump, layered under impacts. |
-| `combat.creep_death` | Low growl falling away. |
+| `combat.creep_death` | Dull body fall with a settling knock and a short exhale (~0.37 s). |
 | `combat.creep_escape` | Two-tone low warning, A then F. |
 | `combat.creep_spawn` | Short low rush with a dull drum and a rising D-A tone (sent creature arrives). |
 | `combat.effect_applied.chill` | Icy high shimmer with frost crackle. |
