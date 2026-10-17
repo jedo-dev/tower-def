@@ -19,10 +19,19 @@ import {
   writeCreepShadowLayout,
   type CreepShadowLayout,
 } from './creepAdornmentLayout';
+import {
+  createCreepHealthBar,
+  destroyCreepHealthBar,
+  hideCreepHealthBar,
+  resetCreepHealthBar,
+  syncCreepHealthBar,
+  type CreepHealthBar,
+} from './creepHealthBar';
 
 /**
  * The readability layer drawn with a creep (tower-def-3br): a ground shadow
- * and, under a sent creep, a ring in the sender race's accent colour.
+ * and, under a sent creep, a ring in the sender race's accent colour, plus
+ * a health bar above it once it is hurt.
  * Records and their images are pooled, so a spawn after the first waves
  * allocates nothing, and the per-frame sync only moves and toggles them.
  */
@@ -33,6 +42,8 @@ export type CreepAdornments = {
   /** Always created so a pooled record serves any creep; hidden on baseline creeps. */
   readonly ring: Phaser.GameObjects.Image;
   hasRing: boolean;
+  /** Hidden until the creep first takes damage. */
+  readonly healthBar: CreepHealthBar;
 };
 
 export type CreepAdornmentPool = RenderRecordPool<CreepAdornments>;
@@ -48,7 +59,14 @@ function createCreepAdornments(scene: Phaser.Scene, pool: CreepAdornmentPool): C
   ring.setDepth(CREEP_SENDER_RING_RENDER_DEPTH);
   ring.setAlpha(CREEP_SENDER_RING_ALPHA);
   ring.setVisible(false);
-  return { pool, shadow, shadowLayout: createCreepShadowLayout(), ring, hasRing: false };
+  return {
+    pool,
+    shadow,
+    shadowLayout: createCreepShadowLayout(),
+    ring,
+    hasRing: false,
+    healthBar: createCreepHealthBar(scene),
+  };
 }
 
 /**
@@ -82,6 +100,8 @@ export function attachCreepAdornments(
     );
   }
 
+  resetCreepHealthBar(adornments.healthBar, displaySizePx);
+
   creep.adornments = adornments;
   syncCreepAdornments(creep);
 }
@@ -101,8 +121,10 @@ export function syncCreepAdornments(creep: CreepRenderState): void {
   adornments.shadow.setVisible(isShown);
   adornments.ring.setVisible(isShown && adornments.hasRing);
   if (!isShown) {
+    hideCreepHealthBar(adornments.healthBar);
     return;
   }
+  syncCreepHealthBar(adornments.healthBar, creep.entity, sprite.x, sprite.y);
 
   // The ring lies on the ground around the shadow, also under a flier.
   const shadowLayout = adornments.shadowLayout;
@@ -124,6 +146,7 @@ export function syncCreepListAdornments(creeps: readonly CreepRenderState[]): vo
 function destroyCreepAdornments(adornments: CreepAdornments): void {
   adornments.shadow.destroy();
   adornments.ring.destroy();
+  destroyCreepHealthBar(adornments.healthBar);
 }
 
 /** Hides a creep's adornments and hands them back to their pool (destroyed once it is full). */
@@ -135,6 +158,7 @@ export function releaseCreepAdornments(creep: CreepRenderState): void {
   creep.adornments = undefined;
   adornments.shadow.setVisible(false);
   adornments.ring.setVisible(false);
+  hideCreepHealthBar(adornments.healthBar);
 
   const { pool } = adornments;
   if (pool.free.length >= pool.capacity) {

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { DEFAULT_CREEP_COMBAT_TRAITS, type CreepEntity } from '../../../../entities/creep';
 import { CreepTypeId, UnitMoveType } from '../../../../shared/types/content-ids';
 import {
@@ -9,6 +9,7 @@ import { CREEP_RENDER_DEPTH } from '../../scenes/gameScene.constants';
 import type { CreepRenderState } from '../../scenes/gameScene.types';
 import { FakeObjectFactory, type FakeGameObject } from '../../test/fakePhaser';
 import { createCreepShadowLayout, writeCreepShadowLayout } from './creepAdornmentLayout';
+import { resolveHealthBarColor } from './creepAdornmentStyle';
 import {
   attachCreepAdornments,
   createCreepAdornmentPool,
@@ -129,6 +130,41 @@ describe('creep adornments', () => {
     attachCreepAdornments(scene, pool, next, undefined);
     expect(ringOf(next)).toBe(sentRing);
     expect(sentRing.visible).toBe(false);
+  });
+
+  it('shows the health bar only after damage and redraws it only when health changes', () => {
+    const factory = new FakeObjectFactory();
+    const creep = createCreep(factory);
+    attachCreepAdornments(createScene(factory), createCreepAdornmentPool(), creep, undefined);
+    const bar = creep.adornments?.healthBar;
+    if (!bar) throw new Error('missing health bar');
+    const fill = bar.fill as unknown as FakeGameObject;
+    const back = bar.back as unknown as FakeGameObject;
+
+    syncCreepAdornments(creep);
+    expect(fill.visible).toBe(false);
+    expect(back.visible).toBe(false);
+
+    creep.entity.hp = 40;
+    syncCreepAdornments(creep);
+    expect(fill.visible).toBe(true);
+    expect(fill.displayWidth).toBeCloseTo(bar.widthPx * 0.4);
+    expect(fill.tint).toBe(resolveHealthBarColor(0.4));
+    expect(fill.depth).toBeGreaterThan(CREEP_RENDER_DEPTH);
+    expect(fill.y).toBeLessThan(creep.sprite.y);
+
+    // Same health next frame: moved, not resized or recoloured.
+    const setDisplaySize = vi.spyOn(fill, 'setDisplaySize');
+    const setTint = vi.spyOn(fill, 'setTint');
+    creep.sprite.setPosition(150, 90);
+    syncCreepAdornments(creep);
+    expect(setDisplaySize).not.toHaveBeenCalled();
+    expect(setTint).not.toHaveBeenCalled();
+    expect(fill.x).toBeCloseTo(150 - bar.widthPx / 2);
+
+    creep.entity.status = 'dead';
+    syncCreepAdornments(creep);
+    expect(fill.visible).toBe(false);
   });
 
   it('reuses released records instead of creating new images', () => {

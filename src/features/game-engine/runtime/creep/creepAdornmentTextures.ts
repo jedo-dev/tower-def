@@ -3,6 +3,7 @@ import {
   CREEP_ADORNMENT_TEXTURE_HEIGHT_PX,
   CREEP_ADORNMENT_TEXTURE_KEYS,
   CREEP_ADORNMENT_TEXTURE_WIDTH_PX,
+  CREEP_BAR_TEXTURE_SIZE_PX,
   CREEP_RING_TEXTURE_LINE_WIDTH_PX,
 } from '../../scenes/creepReadability.constants';
 
@@ -33,6 +34,12 @@ function paintRing(context: CanvasRenderingContext2D, width: number, height: num
   context.beginPath();
   context.ellipse(width / 2, height / 2, width / 2 - inset, height / 2 - inset, 0, 0, Math.PI * 2);
   context.stroke();
+}
+
+/** Plain white, stretched and tinted into the health bar and its backing. */
+function paintSolid(context: CanvasRenderingContext2D, width: number, height: number): void {
+  context.fillStyle = '#ffffff';
+  context.fillRect(0, 0, width, height);
 }
 
 function createCanvasTexture(
@@ -72,5 +79,12 @@ export function ensureCreepAdornmentTextures(scene: Phaser.Scene): void {
     CREEP_ADORNMENT_TEXTURE_WIDTH_PX,
     CREEP_ADORNMENT_TEXTURE_HEIGHT_PX,
     paintRing,
+  );
+  createCanvasTexture(
+    scene,
+    CREEP_ADORNMENT_TEXTURE_KEYS.BAR,
+    CREEP_BAR_TEXTURE_SIZE_PX,
+    CREEP_BAR_TEXTURE_SIZE_PX,
+    paintSolid,
   );
 }
