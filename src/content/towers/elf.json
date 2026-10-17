@@ -40,6 +40,10 @@
       "spriteKey": "tower.elf.moon_archer",
       "description": "Moonlit archers strike swiftly from sacred boughs.",
       "lore": "A platform grown, not built, in the crown of an elder tree. Its archers draw by moonlight and release in silence.",
+      "sounds": {
+        "attack": "combat.tower.elf_moon_archer_tower.attack",
+        "impact": "combat.tower.elf_moon_archer_tower.impact"
+      },
       "talentBranches": [
         {
           "id": "elf_moon_archer_tower_moonfall",
@@ -109,6 +113,10 @@
       "spriteKey": "tower.elf.wisp_bloom",
       "description": "A bloom of wisps that bursts over anything close.",
       "lore": "Wisps gathered into one bright flower of the grove. When it opens, everything near it is briefly, brilliantly gone.",
+      "sounds": {
+        "attack": "combat.tower.elf_wisp_bloom.attack",
+        "impact": "combat.tower.elf_wisp_bloom.impact"
+      },
       "talentBranches": [
         {
           "id": "elf_wisp_bloom_spores",
@@ -269,6 +277,10 @@
       "spriteKey": "tower.elf.moonwell",
       "description": "Cold moonlight pools over the path and slows it.",
       "lore": "Still water that remembers the moon. The path that crosses it grows heavy with the cold of a long night.",
+      "sounds": {
+        "attack": "combat.tower.elf_moonwell.attack",
+        "impact": "combat.tower.elf_moonwell.impact"
+      },
       "talentBranches": [
         {
           "id": "elf_moonwell_moonlight",
@@ -450,6 +462,10 @@
       "spriteKey": "tower.elf.thorn_spire",
       "description": "Barbed thorns that keep working long after the hit.",
       "lore": "The forest's own answer to trespass, a spire of barbed vine. The thorns stay in the wound and keep working.",
+      "sounds": {
+        "attack": "combat.tower.elf_thorn_spire.attack",
+        "impact": "combat.tower.elf_thorn_spire.impact"
+      },
       "talentBranches": [
         {
           "id": "elf_thorn_spire_thorns",

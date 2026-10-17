@@ -188,6 +188,46 @@ Dark fantasy around D minor: low-mid, soft attacks, short tails. Frequent cues
 | `combat.impact.elf` | Light chime tick. |
 | `combat.build.elf` | Leaf rustle into two rising chimes. |
 | `combat.creep_death.elf` | Soft sigh with a falling chime. |
+| `combat.creep.elf_archer.hit` | Light body tap, a leaf crackle and a clipped soft cry. |
+| `combat.creep.elf_archer.death` | Soft falling cry over leaves, a slack bowstring at the end. |
+| `combat.creep.elf_archer.escape` | Two bowstring plucks and a rising soft call. |
+| `combat.creep.elf_archer.spawn` | Leaf rustle, a drawn bowstring and a short call. |
+| `combat.creep.elf_wisp.hit` | Tiny high bell blip with a puff of air (quietest hit). |
+| `combat.creep.elf_wisp.death` | Bright pop, then sparkles falling A-F-D-A. |
+| `combat.creep.elf_wisp.escape` | Two soft bells, D then A, with a sparkle. |
+| `combat.creep.elf_wisp.spawn` | Rising D-F-A sparkle over a floating airy tone. |
+| `combat.creep.elf_huntress.hit` | Body thump, a clipped panther snarl and a blade tick. |
+| `combat.creep.elf_huntress.death` | Panther growl falling away, the glaive clattering down. |
+| `combat.creep.elf_huntress.escape` | Whirring glaive pass and a rising growl. |
+| `combat.creep.elf_huntress.spawn` | Rising panther growl into a glaive whirr. |
+| `combat.creep.elf_dryad.hit` | Hoof click, leaves and a small wind chime. |
+| `combat.creep.elf_dryad.death` | Stumbling hooves slowing down, falling wind chimes. |
+| `combat.creep.elf_dryad.escape` | Four galloping hooves and two wind chimes. |
+| `combat.creep.elf_dryad.spawn` | Leaves into a rising D-A-D wind chime, two hooves. |
+| `combat.creep.elf_chimera.hit` | Heavy thud with a short acid sizzle. |
+| `combat.creep.elf_chimera.death` | Two roars a fourth apart falling, acid hiss, a last wingbeat and a drop. |
+| `combat.creep.elf_chimera.escape` | Three heavy leather wingbeats under a two-headed snarl. |
+| `combat.creep.elf_chimera.spawn` | Rising two-headed roar, a hiss and two heavy wingbeats. |
+| `combat.creep.elf_druid_of_the_claw.hit` | Deep wooden knock with a short bear grunt. |
+| `combat.creep.elf_druid_of_the_claw.death` | Long deep bear roar falling into a wooden thump. |
+| `combat.creep.elf_druid_of_the_claw.escape` | Two bear huffs over two wooden knocks. |
+| `combat.creep.elf_druid_of_the_claw.spawn` | Rising bear roar ending on a wooden thump. |
+| `combat.creep.elf_hippogryph.hit` | Feather flutter on a light thump with a clipped screech. |
+| `combat.creep.elf_hippogryph.death` | Falling hawk screech, two feathery wingbeats and a drop. |
+| `combat.creep.elf_hippogryph.escape` | Two rising screeches over feathery wings. |
+| `combat.creep.elf_hippogryph.spawn` | Three feathery wingbeats and a rising screech. |
+| `combat.creep.elf_mountain_giant.hit` | Low rock crunch on a deep thud. |
+| `combat.creep.elf_mountain_giant.death` | Grinding stone, a massive stomp and a low rumble. |
+| `combat.creep.elf_mountain_giant.escape` | Two massive stomps over grinding stone. |
+| `combat.creep.elf_mountain_giant.spawn` | Stone grinding up into a massive stomp. |
+| `combat.tower.elf_moon_archer_tower.attack` | Silvery bowstring with a faint chime and an air swish. |
+| `combat.tower.elf_moon_archer_tower.impact` | Bright arrow strike: a sharp tick with a glassy ring. |
+| `combat.tower.elf_wisp_bloom.attack` | Two soft chimes, D and A, and a spore puff. |
+| `combat.tower.elf_wisp_bloom.impact` | Muffled spore puff with a faint chime. |
+| `combat.tower.elf_moonwell.attack` | Two rippling water bloops and a cold C-G chime. |
+| `combat.tower.elf_moonwell.impact` | Rising droplet, a cold chime and icy hiss. |
+| `combat.tower.elf_thorn_spire.attack` | Root snap with a low creak. |
+| `combat.tower.elf_thorn_spire.impact` | Thorny double crunch on a soft thud. |
 
 ### Ambience (authored)
 

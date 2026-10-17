@@ -13,6 +13,8 @@ import {
   thump,
 } from './recipeKit';
 import type { RaceSfxRecipeGroup } from './recipeGroups';
+import { ELF_CREATURE_RECIPES } from './elfCreatureRecipes';
+import { ELF_TOWER_RECIPES } from './elfTowerRecipes';
 
 /** Glassy elven tone with a slow shimmer. */
 function glass(frequencyHz: number, startSec: number, durationSec: number, gain: number): SfxLayer {
@@ -27,7 +29,10 @@ function glass(frequencyHz: number, startSec: number, durationSec: number, gain:
   };
 }
 
+/** Race-wide elf clips, then each creature's and tower's own (see the two files above). */
 export const ELF_RECIPES: RaceSfxRecipeGroup<'elf'> = {
+  ...ELF_CREATURE_RECIPES,
+  ...ELF_TOWER_RECIPES,
   'combat.attack.single.elf': {
     seed: 801,
     layers: [
