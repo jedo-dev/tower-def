@@ -103,10 +103,7 @@ export const UNIT_FACTION_TINTS: Record<RaceId, number> = {
   [RaceId.ELF]: 0x9bdcd6,
 };
 
-export const UNIT_SPRITE_SHEET_FRAME = {
-  width: 32,
-  height: 32,
-} as const;
+export { UNIT_SPRITE_SHEET_FRAME } from './unitSpriteSheetFrame';
 
 /**
  * Rows of the 128x128 creep sheet, in the order Phaser numbers frames

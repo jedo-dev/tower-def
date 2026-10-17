@@ -2021,6 +2021,125 @@ in 30. Human remains the weakest seat: it loses 1-9 to elf on its own waves
 **Difficulty spot-check** (`--matchups hard:normal`, seeds 1-3, classic,
 every race on every race, 48 duels): hard wins 46, normal 2 (96%).
 
+### Final balance pass (tower-def-716.6)
+
+A short integrated pass on top of the roster balance (716.9), cut short by
+request: content and one baseline wave lever only, no AI code. Before is main
+at 053f535. The batch CLI had stopped running under `tsx` (the headless
+battlefield reached `shared/constants/sprites.ts`, which imports the sheet
+images); the creep frame size now lives in `unitSpriteSheetFrame.ts`.
+
+**Measure.** As in 716.9: standard batch (hard vs hard, six pairs, classic and
+seeded maps, baseline undead) and game-faithful batch (each race in seat A
+against the other three on its own `--baseline-race`, classic), three pairs a
+call under `timeout 110`, one sim at a time. A temporary stderr probe in
+`markEscaped` (never committed) printed the tier and move type of every sent
+creep that leaked.
+
+**Levers** (old -> new):
+
+| Lever | Where | Old | New | Why |
+| --- | --- | --- | --- | --- |
+| Wyrm Breath `vulnerability` (grades 6 / 7) | `towers/undead.json` | 0.2 / 0.4 | 0.15 / 0.3 | Breath took 88% of Frost Wyrm picks |
+| Chimera health, base and branch grades | `units/elf.json` | 150; Acid 160-200, Two-Headed 157-187 | 145; 155-194, 152-181 | elf sends caused about 10 leaks per undead side (as many as the baseline), 192 of them tier 4 air: the Chimera |
+| Crossbowmen grades 4-7 damage; reload (ms) | `towers/human.json` | 52 / 59 / 68 / 81; 750 / 800 / 850 / 900 | 53 / 60 / 70 / 84; 730 / 750 / 770 / 790 | picked 8% |
+| Guard Archer level 3 damage | same | 46 | 50 | lift human |
+| Rifle Company grades 4 / 5 damage | same | 48 / 50 | 50 / 51 | branch grades must not fall below level 3 (content test) |
+| Human baseline health scale | `WAVE_BASELINE_HEALTH_MULTIPLIER_BY_RACE` | 1.1 | 1.15 | lift human on its own waves |
+
+Rejected (measured, reverted):
+
+- Bone Archer `airDamageMultiplier` 1.2 (to answer the Chimera): undead
+  jumped to 69% on its pairs (orc 0-10 on seeded) and the Chimera leaks stayed.
+- Chimera Acid Breath multipliers 0.92-0.6 -> 0.95-0.7: the elf switched to
+  Two-Headed and the Chimera leaked as much (elf against undead still 9-1).
+- Chimera health 140 or 130: the send planner (health per gold against the
+  defender mix) stops buying it (3-7 leaks in 20 duels) and seeded duels hit the
+  round cap; 145 halves its leaks and keeps it in play.
+- Chimera speed 1.3 -> 1.15: no change (168 leaks, 7-3 for elf).
+- Crossbowmen at 54-86 damage, 700-640 ms: taken 59-100%, no win change.
+- Rifle Company grades 4-7 +2-5 damage: human against elf on human waves 2 of
+  20, no change; Crossbowmen fell back to 7-17%.
+- Human baseline scale 1.2: human game-faithful 64% (20 seeds) but undead
+  1-9 on human waves; 1.15 gives 45% over seeds 1-20.
+
+**Standard batch** (before seeds 1-10, 60 duels a race; after seeds 1-10 at
+eab1f61 and the confirmation run seeds 1-5 with the final Company numbers):
+
+| Race | Before (classic / seeded) | After s1-10 (classic / seeded) | Confirmation s1-5 |
+| --- | --- | --- | --- |
+| Undead | 51.7% (43.3 / 60.0) | 46.7% (43.3 / 50.0) | 50.0% |
+| Orc | 50.0% (60.0 / 40.0) | 51.7% (50.0 / 53.3) | 60.0% |
+| Human | 43.3% (43.3 / 43.3) | 58.3% (56.7 / 60.0) | 56.7% |
+| Elf | 55.0% (53.3 / 56.7) | 43.3% (50.0 / 36.7) | 33.3% (46.7 / 20.0) |
+
+Pacing: median 28 rounds before, 28.5 after (classic rows 26-28, seeded rows
+30.5-34.5; 30 at seeds 1-5); towers at round 5 row medians 10-14 before and
+after; no draws; round cap 1 of 120 before, 3 of 120 after (seeded, at most 1
+per row of 10).
+
+**Game-faithful batch** (classic, 30 duels a race, seeds 1-10; round-cap hits
+in brackets):
+
+| Race in seat A | Before | After | Confirmation s1-5 |
+| --- | --- | --- | --- |
+| Undead | 43.3% (0) | 43.3% (0) | 40.0% (0) |
+| Orc | 56.7% (0) | 53.3% (0) | 60.0% (0) |
+| Human | 36.7% (0) | 40.0% (0) | 40.0% (0) |
+| Elf | 43.3% (1) | 53.3% (2, against human) | 60.0% (2, against human) |
+
+Human against elf on human waves: 1-9 before, 3-7 after (2-3 at seeds 1-5).
+
+**Difficulty** (before only, classic, seeds 1-3, 48 duels): hard beats normal
+46-2, normal beats easy 40-8. No AI or preset changed.
+
+**Pick shares** (standard batch, seeds 1-10):
+
+| Tower type | Before | After |
+| --- | --- | --- |
+| Undead Frost Wyrm Nest | Breath 88%, Permafrost 12% | Breath 53%, Permafrost 47% |
+| Undead Bone Archer | Volley 70%, Cursed 30% | Cursed 61%, Volley 39% |
+| Undead Bone Obelisk | Whisper 78%, Harvest 22% | Whisper 70%, Harvest 30% |
+| Human Guard Archer | Company 92%, Crossbowmen 8% | Company 55%, Crossbowmen 45% |
+| Human Guard Post | Headquarters 70%, Treasury 30% | Headquarters 80%, Treasury 20% |
+| Human Alchemist | Acid 62%, Flasks 38% | Acid 89%, Flasks 11% |
+| Orc Spear | Heavy 62%, Throwers 38% | Heavy 63%, Throwers 37% |
+| Orc Lightning Totem | Thunder 82%, Storm 18% | Thunder 81%, Storm 19% |
+| Orc Tar Pit | Sticky 80%, Quagmire 20% | Sticky 83%, Quagmire 17% |
+| Elf Moonwell | Moonlight 58%, Living Water 42% | Moonlight 58%, Living Water 42% |
+| Elf Thorn Spire | Vine 57%, Thornbite 43% | Vine 59%, Thornbite 41% |
+| Elf Moon Archer | Moonfall 76%, Sniper 24% | Moonfall 81%, Sniper 19% |
+
+Every developed branch is at 10% or more. Plague Tower (2 sides, Corpse
+Blast both), Cannon Bastion and Burning Pit are still almost never
+developed, so Plague Cloud, Siege Cannon, Grapeshot, Napalm and Mortar have no
+measurable share.
+
+**Creatures** (standard, average per side): xp spent before / after undead
+90 / 90, orc 107 / 108, human 128 / 133, elf 124 / 111; top creature grade at
+round 20 is 2.0-3.1 for every race, unchanged. Leaks caused by sends / baseline
+leaks suffered: elf 5.1 / 15.7 -> 3.5 / 16.6, the other races 1.2-2.4 against
+12-17. Against undead (elf:undead, seeds 1-10, both maps) Chimera leaks fall
+from 192 to 91. Creature branch picks are unchanged except the Chimera (Acid
+Breath 32 / Two-Headed 7 -> 20 / 6, fewer Chimeras developed).
+
+**Residual gaps / follow-ups:**
+
+- Elf in the standard table fell from 55% to 43% (33% in the seeds 1-5 run,
+  20% on seeded maps); human against elf on undead waves is 9-1 on both maps.
+  Next lever to try: Chimera 145 -> 148, or an elf tower lift.
+- Human against elf on human waves stays elf-favoured (3-7); company or
+  crossbow damage does not move it. The pair is a mirror counter (human beats
+  elf 8-2 on elf waves).
+- Elf against undead on undead waves is still 8-2 classic; undead air
+  coverage (the send planner values health per gold, not air) is the
+  structural cause. Valuing air sends against the defender's air coverage is
+  an AI follow-up.
+- Seeded maps run long (row medians 30.5-36); classic stays 23-29.
+- Not re-measured after: difficulty ordering (no AI change, expected
+  unchanged); Thunderstorm, Quagmire, Treasury, Sniper and Soul Harvest stay
+  at 17-30%, no change made.
+
 ## Suggested Improvements
 
 - Add difficulty presets for the computer opponent: relaxed, normal, aggressive.

@@ -1,6 +1,6 @@
 import { CREEP_FOOTPRINT_SIZE_BY_SIZE_CLASS } from '../../../../shared/constants/footprint';
 import { GRID_DIMENSIONS } from '../../../../shared/constants/grid';
-import { UNIT_SPRITE_SHEET_FRAME } from '../../../../shared/constants/sprites';
+import { UNIT_SPRITE_SHEET_FRAME } from '../../../../shared/constants/unitSpriteSheetFrame';
 import type { UnitSizeClass } from '../../../../shared/types/content-ids';
 import {
   CREEP_VISUAL_MAX_SIZE_IN_CELLS,
