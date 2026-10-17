@@ -7,7 +7,7 @@ import styles from './BestiaryPage.module.css';
 import { FactionEmblem } from '../../../shared/ui/faction-emblem';
 
 /** Side of the race emblem next to a tab's race name, in px. */
-const TAB_EMBLEM_SIZE = 18;
+const TAB_EMBLEM_SIZE = 16;
 
 export type RaceTabsProps = {
   races: readonly RaceBestiaryViewModel[];

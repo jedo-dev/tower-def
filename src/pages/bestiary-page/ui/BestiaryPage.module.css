@@ -76,7 +76,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: var(--space-xs);
+  gap: var(--space-2xs);
   padding: 0 var(--space-2xs);
   border: 1px solid var(--color-iron-shadow);
   border-radius: var(--radius-sm);
