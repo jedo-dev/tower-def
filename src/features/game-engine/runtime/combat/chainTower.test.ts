@@ -11,6 +11,7 @@ import { CreepTypeId, TowerTypeId } from '../../../../shared/types/content-ids';
 import { GRID_DIMENSIONS } from '../../../../shared/constants/grid';
 import type { BattlefieldRenderState } from '../battlefield/battlefieldRenderState';
 import type { CreepRenderState, TowerRenderState } from '../../scenes/gameScene.types';
+import { createFloatingLabelPool } from '../labels/floatingLabelPool';
 
 vi.mock('phaser', () => ({ default: { Display: { Color: {} } } }));
 
@@ -63,6 +64,7 @@ function createDeps(): CombatDeps & { sounds: string[] } {
     scene: {
       add: { text: vi.fn(() => createSpriteStub()), sprite: vi.fn(() => createSpriteStub()) },
     },
+    floatingLabels: createFloatingLabelPool(),
     writeCellCenter: (position: { x: number; y: number }, out: { x: number; y: number }) => {
       out.x = position.x * GRID_DIMENSIONS.cellSize;
       out.y = position.y * GRID_DIMENSIONS.cellSize;

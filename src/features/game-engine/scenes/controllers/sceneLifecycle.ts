@@ -11,6 +11,9 @@ import { ensurePlaceholderTextures } from '../../runtime/assets/placeholderTextu
 import { destroyBattlefieldRenderState } from '../../runtime/battlefield/battlefieldRenderState';
 import { registerResponsiveCamera } from '../../runtime/camera/gameSceneCameraRuntime';
 import { drainCreepAdornmentPool } from '../../runtime/creep/creepAdornments';
+import { applyEffectPipResolution } from '../../runtime/combat/creepEffectVisuals';
+import { drainFloatingLabelPool } from '../../runtime/labels/floatingLabelPool';
+import { registerFloatingLabels } from '../../runtime/labels/floatingLabelRuntime';
 import { ensureCreepAdornmentTextures } from '../../runtime/creep/creepAdornmentTextures';
 import {
   attachRoutePreviewGraphics,
@@ -58,6 +61,21 @@ function registerInput(context: GameSceneContext): void {
   );
 }
 
+/** Damage number labels and effect pips follow the canvas pixel ratio. */
+function registerLabels(context: GameSceneContext): void {
+  const { scene, state } = context;
+  state.teardownCallbacks.push(
+    registerFloatingLabels({
+      scene,
+      pool: state.floatingLabelPool,
+      onRasterScaleChanged: (rasterScale) => {
+        applyEffectPipResolution(state.playerField.creeps, rasterScale);
+        applyEffectPipResolution(state.opponentField.creeps, rasterScale);
+      },
+    }),
+  );
+}
+
 function publishInitialRegistry(context: GameSceneContext): void {
   const { scene, state } = context;
   scene.registry.set('economy.gold', state.runState.playerGold);
@@ -81,6 +99,7 @@ export function createScene(context: GameSceneContext): void {
   state.boardCamera = null;
   state.teardownCallbacks.push(registerResponsiveCamera(scene, getBoardCamera(context)));
   drawGrid(context);
+  registerLabels(context);
   registerInput(context);
   state.buildPreviewOverlay = scene.add.graphics();
   state.buildPreviewOverlay.setDepth(BUILD_PREVIEW_RENDER_DEPTH);
@@ -113,6 +132,7 @@ function destroyBoardGraphics(context: GameSceneContext): void {
   destroyBattlefieldRenderState(state.opponentField);
   // After both fields released their creeps' adornments into the pool.
   drainCreepAdornmentPool(state.creepAdornmentPool);
+  drainFloatingLabelPool(state.floatingLabelPool);
   state.buildPreviewOverlay?.destroy();
   state.buildPreviewOverlay = null;
   destroyRoutePreviewGraphics(state.routePreview);

@@ -34,6 +34,7 @@ function pick<V>(random: Random, values: readonly V[]): V {
 function createTextStub(log: CallLog, label: string): Record<string, unknown> {
   log.push(`text.create ${label}`);
   return {
+    texture: { setFilter: (mode: number) => log.push(`text.filter ${mode}`) },
     setOrigin: (x: number, y: number) => log.push(`text.origin ${x},${y}`),
     setDepth: (depth: number) => log.push(`text.depth ${depth}`),
     setPosition: (x: number, y: number) => log.push(`text.position ${x},${y}`),

@@ -26,6 +26,7 @@ import type { CombatRuntimeDependencies } from '../runtime/combat/gameSceneComba
 import { attachCreepAdornments, type CreepAdornmentPool } from '../runtime/creep/creepAdornments';
 import { resolveSenderRingColor } from '../runtime/creep/creepAdornmentStyle';
 import type { DuelMatchRuntimeDeps } from '../runtime/duel/gameSceneDuelRuntime';
+import type { FloatingLabelPool } from '../runtime/labels/floatingLabelPool';
 import type {
   MovementRuntimeDeps,
   MovementRuntimeState,
@@ -47,6 +48,8 @@ export type GameSceneWiringHost = {
   opponentField: BattlefieldRenderState;
   /** Pooled creep shadows, rings and health bars shared by both fields. */
   creepAdornmentPool: CreepAdornmentPool;
+  /** Pooled damage number labels shared by both fields. */
+  floatingLabelPool: FloatingLabelPool;
   getSoundManager: () => GameAudioManager | null;
   /** Tower and creature sounds for the player's battlefield. */
   soundRouter: GameSoundRouter;
@@ -79,6 +82,7 @@ function createPlayerCombatDeps(host: GameSceneWiringHost): CombatRuntimeDepende
   return {
     scene: host.scene,
     writeCellCenter,
+    floatingLabels: host.floatingLabelPool,
     playArcherAttackAnimation: (tower) => playArcherAttackAnimation(tower),
     playSplashAttackAnimation: (tower) => playPlagueAttackAnimation(host.scene, tower),
     playSound: (soundId: SoundId) => host.getSoundManager()?.play(soundId),
@@ -101,6 +105,7 @@ function createOpponentCombatDeps(host: GameSceneWiringHost): CombatRuntimeDepen
   return {
     scene: host.scene,
     writeCellCenter,
+    floatingLabels: host.floatingLabelPool,
     playArcherAttackAnimation: (tower) => playArcherAttackAnimation(tower),
     playSplashAttackAnimation: (tower) => playPlagueAttackAnimation(host.scene, tower),
     playSound: () => undefined,

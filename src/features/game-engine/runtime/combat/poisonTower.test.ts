@@ -19,6 +19,7 @@ import {
 } from '../../../../shared/types/content-ids';
 import type { BattlefieldRenderState } from '../battlefield/battlefieldRenderState';
 import type { CreepRenderState, TowerRenderState } from '../../scenes/gameScene.types';
+import { createFloatingLabelPool } from '../labels/floatingLabelPool';
 
 vi.mock('phaser', () => ({ default: { Display: { Color: {} } } }));
 
@@ -72,6 +73,7 @@ function createDeps(): CombatDeps & { sounds: string[] } {
     scene: {
       add: { text: vi.fn(() => createSpriteStub()), sprite: vi.fn(() => createSpriteStub()) },
     },
+    floatingLabels: createFloatingLabelPool(),
     writeCellCenter: (position: { x: number; y: number }, out: { x: number; y: number }) => {
       out.x = position.x * 40;
       out.y = position.y * 40;
@@ -218,6 +220,7 @@ describe('poison tower', () => {
       );
       const hpBefore = creep.entity.hp;
       const hooks = {
+        floatingLabels: createFloatingLabelPool(),
         writeCellCenter: (position: { x: number; y: number }, out: { x: number; y: number }) => {
           out.x = position.x;
           out.y = position.y;
@@ -255,6 +258,7 @@ describe('poison tower', () => {
       );
       const hpBefore = creep.entity.hp;
       const hooks = {
+        floatingLabels: createFloatingLabelPool(),
         writeCellCenter: (position: { x: number; y: number }, out: { x: number; y: number }) => {
           out.x = position.x;
           out.y = position.y;

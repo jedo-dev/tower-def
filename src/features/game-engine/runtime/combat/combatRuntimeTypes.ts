@@ -2,6 +2,7 @@ import type Phaser from 'phaser';
 import type { CreepEntity } from '../../../../entities/creep';
 import type { SoundId } from '../../../../shared/lib/sound-registry/audio.types';
 import type { GameSoundRouter } from '../audio/gameSoundRouting';
+import type { FloatingLabelPool } from '../labels/floatingLabelPool';
 import type { TowerRenderState } from '../../scenes/gameScene.types';
 import type { CellCenterWriter } from './towerCombatTypes';
 
@@ -31,6 +32,8 @@ export type CombatRuntimeDependencies = {
   scene: Phaser.Scene;
   /** Pixel centre of a cell, written into `out` (no allocation). */
   writeCellCenter: CellCenterWriter;
+  /** Pre-created damage number labels shared by both fields. */
+  floatingLabels: FloatingLabelPool;
   playArcherAttackAnimation: (tower: TowerRenderState) => void;
   playSplashAttackAnimation: (tower: TowerRenderState) => void;
   /** Fixed cues (economy, status effects); tower and creature sounds go through `soundRouter`. */

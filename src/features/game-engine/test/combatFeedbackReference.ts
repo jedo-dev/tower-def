@@ -1,18 +1,15 @@
 import { getTowerCenter } from '../../../entities/tower';
 import { TOWER_SHEET_EFFECT_FRAMES, TOWER_SPRITE_KEYS } from '../../../shared/constants/sprites';
 import type { TowerTypeId } from '../../../shared/types/content-ids';
-import type { GridPosition } from '../../../shared/types/pathfinding';
 import type { BattlefieldRenderState } from '../runtime/battlefield/battlefieldRenderState';
 import type {
   CombatRuntimeConfig,
   CombatRuntimeDependencies,
 } from '../runtime/combat/combatRuntimeTypes';
 import { resolveShotTint } from '../runtime/combat/shotTint';
-import type { DamageNumberSource } from '../runtime/combat/towerCombatTypes';
 import { IMPACT_EFFECT_SPLASH_TINT, PROJECTILE_SPLASH_TINT } from '../scenes/gameScene.constants';
 import type {
   CreepRenderState,
-  DamageNumberState,
   ImpactEffectState,
   ProjectileState,
   TowerRenderState,
@@ -20,9 +17,10 @@ import type {
 import { toCellCenterViaHooks } from './towerCombatReference';
 
 // Verbatim copies of the combat feedback paths tower-def-5rh rewrote: every
-// frame they rebuilt the projectile, impact effect and damage number lists
-// and a fresh record per survivor. Tests run them next to the pooled,
-// in-place versions on seeded scenarios.
+// frame they rebuilt the projectile and impact effect lists and a fresh
+// record per survivor. Tests run them next to the pooled, in-place versions
+// on seeded scenarios. Damage numbers left this file in tower-def-0zc, when
+// they moved from created-per-hit Text to pooled BitmapText labels.
 
 export function referenceSpawnImpactEffect(
   battlefield: BattlefieldRenderState,
@@ -54,35 +52,6 @@ export function referenceSpawnImpactEffect(
     sprite: effect,
     remainingMs: config.impactEffectLifetimeMs,
     maxLifetimeMs: config.impactEffectLifetimeMs,
-  });
-}
-
-export function referenceSpawnDamageNumber(
-  battlefield: BattlefieldRenderState,
-  deps: CombatRuntimeDependencies,
-  config: CombatRuntimeConfig,
-  position: GridPosition,
-  damage: number,
-  source: DamageNumberSource = 'hit',
-): void {
-  if (!config.damageNumbersEnabled) {
-    return;
-  }
-
-  const center = toCellCenterViaHooks(deps, position);
-  const text = deps.scene.add.text(center.x, center.y - 10, `${damage}`, {
-    fontFamily: 'Exo 2, Segoe UI, Tahoma, sans-serif',
-    fontSize: source === 'effect' ? '10px' : '11px',
-    color: source === 'effect' ? config.damageNumberEffectColor : config.damageNumberHitColor,
-    stroke: '#1d2536',
-    strokeThickness: 2,
-  });
-  text.setOrigin(0.5);
-
-  battlefield.damageNumbers.push({
-    text,
-    startY: text.y,
-    remainingMs: config.damageNumberLifetimeMs,
   });
 }
 
@@ -226,35 +195,4 @@ export function referenceUpdateImpactEffects(
   }
 
   battlefield.impactEffects = nextEffects;
-}
-
-export function referenceUpdateDamageNumbers(
-  battlefield: BattlefieldRenderState,
-  config: CombatRuntimeConfig,
-  deltaMs: number,
-): void {
-  if (battlefield.damageNumbers.length === 0) {
-    return;
-  }
-
-  const next: DamageNumberState[] = [];
-
-  for (const numberState of battlefield.damageNumbers) {
-    const remainingMs = numberState.remainingMs - deltaMs;
-
-    if (remainingMs <= 0) {
-      numberState.text.destroy();
-      continue;
-    }
-
-    const progress = 1 - remainingMs / config.damageNumberLifetimeMs;
-    numberState.text.setAlpha(1 - progress);
-    numberState.text.setY(numberState.startY - config.damageNumberRisePx * progress);
-    next.push({
-      ...numberState,
-      remainingMs,
-    });
-  }
-
-  battlefield.damageNumbers = next;
 }

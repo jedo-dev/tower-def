@@ -4,6 +4,7 @@ import { CreepTypeId, EffectId } from '../../../../shared/types/content-ids';
 import { resolveEffectDefinition } from '../../../../shared/constants/effects';
 import type { BattlefieldRenderState } from '../battlefield/battlefieldRenderState';
 import type { CreepRenderState } from '../../scenes/gameScene.types';
+import { createFloatingLabelPool } from '../labels/floatingLabelPool';
 
 // The combat runtime imports Phaser for colour maths only; the stub keeps this
 // suite in the node environment.
@@ -36,6 +37,7 @@ function createDeps(): CombatDeps & {
     bountiesPaid,
     sounds,
     scene: { add: { text: vi.fn(), sprite: vi.fn() } },
+    floatingLabels: createFloatingLabelPool(),
     writeCellCenter: (position: { x: number; y: number }, out: { x: number; y: number }) => {
       out.x = position.x;
       out.y = position.y;

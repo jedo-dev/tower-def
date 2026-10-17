@@ -3,10 +3,8 @@ import { createSeededRandom } from '../../../../shared/lib/random/createSeededRa
 import { TOWER_TYPE_IDS } from '../../../../shared/types/content-ids';
 import { createFixtureTower } from '../../test/combatCoreFixtures';
 import {
-  referenceSpawnDamageNumber,
   referenceSpawnImpactEffect,
   referenceSpawnProjectileFeedback,
-  referenceUpdateDamageNumbers,
   referenceUpdateImpactEffects,
   referenceUpdateProjectiles,
 } from '../../test/combatFeedbackReference';
@@ -15,6 +13,7 @@ import {
   createBattlefieldRenderState,
   type BattlefieldRenderState,
 } from '../battlefield/battlefieldRenderState';
+import { createFloatingLabelPool, fillFloatingLabelPool } from '../labels/floatingLabelPool';
 import type { CombatRuntimeConfig, CombatRuntimeDependencies } from './combatRuntimeTypes';
 import { getDamageNumberPool, spawnDamageNumber, updateDamageNumbers } from './damageNumbers';
 import { getImpactEffectPool, spawnImpactEffect, updateImpactEffects } from './impactEffects';
@@ -25,7 +24,9 @@ import { createRenderRecordPool, releasePooledRecord, takePooledRecord } from '.
 // rebuilding their lists and records every frame. The pooled, in-place
 // versions run next to verbatim copies of the old code
 // (test/combatFeedbackReference) on seeded scenarios; both must make the same
-// scene calls in the same order and hold the same records.
+// scene calls in the same order and hold the same records. Damage numbers have
+// no old-code twin since tower-def-0zc (pooled labels), so both runs use the
+// live number path and the scenarios still check it interleaves the same way.
 
 type Random = () => number;
 type CallLog = string[];
@@ -51,10 +52,10 @@ const LIVE: FeedbackPaths = {
 const REFERENCE: FeedbackPaths = {
   spawnProjectile: referenceSpawnProjectileFeedback,
   spawnImpact: referenceSpawnImpactEffect,
-  spawnNumber: referenceSpawnDamageNumber,
+  spawnNumber: spawnDamageNumber,
   updateProjectiles: referenceUpdateProjectiles,
   updateImpacts: referenceUpdateImpactEffects,
-  updateNumbers: referenceUpdateDamageNumbers,
+  updateNumbers: updateDamageNumbers,
 };
 
 function pick<V>(random: Random, values: readonly V[]): V {
@@ -100,6 +101,9 @@ function createScene(log: CallLog): Phaser.Scene {
       setTint: (tint: number) => log.push(`${id} tint ${tint}`),
       setPosition: (nextX: number, nextY: number) => log.push(`${id} position ${nextX},${nextY}`),
       setAlpha: (alpha: number) => log.push(`${id} alpha ${alpha}`),
+      setVisible: (visible: boolean) => log.push(`${id} visible ${visible}`),
+      setFontSize: (size: number) => log.push(`${id} fontSize ${size}`),
+      setText: (label: string) => log.push(`${id} text ${label}`),
       setY: (nextY: number) => {
         object.y = nextY;
         log.push(`${id} y ${nextY}`);
@@ -114,8 +118,8 @@ function createScene(log: CallLog): Phaser.Scene {
         log.push(`sprite ${x},${y} ${key} ${frame}`);
         return createObject(x, y);
       },
-      text: (x: number, y: number, label: string, style: unknown) => {
-        log.push(`text ${x},${y} ${label} ${JSON.stringify(style)}`);
+      bitmapText: (x: number, y: number, font: string) => {
+        log.push(`bitmapText ${x},${y} ${font}`);
         return createObject(x, y);
       },
     },
@@ -123,8 +127,11 @@ function createScene(log: CallLog): Phaser.Scene {
 }
 
 function createDeps(scene: Phaser.Scene): CombatRuntimeDependencies {
+  const floatingLabels = createFloatingLabelPool();
+  fillFloatingLabelPool(scene, floatingLabels, 'test-font', 16);
   return {
     scene,
+    floatingLabels,
     writeCellCenter: (position: { x: number; y: number }, out: { x: number; y: number }) => {
       out.x = position.x * 16 + 8;
       out.y = position.y * 16 + 8;
@@ -168,8 +175,9 @@ function snapshot(field: BattlefieldRenderState): unknown {
       sprite: objectId(record.sprite),
     })),
     damageNumbers: field.damageNumbers.map((record) => ({
-      ...record,
-      text: objectId(record.text),
+      label: objectId(record.label),
+      startY: record.startY,
+      remainingMs: record.remainingMs,
     })),
   };
 }

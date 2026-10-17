@@ -11,6 +11,7 @@ import {
 } from '../../scenes/gameScene.constants';
 import type { CreepRenderState } from '../../scenes/gameScene.types';
 import { releaseCreepAdornments } from '../creep/creepAdornments';
+import { LABEL_TEXTURE_FILTER_LINEAR } from '../../scenes/floatingLabel.constants';
 
 const PIP_GLYPH = '•';
 
@@ -90,6 +91,7 @@ export function refreshCreepEffectVisuals(
   scene: Phaser.Scene,
   creep: CreepRenderState,
   fallbackTint: number,
+  labelRasterScale = 1,
 ): void {
   const effects = getActiveEffects(creep.entity);
   const signature = computeEffectSignature(effects);
@@ -120,7 +122,9 @@ export function refreshCreepEffectVisuals(
       fontFamily: 'Exo 2, Segoe UI, Tahoma, sans-serif',
       fontSize: `${CREEP_EFFECT_PIP_FONT_SIZE_PX}px`,
       color: toCssColor(restingTint),
+      resolution: labelRasterScale,
     });
+    creep.effectPips.texture.setFilter(LABEL_TEXTURE_FILTER_LINEAR);
     creep.effectPips.setOrigin(0.5, 1);
     creep.effectPips.setDepth(CREEP_EFFECT_PIP_RENDER_DEPTH);
   } else {
@@ -129,6 +133,21 @@ export function refreshCreepEffectVisuals(
   }
 
   syncCreepEffectPipPosition(creep);
+}
+
+/**
+ * Re-rasterises live effect pips at a new label raster scale (DPR change).
+ * Pips are rare, so they stay plain Text; this runs only on a scale change.
+ */
+export function applyEffectPipResolution(
+  creeps: readonly CreepRenderState[],
+  labelRasterScale: number,
+): void {
+  for (const creep of creeps) {
+    if (creep.effectPips && creep.effectPips.style.resolution !== labelRasterScale) {
+      creep.effectPips.setResolution(labelRasterScale);
+    }
+  }
 }
 
 /** Single teardown point for a creep, so pips and adornments cannot outlive their sprite. */

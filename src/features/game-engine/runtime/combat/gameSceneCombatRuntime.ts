@@ -80,15 +80,32 @@ function createRenderCombatHooks(
     onDamageDealt: (position, damage, source) =>
       spawnDamageNumber(battlefield, deps, config, position, damage, source),
     onEffectApplied: (creep, effectId) => {
-      refreshCreepEffectVisuals(deps.scene, creep, config.creepBaseColor);
+      refreshCreepEffectVisuals(
+        deps.scene,
+        creep,
+        config.creepBaseColor,
+        deps.floatingLabels.rasterScale,
+      );
       const soundId = EFFECT_APPLIED_SOUND_BY_EFFECT[effectId];
       if (soundId) {
         deps.playSound(soundId);
       }
     },
-    onEffectsTicked: (creep) => refreshCreepEffectVisuals(deps.scene, creep, config.creepBaseColor),
+    onEffectsTicked: (creep) =>
+      refreshCreepEffectVisuals(
+        deps.scene,
+        creep,
+        config.creepBaseColor,
+        deps.floatingLabels.rasterScale,
+      ),
     onCreepKilled: (creep, killer) => handleCreepKill(deps, creep, killer),
-    onCreepRevived: (creep) => refreshCreepEffectVisuals(deps.scene, creep, config.creepBaseColor),
+    onCreepRevived: (creep) =>
+      refreshCreepEffectVisuals(
+        deps.scene,
+        creep,
+        config.creepBaseColor,
+        deps.floatingLabels.rasterScale,
+      ),
     onTowerFired: (tower, target, isSplashTower) => {
       if (isSplashTower) {
         deps.playSplashAttackAnimation(tower);

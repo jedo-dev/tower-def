@@ -139,6 +139,27 @@ class FakeTextureManager {
   public createCanvas(): null {
     return null;
   }
+
+  public remove(): void {
+    // Nothing is uploaded in the fake.
+  }
+}
+
+/** The bitmap font cache; fonts installed by the scene land here. */
+class FakeBitmapFontCache {
+  public readonly entries = new Map<string, unknown>();
+
+  public exists(key: string): boolean {
+    return this.entries.has(key);
+  }
+
+  public add(key: string, entry: unknown): void {
+    this.entries.set(key, entry);
+  }
+
+  public remove(key: string): void {
+    this.entries.delete(key);
+  }
 }
 
 class FakeAnimationManager {
@@ -183,6 +204,7 @@ export type FakeSceneSystems = {
   scale: FakeScaleManager;
   cameras: { main: FakeCamera };
   textures: FakeTextureManager;
+  cache: { bitmapFont: FakeBitmapFontCache };
   anims: FakeAnimationManager;
   tweens: typeof NO_OP_PLUGIN;
   sound: typeof NO_OP_PLUGIN;
@@ -207,6 +229,7 @@ function createFakeSceneSystems(): FakeSceneSystems {
     scale: new FakeScaleManager(),
     cameras: { main: new FakeCamera() },
     textures: new FakeTextureManager(),
+    cache: { bitmapFont: new FakeBitmapFontCache() },
     anims: new FakeAnimationManager(),
     tweens: NO_OP_PLUGIN,
     sound: NO_OP_PLUGIN,

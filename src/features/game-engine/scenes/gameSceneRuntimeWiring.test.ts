@@ -7,6 +7,7 @@ import {
 import { RaceId } from '../../../shared/types/content-ids';
 import type { BattlefieldRenderState } from '../runtime/battlefield/battlefieldRenderState';
 import { createCreepAdornmentPool } from '../runtime/creep/creepAdornments';
+import { createFloatingLabelPool } from '../runtime/labels/floatingLabelPool';
 import type { WaveRuntimeState } from '../runtime/wave/gameSceneWaveRuntime';
 import { createGameSceneRuntimeWiring, type GameSceneWiringHost } from './gameSceneRuntimeWiring';
 
@@ -23,6 +24,7 @@ function createHost(): GameSceneWiringHost & { duelState: () => DuelMatchState }
     playerField: emptyField,
     opponentField: emptyField,
     creepAdornmentPool: createCreepAdornmentPool(),
+    floatingLabelPool: createFloatingLabelPool(),
     getSoundManager: () => null,
     soundRouter: { playTowerSound: vi.fn(), playCreepSound: vi.fn() },
     getDuelMatchState: () => duelMatchState,
