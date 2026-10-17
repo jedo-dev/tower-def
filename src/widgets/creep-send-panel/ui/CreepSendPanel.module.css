@@ -33,9 +33,16 @@
 
 .title {
   grid-area: title;
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  min-width: 0;
+  font-size: 18px;
+}
+
+.titleText {
   min-width: 0;
   overflow: hidden;
-  font-size: 18px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }

@@ -38,6 +38,25 @@ describe('BestiaryPage overview', () => {
     expect(consoleError).not.toHaveBeenCalled();
   });
 
+  it('marks every race tab and the open race header with the race emblem', () => {
+    render(<BestiaryPage onNavigate={() => undefined} />);
+
+    const tabEmblems = screen
+      .getAllByRole('tab')
+      .map((tab) => tab.querySelector('img')?.getAttribute('src'));
+    expect(tabEmblems).toEqual([
+      '/assets/ui/factions/undead.webp',
+      '/assets/ui/factions/orc.webp',
+      '/assets/ui/factions/human.webp',
+      '/assets/ui/factions/elf.webp',
+    ]);
+
+    fireEvent.click(screen.getByRole('tab', { name: 'Human' }));
+    const header = screen.getByRole('tabpanel').querySelector('header img');
+    expect(header?.getAttribute('src')).toBe('/assets/ui/factions/human.webp');
+    expect(consoleError).not.toHaveBeenCalled();
+  });
+
   it('switches races and shows a tile for every tower and creature of the content', () => {
     render(<BestiaryPage onNavigate={() => undefined} />);
 

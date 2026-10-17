@@ -4,6 +4,10 @@ import type { RaceBestiaryViewModel } from '../model/types';
 import { raceAccentClass } from './codex/raceAccentClass';
 import { racePanelId, raceTabId } from './raceTabIds';
 import styles from './BestiaryPage.module.css';
+import { FactionEmblem } from '../../../shared/ui/faction-emblem';
+
+/** Side of the race emblem next to a tab's race name, in px. */
+const TAB_EMBLEM_SIZE = 16;
 
 export type RaceTabsProps = {
   races: readonly RaceBestiaryViewModel[];
@@ -64,7 +68,12 @@ export function RaceTabs({ races, selectedRaceId, onSelect }: RaceTabsProps) {
             onKeyDown={(event) => handleKeyDown(event, index)}
             data-sound="ui.faction_select"
           >
-            <span className={styles.tabGem} aria-hidden="true" />
+            <FactionEmblem
+              race={race.raceId}
+              size={TAB_EMBLEM_SIZE}
+              decorative
+              className={styles.tabEmblem}
+            />
             <span className={styles.tabLabel}>{race.name}</span>
           </button>
         );

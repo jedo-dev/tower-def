@@ -1,0 +1,27 @@
+/* Square emblem with a transparent background; it never shrinks inside flex rows. */
+.emblem {
+  display: inline-block;
+  flex: 0 0 auto;
+  box-sizing: border-box;
+  width: var(--faction-emblem-size);
+  height: var(--faction-emblem-size);
+  object-fit: contain;
+  vertical-align: middle;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Initial letter shown when the emblem file is missing. */
+.fallback {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-pill);
+  background-color: var(--glass-bg-soft);
+  color: var(--color-text-primary);
+  font-family: var(--font-family-display);
+  font-size: calc(var(--faction-emblem-size) * 0.5);
+  font-weight: 700;
+  line-height: 1;
+}

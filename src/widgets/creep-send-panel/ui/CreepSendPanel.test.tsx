@@ -10,6 +10,7 @@ import type { GameSetupConfig } from '../../../shared/config/game-setup';
 import type { GameHudSnapshot } from '../../../shared/lib/game-bridge/types';
 import { UNIT_SPRITE_ASSETS, UNIT_SPRITE_KEYS } from '../../../shared/constants/sprites';
 import { toUnitPortraitSource } from '../../../shared/ui/unit-icon';
+import { toFactionEmblemSource } from '../../../shared/ui/faction-emblem';
 
 const snapshot: GameHudSnapshot = {
   gold: 1000,
@@ -161,6 +162,19 @@ describe('CreepSendPanel', () => {
     expect(screen.getByRole('img', { name: 'Grunt' }).style.backgroundImage).toContain(
       UNIT_SPRITE_ASSETS[UNIT_SPRITE_KEYS.ORC_GRUNT],
     );
+  });
+});
+
+describe('CreepSendPanel heading', () => {
+  it('leads the heading with the race emblem in full and compact mode', () => {
+    const { container, rerender } = render(<CreepSendPanel setup={createSetup(RaceId.ORC)} />);
+    const emblemSource = () =>
+      container.querySelector('.ui-heading img')?.getAttribute('src') ?? null;
+
+    expect(emblemSource()).toBe(toFactionEmblemSource(RaceId.ORC));
+    rerender(<CreepSendPanel setup={createSetup(RaceId.ORC)} isCompact />);
+    expect(emblemSource()).toBe(toFactionEmblemSource(RaceId.ORC));
+    expect(screen.getByText('Send Orc')).toBeDefined();
   });
 });
 

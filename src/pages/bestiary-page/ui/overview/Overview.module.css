@@ -7,6 +7,16 @@
   padding: var(--space-lg) var(--codex-gutter) calc(var(--safe-area-bottom) + var(--space-xl));
 }
 
+.raceHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.raceEmblem {
+  filter: drop-shadow(0 0 6px var(--race-accent));
+}
+
 .raceDescription {
   margin: 0;
   color: var(--color-codex-text-muted);

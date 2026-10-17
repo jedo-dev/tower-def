@@ -16,6 +16,7 @@ import type { GameSetupConfig } from '../../../shared/config/game-setup';
 import { TowerIcon } from '../../../shared/ui/tower-icon';
 import { FantasyButton } from '../../../shared/ui/fantasy-button';
 import { BranchGlyph } from '../../../shared/ui/branch-glyph';
+import { FactionEmblem } from '../../../shared/ui/faction-emblem';
 import { getDifficultyConfig } from '../../../entities/difficulty';
 
 export type HudPanelProps = {
@@ -26,6 +27,9 @@ export type HudPanelProps = {
 };
 
 export const BUILD_PHASE_ONLY_HINT = 'Build phase only';
+
+/** Side of the race emblems on the duel line, in px; fits the line height. */
+const DUEL_EMBLEM_SIZE = 16;
 
 function formatCountdown(secondsLeft: number): string {
   const safeSeconds = Math.max(0, secondsLeft);
@@ -231,8 +235,16 @@ function HudPanelComponent({
         </div>
 
         <div className={styles.duelRow} role="status" aria-label={viewModel.duel.ariaLabel}>
-          <span className={styles.duelSide}>{viewModel.duel.playerLine}</span>
+          <span className={styles.duelSide}>
+            {setup && (
+              <FactionEmblem race={setup.builderFaction} size={DUEL_EMBLEM_SIZE} decorative />
+            )}
+            {viewModel.duel.playerLine}
+          </span>
           <span className={joinClassNames(styles.duelSide, styles.duelSideEnemy)}>
+            {setup && (
+              <FactionEmblem race={setup.enemyFaction} size={DUEL_EMBLEM_SIZE} decorative />
+            )}
             {viewModel.duel.opponentLine}
           </span>
         </div>

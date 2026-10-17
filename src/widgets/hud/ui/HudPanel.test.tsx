@@ -14,6 +14,7 @@ import hudPanelCss from './HudPanel.module.css?raw';
 import { injectCssModule } from '../../../shared/test/injectCssModule';
 import { toTalentIconSource } from '../../../shared/ui/branch-glyph';
 import { toTowerIconSource } from '../../../shared/ui/tower-icon';
+import { toFactionEmblemSource } from '../../../shared/ui/faction-emblem';
 
 function createSnapshot(overrides?: Partial<GameHudSnapshot>): GameHudSnapshot {
   return {
@@ -226,6 +227,22 @@ describe('HudPanel build bar', () => {
     for (const button of buttons) {
       expect(['true', 'false']).toContain(button.getAttribute('aria-pressed'));
     }
+    expect(consoleError).not.toHaveBeenCalled();
+  });
+
+  it('marks both sides of the duel line with their race emblems', () => {
+    publishGameHudSnapshot(createSnapshot());
+
+    render(<HudPanel setup={createSetup(RaceId.ELF)} />);
+
+    const duelRow = screen.getByRole('status', { name: /Your income/ });
+    const emblems = Array.from(duelRow.querySelectorAll('img'));
+    expect(emblems.map((emblem) => emblem.getAttribute('src'))).toEqual([
+      toFactionEmblemSource(RaceId.ELF),
+      toFactionEmblemSource(RaceId.ORC),
+    ]);
+    // The line's status label already names both sides.
+    expect(emblems.every((emblem) => emblem.getAttribute('aria-hidden') === 'true')).toBe(true);
     expect(consoleError).not.toHaveBeenCalled();
   });
 

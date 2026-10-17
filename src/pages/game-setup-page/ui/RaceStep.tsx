@@ -2,6 +2,10 @@ import type { CSSProperties } from 'react';
 import { BuilderFaction, builderFactions } from '../../../entities/builder-faction';
 import type { RaceSwitchDirection } from '../model/useBuilderRaceCarousel';
 import { SetupProgress } from './SetupProgress';
+import { FactionEmblem } from '../../../shared/ui/faction-emblem';
+
+/** Side of the race emblem above the builder race name, in px. */
+const RACE_EMBLEM_SIZE = 56;
 
 const BUILDER_BACKGROUND_VIDEO: Partial<Record<BuilderFaction, string>> = {
   [BuilderFaction.UNDEAD]: '/assets/video/undead.mp4',
@@ -97,6 +101,12 @@ export function RaceStep({
         </button>
 
         <div className="setup-race-info">
+          <FactionEmblem
+            race={builderConfig.id}
+            size={RACE_EMBLEM_SIZE}
+            decorative
+            className="setup-race-emblem"
+          />
           <h2 className="setup-card-name">{builderConfig.name}</h2>
           <p className="setup-card-desc">{builderConfig.description}</p>
           <p className="setup-card-tower">

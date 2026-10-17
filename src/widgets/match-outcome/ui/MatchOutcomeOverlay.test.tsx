@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { onGameCommand, publishGameHudSnapshot } from '../../../shared/lib/game-bridge/bridge';
 import type { GameHudSnapshot } from '../../../shared/lib/game-bridge/types';
 import { MatchOutcomeOverlay } from './MatchOutcomeOverlay';
@@ -65,6 +65,31 @@ describe('MatchOutcomeOverlay', () => {
     expect(screen.getByText('Undead broke through on wave 12')).toBeDefined();
     expect(screen.getByText('4')).toBeDefined();
     expect(screen.getByText('90')).toBeDefined();
+    expect(consoleError).not.toHaveBeenCalled();
+  });
+
+  it("crowns the outcome with the winner's race emblem", () => {
+    publishGameHudSnapshot(
+      createSnapshot({
+        matchOutcome: { status: 'player-lost', winner: 'orc', reason: 'knockout' },
+      }),
+    );
+
+    render(<MatchOutcomeOverlay onExit={() => undefined} />);
+
+    const emblem = within(screen.getByRole('dialog')).getByRole('img', { name: 'Orc' });
+    expect(emblem.getAttribute('src')).toBe('/assets/ui/factions/orc.webp');
+    expect(consoleError).not.toHaveBeenCalled();
+  });
+
+  it('shows no emblem on a draw', () => {
+    publishGameHudSnapshot(
+      createSnapshot({ matchOutcome: { status: 'draw', winner: null, reason: 'even' } }),
+    );
+
+    render(<MatchOutcomeOverlay onExit={() => undefined} />);
+
+    expect(within(screen.getByRole('dialog')).queryByRole('img')).toBeNull();
     expect(consoleError).not.toHaveBeenCalled();
   });
 

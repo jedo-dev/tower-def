@@ -33,6 +33,7 @@ export type CreepSendButtonViewModel = {
 };
 
 export type CreepSendPanelViewModel = {
+  raceId: RaceId;
   raceName: string;
   faction: FactionThemeName;
   gold: number;
@@ -165,6 +166,7 @@ export function mapCreepSendPanelToViewModel(
   });
 
   return {
+    raceId,
     raceName: race.name,
     faction: raceId.toLowerCase() as FactionThemeName,
     gold: snapshot.gold,

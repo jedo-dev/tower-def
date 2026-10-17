@@ -39,6 +39,12 @@
   text-align: center;
 }
 
+/* Winner's race emblem; the negative margin keeps it close to the title. */
+.winnerEmblem {
+  margin-bottom: calc(var(--space-lg) * -0.5);
+  filter: drop-shadow(var(--shadow-md));
+}
+
 .title {
   margin: 0;
   font-family: var(--font-family-display);

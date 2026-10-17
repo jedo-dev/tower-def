@@ -3,11 +3,14 @@ import type {
   MatchOutcomeReason,
   MatchOutcomeStatus,
 } from '../../../shared/lib/game-bridge/types';
+import { isRaceId, type RaceId } from '../../../shared/types/content-ids';
 
 export type MatchOutcomeViewModel = {
   isVisible: boolean;
   tone: 'victory' | 'defeat' | 'draw';
   title: string;
+  /** Race whose emblem crowns the overlay; null on a draw. */
+  winnerRace: RaceId | null;
   detail: string;
   ariaLabel: string;
 };
@@ -71,6 +74,9 @@ export function mapMatchOutcomeToViewModel(snapshot: GameHudSnapshot): MatchOutc
   const title = TITLE_BY_TONE[tone];
 
   const winnerName = winner === null ? null : (FACTION_NAMES[winner] ?? winner);
+  const winnerRaceCandidate = winner === null ? null : winner.toUpperCase();
+  const winnerRace =
+    winnerRaceCandidate !== null && isRaceId(winnerRaceCandidate) ? winnerRaceCandidate : null;
   const detail =
     tone === 'draw'
       ? `Both keeps fell on wave ${snapshot.waveNumber} — dead even`
@@ -80,6 +86,7 @@ export function mapMatchOutcomeToViewModel(snapshot: GameHudSnapshot): MatchOutc
     isVisible: status !== 'active',
     tone,
     title,
+    winnerRace,
     detail,
     ariaLabel: `${title}. ${detail}.`,
   };
