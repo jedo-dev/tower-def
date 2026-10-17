@@ -315,21 +315,21 @@
           "grades": [
             {
               "level": 4,
-              "damage": 42,
+              "damage": 46,
               "range": 7.2,
               "attackCooldownMs": 800,
               "onHitEffects": [{ "effectId": "chill", "magnitude": 0.6, "durationMs": 2500 }]
             },
             {
               "level": 5,
-              "damage": 52,
+              "damage": 58,
               "range": 7.6,
               "attackCooldownMs": 800,
               "onHitEffects": [{ "effectId": "chill", "magnitude": 0.65, "durationMs": 3000 }]
             },
             {
               "level": 6,
-              "damage": 62,
+              "damage": 70,
               "range": 8,
               "attackCooldownMs": 750,
               "onHitEffects": [
@@ -338,13 +338,13 @@
                   "magnitude": 0.7,
                   "durationMs": 3000,
                   "freezeAtStacks": 3,
-                  "freezeMs": 800
+                  "freezeMs": 1000
                 }
               ]
             },
             {
               "level": 7,
-              "damage": 74,
+              "damage": 86,
               "range": 8.4,
               "attackCooldownMs": 700,
               "onHitEffects": [
@@ -353,8 +353,8 @@
                   "magnitude": 0.75,
                   "durationMs": 4000,
                   "freezeAtStacks": 3,
-                  "freezeMs": 1200,
-                  "groundsFliersMs": 1200
+                  "freezeMs": 1400,
+                  "groundsFliersMs": 1400
                 }
               ]
             }
@@ -390,7 +390,7 @@
                 { "effectId": "chill", "magnitude": 0.55, "durationMs": 2000 },
                 {
                   "effectId": "vulnerability",
-                  "magnitude": 0.15,
+                  "magnitude": 0.2,
                   "durationMs": 2000,
                   "damageKind": "all"
                 }
@@ -406,7 +406,7 @@
                 { "effectId": "chill", "magnitude": 0.55, "durationMs": 2000 },
                 {
                   "effectId": "vulnerability",
-                  "magnitude": 0.25,
+                  "magnitude": 0.4,
                   "durationMs": 2000,
                   "damageKind": "all"
                 }
@@ -497,7 +497,7 @@
           "grades": [
             {
               "level": 4,
-              "damage": 20,
+              "damage": 22,
               "range": 5.5,
               "attackCooldownMs": 1000,
               "abilities": { "volleyEveryMs": 1500 },
@@ -511,7 +511,7 @@
             },
             {
               "level": 5,
-              "damage": 28,
+              "damage": 30,
               "range": 6,
               "attackCooldownMs": 1000,
               "abilities": { "volleyEveryMs": 1400 },
@@ -525,7 +525,7 @@
             },
             {
               "level": 6,
-              "damage": 38,
+              "damage": 40,
               "range": 6.5,
               "attackCooldownMs": 1000,
               "abilities": { "volleyEveryMs": 1300, "largeTargetMultiplier": 1.5 },
@@ -539,8 +539,8 @@
             },
             {
               "level": 7,
-              "damage": 50,
-              "range": 7,
+              "damage": 52,
+              "range": 6.5,
               "attackCooldownMs": 1000,
               "abilities": { "volleyEveryMs": 1200, "largeTargetMultiplier": 2 },
               "aura": {

@@ -391,7 +391,7 @@
                 "rangeBonus": 1.6,
                 "stacking": "strongest",
                 "goldPerKill": 1,
-                "incomePerRound": 10
+                "incomePerRound": 20
               }
             },
             {
@@ -405,7 +405,7 @@
                 "rangeBonus": 1.8,
                 "stacking": "strongest",
                 "goldPerKill": 2,
-                "incomePerRound": 20
+                "incomePerRound": 30
               }
             },
             {
@@ -419,7 +419,7 @@
                 "rangeBonus": 2,
                 "stacking": "strongest",
                 "goldPerKill": 3,
-                "incomePerRound": 35
+                "incomePerRound": 45
               }
             },
             {
@@ -433,7 +433,7 @@
                 "rangeBonus": 2.2,
                 "stacking": "strongest",
                 "goldPerKill": 4,
-                "incomePerRound": 50,
+                "incomePerRound": 60,
                 "sellRefundBonus": 0.25
               }
             }

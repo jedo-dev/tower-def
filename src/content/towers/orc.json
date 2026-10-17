@@ -27,28 +27,28 @@
           "grades": [
             {
               "level": 4,
-              "damage": 52,
+              "damage": 54,
               "range": 7,
               "attackCooldownMs": 500,
               "abilities": { "pierceLine": 0.2 }
             },
             {
               "level": 5,
-              "damage": 57,
+              "damage": 60,
               "range": 7.2,
               "attackCooldownMs": 450,
               "abilities": { "pierceLine": 0.3 }
             },
             {
               "level": 6,
-              "damage": 62,
+              "damage": 66,
               "range": 7.4,
               "attackCooldownMs": 350,
               "abilities": { "pierceLine": 0.4 }
             },
             {
               "level": 7,
-              "damage": 68,
+              "damage": 72,
               "range": 7.6,
               "attackCooldownMs": 300,
               "abilities": { "pierceLine": 0.5 }

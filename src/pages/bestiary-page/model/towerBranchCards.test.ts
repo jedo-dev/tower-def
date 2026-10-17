@@ -66,7 +66,7 @@ describe('talent branch cards', () => {
 
     expect([gradeFour.damage, gradeFour.range, gradeFour.cooldown]).toEqual(['—', '—', '—']);
     expect(gradeSeven.special).toBe(
-      'aura 8.5 cells: +50% attack speed, +2.2 range, +4g per kill, +50g income per round, ' +
+      'aura 8.5 cells: +50% attack speed, +2.2 range, +4g per kill, +60g income per round, ' +
         '+25% sell refund',
     );
     expect(branchCard('undead_bone_obelisk', 0).grades[1].special).toBe(
@@ -79,7 +79,7 @@ describe('talent branch cards', () => {
     const storm = branchCard('orc_lightning_totem', 0);
     const thornbite = branchCard('elf_thorn_spire', 0);
 
-    expect(harvest.grades[0].damage).toBe('20');
+    expect(harvest.grades[0].damage).toBe('22');
     expect(harvest.grades[0].special).toMatch(/volley at all in range every 1\.5s$/);
     expect(storm.grades[3].special).toBe('6 jumps within 5 cells, -10% each');
     expect(thornbite.grades[0].damage).toBe('0.9% max HP');
