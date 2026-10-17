@@ -1,5 +1,5 @@
 import { TowerTypeId } from '../../../shared/types/content-ids';
-import { memo } from 'react';
+import { memo, useId } from 'react';
 import styles from './TowerActionPanel.module.css';
 import { sendGameCommand } from '../../../shared/lib/game-bridge/bridge';
 import {
@@ -18,13 +18,15 @@ import {
 } from '../../../entities/tower';
 import { mapTowerEffectsToLines } from '../model/mapTowerEffectsToLines';
 import { mapTowerNextLevelPreview } from '../model/mapTowerNextLevelPreview';
-import { mapTowerStatsToLines } from '../model/mapTowerStatsToLines';
+import { mapTowerSheetStatTiles } from '../model/mapTowerSheetStats';
+import { useEscapeToClose } from '../model/useEscapeToClose';
 import type { HudTowerType } from '../../../shared/lib/game-bridge/types';
 import { TowerIcon } from '../../../shared/ui/tower-icon';
 import { BranchGlyph } from '../../../shared/ui/branch-glyph';
 import { mapTowerBranchState } from '../model/mapTowerBranchState';
 import { NextLevelPreview } from './NextLevelPreview';
 import { TowerDevelopAction } from './TowerDevelopAction';
+import { TowerSheetStats } from './TowerSheetStats';
 
 const TOWER_DISPLAY_NAMES: Record<HudTowerType, string> = {
   [TowerTypeId.SINGLE]: 'Archer Tower',
@@ -35,13 +37,28 @@ const TOWER_DISPLAY_NAMES: Record<HudTowerType, string> = {
   [TowerTypeId.SUPPORT]: 'Support Tower',
 };
 
+const UPGRADE_BLOCKED_REASON = 'Not enough gold';
+/** Grade 3 of a tower with branches: the curve goes on only through Develop. */
+const DEVELOP_HINT = 'develop a branch for Lv 4-7';
+
 function formatTowerType(type: HudTowerType): string {
   return TOWER_DISPLAY_NAMES[type] ?? type;
 }
 
+function closeTowerSheet(): void {
+  clearSelectedTower();
+}
+
+/**
+ * The selected tower as a bottom sheet. The page renders it in the dock slot
+ * under the HUD, where it replaces the build and send controls while open; it
+ * only ever shows the tower's actions, never runtime state of its own.
+ */
 function TowerActionPanelComponent() {
   const selectedTower = useSelectedTower();
   const snapshot = useGameHudSnapshot();
+  const upgradeReasonId = useId();
+  useEscapeToClose(selectedTower !== null, closeTowerSheet);
 
   if (!selectedTower) {
     return null;
@@ -64,7 +81,6 @@ function TowerActionPanelComponent() {
 
   const canUpgrade = upgradeCheck.allowed;
   const effectLines = mapTowerEffectsToLines(type, combatStats);
-  const statLines = mapTowerStatsToLines(combatStats);
   // Deltas compare two levels of the curve the tower upgrades along (its
   // authored one, else the archetype's), not the live stats an aura buffs.
   const currentLevelStats =
@@ -74,9 +90,11 @@ function TowerActionPanelComponent() {
     : getTowerStatsForCurveLevel(type, buildableTowerId, level + 1, choices);
   const branchState = mapTowerBranchState(selectedTower, snapshot.gold, choices);
   const { chosenBranch, develop } = branchState;
+  const hasBranches = selectedTower.availableBranches.length > 0;
   const nextLevelPreview = nextLevelStats
     ? mapTowerNextLevelPreview(type, currentLevelStats, nextLevelStats, level + 1)
     : null;
+  const statTiles = mapTowerSheetStatTiles(combatStats, nextLevelStats, nextLevelPreview);
 
   function handleUpgrade(): void {
     sendGameCommand('upgrade-tower', { towerId: id });
@@ -86,93 +104,108 @@ function TowerActionPanelComponent() {
     sendGameCommand('sell-tower', { towerId: id });
   }
 
-  function handleClose(): void {
-    clearSelectedTower();
-  }
-
   return (
-    <section className={`ui-panel ${styles.panel}`} aria-label="Tower actions">
+    <section className={`ui-panel ${styles.sheet}`} aria-label="Tower actions" data-tower-sheet="">
+      <span className={styles.handle} aria-hidden="true" />
+
       <div className={styles.header}>
-        <TowerIcon
-          towerId={raceTowerId}
-          spriteKey={towerSpriteKey}
-          label={towerName}
-          faction={snapshot.selectedFaction}
-        />
-        <span className={styles.title}>{towerName}</span>
-        {chosenBranch && (
-          <span className={styles.branch} aria-label={`Branch: ${chosenBranch.name}`} role="note">
-            <BranchGlyph
-              glyph={chosenBranch.glyph}
-              branchId={chosenBranch.id}
-              title={chosenBranch.name}
-            />
-          </span>
-        )}
-        <span className={styles.level} aria-label={`Level ${level} of ${branchState.maxGrade}`}>
-          Lv {level}/{branchState.maxGrade}
+        <span className={styles.portrait}>
+          <TowerIcon
+            towerId={raceTowerId}
+            spriteKey={towerSpriteKey}
+            label={towerName}
+            faction={snapshot.selectedFaction}
+          />
         </span>
+        <div className={styles.identity}>
+          <h2 className={styles.title}>{towerName}</h2>
+          <div className={styles.meta}>
+            <span className={styles.level} aria-label={`Level ${level} of ${branchState.maxGrade}`}>
+              Lv {level}/{branchState.maxGrade}
+            </span>
+            {chosenBranch ? (
+              <span
+                className={styles.branch}
+                aria-label={`Branch: ${chosenBranch.name}`}
+                role="note"
+              >
+                <BranchGlyph
+                  glyph={chosenBranch.glyph}
+                  branchId={chosenBranch.id}
+                  title={chosenBranch.name}
+                />
+                <span className={styles.branchName} aria-hidden="true">
+                  {chosenBranch.name}
+                </span>
+              </span>
+            ) : (
+              hasBranches && <span className={styles.branch}>No branch yet</span>
+            )}
+            {effectLines.length > 0 && (
+              <ul className={styles.effects} aria-label="Tower effects">
+                {effectLines.map((line) => (
+                  <li key={line.key} className={styles.effectItem}>
+                    <span className={styles.effectLabel}>{line.label}</span> {line.value}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
         <button
           type="button"
           className={`ui-btn-small ui-btn-small--close ${styles.close}`}
           aria-label="Close tower panel"
-          onClick={handleClose}
+          onClick={closeTowerSheet}
         >
           X
         </button>
       </div>
 
-      <dl className={styles.stats}>
-        {statLines.map((stat) => (
-          <div key={stat.key} className={styles.stat}>
-            <dt className={styles.statLabel} title={stat.name}>
-              <span aria-hidden="true">{stat.shortLabel}</span>
-              <span className={styles.visuallyHidden}>{stat.name}</span>
-            </dt>
-            <dd className={styles.statValue}>{stat.value}</dd>
-          </div>
-        ))}
-      </dl>
+      <TowerSheetStats tiles={statTiles} />
 
-      {effectLines.length > 0 && (
-        <ul className={styles.effects} aria-label="Tower effects">
-          {effectLines.map((line) => (
-            <li key={line.key} className={styles.effectRow}>
-              <span className={styles.effectLabel}>{line.label}</span>
-              <span className={styles.effectValue}>{line.value}</span>
-            </li>
-          ))}
-        </ul>
+      {nextLevelPreview ? (
+        <NextLevelPreview preview={nextLevelPreview} />
+      ) : (
+        develop && (
+          <p className={styles.next}>
+            <span className={styles.nextLabel}>NEXT</span> · {DEVELOP_HINT}
+          </p>
+        )
       )}
 
-      {nextLevelPreview && <NextLevelPreview preview={nextLevelPreview} />}
-
-      <div className={styles.buttons}>
+      <div className={styles.footer}>
         {develop ? (
           <TowerDevelopAction key={id} towerId={id} towerName={towerName} develop={develop} />
-        ) : maxed ? (
-          <div className={styles.maxLabel}>MAX LEVEL</div>
         ) : (
           <button
             type="button"
-            className={`fantasy-button fantasy-button--emerald fantasy-button--compact ${styles.actionBtn}`}
+            className={`fantasy-button fantasy-button--emerald ${styles.actionBtn} ${styles.upgradeBtn}`}
             disabled={!canUpgrade}
-            aria-label={`Upgrade tower to level ${level + 1}`}
+            aria-label={maxed ? 'Tower is at max level' : `Upgrade tower to level ${level + 1}`}
+            aria-describedby={!maxed && !canUpgrade ? upgradeReasonId : undefined}
             onClick={handleUpgrade}
           >
-            <span>Upgrade</span>
-            {upgradeCost !== null && <span className={styles.btnCost}>${upgradeCost}</span>}
+            {maxed || upgradeCost === null ? (
+              <span className={styles.actionLabel}>MAX LEVEL</span>
+            ) : (
+              <span className={styles.actionLabel}>Upgrade ${upgradeCost}</span>
+            )}
+            {!maxed && !canUpgrade && (
+              <span id={upgradeReasonId} className={styles.actionReason}>
+                {UPGRADE_BLOCKED_REASON}
+              </span>
+            )}
           </button>
         )}
 
         <button
           type="button"
-          className={`fantasy-button fantasy-button--ember fantasy-button--compact ${styles.actionBtn}`}
+          className={`fantasy-button fantasy-button--danger ${styles.actionBtn} ${styles.sellBtn}`}
           aria-label={`Sell tower for ${sellValue} gold`}
           onClick={handleSell}
         >
-          <span>Sell</span>
-          <span className={styles.btnCost}>${sellValue}</span>
+          <span className={styles.actionLabel}>Sell +${sellValue}</span>
         </button>
       </div>
     </section>

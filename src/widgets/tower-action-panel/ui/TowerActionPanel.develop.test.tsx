@@ -113,6 +113,8 @@ describe('TowerActionPanel develop states', () => {
     expect(develop.getAttribute('aria-disabled')).toBeNull();
     expect(develop.getAttribute('data-sound')).toBe('ui.open');
     expect(screen.queryByText('MAX LEVEL')).toBeNull();
+    // Upgrading on needs a branch: the forecast line says so.
+    expect(screen.getByText(/develop a branch for Lv 4-7/)).toBeDefined();
   });
 
   it('disables Develop with a reason when the gold is short', () => {
@@ -138,8 +140,11 @@ describe('TowerActionPanel develop states', () => {
       `$${TowerTalentPricing.GRADE_COSTS[4]}`,
     );
     const next = screen.getByRole('group', { name: `${NEXT_LEVEL_PREVIEW_LABEL} 4` });
+    const gradeThree = getTowerStatsForCurveLevel(TowerTypeId.SINGLE, ARCHER.id, 3)!;
     const gradeFour = BRANCH_A.grades[0].stats;
-    expect(next.textContent).toContain(`Damage ${gradeFour.damage}`);
+    expect(next.textContent).toContain(`+${gradeFour.damage - gradeThree.damage} damage`);
+    const damageTile = screen.getAllByRole('definition')[0];
+    expect(damageTile.textContent).toContain(`next level ${gradeFour.damage}`);
   });
 });
 

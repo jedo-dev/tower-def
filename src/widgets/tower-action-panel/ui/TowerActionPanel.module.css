@@ -1,52 +1,145 @@
-/* Only rendered while a tower is selected. Floats over the bottom of the
- * battlefield so opening it never resizes the canvas and shifts the grid. */
-.panel {
+/*
+ * The selected tower as a bottom sheet (docs/design/mockup-in-match,
+ * TowerSheet.dc.html): kit frame, drag handle, identity row, stat tiles, a
+ * one-line NEXT forecast and the 44px action row. It fills the dock slot the
+ * page gives it, so its height is the dock's and the board never moves.
+ * The attribute lifts it over .ui-panel's `position: relative`.
+ */
+.sheet[data-tower-sheet] {
+  /* Size queries: a short slot (build drawer was open) drops the NEXT line. */
+  container: tower-sheet / size;
   position: absolute;
-  left: 8px;
-  right: 8px;
-  bottom: 8px;
+  inset: 0;
   z-index: var(--z-index-canvas-panel);
   display: flex;
   flex-direction: column;
-  gap: var(--space-sm);
-  padding: 12px 16px 14px;
+  gap: var(--space-xs);
+  padding: var(--space-sm) var(--space-lg) 10px;
+  overflow: hidden;
+  font-family: var(--font-family-ui);
+  color: var(--color-codex-text);
+  /* The kit frame's 22px slices would eat the 174px sheet; thinner rim. */
+  border-image-width: 14px;
+}
+
+.handle {
+  flex: 0 0 var(--tower-sheet-handle-height);
+  align-self: center;
+  width: var(--tower-sheet-handle-width);
+  height: var(--tower-sheet-handle-height);
+  border-radius: 2px;
+  background: var(--color-codex-line);
 }
 
 .header {
+  flex: 0 0 var(--touch-target-min);
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: var(--space-md);
+  gap: 10px;
+  min-width: 0;
+}
+
+/* Gold ring round the painted icon (or its fallback chip). */
+.portrait {
+  --tower-icon-size: var(--tower-sheet-portrait-size);
+  flex: 0 0 var(--tower-sheet-portrait-size);
+  display: inline-flex;
+  width: var(--tower-sheet-portrait-size);
+  height: var(--tower-sheet-portrait-size);
+  border-radius: 3px;
+  box-shadow: 0 0 0 1px var(--color-accent-gold);
+}
+
+.identity {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
 }
 
 .title {
-  flex: 1 1 auto;
-  min-width: 0;
+  margin: 0;
+  overflow: hidden;
   font-family: var(--font-family-display);
-  font-size: var(--font-size-sm);
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: #e8c25f;
-  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.9);
+  font-size: var(--font-size-lg);
+  font-weight: 900;
+  line-height: 1.2;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--color-text-gold);
 }
 
-.branch {
-  display: inline-flex;
-  flex: 0 0 auto;
+.meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  font-size: var(--font-size-xs);
+  line-height: 16px;
 }
 
 .level {
   flex: 0 0 auto;
-  font-family: var(--font-family-stats);
-  font-size: var(--font-size-2xs);
+  padding: 0 var(--space-sm);
+  border-radius: 3px;
+  background: var(--color-codex-panel-sunken);
+  box-shadow: inset 0 0 0 1px var(--color-accent-gold);
+  font-family: var(--font-family-display);
+  font-size: var(--font-size-xs);
+  font-weight: 900;
   color: var(--color-accent-gold);
 }
 
+.branch {
+  flex: 0 1 auto;
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--color-text-muted);
+}
+
+.branchName {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* What the tower applies now (slow, poison, aura): after the branch, cut
+ * with an ellipsis when the line runs out. */
+.effects {
+  flex: 0 1 auto;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  list-style: none;
+  text-overflow: ellipsis;
+  color: var(--color-text-secondary);
+}
+
+.effectItem {
+  display: inline;
+}
+
+.effectItem + .effectItem::before {
+  content: ' · ';
+}
+
+.effectLabel {
+  color: var(--color-text-label);
+  letter-spacing: 0.06em;
+}
+
 .close {
-  width: 32px;
-  height: 32px;
-  flex: 0 0 auto;
+  flex: 0 0 var(--touch-target-min);
+  width: var(--touch-target-min);
+  height: var(--touch-target-min);
 }
 
 .close:focus-visible {
@@ -54,73 +147,97 @@
   outline-offset: var(--focus-ring-outline-offset);
 }
 
-/* Label/value pairs as a description list: each value is announced with
- * its full stat name, the short label stays visual. */
-.stats {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-2xs) var(--space-md);
-  margin: 0;
-  font-family: var(--font-family-ui);
-  font-size: var(--font-size-2xs);
-}
-
-.stat {
-  display: inline-flex;
-  align-items: baseline;
-  gap: var(--space-xs);
-}
-
-.statLabel {
-  color: var(--color-text-label);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-.statValue {
-  margin: 0;
-  font-family: var(--font-family-stats);
-  font-variant-numeric: tabular-nums;
-  color: var(--color-text-secondary);
-}
-
-/* "NEXT:" preview: dimmed so it reads as a forecast, not the live stats. */
-.next {
-  display: flex;
-  align-items: baseline;
+/* Stat tiles: three columns (four with a splash radius). */
+.tiles {
+  flex: 0 0 auto;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--space-sm);
-  font-family: var(--font-family-ui);
+  margin: 0;
+}
+
+.tiles[data-tile-count='4'] {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.tile {
+  min-width: 0;
+  padding: var(--space-2xs) var(--space-md);
+  border-radius: 3px;
+  background: var(--color-codex-panel-sunken);
+  box-shadow: inset 0 0 0 1px var(--color-codex-line);
+}
+
+.tileLabel {
   font-size: var(--font-size-2xs);
+  line-height: 12px;
   color: var(--color-text-muted);
 }
 
-.nextLabel {
+.tileValues {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  line-height: 18px;
+}
+
+.tileValue {
+  font-family: var(--font-family-display);
+  font-size: var(--font-size-md);
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-primary);
+}
+
+.tileNext {
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  color: var(--color-success);
+}
+
+/* "NEXT Lv 5 · +7 damage · +0.3 range · −0.05s": one line, ellipsized. */
+.next {
   flex: 0 0 auto;
-  letter-spacing: 0.08em;
-  color: var(--color-text-label);
+  margin: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: var(--font-size-xs);
+  line-height: 14px;
+  color: var(--color-text-secondary);
+}
+
+.nextLabel {
+  font-family: var(--font-family-accent);
+  color: var(--color-accent-gold);
 }
 
 .nextList {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2xs) var(--space-md);
+  display: inline;
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
 .nextItem {
-  white-space: nowrap;
+  display: inline;
 }
 
-.nextItemLabel {
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+.nextItem::before {
+  content: ' · ';
 }
 
-.nextDelta {
-  color: var(--color-text-success);
+/* Below the full sheet (the slot of an open build drawer) the forecast goes:
+ * the tiles already show the next values. The query reads the content box:
+ * handle, header, tiles, NEXT line and actions need ~156px of it. */
+@container tower-sheet (max-height: 150px) {
+  .next {
+    display: none;
+  }
 }
 
 .visuallyHidden {
@@ -135,75 +252,67 @@
   border: 0;
 }
 
-.buttons {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--space-md);
+/* Action row pinned to the bottom: Upgrade / Develop 1.2, Sell 0.85. */
+.footer {
+  flex: 0 0 var(--tower-sheet-action-height);
+  display: flex;
+  gap: var(--space-sm);
+  margin-top: auto;
 }
 
+/* Kit buttons at 44px: thinner 9-slice and glow than the menu buttons. */
 .actionBtn {
-  width: 100%;
-  min-height: var(--touch-target-min);
-  gap: var(--space-sm);
-}
-
-.btnCost {
-  font-family: var(--font-family-stats);
-  font-size: 12px;
-  font-variant-numeric: tabular-nums;
-  color: #fff4d6;
-}
-
-.maxLabel {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 38px;
-  font-family: var(--font-family-stats);
-  font-size: var(--font-size-2xs);
-  color: var(--color-text-label);
-}
-
-.effects {
-  display: flex;
   flex-direction: column;
-  gap: var(--space-2xs);
-  margin: 0;
-  padding: 0;
-  list-style: none;
+  gap: 0;
+  width: auto;
+  min-width: 0;
+  min-height: var(--tower-sheet-action-height);
+  height: var(--tower-sheet-action-height);
+  padding: 0 var(--space-sm);
+  border-image-width: 18px;
+  border-image-outset: 4px;
 }
 
-.effectRow {
-  display: flex;
-  align-items: baseline;
-  gap: var(--space-sm);
+.upgradeBtn,
+.developBtn {
+  flex: 1.2 1 0;
 }
 
-.effectLabel {
-  color: var(--color-text-label);
-  font-family: var(--font-family-ui);
+.sellBtn {
+  flex: 0.85 1 0;
+}
+
+.actionLabel {
+  overflow: hidden;
+  max-width: 100%;
+  font-family: var(--font-family-display);
+  font-size: var(--font-size-sm);
+  font-weight: 900;
+  line-height: 1.2;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--color-text-primary);
+  text-shadow:
+    0 1px 0 var(--color-iron-black),
+    0 0 2px var(--color-iron-black);
+}
+
+.developBtn .actionLabel {
+  color: var(--color-accent-gold);
+}
+
+/* Why the action is unavailable, inside the button under its label. */
+.actionReason {
   font-size: var(--font-size-2xs);
-  letter-spacing: 0.08em;
-}
-
-.effectValue {
-  color: var(--color-text-secondary);
-  font-family: var(--font-family-ui);
-  font-size: var(--font-size-xs);
+  line-height: 1.1;
+  color: var(--color-text-warning);
+  text-shadow: 0 1px 0 var(--color-iron-black);
 }
 
 /* Develop it cannot pay for yet: still focusable, so the reason is read out. */
 .actionBtnBlocked {
   cursor: not-allowed;
   filter: grayscale(0.6) brightness(0.7);
-}
-
-.blockedReason {
-  grid-column: 1 / -1;
-  order: 1;
-  margin: 0;
-  font-family: var(--font-family-ui);
-  font-size: var(--font-size-xs);
-  text-align: center;
-  color: var(--color-text-warning);
 }
