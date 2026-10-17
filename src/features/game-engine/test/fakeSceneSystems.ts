@@ -133,6 +133,8 @@ class FakeTextureManager {
       getFrameNames: (): string[] =>
         Array.from({ length: FAKE_SHEET_FRAME_COUNT }, (_, index) => `${index}`),
       setFilter: (): void => undefined,
+      // No pixels behind fake textures: canvas painters (the path ribbon) skip.
+      getSourceImage: (): null => null,
     };
   }
 

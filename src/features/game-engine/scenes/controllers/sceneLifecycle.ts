@@ -25,6 +25,7 @@ import {
   clearTerrainSprites as clearTerrainSpritesRuntime,
 } from '../../runtime/grid/gameSceneGridRenderer';
 import { destroyGridOccupancyOverlay } from '../../runtime/grid/gridOccupancyOverlay';
+import { destroyPathRibbon } from '../../runtime/grid/pathRibbonRenderer';
 import {
   registerSceneAudioUnlock,
   registerScenePointerHandlers,
@@ -146,6 +147,7 @@ function destroyBoardGraphics(context: GameSceneContext): void {
   destroyGridOccupancyOverlay(state.gridRendererState);
   clearTerrainSpritesRuntime(state.gridRendererState);
   clearGridLabelsRuntime(state.gridRendererState);
+  destroyPathRibbon(state.gridRendererState.pathRibbon);
 }
 
 /** Scene shutdown or destroy: releases every subscription, sprite and sound once. */

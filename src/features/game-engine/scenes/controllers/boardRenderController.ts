@@ -11,15 +11,22 @@ import {
 } from '../../runtime/grid/gameSceneGridPreviewRuntime';
 import {
   drawGridCell as drawGridCellRuntime,
+  resolvePathTextureKey,
   type GridRendererDeps,
 } from '../../runtime/grid/gameSceneGridRenderer';
 import { drawGridOccupancyOverlay } from '../../runtime/grid/gridOccupancyOverlay';
-import { refreshPathTiles, selectPlayerPathRoute } from '../../runtime/grid/pathTiles';
+import { syncPathRibbon } from '../../runtime/grid/pathRibbonRenderer';
+import {
+  refreshPathTiles,
+  selectPlayerPathRoute,
+  toTrailCellKeys,
+} from '../../runtime/grid/pathTiles';
 import { GRID_OVERLAY_RENDER_DEPTH } from '../gameScene.constants';
 import { resolveTowerRangeCells } from '../gameScene.helpers';
 import {
   GRID_PREVIEW_CONFIG,
   GRID_RENDERER_CONFIG,
+  PATH_RIBBON_CONFIG,
   ROUTE_PREVIEW_CONFIG,
 } from '../gameScene.runtimeConfigs';
 import { isBuildAnchorValid } from './buildRuntimeAdapter';
@@ -106,6 +113,29 @@ export function redrawTerrainTiles(core: GameSceneCore): void {
   redrawOccupancyOverlay(core);
 }
 
+/**
+ * Points the trail ribbon at `route` on the board in view. A no-op unless the
+ * route or the visible race changed, so callers may call it freely on events.
+ */
+function syncShownPathRibbon({ scene, state }: GameSceneCore, route: readonly GridPoint[]): void {
+  syncPathRibbon(
+    state.gridRendererState.pathRibbon,
+    scene,
+    { route, pathTextureKey: resolvePathTextureKey(getVisibleBuilderFactionId(state)) },
+    PATH_RIBBON_CONFIG,
+  );
+}
+
+/**
+ * Shows `route` as the board's path: the trail ribbon follows it and every
+ * terrain tile is redrawn against its trail cells (view switch, wave start).
+ */
+export function showPathRoute(core: GameSceneCore, route: readonly GridPoint[]): void {
+  core.state.pathCellKeys = toTrailCellKeys(route);
+  syncShownPathRibbon(core, route);
+  redrawTerrainTiles(core);
+}
+
 /** Shares the route preview's memoised search while building. */
 export function getPlayerPathRoute(state: GameSceneState): readonly GridPoint[] {
   const grid = state.gridModel;
@@ -119,7 +149,7 @@ export function getPlayerPathRoute(state: GameSceneState): readonly GridPoint[] 
 }
 
 /**
- * Keeps the terrain path tiles on the current small route while building.
+ * Keeps the trail (ribbon and prop-free cells) on the current small route while building.
  * Shares the route preview's memoised search, so it adds no route search.
  * Outside the build phase the tiles follow the wave's routes (wave start).
  */
@@ -129,12 +159,14 @@ export function refreshBuildPhasePathTiles(core: GameSceneCore): void {
     return;
   }
   state.arePathTilesStale = false;
+  const route = getPlayerPathRoute(state);
   refreshPathTiles(
     state.gridModel.cells,
     state.pathCellKeys,
-    getPlayerPathRoute(state),
+    route,
     (nextPathCellKeys) => {
       state.pathCellKeys = nextPathCellKeys;
+      syncShownPathRibbon(core, route);
     },
     (cell) => drawGridCell(core, cell),
   );

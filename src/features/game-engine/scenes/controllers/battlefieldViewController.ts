@@ -6,7 +6,7 @@ import { syncSideScenery } from '../../runtime/battlefield/sideScenery';
 import type { SideSceneryBoardSize } from '../../runtime/battlefield/sideSceneryLayout';
 import { syncCreepListAdornments } from '../../runtime/creep/creepAdornments';
 import { GRID_PIXEL_HEIGHT, GRID_PIXEL_WIDTH, TERRAIN_RENDER_DEPTH } from '../gameScene.constants';
-import { getPlayerPathRoute, redrawTerrainTiles } from './boardRenderController';
+import { getPlayerPathRoute, showPathRoute } from './boardRenderController';
 import type { GameSceneState } from './gameSceneState';
 import { publishHudSnapshot } from './hudSnapshotPublisher';
 import { getVisibleBuilderFactionId, type GameSceneCore } from './sceneQueries';
@@ -73,8 +73,7 @@ export function renderVisibleBattlefield(core: GameSceneCore): void {
     ? state.duelMatchState.opponent.battlefield.routes.small
     : getPlayerPathRoute(state);
   if (!showOpponent) state.arePathTilesStale = false;
-  state.pathCellKeys = new Set(visiblePath.map((cell) => `${cell.x}:${cell.y}`));
-  redrawTerrainTiles(core);
+  showPathRoute(core, visiblePath);
   syncVisibleSideScenery(core);
 }
 

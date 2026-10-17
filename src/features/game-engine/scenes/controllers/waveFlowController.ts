@@ -27,7 +27,7 @@ import {
   syncOpponentDuelCreepsFromField,
 } from './battlefieldViewController';
 import {
-  redrawTerrainTiles,
+  showPathRoute,
   updateBuildPreview,
   updateGridOverlayVisualState,
 } from './boardRenderController';
@@ -116,8 +116,7 @@ function startNextWaveFromBuildState(context: GameSceneContext): void {
   scene.registry.set('wave.number', state.runState.currentWaveNumber);
   state.runState.activeCreepRoutes = waveRoutes;
   // The path preview shows the single-cell route; large creeps may walk wider.
-  state.pathCellKeys = new Set(waveRoutes.small.map((cell) => `${cell.x}:${cell.y}`));
-  redrawTerrainTiles(context);
+  showPathRoute(context, waveRoutes.small);
   state.duelMatchState = applyComputerBuildPhaseStrategies(state.duelMatchState, {
     difficulty: state.selectedDifficulty,
     leakHistory: state.opponentLeakHistory,

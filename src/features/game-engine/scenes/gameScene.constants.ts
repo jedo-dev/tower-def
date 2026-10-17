@@ -167,6 +167,8 @@ export const ENTRANCE_EXIT_LABEL_FONT_FAMILY = 'Arial';
 export const ENTRANCE_EXIT_LABEL_FONT_SIZE_PX = '10px';
 export const ENTRANCE_EXIT_LABEL_COLOR = '#ffffff';
 export const TERRAIN_RENDER_DEPTH = -20;
+/** The route's trail: above the ground tiles, below the props (terrain + 1). */
+export const PATH_RIBBON_RENDER_DEPTH = TERRAIN_RENDER_DEPTH + 0.5;
 export const GRID_OVERLAY_RENDER_DEPTH = 10;
 export const ENTRANCE_EXIT_LABEL_RENDER_DEPTH = 20;
 export const ENDPOINT_ENTRANCE_MARKER_COLOR = 0x2ecc71;
