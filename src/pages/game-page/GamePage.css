@@ -56,6 +56,36 @@
   min-width: 0;
 }
 
+/* The feed's place in the row. A tower selected mid-wave lays its one-line
+ * info bar over the feed (kept mounted, inert) instead of adding a row, so
+ * the board does not move when a tower is tapped during the wave. */
+.game-feed-slot {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.game-feed-slot__feed {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.game-feed-slot__feed > * {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.game-feed-slot__feed[inert] {
+  visibility: hidden;
+}
+
+.game-feed-slot > [data-wave-tower-info] {
+  position: absolute;
+  inset: 0;
+}
+
 /* Controls stay a strip: capped low enough that the battlefield keeps at
  * least ~450px (a 300px-wide board) on a 390x844 phone even with the build
  * drawer open. The HUD scrolls its expanded body internally and the send
@@ -96,6 +126,41 @@
 
 .game-panels--sheet-open .game-dock {
   visibility: hidden;
+}
+
+/*
+ * Wave phase: the dock folds away and the strip shrinks to the HUD status
+ * rows, so the board takes the freed height. The slot leaves the flow (no
+ * gap, no height) but keeps its layout, clipped and hidden, so the send
+ * panel's mode and scroll survive. The height snaps rather than animates:
+ * one host resize, one camera re-fit. Coming back, the dock fades in.
+ */
+.game-panels--wave {
+  position: relative;
+}
+
+.game-panels--wave .game-dock-slot {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 0;
+  overflow: hidden;
+  visibility: hidden;
+}
+
+.game-panels:not(.game-panels--wave) .game-dock-slot {
+  animation: game-dock-return var(--duration-med) var(--ease-out);
+}
+
+@keyframes game-dock-return {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .game-panels:not(.game-panels--wave) .game-dock-slot {
+    animation: none;
+  }
 }
 
 /* Only the slot gives way to the lock; the HUD keeps its rows. */
@@ -147,6 +212,11 @@
 .game-page--landscape .game-feed-row > :first-child {
   flex: 1 1 0;
   min-height: 0;
+}
+
+/* Landscape: the feed is a tall column; the info bar sits at its top. */
+.game-page--landscape .game-feed-slot > [data-wave-tower-info] {
+  bottom: auto;
 }
 
 /* The panels keep their natural height so the column scrolls, instead of
