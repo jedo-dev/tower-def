@@ -1,5 +1,6 @@
 import { syncCreepEffectPipPosition } from '../combat/creepEffectVisuals';
 import { applyCreepFacing } from '../animation/creepFacing';
+import { syncCreepRenderDepth } from '../battlefield/actorRenderDepth';
 import type { GridPosition } from '../../../../shared/types/pathfinding';
 import {
   hasWaveRoute,
@@ -90,6 +91,7 @@ function readSpritePosition(creep: CreepRenderState, out: MutablePoint): void {
 
 function commitSpriteMove(creep: CreepRenderState, position: MutablePoint, route: WaveRoute): void {
   creep.sprite.setPosition(position.x, position.y);
+  syncCreepRenderDepth(creep);
   syncCreepEffectPipPosition(creep);
   faceCurrentSegment(creep, route);
 }

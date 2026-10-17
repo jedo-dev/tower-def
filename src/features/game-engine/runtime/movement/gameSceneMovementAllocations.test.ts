@@ -96,6 +96,11 @@ function createSpriteStub(): Phaser.GameObjects.Sprite {
     x: 0,
     y: 0,
     rotation: 0,
+    depth: 0,
+    setDepth(depth: number) {
+      sprite.depth = depth;
+      return sprite;
+    },
     setPosition(x: number, y: number) {
       sprite.x = x;
       sprite.y = y;

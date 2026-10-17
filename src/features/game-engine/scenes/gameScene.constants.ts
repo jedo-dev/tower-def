@@ -149,12 +149,6 @@ export const BONE_ARCHER_TOWER_CONFIG =
   buildableTowers.find((tower) => tower.id === BONE_ARCHER_TOWER_ID) ?? null;
 export const PLAGUE_TOWER_CONFIG =
   buildableTowers.find((tower) => tower.id === PLAGUE_TOWER_ID) ?? null;
-/** Tower sprites span their 2x2 footprint. */
-export const TOWER_VISUAL_SCALE_IN_CELLS = TowerFootprint.SIZE;
-export const BONE_ARCHER_ORIGIN_X = 0.5;
-export const BONE_ARCHER_ORIGIN_Y = 0.82;
-export const PLAGUE_TOWER_ORIGIN_X = 0.5;
-export const PLAGUE_TOWER_ORIGIN_Y = 0.75;
 export const GRID_LINE_COLOR = 0x5f6f8f;
 export const GRID_IDLE_ALPHA = 0.08;
 export const GRID_BUILD_ALPHA = 0.42;
@@ -176,8 +170,19 @@ export const ENDPOINT_GATE_RENDER_DEPTH = 20;
 /** Tint over every cell a tower stands on, drawn on the grid overlay layer. */
 export const OCCUPIED_CELL_FILL_COLOR = 0x263347;
 export const OCCUPIED_CELL_FILL_ALPHA = 0.55;
-export const TOWER_RENDER_DEPTH = 40;
+/**
+ * Towers and ground creeps share one depth band starting here, sorted by the
+ * world y where they meet the ground (see runtime/battlefield/actorRenderDepth):
+ * above creep shadows and rings, below projectiles and health bars.
+ */
 export const CREEP_RENDER_DEPTH = 45;
+export const GROUND_ACTOR_RENDER_DEPTH_BASE = CREEP_RENDER_DEPTH;
+/** The whole 480px board spans 4.8 depth units, so the band ends below 50. */
+export const ACTOR_RENDER_DEPTH_PER_WORLD_PX = 0.01;
+/** Breaks ties between towers of one row; 20 columns stay under one world px. */
+export const TOWER_RENDER_DEPTH_COLUMN_STEP = 0.0001;
+/** Flyers draw above every ground actor and below projectiles. */
+export const AIR_CREEP_RENDER_DEPTH = 50;
 /**
  * Creep sprites overhang their footprint so the art stays readable on 16px
  * cells. These are the wanted sizes (a third above the first pass, so creeps

@@ -13,11 +13,7 @@ import {
   preloadGameScene,
   type GameSceneHarness,
 } from '../test/sceneHarness';
-import {
-  CREEP_RENDER_DEPTH,
-  PATH_RIBBON_RENDER_DEPTH,
-  TOWER_RENDER_DEPTH,
-} from './gameScene.constants';
+import { GROUND_ACTOR_RENDER_DEPTH_BASE, PATH_RIBBON_RENDER_DEPTH } from './gameScene.constants';
 
 type GateView = {
   edge: unknown;
@@ -107,7 +103,7 @@ describe('GameScene faction gates (tower-def-alq)', () => {
     expect(entrance.displayWidth).toBe(32);
     expect(entrance.displayHeight).toBe(32);
     expect(entrance.depth).toBeGreaterThan(PATH_RIBBON_RENDER_DEPTH);
-    expect(entrance.depth).toBeLessThan(Math.min(TOWER_RENDER_DEPTH, CREEP_RENDER_DEPTH));
+    expect(entrance.depth).toBeLessThan(GROUND_ACTOR_RENDER_DEPTH_BASE);
   });
 
   it('stands its base on the lower edge of the 2x2 entrance zone', async () => {

@@ -52,6 +52,11 @@ function createCreep(start: GridPosition, sizeClass: UnitSizeClass, speed: numbe
     x: startPx.x + footprintCenterOffsetPx,
     y: startPx.y + footprintCenterOffsetPx,
     rotation: 0,
+    depth: 0,
+    setDepth: vi.fn(function setDepth(this: Phaser.GameObjects.Sprite, depth: number) {
+      this.depth = depth;
+      return this;
+    }),
     setPosition: vi.fn(function setPosition(this: Phaser.GameObjects.Sprite, x: number, y: number) {
       this.x = x;
       this.y = y;

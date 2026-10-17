@@ -172,6 +172,18 @@ export const TOWER_SPRITE_SHEET_LAYOUT = {
   rows: 3,
 } as const;
 
+/**
+ * How big a placed tower is drawn, measured on the painted structure (the
+ * alpha box of its idle frames, see towerSheetMetrics.generated.ts), not on
+ * the 60px frame. The structure is scaled until its width reaches the target
+ * (1.4 tower footprints) unless its height would pass the cap first; it stands
+ * on the footprint's bottom edge and overhangs upward, like a WC3 building.
+ */
+export const TOWER_VISUAL_SIZE = {
+  targetWidthWorldPx: 44,
+  maxHeightWorldPx: 64,
+} as const;
+
 export type TowerSpriteSheet = {
   spriteKey: TowerSpriteKey;
   url: string;

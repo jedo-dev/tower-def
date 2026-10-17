@@ -1,7 +1,6 @@
 import { TowerAttackKind, TowerTypeId } from '../../../../shared/types/content-ids';
 import {
   getTowerAttackKind,
-  getTowerCenter,
   resolveBuildableTowerById,
   type TowerEntity,
 } from '../../../../entities/tower';
@@ -13,7 +12,6 @@ import {
   createTowersWithAuras,
 } from '../../../../entities/tower';
 import type { UnitConfig, UnitId } from '../../../../entities/unit';
-import { GRID_DIMENSIONS } from '../../../../shared/constants/grid';
 import {
   TOWER_SPRITE_KEYS,
   UNIT_FACTION_TINTS,
@@ -22,22 +20,15 @@ import {
 } from '../../../../shared/constants/sprites';
 import type { RaceId } from '../../../../shared/types/content-ids';
 import type { GridPosition } from '../../../../shared/types/pathfinding';
-import {
-  BONE_ARCHER_ORIGIN_X,
-  BONE_ARCHER_ORIGIN_Y,
-  PLAGUE_TOWER_CONFIG,
-  PLAGUE_TOWER_ORIGIN_X,
-  PLAGUE_TOWER_ORIGIN_Y,
-  TOWER_RENDER_DEPTH,
-  TOWER_VISUAL_SCALE_IN_CELLS,
-} from '../../scenes/gameScene.constants';
-import { toCellCenter } from '../../scenes/gameScene.helpers';
+import { PLAGUE_TOWER_CONFIG } from '../../scenes/gameScene.constants';
 import type { TowerRenderState } from '../../scenes/gameScene.types';
 import {
   getTowerAnimationSet,
   getWalkAnimationKeyBySpriteKey,
 } from '../animation/gameSceneAnimationRuntime';
 import { resolveSpriteKey } from '../assets/spriteKeyResolver';
+import { resolveTowerRenderDepth } from './actorRenderDepth';
+import { getTowerVisualMetrics, toTowerSpriteFootPoint } from './towerVisualMetrics';
 import {
   destroyBattlefieldRenderState,
   type BattlefieldRenderState,
@@ -95,13 +86,24 @@ function resolveArcherTowerSprite(scene: Phaser.Scene, factionId: RaceId) {
   });
 }
 
-function resolveTowerRenderDepth(position: GridPosition): number {
-  return TOWER_RENDER_DEPTH + position.y * 10 + position.x * 0.01;
-}
-
-/** Sprites stand on the centre of the tower's footprint, not on its anchor cell. */
-function toTowerSpriteCenter(anchor: GridPosition): { x: number; y: number } {
-  return toCellCenter(getTowerCenter({ position: anchor }));
+/**
+ * A tower sprite at its footprint: the painted structure sized by its sheet's
+ * visual metrics, its bottom centre on the footprint's bottom centre, sorted
+ * with the creeps by that bottom edge. Selection, range and hit testing stay
+ * on the footprint; only the art overhangs upward.
+ */
+function addTowerSprite(
+  scene: Phaser.Scene,
+  position: GridPosition,
+  textureKey: string,
+): Phaser.GameObjects.Sprite {
+  const foot = toTowerSpriteFootPoint(position);
+  const metrics = getTowerVisualMetrics(textureKey);
+  const sprite = scene.add.sprite(foot.x, foot.y, textureKey, 0);
+  sprite.setDepth(resolveTowerRenderDepth(position));
+  sprite.setDisplaySize(metrics.displayWidthPx, metrics.displayHeightPx);
+  sprite.setOrigin(metrics.originX, metrics.originY);
+  return sprite;
 }
 
 /** A placed tower's sprite, and whether it draws the tower's own sheet or borrowed art. */
@@ -128,14 +130,7 @@ function createOwnArtTowerSprite(
   position: GridPosition,
   spriteKey: string,
 ): Phaser.GameObjects.Sprite {
-  const center = toTowerSpriteCenter(position);
-  const sprite = scene.add.sprite(center.x, center.y, spriteKey, 0);
-  sprite.setDepth(resolveTowerRenderDepth(position));
-  sprite.setDisplaySize(
-    GRID_DIMENSIONS.cellSize * TOWER_VISUAL_SCALE_IN_CELLS,
-    GRID_DIMENSIONS.cellSize * TOWER_VISUAL_SCALE_IN_CELLS,
-  );
-  sprite.setOrigin(BONE_ARCHER_ORIGIN_X, BONE_ARCHER_ORIGIN_Y);
+  const sprite = addTowerSprite(scene, position, spriteKey);
   playBuildThenIdle(sprite, spriteKey);
   return sprite;
 }
@@ -176,18 +171,11 @@ export function createPlacedArcherSprite(
   position: GridPosition,
   factionId: RaceId,
 ): Phaser.GameObjects.Sprite {
-  const center = toTowerSpriteCenter(position);
   const resolved = resolveArcherTowerSprite(scene, factionId);
-  const sprite = scene.add.sprite(center.x, center.y, resolved.spriteKey, 0);
+  const sprite = addTowerSprite(scene, position, resolved.spriteKey);
   if (resolved.isPlaceholder && resolved.placeholderTint !== undefined) {
     sprite.setTint(resolved.placeholderTint);
   }
-  sprite.setDepth(resolveTowerRenderDepth(position));
-  sprite.setDisplaySize(
-    GRID_DIMENSIONS.cellSize * TOWER_VISUAL_SCALE_IN_CELLS,
-    GRID_DIMENSIONS.cellSize * TOWER_VISUAL_SCALE_IN_CELLS,
-  );
-  sprite.setOrigin(BONE_ARCHER_ORIGIN_X, BONE_ARCHER_ORIGIN_Y);
   playBuildThenIdle(sprite, resolved.spriteKey);
 
   return sprite;
@@ -197,20 +185,13 @@ export function createPlacedPlagueSprite(
   scene: Phaser.Scene,
   position: GridPosition,
 ): Phaser.GameObjects.Sprite {
-  const center = toTowerSpriteCenter(position);
   const resolved = resolveSpriteKey(
     scene.textures,
     'tower',
     PLAGUE_TOWER_CONFIG?.spriteKey ?? TOWER_SPRITE_KEYS.UNDEAD_BONE_ARCHER,
     { contentId: PLAGUE_TOWER_CONFIG?.id },
   );
-  const sprite = scene.add.sprite(center.x, center.y, resolved.spriteKey, 0);
-  sprite.setDepth(resolveTowerRenderDepth(position));
-  sprite.setDisplaySize(
-    GRID_DIMENSIONS.cellSize * TOWER_VISUAL_SCALE_IN_CELLS * 1.1,
-    GRID_DIMENSIONS.cellSize * TOWER_VISUAL_SCALE_IN_CELLS * 1.1,
-  );
-  sprite.setOrigin(PLAGUE_TOWER_ORIGIN_X, PLAGUE_TOWER_ORIGIN_Y);
+  const sprite = addTowerSprite(scene, position, resolved.spriteKey);
   sprite.setTint(0x44aa44);
   playBuildThenIdle(sprite, resolved.spriteKey);
 

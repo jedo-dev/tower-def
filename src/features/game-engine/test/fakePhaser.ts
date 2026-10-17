@@ -80,6 +80,9 @@ export class FakeGameObject extends FakeEventEmitter {
   public scaleY = 1;
   public displayWidth = 0;
   public displayHeight = 0;
+  /** Phaser's default origin is the centre. */
+  public originX = 0.5;
+  public originY = 0.5;
   public width = 0;
   public height = 0;
   public tint = 0xffffff;
@@ -151,6 +154,12 @@ export class FakeGameObject extends FakeEventEmitter {
   public setDisplaySize(width: number, height: number): this {
     this.displayWidth = width;
     this.displayHeight = height;
+    return this;
+  }
+
+  public setOrigin(x: number, y: number = x): this {
+    this.originX = x;
+    this.originY = y;
     return this;
   }
 

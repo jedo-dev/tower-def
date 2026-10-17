@@ -8,7 +8,7 @@ import {
   type WaveRoutes,
 } from '../../../../shared/lib/pathfinding/waveRoutes';
 import type { GridPosition } from '../../../../shared/types/pathfinding';
-import { CREEP_RENDER_DEPTH } from '../../scenes/gameScene.constants';
+import { syncCreepRenderDepth } from '../battlefield/actorRenderDepth';
 import type { CreepRenderState, PendingWaveSpawn } from '../../scenes/gameScene.types';
 import { isDirectionalCreepSprite } from '../animation/creepFacing';
 import { getCreepVisualMetrics } from '../creep/creepVisualMetrics';
@@ -180,7 +180,6 @@ function createSpawnedCreep(
     animationKey,
   );
   sprite.setDisplaySize(visualMetrics.displaySizePx, visualMetrics.displaySizePx);
-  sprite.setDepth(CREEP_RENDER_DEPTH);
   const baseTint = deps.getCreepTintByUnit?.(spawn.unit) ?? 0xffffff;
   sprite.setTint(baseTint);
   sprite.play(animationKey);
@@ -202,6 +201,7 @@ function createSpawnedCreep(
     facing: isDirectional ? 'side' : undefined,
     facingFlipped: false,
   };
+  syncCreepRenderDepth(creep);
   deps.attachCreepAdornments?.(creep);
   return creep;
 }
