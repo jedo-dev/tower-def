@@ -118,7 +118,7 @@ describe('GamePage', () => {
     const board = document.querySelector('.game-canvas-area');
     expect(board).not.toBeNull();
     expect(board?.contains(feed)).toBe(false);
-    const feedRow = feed.parentElement;
+    const feedRow = feed.closest('.game-feed-slot')?.parentElement;
     expect(feedRow?.className).toBe('game-feed-row');
     expect(feedRow?.parentElement?.className).toBe('game-viewport');
 

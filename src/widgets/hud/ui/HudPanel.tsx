@@ -24,6 +24,11 @@ export type HudPanelProps = {
   /** Controlled expand state; omitted, the panel keeps its own. */
   isExpanded?: boolean;
   onToggleExpanded?: (isExpanded: boolean) => void;
+  /**
+   * False while the wave runs: the build drawer folds away with its tab and
+   * the status rows stay. The expand state is kept for the next build phase.
+   */
+  isDrawerAvailable?: boolean;
 };
 
 export const BUILD_PHASE_ONLY_HINT = 'Build phase only';
@@ -66,9 +71,10 @@ function HudPanelComponent({
   setup,
   isExpanded: controlledExpanded,
   onToggleExpanded,
+  isDrawerAvailable = true,
 }: HudPanelProps) {
   const [internalExpanded, setInternalExpanded] = useState(false);
-  const isExpanded = controlledExpanded ?? internalExpanded;
+  const isExpanded = isDrawerAvailable && (controlledExpanded ?? internalExpanded);
   const setIsExpanded = (next: boolean): void => {
     setInternalExpanded(next);
     onToggleExpanded?.(next);
@@ -97,14 +103,16 @@ function HudPanelComponent({
 
   return (
     <section className={`ui-panel ${styles.panel}`} aria-label="Game HUD">
-      <button
-        type="button"
-        className={styles.toggle}
-        aria-label={isExpanded ? 'Collapse HUD' : 'Expand HUD'}
-        onClick={() => setIsExpanded(!isExpanded)}
-      >
-        <span className={joinClassNames(styles.toggleIcon, isExpanded && styles.toggleIconUp)} />
-      </button>
+      {isDrawerAvailable && (
+        <button
+          type="button"
+          className={styles.toggle}
+          aria-label={isExpanded ? 'Collapse HUD' : 'Expand HUD'}
+          onClick={() => setIsExpanded(!isExpanded)}
+        >
+          <span className={joinClassNames(styles.toggleIcon, isExpanded && styles.toggleIconUp)} />
+        </button>
+      )}
 
       <div className={styles.topRow}>
         <div className={styles.resource}>

@@ -88,6 +88,45 @@ describe('HudPanel render', () => {
   });
 });
 
+describe('HudPanel during the wave', () => {
+  const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+  const setup: GameSetupConfig = {
+    builderFaction: RaceId.UNDEAD,
+    enemyFaction: EnemyFaction.ORC,
+    difficulty: Difficulty.NORMAL,
+  };
+
+  afterEach(() => {
+    cleanup();
+    expect(consoleError).not.toHaveBeenCalled();
+    consoleError.mockClear();
+  });
+
+  function renderPanelMarkup(isDrawerAvailable: boolean): string {
+    const { container, unmount } = render(
+      <HudPanel setup={setup} isExpanded={false} isDrawerAvailable={isDrawerAvailable} />,
+    );
+    const panel = container.querySelector('section')!;
+    panel.querySelector('button[aria-label="Expand HUD"]')?.remove();
+    const markup = panel.outerHTML;
+    unmount();
+    return markup;
+  }
+
+  it('keeps the status rows exactly as they are and only drops the drawer tab', () => {
+    publishGameHudSnapshot(
+      createSnapshot({ phase: 'wave', canStartWave: false, pendingCreepCount: 6 }),
+    );
+
+    expect(renderPanelMarkup(false)).toBe(renderPanelMarkup(true));
+
+    render(<HudPanel setup={setup} isExpanded isDrawerAvailable={false} />);
+    expect(screen.queryByRole('button', { name: /HUD$/ })).toBeNull();
+    expect(screen.queryByRole('group', { name: 'Buildable towers' })).toBeNull();
+    expect(screen.getByRole('status', { name: /^Incoming 6/ })).toBeDefined();
+  });
+});
+
 describe('HudPanel build bar', () => {
   const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
 
