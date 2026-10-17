@@ -2,7 +2,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { BranchChooserDialog } from './BranchChooserDialog';
-import type { BranchChooserCard } from '../model/types';
+import { UNCHANGED_GRADE_VALUE, type BranchChooserCard } from '../model/types';
+import type { BranchChooserDialogProps } from '../model/types';
 
 function createCard(id: string, name: string, overrides: Partial<BranchChooserCard> = {}) {
   const card: BranchChooserCard = {
@@ -14,15 +15,15 @@ function createCard(id: string, name: string, overrides: Partial<BranchChooserCa
     isDisabled: false,
     grades: {
       ariaLabel: `${name} grades`,
-      gradeColumnLabel: 'Lv',
+      gradeColumnLabel: 'Grade',
       statColumns: [
         { label: 'DMG', title: 'Damage' },
         { label: 'RNG', title: 'Range' },
       ],
       specialColumnLabel: 'Special',
       rows: [
-        { grade: 4, stats: ['+10%', '+0'], special: '—' },
-        { grade: 5, stats: ['+20%', '+1'], special: 'Slow' },
+        { grade: 4, stats: ['+10%', UNCHANGED_GRADE_VALUE], special: UNCHANGED_GRADE_VALUE },
+        { grade: 5, stats: ['+20%', UNCHANGED_GRADE_VALUE], special: 'Slow' },
       ],
     },
     ...overrides,
@@ -43,7 +44,10 @@ describe('BranchChooserDialog (shared shell)', () => {
     consoleError.mockClear();
   });
 
-  function renderDialog(cards: readonly BranchChooserCard[] = CARDS) {
+  function renderDialog(
+    cards: readonly BranchChooserCard[] = CARDS,
+    extra: Partial<BranchChooserDialogProps> = {},
+  ) {
     const onConfirm = vi.fn();
     const onCancel = vi.fn();
     render(
@@ -53,20 +57,23 @@ describe('BranchChooserDialog (shared shell)', () => {
         lockWarning="The other branch locks for the match."
         onConfirm={onConfirm}
         onCancel={onCancel}
+        {...extra}
       />,
     );
     return { onConfirm, onCancel, dialog: screen.getByRole('dialog') };
   }
 
-  it('portals a labelled modal with both cards, their grade tables and the lock warning', () => {
+  it('portals a labelled modal with both cards, sideways grade tables and the lock warning', () => {
     const { dialog } = renderDialog();
 
     expect(dialog.parentElement).toBe(document.body);
     expect(dialog.getAttribute('aria-modal')).toBe('true');
     expect(screen.getByRole('dialog', { name: 'Develop Arrow Tower' })).toBe(dialog);
-    expect(dialog.getAttribute('aria-describedby')).toBe(
-      screen.getByText('The other branch locks for the match.').id,
+    expect(screen.getByRole('heading', { level: 2 }).textContent).toBe('Develop · Arrow Tower');
+    expect(within(dialog).getByText('The other branch locks for the match.').id).toBe(
+      dialog.getAttribute('aria-describedby'),
     );
+    expect(within(dialog).getByText('Step 1 of 2 · Choose')).toBeTruthy();
     expect(document.activeElement).toBe(dialog);
 
     const fireTable = screen.getByRole('table', { name: 'Fire grades' });
@@ -74,69 +81,105 @@ describe('BranchChooserDialog (shared shell)', () => {
       within(fireTable)
         .getAllByRole('columnheader')
         .map((cell) => cell.textContent),
-    ).toEqual(['Lv', 'DMG', 'RNG', 'Special']);
-    expect(within(fireTable).getByRole('rowheader', { name: '5' })).toBeTruthy();
-    expect(within(fireTable).getByText('Slow')).toBeTruthy();
+    ).toEqual(['Grade', '4', '5']);
+    // RNG never changes, so only DMG gets a row.
+    expect(
+      within(fireTable)
+        .getAllByRole('rowheader')
+        .map((cell) => cell.textContent),
+    ).toEqual(['DMG']);
+    const fireCard = screen.getByRole('article', { name: 'Fire' });
+    expect(within(fireCard).getByRole('list', { name: 'Special' }).textContent).toBe('5 Slow');
+    expect(within(fireCard).getByText('$40')).toBeTruthy();
     expect(screen.getByRole('table', { name: 'Frost grades' })).toBeTruthy();
+    expect(screen.queryByRole('timer')).toBeNull();
     expect(consoleError).not.toHaveBeenCalled();
   });
 
-  it('commits only after Choose then Confirm', () => {
-    const { onConfirm } = renderDialog();
+  it('shows the countdown chip only when one is given', () => {
+    renderDialog(CARDS, {
+      countdown: { label: '0:21', accessibleLabel: 'Build phase ends in 21 seconds' },
+    });
+
+    const timer = screen.getByRole('timer', { name: 'Build phase ends in 21 seconds' });
+    expect(timer.textContent).toBe('0:21');
+    expect(consoleError).not.toHaveBeenCalled();
+  });
+
+  it('commits only after Choose then Confirm, and Back returns to step 1', () => {
+    const { onConfirm, onCancel } = renderDialog();
     const confirm = screen.getByRole('button', { name: 'Confirm branch' }) as HTMLButtonElement;
     expect(confirm.disabled).toBe(true);
-    expect(confirm.textContent).toContain('$40');
+    expect(confirm.textContent).toBe('Choose a branch first');
 
     const chooseFrost = screen.getByRole('button', { name: 'Choose Frost for 40 gold' });
     fireEvent.click(chooseFrost);
     expect(chooseFrost.getAttribute('aria-pressed')).toBe('true');
-    expect(chooseFrost.textContent).toContain('Selected');
+    expect(within(screen.getByRole('article', { name: 'Frost' })).getByText('Chosen')).toBeTruthy();
+    expect(screen.getByText('Step 2 of 2 · Confirm')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Confirm Frost for 40 gold' }).textContent).toBe(
+      'Confirm Frost · $40',
+    );
     expect(onConfirm).not.toHaveBeenCalled();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Choose Fire for 40 gold' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Back' }));
     expect(chooseFrost.getAttribute('aria-pressed')).toBe('false');
+    expect(onCancel).not.toHaveBeenCalled();
 
+    fireEvent.click(screen.getByRole('button', { name: 'Choose Fire for 40 gold' }));
     fireEvent.click(screen.getByRole('button', { name: 'Confirm Fire for 40 gold' }));
     expect(onConfirm).toHaveBeenCalledExactlyOnceWith('fire');
     expect(consoleError).not.toHaveBeenCalled();
   });
 
-  it('cancels on Escape and on Cancel, and keeps Tab inside the dialog', () => {
-    const { dialog, onCancel, onConfirm } = renderDialog();
-    const buttons = within(dialog).getAllByRole('button');
-    const first = buttons[0];
-    const last = buttons[buttons.length - 1];
-    if (!first || !last) {
-      throw new Error('dialog has no buttons');
-    }
+  it('confirms with Enter outside a button once a branch is chosen', () => {
+    const { dialog, onConfirm } = renderDialog();
 
-    last.focus();
-    fireEvent.keyDown(last, { key: 'Tab' });
-    expect(document.activeElement).toBe(first);
-    fireEvent.keyDown(first, { key: 'Tab', shiftKey: true });
-    expect(document.activeElement).toBe(last);
+    fireEvent.keyDown(dialog, { key: 'Enter' });
+    expect(onConfirm).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Choose Frost for 40 gold' }));
+    fireEvent.keyDown(dialog, { key: 'Enter' });
+    expect(onConfirm).toHaveBeenCalledExactlyOnceWith('frost');
+    expect(consoleError).not.toHaveBeenCalled();
+  });
+
+  it('cancels on Escape, Close and Cancel, and keeps Tab inside the dialog', () => {
+    const { dialog, onCancel, onConfirm } = renderDialog();
+    const close = screen.getByRole('button', { name: 'Close' });
+    const cancel = screen.getByRole('button', { name: 'Cancel' });
+
+    fireEvent.keyDown(dialog, { key: 'Tab' });
+    expect(document.activeElement).toBe(close);
+    cancel.focus();
+    fireEvent.keyDown(cancel, { key: 'Tab' });
+    expect(document.activeElement).toBe(close);
+    fireEvent.keyDown(close, { key: 'Tab', shiftKey: true });
+    expect(document.activeElement).toBe(cancel);
 
     fireEvent.keyDown(dialog, { key: 'Escape' });
-    expect(onCancel).toHaveBeenCalledOnce();
-    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
-    expect(onCancel).toHaveBeenCalledTimes(2);
+    fireEvent.click(close);
+    fireEvent.click(cancel);
+    expect(onCancel).toHaveBeenCalledTimes(3);
     expect(onConfirm).not.toHaveBeenCalled();
     expect(consoleError).not.toHaveBeenCalled();
   });
 
-  it('disables Choose with its reason when a card cannot be paid for', () => {
-    renderDialog(
+  it('keeps Confirm disabled with a visible reason when the chosen card cannot be paid for', () => {
+    const { dialog, onConfirm } = renderDialog(
       CARDS.map((card) => ({ ...card, isDisabled: true, disabledReason: 'Not enough gold' })),
     );
 
-    const choose = screen.getByRole('button', {
-      name: 'Choose Fire for 40 gold',
+    fireEvent.click(screen.getByRole('button', { name: 'Choose Fire for 40 gold' }));
+    const confirm = screen.getByRole('button', {
+      name: 'Confirm Fire for 40 gold',
     }) as HTMLButtonElement;
-    expect(choose.disabled).toBe(true);
-    expect(choose.title).toBe('Not enough gold');
-    expect(
-      (screen.getByRole('button', { name: 'Confirm branch' }) as HTMLButtonElement).disabled,
-    ).toBe(true);
+    expect(confirm.disabled).toBe(true);
+    const reason = screen.getByText('Not enough gold');
+    expect(confirm.getAttribute('aria-describedby')).toBe(reason.id);
+
+    fireEvent.keyDown(dialog, { key: 'Enter' });
+    expect(onConfirm).not.toHaveBeenCalled();
     expect(consoleError).not.toHaveBeenCalled();
   });
 });

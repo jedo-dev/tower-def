@@ -245,8 +245,8 @@ describe('CreepSendPanel creature branch chooser', () => {
       const card = within(dialog).getByRole('article', { name: branch.name });
       expect(within(card).getByText(branch.description)).toBeDefined();
       const table = within(card).getByRole('table', { name: `${branch.name} grades 1 to 4` });
-      const rowHeaders = within(table).getAllByRole('rowheader');
-      expect(rowHeaders.map((cell) => cell.textContent)).toEqual(['1', '2', '3', '4']);
+      const gradeHeaders = within(table).getAllByRole('columnheader');
+      expect(gradeHeaders.map((cell) => cell.textContent)).toEqual(['Grade', '1', '2', '3', '4']);
       expect(
         within(card).getByRole('button', { name: `Choose ${branch.name} for 6 XP` }),
       ).toBeDefined();
@@ -314,10 +314,7 @@ describe('CreepSendPanel creature branch chooser', () => {
 
     expect(document.activeElement).toBe(dialog);
     fireEvent.keyDown(dialog, { key: 'Tab' });
-    const firstChoose = within(dialog).getByRole('button', {
-      name: `Choose ${GHOUL_A.name} for 6 XP`,
-    });
-    expect(document.activeElement).toBe(firstChoose);
+    expect(document.activeElement).toBe(within(dialog).getByRole('button', { name: 'Close' }));
     fireEvent.keyDown(dialog, { key: 'Tab', shiftKey: true });
     expect(document.activeElement).toBe(within(dialog).getByRole('button', { name: 'Cancel' }));
 
