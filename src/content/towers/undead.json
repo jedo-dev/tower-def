@@ -315,21 +315,21 @@
           "grades": [
             {
               "level": 4,
-              "damage": 40,
+              "damage": 42,
               "range": 7.2,
               "attackCooldownMs": 800,
               "onHitEffects": [{ "effectId": "chill", "magnitude": 0.6, "durationMs": 2500 }]
             },
             {
               "level": 5,
-              "damage": 48,
+              "damage": 52,
               "range": 7.6,
               "attackCooldownMs": 800,
               "onHitEffects": [{ "effectId": "chill", "magnitude": 0.65, "durationMs": 3000 }]
             },
             {
               "level": 6,
-              "damage": 56,
+              "damage": 62,
               "range": 8,
               "attackCooldownMs": 750,
               "onHitEffects": [
@@ -344,7 +344,7 @@
             },
             {
               "level": 7,
-              "damage": 66,
+              "damage": 74,
               "range": 8.4,
               "attackCooldownMs": 700,
               "onHitEffects": [
@@ -390,7 +390,7 @@
                 { "effectId": "chill", "magnitude": 0.55, "durationMs": 2000 },
                 {
                   "effectId": "vulnerability",
-                  "magnitude": 0.25,
+                  "magnitude": 0.15,
                   "durationMs": 2000,
                   "damageKind": "all"
                 }
@@ -406,7 +406,7 @@
                 { "effectId": "chill", "magnitude": 0.55, "durationMs": 2000 },
                 {
                   "effectId": "vulnerability",
-                  "magnitude": 0.5,
+                  "magnitude": 0.25,
                   "durationMs": 2000,
                   "damageKind": "all"
                 }
@@ -497,8 +497,8 @@
           "grades": [
             {
               "level": 4,
-              "damage": 16,
-              "range": 5,
+              "damage": 20,
+              "range": 5.5,
               "attackCooldownMs": 1000,
               "abilities": { "volleyEveryMs": 1500 },
               "aura": {
@@ -511,8 +511,8 @@
             },
             {
               "level": 5,
-              "damage": 22,
-              "range": 5,
+              "damage": 28,
+              "range": 6,
               "attackCooldownMs": 1000,
               "abilities": { "volleyEveryMs": 1400 },
               "aura": {
@@ -525,8 +525,8 @@
             },
             {
               "level": 6,
-              "damage": 30,
-              "range": 5.5,
+              "damage": 38,
+              "range": 6.5,
               "attackCooldownMs": 1000,
               "abilities": { "volleyEveryMs": 1300, "largeTargetMultiplier": 1.5 },
               "aura": {
@@ -539,8 +539,8 @@
             },
             {
               "level": 7,
-              "damage": 40,
-              "range": 6,
+              "damage": 50,
+              "range": 7,
               "attackCooldownMs": 1000,
               "abilities": { "volleyEveryMs": 1200, "largeTargetMultiplier": 2 },
               "aura": {
