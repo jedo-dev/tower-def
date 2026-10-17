@@ -288,7 +288,7 @@
               "physicalArmor": 1,
               "magicalArmor": 5,
               "abilities": {
-                "dodgeEveryNthShot": 3
+                "dodgeEveryNthShot": 4
               }
             }
           ]
@@ -300,14 +300,14 @@
           "grades": [
             {
               "level": 1,
-              "health": 70,
+              "health": 76,
               "speed": 1.9,
               "physicalArmor": 1,
               "magicalArmor": 4
             },
             {
               "level": 2,
-              "health": 72,
+              "health": 82,
               "speed": 1.95,
               "physicalArmor": 1,
               "magicalArmor": 4,
@@ -320,7 +320,7 @@
             },
             {
               "level": 3,
-              "health": 76,
+              "health": 90,
               "speed": 2.2,
               "physicalArmor": 1,
               "magicalArmor": 4,
@@ -333,7 +333,7 @@
             },
             {
               "level": 4,
-              "health": 82,
+              "health": 97,
               "speed": 2.46,
               "physicalArmor": 1,
               "magicalArmor": 5,
@@ -583,7 +583,7 @@
           "grades": [
             {
               "level": 1,
-              "health": 155,
+              "health": 157,
               "speed": 1.3,
               "physicalArmor": 2,
               "magicalArmor": 5,
@@ -595,7 +595,7 @@
             },
             {
               "level": 2,
-              "health": 160,
+              "health": 162,
               "speed": 1.3,
               "physicalArmor": 2,
               "magicalArmor": 5,
@@ -607,7 +607,7 @@
             },
             {
               "level": 3,
-              "health": 170,
+              "health": 172,
               "speed": 1.35,
               "physicalArmor": 2,
               "magicalArmor": 6,
@@ -620,7 +620,7 @@
             },
             {
               "level": 4,
-              "health": 185,
+              "health": 187,
               "speed": 1.35,
               "physicalArmor": 2,
               "magicalArmor": 6,

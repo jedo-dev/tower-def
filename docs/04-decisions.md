@@ -224,7 +224,8 @@ side earns experience per tier when a creature it sent dies on the other field
 (1 x tier) or leaks (3 x tier, +2 when the leak took a life), credited at the
 round settle. Experience of a tier buys one branch per creature for the match
 and then its grades; prices are one ladder scaled by tier
-(`CreatureTalentPricing`: branch 4, grades 6 / 10 / 16 / 26, times the tier)
+(`CreatureTalentPricing`: branch 6, grades 2 / 5 / 10 / 18, times the tier,
+since tower-def-716.8; first draft 4 / 6 / 10 / 16 / 26)
 and content cannot declare them. Grades replace health, speed and both armors
 (plus an open `abilities` object for the creature mechanics that land
 separately); they never change send price, send caps or reward.

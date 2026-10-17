@@ -17,8 +17,8 @@ const MAX_FRAMES_PER_ROUND = 6000;
 const SKELETON = resolveUnitConfigById('undead_skeleton');
 const FIEND = resolveUnitConfigById('undead_crypt_fiend');
 const [FIEND_A, FIEND_B] = FIEND.talentBranches;
-/** Enough tier 2 experience for the branch and every grade (docs/12: 124 at tier 2). */
-const FULL_FIEND_XP: CreatureXpByTier = { 2: 124 };
+/** Enough tier 2 experience for the branch and every grade (41 per tier: 82 at tier 2). */
+const FULL_FIEND_XP: CreatureXpByTier = { 2: 82 };
 
 describe('GameScene creature talents (headless harness)', () => {
   let harness: GameSceneHarness | null = null;
@@ -93,7 +93,7 @@ describe('GameScene creature talents (headless harness)', () => {
 
     const player = game.inspect().duelMatchState.player;
     expect(player.creatureBranchChoices).toEqual({ [FIEND.id]: FIEND_A.id });
-    expect(player.creatureXpByTier).toEqual({ 2: 12 });
+    expect(player.creatureXpByTier).toEqual({ 2: 8 });
     expect(game.latestHud().creatureBranchChoices).toEqual({ [FIEND.id]: FIEND_A.id });
     const fiendLimits = game
       .eventsOf('send-limits-updated')
@@ -104,16 +104,16 @@ describe('GameScene creature talents (headless harness)', () => {
         { id: FIEND_A.id, name: FIEND_A.name, description: FIEND_A.description, isChosen: true },
         { id: FIEND_B.id, name: FIEND_B.name, description: FIEND_B.description, isChosen: false },
       ],
-      branchCostXp: 8,
+      branchCostXp: 12,
       grade: 0,
-      nextUpgradeCostXp: 12,
+      nextUpgradeCostXp: 4,
     });
 
     game.command('choose-creature-branch', { unitId: FIEND.id, branchId: FIEND_B.id });
     expect(game.inspect().duelMatchState.player.creatureBranchChoices).toEqual({
       [FIEND.id]: FIEND_A.id,
     });
-    expect(game.inspect().duelMatchState.player.creatureXpByTier).toEqual({ 2: 12 });
+    expect(game.inspect().duelMatchState.player.creatureXpByTier).toEqual({ 2: 8 });
   });
 
   it('applies a grade to sends queued after the purchase only', async () => {

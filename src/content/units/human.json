@@ -26,21 +26,21 @@
               "level": 1,
               "health": 57,
               "speed": 1.25,
-              "physicalArmor": 4,
+              "physicalArmor": 3,
               "magicalArmor": 2
             },
             {
               "level": 2,
               "health": 60,
               "speed": 1.25,
-              "physicalArmor": 5,
+              "physicalArmor": 4,
               "magicalArmor": 2
             },
             {
               "level": 3,
               "health": 63,
               "speed": 1.25,
-              "physicalArmor": 6,
+              "physicalArmor": 5,
               "magicalArmor": 3,
               "abilities": {
                 "incomingDamageMultipliers": {
@@ -52,7 +52,7 @@
               "level": 4,
               "health": 70,
               "speed": 1.3,
-              "physicalArmor": 7,
+              "physicalArmor": 6,
               "magicalArmor": 3,
               "abilities": {
                 "incomingDamageMultipliers": {
@@ -69,7 +69,7 @@
           "grades": [
             {
               "level": 1,
-              "health": 55,
+              "health": 57,
               "speed": 1.3,
               "physicalArmor": 2,
               "magicalArmor": 1,
@@ -81,8 +81,8 @@
             },
             {
               "level": 2,
-              "health": 58,
-              "speed": 1.3,
+              "health": 61,
+              "speed": 1.35,
               "physicalArmor": 2,
               "magicalArmor": 1,
               "abilities": {
@@ -93,8 +93,8 @@
             },
             {
               "level": 3,
-              "health": 62,
-              "speed": 1.35,
+              "health": 67,
+              "speed": 1.4,
               "physicalArmor": 2,
               "magicalArmor": 1,
               "abilities": {
@@ -105,8 +105,8 @@
             },
             {
               "level": 4,
-              "health": 68,
-              "speed": 1.35,
+              "health": 73,
+              "speed": 1.4,
               "physicalArmor": 3,
               "magicalArmor": 1,
               "abilities": {
@@ -272,9 +272,9 @@
               "magicalArmor": 4,
               "abilities": {
                 "incomingDamageMultipliers": {
-                  "single": 0.92,
-                  "splash": 0.92,
-                  "chain": 0.92
+                  "single": 0.95,
+                  "splash": 0.95,
+                  "chain": 0.95
                 }
               }
             },
@@ -286,9 +286,9 @@
               "magicalArmor": 5,
               "abilities": {
                 "incomingDamageMultipliers": {
-                  "single": 0.88,
-                  "splash": 0.88,
-                  "chain": 0.88
+                  "single": 0.92,
+                  "splash": 0.92,
+                  "chain": 0.92
                 }
               }
             },
@@ -300,9 +300,9 @@
               "magicalArmor": 6,
               "abilities": {
                 "incomingDamageMultipliers": {
-                  "single": 0.8,
-                  "splash": 0.8,
-                  "chain": 0.8
+                  "single": 0.85,
+                  "splash": 0.85,
+                  "chain": 0.85
                 }
               }
             }
@@ -315,7 +315,7 @@
           "grades": [
             {
               "level": 1,
-              "health": 102,
+              "health": 106,
               "speed": 1.15,
               "physicalArmor": 6,
               "magicalArmor": 3,
@@ -329,7 +329,7 @@
             },
             {
               "level": 2,
-              "health": 106,
+              "health": 112,
               "speed": 1.15,
               "physicalArmor": 6,
               "magicalArmor": 3,
@@ -343,7 +343,7 @@
             },
             {
               "level": 3,
-              "health": 112,
+              "health": 120,
               "speed": 1.15,
               "physicalArmor": 7,
               "magicalArmor": 3,
@@ -357,7 +357,7 @@
             },
             {
               "level": 4,
-              "health": 120,
+              "health": 130,
               "speed": 1.2,
               "physicalArmor": 7,
               "magicalArmor": 3,
@@ -513,7 +513,7 @@
               "level": 2,
               "health": 252,
               "speed": 0.75,
-              "physicalArmor": 12,
+              "physicalArmor": 13,
               "magicalArmor": 4,
               "abilities": {
                 "incomingDamageMultipliers": {
@@ -525,7 +525,7 @@
               "level": 3,
               "health": 271,
               "speed": 0.78,
-              "physicalArmor": 13,
+              "physicalArmor": 15,
               "magicalArmor": 4,
               "abilities": {
                 "incomingDamageMultipliers": {
@@ -540,7 +540,7 @@
               "level": 4,
               "health": 301,
               "speed": 0.8,
-              "physicalArmor": 15,
+              "physicalArmor": 17,
               "magicalArmor": 5,
               "abilities": {
                 "incomingDamageMultipliers": {
@@ -566,7 +566,7 @@
               "physicalArmor": 10,
               "magicalArmor": 3,
               "abilities": {
-                "dodgeEveryNthShot": 10
+                "dodgeEveryNthShot": 20
               }
             },
             {
@@ -576,7 +576,7 @@
               "physicalArmor": 10,
               "magicalArmor": 3,
               "abilities": {
-                "dodgeEveryNthShot": 5
+                "dodgeEveryNthShot": 12
               }
             },
             {
@@ -586,7 +586,7 @@
               "physicalArmor": 11,
               "magicalArmor": 3,
               "abilities": {
-                "dodgeEveryNthShot": 4
+                "dodgeEveryNthShot": 8
               }
             },
             {
@@ -596,7 +596,7 @@
               "physicalArmor": 11,
               "magicalArmor": 3,
               "abilities": {
-                "dodgeEveryNthShot": 3,
+                "dodgeEveryNthShot": 6,
                 "leakLivesTaken": 2
               }
             }
