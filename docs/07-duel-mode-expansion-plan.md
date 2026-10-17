@@ -880,7 +880,7 @@ expected wave, never a roll:
 | `extraTargets` (+ share) | up to N more creeps of those the route packs within the tower's range, at their share |
 | `pierceLine` | its share on the creeps within 2 cells of the target on the route |
 | `coneDegrees` (tower-def-bge.9, `deferredMechanicsValue.ts`) | `coneDegrees / 360` of the other creeps the route packs within range, at full damage |
-| `groundZone` (tower-def-bge.9) | on the ground lane: the tick rate (`damage / tickMs`) on the creeps the route packs inside the zone (at most 4), halved for creeps walking through, at the zone's damage type; overlapping zones and the zone's chill are not valued |
+| `groundZone` (tower-def-bge.9) | on the ground lane: the tick rate (`damage / tickMs`) on the creeps the route packs inside the zone (at most 4), halved for creeps walking through, at the zone's damage type; overlapping zones are not valued; the zone's chill is valued since 02k.13 ("AI ground zone chill") |
 | `corpseExplosionShare` (+ radius, chain) (tower-def-bge.9) | half its share of the shot on the other creeps the route packs within the explosion radius (at most 4): a kill's explosion is worth `share * maxHp`, and the shot's damage turns into kills at `damage / maxHp`, so the health cancels; one generation only |
 | `knockbackCells`, `groundsFliersMs`, chill `groundsFliersMs` (tower-def-bge.9) | not valued (0): a conservative floor, like a stun |
 | `volleyEveryMs` (+ share) | `damage * share / interval` on the creeps in range around the target (at most 6); support towers too |
@@ -1284,7 +1284,8 @@ value     = rawPool x (reference exposure / targetable exposure) x (1 + (lives -
 
 Armor goes through `calculateDamageAgainst` (via `computeMixedEffectiveHealth`),
 so plated creatures gain against archers and nothing against casters;
-`startInvisibleMs` removes its seconds from the targetable exposure; a
+`startInvisibleMs` removes its share of the route in tower reach from the
+targetable exposure (see "AI start invisibility value (tower-def-02k.14)"); a
 regeneration paused by poison counts half when the field poisons.
 
 **Branch choice** (`valueCreatureBranch`): `gain[g] = value(grade g) -
@@ -1804,6 +1805,140 @@ How to measure it: the standard batch on `--maps classic` and `--maps
 seeded`, one at a time (about 105 s each); the `creatures` block prints the
 grades, leaks and creature branch picks.
 
+
+### AI ground zone chill (tower-def-02k.13)
+
+Quagmire (orc Tar Pit branch: grades 4-7 leave a tar puddle of radius
+1.5-3, 3-6 s, chill 0.55-0.75, no damage) was picked by no orc side: the
+valuation priced a ground zone's damage but not its chill, so Sticky Tar was
+valued 3-10 times higher (Quagmire / Sticky Tar value per gold 0.10-0.40,
+median 0.21 classic, 0.23 seeded). This pass values the zone's chill in the
+route damage ledger the way an on-hit chill is valued; no content changed.
+
+**Formula** (`computeGroundZoneChillWindow` in `deferredMechanicsValue.ts`,
+`ledgerSlowTerms.ts`, `slowGain.ts`):
+
+- **Footprint.** A zone lands at the target's feet, and towers shoot the
+  creep nearest its exit, so while a wave streams past the zones land in the
+  last creep spacing of the reach (0.35 s x 6.5 cells/s, about 2.3 route
+  samples). The zone window runs from that band minus the radius to the end
+  of the reach plus the radius. Spreading the zones over the whole reach was
+  tried first: it valued Quagmire 1.7-2.2 times Sticky Tar (picked by every
+  orc side) while the A/B below has the two even.
+- **Share of the wave.** The tower lays one zone per shot, and a zone chills
+  for `floor(durationMs / tickMs) * tickMs`, so `shots per second x that
+  time` zones lie at once, each over the route samples within its radius of
+  the landing point (`neighbourCounts`, more at a turn). Their coverage of
+  the window, at most 1, is the share of the creeps there that walk through a
+  live zone: the zone's counterpart of the struck share of an on-hit chill.
+- **Gain.** On each sample of the window the zone adds the extra time in
+  reach of its slow, `slowTimeGain(chill)` capped at `MAX_SLOW_TIME_GAIN` (2,
+  three times the time in range, as since 02k.11), over the strongest slow
+  another tower already holds there, times the field's damage rate on the
+  sample. Ground lane only; nothing on the air ledger.
+- **No double counting with the shot's own chill.** On samples both reach,
+  a creep both reach counts the stronger slow once: stronger gain on its
+  share plus the weaker gain on the rest of the wave it reaches,
+  `pA gA + (1 - pA) pB gB` (`combineOwnSlowGains`). A tower without a
+  chilling zone keeps the exact pre-02k.13 computation.
+- Other towers' zone windows count as slow already held (`slowBySample`),
+  like their on-hit chills, so a frost tower beside a puddle is valued for
+  what it adds over the puddle. Spores (Wisp Bloom) and Plague Cloud carry a
+  zone chill too and are valued the same way.
+
+**A/B** (test-only override of `selectBestBranch`, never committed; orc's
+three pairs undead:orc, orc:human, orc:elf, hard vs hard, seeds 1-5, classic
+and seeded maps, 30 duels; valuation of this pass in both arms):
+
+| Forced | Orc wins (classic / seeded) | Orc baseline leaks per side (classic / seeded) |
+| --- | --- | --- |
+| Quagmire | 13 of 30 (7 / 6) | 17.7 / 14.6 |
+| Sticky Tar | 14 of 30 (8 / 6) | 17.7 / 14.7 |
+
+The two branches are even in the sim (one win in 30, the same leaks). The
+new value ratio Quagmire / Sticky Tar is 0.16-0.92 on the classic boards
+(median 0.56) and 0.18-2.0 on seeded ones (median 0.74): Sticky Tar still
+ahead on most boards, Quagmire ahead where the route turns inside the
+puddle's footprint.
+
+**Pick shares** (orc Tar Pit, standard batch, seeds 1-5, 15 developed sides
+per map):
+
+| Map | Before | After |
+| --- | --- | --- |
+| Classic | Sticky Tar 15/15, Quagmire 0 | Sticky Tar 15/15, Quagmire 0 |
+| Seeded | Sticky Tar 15/15, Quagmire 0 | Sticky Tar 9/15 (60%), Quagmire 6 (40%) |
+
+Quagmire moves from 0 to 20% of picks, toward the even A/B. Every other
+branch split is unchanged.
+
+**Standard batch** (six pairs, hard vs hard, seeds 1-5, classic + seeded,
+30 duels per race): undead 80.0%, orc 46.7%, human 26.7%, elf 46.7%, before
+and after (no race moved; one seeded orc against elf duel ended two rounds
+earlier with the same winner).
+
+### AI start invisibility value (tower-def-02k.14)
+
+Archer / Evasion was never picked (Creature branch balance): the valuation
+took `startInvisibleMs` as seconds off the 40-cell relative exposure route,
+about 4.7 s for the Archer, so Forest Shadow's 2-5 s hid 40-100% of the
+exposure (floored at 10%) and scored 11.5-13.9 times Evasion. That route
+is a relative scale for speed and slows; the real route under fire is
+much longer. No content changed.
+
+**Geometry** (measured once on the hard boards, elf pairs, seeds 1-3, by a
+throwaway probe on the headless battlefield: route cells walked before the
+first tower can reach the creep, and route cells in any tower's reach):
+
+| Rounds | Classic first reach / in reach | Seeded first reach / in reach |
+| --- | --- | --- |
+| 1-4 | 4.2 / 25 | 0 / 24 |
+| 5-9 | 1.9 / 53 | 0 / 47 |
+| 10-14 | 0.2 / 78 | 0 / 81 |
+| 15-19 | 0 / 98 | 0 / 112 |
+| 20-24 | 0 / 104 | 0 / 117 |
+
+Towers reach the entrance almost at once; what the old model missed was the
+length of the route under fire. The profile carries no geometry, so the
+valuation uses two constants from this table (`CREATURE_VALUATION`).
+
+**Formula** (`computeInvisibleExposureShare` in `creatureValue.ts`):
+
+```txt
+unseen cells   = startInvisibleMs / 1000 x speed x 5 cells/s   (nothing slows an untargetable creep)
+hidden share   = min(0.9, max(0, unseen cells - 4 approach cells) / 110 route cells in reach)
+targetable     = exposure x (1 - hidden share)
+```
+
+A window that ends inside the 4 approach cells is worth nothing; longer
+windows grow linearly and saturate at 90% of the exposure. 110 cells is the
+route in reach in rounds 15-25, when the dearer grades that dominate a
+branch's mean gain are bought.
+
+**A/B** (test-only override of `selectBestCreatureBranch`, never committed;
+elf pairs undead:elf, orc:elf, human:elf, hard vs hard, seeds 1-5):
+
+| Forced | Elf wins (classic / seeded) | Leaks the elf sends cause per side (classic / seeded) |
+| --- | --- | --- |
+| Forest Shadow | 13 of 30 (8 / 5) | 4.9 / 5.3 |
+| Evasion | 12 of 30 (9 / 3) | 4.9 / 3.3 |
+
+Forest Shadow is the slightly stronger branch in the sim: one win in 30 and
+about 25% more leaks from the elf's sends (even on classic, +60% on seeded).
+The new score ratio Forest Shadow / Evasion is 1.15 against physical
+single-target fields (with or without a frost tower) and 1.26 against a
+splash-heavy one, down from 11.5-13.9. Wind Walk / Tower Hunter (orc
+Headhunter) falls from 2.7-2.8 to 1.23-1.25; Invisibility / Polymorph
+(human Sorceress) from 4.2-5 to 1.7-1.75 (still the pick).
+
+**Pick shares** (elf pairs above, 15 developed sides per map): Forest Shadow
+15/15 on both maps before and after; Evasion stays at 0. That matches the
+A/B, which also favours Forest Shadow; the gap is now within the range a
+tower or content change can tip.
+
+**Standard batch** (six pairs, hard vs hard, seeds 1-5, classic + seeded,
+30 duels per race): undead 80.0%, orc 43.3%, human 30.0%, elf 43.3%, before
+and after; the batch output is identical (no branch pick changed).
 
 ## Suggested Improvements
 

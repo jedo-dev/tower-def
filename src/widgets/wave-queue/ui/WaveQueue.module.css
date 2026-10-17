@@ -125,36 +125,8 @@
   color: #e6e9ef;
 }
 
-.spriteViewport {
-  width: 18px;
-  height: 18px;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-}
-
-.spriteStrip {
-  --wave-queue-frames: 4;
-  --wave-queue-anim-delay: 0s;
-  width: calc(18px * var(--wave-queue-frames));
-  height: 18px;
-  image-rendering: pixelated;
-  animation: spriteWalk 0.7s steps(4) infinite;
-  animation-delay: var(--wave-queue-anim-delay);
-}
-
-@keyframes spriteWalk {
-  from {
-    transform: translateX(0);
-  }
-  to {
-    transform: translateX(-72px);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .spriteStrip {
-    animation: none;
-  }
+/* Creature portrait inset in the slot frame. */
+.portrait {
+  --unit-icon-size: 22px;
+  --placeholder-icon-size: 22px;
 }

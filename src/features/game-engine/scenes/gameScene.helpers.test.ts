@@ -28,6 +28,7 @@ function createCreepRenderState(id: string, status: CreepEntity['status']): Cree
     sprite: {} as CreepRenderState['sprite'],
     hitFlashRemainingMs: 0,
     deathFadeRemainingMs: 0,
+    unitId: 'undead_skeleton',
   };
 }
 
@@ -72,7 +73,7 @@ describe('buildHudWaveQueueWithPending', () => {
       [createPendingSpawn('undead_ghoul', 0), createPendingSpawn('undead_skeleton', 1)],
     );
 
-    const keys = queue.map((item) => `${item.type}-${item.index}`);
+    const keys = queue.map((item) => `${item.creepTypeId}-${item.index}`);
     expect(new Set(keys).size).toBe(keys.length);
     expect(queue.map((item) => item.index)).toEqual([0, 1, 2, 3]);
   });

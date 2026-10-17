@@ -105,8 +105,8 @@ describe('mapCreepSendPanelToViewModel', () => {
     const viewModel = mapCreepSendPanelToViewModel(
       createSnapshot({
         playerSendQueue: [
-          { type: 'skeleton', index: 0 },
-          { type: 'ghoul', index: 1 },
+          { creepTypeId: 'undead_skeleton', index: 0 },
+          { creepTypeId: 'undead_ghoul', index: 1 },
         ],
       }),
       createSetup(RaceId.UNDEAD),

@@ -4,7 +4,6 @@ import type { EffectId, TowerTypeId } from '../../types/content-ids';
 /** Archetype the player can select to build; derived from tower content. */
 export type HudTowerType = TowerTypeId;
 export type HudFactionType = 'undead' | 'orc' | 'human' | 'elf';
-export type HudCreepType = 'skeleton' | 'ghoul' | 'crypt_fiend' | 'gargoyle';
 export type BattlefieldView = 'player' | 'opponent';
 export type MatchOutcomeStatus = 'active' | 'player-won' | 'player-lost' | 'draw';
 /**
@@ -39,8 +38,9 @@ export type BuildRejectionReason =
   | 'match_over'
   | 'opponent_view';
 
+/** One creature in the wave strip, by its content unit id (e.g. `orc_grunt`). */
 export type WaveQueueItem = {
-  type: HudCreepType;
+  creepTypeId: string;
   index: number;
 };
 

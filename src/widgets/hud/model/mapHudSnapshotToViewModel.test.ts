@@ -99,10 +99,10 @@ describe('mapHudSnapshotToViewModel', () => {
       createSnapshot({
         phase: 'build',
         opponentSendQueue: [
-          { type: 'skeleton', index: 0 },
-          { type: 'ghoul', index: 1 },
-          { type: 'crypt_fiend', index: 2 },
-          { type: 'gargoyle', index: 3 },
+          { creepTypeId: 'undead_skeleton', index: 0 },
+          { creepTypeId: 'undead_ghoul', index: 1 },
+          { creepTypeId: 'undead_crypt_fiend', index: 2 },
+          { creepTypeId: 'undead_gargoyle', index: 3 },
         ],
       }),
     );
@@ -122,7 +122,7 @@ describe('mapHudSnapshotToViewModel', () => {
       createSnapshot({
         phase: 'wave',
         pendingCreepCount: 8,
-        opponentSendQueue: [{ type: 'skeleton', index: 0 }],
+        opponentSendQueue: [{ creepTypeId: 'undead_skeleton', index: 0 }],
       }),
     );
 
