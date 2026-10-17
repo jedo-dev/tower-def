@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Match · portrait</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&amp;family=Marcellus&amp;family=Exo+2:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#0a0c11}
+</style>
+</helmet>
+<div style="position:relative;width:{{w}}px;height:{{h}}px;box-sizing:border-box;padding:{{safeTop}}px 6px {{safeBottom}}px;display:flex;flex-direction:column;gap:4px;overflow:hidden;font-family:'Exo 2',system-ui,sans-serif;color:#ece6d6;background:#0a0c11">
+
+  <div style="position:relative;flex:1 1 auto;min-height:0;display:flex;flex-direction:column;border-radius:4px;background:#0c0f15;box-shadow:inset 0 0 0 1px {{frameEdge}},0 0 0 1px #07090d,0 0 12px {{frameGlow}}">
+    <sc-if value="{{isEnemy}}" hint-placeholder-val="{{false}}">
+      <div style="flex:0 0 28px;display:flex;align-items:center;justify-content:center;gap:8px;border-bottom:1px solid #7a1d14;background:#12151d">
+        <img src="/_blob/8a02124692af161ed7eb905de14ba774" alt="" style="width:22px;height:22px;object-fit:contain">
+        <span style="font-family:Cinzel,serif;font-weight:900;font-size:12px;letter-spacing:.16em;color:#ec7048">ENEMY BOARD</span>
+        <span style="font-size:11px;color:#bed0ee">Orc · read-only</span>
+      </div>
+    </sc-if>
+    <div style="position:relative;flex:1 1 auto;min-height:0;margin:2px;border-radius:3px;overflow:hidden">
+      <dc-import name="Board" phase="{{phase}}" view="{{view}}" selected="{{isTower}}" hint-size="100%,100%"></dc-import>
+    </div>
+  </div>
+
+  <dc-import name="StatusBar" phase="{{phase}}" view="{{view}}" hint-size="100%,56px"></dc-import>
+
+  <sc-if value="{{showDock}}" hint-placeholder-val="{{true}}">
+    <dc-import name="Dock" tab="{{tab}}" hint-size="100%,174px"></dc-import>
+  </sc-if>
+  <sc-if value="{{showSheet}}" hint-placeholder-val="{{false}}">
+    <dc-import name="TowerSheet" hint-size="100%,174px"></dc-import>
+  </sc-if>
+  <sc-if value="{{showEnemyBar}}" hint-placeholder-val="{{false}}">
+    <section aria-label="Enemy summary" style="position:relative;flex:0 0 174px;box-sizing:border-box;padding:14px 16px 14px;display:flex;flex-direction:column;justify-content:space-between">
+      <img src="/_blob/e7c2b9c79a487a3517f6e8ddce18f5c4" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:fill;pointer-events:none">
+      <div style="position:relative;display:flex;align-items:center;gap:12px">
+        <img src="/_blob/8a02124692af161ed7eb905de14ba774" alt="Orc emblem" style="width:52px;height:52px;object-fit:contain">
+        <div style="display:flex;flex-direction:column;gap:2px">
+          <span style="font-family:Cinzel,serif;font-weight:900;font-size:16px;letter-spacing:.06em;color:#ec7048">ORC · [OPPONENT]</span>
+          <span style="font-size:12px;color:#bed0ee">You are watching. Nothing here can be changed.</span>
+        </div>
+      </div>
+      <div style="position:relative;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;text-align:center">
+        <div style="padding:3px 0;border-radius:3px;background:#0c0f15;box-shadow:inset 0 0 0 1px #262c38"><div style="font-family:Cinzel,serif;font-weight:900;font-size:16px;color:#eff4ff">18</div><div style="font-size:10px;color:#9fb2d4">lives</div></div>
+        <div style="padding:3px 0;border-radius:3px;background:#0c0f15;box-shadow:inset 0 0 0 1px #262c38"><div style="font-family:Cinzel,serif;font-weight:900;font-size:16px;color:#eff4ff">19</div><div style="font-size:10px;color:#9fb2d4">towers</div></div>
+        <div style="padding:3px 0;border-radius:3px;background:#0c0f15;box-shadow:inset 0 0 0 1px #262c38"><div style="font-family:Cinzel,serif;font-weight:900;font-size:16px;color:#ffb15f">3</div><div style="font-size:10px;color:#9fb2d4">sends queued</div></div>
+      </div>
+      <button type="button" style="position:relative;height:44px;border:0;padding:0;background:none;cursor:pointer;color:#f0e3c0;font-family:Cinzel,serif;font-weight:900;font-size:14px;letter-spacing:.08em">
+        <img src="/_blob/4dd5440875865f76ba43ad90ae980471" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:fill">
+        <span style="position:relative">BACK TO MY BOARD</span>
+      </button>
+    </section>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"phase":{"editor":"enum","options":["build","wave"],"default":"build"},"tab":{"editor":"enum","options":["towers","send"],"default":"towers"},"sheet":{"editor":"enum","options":["none","tower"],"default":"none"},"view":{"editor":"enum","options":["mine","enemy"],"default":"mine"},"device":{"editor":"enum","options":["390x844","360x800"],"default":"390x844"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const phase = this.props.phase ?? 'build';
+    const view = this.props.view ?? 'mine';
+    const narrow = (this.props.device ?? '390x844') === '360x800';
+    const isTower = (this.props.sheet ?? 'none') === 'tower';
+    const isEnemy = view === 'enemy';
+    const build = phase === 'build';
+    return {
+      phase, view, tab: this.props.tab ?? 'towers',
+      w: narrow ? 360 : 390, h: narrow ? 800 : 844,
+      safeTop: narrow ? 24 : 47, safeBottom: narrow ? 16 : 34,
+      isTower, isEnemy,
+      showDock: build && !isTower && !isEnemy,
+      showSheet: build && isTower && !isEnemy,
+      showEnemyBar: build && isEnemy,
+      frameEdge: isEnemy ? '#ec7048' : '#262c38',
+      frameGlow: isEnemy ? 'rgba(236,112,72,.25)' : 'rgba(143,209,79,.08)'
+    };
+  }
+}
+</script>
+</body>
+</html>

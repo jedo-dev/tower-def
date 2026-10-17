@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Status bar</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&amp;family=Marcellus&amp;family=Exo+2:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#0a0c11}
+</style>
+</helmet>
+<section aria-label="Match status" style="box-sizing:border-box;width:100%;height:56px;padding:6px 6px;display:flex;align-items:center;gap:5px;border-radius:4px;border-top:2px solid #8fd14f;background:#12151d;box-shadow:inset 0 0 0 1px #262c38,0 0 0 1px #07090d;font-family:'Exo 2',system-ui,sans-serif;color:#ece6d6">
+  <button type="button" aria-label="Match menu: pause, speed, duel log, settings, quit" style="flex:0 0 44px;width:44px;height:44px;padding:0;border:0;background:none;cursor:pointer">
+    <img src="/_blob/825232148481adbe92154991ae5ea8c5" alt="" style="width:44px;height:44px;display:block">
+  </button>
+
+  <button type="button" aria-label="Gold 335, income 50 per wave. Open economy details" style="flex:0 0 auto;min-width:70px;height:44px;padding:0 4px;display:flex;align-items:center;gap:4px;border:0;border-radius:3px;background:#0c0f15;box-shadow:inset 0 0 0 1px #262c38;cursor:pointer;color:inherit;font:inherit">
+    <img src="/_blob/b633a92a8cc9b4671b4ec4454470f708" alt="" style="width:26px;height:26px">
+    <span style="display:flex;flex-direction:column;align-items:flex-start;line-height:1">
+      <span style="font-family:Cinzel,serif;font-weight:900;font-size:20px;color:#f0d188">335</span>
+      <span style="font-size:10px;color:#9fb2d4;margin-top:2px">+50/wave</span>
+    </span>
+  </button>
+
+  <button type="button" aria-pressed="{{enemyOn}}" aria-label="Lives: you 20, enemy 18. Toggle enemy board view" style="flex:0 0 auto;height:44px;padding:0 6px 0 3px;display:flex;align-items:center;gap:3px;border:0;border-radius:3px;background:{{livesBg}};box-shadow:inset 0 0 0 1px {{livesEdge}};cursor:pointer;color:inherit;font:inherit">
+    <img src="/_blob/7776b25f5507e56d8842ede6ee910b14" alt="" style="width:24px;height:24px">
+    <span style="font-family:Cinzel,serif;font-weight:900;font-size:20px;color:#eff4ff;line-height:1">20</span>
+    <span style="font-family:Marcellus,serif;font-size:11px;color:#9fb2d4;margin:0 1px">vs</span>
+    <img src="/_blob/8a02124692af161ed7eb905de14ba774" alt="" style="width:18px;height:18px;object-fit:contain">
+    <span style="font-family:Cinzel,serif;font-weight:900;font-size:16px;color:#ec7048;line-height:1">18</span>
+  </button>
+
+  <sc-if value="{{build}}" hint-placeholder-val="{{true}}">
+    <button type="button" style="position:relative;flex:1 1 auto;min-width:0;height:44px;padding:0;border:0;background:none;cursor:pointer;color:#f0e3c0">
+      <img src="/_blob/0a0a868986dd6172645d2aac3cdb3980" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:fill">
+      <span style="position: relative; display: flex; flex-direction: column; align-items: center; line-height: 1.1; text-shadow: 0 1px 0 #000,0 0 2px #000; font-size: 9px">
+        <span style="font-family:Cinzel,serif;font-weight:900;font-size:14px;letter-spacing:.05em;white-space:nowrap">START WAVE 6</span>
+        <span style="font-size:11px;font-weight:600">auto in 0:28</span>
+      </span>
+    </button>
+  </sc-if>
+  <sc-if value="{{wave}}" hint-placeholder-val="{{false}}">
+    <div role="status" style="flex:1 1 auto;min-width:0;height:44px;box-sizing:border-box;padding:3px 8px;display:flex;flex-direction:column;justify-content:center;border-radius:3px;background:#0c0f15;box-shadow:inset 0 0 0 1px #262c38">
+      <span style="font-family:Cinzel,serif;font-weight:900;font-size:14px;letter-spacing:.05em;color:#f0e3c0;white-space:nowrap">WAVE 6</span>
+      <span style="font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><span style="color:#bed0ee">Yours 7</span><span style="color:#9fb2d4"> · </span><span style="color:#ffb15f">Enemy field: 5 left</span></span>
+    </div>
+  </sc-if>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"phase":{"editor":"enum","options":["build","wave"],"default":"build"},"view":{"editor":"enum","options":["mine","enemy"],"default":"mine"},"$preview":{"width":378,"height":56}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const wave = (this.props.phase ?? 'build') === 'wave';
+    const enemy = (this.props.view ?? 'mine') === 'enemy';
+    return {
+      build: !wave, wave,
+      enemyOn: enemy,
+      livesBg: enemy ? '#07090d' : '#0c0f15',
+      livesEdge: enemy ? '#ec7048' : '#262c38'
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Tower bottom sheet</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&amp;family=Marcellus&amp;family=Exo+2:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#0a0c11}
+</style>
+</helmet>
+<section role="dialog" aria-label="Bone Archer, level 4 of 7" style="position:relative;box-sizing:border-box;width:100%;height:174px;padding:6px 12px 10px;display:flex;flex-direction:column;gap:4px;font-family:'Exo 2',system-ui,sans-serif;color:#ece6d6">
+  <img src="/_blob/e7c2b9c79a487a3517f6e8ddce18f5c4" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:fill;pointer-events:none">
+  <span aria-hidden="true" style="position:relative;align-self:center;width:36px;height:4px;border-radius:2px;background:#262c38;flex:0 0 4px"></span>
+  <div style="position:relative;display:flex;align-items:center;gap:10px;height:44px">
+    <img src="/_blob/7e90d4ea30c96e54dc4a59d8bcf90a98" alt="" style="width:42px;height:42px;object-fit:cover;border-radius:3px;box-shadow:0 0 0 1px #f0d188">
+    <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px">
+      <h2 style="margin:0;font-family:Cinzel,serif;font-weight:900;font-size:16px;letter-spacing:.04em;color:#f0e3c0">Bone Archer</h2>
+      <div style="display:flex;align-items:center;gap:6px">
+        <span style="padding:0 6px;border-radius:3px;background:#0c0f15;box-shadow:inset 0 0 0 1px #f0d188;font-family:Cinzel,serif;font-weight:900;font-size:11px;line-height:16px;color:#f0d188">Lv 4/7</span>
+        <span style="font-size:11px;color:#9fb2d4">No branch yet</span>
+      </div>
+    </div>
+    <button type="button" aria-label="Close" style="flex:0 0 44px;width:44px;height:44px;padding:0;border:0;background:none;cursor:pointer"><img src="/_blob/99778b1cc1dbbdf54b618712f7114889" alt="" style="width:44px;height:44px;display:block"></button>
+  </div>
+  <div style="position:relative;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px">
+    <div style="padding:2px 8px;border-radius:3px;background:#0c0f15;box-shadow:inset 0 0 0 1px #262c38"><div style="font-size:10px;color:#9fb2d4">Damage</div><div style="display:flex;align-items:baseline;gap:5px"><span style="font-family:Cinzel,serif;font-weight:900;font-size:14px;color:#eff4ff">24</span><span style="font-size:11px;font-weight:700;color:#44aa44">→ 31</span></div></div>
+    <div style="padding:2px 8px;border-radius:3px;background:#0c0f15;box-shadow:inset 0 0 0 1px #262c38"><div style="font-size:10px;color:#9fb2d4">Range</div><div style="display:flex;align-items:baseline;gap:5px"><span style="font-family:Cinzel,serif;font-weight:900;font-size:14px;color:#eff4ff">3.5</span><span style="font-size:11px;font-weight:700;color:#44aa44">→ 3.8</span></div></div>
+    <div style="padding:2px 8px;border-radius:3px;background:#0c0f15;box-shadow:inset 0 0 0 1px #262c38"><div style="font-size:10px;color:#9fb2d4">Cooldown</div><div style="display:flex;align-items:baseline;gap:5px"><span style="font-family:Cinzel,serif;font-weight:900;font-size:14px;color:#eff4ff">0.90s</span><span style="font-size:11px;font-weight:700;color:#44aa44">→ 0.85</span></div></div>
+  </div>
+  <div style="position:relative;font-size:11px;color:#bed0ee;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><span style="font-family:Marcellus,serif;color:#f0d188">NEXT Lv 5</span> · +7 damage · +0.3 range · −0.05s</div>
+  <div style="position:relative;display:flex;gap:6px;height:44px;margin-top:auto">
+    <button type="button" style="position:relative;flex:1.2;height:44px;padding:0;border:0;background:none;cursor:pointer;color:#eff4ff">
+      <img src="/_blob/706a2e80a3dda5644432c319faf9b08e" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:fill">
+      <span style="position:relative;font-family:Cinzel,serif;font-weight:900;font-size:12px;letter-spacing:.04em;text-shadow:0 1px 0 #000,0 0 2px #000">UPGRADE $150</span>
+    </button>
+    <button type="button" style="position:relative;flex:1.2;height:44px;padding:0;border:0;background:none;cursor:pointer;color:#f0d188">
+      <img src="/_blob/4dd5440875865f76ba43ad90ae980471" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:fill">
+      <span style="position:relative;display:flex;align-items:center;justify-content:center;gap:4px;font-family:Cinzel,serif;font-weight:900;font-size:12px;letter-spacing:.04em;text-shadow:0 1px 0 #000"><img src="/_blob/4a5a7909b8ac121c7dd662de4d37efa3" alt="" style="width:16px;height:11px">DEVELOP $120</span>
+    </button>
+    <button type="button" style="position:relative;flex:.85;height:44px;padding:0;border:0;background:none;cursor:pointer;color:#eff4ff">
+      <img src="/_blob/afb57966c93d09b49baf6859cc9ba16f" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:fill">
+      <span style="position:relative;font-family:Cinzel,serif;font-weight:900;font-size:12px;letter-spacing:.04em;text-shadow:0 1px 0 #000,0 0 2px #000">SELL +$84</span>
+    </button>
+  </div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":378,"height":174}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

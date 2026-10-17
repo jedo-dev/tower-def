@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Action dock</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&amp;family=Marcellus&amp;family=Exo+2:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#0a0c11}
+</style>
+</helmet>
+<section aria-label="{{label}}" style="position:relative;box-sizing:border-box;width:100%;height:{{h}}px;padding:10px 12px 12px;display:flex;flex-direction:column;gap:6px;font-family:'Exo 2',system-ui,sans-serif;color:#ece6d6">
+  <img src="/_blob/e7c2b9c79a487a3517f6e8ddce18f5c4" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:fill;pointer-events:none">
+
+  <sc-if value="{{tabs}}" hint-placeholder-val="{{true}}">
+    <div style="position:relative;flex:0 0 44px;display:flex;align-items:center;justify-content:space-between;gap:8px">
+      <div role="tablist" aria-label="Actions" style="display:flex;gap:4px">
+        <button type="button" role="tab" aria-selected="{{onT}}" onClick="{{toTowers}}" style="position:relative;width:104px;height:44px;padding:0;border:0;background:none;cursor:pointer;color:{{fgT}}">
+          <img src="{{imgT}}" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:fill">
+          <span style="position:relative;font-family:Cinzel,serif;font-weight:900;font-size:12px;letter-spacing:.08em">TOWERS</span>
+          <span style="position:absolute;left:14px;right:14px;bottom:5px;height:2px;background:{{barT}}"></span>
+        </button>
+        <button type="button" role="tab" aria-selected="{{onS}}" onClick="{{toSend}}" style="position:relative;width:104px;height:44px;padding:0;border:0;background:none;cursor:pointer;color:{{fgS}}">
+          <img src="{{imgS}}" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:fill">
+          <span style="position:relative;display:flex;align-items:baseline;justify-content:center;gap:5px"><span style="font-family:Cinzel,serif;font-weight:900;font-size:12px;letter-spacing:.08em">SEND</span><span style="font-size:11px;font-weight:600">12/12</span></span>
+          <span style="position:absolute;left:14px;right:14px;bottom:5px;height:2px;background:{{barS}}"></span>
+        </button>
+      </div>
+      <div aria-label="Next wave: 4 Grunts, 2 Wolf Riders, 2 Trolls, 1 Tauren" style="display:flex;align-items:center;gap:4px;min-width:0">
+        <span style="font-family:Marcellus,serif;font-size:11px;color:#9fb2d4">NEXT</span>
+        <sc-for list="{{next}}" as="n" hint-placeholder-count="4">
+          <span style="position:relative;width:24px;height:24px;flex:0 0 24px">
+            <img src="{{n.src}}" alt="" style="width:24px;height:24px;object-fit:cover;border-radius:3px;box-shadow:0 0 0 1px {{n.ring}}">
+            <span style="position:absolute;right:-3px;bottom:-4px;padding:0 2px;border-radius:2px;background:#07090d;font-size:10px;font-weight:700;line-height:12px;color:#eff4ff">{{n.c}}</span>
+          </span>
+        </sc-for>
+      </div>
+    </div>
+  </sc-if>
+  <sc-if value="{{single}}" hint-placeholder-val="{{false}}">
+    <div style="position:relative;flex:0 0 18px;display:flex;align-items:center;justify-content:space-between;padding:0 2px">
+      <span style="font-family:Cinzel,serif;font-weight:900;font-size:11px;letter-spacing:.1em;color:#f0d188">{{singleTitle}}</span>
+      <span style="font-size:11px;color:#bed0ee">{{singleSub}}</span>
+    </div>
+  </sc-if>
+
+  <div role="tabpanel" style="position:relative;flex:1 1 auto;min-height:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px">
+    <sc-if value="{{showTowers}}" hint-placeholder-val="{{true}}">
+      <sc-for list="{{towers}}" as="t" hint-placeholder-count="4">
+        <button type="button" aria-label="{{t.aria}}" aria-pressed="{{t.sel}}" aria-disabled="{{t.off}}" style="position:relative;min-width:0;height:100%;box-sizing:border-box;padding:6px 3px 5px;border:0;background:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;color:inherit;font:inherit;border-radius:4px;box-shadow:{{t.glow}}">
+          <img src="/_blob/abfbd7d37c7e423758f9ca2aba527e7d" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:fill">
+          <img src="{{t.icon}}" alt="" style="position: relative; width: 56px; height: 60px; object-fit: cover; border-radius: 3px; filter: {{t.filter}}">
+          <span style="position: relative; max-width: 100%; font-size: 6px; font-weight: 600; color: #ece6d6; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{t.name}}</span>
+          <span style="position:relative;display:flex;align-items:center;gap:3px;font-family:Cinzel,serif;font-weight:900;font-size:12px;color:{{t.costC}}">{{t.cost}}<img src="/_blob/4a5a7909b8ac121c7dd662de4d37efa3" alt="" style="width:14px;height:9px;opacity:{{t.gemOp}}"></span>
+        </button>
+      </sc-for>
+    </sc-if>
+    <sc-if value="{{showSends}}" hint-placeholder-val="{{false}}">
+      <sc-for list="{{sends}}" as="s" hint-placeholder-count="4">
+        <button type="button" aria-label="{{s.aria}}" style="position:relative;min-width:0;height:100%;box-sizing:border-box;padding:6px 4px 5px;border:0;background:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;color:inherit;font:inherit">
+          <img src="/_blob/abfbd7d37c7e423758f9ca2aba527e7d" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:fill">
+          <span style="position:relative;width:44px;height:44px;flex:0 0 44px">
+            <img src="{{s.src}}" alt="" style="width:44px;height:44px;object-fit:cover;border-radius:3px;box-shadow:0 0 0 1px #2f6b2a">
+            <span style="position:absolute;right:-4px;bottom:-4px;padding:0 3px;border-radius:2px;background:#07090d;box-shadow:inset 0 0 0 1px #262c38;font-size:10px;font-weight:700;line-height:13px;color:#eff4ff">{{s.cap}}</span>
+            <sc-if value="{{s.dev}}" hint-placeholder-val="{{false}}">
+              <span style="position:absolute;left:-5px;top:-5px;display:flex;align-items:center;gap:1px;padding:0 3px 0 1px;border-radius:2px;background:#07090d;box-shadow:inset 0 0 0 1px #f0d188;font-size:10px;font-weight:700;line-height:13px;color:#f0d188"><img src="/_blob/4a5a7909b8ac121c7dd662de4d37efa3" alt="" style="width:12px;height:8px">G2/4</span>
+            </sc-if>
+          </span>
+          <span style="position:relative;max-width:100%;font-size:11px;font-weight:600;color:#ece6d6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{s.name}}</span>
+          <span style="position:relative;display:flex;gap:4px;align-items:baseline"><span style="font-family:Cinzel,serif;font-weight:900;font-size:12px;color:#f0d188">{{s.cost}}</span><span style="font-size:11px;font-weight:700;color:#44aa44">{{s.inc}}</span></span>
+          <span aria-hidden="true" style="position:relative;display:block;width:80%;height:3px;border-radius:2px;background:#0f1219;box-shadow:0 0 0 1px #262c38;overflow:hidden"><span style="display:block;height:100%;width:{{s.xp}}%;background:#8fd14f"></span></span>
+        </button>
+      </sc-for>
+    </sc-if>
+  </div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"tab":{"editor":"enum","options":["towers","send"],"default":"towers"},"mode":{"editor":"enum","options":["tabs","towers","send"],"default":"tabs"},"$preview":{"width":378,"height":174}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const mode = this.props.mode ?? 'tabs';
+    const tabs = mode === 'tabs';
+    const s = this.state || {};
+    const tab = tabs ? (s.tab ?? (this.props.tab ?? 'towers')) : mode;
+    const onT = tab === 'towers', onS = tab === 'send';
+    const SEC = '/_blob/4dd5440875865f76ba43ad90ae980471', SECH = '/_blob/269129adf9ae9f6cc021ce36829cef56';
+    const T = [
+      ['Bone Archer', '$60', '/_blob/7e90d4ea30c96e54dc4a59d8bcf90a98', true, false],
+      ['Plague Tower', '$90', '/_blob/f78feebdf706404d0d914e3fb16f6544', false, false],
+      ['Bone Obelisk', '$120', '/_blob/801fa63af51421f4f6003abde8c93408', false, false],
+      ['Frost Wyrm Nest', '$400', '/_blob/fbb2fcaa04c8bdc00d761f25cf3d3f26', false, true]
+    ];
+    const S = [
+      ['Skeleton', '$50', '+10', '6/6', 70, false, '/_blob/2ca858c63065af75f6e188e84a545fe7'],
+      ['Ghoul', '$50', '+10', '5/6', 35, false, '/_blob/a45d89ade6665c8072c1ab442844fa89'],
+      ['Crypt Fiend', '$75', '+14', '5/5', 55, true, '/_blob/78d4543a9b0691f1ac2bb6232e68e58f'],
+      ['Gargoyle', '$110', '+19', '4/4', 15, false, '/_blob/8aaabe31c5f075cc9a5dbf346a5026d0']
+    ];
+    return {
+      h: tabs ? 174 : 146, tabs, single: !tabs,
+      label: onT ? 'Build towers' : 'Send creatures',
+      singleTitle: onT ? 'BUILD' : 'SEND',
+      singleSub: onT ? 'Tap a card, then a free 2×2 spot' : '12/12 left · +50 income',
+      onT, onS, showTowers: onT, showSends: onS,
+      imgT: onT ? SECH : SEC, imgS: onS ? SECH : SEC,
+      fgT: onT ? '#f0e3c0' : '#bed0ee', fgS: onS ? '#f0e3c0' : '#bed0ee',
+      barT: onT ? '#8fd14f' : 'transparent', barS: onS ? '#8fd14f' : 'transparent',
+      toTowers: () => this.setState({ tab: 'towers' }),
+      toSend: () => this.setState({ tab: 'send' }),
+      next: [['/_blob/81ed14bb17fe4c0eb589ca9a763ebedf', '4'], ['/_blob/976b364b008d88dd3b1fddccca2188a1', '2'], ['/_blob/c0ab06e553e934ca187358648af207d4', '2'], ['/_blob/7b9829439191eb3885382d515935e387', '1']]
+        .map(([src, c], i) => ({ src, c, ring: i === 3 ? '#ffb15f' : '#7a1d14' })),
+      towers: T.map(([name, cost, icon, sel, off]) => ({
+        name, icon, sel, off,
+        cost: off ? 'Need $65' : cost,
+        costC: off ? '#ff7b6b' : '#f0d188',
+        filter: off ? 'grayscale(1) brightness(.6)' : 'none',
+        gemOp: off ? 0 : 1,
+        glow: sel ? '0 0 0 2px #8fd14f,0 0 10px rgba(143,209,79,.45)' : 'none',
+        aria: off ? 'Build ' + name + ', ' + cost + ' — need $65 more' : 'Build ' + name + ', ' + cost + (sel ? ', selected for placing' : '') + ', has talent branches'
+      })),
+      sends: S.map(([name, cost, inc, cap, xp, dev, src]) => ({
+        name, cost, inc, cap, xp, dev, src,
+        aria: 'Send ' + name + ', ' + cost + ', income ' + inc + ', ' + cap + ' this wave' + (dev ? ', developed grade 2 of 4' : '')
+      }))
+    };
+  }
+}
+</script>
+</body>
+</html>
