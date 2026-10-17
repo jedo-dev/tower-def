@@ -18,7 +18,12 @@ import { preloadGameAudioClips } from './gameAudioClipPreloader';
 import { getCanvasResolution } from '../runtime/camera/canvasResolutionRuntime';
 
 /** `Game#pendingDestroy` is set by `destroy()` but missing from Phaser's typings. */
-function isGamePendingDestroy(game: Phaser.Game): boolean {
+function isGamePendingDestroy(game: Phaser.Game | null | undefined): boolean {
+  // A scene whose systems were torn down has no game any more: treat it as gone,
+  // so a clip that finishes decoding afterwards is dropped instead of throwing.
+  if (!game) {
+    return true;
+  }
   return (game as Phaser.Game & { pendingDestroy?: boolean }).pendingDestroy === true;
 }
 
@@ -308,7 +313,9 @@ export class GameAudioManager {
       clipCache: this.clipCache,
       // A game torn down before its scene shut down (e.g. a StrictMode
       // remount mid-preload) never destroys this manager, so check both.
-      isActive: () => !this.isDestroyed && !isGamePendingDestroy(this.scene.sys.game),
+      isActive: () =>
+        !this.isDestroyed &&
+        !isGamePendingDestroy((this.scene.sys as { game?: Phaser.Game | null } | null)?.game),
       getAudioKey: (soundId) => this.getAudioKey(soundId),
     });
   }

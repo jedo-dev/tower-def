@@ -16,6 +16,7 @@
     "sim:duel": "tsx tools/sim-duel.ts",
     "sim:duel-batch": "tsx tools/sim-duel-batch.ts",
     "gen:sfx": "tsx tools/generate-sfx.ts",
+    "audit:sounds": "tsx tools/build-sound-audit.ts",
     "encode:ambient": "tsx tools/encode-ambient.ts",
     "check": "npm run typecheck && npm run lint && npm run format:check && vitest run"
   },
