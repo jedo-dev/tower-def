@@ -33,6 +33,7 @@ export function BranchGradeTable({ table }: BranchGradeTableProps) {
             <tr key={statRow.label}>
               <th scope="row" title={statRow.title}>
                 {statRow.label}
+                {statRow.unit && <span className={styles.unit}> {statRow.unit}</span>}
               </th>
               {statRow.values.map((value, index) => (
                 <td key={view.grades[index] ?? index}>{value}</td>

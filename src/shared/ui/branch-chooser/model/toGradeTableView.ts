@@ -4,6 +4,8 @@ import { UNCHANGED_GRADE_VALUE, type BranchGradeTableData } from './types';
 export type GradeStatRowView = {
   label: string;
   title?: string;
+  /** Unit shared by every changed value, moved out of the cells ("ms", "%"). */
+  unit?: string;
   values: readonly string[];
 };
 
@@ -48,6 +50,49 @@ function collectSpecials(table: BranchGradeTableData): GradeSpecialView[] {
   return specials;
 }
 
+const UNIT_SUFFIX_PATTERN = /^[+-]?[\d.]+([a-z%]+)$/i;
+
+/**
+ * The unit every changed value of a stat ends with ("ms" in "-150ms"), or
+ * an empty string when they do not share one. Factored out to the row
+ * header so the narrow grade columns only carry numbers.
+ */
+function findSharedUnit(values: readonly string[]): string {
+  const units = values
+    .filter((value) => value !== UNCHANGED_GRADE_VALUE)
+    .map((value) => UNIT_SUFFIX_PATTERN.exec(value)?.[1] ?? '');
+  const [first = ''] = units;
+  return first !== '' && units.every((unit) => unit === first) ? first : '';
+}
+
+const FINE_FRACTION_PATTERN = /\.\d{2,}/;
+const LEADING_ZERO_PATTERN = /^([+-]?)0\./;
+
+/**
+ * "+0.15" → "+.15" for every value of a row that carries a two-digit
+ * fraction anywhere, so the row stays uniform and fits a grade column.
+ */
+function compactFractions(values: readonly string[]): string[] {
+  if (!values.some((value) => FINE_FRACTION_PATTERN.test(value))) {
+    return [...values];
+  }
+  return values.map((value) => value.replace(LEADING_ZERO_PATTERN, '$1.'));
+}
+
+function toStatRow(label: string, title: string | undefined, values: string[]): GradeStatRowView {
+  const unit = findSharedUnit(values);
+  const withoutUnit =
+    unit === ''
+      ? values
+      : values.map((value) =>
+          value === UNCHANGED_GRADE_VALUE ? value : value.slice(0, -unit.length),
+        );
+  const compactValues = compactFractions(withoutUnit);
+  return unit === ''
+    ? { label, title, values: compactValues }
+    : { label, title, unit, values: compactValues };
+}
+
 /**
  * Pivots a branch's per-grade rows into the card layout of the chooser:
  * one row per stat that changes at some grade (a stat unchanged at every
@@ -55,11 +100,13 @@ function collectSpecials(table: BranchGradeTableData): GradeSpecialView[] {
  */
 export function toGradeTableView(table: BranchGradeTableData): GradeTableView {
   const statRows = table.statColumns
-    .map((column, columnIndex) => ({
-      label: column.label,
-      title: column.title,
-      values: table.rows.map((row) => row.stats[columnIndex] ?? UNCHANGED_GRADE_VALUE),
-    }))
+    .map((column, columnIndex) =>
+      toStatRow(
+        column.label,
+        column.title,
+        table.rows.map((row) => row.stats[columnIndex] ?? UNCHANGED_GRADE_VALUE),
+      ),
+    )
     .filter((statRow) => statRow.values.some((value) => value !== UNCHANGED_GRADE_VALUE));
 
   return {

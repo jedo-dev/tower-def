@@ -17,7 +17,9 @@ function formatHeading(title: string): string {
 }
 
 function confirmText(card: BranchChooserCard | undefined): string {
-  return card ? `Confirm ${card.name} · ${card.price.label}` : 'Choose a branch first';
+  // No-break spaces keep "· price" with the name when the label wraps.
+  // No-break spaces keep "· price" with the name when the label wraps.
+  return card ? `Confirm ${card.name} · ${card.price.label}` : 'Choose a branch first';
 }
 
 /**

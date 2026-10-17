@@ -180,12 +180,14 @@
 }
 
 .actions > button > span {
+  min-width: 0;
   font-size: var(--font-size-sm);
   font-weight: 900;
-  letter-spacing: 0.04em;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  line-height: 1.15;
+  letter-spacing: 0.03em;
+  text-align: center;
+  /* A long branch name wraps to a second line instead of losing the price. */
+  overflow-wrap: anywhere;
 }
 
 .confirm:disabled {

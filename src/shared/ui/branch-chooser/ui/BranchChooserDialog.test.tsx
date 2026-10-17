@@ -87,7 +87,7 @@ describe('BranchChooserDialog (shared shell)', () => {
       within(fireTable)
         .getAllByRole('rowheader')
         .map((cell) => cell.textContent),
-    ).toEqual(['DMG']);
+    ).toEqual(['DMG %']);
     const fireCard = screen.getByRole('article', { name: 'Fire' });
     expect(within(fireCard).getByRole('list', { name: 'Special' }).textContent).toBe('5 Slow');
     expect(within(fireCard).getByText('$40')).toBeTruthy();
@@ -118,7 +118,7 @@ describe('BranchChooserDialog (shared shell)', () => {
     expect(within(screen.getByRole('article', { name: 'Frost' })).getByText('Chosen')).toBeTruthy();
     expect(screen.getByText('Step 2 of 2 · Confirm')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Confirm Frost for 40 gold' }).textContent).toBe(
-      'Confirm Frost · $40',
+      'Confirm Frost · $40',
     );
     expect(onConfirm).not.toHaveBeenCalled();
 

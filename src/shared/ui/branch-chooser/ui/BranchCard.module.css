@@ -131,7 +131,7 @@
 
 .grades th[scope='row'],
 .grades .gradesCorner {
-  width: 34px;
+  width: 38px;
   text-align: left;
 }
 
@@ -161,4 +161,8 @@
   font-size: var(--font-size-md);
   font-weight: 900;
   color: var(--color-accent-gold);
+}
+
+.unit {
+  color: var(--color-text-label);
 }

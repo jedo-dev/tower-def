@@ -26,9 +26,32 @@ describe('toGradeTableView', () => {
     expect(view.grades).toEqual([4, 5]);
     expect(view.statRows).toEqual([
       { label: 'DMG', title: 'Damage', values: ['+2', '+4'] },
-      { label: 'SPD', title: undefined, values: [NONE, '-50ms'] },
+      { label: 'SPD', title: undefined, unit: 'ms', values: [NONE, '-50'] },
     ]);
     expect(view.specials).toEqual([]);
+  });
+
+  it('keeps units in the cells when the values do not share one', () => {
+    const view = toGradeTableView(
+      table([
+        { grade: 4, stats: ['+2%', NONE, NONE], special: NONE },
+        { grade: 5, stats: ['+4', NONE, NONE], special: NONE },
+      ]),
+    );
+
+    expect(view.statRows[0]).toEqual({ label: 'DMG', title: 'Damage', values: ['+2%', '+4'] });
+  });
+
+  it('drops the leading zero across a row that has a two-digit fraction', () => {
+    const view = toGradeTableView(
+      table([
+        { grade: 4, stats: ['+0.3', NONE, NONE], special: NONE },
+        { grade: 5, stats: ['+0.15', NONE, NONE], special: NONE },
+        { grade: 6, stats: ['-0.05', NONE, NONE], special: NONE },
+      ]),
+    );
+
+    expect(view.statRows[0]?.values).toEqual(['+.3', '+.15', '-.05']);
   });
 
   it('groups equal specials of consecutive grades and skips grades without one', () => {
