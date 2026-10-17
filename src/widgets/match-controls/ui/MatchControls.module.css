@@ -1,10 +1,9 @@
-/* In-flow row of four 44x44 targets beside the duel feed: the page lays it
- * out next to the board, never over board cells. Wraps when the strip is a
- * narrow landscape column. */
+/* Pause / 1x / 2x / quit (docs/design/match-screen-concept.webp): four 44px
+ * kit squares in the event row, beside the duel feed, never over the board.
+ * The selected speed (and an active pause) takes the gold frame. */
 .strip {
   flex: 0 0 auto;
   display: flex;
-  flex-wrap: wrap;
   gap: var(--space-xs);
 }
 
@@ -12,38 +11,44 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  width: var(--touch-target-min);
+  height: var(--touch-target-min);
   min-width: var(--touch-target-min);
   min-height: var(--touch-target-min);
   padding: 0;
-  border: 1px solid var(--glass-border-strong);
-  border-radius: var(--radius-md);
-  background: var(--color-surface-overlay);
   color: var(--color-text-primary);
   font-family: var(--font-family-display);
-  font-size: var(--font-size-md);
+  font-size: var(--font-size-lg);
   font-weight: 700;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.02em;
   cursor: pointer;
   touch-action: manipulation;
-  box-shadow: var(--shadow-sm);
+  text-shadow: var(--shadow-codex-drop);
 }
 
 .button:hover {
-  filter: brightness(1.15);
+  filter: brightness(1.2);
 }
 
-.button:focus-visible {
-  outline: none;
-  box-shadow: var(--focus-ring);
+.button:active {
+  transform: translateY(1px);
 }
 
 .buttonActive {
-  border-color: var(--color-accent-gold);
   color: var(--color-accent-gold);
+  box-shadow:
+    0 0 0 2px var(--color-accent-gold-deep),
+    0 0 10px var(--color-accent-gold-glow);
 }
 
 .buttonQuit {
   color: var(--color-text-danger);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .button:active {
+    transform: none;
+  }
 }
 
 /* Quit confirmation: the strip sits in the feed row, so the

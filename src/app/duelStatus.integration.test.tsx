@@ -9,7 +9,7 @@ import {
   type GameSceneHarness,
 } from '../features/game-engine/test/sceneHarness';
 import { RaceId } from '../shared/types/content-ids';
-import { HudPanel } from '../widgets/hud/ui/HudPanel';
+import { MatchStatusBar } from '../widgets/hud';
 import { ENEMY_SENDS_PENDING_DETAIL } from '../widgets/hud/model/mapHudSnapshotToViewModel';
 import { WaveQueue } from '../widgets/wave-queue';
 
@@ -93,7 +93,7 @@ describe('duel statuses (live scene + widgets)', () => {
   it('says the enemy sends at wave start, then shows what it sent this wave', async () => {
     const game = await createGameSceneHarness();
     harness = game;
-    render(<HudPanel setup={HARNESS_DEFAULT_SETUP} />);
+    render(<MatchStatusBar setup={HARNESS_DEFAULT_SETUP} />);
 
     expect(pressureStatus().textContent).toContain(ENEMY_SENDS_PENDING_DETAIL);
 

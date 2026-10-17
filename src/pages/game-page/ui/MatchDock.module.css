@@ -1,0 +1,106 @@
+/*
+ * The dock: kit frame, a tab rail (TOWERS, SEND n/m, and DEVELOP on the
+ * send tab's right), then the active tab's single card row.
+ */
+.dock {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  padding: var(--space-sm) var(--space-md) var(--space-md);
+  border-image-width: var(--match-frame-rim);
+}
+
+.rail {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  min-width: 0;
+  padding-bottom: var(--space-2xs);
+  border-bottom: 1px solid var(--color-codex-line);
+}
+
+.tabs {
+  display: flex;
+  gap: var(--space-xs);
+  min-width: 0;
+}
+
+/* Kit steel tab; the active one has gold text and a green underline. */
+.tab {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2xs);
+  min-width: var(--match-tab-width);
+  height: var(--touch-target-min);
+  padding: 0 var(--space-lg);
+  border: 0;
+  border-image-source: url('/assets/ui/kit/btn-secondary-normal.png');
+  border-image-slice: 36 fill;
+  border-image-width: 12px;
+  border-image-repeat: stretch;
+  background: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  font-family: var(--font-family-display);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  touch-action: manipulation;
+  text-shadow: var(--shadow-codex-drop);
+  white-space: nowrap;
+}
+
+.tab:hover {
+  border-image-source: url('/assets/ui/kit/btn-secondary-hover.png');
+  color: var(--color-text-primary);
+}
+
+.tab:focus-visible {
+  outline: var(--focus-ring-outline);
+  outline-offset: var(--focus-ring-outline-offset);
+}
+
+.tabActive,
+.tabActive:hover {
+  border-image-source: url('/assets/ui/kit/btn-secondary-pressed.png');
+  color: var(--color-accent-gold);
+}
+
+.tabActive::after {
+  content: '';
+  position: absolute;
+  right: var(--space-lg);
+  bottom: var(--space-xs);
+  left: var(--space-lg);
+  height: var(--match-tab-underline-height);
+  border-radius: var(--radius-pill);
+  background: var(--color-match-tab-underline);
+  box-shadow: 0 0 6px var(--glow-emerald);
+}
+
+.tabTitle {
+  font-size: var(--font-size-md);
+}
+
+.tabCount {
+  font-family: var(--font-family-ui);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+}
+
+.panel {
+  min-width: 0;
+}
+
+/* 360px phones: the rail keeps both tabs and DEVELOP on one line. */
+@media (max-width: 370px) {
+  .tab {
+    min-width: 0;
+    padding: 0 var(--space-md);
+  }
+}

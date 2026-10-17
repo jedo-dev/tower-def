@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { Difficulty } from '../../entities/difficulty';
 import { getTowerStatsForLevel } from '../../entities/tower';
 import type { GameSetupConfig } from '../../shared/config/game-setup';
@@ -11,6 +11,7 @@ import {
 } from '../../shared/lib/game-bridge/bridge';
 import type { GameHudSnapshot, SelectedTowerSnapshot } from '../../shared/lib/game-bridge/types';
 import { RaceId, TowerTypeId } from '../../shared/types/content-ids';
+import { MATCH_STATUS_LABEL } from '../../widgets/hud';
 import { QUIT_DIALOG_TITLE } from '../../widgets/match-controls';
 import { GamePage } from './GamePage';
 
@@ -35,16 +36,16 @@ const SETUP: GameSetupConfig = {
 };
 
 /*
- * jsdom has no layout, so the page's flex column is modelled here with the
- * numbers measured in Chrome at 390x844: the board is the viewport minus the
- * control strip (minus the fixed feed row and gaps). The strip's natural
- * height differs with the sheet open (sheet 174 + collapsed HUD) from the
- * dock's (send panel 172.8 + HUD); only the lock keeps the board still.
+ * jsdom has no layout, so the page's grid is modelled here with the numbers
+ * measured in Chrome at 390x844: the board is the viewport minus the control
+ * strip (minus the plate, the event row and the gaps). The strip's natural
+ * height differs with the sheet open (status bar + sheet 174) from the
+ * dock's (status bar + dock 193); only the lock keeps the board still.
  */
 const VIEWPORT_HEIGHT = 832;
-const FEED_ROW_AND_GAPS = 56;
-const DOCK_STRIP_HEIGHT = 336.4;
-const SHEET_STRIP_HEIGHT = 338;
+const PLATE_FEED_ROW_AND_GAPS = 122;
+const DOCK_STRIP_HEIGHT = 257;
+const SHEET_STRIP_HEIGHT = 238;
 
 function stripHeight(strip: HTMLElement): number {
   const lockedHeight = Number.parseFloat(strip.style.height);
@@ -62,7 +63,7 @@ function modelledHeight(element: HTMLElement): number {
   }
   if (element.classList.contains('game-canvas-area')) {
     const strip = document.querySelector<HTMLElement>('.game-panels');
-    return VIEWPORT_HEIGHT - FEED_ROW_AND_GAPS - (strip ? stripHeight(strip) : 0);
+    return VIEWPORT_HEIGHT - PLATE_FEED_ROW_AND_GAPS - (strip ? stripHeight(strip) : 0);
   }
   return 0;
 }
@@ -152,8 +153,8 @@ describe('GamePage tower sheet', () => {
     expect(document.querySelector<HTMLElement>('.game-panels')!.style.height).toBe(
       `${DOCK_STRIP_HEIGHT}px`,
     );
-    // The HUD status rows stay; the send panel steps aside but stays mounted.
-    expect(screen.getByRole('region', { name: 'Game HUD' })).toBeDefined();
+    // The status bar stays; the dock steps aside but stays mounted.
+    expect(screen.getByRole('region', { name: MATCH_STATUS_LABEL })).toBeDefined();
     expect(document.querySelector('.game-dock')?.hasAttribute('inert')).toBe(true);
 
     selectTower(null);
@@ -176,8 +177,9 @@ describe('GamePage tower sheet', () => {
 
   it('closes from its close button and brings the dock back as it was', () => {
     render(<GamePage setup={SETUP} onExit={vi.fn()} />);
+    fireEvent.click(screen.getByRole('tab', { name: /^Send/ }));
+    fireEvent.click(screen.getByRole('button', { name: /^Develop creatures/ }));
     const sendPanel = screen.getByRole('region', { name: 'Creep sending panel' });
-    fireEvent.click(within(sendPanel).getByRole('button', { name: /^Develop creatures/ }));
     expect(sendPanel.getAttribute('data-mode')).toBe('develop');
 
     selectTower(archerTower());
@@ -185,29 +187,22 @@ describe('GamePage tower sheet', () => {
 
     expect(sheet()).toBeNull();
     expect(document.querySelector('.game-dock')?.hasAttribute('inert')).toBe(false);
+    expect(screen.getByRole('tab', { name: /^Send/ }).getAttribute('aria-selected')).toBe('true');
     expect(screen.getByRole('region', { name: 'Creep sending panel' })).toBe(sendPanel);
     expect(sendPanel.getAttribute('data-mode')).toBe('develop');
   });
 
-  it('folds an open build drawer while open and restores it on close', () => {
+  it('stands in for the tower cards while open and gives them back on close', () => {
     render(<GamePage setup={SETUP} onExit={vi.fn()} />);
-    fireEvent.click(screen.getByRole('button', { name: 'Expand HUD' }));
-    expect(screen.getByRole('group', { name: 'Buildable towers' })).toBeDefined();
+    const towerCards = screen.getByRole('group', { name: 'Buildable towers' });
 
     selectTower(archerTower());
-    expect(screen.queryByRole('group', { name: 'Buildable towers' })).toBeNull();
+    // Kept mounted under the sheet, but out of reach: the dock is inert.
+    expect(towerCards.closest('.game-dock')?.hasAttribute('inert')).toBe(true);
+    expect(towerCards.closest('.game-dock-slot')?.contains(sheet())).toBe(true);
 
     selectTower(null);
-    expect(screen.getByRole('group', { name: 'Buildable towers' })).toBeDefined();
-  });
-
-  it('gives way to the build drawer when the HUD is expanded', () => {
-    render(<GamePage setup={SETUP} onExit={vi.fn()} />);
-    selectTower(archerTower());
-
-    fireEvent.click(screen.getByRole('button', { name: 'Expand HUD' }));
-
-    expect(sheet()).toBeNull();
-    expect(screen.getByRole('group', { name: 'Buildable towers' })).toBeDefined();
+    expect(screen.getByRole('group', { name: 'Buildable towers' })).toBe(towerCards);
+    expect(towerCards.closest('.game-dock')?.hasAttribute('inert')).toBe(false);
   });
 });

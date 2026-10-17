@@ -10,38 +10,45 @@ export type CreepSendCardProps = {
   faction: FactionThemeName;
 };
 
-/** A creature card in send mode: one tap queues a send. */
+/**
+ * A creature card in send mode: one tap queues a send. Portrait with the
+ * "6/6" sends-left badge, name, "$50 +10" price and income, and the talent
+ * marks (grade badge, experience bar). Disabled, the reason replaces the price.
+ */
 export function CreepSendCard({ creature, faction }: CreepSendCardProps) {
   return (
     <button
       type="button"
-      className={`ui-slot ${styles.button}`}
+      className={`ui-slot ${styles.card}`}
       disabled={creature.isDisabled}
       aria-label={creature.ariaLabel}
       title={creature.tooltip}
       data-send-card="true"
       onClick={() => sendGameCommand('send-creep', { creepTypeId: creature.creepTypeId })}
     >
-      <UnitIcon
-        unitId={creature.creepTypeId}
-        label={creature.name}
-        faction={faction}
-        className={styles.buttonIcon}
-      />
-      <span className={styles.buttonName}>{creature.name}</span>
-      <span className={styles.buttonStats} aria-hidden="true">
-        <span>T{creature.tier}</span>
-        <span className={styles.buttonCost}>${creature.cost}</span>
-        <span className={styles.buttonIncome}>+{creature.incomeGain}</span>
+      <span className={styles.portrait}>
+        <UnitIcon
+          unitId={creature.creepTypeId}
+          label={creature.name}
+          faction={faction}
+          className={styles.portraitIcon}
+        />
         {creature.remainingOfType !== null && (
-          <span className={styles.buttonRemaining} data-send-remaining="true">
+          <span className={styles.remaining} aria-hidden="true" data-send-remaining="true">
             {creature.remainingOfType}/{creature.typeCap}
           </span>
         )}
       </span>
-      {creature.disabledReason && (
-        <span className={styles.buttonReason} aria-hidden="true">
+      <span className={styles.name}>{creature.name}</span>
+      {creature.disabledReason ? (
+        <span className={styles.reason} aria-hidden="true">
           {creature.disabledReason}
+        </span>
+      ) : (
+        <span className={styles.stats} aria-hidden="true">
+          <span className={`ui-icon-coin ${styles.coin}`} />
+          <span className={styles.cost}>${creature.cost}</span>
+          <span className={styles.income}>+{creature.incomeGain}</span>
         </span>
       )}
       <CreatureTalentMarks talent={creature.talent} />

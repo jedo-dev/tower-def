@@ -17,6 +17,7 @@ import type {
   SelectedTowerSnapshot,
 } from '../../shared/lib/game-bridge/types';
 import { RaceId, TowerTypeId } from '../../shared/types/content-ids';
+import { MATCH_STATUS_LABEL } from '../../widgets/hud';
 import { QUIT_DIALOG_TITLE } from '../../widgets/match-controls';
 import { GamePage } from './GamePage';
 
@@ -41,18 +42,19 @@ const SETUP: GameSetupConfig = {
 };
 
 /*
- * jsdom has no layout: the flex column is modelled with the numbers measured
- * in headless Chrome at 390x844 (832px inside the page padding). The board is
- * what the strip leaves; the strip is the dock + HUD in the build phase and
- * the HUD status rows alone during the wave. Landscape (844x390) keeps the
- * board at the full 378px column height in both phases.
+ * jsdom has no layout: the grid is modelled with the numbers measured in
+ * headless Chrome at 390x844 (832px inside the page padding). The board is
+ * what the plate, the event row, the gaps and the strip leave; the strip is
+ * the status bar + dock in the build phase and the status bar alone during
+ * the wave. Landscape (844x390) keeps the board at the full 378px column
+ * height in both phases.
  */
 const PORTRAIT_VIEWPORT_HEIGHT = 832;
 const LANDSCAPE_BOARD_HEIGHT = 378;
-const FEED_ROW_AND_GAPS = 56;
-const DOCK_STRIP_HEIGHT = 334.6;
-const SHEET_STRIP_HEIGHT = 338;
-const WAVE_STRIP_HEIGHT = 134.8;
+const PLATE_FEED_ROW_AND_GAPS = 122;
+const DOCK_STRIP_HEIGHT = 257;
+const SHEET_STRIP_HEIGHT = 238;
+const WAVE_STRIP_HEIGHT = 58;
 const BOARD_WIDTH = 378;
 
 function stripHeight(strip: HTMLElement): number {
@@ -73,7 +75,7 @@ function modelledBoardHeight(): number {
     return LANDSCAPE_BOARD_HEIGHT;
   }
   const strip = document.querySelector<HTMLElement>('.game-panels');
-  return PORTRAIT_VIEWPORT_HEIGHT - FEED_ROW_AND_GAPS - (strip ? stripHeight(strip) : 0);
+  return PORTRAIT_VIEWPORT_HEIGHT - PLATE_FEED_ROW_AND_GAPS - (strip ? stripHeight(strip) : 0);
 }
 
 function modelledHeight(element: HTMLElement): number {
@@ -204,6 +206,10 @@ function selectTower(tower: SelectedTowerSnapshot | null): void {
 }
 
 const strip = () => document.querySelector<HTMLElement>('.game-panels')!;
+const statusBar = () => screen.getByRole('region', { name: MATCH_STATUS_LABEL });
+const tab = (name: RegExp) => screen.getByRole('tab', { name, hidden: true });
+const towerCards = () => screen.queryByRole('group', { name: 'Buildable towers', hidden: true });
+const sendPanel = () => screen.queryByRole('region', { name: 'Creep sending panel', hidden: true });
 const dockSlot = () => document.querySelector<HTMLElement>('.game-dock-slot')!;
 const boardHeight = () =>
   document.querySelector<HTMLElement>('.game-canvas-area')!.getBoundingClientRect().height;
@@ -242,26 +248,25 @@ describe('GamePage wave phase', () => {
     consoleError.mockClear();
   });
 
-  it('gives the dock height to the board during the wave and keeps the status rows', () => {
+  it('gives the dock height to the board during the wave and keeps the status bar', () => {
     render(<GamePage setup={SETUP} onExit={vi.fn()} />);
     const buildBoardHeight = boardHeight();
-    const sendPanel = screen.getByRole('region', { name: 'Creep sending panel' });
+    const dock = screen.getByRole('region', { name: 'Action dock' });
 
     setPhase('wave');
 
     expect(strip().classList.contains('game-panels--wave')).toBe(true);
     expect(strip().style.height).toBe('');
     expect(boardHeight()).toBe(buildBoardHeight + DOCK_STRIP_HEIGHT - WAVE_STRIP_HEIGHT);
-    // Send panel folded away but mounted; the drawer tab and Start Wave gone.
+    // The dock folded away but mounted; Start Wave gives way to the view toggle.
     expect(dockSlot().hasAttribute('inert')).toBe(true);
-    expect(screen.getByRole('region', { name: 'Creep sending panel', hidden: true })).toBe(
-      sendPanel,
-    );
-    expect(screen.queryByRole('button', { name: 'Expand HUD' })).toBeNull();
-    expect(screen.queryByRole('button', { name: 'Start Wave' })).toBeNull();
-    const hud = screen.getByRole('region', { name: 'Game HUD' });
-    expect(within(hud).getByText('1000')).toBeDefined();
-    expect(within(hud).getByRole('status', { name: /^Incoming 6/ })).toBeDefined();
+    expect(screen.getByRole('region', { name: 'Action dock', hidden: true })).toBe(dock);
+    expect(screen.queryByRole('button', { name: /^Start wave/ })).toBeNull();
+    expect(within(statusBar()).getByText('1000')).toBeDefined();
+    expect(within(statusBar()).getByRole('status', { name: /^Incoming 6/ })).toBeDefined();
+    expect(
+      within(statusBar()).getByRole('button', { name: 'Show opponent battlefield' }),
+    ).toBeDefined();
     expect(screen.getByRole('region', { name: 'Duel events' })).toBeDefined();
     expect(screen.getByRole('button', { name: 'Pause game' })).toBeDefined();
 
@@ -270,33 +275,44 @@ describe('GamePage wave phase', () => {
     expect(strip().classList.contains('game-panels--wave')).toBe(false);
     expect(dockSlot().hasAttribute('inert')).toBe(false);
     expect(boardHeight()).toBe(buildBoardHeight);
-    expect(screen.getByRole('button', { name: 'Start Wave' })).toBeDefined();
+    expect(screen.getByRole('button', { name: /^Start wave 1/ })).toBeDefined();
   });
 
   it('brings the dock back after the wave in the state it had', () => {
     render(<GamePage setup={SETUP} onExit={vi.fn()} />);
-    const sendPanel = screen.getByRole('region', { name: 'Creep sending panel' });
-    fireEvent.click(within(sendPanel).getByRole('button', { name: /^Develop creatures/ }));
-    expect(sendPanel.getAttribute('data-mode')).toBe('develop');
+    fireEvent.click(tab(/^Send/));
+    fireEvent.click(screen.getByRole('button', { name: /^Develop creatures/ }));
+    const panel = sendPanel()!;
+    expect(panel.getAttribute('data-mode')).toBe('develop');
 
     setPhase('wave');
     setPhase('build');
 
-    expect(screen.getByRole('region', { name: 'Creep sending panel' })).toBe(sendPanel);
-    expect(sendPanel.getAttribute('data-mode')).toBe('develop');
+    expect(sendPanel()).toBe(panel);
+    expect(panel.getAttribute('data-mode')).toBe('develop');
   });
 
-  it('folds an open build drawer for the wave and reopens it after', () => {
+  it('keeps the active dock tab through the wave, one card row at a time', () => {
     render(<GamePage setup={SETUP} onExit={vi.fn()} />);
-    fireEvent.click(screen.getByRole('button', { name: 'Expand HUD' }));
-    expect(screen.getByRole('group', { name: 'Buildable towers' })).toBeDefined();
+    expect(tab(/^Towers/).getAttribute('aria-selected')).toBe('true');
+    fireEvent.click(tab(/^Send/));
+    expect(towerCards()).toBeNull();
 
     setPhase('wave');
-    expect(screen.queryByRole('group', { name: 'Buildable towers' })).toBeNull();
+    expect(tab(/^Send/).getAttribute('aria-selected')).toBe('true');
+    expect(towerCards()).toBeNull();
 
     setPhase('build');
-    expect(screen.getByRole('group', { name: 'Buildable towers' })).toBeDefined();
-    expect(screen.getByRole('button', { name: 'Collapse HUD' })).toBeDefined();
+    expect(tab(/^Send/).getAttribute('aria-selected')).toBe('true');
+    expect(sendPanel()).not.toBeNull();
+    expect(towerCards()).toBeNull();
+
+    fireEvent.click(tab(/^Towers/));
+    setPhase('wave');
+    setPhase('build');
+    expect(tab(/^Towers/).getAttribute('aria-selected')).toBe('true');
+    expect(towerCards()).not.toBeNull();
+    expect(sendPanel()).toBeNull();
   });
 
   it('re-fits the camera once per phase change, never on mid-wave HUD updates', () => {
@@ -381,7 +397,7 @@ describe('GamePage wave phase', () => {
 
     expect(strip().classList.contains('game-panels--wave')).toBe(true);
     expect(dockSlot().hasAttribute('inert')).toBe(true);
-    expect(screen.getByRole('region', { name: 'Game HUD' })).toBeDefined();
+    expect(statusBar()).toBeDefined();
     expect(boardHeight()).toBe(buildBoardHeight);
     expect(resize).toHaveBeenCalledTimes(1);
 

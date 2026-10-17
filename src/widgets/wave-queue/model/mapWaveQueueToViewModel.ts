@@ -2,6 +2,8 @@ import { tryResolveUnitConfigById, type UnitId } from '../../../entities/unit';
 import type { FactionThemeName } from '../../../shared/constants/theme';
 import type { GameHudSnapshot, WaveQueueItem } from '../../../shared/lib/game-bridge/types';
 
+const BASELINE_WAVE_HINT = 'Baseline wave';
+
 /** One creature portrait in the strip. */
 export type WaveQueueIcon = {
   creepTypeId: string;
@@ -16,8 +18,19 @@ export type WaveQueueSection = {
   items: WaveQueueIcon[];
 };
 
+/** One portrait of the plate's strip: a creature type and how many of it come. */
+export type WaveQueueGroup = WaveQueueIcon & {
+  count: number;
+  /** "×4" */
+  countLabel: string;
+};
+
 export type WaveQueueViewModel = {
   headerLabel: string;
+  /** The plate's second line: "baseline + 3 enemy sends", "6 creeps", "No enemies". */
+  subtitle: string | null;
+  /** The sections' creatures grouped by type, in order of first appearance. */
+  groups: WaveQueueGroup[];
   countLabel: string | null;
   baselineHint: string | null;
   sections: WaveQueueSection[];
@@ -33,6 +46,25 @@ export function toWaveQueueIcon(item: WaveQueueItem): WaveQueueIcon {
     name: unit?.name ?? item.creepTypeId,
     faction: unit ? (unit.faction.toLowerCase() as FactionThemeName) : undefined,
   };
+}
+
+/** Folds a queue into one portrait per creature type with its count. */
+export function groupWaveQueueIcons(items: readonly WaveQueueIcon[]): WaveQueueGroup[] {
+  const groups = new Map<string, WaveQueueGroup>();
+  for (const item of items) {
+    const group = groups.get(item.creepTypeId);
+    if (group) {
+      group.count += 1;
+      group.countLabel = `×${group.count}`;
+    } else {
+      groups.set(item.creepTypeId, { ...item, count: 1, countLabel: '×1' });
+    }
+  }
+  return [...groups.values()];
+}
+
+function formatEnemySendsSubtitle(sendCount: number): string {
+  return `baseline + ${sendCount} enemy ${sendCount === 1 ? 'send' : 'sends'}`;
 }
 
 export function formatEnemyFieldStatus(remainingCreeps: number): string {
@@ -54,12 +86,16 @@ export function mapWaveQueueToViewModel(
     const pendingCreepCount = snapshot.pendingCreepCount ?? 0;
     const isPlayerFieldClear = items.length === 0 && pendingCreepCount === 0;
     const isEnemyFieldFighting = isPlayerFieldClear && opponentFieldRemaining > 0;
+    const countLabel = pendingCreepCount > 0 ? `${pendingCreepCount} creeps` : null;
+    const emptyText = isPlayerFieldClear && !isEnemyFieldFighting ? 'No enemies' : null;
     return {
       headerLabel,
-      countLabel: pendingCreepCount > 0 ? `${pendingCreepCount} creeps` : null,
+      subtitle: countLabel ?? emptyText,
+      groups: groupWaveQueueIcons(items),
+      countLabel,
       baselineHint: null,
       sections: items.length > 0 ? [{ key: 'live', label: 'Incoming', items }] : [],
-      emptyText: isPlayerFieldClear && !isEnemyFieldFighting ? 'No enemies' : null,
+      emptyText,
       enemyFieldStatus: isEnemyFieldFighting
         ? formatEnemyFieldStatus(opponentFieldRemaining)
         : null,
@@ -70,8 +106,13 @@ export function mapWaveQueueToViewModel(
     const enemySendItems = snapshot.opponentSendQueue.map(toWaveQueueIcon);
     return {
       headerLabel: `Next: ${headerLabel}`,
+      subtitle:
+        enemySendItems.length > 0
+          ? formatEnemySendsSubtitle(enemySendItems.length)
+          : BASELINE_WAVE_HINT,
+      groups: groupWaveQueueIcons(enemySendItems),
       countLabel: enemySendItems.length > 0 ? `+${enemySendItems.length} enemy sends` : null,
-      baselineHint: 'Baseline wave',
+      baselineHint: BASELINE_WAVE_HINT,
       sections:
         enemySendItems.length > 0
           ? [{ key: 'enemy-sends', label: 'Enemy sends', items: enemySendItems }]
@@ -83,6 +124,8 @@ export function mapWaveQueueToViewModel(
 
   return {
     headerLabel,
+    subtitle: 'No enemies',
+    groups: [],
     countLabel: null,
     baselineHint: null,
     sections: [],

@@ -1,0 +1,138 @@
+/* The TOWERS tab: a one-line hint over four kit-framed cards, equal widths.
+ * As tall as the SEND tab (note + card row), so switching never moves the board. */
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.note {
+  height: var(--match-dock-note-height);
+  margin: 0;
+  padding: 0 var(--space-2xs);
+  overflow: hidden;
+  font-family: var(--font-family-ui);
+  font-size: var(--font-size-xs);
+  line-height: var(--match-dock-note-height);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--color-text-secondary);
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-sm);
+  height: var(--match-card-height);
+}
+
+.card {
+  position: relative;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: var(--space-2xs);
+  min-height: var(--touch-target-min);
+  padding: var(--space-sm) var(--space-2xs) var(--space-xs);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  font: inherit;
+  text-align: center;
+  touch-action: manipulation;
+  transition:
+    filter var(--duration-fast) var(--ease-out),
+    transform var(--duration-fast) var(--ease-out);
+}
+
+.card:not(:disabled):hover {
+  filter: brightness(1.15);
+}
+
+.card:not(:disabled):active {
+  transform: translateY(1px);
+}
+
+/* Selected for placement: the green glow of the concept. */
+.cardSelected {
+  box-shadow:
+    0 0 0 2px var(--color-match-card-selected-glow),
+    0 0 14px var(--glow-emerald);
+}
+
+/* Too expensive: greyscale icon, red reason instead of the price. */
+.card:disabled {
+  cursor: not-allowed;
+}
+
+.card:disabled .portrait {
+  filter: grayscale(1) brightness(0.6);
+}
+
+.cardLocked {
+  cursor: not-allowed;
+  filter: grayscale(0.7) brightness(0.7);
+}
+
+.portrait {
+  --tower-icon-size: var(--match-card-icon-size);
+  position: relative;
+  flex: 0 0 var(--match-card-icon-size);
+  display: inline-flex;
+  width: var(--match-card-icon-size);
+  height: var(--match-card-icon-size);
+}
+
+.branch {
+  position: absolute;
+  top: calc(var(--space-2xs) * -1);
+  right: calc(var(--space-xs) * -1);
+}
+
+.name {
+  display: -webkit-box;
+  width: 100%;
+  overflow: hidden;
+  font-family: var(--font-family-ui);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  line-height: 1.1;
+  color: var(--color-text-parchment);
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow-wrap: break-word;
+}
+
+.price,
+.reason {
+  margin-top: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  font-family: var(--font-family-stats);
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+.price {
+  color: var(--color-stat-gold);
+}
+
+.reason {
+  color: var(--color-text-danger);
+}
+
+.coin {
+  width: var(--font-size-lg);
+  height: var(--font-size-lg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card {
+    transition: none;
+  }
+}

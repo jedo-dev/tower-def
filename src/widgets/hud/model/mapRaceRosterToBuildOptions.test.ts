@@ -51,6 +51,19 @@ describe('mapRaceRosterToBuildOptions', () => {
 
     expect(options.every((option) => !option.isAffordable)).toBe(true);
     expect(options[0].ariaLabel).toContain('not affordable');
+    expect(options.map((option) => option.disabledReason)).toEqual(
+      options.map((option) => `Need $${option.costGold - (cheapest.costGold - 1)}`),
+    );
+  });
+
+  it('gives an affordable tower no disabled reason', () => {
+    const options = mapRaceRosterToBuildOptions({
+      raceId: RaceId.UNDEAD,
+      gold: 1000,
+      selectedTowerType: null,
+    });
+
+    expect(options.every((option) => option.disabledReason === null)).toBe(true);
   });
 
   it('marks the selected archetype', () => {

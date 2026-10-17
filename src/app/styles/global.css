@@ -267,20 +267,29 @@
   --codex-tracking-display: 0.14em;
   --codex-tracking-logo: 0.24em;
 
-  /* Game page layout: how much of the viewport the control strip and the
-   * HUD may claim, so the battlefield always keeps the rest. */
-  --game-controls-max-height: 42dvh;
-  /* The px floor is the expanded HUD at its smallest (resources, one row of
-   * tower cards, pressure bar and duel line); below it the strip would scroll. */
-  --hud-panel-max-height: max(30dvh, 260px);
-  /* Expanded HUD: the scrolling status body keeps the pressure bar and the
-   * duel line in view under the tower cards. */
-  --hud-status-min-height: 56px;
+  /* Match screen (docs/design/match-screen-concept.webp), top to bottom:
+   * the next-wave plate, the framed board, the event row, the status bar
+   * and the tabbed dock. Frames are kit 9-slices at --match-frame-rim. */
+  --match-frame-rim: 14px;
+  --match-plate-height: 48px;
+  --match-plate-emblem-size: 34px;
+  --match-plate-portrait-size: 30px;
+  --match-status-height: 58px;
+  --match-stat-value-size: 24px;
+  --match-start-button-width: 132px;
+  --match-tab-width: 112px;
+  --match-tab-underline-height: 2px;
+  --match-dock-note-height: 16px;
+  --match-card-height: 108px;
+  --match-card-icon-size: 56px;
+  --match-xp-bar-height: 4px;
+  --match-board-vignette: inset 0 0 28px 10px rgba(0, 0, 0, 0.78);
+  --color-match-card-selected-glow: rgba(116, 235, 172, 0.75);
+  --color-match-tab-underline: #74eb6c;
+  /* Landscape: the controls column beside the full-height board. */
+  --match-landscape-column-width: clamp(340px, 54%, 520px);
   /* The expanded duel event history scrolls past this height. */
   --duel-feed-expanded-max-height: 96px;
-  /* Landscape: the duel feed + match controls column between the board and
-   * the panels (two 44px controls per row at the floor). */
-  --game-feed-landscape-width: clamp(100px, 18vw, 196px);
   /* Selected tower bottom sheet (docs/design/mockup-in-match TowerSheet):
    * its height in the dock slot, the drag handle and the ringed portrait.
    * In portrait the slot keeps the dock's measured height instead, so the

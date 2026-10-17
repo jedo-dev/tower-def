@@ -9,46 +9,79 @@
 }
 
 /*
- * Mobile-first flex column: the battlefield takes every pixel the controls
- * do not need. The controls are a thin stack, not framed panels - the old
- * border-image chrome plus stacked rows ate roughly half the screen.
+ * The match screen (docs/design/match-screen-concept.webp) as one grid:
+ * plate, board, event row and the control strip (status bar + dock). The
+ * board row takes every pixel the others leave; landscape moves the other
+ * rows into a column beside it by changing the areas only, so the canvas
+ * element never moves in the DOM.
  */
 .game-viewport {
   position: relative; /* anchors the match outcome modal over the whole page */
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
+  grid-template-areas:
+    'plate'
+    'board'
+    'events'
+    'panels';
   gap: var(--space-sm);
   height: 100%;
   box-sizing: border-box;
   overflow: hidden;
 }
 
-/* Battlefield: fills the leftover height; WaveQueue positions itself
- * absolutely inside this box as a canvas overlay. The duel event feed and
- * the match controls share a sibling strip below it, never over the cells. */
-.game-canvas-area {
-  position: relative;
-  /* Basis 0: the box is the leftover space, never the canvas's last size,
-   * so a stale Phaser canvas cannot push the panels off the page. */
-  flex: 1 1 0;
-  min-height: 0;
-  display: flex;
-  border: 0;
-  border-radius: 6px;
-  overflow: hidden;
-  box-shadow:
-    inset 0 0 0 1px rgba(0, 0, 0, 0.6),
-    0 4px 14px rgba(0, 0, 0, 0.5);
+.game-plate-slot {
+  grid-area: plate;
+  min-width: 0;
 }
 
-/* Feed + pause/speed/quit: one touch-target-tall row in portrait. The feed
- * takes the leftover width; the controls keep their natural size. */
-.game-feed-row {
-  flex: 0 0 auto;
-  display: flex;
-  align-items: flex-start;
-  gap: var(--space-xs);
+/*
+ * Battlefield in an ornate dark frame: the kit rim and an inner vignette are
+ * drawn over the canvas edge by a pseudo element that takes no taps. The
+ * Phaser content is unchanged.
+ */
+.game-canvas-area {
+  grid-area: board;
+  position: relative;
+  min-height: 0;
   min-width: 0;
+  display: flex;
+  padding: var(--space-xs);
+  border-radius: var(--radius-sm);
+  background: var(--color-iron-shadow);
+  box-shadow: var(--shadow-codex-bar);
+}
+
+.game-canvas-area::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: var(--z-index-canvas-feed);
+  border: 0;
+  border-image-source: url('/assets/ui/kit/panel-wide.png');
+  border-image-slice: 22;
+  border-image-width: var(--match-frame-rim);
+  border-image-repeat: stretch;
+  box-shadow: var(--match-board-vignette);
+  pointer-events: none;
+}
+
+/* Event row: the duel feed well on the left, the four 44px controls right,
+ * in one kit frame. */
+.game-feed-row {
+  grid-area: events;
+  display: flex;
+  align-items: stretch;
+  gap: var(--space-sm);
+  min-width: 0;
+  padding: var(--space-sm);
+  border: 0;
+  border-image-source: url('/assets/ui/kit/panel-wide.png');
+  border-image-slice: 22 fill;
+  border-image-width: var(--match-frame-rim);
+  border-image-repeat: stretch;
+  box-shadow: var(--shadow-codex-bar);
 }
 
 .game-feed-row > :first-child {
@@ -86,29 +119,22 @@
   inset: 0;
 }
 
-/* Controls stay a strip: capped low enough that the battlefield keeps at
- * least ~450px (a 300px-wide board) on a 390x844 phone even with the build
- * drawer open. The HUD scrolls its expanded body internally and the send
- * panel folds to its header while the drawer is open; the strip itself only
- * scrolls as a last resort on very short viewports. */
+/* Control strip: the status bar over the dock slot. */
 .game-panels {
-  flex: 0 0 auto;
+  grid-area: panels;
   display: flex;
   flex-direction: column;
-  gap: var(--space-md);
-  padding: 0 2px;
+  gap: var(--space-sm);
   min-height: 0;
-  max-height: var(--game-controls-max-height);
-  overflow-y: auto;
-  overscroll-behavior: contain;
+  min-width: 0;
 }
 
 /*
- * Dock slot: the send panel (the dock) and, while a tower is selected, the
- * tower sheet standing in for it. The dock stays mounted and laid out under
- * the sheet (hidden, inert), so its tab, mode and scroll come back exactly.
- * Open in portrait, the strip is locked at the dock's measured height (see
- * useStripHeightLock) and the slot takes whatever the collapsed HUD leaves;
+ * Dock slot: the dock and, while a tower is selected, the tower sheet
+ * standing in for it. The dock stays mounted and laid out under the sheet
+ * (hidden, inert), so its tab, mode and scroll come back exactly. Open in
+ * portrait, the strip is locked at the dock's measured height (see
+ * useStripHeightLock) and the slot takes whatever the status bar leaves;
  * unlocked (no measurement yet) it falls back to the sheet's own height.
  */
 .game-dock-slot {
@@ -128,12 +154,17 @@
   visibility: hidden;
 }
 
+/* Only the slot gives way to the lock; the status bar keeps its row. */
+.game-panels--sheet-open > :not(.game-dock-slot) {
+  flex-shrink: 0;
+}
+
 /*
- * Wave phase: the dock folds away and the strip shrinks to the HUD status
- * rows, so the board takes the freed height. The slot leaves the flow (no
- * gap, no height) but keeps its layout, clipped and hidden, so the send
- * panel's mode and scroll survive. The height snaps rather than animates:
- * one host resize, one camera re-fit. Coming back, the dock fades in.
+ * Wave phase: the dock folds away and the strip shrinks to the status bar,
+ * so the board takes the freed height. The slot leaves the flow (no gap, no
+ * height) but keeps its layout, clipped and hidden, so the dock's tab and
+ * mode survive. The height snaps rather than animates: one host resize, one
+ * camera re-fit. Coming back, the dock fades in.
  */
 .game-panels--wave {
   position: relative;
@@ -163,70 +194,29 @@
   }
 }
 
-/* Only the slot gives way to the lock; the HUD keeps its rows. */
-.game-panels--sheet-open > :not(.game-dock-slot) {
-  flex-shrink: 0;
-}
-
 /*
  * Landscape phones (the class comes from useLandscapeLayout, one breakpoint
- * in shared/constants/layout): the board fills the height on the left and
- * the send panel + HUD become a scrollable column on the right, so nothing
- * runs off the bottom of a 360px-tall viewport. The canvas element is the
- * same one as in portrait; only its box changes, and the engine re-fits the
- * camera on the resize.
+ * in shared/constants/layout): the board fills the height on the left; the
+ * plate, the event row and the strip stack in the right column. The canvas
+ * element is the same one as in portrait; only its box changes, and the
+ * engine re-fits the camera on the resize.
  */
 .game-page--landscape {
   max-width: none;
 }
 
 .game-page--landscape .game-viewport {
-  flex-direction: row;
-  align-items: stretch;
+  grid-template-columns: minmax(0, 1fr) var(--match-landscape-column-width);
+  grid-template-rows: auto auto auto minmax(0, 1fr);
+  grid-template-areas:
+    'board plate'
+    'board events'
+    'board panels'
+    'board .';
 }
 
-.game-page--landscape .game-canvas-area {
-  flex: 1 1 auto;
-  min-width: 0;
-  height: 100%;
-}
-
-.game-page--landscape .game-panels {
-  /* The column scrolls as a whole; the HUD no longer caps itself. */
-  --hud-panel-max-height: none;
-  flex: 0 0 clamp(300px, 44%, 400px);
-  height: 100%;
-  max-height: none;
-  padding: 2px;
-}
-
-/* Landscape: the strip is a narrow column between the board and the panels;
- * the controls wrap into a block on top and the feed fills the rest. */
-.game-page--landscape .game-feed-row {
-  flex: 0 0 var(--game-feed-landscape-width);
-  flex-direction: column;
-  align-items: stretch;
-  height: 100%;
-}
-
-.game-page--landscape .game-feed-row > :first-child {
-  flex: 1 1 0;
-  min-height: 0;
-}
-
-/* Landscape: the feed is a tall column; the info bar sits at its top. */
-.game-page--landscape .game-feed-slot > [data-wave-tower-info] {
-  bottom: auto;
-}
-
-/* The panels keep their natural height so the column scrolls, instead of
- * squashing the HUD into its own inner scroller next to the board. */
-.game-page--landscape .game-panels > * {
-  flex-shrink: 0;
-}
-
-/* Landscape: the column is not locked; the sheet takes its own height at the
- * top of the right column and the HUD follows. */
+/* Landscape: the column is not locked; the sheet takes its own height under
+ * the status bar. */
 .game-page--landscape .game-panels--sheet-open .game-dock-slot {
   flex: 0 0 var(--tower-sheet-height);
 }

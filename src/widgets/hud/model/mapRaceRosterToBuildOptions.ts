@@ -25,6 +25,8 @@ export type HudBuildOptionViewModel = {
   /** One-word summary of what the tower does beyond damage. */
   effectHint: string;
   isAffordable: boolean;
+  /** Short card line when the tower cannot be afforded ("Need $65"); null otherwise. */
+  disabledReason: string | null;
   isSelected: boolean;
   /** The talent branch this tower type took this match; `null` while open. */
   chosenBranch: { id: string; name: string; glyph: string } | null;
@@ -83,6 +85,11 @@ function resolveChosenBranch(
     : { id: branches[index].id, name: branches[index].name, glyph: toBranchGlyph(index) };
 }
 
+/** "Need $65": the gold still missing for a tower card. */
+export function formatGoldShortfall(missingGold: number): string {
+  return `Need $${missingGold}`;
+}
+
 export function mapRaceRosterToBuildOptions(input: MapRaceRosterInput): HudBuildOptionViewModel[] {
   return getBuildableTowersByFaction(input.raceId).map((tower) => {
     const effectHint = resolveEffectHint(tower.towerType);
@@ -98,6 +105,7 @@ export function mapRaceRosterToBuildOptions(input: MapRaceRosterInput): HudBuild
       costGold: tower.costGold,
       effectHint,
       isAffordable,
+      disabledReason: isAffordable ? null : formatGoldShortfall(tower.costGold - input.gold),
       isSelected: input.selectedTowerType === tower.towerType,
       chosenBranch,
       tooltip: chosenBranch ? `${tower.name} — ${chosenBranch.name}` : tower.name,

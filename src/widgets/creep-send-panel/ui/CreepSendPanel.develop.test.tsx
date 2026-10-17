@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import {
@@ -12,6 +13,7 @@ import { Difficulty } from '../../../entities/difficulty';
 import { RaceId } from '../../../shared/types/content-ids';
 import type { GameSetupConfig } from '../../../shared/config/game-setup';
 import { formatCreatureBranchLockWarning } from '../model/mapCreatureTalentState';
+import { CreepDevelopToggle } from './CreepDevelopToggle';
 import { CreepSendPanel } from './CreepSendPanel';
 import { toTalentIconSource } from '../../../shared/ui/branch-glyph';
 
@@ -60,9 +62,28 @@ function hud(overrides: Partial<GameHudSnapshot> = {}): GameHudSnapshot {
   };
 }
 
+/** The SEND tab as the dock wires it: the rail's toggle drives the panel. */
+function SendTab() {
+  const [isDevelopMode, setIsDevelopMode] = useState(false);
+  return (
+    <>
+      <CreepDevelopToggle
+        setup={SETUP}
+        isDevelopMode={isDevelopMode}
+        onDevelopModeChange={setIsDevelopMode}
+      />
+      <CreepSendPanel
+        setup={SETUP}
+        isDevelopMode={isDevelopMode}
+        onDevelopModeChange={setIsDevelopMode}
+      />
+    </>
+  );
+}
+
 function show(snapshot: GameHudSnapshot = hud()): void {
   publishGameHudSnapshot(snapshot);
-  render(<CreepSendPanel setup={SETUP} />);
+  render(<SendTab />);
 }
 
 function enterDevelopMode(): HTMLElement {
