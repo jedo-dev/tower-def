@@ -140,9 +140,15 @@ describe('mapCreatureTalentState', () => {
     });
   });
 
-  it('words the lock warning per creature', () => {
+  it('words the lock warning for all creatures of the type', () => {
     expect(formatCreatureBranchLockWarning('Crypt Fiend')).toBe(
-      'Locks the other Crypt Fiend branch for this match',
+      'Locks the other branch for all Crypt Fiends this match',
+    );
+    expect(formatCreatureBranchLockWarning('Druid of the Claw')).toBe(
+      'Locks the other branch for all Druids of the Claw this match',
+    );
+    expect(formatCreatureBranchLockWarning('Militia')).toBe(
+      'Locks the other branch for all Militia this match',
     );
   });
 });

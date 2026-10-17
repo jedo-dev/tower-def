@@ -14,6 +14,7 @@ import {
 } from '../../../entities/unit';
 import { CreatureTalentRule } from '../../../shared/constants/creatureTalents';
 import type { GameHudSnapshot } from '../../../shared/lib/game-bridge/types';
+import { pluralizeUnitName } from '../../../shared/lib/text';
 import { toBranchGlyph } from '../../../shared/ui/branch-glyph';
 import { mapCreatureTalentGradeRows, type CreatureGradeRow } from './mapCreatureTalentGradeRows';
 
@@ -206,7 +207,7 @@ export function mapCreatureTalentState(
   };
 }
 
-/** The chooser's confirmation line: the pick holds for this creature all match. */
+/** The chooser's confirmation line: the pick holds for every creature of the type. */
 export function formatCreatureBranchLockWarning(creatureName: string): string {
-  return `Locks the other ${creatureName} branch for this match`;
+  return `Locks the other branch for all ${pluralizeUnitName(creatureName)} this match`;
 }

@@ -12,7 +12,6 @@ import { resolveUnitConfigById } from '../../../entities/unit';
 import { Difficulty } from '../../../entities/difficulty';
 import { RaceId } from '../../../shared/types/content-ids';
 import type { GameSetupConfig } from '../../../shared/config/game-setup';
-import { formatCreatureBranchLockWarning } from '../model/mapCreatureTalentState';
 import { CreepDevelopToggle } from './CreepDevelopToggle';
 import { CreepSendPanel } from './CreepSendPanel';
 import { toTalentIconSource } from '../../../shared/ui/branch-glyph';
@@ -272,7 +271,9 @@ describe('CreepSendPanel creature branch chooser', () => {
         within(card).getByRole('button', { name: `Choose ${branch.name} for 6 XP` }),
       ).toBeDefined();
     }
-    expect(within(dialog).getByText(formatCreatureBranchLockWarning('Ghoul'))).toBeDefined();
+    expect(
+      within(dialog).getByText('Locks the other branch for all Ghouls this match'),
+    ).toBeDefined();
   });
 
   it('sends choose-creature-branch for the confirmed branch and closes', () => {

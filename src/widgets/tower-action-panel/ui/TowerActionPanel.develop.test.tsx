@@ -12,7 +12,6 @@ import { getTowerStatsForCurveLevel, resolveBuildableTowerById } from '../../../
 import { TowerTalentPricing } from '../../../shared/constants/towerTalents';
 import { TowerTypeId } from '../../../shared/types/content-ids';
 import { TowerActionPanel } from './TowerActionPanel';
-import { formatBranchLockWarning } from '../model/mapTowerBranchState';
 import { NEXT_LEVEL_PREVIEW_LABEL } from './NextLevelPreview';
 
 const ARCHER = resolveBuildableTowerById('undead_bone_archer_tower');
@@ -165,7 +164,9 @@ describe('TowerActionPanel branch chooser', () => {
         }),
       ).toBeDefined();
     }
-    expect(within(dialog).getByText(formatBranchLockWarning(ARCHER.name))).toBeDefined();
+    expect(
+      within(dialog).getByText('Locks the other branch for all Bone Archer Towers this match'),
+    ).toBeDefined();
   });
 
   it('sends choose-tower-branch for the confirmed branch and closes', () => {

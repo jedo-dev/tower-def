@@ -9,6 +9,7 @@ import {
 } from '../../../entities/tower';
 import { TowerTalentPricing, TowerTalentRule } from '../../../shared/constants/towerTalents';
 import type { SelectedTowerSnapshot } from '../../../shared/lib/game-bridge/types';
+import { pluralizeUnitName } from '../../../shared/lib/text';
 import { toBranchGlyph } from '../../../shared/ui/branch-glyph';
 import { mapTalentBranchGradeRows, type TalentGradeRow } from './mapTalentBranchGradeRows';
 
@@ -51,7 +52,7 @@ const BLOCKED_REASON_TEXT: Record<BranchChoiceRejectionReason, string> = {
 
 /** The chooser's confirmation line: a pick holds for every tower of the type. */
 export function formatBranchLockWarning(towerName: string): string {
-  return `Locks the other branch for all ${towerName} this match`;
+  return `Locks the other branch for all ${pluralizeUnitName(towerName)} this match`;
 }
 
 type BranchStateTower = Pick<

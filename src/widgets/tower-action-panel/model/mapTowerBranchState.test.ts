@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { resolveBuildableTowerById } from '../../../entities/tower';
 import { TowerTalentPricing } from '../../../shared/constants/towerTalents';
 import { TowerTypeId } from '../../../shared/types/content-ids';
-import { mapTowerBranchState } from './mapTowerBranchState';
+import { formatBranchLockWarning, mapTowerBranchState } from './mapTowerBranchState';
 
 const ARCHER = resolveBuildableTowerById('undead_bone_archer_tower');
 const [BRANCH_A, BRANCH_B] = ARCHER.talentBranches;
@@ -56,5 +56,13 @@ describe('mapTowerBranchState', () => {
     );
 
     expect(state).toEqual({ maxGrade: 3, chosenBranch: null, develop: null });
+  });
+});
+
+describe('formatBranchLockWarning', () => {
+  it('words the lock warning for all towers of the type', () => {
+    expect(formatBranchLockWarning('Bone Archer Tower')).toBe(
+      'Locks the other branch for all Bone Archer Towers this match',
+    );
   });
 });
