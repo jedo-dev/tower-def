@@ -1,7 +1,7 @@
 import type { StatKey } from '../../model/types';
 
 /** Line pictograms of the codex, drawn on a 16x16 grid with round strokes. */
-export type CodexIconName = StatKey | 'chevronLeft' | 'chevronRight' | 'chevronDown';
+export type CodexIconName = StatKey | 'chevronLeft' | 'chevronRight' | 'chevronDown' | 'sound';
 
 export const CODEX_ICON_PATHS: Record<CodexIconName, readonly string[]> = {
   physical: ['M13.5 2.5L6.5 9.5M13.5 2.5H11M13.5 2.5V5M4.2 8.2l3.6 3.6M5.8 10.2L2.5 13.5'],
@@ -35,4 +35,8 @@ export const CODEX_ICON_PATHS: Record<CodexIconName, readonly string[]> = {
   chevronLeft: ['M10 3L5 8l5 5'],
   chevronRight: ['M6 3l5 5-5 5'],
   chevronDown: ['M3 6l5 5 5-5'],
+  sound: [
+    'M2.5 6h2.6L8.5 3v10L5.1 10H2.5z',
+    'M10.8 5.6a3.3 3.3 0 0 1 0 4.8M12.6 3.8a5.8 5.8 0 0 1 0 8.4',
+  ],
 };

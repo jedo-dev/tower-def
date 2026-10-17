@@ -2,6 +2,15 @@ import type { DamageType, RaceId } from '../../../shared/types/content-ids';
 import type { FactionThemeName } from '../../../shared/constants/theme';
 import type { UnitId, UnitTier } from '../../../entities/unit';
 import type { BuildableTowerId } from '../../../entities/tower';
+import type { SoundId, SoundSlot } from '../../../shared/types/sound-ids';
+
+/** One clip a card can play: which cue it is and the clip the game resolves for it. */
+export type SoundCueViewModel = {
+  slot: SoundSlot;
+  /** Short cue name under the button: "Hit", "Attack". */
+  label: string;
+  soundId: SoundId;
+};
 
 /** Pictogram of a stat reading; the UI maps each key to an icon and tint. */
 export type StatKey =
@@ -70,6 +79,8 @@ export type CreepCardViewModel = {
   lore: string | null;
   /** The two talent branches; a side picks one per creature for the match. */
   talentBranches: CreepBranchViewModel[];
+  /** Hit, death, escape and spawn clips the listen buttons play. */
+  soundCues: SoundCueViewModel[];
 };
 
 /** One creature talent grade (1-4) as the card's branch table shows it. */
@@ -171,6 +182,8 @@ export type TowerCardViewModel = {
   levels: TowerLevelViewModel[];
   /** The two branches; choosing one locks the other for the match. */
   talentBranches: TowerBranchViewModel[];
+  /** Attack, impact and (when it has its own) upgrade clips the listen buttons play. */
+  soundCues: SoundCueViewModel[];
   description: string;
   lore: string | null;
 };

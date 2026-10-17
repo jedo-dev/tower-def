@@ -7,6 +7,7 @@ import { StatChips } from '../codex/StatChips';
 import codex from '../codex/Codex.module.css';
 import { DetailHeader, LoreFold, SpecialLines } from './DetailParts';
 import { TalentSection, type TalentBranchView } from './TalentSection';
+import { SoundCues } from './SoundCues';
 import sections from './Sections.module.css';
 
 export type CreepDetailProps = {
@@ -87,6 +88,7 @@ export function CreepDetail({ creep, faction, nameId }: CreepDetailProps) {
           branches={toTalentBranches(creep)}
         />
       )}
+      <SoundCues idPrefix={`codex-${creep.id}`} name={creep.name} cues={creep.soundCues} />
       <LoreFold description={creep.description} lore={creep.lore} />
     </>
   );

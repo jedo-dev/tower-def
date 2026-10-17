@@ -9,6 +9,7 @@ import { DamageType } from '../../../shared/types/content-ids';
 import { describeDamageType, formatPercentOfMaxHealth } from './combatTypeDisplay';
 import { readLore } from './creepCards';
 import { describeGradeSpecial, mapTalentBranch } from './towerBranchCards';
+import { towerSoundCues } from './soundCues';
 import { goldReading, towerAttackReadings } from './statReadings';
 import { describeOnHitEffect, formatCells, formatPercent, formatSeconds } from './towerEffectLines';
 import type { TowerCardViewModel, TowerLevelViewModel, TowerSpecialViewModel } from './types';
@@ -142,6 +143,7 @@ export function mapTowerToTowerCard(tower: BuildableTowerConfig): TowerCardViewM
         numbers: topLevel?.stats ?? baseAttack,
       }),
     ),
+    soundCues: towerSoundCues(tower),
     description: tower.description,
     lore: readLore(tower),
   };

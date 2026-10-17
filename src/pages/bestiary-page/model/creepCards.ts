@@ -3,6 +3,7 @@ import { describeArmor } from './combatTypeDisplay';
 import { mapCreatureBranches } from './creepBranchCards';
 import { describeCreatureAbilities, NO_CREATURE_SPECIAL } from './creatureAbilityLines';
 import { creatureBodyReadings, goldReading } from './statReadings';
+import { creepSoundCues } from './soundCues';
 import { getTierEconomy } from './tierEconomy';
 import type { CreepCardViewModel } from './types';
 
@@ -45,6 +46,7 @@ export function mapUnitToCreepCard(unit: UnitConfig): CreepCardViewModel {
     description: unit.description ?? null,
     lore: readLore(unit),
     talentBranches: mapCreatureBranches(unit.talentBranches, unit),
+    soundCues: creepSoundCues(unit),
   };
 }
 
